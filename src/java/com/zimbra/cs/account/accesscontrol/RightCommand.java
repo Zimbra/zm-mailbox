@@ -15,6 +15,7 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
@@ -39,12 +41,13 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.RightChecker.SearchGrantResult;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 public class RightCommand {
     
     /*
-     * ACL and ACE are aux class for ProvUtil.  We don't want to pass "live"(those actually being used 
+     * Grants and ACE are aux class for ProvUtil.  We don't want to pass "live"(those actually being used 
      * in the server) ZimbraACL/ZimbraACE objects to ProvUtil, because:
      *     - Some methods(e.g. ZimbraACE.getGranteeDisplayName ) calls Provisioning.getInstance(), 
      *       which is an instance of LdapProvisioning, which should not be done from ProvUtil when 
@@ -58,10 +61,10 @@ public class RightCommand {
      * RightManager, which would access LDAP for custom rights that are defined in LDAP.
      */
     
-    public static class ACL {
+    public static class Grants {
         Set<ACE> mACEs = new HashSet<ACE>();
         
-        ACL() {
+        Grants() {
         }
         
         void addACE(ACE ace) {
@@ -76,15 +79,25 @@ public class RightCommand {
          * ctor or parsing ACL from a SOAP response
          * called from SoapProvisioning/ProvUtil
          */
-        public ACL(Element parent) throws ServiceException {
+        public Grants(Element parent) throws ServiceException {
             for (Element eGrant : parent.listElements(AdminConstants.E_GRANT)) {
-                String granteeType = eGrant.getAttribute(AdminConstants.A_TYPE, "");
-                String granteeId = eGrant.getAttribute(AdminConstants.A_ID, "");
-                String granteeName = eGrant.getAttribute(AdminConstants.A_NAME, "");
-                String right = eGrant.getAttribute(AdminConstants.A_RIGHT, "");
+                // target
+                Element eTarget = eGrant.getElement(AdminConstants.E_TARGET);
+                String targetType = eTarget.getAttribute(AdminConstants.A_TYPE, "");
+                String targetId = eTarget.getAttribute(AdminConstants.A_ID, "");
+                String targetName = eTarget.getAttribute(AdminConstants.A_NAME, "");
+                    
+                // grantee
+                Element eGrantee = eGrant.getElement(AdminConstants.E_GRANTEE);
+                String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, "");
+                String granteeId = eGrantee.getAttribute(AdminConstants.A_ID, "");
+                String granteeName = eGrantee.getAttribute(AdminConstants.A_NAME, "");
                 
-                boolean deny = eGrant.getAttributeBool(AdminConstants.A_DENY, false);
-                boolean canDelegate = eGrant.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+                // right
+                Element eRight = eGrant.getElement(AdminConstants.E_RIGHT);
+                String right = eRight.getText();
+                boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
+                boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
                 
                 RightModifier rightModifier = null;
                 
@@ -96,26 +109,38 @@ public class RightCommand {
                 else if (canDelegate)
                     rightModifier = RightModifier.RM_CAN_DELEGATE;
                 
-                ACE ace = new ACE(granteeType, granteeId, granteeName, right, rightModifier);
+                ACE ace = new ACE(targetType, targetId, targetName,
+                        granteeType, granteeId, granteeName, 
+                        right, rightModifier);
                 addACE(ace);
             }
         }
         
         /*
-         * ctor to construct an ACL from ZimbraACL
+         * add grants from a ZimbraACL
          * called in server
          */
-        private ACL(ZimbraACL acl) {
+        private void addGrants(TargetType targetType, Entry target, ZimbraACL acl,
+                Set<String> granteeFilter) {
             if (acl == null)
                 return;
                 
             for (ZimbraACE ace : acl.getAllACEs()) {
-                addACE(new ACE(ace));
+                if (granteeFilter == null || granteeFilter.contains(ace.getGrantee()))
+                    addACE(new ACE(targetType, target, ace));
             }
         }
         
+        
         public void toXML(Element parent) {
+            
             for (ACE ace : mACEs) {
+                /*
+                 * for backward compatibility
+                 * 
+                 * <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" 
+                 *        right="{right-name}" deny="{deny}" canDelegate="{canDelegate}"/>
+                 */
                 Element eGrant = parent.addElement(AdminConstants.E_GRANT);
                 eGrant.addAttribute(AdminConstants.A_TYPE, ace.granteeType());
                 eGrant.addAttribute(AdminConstants.A_ID, ace.granteeId());
@@ -127,26 +152,54 @@ public class RightCommand {
                 boolean canDelegate = (rightModifier == RightModifier.RM_CAN_DELEGATE);
                 eGrant.addAttribute(AdminConstants.A_DENY, deny);
                 eGrant.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
+                
+                /*
+                 * new format:
+                 * 
+                 * <grant>
+                 *   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+                 *   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+                 *   <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
+                 * </grant>
+                 */
+                Element eTarget = eGrant.addElement(AdminConstants.E_TARGET);
+                eTarget.addAttribute(AdminConstants.A_TYPE, ace.targetType());
+                eTarget.addAttribute(AdminConstants.A_ID, ace.targetId());
+                eTarget.addAttribute(AdminConstants.A_NAME, ace.targetName());
+                
+                Element eGrantee = eGrant.addElement(AdminConstants.E_GRANTEE);
+                eGrantee.addAttribute(AdminConstants.A_TYPE, ace.granteeType());
+                eGrantee.addAttribute(AdminConstants.A_ID, ace.granteeId());
+                eGrantee.addAttribute(AdminConstants.A_NAME, ace.granteeName());
+                
+                Element eRight = eGrant.addElement(AdminConstants.E_RIGHT);
+                eRight.addAttribute(AdminConstants.A_DENY, deny);
+                eRight.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
+                eRight.setText(ace.right());
             }
         }
     }
     
     public static class ACE {
-        String mGranteeType;
-        String mGranteeId;
-        String mGranteeName;
-        String mRight;
-        RightModifier mRightModifier;
+        private String mTargetType;
+        private String mTargetId;
+        private String mTargetName;
+        private String mGranteeType;
+        private String mGranteeId;
+        private String mGranteeName;
+        private String mRight;
+        private RightModifier mRightModifier;
     
         /*
          * called from CLI
          */
-        private ACE(String granteeType,
-            String granteeId,
-            String granteeName,
-            String right,
-            RightModifier rightModifier) {
+        private ACE(String targetType, String targetId, String targetName,
+            String granteeType, String granteeId, String granteeName,
+            String right, RightModifier rightModifier) {
             
+            mTargetType = targetType;
+            mTargetId = targetId;
+            mTargetName = targetName;
             mGranteeType = granteeType;
             mGranteeId = granteeId;
             mGranteeName = granteeName;
@@ -157,7 +210,10 @@ public class RightCommand {
         /*
          * called in server
          */
-        private ACE(ZimbraACE ace) {
+        private ACE(TargetType targetType, Entry target, ZimbraACE ace) {
+            mTargetType = targetType.getCode();
+            mTargetId = TargetType.getId(target);
+            mTargetName = target.getLabel();
             mGranteeType = ace.getGranteeType().getCode();
             mGranteeId = ace.getGrantee();
             mGranteeName = ace.getGranteeDisplayName();
@@ -165,6 +221,9 @@ public class RightCommand {
             mRightModifier = ace.getRightModifier();
         }
         
+        public String targetType() { return mTargetType; }
+        public String targetId()   { return (mTargetId!=null)?mTargetId:""; }
+        public String targetName() { return mTargetName; }
         public String granteeType() { return mGranteeType; }
         public String granteeId()   { return mGranteeId; }
         public String granteeName() { return mGranteeName; }
@@ -709,7 +768,7 @@ public class RightCommand {
             AllEffectiveRights aer = new AllEffectiveRights(granteeType, granteeId, granteeName);
             
             for (Element eTarget : parent.listElements(AdminConstants.E_TARGET)) {
-                TargetType targetType = TargetType.fromString(eTarget.getAttribute(AdminConstants.A_TYPE));
+                TargetType targetType = TargetType.fromCode(eTarget.getAttribute(AdminConstants.A_TYPE));
                 RightsByTargetType rbtt = aer.mRightsByTargetType.get(targetType);
                 
                 Element eAll = eTarget.getOptionalElement(AdminConstants.E_ALL);
@@ -853,7 +912,7 @@ public class RightCommand {
         
         List<Right> rights = new ArrayList<Right>();
         
-        TargetType tt = (targetType==null)? null : TargetType.fromString(targetType);
+        TargetType tt = (targetType==null)? null : TargetType.fromCode(targetType);
         for (Map.Entry<String, AdminRight> right : allRights.entrySet()) {
             Right r = right.getValue();
             if (tt == null || r.grantableOnTargetType(tt)) {
@@ -871,7 +930,7 @@ public class RightCommand {
         verifyAccessManager();
         
         // target
-        TargetType tt = TargetType.fromString(targetType);
+        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
         
         // grantee
@@ -916,7 +975,7 @@ public class RightCommand {
         verifyAccessManager();
         
         // target
-        TargetType tt = TargetType.fromString(targetType);
+        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
         
         // grantee
@@ -940,7 +999,7 @@ public class RightCommand {
         
         verifyAccessManager();
         
-        TargetType tt = TargetType.fromString(targetType);
+        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = PseudoTarget.createPseudoTarget(prov, tt, domainBy, domainStr, false, cosBy, cosStr);
        
         // grantee
@@ -956,16 +1015,77 @@ public class RightCommand {
         return er;
     }
     
-    public static ACL getGrants(Provisioning prov,
-                                String targetType, TargetBy targetBy, String target) throws ServiceException {
+    public static Grants getGrants(Provisioning prov,
+                                String targetType, TargetBy targetBy, String target, 
+                                String granteeType, GranteeBy granteeBy, String grantee, 
+                                boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
         verifyAccessManager();
         
-        // target
-        TargetType tt = TargetType.fromString(targetType);
-        Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+        if (targetType == null && granteeType == null)
+            throw ServiceException.INVALID_REQUEST("at least one of target or grantee must be specified", null);
+
         
-        ZimbraACL zimbraAcl = RightUtil.getACL(targetEntry);
-        return new ACL(zimbraAcl);
+        // target
+        TargetType tt = null;
+        Entry targetEntry = null;
+        if (targetType != null) {
+            tt = TargetType.fromCode(targetType);
+            targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+        }
+        
+        // grantee
+        GranteeType gt = null;
+        NamedEntry granteeEntry = null; 
+        Set<String> granteeFilter = null;
+        if (granteeType != null) {
+            gt = GranteeType.fromCode(granteeType);
+            granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+            
+            Grantee theGrantee = Grantee.makeGrantee(granteeEntry);
+            if (theGrantee == null)
+                throw ServiceException.INVALID_REQUEST("entry not a valid grantee type", null);
+            
+            if (granteeIncludeGroupsGranteeBelongs)
+                granteeFilter = theGrantee.getIdAndGroupIds();
+            else {
+                granteeFilter = new HashSet<String>();
+                granteeFilter.add(granteeEntry.getId());
+            }
+        }
+            
+        Grants grants = new Grants();
+        
+        if (targetEntry != null) {
+            // get ACL from the target
+            ZimbraACL zimbraAcl = RightUtil.getACL(targetEntry);
+            grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter);
+            
+        } else {
+            /*
+             * no specific target, search for grants granted to
+             * the grantee (and optionally groups the specified
+             * grantee belongs to)
+             * 
+             * If we come to this path, grantee must have been
+             * specified.
+             */
+            
+            // we want all target types
+            Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
+            
+            Map<String, SearchGrantResult> sgr = 
+                RightChecker.searchGrants(prov, targetTypesToSearch, granteeFilter);
+
+            for (SearchGrantResult grant : sgr.values()) {
+                Pair<Entry, ZimbraACL> grantsOnTarget = RightChecker.getGrants(prov, grant);
+                Entry grantedOnEntry = grantsOnTarget.getFirst();
+                ZimbraACL acl = grantsOnTarget.getSecond();
+                TargetType grantedOnTargetType = TargetType.getTargetType(grantedOnEntry);
+                grants.addGrants(grantedOnTargetType, grantedOnEntry, acl, granteeFilter);
+            }
+        }
+        
+        return grants;
     }
     
     private static void verifyGrant(Account authedAcct,
@@ -1038,7 +1158,7 @@ public class RightCommand {
         verifyAccessManager();
         
         // target
-        TargetType tt = TargetType.fromString(targetType);
+        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
         
         // grantee
@@ -1066,7 +1186,7 @@ public class RightCommand {
         verifyAccessManager();
         
         // target
-        TargetType tt = TargetType.fromString(targetType);
+        TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
         
         // grantee

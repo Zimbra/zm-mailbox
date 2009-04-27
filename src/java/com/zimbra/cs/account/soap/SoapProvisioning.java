@@ -57,6 +57,7 @@ import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
+import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
@@ -1948,7 +1949,7 @@ public class SoapProvisioning extends Provisioning {
     //
     
     // target
-    private void toXML(Element req,
+    private Element toXML(Element req,
                        String targetType, TargetBy targetBy, String target) {
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
         eTarget.addAttribute(AdminConstants.A_TYPE, targetType);
@@ -1956,26 +1957,32 @@ public class SoapProvisioning extends Provisioning {
             eTarget.addAttribute(AdminConstants.A_BY, targetBy.toString());
             eTarget.setText(target);
         }
+        
+        return eTarget;
     }
         
     // grantee
-    private void toXML(Element req,
+    private Element toXML(Element req,
                        String granteeType, GranteeBy granteeBy, String grantee) {
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
         if (granteeType != null)
             eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType);
         eGrantee.addAttribute(AdminConstants.A_BY, granteeBy.toString());
         eGrantee.setText(grantee);
+        
+        return eGrantee;
     }
     
     // right
-    private void toXML(Element req,
+    private Element toXML(Element req,
                        String right, RightModifier rightModifier) {
         Element eRight = req.addElement(AdminConstants.E_RIGHT);
         if (rightModifier != null) {
             eRight.addAttribute(rightModifier.getSoapAttrMapping(), true);
         }
         eRight.setText(right);
+        
+        return eRight;
     }
     
     @Override
@@ -2093,9 +2100,10 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public RightCommand.EffectiveRights getEffectiveRights(String targetType, TargetBy targetBy, String target,
-                                                           GranteeBy granteeBy, String grantee,
-                                                           boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+    public RightCommand.EffectiveRights getEffectiveRights(
+            String targetType, TargetBy targetBy, String target,
+            GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_EFFECTIVE_RIGHTS_REQUEST);
         
         String expandAttrs = null;
@@ -2118,10 +2126,11 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public RightCommand.EffectiveRights getCreateObjectAttrs(String targetType,
-                                                             DomainBy domainBy, String domain,
-                                                             CosBy cosBy, String cos,
-                                                             GranteeBy granteeBy, String grantee) throws ServiceException {
+    public RightCommand.EffectiveRights getCreateObjectAttrs(
+            String targetType,
+            DomainBy domainBy, String domain,
+            CosBy cosBy, String cos,
+            GranteeBy granteeBy, String grantee) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_CREATE_OBJECT_ATTRS_REQUEST);
         
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
@@ -2149,12 +2158,22 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException {
+    public RightCommand.Grants getGrants(
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_GRANTS_REQUEST);
-        toXML(req, targetType, targetBy, target);
+        
+        if (targetType != null)
+            toXML(req, targetType, targetBy, target);
+        
+        if (granteeType != null) {
+            Element eGrantee = toXML(req, granteeType, granteeBy, grantee);
+            eGrantee.addAttribute(AdminConstants.A_ALL, granteeIncludeGroupsGranteeBelongs);
+        }
         
         Element resp = invoke(req);
-        return new RightCommand.ACL(resp);
+        return new RightCommand.Grants(resp);
     }
     
     @Override

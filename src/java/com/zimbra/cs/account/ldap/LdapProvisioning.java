@@ -5679,8 +5679,11 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public RightCommand.ACL getGrants(String targetType, TargetBy targetBy, String target) throws ServiceException {
-        return RightCommand.getGrants(this, targetType, targetBy, target);
+    public RightCommand.Grants getGrants(String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
+        return RightCommand.getGrants(this, targetType, targetBy, target,
+                granteeType, granteeBy, grantee, granteeIncludeGroupsGranteeBelongs);
     }
     
     @Override

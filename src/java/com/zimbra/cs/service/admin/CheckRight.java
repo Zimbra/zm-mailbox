@@ -58,7 +58,7 @@ public class CheckRight extends RightDocumentHandler {
         String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
         TargetBy targetBy = null;
         String target = null;
-        if (TargetType.fromString(targetType).needsTargetIdentity()) {
+        if (TargetType.fromCode(targetType).needsTargetIdentity()) {
             targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
             target = eTarget.getText();
         }

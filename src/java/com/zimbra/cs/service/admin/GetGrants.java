@@ -16,14 +16,17 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -36,34 +39,60 @@ public class GetGrants extends RightDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        Element eTarget = request.getElement(AdminConstants.E_TARGET);
-        String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
+        String targetType = null;
         TargetBy targetBy = null;
         String target = null;
-        if (TargetType.fromString(targetType).needsTargetIdentity()) {
-            targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
-            target = eTarget.getText();
+        Element eTarget = request.getOptionalElement(AdminConstants.E_TARGET);
+        if (eTarget != null) {
+            targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
+            if (TargetType.fromCode(targetType).needsTargetIdentity()) {
+                targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+                target = eTarget.getText();
+            }
         }
-            
+        
+        String granteeType = null;
+        GranteeBy granteeBy = null;
+        String grantee = null;
+        boolean granteeIncludeGroupsGranteeBelongs = true;
+        Element eGrantee = request.getOptionalElement(AdminConstants.E_GRANTEE);
+        if (eGrantee != null) {
+            granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
+            granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+            grantee = eGrantee.getText();
+            granteeIncludeGroupsGranteeBelongs = eGrantee.getAttributeBool(AdminConstants.A_ALL);
+        }
+        
         Provisioning prov = Provisioning.getInstance();
         
-        // check if the authed admin can see the zimbraACE attr on the target entry
-        TargetType tt = TargetType.fromString(targetType);
-        Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
-        checkRight(zsc, targetEntry, Admin.R_viewGrants);
+        RightCommand.Grants grants = RightCommand.getGrants(
+                prov,
+                targetType, targetBy, target,
+                granteeType, granteeBy, grantee, granteeIncludeGroupsGranteeBelongs);
         
-        RightCommand.ACL acl = RightCommand.getGrants(Provisioning.getInstance(),
-                                                      targetType, targetBy, target);
+        // check if the authed admin can see the zimbraACE attr on 
+        // each of the target on which grants for the specified grantee are found
+        Set<String> OKedTarget = new HashSet<String>();
+        for (RightCommand.ACE ace : grants.getACEs()) {
+            TargetType tt = TargetType.fromCode(ace.targetType());
+            // has to look up target by name, because zimlet can only be looked up by name
+            Entry targetEntry = TargetType.lookupTarget(prov, tt, TargetBy.name, ace.targetName());
+            String targetKey = ace.targetType() + "-" + ace.targetId();
+            if (!OKedTarget.contains(targetKey)) {
+                checkRight(zsc, targetEntry, Admin.R_viewGrants);
+                OKedTarget.add(targetKey);  // add the target to our OKed set, so we don't check again
+            }
+        }
         
         Element resp = zsc.createElement(AdminConstants.GET_GRANTS_RESPONSE);
-        acl.toXML(resp);
+        grants.toXML(resp);
         return resp;
     }
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_viewGrants);
-        notes.add("Needs a get attr right of zimbraACE of the requested target type.  " +
+        notes.add("Needs a get attr right of zimbraACE on each the target entry.  " +
                 "Granting the " + Admin.R_viewGrants.getName() + " is one way to do it, " +
                 "which will give the right on all target types.   Use inline right " +
                 "if more granularity is needed.   See doc for the " + Admin.R_viewGrants.getName() + 

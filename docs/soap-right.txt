@@ -3,8 +3,7 @@
 -----------------------------
 
 ----------------------------------------------------------
-
-    Grant right on a target.
+Grant a right on a target to an individual or group grantee.
     
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
@@ -40,8 +39,9 @@
 
 
 ----------------------------------------------------------
+Revoke a right from a target that was previously granted to 
+an individual or group grantee.
 
-    Revoke right previously granted on a target.
  
 <RevokeRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
@@ -53,9 +53,9 @@
 
 
 ----------------------------------------------------------
+Check if a principal has the specified right on target.
 
-    Check if a principal has the specified right on target.
-    
+
 <CheckRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee by="{grantee-by}">{grantee-name-or-id}</grantee>
@@ -130,30 +130,51 @@
          
          
 ----------------------------------------------------------
+Returns all grants on the specified target entry, or all grants
+granted to the specified grantee entry.
+The authenticated admin must have an effective "viewGrants" (TBD) system 
+right on the specified target/grantdee.
 
-    Returns all grants on the specified target entry.
-    The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
-      
+At least one of <target> or <grantee> must be specified.  
+If both <target> and <grantee> are specified, only grants that are granted 
+on the target to the grantee are returned.
+
+
 <GetGrantsRequest>
-  <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+  [<target type={target-type} by="{target-by}">{target-name-or-id}</target>]
+  [<grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id} all={0|1(default)}</grantee>]
 </GetGrantsRequest>
 
+
+all = whether to include grants granted to groups the specified grantee belongs to.
+      1: include (default)
+      0: do not include
+
 <GetGrantsResponse>
-    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" right="{right-name}" deny="{deny}" canDelegate="{canDelegate}"/>+
+    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" 
+           right="{right-name}" deny="{deny}" canDelegate="{canDelegate}">
+           
+        <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+        <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+        <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
+  </grant>+
 </GetGrantsResponse>  
    
+Note: all attribute in the <grant> element are for backward compatibility, 
+      where only <target> can be specified in the request.
+      It will be deprecated after admin console switches to use the new interface
+      (i.e. use info in the <grantee> and <right> elements).
          
 ----------------------------------------------------------
-
-    Returns *effective* rights the authenticated admin has on the specified target entry.
+Returns *effective* rights the authenticated admin has on the specified target entry.
         
-    Effective rights are the rights the admin is actually allowed.  It is the net result of 
-    applying ACL checking rules given the target and grantee.  Specifically denied rights 
-    will *not* be returned.
+Effective rights are the rights the admin is actually allowed.  It is the net result of 
+applying ACL checking rules given the target and grantee.  Specifically denied rights 
+will *not* be returned.
         
-    The result can help the admin console decide on what tabs to display after a target 
-    is selected.  For example, after user1 is selected, if the admin does not have right 
-    to setPassword, it should probably hide or gray out the setPassword tab.
+The result can help the admin console decide on what tabs to display after a target 
+is selected.  For example, after user1 is selected, if the admin does not have right 
+to setPassword, it should probably hide or gray out the setPassword tab.
 
     
 <GetEffectiveRightsRequest expandAllAttrs="{expand-all-attrs}">
@@ -250,15 +271,14 @@ if <grantee> is omitted, it means the account identified by the auth token.
 
          
 ----------------------------------------------------------
+Returns attributes, with defaults and constraints if any,  that can be set by the authed admin when an 
+object is created.
       
-      Returns attributes, with defaults and constraints if any,  that can be set by the authed admin when an 
-      object is created.
+GetCreateObjectAttrsRequest returns the equivalent of setAttrs portion of GetEffectiveRightsResponse.
+GetCreateObjectAttrsRequest is needed becasue GetEffectiveRightsRequest requires a target, but when we are 
+creating a object, the target object does not exist yet.
       
-      GetCreateObjectAttrsRequest returns the equivalent of setAttrs portion of GetEffectiveRightsResponse.
-      GetCreateObjectAttrsRequest is needed becasue GetEffectiveRightsRequest requires a target, but when we are 
-      creating a object, the target object does not exist yet.
-      
-      The result can help the admin console decide on what tabs/attributes to display for creating objects.
+The result can help the admin console decide on what tabs/attributes to display for creating objects.
     
 
 <GetCreateObjectAttrsRequest>
@@ -321,7 +341,8 @@ e.g. 2 creating a server:
 </GetCreateObjectAttrsResponse>
     
 ----------------------------------------------------------
-      returns all effective rights 
+Get all effective rights.
+
       
 <GetAllEffectiveRightsRequest>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
@@ -600,9 +621,10 @@ e.g.
 
     
 ----------------------------------------------------------
-      returns the union of the zimbraAdminConsoleUIComponents values on the 
-      specified account/dl entry and that on all admin groups the entry
-      belongs.
+Returns the union of the zimbraAdminConsoleUIComponents values on the 
+specified account/dl entry and that on all admin groups the entry
+belongs.
+              
                     
 <GetAdminConsoleUICompRequest>
     [<account by="id|name">...</account>]
@@ -621,8 +643,8 @@ Note: if neither account nor dl is specified, the authed admin account will
               1: inherited from a group
         
 ----------------------------------------------------------
+Get definition of a right.
 
-      Get definition for a right.
     
 <GetRightRequest [expandAllAttrs="{expand-all-attrs}"]>
   <right>{right-name}</right>
@@ -656,8 +678,8 @@ Note: if neither account nor dl is specified, the authed admin account will
 
 
 ----------------------------------------------------------
+Get all system defined rights.
 
-      Get all system defined rights
       
 <GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"]/>
 

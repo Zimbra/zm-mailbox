@@ -481,21 +481,21 @@ public class ACLAccessManager extends AccessManager {
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = 
             RightChecker.accessibleAttrs(Grantee.makeGrantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
-        return RightChecker.canAccessAttrs(allowedAttrs, rightNeeded.getAttrs());
+        return RightChecker.canAccessAttrs(allowedAttrs, rightNeeded.getAttrs(), target);
     }
     
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = 
             RightChecker.accessibleAttrs(Grantee.makeGrantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
-        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
+        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded, target);
     }
     
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = 
             RightChecker.accessibleAttrs(Grantee.makeGrantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
-        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded);
+        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded, target);
     }
 
     // ============

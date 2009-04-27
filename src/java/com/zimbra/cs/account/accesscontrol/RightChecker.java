@@ -1271,7 +1271,7 @@ public class RightChecker {
             return attr;
     }
     
-    static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded) 
+    static boolean canAccessAttrs(AllowedAttrs attrsAllowed, Set<String> attrsNeeded, Entry target) 
     throws ServiceException {
         
         if (sLog.isDebugEnabled()) {
@@ -1313,7 +1313,9 @@ public class RightChecker {
                  * ServiceException and react properly.
                  */
                 // return false;
-                throw ServiceException.PERM_DENIED("cannot access attribute " + attrName);
+                throw ServiceException.PERM_DENIED("cannot access attribute " + attrName +
+                        " on " + TargetType.getTargetType(target) + " target " +
+                        target.getLabel());
             }
         }
         return true;
@@ -1368,7 +1370,9 @@ public class RightChecker {
                  * ServiceException and react properly.
                  */
                 // return false;
-                throw ServiceException.PERM_DENIED("cannot access attribute " + attrName);
+                throw ServiceException.PERM_DENIED("cannot access attribute " + attrName +
+                        " on " + TargetType.getTargetType(target) + " target " +
+                        target.getLabel());
             }
             
             if (hasConstraints) {
@@ -1479,7 +1483,7 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    private static Map<String, SearchGrantResult> searchGrants(Provisioning prov, 
+    static Map<String, SearchGrantResult> searchGrants(Provisioning prov, 
             Set<TargetType> targetTypes, Set<String> granteeIds) throws ServiceException {
         
         Pair<String, Set<String>> baseAndOcs = TargetType.getSearchBaseAndOCs(prov, targetTypes);
@@ -1522,7 +1526,7 @@ public class RightChecker {
      * @param sgr
      * @return
      */
-    private static Pair<Entry, ZimbraACL> getGrants(Provisioning prov, SearchGrantResult sgr) 
+    static Pair<Entry, ZimbraACL> getGrants(Provisioning prov, SearchGrantResult sgr) 
     throws ServiceException {
         
         TargetType tt;
@@ -2099,6 +2103,7 @@ public class RightChecker {
             return;
         
         Provisioning prov = Provisioning.getInstance();
+        
         // we want all target types
         Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
 
@@ -2176,7 +2181,7 @@ public class RightChecker {
                 computeRightsOnEntry(prov, grantee, targetType, grantedOnEntry, expandSetAttrs, expandGetAttrs, aer);
         }
     }
-
+    
     
     /*
      * ==========

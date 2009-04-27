@@ -35,7 +35,7 @@ public class InlineAttrRight extends AttrRight {
         else
             throw ServiceException.PARSE_ERROR("invalid op for inline attr right: " + parts[0], null);
         
-        TargetType targetType = TargetType.fromString(parts[1]);
+        TargetType targetType = TargetType.fromCode(parts[1]);
         if (targetType == TargetType.global)
             throw ServiceException.PARSE_ERROR("target type for inline attr right cannot be: " + parts[1], null);
         

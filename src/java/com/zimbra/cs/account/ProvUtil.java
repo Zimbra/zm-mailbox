@@ -381,7 +381,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
         
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-        GET_GRANTS("getGrants", "gg", "{target-type} [{target-id|target-name}]", Category.RIGHT, 1, 2),
+        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 3, 7),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_PUBLISHED_DISTRIBUTION_LIST_SHARE_INFO("getPublishedDistributionListShareInfo", "gpdlsi", "{dl-name|dl-id} [{owner-name|owner-id}]", Category.SHARE, 1, 2),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
@@ -3266,12 +3266,23 @@ public class ProvUtil implements HttpDebugListener {
             mArgs = args;
             mCurPos = 1;
         }
+        
+        String getNextArg() throws ServiceException {
+            if (hasNext())
+                return mArgs[mCurPos++];
+            else
+                throw ServiceException.INVALID_REQUEST("not enough number of arguments", null);
+        }
+        
+        boolean hasNext() {
+            return (mCurPos < mArgs.length);
+        }
     }
     
     private void getRightArgsTarget(RightArgs ra) throws ServiceException, ArgException {
         if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
         ra.mTargetType = ra.mArgs[ra.mCurPos++];
-        TargetType tt = TargetType.fromString(ra.mTargetType);
+        TargetType tt = TargetType.fromCode(ra.mTargetType);
         if (tt.needsTargetIdentity()) {
             if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
             ra.mTargetIdOrName = ra.mArgs[ra.mCurPos++];
@@ -3543,26 +3554,56 @@ public class ProvUtil implements HttpDebugListener {
     
     private void doGetGrants(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
-        getRightArgsTarget(ra);
+        
+        boolean granteeIncludeGroupsGranteeBelongs = true;
+        
+        while (ra.hasNext()) {
+            String arg = ra.getNextArg();
+            if ("-t".equals(arg))
+                getRightArgsTarget(ra);
+            else if ("-g".equals(arg)) {
+                getRightArgsGrantee(ra, true);
+                if (ra.hasNext()) {
+                    String includeGroups = ra.getNextArg();
+                    if ("1".equals(includeGroups))
+                        granteeIncludeGroupsGranteeBelongs = true;
+                    else if ("0".equals(includeGroups))
+                        granteeIncludeGroupsGranteeBelongs = false;
+                    else
+                        throw ServiceException.INVALID_REQUEST("invalid value for the include group flag, must be 0 or 1", null);
+                }
+            }
+        }
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-    
-        RightCommand.ACL acl = mProv.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
         
-        String format = "%-36.36s %-20.20s %-20.20s %s\n";
-        System.out.printf(format, "grantee id", "grantee name", "grantee type", "right");
-        System.out.printf(format, "------------------------------------",
-                "--------------------", 
-                "--------------------", 
+        RightCommand.Grants grants = mProv.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName,
+                ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
+                granteeIncludeGroupsGranteeBelongs);
+        
+        String format = "%-12.12s %-36.36s %-30.30s %-12.12s %-36.36s %-30.30s %s\n";
+        System.out.printf(format, "target type", "target id", "target name", "grantee type", "grantee id", "grantee name", "right");
+        System.out.printf(format, 
+                "------------",
+                "------------------------------------",
+                "------------------------------", 
+                "------------",
+                "------------------------------------",
+                "------------------------------", 
                 "--------------------");
-        for (RightCommand.ACE ace : acl.getACEs()) {
+        
+        for (RightCommand.ACE ace : grants.getACEs()) {
             // String deny = ace.deny()?"-":"";
             RightModifier rightModifier = ace.rightModifier();
             String rm = (rightModifier==null)?"":String.valueOf(rightModifier.getModifier());
             System.out.printf(format, 
+                              ace.targetType(),
+                              ace.targetId(),
+                              ace.targetName(),
+                              ace.granteeType(),
                               ace.granteeId(),
                               ace.granteeName(),
-                              ace.granteeType(),
                               rm + ace.right());
         }
         System.out.println();

@@ -1692,19 +1692,26 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
             
-    public abstract RightCommand.ACL getGrants(
-            String targetType, TargetBy targetBy, String target) throws ServiceException;
+    public RightCommand.Grants getGrants(
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException{
+        throw ServiceException.FAILURE("unsupported", null);
+    }
             
-    public abstract void grantRight(
+    public void grantRight(
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
-            String right, RightModifier rightModifier) throws ServiceException;
+            String right, RightModifier rightModifier) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
     
-    public abstract void revokeRight(
+    public void revokeRight(
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
-            String right, RightModifier rightModifier) throws ServiceException;
-    
+            String right, RightModifier rightModifier) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
 
     public static enum CacheEntryType {

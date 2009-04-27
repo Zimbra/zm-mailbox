@@ -270,7 +270,7 @@ public class RightManager {
             if (targetTypeStr != null) {
                 String taregtTypes[] = targetTypeStr.split(TARGET_TYPE_DELIMITER);
                 for (String tt : taregtTypes) {
-                    TargetType targetType = TargetType.fromString(tt);
+                    TargetType targetType = TargetType.fromCode(tt);
                     right.setTargetType(targetType);
                 }
             }

@@ -193,7 +193,7 @@ public enum TargetType {
         return mInheritFromTargetTypes;
     }
     
-    public static TargetType fromString(String s) throws ServiceException {
+    public static TargetType fromCode(String s) throws ServiceException {
         try {
             return TargetType.valueOf(s);
         } catch (IllegalArgumentException e) {

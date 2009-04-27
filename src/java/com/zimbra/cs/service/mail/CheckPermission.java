@@ -45,7 +45,7 @@ public class CheckPermission extends MailDocumentHandler {
         Element eTarget = request.getElement(MailConstants.E_TARGET);
         String targetType = eTarget.getAttribute(MailConstants.A_TARGET_TYPE);
         
-        TargetType tt = TargetType.fromString(targetType);
+        TargetType tt = TargetType.fromCode(targetType);
         String targetBy = eTarget.getAttribute(MailConstants.A_TARGET_BY);
         String targetValue = eTarget.getText();
         
