@@ -26,6 +26,7 @@ import org.dom4j.tree.DefaultElement;
 
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.httpclient.URLUtil;
 
 /**
  * RFC 2518bis section 4
@@ -130,6 +131,12 @@ public class ResourceProperty {
 
 	public void setVisible(boolean v) {
 		mVisible = v;
+	}
+	
+	protected Element createHref(String path) {
+		Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+		e.setText(URLUtil.urlEscape(path));
+		return e;
 	}
 	
 	public String toString() {
