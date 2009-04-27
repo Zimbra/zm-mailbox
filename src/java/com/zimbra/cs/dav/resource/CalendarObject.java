@@ -166,7 +166,7 @@ public interface CalendarObject {
             if (compNum < 0 || msgId < 0) {
                 mInvites = calItem.getInvites();
             } else {
-		isSchedulingMessage = true;
+            	isSchedulingMessage = true;
             	mId = msgId;
             	mInvites = new Invite[1];
             	mInvites[0] = calItem.getInvite(compNum);
@@ -290,13 +290,13 @@ public interface CalendarObject {
         
         @Override
     	public void delete(DavContext ctxt) throws DavException {
-    		if (mId > 0) {
+    		if (isSchedulingMessage) {
     			// it means this CalendarObject represents the meeting invite in Inbox.
     			// on DELETE request we need to delete the invite message, not the
     			// appointment in the calendar.
     			try {
     				Mailbox mbox = getMailbox(ctxt);
-    				mbox.delete(ctxt.getOperationContext(), mId, MailItem.TYPE_MESSAGE);
+    				mbox.move(ctxt.getOperationContext(), mId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
     			} catch (ServiceException se) {
     				throw new DavException("cannot delete item", HttpServletResponse.SC_FORBIDDEN, se);
     			}
