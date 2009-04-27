@@ -582,11 +582,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * 
      * @param emailAddress
      * @param password
-     * @param attrs
+     * @param attrs attributes to set while creating the account entry
+     * @param origAttrs original attributes when the account was backed, this is for license checking purpose,
+     *                  none of the attrs in the origAttrs map will be set while creating the account entry.
      * @return
      * @throws ServiceException
      */
-    public abstract Account restoreAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
+    public abstract Account restoreAccount(String emailAddress, String password, 
+            Map<String, Object> attrs, Map<String, Object> origAttrs) throws ServiceException;
     
     /**
      * deletes the specified account, removing the account and all email aliases.

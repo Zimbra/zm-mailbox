@@ -689,12 +689,13 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException {
-        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, false);
+        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, false, null);
     }
     
     @Override
-    public Account restoreAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException {
-        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, true);
+    public Account restoreAccount(String emailAddress, String password, 
+            Map<String, Object> attrs, Map<String, Object> origAttrs) throws ServiceException {
+        return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
     
     private Account createAccount(String emailAddress,
@@ -702,22 +703,27 @@ public class LdapProvisioning extends Provisioning {
                                   Map<String, Object> acctAttrs,
                                   SpecialAttrs specialAttrs,
                                   String[] additionalObjectClasses,
-                                  boolean restoring) throws ServiceException {
+                                  boolean restoring,
+                                  Map<String, Object> origAttrs) throws ServiceException {
         
         validEmailAddress(emailAddress);
         
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
-        
-    	validate("createAccount", emailAddress, additionalObjectClasses, acctAttrs);
+    	
         emailAddress = emailAddress.toLowerCase().trim();
-        
         String parts[] = emailAddress.split("@");
         if (parts.length != 2)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
- 
-    	validate("createAccountCheckDomainCosAndFeature", emailAddress, acctAttrs );
-            
+        
+        if (restoring) {
+            validate("createAccount", emailAddress, additionalObjectClasses, origAttrs);
+            validate("createAccountCheckDomainCosAndFeature", emailAddress, origAttrs);
+        } else {
+            validate("createAccount", emailAddress, additionalObjectClasses, acctAttrs);
+            validate("createAccountCheckDomainCosAndFeature", emailAddress, acctAttrs);
+        }
+        
         String localPart = parts[0];
         String domain = parts[1];
         domain = IDNUtil.toAsciiDomainName(domain);
@@ -3787,7 +3793,7 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         
         Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(this);
-        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]), false);
+        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]), false, null);
 
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);

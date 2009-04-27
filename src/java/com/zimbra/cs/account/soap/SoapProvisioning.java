@@ -489,8 +489,8 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public Account restoreAccount(String emailAddress, String password, Map<String, Object> attrs)
-        throws ServiceException {
+    public Account restoreAccount(String emailAddress, String password, Map<String, 
+            Object> attrs, Map<String, Object> origAttrs) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

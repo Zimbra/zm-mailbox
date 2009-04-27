@@ -54,20 +54,20 @@ public class Validators {
         private long mNextCheck;
         private long mLastUserCount; // PFN: this isn't counted per-domain, is it?
         
-            public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
-                if (args.length < 1) return;
+        public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
+            if (args.length < 1) return;
             if (!action.equals("createAccount") || !(args[0] instanceof String))
                 return;
+            
             if (args.length > 1 && args[1] instanceof String[] &&
-                    Arrays.asList((String[]) args[1]).contains(
-                            LdapProvisioning.C_zimbraCalendarResource)) {
+                    Arrays.asList((String[]) args[1]).contains(LdapProvisioning.C_zimbraCalendarResource)) {
                 return; // as in LicenseManager, don't want to count calendar resources
             }
+            
             if (args.length > 2 && args[2] instanceof Map) {
                 Map<String,Object> acctAttrs = (Map) args[2];
-                Object o = acctAttrs.get(Provisioning.A_zimbraIsSystemResource);
-                if (o != null && "true".equalsIgnoreCase(o.toString()))
-                    return; // is system resource, do not check
+                if (isSystemProperty(acctAttrs))
+                    return;
             }
             
             String emailAddr = (String)args[0];
@@ -100,6 +100,26 @@ public class Validators {
         }
         
     }
+    
+    private static boolean isSystemProperty(Map<String,Object> attrs) {
+        Object o = attrs.get(Provisioning.A_zimbraIsSystemResource);
+        if (o != null && "true".equalsIgnoreCase(o.toString()))
+            return true; // is system resource, do not check
+        
+        // if we are restoring, the OC array would be empty and 
+        // all object classes will be in the attr map.  
+        // Skip license check if we are restoring a calendar resource
+        o = attrs.get(Provisioning.A_objectClass);
+        if (o instanceof String[]) {
+            Set<String> ocs = new HashSet<String>(Arrays.asList((String[])o));
+            if (ocs.contains(LdapProvisioning.C_zimbraCalendarResource))
+                return true;
+        }
+        
+        return false;
+    }
+    
+    
     /**
      * Validate that we are not exceeding max feature and cos counts for the given domain.
      * <p>
@@ -130,6 +150,9 @@ public class Validators {
                 return;
 
             Map<String, Object> attrs = (Map) args[1];
+            if (isSystemProperty(attrs))
+                return;
+            
             Account account = null;
             if (args.length == 3)
                 account = (Account) args[2];
