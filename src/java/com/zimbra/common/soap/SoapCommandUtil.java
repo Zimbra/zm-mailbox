@@ -14,8 +14,9 @@
  */
 package com.zimbra.common.soap;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,9 +41,8 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 
 public class SoapCommandUtil implements SoapTransport.DebugListener {
@@ -78,13 +78,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mAdminAccountName;
     private String mTargetAccountName;
     private String mPassword;
-    private String mPasswordFile;
-    private String mRootElement;
-    private List mPaths;
+    private List<String> mPaths;
     private String mAuthToken;
     private int mVerbose = 0;
     private boolean mUseSession = false;
+    private boolean mNoOp = false;
+    private String mSelect;
     
+    @SuppressWarnings("unchecked")
     private void parseCommandLine(String[] args) {
         
         DefaultOptionBuilder obuilder = new DefaultOptionBuilder();
@@ -112,11 +113,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         Option passFile = obuilder
             .withLongName("passfile").withShortName("P").withDescription("Read password from file.")
             .withArgument(abuilder.withName("path").withMinimum(1).withMaximum(1).create()).create();
-        Option element = obuilder
-            .withLongName("element").withShortName("e")
-            .withArgument(abuilder.withName("path").withMinimum(1).withMaximum(1).create())
-            .withDescription("Root element path.  If specified, all path arguments that don't start with " +
-                "a slash (/) are relative to this element.").create();
         Option url = obuilder
             .withLongName("url").withShortName("u").withDescription("Server hostname and optional port.")
             .withArgument(abuilder.withName("http[s]://...").withMinimum(1).withMaximum(1).create()).create();
@@ -126,9 +122,15 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         Option verbose = obuilder
             .withLongName("verbose").withShortName("v").withArgument(noArgs)
             .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output").create();
+        Option noOp = obuilder
+            .withLongName("no-op").withShortName("n").withArgument(noArgs)
+            .withDescription("Print the SOAP request only.  Don't send it.").create();
+        Option select = obuilder
+            .withLongName("select").withDescription("Select element(s) or an attribute from the response.")
+            .withArgument(abuilder.withMinimum(1).withMaximum(1).withName("path").create()).create();
         Option paths = abuilder.withName("path").withMinimum(1)
             .withDescription("Element or attribute path and value.  Roughly follows XPath syntax: " +
-                "[/]element1[/element2][/@attr][=value].").create();
+                "[/]element1[/element2][/..][/@attr][=value].").create();
         
         // Types option
         Set<String> validTypes = new HashSet<String>();
@@ -139,7 +141,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         Option type = obuilder
             .withLongName("type").withShortName("t")
             .withArgument(typeArg)
-            .withDescription("SOAP request type (mail, account, admin, im).  Default is admin.")
+            .withDescription("SOAP request type (mail, account, admin, im, mobile).  Default is admin.")
             .create();
         
         // Initialize option group
@@ -153,11 +155,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             .withOption(zadmin)
             .withOption(password)
             .withOption(passFile)
-            .withOption(element)
             .withOption(type)
             .withOption(url)
             .withOption(verbose)
+            .withOption(noOp)
             .withOption(paths)
+            .withOption(select)
             .create();
 
         // Parse command line
@@ -232,10 +235,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             }
             mTargetAccountName = (String) cl.getValue(target);
         }
-        mRootElement = (String) cl.getValue(element);
         
         mPaths = cl.getValues(paths);
         mVerbose = cl.getOptionCount(verbose);
+        mNoOp = cl.hasOption(noOp);
+        mSelect = (String) cl.getValue(select);
     }
     
     public void sendSoapMessage(com.zimbra.common.soap.Element envelope) {
@@ -290,6 +294,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         } catch (SoapFaultException e) {
             System.err.format("Authentication error: %s\n", e.getMessage());
             System.exit(1);
+        } catch (ConnectException e) {
+            System.err.format("Unable to connect to %s: %s\n", mUrl, e.getMessage());
         }
         mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         transport.setAuthToken(mAuthToken);
@@ -346,46 +352,47 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         } catch (SoapFaultException e) {
             System.err.println("Authentication error: " + e.getMessage());
             System.exit(1);
+        } catch (ConnectException e) {
+            System.err.format("Unable to connect to %s: %s\n", mUrl, e.getMessage());
+            System.exit(1);
         }
         mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
     }
     
     private void run()
     throws Exception {
+        // Assemble SOAP request.
+        Element element = null;
+        
+        for (int i = 0; i < mPaths.size(); i++) {
+            element = processPath(element, mPaths.get(i));
+        }
+        
+        // Find the root.
+        Element request = element;
+        if (request == null) {
+            System.err.println("No request element specified.");
+            System.exit(1);
+        }
+        while (request.getParent() != null) {
+            request = request.getParent();
+        }
+        
+        if (mVerbose == 1 || mNoOp) {
+            System.out.println(DomUtil.toString(request, true));
+        }
+        if (mNoOp) {
+            return;
+        }
+
+        // Authenticate
         if (mAdminAccountName != null) {
             adminAuth();
         } else {
             mailboxAuth();
         }
         
-        // Assemble SOAP request
-        Element request = null;
-        Element subpathRoot = null;
-        
-        if (mRootElement != null) {
-            subpathRoot = processPath(null, mRootElement);
-        }
-
-        for (int i = 0; i < mPaths.size(); i++) {
-            Element e = processPath(subpathRoot, (String) mPaths.get(i));
-            if (request == null) {
-                request = e;
-                while (request.getParent() != null) {
-                    request = request.getParent();
-                }
-            }
-        }
-        
-        if (request == null) {
-            System.err.println("No request element specified.");
-            System.exit(1);
-        }
-        
-        // Send request and print response
-        if (mVerbose == 1) {
-            System.out.println(DomUtil.toString(request, true));
-        }
-        
+        // Send request and print response.
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
         transport.setDebugListener(this);
         
@@ -401,44 +408,92 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             System.err.println(e.getMessage());
             System.exit(1);
         }
+
+        // Select result.
+        List<com.zimbra.common.soap.Element> results = null;
+        String resultString = null;
         
-        if (mVerbose <= 1) 
-            System.out.println(DomUtil.toString(response.toXML(), true));
+        if (mSelect != null) {
+            // Create bogus root element, to allow us to find the first element in the path. 
+            com.zimbra.common.soap.Element root = response.getFactory().createElement("root");
+            response.detach();
+            root.addElement(response);
+            
+            String[] parts = mSelect.split("/");
+            if (parts.length > 0) {
+                String lastPart = parts[parts.length - 1];
+                if (lastPart.startsWith("@")) {
+                    parts[parts.length - 1] = lastPart.substring(1);
+                    resultString = root.getPathAttribute(parts);
+                } else {
+                    results = root.getPathElementList(parts);
+                }
+            }
+        } else {
+            results = new ArrayList<com.zimbra.common.soap.Element>();
+            results.add(response);
+        }
+        
+        if (mVerbose <= 1) {
+            if (resultString == null && results != null) {
+                StringBuilder buf = new StringBuilder();
+                boolean first = true;
+                for (com.zimbra.common.soap.Element e : results) {
+                    if (first) {
+                        first = false; 
+                    } else {
+                        buf.append('\n');
+                    }
+                    buf.append(DomUtil.toString(e.toXML(), true));
+                }
+                resultString = buf.toString();
+            }
+            if (resultString == null) {
+                resultString = "";
+            }
+            System.out.println(resultString);
+        }
     }
 
     /**
-     * <p>Processes a path that's relative to the given root.  The path
-     * is in an XPath-like format:</p>
+     * Processes a path that's relative to the given root.  The path
+     * is in an XPath-like format:
      * 
      * <p><tt>element1/element2[/@attr][=value]</tt></p>
      * 
      * If a value is specified, it sets the text of the last element
      * or attribute in the path.
      * 
-     * @param root <tt>Element</tt> that the path is relative to
+     * @param start <tt>Element</tt> that the path is relative to, or <tt>null</tt>
+     * for the root
      * @param path an XPath-like path of elements and attributes
      */
-    private Element processPath(Element root, String path)
+    private Element processPath(Element start, String path)
     throws Exception {
         String value = null;
         
-        // Parse out value, if it's specified
+        // Parse out value, if it's specified.
         if (path.contains("=")) {
             String[] parts = path.split("=");
             path = parts[0];
             value = parts[1];
         }
         
-        // Walk parts and implicitly create elements
+        // Find the first element.
+        Element element = start;
+        
+        // Walk parts and implicitly create elements.
         String[] parts = path.split("/");
         String part = null;
         for (int i = 0; i < parts.length; i++) {
             part = parts[i];
-            if (root == null) {
+            if (element == null) {
                 QName name = QName.get(part, mNamespace);
-                root = DocumentHelper.createElement(name);
+                element = DocumentHelper.createElement(name);
+            } else if (part.equals("..")) {
+                element = element.getParent();
             } else if (!(part.startsWith("@"))) {
-                root = root.addElement(part);
+                element = element.addElement(part);
             }
         }
         
@@ -446,12 +501,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (value != null && part != null) {
             if (part.startsWith("@")) {
                 String attrName = part.substring(1);
-                root.addAttribute(attrName, value);
+                element.addAttribute(attrName, value);
             } else {
-                root.setText(value);
+                element.setText(value);
             }
         }
-        return root;
+        return element;
     }
     
     public static void main(String[] args) {
