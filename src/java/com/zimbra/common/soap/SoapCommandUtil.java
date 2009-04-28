@@ -14,7 +14,9 @@
  */
 package com.zimbra.common.soap;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,13 +37,14 @@ import org.apache.commons.cli2.builder.GroupBuilder;
 import org.apache.commons.cli2.commandline.Parser;
 import org.apache.commons.cli2.util.HelpFormatter;
 import org.apache.commons.cli2.validation.EnumValidator;
-import org.dom4j.DocumentHelper;
-import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 
@@ -84,6 +87,9 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private boolean mUseSession = false;
     private boolean mNoOp = false;
     private String mSelect;
+    private boolean mUseJson = false;
+    private String mFilePath;
+    private ElementFactory mFactory;
     
     @SuppressWarnings("unchecked")
     private void parseCommandLine(String[] args) {
@@ -114,21 +120,28 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             .withLongName("passfile").withShortName("P").withDescription("Read password from file.")
             .withArgument(abuilder.withName("path").withMinimum(1).withMaximum(1).create()).create();
         Option url = obuilder
-            .withLongName("url").withShortName("u").withDescription("Server hostname and optional port.")
-            .withArgument(abuilder.withName("http[s]://...").withMinimum(1).withMaximum(1).create()).create();
+            .withLongName("url").withShortName("u").withDescription(
+                "SOAP service url, usually http[s]://host:port/service/soap or https://host:port/service/admin/soap.")
+            .withArgument(abuilder.withName("url").withMinimum(1).withMaximum(1).create()).create();
         Option zadmin = obuilder
             .withLongName("zadmin").withShortName("z").withArgument(noArgs)
             .withDescription("Authenticate with zimbra admin name/password from localconfig.").create();
         Option verbose = obuilder
             .withLongName("verbose").withShortName("v").withArgument(noArgs)
-            .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output").create();
+            .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output.").create();
         Option noOp = obuilder
             .withLongName("no-op").withShortName("n").withArgument(noArgs)
             .withDescription("Print the SOAP request only.  Don't send it.").create();
         Option select = obuilder
             .withLongName("select").withDescription("Select element(s) or an attribute from the response.")
             .withArgument(abuilder.withMinimum(1).withMaximum(1).withName("path").create()).create();
-        Option paths = abuilder.withName("path").withMinimum(1)
+        Option json = obuilder
+            .withLongName("json").withArgument(noArgs)
+            .withDescription("Use JSON instead of XML.").create();
+        Option file = obuilder
+            .withLongName("file").withShortName("f").withDescription("Read request from file.")
+            .withArgument(abuilder.withName("file-path").withMinimum(1).withMaximum(1).create()).create();
+        Option paths = abuilder.withName("path")
             .withDescription("Element or attribute path and value.  Roughly follows XPath syntax: " +
                 "[/]element1[/element2][/..][/@attr][=value].").create();
         
@@ -161,6 +174,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             .withOption(noOp)
             .withOption(paths)
             .withOption(select)
+            .withOption(json)
+            .withOption(file)
             .create();
 
         // Parse command line
@@ -240,15 +255,18 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mVerbose = cl.getOptionCount(verbose);
         mNoOp = cl.hasOption(noOp);
         mSelect = (String) cl.getValue(select);
+        mUseJson = cl.hasOption(json);
+        mFilePath = (String) cl.getValue(file);
+        mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
     }
     
-    public void sendSoapMessage(com.zimbra.common.soap.Element envelope) {
+    public void sendSoapMessage(Element envelope) {
         if (mVerbose > 1) {
             System.out.println(DomUtil.toString(envelope.toXML(), true));
         }
     }
     
-    public void receiveSoapMessage(com.zimbra.common.soap.Element envelope) {
+    public void receiveSoapMessage(Element envelope) {
         if (mVerbose > 1) {
             System.out.println(DomUtil.toString(envelope.toXML(), true));
         }
@@ -276,21 +294,19 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         transport.setDebugListener(this);
         
         // Create auth element
-        Element auth = DocumentHelper.createElement(AdminConstants.AUTH_REQUEST);
+        Element auth = mFactory.createElement(AdminConstants.AUTH_REQUEST);
         auth.addElement(AdminConstants.E_NAME).setText(mAdminAccountName);
         auth.addElement(AdminConstants.E_PASSWORD).setText(mPassword);
         
         // Authenticate and get auth token
-        com.zimbra.common.soap.Element response = null;
-        com.zimbra.common.soap.Element request = null;
+        Element response = null;
         
         if (mVerbose > 0) {
             System.out.println("Sending admin auth request to " + mUrl);
         }
         
         try {
-            request = com.zimbra.common.soap.Element.convertDOM(auth);
-            response = transport.invoke(request, false, !mUseSession, null);
+            response = transport.invoke(auth, false, !mUseSession, null);
         } catch (SoapFaultException e) {
             System.err.format("Authentication error: %s\n", e.getMessage());
             System.exit(1);
@@ -302,12 +318,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         // Do delegate auth if this is a mail or account service request
         if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) {
-            Element getInfo = DocumentHelper.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
-            Element account = DomUtil.add(getInfo, AccountConstants.E_ACCOUNT, mMailboxName);
+            Element getInfo = mFactory.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
+            Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
             try {
-                request = com.zimbra.common.soap.Element.convertDOM(getInfo);
-                response = transport.invoke(request, false, !mUseSession, null);
+                response = transport.invoke(getInfo, false, !mUseSession, null);
             } catch (SoapFaultException e) {
                 System.err.format("Cannot access account: %s\n", e.getMessage());
                 System.exit(1);
@@ -315,12 +330,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mUrl = response.getElement(AdminConstants.E_SOAP_URL).getText();
             
             // Get delegate auth token
-            Element delegateAuth = DocumentHelper.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
-            account = DomUtil.add(delegateAuth, AccountConstants.E_ACCOUNT, mMailboxName);
+            Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
+            account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
             try {
-                request = com.zimbra.common.soap.Element.convertDOM(delegateAuth);
-                response = transport.invoke(request, false, !mUseSession, null);
+                response = transport.invoke(delegateAuth, false, !mUseSession, null);
             } catch (SoapFaultException e) {
                 System.err.format("Cannot do delegate auth: %s\n", e.getMessage());
             }
@@ -338,17 +352,17 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         transport.setDebugListener(this);
         
         // Create auth element
-        Element auth = DocumentHelper.createElement(AccountConstants.AUTH_REQUEST);
-        Element account = DomUtil.add(auth, AccountConstants.E_ACCOUNT, mMailboxName);
+        Element auth = mFactory.createElement(AccountConstants.AUTH_REQUEST);
+        Element account = auth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
         account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
         
         // Authenticate and get auth token
-        com.zimbra.common.soap.Element response = null;
+        Element response = null;
         
         try {
-            com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(auth);
-            response = transport.invoke(requestElt, false, !mUseSession, null);
+            response = transport.invoke(auth, false, !mUseSession, null);
+            System.out.println(response.prettyPrint());
         } catch (SoapFaultException e) {
             System.err.println("Authentication error: " + e.getMessage());
             System.exit(1);
@@ -356,16 +370,43 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             System.err.format("Unable to connect to %s: %s\n", mUrl, e.getMessage());
             System.exit(1);
         }
-        mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
     }
     
     private void run()
     throws Exception {
         // Assemble SOAP request.
         Element element = null;
-        
-        for (int i = 0; i < mPaths.size(); i++) {
-            element = processPath(element, mPaths.get(i));
+        InputStream in = null;
+        String location = null;
+        if (mFilePath != null) {
+            // Read from file.
+            in = new FileInputStream(mFilePath);
+            location = mFilePath;
+        } else if (mPaths.size() > 0) {
+            // Build request from command line.
+            for (int i = 0; i < mPaths.size(); i++) {
+                element = processPath(element, mPaths.get(i));
+            }
+        } else if (System.in.available() > 0) {
+            // Read from stdin.
+            in = System.in;
+            location = "stdin";
+        }
+
+        if (in != null) {
+            try {
+                if (mUseJson) {
+                    element = Element.parseJSON(in);
+                } else {
+                    element = Element.parseXML(in);
+                }
+            } catch (IOException e) {
+                System.err.format("Unable to read request from %s: %s.\n", location, e.getMessage());
+                System.exit(1);
+            } finally {
+                ByteUtil.closeStream(in);
+            }
         }
         
         // Find the root.
@@ -379,7 +420,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
         
         if (mVerbose == 1 || mNoOp) {
-            System.out.println(DomUtil.toString(request, true));
+            System.out.println(request.prettyPrint());
         }
         if (mNoOp) {
             return;
@@ -400,22 +441,21 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (!mType.equals(TYPE_ADMIN) && mTargetAccountName != null) {
             transport.setTargetAcctName(mTargetAccountName);
         }
-        com.zimbra.common.soap.Element response = null;
+        Element response = null;
         try {
-            com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(request);
-            response = transport.invoke(requestElt, false, !mUseSession, null);
+            response = transport.invoke(request, false, !mUseSession, null);
         } catch (SoapFaultException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
 
         // Select result.
-        List<com.zimbra.common.soap.Element> results = null;
+        List<Element> results = null;
         String resultString = null;
         
         if (mSelect != null) {
             // Create bogus root element, to allow us to find the first element in the path. 
-            com.zimbra.common.soap.Element root = response.getFactory().createElement("root");
+            Element root = response.getFactory().createElement("root");
             response.detach();
             root.addElement(response);
             
@@ -430,7 +470,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
                 }
             }
         } else {
-            results = new ArrayList<com.zimbra.common.soap.Element>();
+            results = new ArrayList<Element>();
             results.add(response);
         }
         
@@ -438,13 +478,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             if (resultString == null && results != null) {
                 StringBuilder buf = new StringBuilder();
                 boolean first = true;
-                for (com.zimbra.common.soap.Element e : results) {
+                for (Element e : results) {
                     if (first) {
                         first = false; 
                     } else {
                         buf.append('\n');
                     }
-                    buf.append(DomUtil.toString(e.toXML(), true));
+                    buf.append(e.prettyPrint());
                 }
                 resultString = buf.toString();
             }
@@ -489,7 +529,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             part = parts[i];
             if (element == null) {
                 QName name = QName.get(part, mNamespace);
-                element = DocumentHelper.createElement(name);
+                element = mFactory.createElement(name);
             } else if (part.equals("..")) {
                 element = element.getParent();
             } else if (!(part.startsWith("@"))) {
