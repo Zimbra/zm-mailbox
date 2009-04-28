@@ -742,7 +742,7 @@ public class LC {
         ldap_overlay_syncprov_sessionlog.setDefault("500");
 
         ldap_overlay_accesslog_logpurge = new KnownKey("ldap_overlay_accesslog_logpurge");
-        ldap_overlay_accesslog_logpurge.setDefault("07+00:00  01+00:00");
+        ldap_overlay_accesslog_logpurge.setDefault("01+00:00  00+04:00");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("");
