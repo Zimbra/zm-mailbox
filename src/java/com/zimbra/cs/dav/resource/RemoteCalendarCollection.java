@@ -27,7 +27,6 @@ import java.util.TimeZone;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Header;
-import org.dom4j.QName;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -94,17 +93,9 @@ public class RemoteCalendarCollection extends CalendarCollection {
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
         if (isLocal())
         	return super.getChildren(ctxt, hrefs, range);
-    	boolean needCalendarData = false;
-		for (QName prop : ctxt.getRequestProp().getProps()) {
-			if (prop.equals(DavElements.E_CALENDAR_DATA)) {
-				needCalendarData = true;
-				break;
-			}
-		}
-		
 		Map<String,String> uidmap = getHrefUidMap(hrefs, false);
 		
-		if (needCalendarData) {
+		if (needCalendarData(ctxt)) {
 			try {
 				getCalendarData(ctxt, uidmap.values());
 			} catch (Exception e) {

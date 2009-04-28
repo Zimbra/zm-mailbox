@@ -102,6 +102,7 @@ public interface CalendarObject {
     		mEnd = data.end_time;
     		mEtag = MailItemResource.getEtag(Integer.toString(data.mod_metadata), Integer.toString(data.mod_content));
     		setProperty(DavElements.P_GETETAG, mEtag);
+            addProperty(CalDavProperty.getCalendarData(this));
     	}
         public String getUid() {
         	return mUid;
@@ -143,6 +144,9 @@ public interface CalendarObject {
     		} catch (ServiceException se) {
     			throw new DavException("can't fetch item", se);
     		}
+    	}
+    	public boolean hasContent(DavContext ctxt) {
+    		return true;
     	}
     }
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {
@@ -303,6 +307,9 @@ public interface CalendarObject {
     		} else {
     			super.delete(ctxt);
     		}
+    	}
+    	public boolean hasContent(DavContext ctxt) {
+    		return true;
     	}
     }
 	

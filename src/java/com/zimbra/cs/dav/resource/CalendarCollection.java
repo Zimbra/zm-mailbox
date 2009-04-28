@@ -50,6 +50,8 @@ import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.dav.service.method.Delete;
+import com.zimbra.cs.dav.service.method.Get;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -144,6 +146,9 @@ public class CalendarCollection extends Collection {
 		if (fetchAppts) {
 			try {
 				requestedAppts = getAppointmentMap(ctxt, range);
+				// cache the full appt list
+				if (range == null && needCalendarData(ctxt))
+					mAppts = requestedAppts;
 			} catch (ServiceException se) {
 				ZimbraLog.dav.error("can't get calendar items", se);
 				return Collections.emptyList();
@@ -160,10 +165,6 @@ public class CalendarCollection extends Collection {
 				appt = new DavResource.InvalidResource(href, getOwner());
 			appt.setHref(href);
 			resp.add(appt);
-		}
-		// cache the full appt list
-		if (range == null && (mAppts == null || needCalendarData(ctxt))) {
-			mAppts = requestedAppts;
 		}
 		return resp;
 	}
@@ -200,6 +201,9 @@ public class CalendarCollection extends Collection {
 		sMetaProps.add(DavElements.E_DISPLAYNAME);
 	}
 	protected boolean needCalendarData(DavContext ctxt) throws DavException {
+		String method = ctxt.getRequest().getMethod();
+		if (method.equals(Get.GET) || method.equals(Delete.DELETE))
+			return true;
 		for (QName prop : ctxt.getRequestProp().getProps())
 			if (!sMetaProps.contains(prop))
 				return true;
