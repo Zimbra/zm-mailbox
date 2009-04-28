@@ -788,6 +788,58 @@ over JMX in ZCS 6.0.  If no <stat> element is specified, all server stats
 are returned.  If the stat name is invalid, returns a SOAP fault.
 
 -----------------------------
+<GetLoggerStatsRequest>
+  <hostname>...</hostname>?
+  <stats name="..."/>?
+  <stats name="...">1</stats>?
+  <startTime time="ts"/>?
+  <endTime time="ts"/>?
+</GetLoggerStatsRequest>
+
+<GetLoggerStatsResponse>
+  <!-- first case, list of reporting hostnames -->
+  <hostname hn="..."/>+
+  
+  <!-- second case, list of stat groupings for a given host-->
+  <hostname hn="..."> 
+    <stats name="..."/>+
+  </hostname>
+  
+  <!-- third case, list of columns for a given host and grouping -->
+  <hostname hn="...">
+    <stats name="...">
+      <values>
+        <stat name="..."/>+
+      </values>
+    </stats>
+  </hostname>
+  
+  <!-- fourth case, actual stat results -->
+  <hostname hn="...">
+    <stats name="...">
+      <values t="...">+
+        <stat name="..." value="X"/>+
+      </values>
+    </stats>
+  </hostname>
+  
+</GetLoggerStatsResponse>
+
+Query to retrieve Logger statistics in ZCS 6.0.
+
+Use cases:
+
+1 - no elements specified
+  - result: a listing of reporting host names
+2 - hostname specified
+  - result: a listing of stat groups for the specified host
+3 - hostname and stats specified, text content of stats non-empty
+  - result: a listing of columns for the given host and group
+4 - hostname and stats specified, text content empty, startTime/endTime optional
+  - result: all of the statistics for the given host/group are returned, if start
+    and end are specified, limit/expand the timerange to the given setting.
+    
+-----------------------------
 <GetServiceStatusRequest/>
 
 <GetServiceStatusResponse>

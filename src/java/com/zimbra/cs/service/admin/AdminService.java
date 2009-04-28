@@ -233,6 +233,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.DELETE_XMPPCOMPONENT_REQUEST, new DeleteXMPPComponent());
 
         dispatcher.registerHandler(AdminConstants.GET_SERVER_STATS_REQUEST, new GetServerStats());
+        dispatcher.registerHandler(AdminConstants.GET_LOGGER_STATS_REQUEST, new GetLoggerStats());
         dispatcher.registerHandler(AdminConstants.SYNC_GAL_ACCOUNT_REQUEST, new SyncGalAccount());
     }
 
