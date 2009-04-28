@@ -209,6 +209,9 @@ public interface CalendarObject {
     			throw new DavException("can't fetch item", se);
     		}
     	}
+    	public boolean hasContent(DavContext ctxt) {
+    		return true;
+    	}
     }
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {
 
