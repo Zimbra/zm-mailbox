@@ -2927,8 +2927,7 @@ public class DbMailItem {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(command + " INTO " + getCalendarItemTableName(mbox) +
                         " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
-                        " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)" +
-                        (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE uid = ?, item_id = ?, start_time = ?, end_time = ?" : ""));
+                        " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
