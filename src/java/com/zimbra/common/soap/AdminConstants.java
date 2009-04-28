@@ -384,6 +384,9 @@ public class AdminConstants {
     public static final QName GET_SERVER_STATS_REQUEST = QName.get("GetServerStatsRequest", NAMESPACE);
     public static final QName GET_SERVER_STATS_RESPONSE = QName.get("GetServerStatsResponse", NAMESPACE);
     
+    public static final QName GET_LOGGER_STATS_REQUEST = QName.get("GetLoggerStatsRequest", NAMESPACE);
+    public static final QName GET_LOGGER_STATS_RESPONSE = QName.get("GetLoggerStatsResponse", NAMESPACE);
+    
     public static final QName SYNC_GAL_ACCOUNT_REQUEST = QName.get("SyncGalAccountRequest", NAMESPACE);
     public static final QName SYNC_GAL_ACCOUNT_RESPONSE = QName.get("SyncGalAccountResponse", NAMESPACE);
     
