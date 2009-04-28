@@ -213,6 +213,10 @@ public class Zimbra {
             if (!redoLog.isSlave()) {
                 Server server = Provisioning.getInstance().getLocalServer();
     
+                boolean useDirectBuffers = server.getBooleanAttr(Provisioning.A_zimbraMailUseDirectBuffers, false);
+                org.apache.mina.common.ByteBuffer.setUseDirectBuffers(useDirectBuffers);
+                ZimbraLog.misc.info("MINA setUseDirectBuffers(" + useDirectBuffers + ")");
+                    
                 if (app.supports(ZimbraIM.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                     ZimbraIM.startup();
                 }
