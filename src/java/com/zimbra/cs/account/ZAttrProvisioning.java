@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090421-1355 */
+    /* build: 5.0 pshao 20090428-1338 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2979,8 +2979,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalMaxResults = "zimbraGalMaxResults";
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      */
     @ZAttr(id=46)
     public static final String A_zimbraGalMode = "zimbraGalMode";
@@ -3910,6 +3911,34 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=798)
     public static final String A_zimbraMailWhitelistMaxNumEntries = "zimbraMailWhitelistMaxNumEntries";
+
+    /**
+     * max number of contacts per page, Web client (not server) verifies that
+     * zimbraPrefContactsPerPage should not exceed this attribute.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1012)
+    public static final String A_zimbraMaxContactsPerPage = "zimbraMaxContactsPerPage";
+
+    /**
+     * max number of messages/conversations per page, Web client (not server)
+     * verifies that zimbraPrefMailItemsPerPage should not exceed this
+     * attribute.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1011)
+    public static final String A_zimbraMaxMailItemsPerPage = "zimbraMaxMailItemsPerPage";
+
+    /**
+     * max number of voice items per page, Web client (not server) verifies
+     * that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1013)
+    public static final String A_zimbraMaxVoiceItemsPerPage = "zimbraMaxVoiceItemsPerPage";
 
     /**
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:

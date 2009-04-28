@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090421-1355 */
+    /* build: 5.0 pshao 20090428-1338 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9833,6 +9833,242 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailWhitelistMaxNumEntries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailWhitelistMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
+     * max number of contacts per page, Web client (not server) verifies that
+     * zimbraPrefContactsPerPage should not exceed this attribute.
+     *
+     * @return zimbraMaxContactsPerPage, or 100 if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1012)
+    public int getMaxContactsPerPage() {
+        return getIntAttr(Provisioning.A_zimbraMaxContactsPerPage, 100);
+    }
+
+    /**
+     * max number of contacts per page, Web client (not server) verifies that
+     * zimbraPrefContactsPerPage should not exceed this attribute.
+     *
+     * @param zimbraMaxContactsPerPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1012)
+    public void setMaxContactsPerPage(int zimbraMaxContactsPerPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxContactsPerPage, Integer.toString(zimbraMaxContactsPerPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of contacts per page, Web client (not server) verifies that
+     * zimbraPrefContactsPerPage should not exceed this attribute.
+     *
+     * @param zimbraMaxContactsPerPage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1012)
+    public Map<String,Object> setMaxContactsPerPage(int zimbraMaxContactsPerPage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxContactsPerPage, Integer.toString(zimbraMaxContactsPerPage));
+        return attrs;
+    }
+
+    /**
+     * max number of contacts per page, Web client (not server) verifies that
+     * zimbraPrefContactsPerPage should not exceed this attribute.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1012)
+    public void unsetMaxContactsPerPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxContactsPerPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of contacts per page, Web client (not server) verifies that
+     * zimbraPrefContactsPerPage should not exceed this attribute.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1012)
+    public Map<String,Object> unsetMaxContactsPerPage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxContactsPerPage, "");
+        return attrs;
+    }
+
+    /**
+     * max number of messages/conversations per page, Web client (not server)
+     * verifies that zimbraPrefMailItemsPerPage should not exceed this
+     * attribute.
+     *
+     * @return zimbraMaxMailItemsPerPage, or 100 if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1011)
+    public int getMaxMailItemsPerPage() {
+        return getIntAttr(Provisioning.A_zimbraMaxMailItemsPerPage, 100);
+    }
+
+    /**
+     * max number of messages/conversations per page, Web client (not server)
+     * verifies that zimbraPrefMailItemsPerPage should not exceed this
+     * attribute.
+     *
+     * @param zimbraMaxMailItemsPerPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1011)
+    public void setMaxMailItemsPerPage(int zimbraMaxMailItemsPerPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxMailItemsPerPage, Integer.toString(zimbraMaxMailItemsPerPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of messages/conversations per page, Web client (not server)
+     * verifies that zimbraPrefMailItemsPerPage should not exceed this
+     * attribute.
+     *
+     * @param zimbraMaxMailItemsPerPage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1011)
+    public Map<String,Object> setMaxMailItemsPerPage(int zimbraMaxMailItemsPerPage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxMailItemsPerPage, Integer.toString(zimbraMaxMailItemsPerPage));
+        return attrs;
+    }
+
+    /**
+     * max number of messages/conversations per page, Web client (not server)
+     * verifies that zimbraPrefMailItemsPerPage should not exceed this
+     * attribute.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1011)
+    public void unsetMaxMailItemsPerPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxMailItemsPerPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of messages/conversations per page, Web client (not server)
+     * verifies that zimbraPrefMailItemsPerPage should not exceed this
+     * attribute.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1011)
+    public Map<String,Object> unsetMaxMailItemsPerPage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxMailItemsPerPage, "");
+        return attrs;
+    }
+
+    /**
+     * max number of voice items per page, Web client (not server) verifies
+     * that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+     *
+     * @return zimbraMaxVoiceItemsPerPage, or 100 if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1013)
+    public int getMaxVoiceItemsPerPage() {
+        return getIntAttr(Provisioning.A_zimbraMaxVoiceItemsPerPage, 100);
+    }
+
+    /**
+     * max number of voice items per page, Web client (not server) verifies
+     * that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+     *
+     * @param zimbraMaxVoiceItemsPerPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1013)
+    public void setMaxVoiceItemsPerPage(int zimbraMaxVoiceItemsPerPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxVoiceItemsPerPage, Integer.toString(zimbraMaxVoiceItemsPerPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of voice items per page, Web client (not server) verifies
+     * that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+     *
+     * @param zimbraMaxVoiceItemsPerPage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1013)
+    public Map<String,Object> setMaxVoiceItemsPerPage(int zimbraMaxVoiceItemsPerPage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxVoiceItemsPerPage, Integer.toString(zimbraMaxVoiceItemsPerPage));
+        return attrs;
+    }
+
+    /**
+     * max number of voice items per page, Web client (not server) verifies
+     * that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1013)
+    public void unsetMaxVoiceItemsPerPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxVoiceItemsPerPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of voice items per page, Web client (not server) verifies
+     * that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1013)
+    public Map<String,Object> unsetMaxVoiceItemsPerPage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMaxVoiceItemsPerPage, "");
         return attrs;
     }
 

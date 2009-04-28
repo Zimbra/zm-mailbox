@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090421-1355 */
+    /* build: 5.0 pshao 20090428-1338 */
 
     /**
      * RFC2256: descriptive information
@@ -5503,8 +5503,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5516,8 +5517,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5529,8 +5531,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5545,8 +5548,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5562,8 +5566,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5578,8 +5583,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5595,8 +5601,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *
@@ -5610,8 +5617,9 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * should be internal (query internal only), external (external only), or
-     * both
+     * valid modes are &quot;zimbra&quot; (query internal directory only),
+     * &quot;ldap&quot; (query external directory only), or &quot;both&quot;
+     * (query internal and external directory)
      *
      * <p>Valid values: [both, ldap, zimbra]
      *

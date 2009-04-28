@@ -4393,4 +4393,29 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>where the message reading pane is displayed in conv view</desc>
 </attr>
 
+<attr id="1011" name="zimbraMaxMailItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>
+      max number of messages/conversations per page, 
+      Web client (not server) verifies that zimbraPrefMailItemsPerPage should not exceed this attribute.
+  </desc>
+</attr>
+
+<attr id="1012" name="zimbraMaxContactsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>
+      max number of contacts per page, 
+      Web client (not server) verifies that zimbraPrefContactsPerPage should not exceed this attribute.
+  </desc>
+</attr>
+
+<attr id="1013" name="zimbraMaxVoiceItemsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA2">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>
+      max number of voice items per page, 
+      Web client (not server) verifies that zimbraPrefVoiceItemsPerPage should not exceed this attribute.
+  </desc>
+</attr>
+
+
 </attrs>
