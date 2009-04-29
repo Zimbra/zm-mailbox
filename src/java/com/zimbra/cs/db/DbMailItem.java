@@ -2935,12 +2935,6 @@ public class DbMailItem {
             stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
             stmt.setTimestamp(pos++, endTs);
-            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY)) {
-                stmt.setString(pos++, calItem.getUid());
-                stmt.setInt(pos++, calItem.getId());
-                stmt.setTimestamp(pos++, startTs);
-                stmt.setTimestamp(pos++, endTs);
-            }
             stmt.executeUpdate();
         } catch (SQLException e) {
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
