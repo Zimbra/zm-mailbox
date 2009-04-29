@@ -269,6 +269,8 @@ public class Zimbra {
         
         ZimbraApplication app = ZimbraApplication.getInstance();
 
+        app.shutdown();
+        
         if (sIsMailboxd) {
             if (app.supports(MemoryStats.class.getName()))
             	MemoryStats.shutdown();
@@ -317,8 +319,6 @@ public class Zimbra {
         ZimbraHttpConnectionManager.shutdownReaperThread();
 
         sTimer.cancel();
-        
-        app.shutdown();
     }
 
     public static synchronized boolean started() {
