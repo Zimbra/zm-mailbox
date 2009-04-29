@@ -1313,7 +1313,7 @@ public class LC {
 
         httpclient_connmgr_retry_count = new KnownKey(
                 "httpclient_connmgr_retry_count", 
-                "1",
+                "2",
                 "httpclient connection manager: " +
                 "Defines the number retries after a temporary failure");
 
@@ -1325,13 +1325,13 @@ public class LC {
 
         httpclient_connmgr_connection_timeout = new KnownKey(
                 "httpclient_connmgr_connection_timeout", 
-                "30000",
+                Long.toString(25 * Constants.MILLIS_PER_SECOND),
                 "httpclient connection manager: " +
                 "Determines the timeout until a connection is established. A value of zero means the timeout is not used");
         
         httpclient_connmgr_so_timeout = new KnownKey(
                 "httpclient_connmgr_so_timeout", 
-                "60000",
+                Long.toString(60 * Constants.MILLIS_PER_SECOND),
                 "httpclient connection manager: " +
                 "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
 

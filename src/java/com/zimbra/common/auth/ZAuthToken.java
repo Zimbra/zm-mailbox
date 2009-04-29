@@ -372,8 +372,6 @@ public class ZAuthToken {
     
     public static void main(String[] args) throws Exception {
         SoapHttpTransport trans = new SoapHttpTransport("http://localhost:7070/service/soap/");
-        trans.setTimeout(30000);
-        trans.setRetryCount(3);
         trans.setUserAgent("ZAuthTokenTest", null);
         
         SoapHttpTransport.DebugListener dl = new SoapHttpTransport.DebugListener() {

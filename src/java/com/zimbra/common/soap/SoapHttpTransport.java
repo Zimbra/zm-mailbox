@@ -33,7 +33,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpVersion;
-import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -43,7 +42,6 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.URI;
 import org.dom4j.ElementHandler;
 
-import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -55,7 +53,6 @@ public class SoapHttpTransport extends SoapTransport {
     private HttpDebugListener mHttpDebugListener;
     private boolean mKeepAlive = keepAlive;
     private int mRetryCount = retryCount;
-    HttpState mState = null;
     private int mTimeout = timeout;
     private String mUri;
     private URI mURI;
@@ -146,32 +143,6 @@ public class SoapHttpTransport extends SoapTransport {
             mHostConfig = null;
         }
     }
-
-    public void setAuthToken(String authToken) {
-        super.setAuthToken(authToken);
-        setAuthToken();
-    }
-    
-    public void setAuthToken(ZAuthToken authToken) {
-        super.setAuthToken(authToken);
-        setAuthToken();
-    }
-
-    private void setAuthToken() {
-        Map<String, String> cookieMap = getAuthToken().cookieMap(false);
-
-        if (cookieMap != null) {
-            mState = new HttpState();
-            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
-                try {
-                    mState.addCookie(new Cookie(mURI.getHost(), ck.getKey(),
-                        ck.getValue(), "/", null, false));
-                } catch (URIException e ) {
-                }
-            }
-        }
-    }
-    
     
     public Map<String, String> getCustomHeaders() {
         if (mCustomHeaders == null)
@@ -194,8 +165,8 @@ public class SoapHttpTransport extends SoapTransport {
      *
      * <p> Default value is <code>1</code>.
      */
-    public void setRetryCount(int retryCount) {
-        mRetryCount = retryCount;
+    public void setRetryCount(int newRetryCount) {
+        mRetryCount = newRetryCount < 0 ? retryCount : newRetryCount;
     }
 
     /**
@@ -211,8 +182,8 @@ public class SoapHttpTransport extends SoapTransport {
      * <p>
      * Default value is <code>0</code>, which means no mTimeout.
      */
-    public void setTimeout(int timeout) {
-        mTimeout = timeout;
+    public void setTimeout(int newTimeout) {
+        mTimeout = newTimeout < 0 ? timeout : newTimeout;
     }
 
     /**
@@ -229,19 +200,26 @@ public class SoapHttpTransport extends SoapTransport {
         return mUri;
     }
 
-    public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
+    public Element invoke(Element document, boolean raw, boolean noSession,
+        String requestedAccountId, String changeToken, String tokenType) 
         throws SoapFaultException, IOException, HttpException {
-        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
+        return invoke(document, raw, noSession, requestedAccountId, changeToken,
+            tokenType, null);
     }
     
-    public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType,
-        Map<String, ElementHandler> saxHandlers) throws SoapFaultException, IOException, HttpException {
+    public Element invoke(Element document, boolean raw, boolean noSession,
+        String requestedAccountId, String changeToken, String tokenType,
+        Map<String, ElementHandler> saxHandlers) throws SoapFaultException,
+        IOException, HttpException {
+        Map<String, String> cookieMap = getAuthToken() == null ? null :
+            getAuthToken().cookieMap(false);
+        HttpState state = null;
         PostMethod method = null;
         
         try {
             // Assemble post method.  Append document name, so that the request
             // type is written to the access log.
-            String uri = mUri.toString();
+            String uri = mUri;
             
             if (!uri.endsWith("/"))
                 uri += '/';
@@ -261,12 +239,15 @@ public class SoapHttpTransport extends SoapTransport {
 
             // the content-type charset will determine encoding used
             // when we set the request body
-            method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
+            method.setRequestHeader("Content-Type",
+                getRequestProtocol().getContentType());
             if (getClientIp() != null)
                 method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
 
-            Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+            Element soapReq = generateSoapMessage(document, raw, noSession,
+                requestedAccountId, changeToken, tokenType);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
+            HttpMethodParams params = method.getParams();
             
             method.setRequestEntity(new StringRequestEntity(soapMessage));
     	
@@ -278,23 +259,33 @@ public class SoapHttpTransport extends SoapTransport {
                     method.setRequestHeader(entry.getKey(), entry.getValue());
             }
             
+            if (cookieMap != null) {
+                for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                    if (state == null)
+                        state = new HttpState();
+                    state.addCookie(new Cookie(method.getURI().getHost(),
+                        ck.getKey(), ck.getValue(), "/", null, false));
+                }
+            }
+
             if (mHttpDebugListener != null)
                 mHttpDebugListener.sendSoapMessage(method, soapReq);
             
-            method.getParams().setCookiePolicy(mState == null ?
-                CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
-            method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
+            params.setCookiePolicy(state == null ? CookiePolicy.IGNORE_COOKIES :
+                CookiePolicy.BROWSER_COMPATIBILITY);
+            params.setParameter(HttpMethodParams.RETRY_HANDLER,
                 new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
-            method.getParams().setSoTimeout(mTimeout);
-            method.getParams().setVersion(HttpVersion.HTTP_1_1);
+            params.setSoTimeout(mTimeout);
+            params.setVersion(HttpVersion.HTTP_1_1);
             method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" :
                 "Close");
 
-            mClient.executeMethod(mHostConfig, method, mState);
+            mClient.executeMethod(mHostConfig, method, state);
 
-            // Read the response body.  Use the stream API instead of the byte[] one
-            // to avoid HTTPClient whining about a large response.        
-            InputStreamReader reader = new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
+            // Read the response body.  Use the stream API instead of the byte[]
+            // version to avoid HTTPClient whining about a large response.        
+            InputStreamReader reader = new InputStreamReader(
+                method.getResponseBodyAsStream(), SoapProtocol.getCharset());
             String responseStr = "";
             
             try {
@@ -302,7 +293,8 @@ public class SoapHttpTransport extends SoapTransport {
                     parseLargeSoapResponse(reader, saxHandlers);
                     return null;
                 } else {
-                    responseStr = ByteUtil.getContent(reader, (int)method.getResponseContentLength(), false);
+                    responseStr = ByteUtil.getContent(reader,
+                        (int)method.getResponseContentLength(), false);
                     Element soapResp = parseSoapResponse(responseStr, raw);
                     
                     if (mHttpDebugListener != null)
@@ -310,15 +302,18 @@ public class SoapHttpTransport extends SoapTransport {
                     return soapResp;
                 }
             } catch (SoapFaultException x) {
-            	//attach request/response to the exception and rethrow for downstream consumption
+            	// attach request/response to the exception and rethrow
             	x.setFaultRequest(soapMessage);
-            	x.setFaultResponse(responseStr.substring(0, Math.min(10240, responseStr.length())));
+            	x.setFaultResponse(responseStr.substring(0, Math.min(10240,
+            	    responseStr.length())));
             	throw x;
             }
         } finally {
             // Release the connection.
             if (method != null)
-                method.releaseConnection();        
+                method.releaseConnection();    
+            if (!mKeepAlive)
+                mClient.getHttpConnectionManager().closeIdleConnections(0);
         }
     }
     
