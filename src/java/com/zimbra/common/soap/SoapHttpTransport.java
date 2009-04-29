@@ -21,17 +21,21 @@
 
 package com.zimbra.common.soap;
 
+import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpRecoverableException;
+import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
@@ -228,9 +232,12 @@ public class SoapHttpTransport extends SoapTransport {
     
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType,
         Map<String, ElementHandler> saxHandlers) throws SoapFaultException, IOException, HttpException {
-    	int statusCode = -1;
-
+        Map<String, String> cookieMap = getAuthToken() == null ? null :
+            getAuthToken().cookieMap(false);
+        HttpState state = null;
         PostMethod method = null;
+        int statusCode = -1;
+
         try {
             // the content-type charset will determine encoding used
             // when we set the request body
@@ -240,8 +247,8 @@ public class SoapHttpTransport extends SoapTransport {
                 method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
 
             String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
-            method.setRequestBody(soapMessage);
-            method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
+
+            method.setRequestEntity(new StringRequestEntity(soapMessage));
     	
             if (getRequestProtocol().hasSOAPActionHeader())
                 method.setRequestHeader("SOAPAction", mUri);
@@ -251,11 +258,22 @@ public class SoapHttpTransport extends SoapTransport {
                     method.setRequestHeader(entry.getKey(), entry.getValue());
                 }
             }
-            
+
+            if (cookieMap != null) {
+                for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                    if (state == null)
+                        state = new HttpState();
+                    state.addCookie(new Cookie(method.getURI().getHost(),
+                        ck.getKey(), ck.getValue(), "/", null, false));
+                }
+            }
+            method.getParams().setCookiePolicy(state == null ?
+                CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
+
             for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
                 try {
                     // execute the method.
-                    statusCode = mClient.executeMethod(method);
+                    statusCode = mClient.executeMethod(null, method, state);
                 } catch (HttpRecoverableException e) {
                     if (attempt == mRetryCount - 1)
                         throw e;
