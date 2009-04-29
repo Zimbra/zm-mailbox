@@ -176,6 +176,8 @@ public class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
+        ZimbraHttpConnectionManager.startReaperThread();
+        
         MailboxManager.getInstance();
 
         ZimbraApplication app = ZimbraApplication.getInstance();
@@ -311,6 +313,8 @@ public class Zimbra {
         	ExtensionUtil.destroyAll();
 
         MailboxManager.getInstance().shutdown();
+        
+        ZimbraHttpConnectionManager.shutdownReaperThread();
 
         sTimer.cancel();
         
