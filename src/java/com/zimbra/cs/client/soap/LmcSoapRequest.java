@@ -43,10 +43,10 @@ public abstract class LmcSoapRequest {
     private static boolean sDumpXML = false;
     public static synchronized void setDumpXML(boolean b) { sDumpXML = b; }
 
-    private static int sRetryCount = 3;
+    private static int sRetryCount = -1;
     public static synchronized void setRetryCount(int n) { sRetryCount = n; }
 
-    private static int sTimeoutMillis = 30000;
+    private static int sTimeoutMillis = -1;
     public static synchronized void setTimeout(int millis) { sTimeoutMillis = millis; }
 
     /*

@@ -94,7 +94,7 @@ public class SoapProvisioning extends Provisioning {
         private String mPassword;
         private ZAuthToken mAuthToken;
         private String mUri;
-        private int mTimeout = 60000;
+        private int mTimeout = -1;
         private int mRetryCount = -1;
         private SoapTransport.DebugListener mDebugListener;  
         private boolean mLocalConfigAuth;
@@ -2244,15 +2244,6 @@ public class SoapProvisioning extends Provisioning {
         invoke(req);
     }
     
-    
-    private void toXML(Element req, ShareInfo.Publishing.Action action, String ownerAcctId, String folderIdOrPath) {
-        Element eShare = req.addElement(AdminConstants.E_SHARE);
-        eShare.addAttribute(AdminConstants.A_ACTION, action.name());
-        
-        eShare.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcctId);
-        eShare.addElement(AdminConstants.E_FOLDER).addAttribute(AdminConstants.A_PATH_OR_ID, folderIdOrPath);
-    }
-
     
     @Override
     public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 

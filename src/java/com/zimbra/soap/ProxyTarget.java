@@ -39,8 +39,8 @@ public class ProxyTarget {
     private AuthToken mAuthToken;
     private String mURL;
 
-    private int mMaxAttempts;
-    private long mTimeout;
+    private int mMaxAttempts = 0;
+    private long mTimeout = -1;
 
     public ProxyTarget(String serverId, AuthToken authToken, HttpServletRequest req) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();

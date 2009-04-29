@@ -65,7 +65,6 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.VoiceConstants;
@@ -158,7 +157,7 @@ public class ZMailbox implements ToZJSONObject {
         private String mProxyPass;
         private String mUserAgentName;
         private String mUserAgentVersion;
-        private int mTimeout = 60000;
+        private int mTimeout = -1;
         private int mRetryCount = -1;
         private SoapProtocol mResponseProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapProtocol mRequestProtocol = SoapProtocol.SoapJS; //12; //JS;
@@ -488,7 +487,8 @@ public class ZMailbox implements ToZJSONObject {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         Element req = newRequestElement(AccountConstants.AUTH_REQUEST);
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
-        Element authTokenEl = zat.encodeAuthReq(req, false);
+        
+        zat.encodeAuthReq(req, false);
         if (options.getRequestedSkin() != null) {
 			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
 		}
@@ -516,11 +516,12 @@ public class ZMailbox implements ToZJSONObject {
         mTransport = new SoapHttpTransport(options.getUri(),
         		options.getProxyHost(), options.getProxyPort(),
         		options.getProxyUser(), options.getProxyPass());
-        mTransport.setUserAgent("zclient", BuildInfo.VERSION);
+        if (options.getUserAgentName() == null)
+            mTransport.setUserAgent("zclient", BuildInfo.VERSION);
+        else
+            mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
         mTransport.setMaxNotifySeq(0);
         mTransport.setClientIp(mClientIp);
-        if (options.getUserAgentName() != null && options.getUserAgentVersion() != null)
-        	mTransport.setUserAgent(options.getUserAgentName(), options.getUserAgentVersion());
         if (options.getTimeout() > -1)
             mTransport.setTimeout(options.getTimeout());
         if (options.getRetryCount() != -1)
@@ -968,7 +969,7 @@ public class ZMailbox implements ToZJSONObject {
                 if (searchTypes != null && searchTypes.length() > 0)
                     search.addAttribute(MailConstants.A_SEARCH_TYPES, searchTypes);
             }
-            Element resp = mbox.mTransport.invoke(batch);
+            mbox.mTransport.invoke(batch);
             return debug.getEnvelope();
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
@@ -1061,7 +1062,7 @@ public class ZMailbox implements ToZJSONObject {
             Element queryEl = search.addElement(MailConstants.E_QUERY);
             queryEl.setText(searchQuery.toString());
 
-            Element resp = mbox.mTransport.invoke(batch);
+            mbox.mTransport.invoke(batch);
 
             Element e = debug.getEnvelope();
 
@@ -3468,7 +3469,7 @@ public class ZMailbox implements ToZJSONObject {
 		ZMountpoint mountpoint = getMountpoint(message);
 
 		//noinspection UnusedDeclaration
-        Element m = getMessageElement(req, message, mountpoint);
+        getMessageElement(req, message, mountpoint);
 
 		String requestedAccountId = mountpoint == null ? null : mountpoint.getOwnerId();
         Element resp = invoke(req, requestedAccountId);
@@ -3758,6 +3759,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param prefs prefs to modify
      * @throws ServiceException on error
      */
+    @SuppressWarnings("unchecked")
     public void modifyPrefs(Map<String, ? extends Object> prefs) throws ServiceException {
         Element req = newRequestElement(AccountConstants.MODIFY_PREFS_REQUEST);
         for (Map.Entry<String, ? extends Object> entry : prefs.entrySet()){

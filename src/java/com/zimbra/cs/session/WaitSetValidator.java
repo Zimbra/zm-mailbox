@@ -50,7 +50,7 @@ public class WaitSetValidator implements DebugListener {
 
     private long mSendStart;
     private int mTimeout = -1;
-    private int mRetryCount;
+    private int mRetryCount = -1;
     private SoapHttpTransport mTransport;
     private ZAuthToken mAuthToken;
     private long mAuthTokenLifetime;

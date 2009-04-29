@@ -195,7 +195,6 @@ public abstract class SoapCLI {
         mServerUrl = url.toExternalForm();
         SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
         trans.setRetryCount(1);
-        trans.setTimeout(0);
         mTrans = trans;
         mAuth = false;
         
@@ -229,7 +228,6 @@ public abstract class SoapCLI {
         mServerUrl = url.toExternalForm();
         SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
         trans.setRetryCount(1);
-        trans.setTimeout(0);
         mTrans = trans;
         mAuth = false;
         
