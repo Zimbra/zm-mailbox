@@ -65,6 +65,8 @@ public class DavElements {
 	public static final String P_CALENDAR_FREE_BUSY_SET = "calendar-free-busy-set";
 	public static final String P_CALENDAR_HOME_SET = "calendar-home-set";
 	public static final String P_CALENDAR_MULTIGET = "calendar-multiget";
+	public static final String P_CALENDAR_PROXY_READ = "calendar-proxy-read";
+	public static final String P_CALENDAR_PROXY_WRITE = "calendar-proxy-write";
 	public static final String P_CALENDAR_QUERY = "calendar-query";
 	public static final String P_CALENDAR_TIMEZONE = "calendar-timezone";
 	public static final String P_CALENDAR_USER_ADDRESS_SET = "calendar-user-address-set";
@@ -241,6 +243,8 @@ public class DavElements {
 	public static final QName E_CALENDAR_FREE_BUSY_SET = QName.get(P_CALENDAR_FREE_BUSY_SET, CALDAV_NS);
 	public static final QName E_CALENDAR_HOME_SET = QName.get(P_CALENDAR_HOME_SET, CALDAV_NS);
 	public static final QName E_CALENDAR_MULTIGET = QName.get(P_CALENDAR_MULTIGET, CALDAV_NS);
+	public static final QName E_CALENDAR_PROXY_READ = QName.get(P_CALENDAR_PROXY_READ, CS_NS);
+	public static final QName E_CALENDAR_PROXY_WRITE = QName.get(P_CALENDAR_PROXY_WRITE, CS_NS);
 	public static final QName E_CALENDAR_QUERY = QName.get(P_CALENDAR_QUERY, CALDAV_NS);
 	public static final QName E_CALENDAR_TIMEZONE = QName.get(P_CALENDAR_TIMEZONE, CALDAV_NS);
 	public static final QName E_CALENDAR_USER_ADDRESS_SET = QName.get(P_CALENDAR_USER_ADDRESS_SET, CALDAV_NS);
