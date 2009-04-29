@@ -102,6 +102,9 @@ public class Validators {
     }
     
     private static boolean isSystemProperty(Map<String,Object> attrs) {
+        if (attrs == null)
+            return false;
+        
         Object o = attrs.get(Provisioning.A_zimbraIsSystemResource);
         if (o != null && "true".equalsIgnoreCase(o.toString()))
             return true; // is system resource, do not check
