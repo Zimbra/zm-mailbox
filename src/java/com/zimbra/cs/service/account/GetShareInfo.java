@@ -34,6 +34,24 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetShareInfo  extends AccountDocumentHandler {
 
+    protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
+        
+        if (isInternal(request)) {
+            // we have been proxied to this server because the specified 
+            // "owner account" is homed here.
+            // Do not proxy in this case. 
+            return null;
+        } else {
+            // call super class, go the normal route to proxy to 
+            // the requested account's home server
+            return super.proxyIfNecessary(request, context);  
+        }
+    }
+    
+    private boolean isInternal(Element request) throws ServiceException {
+        return request.getAttributeBool(AccountConstants.A_INTERNAL, false);
+    }
+    
     @Override
     public Element handle(Element request, Map<String, Object> context)
             throws ServiceException {
@@ -50,14 +68,12 @@ public class GetShareInfo  extends AccountDocumentHandler {
     }
     
     /**
-     * This method is used by both the account namespace and admin namespace GetShareInfoRequest
-     * 
      * @param zsc
      * @param targetAcct
      * @param request
      * @param response
      */
-    public static void doGetShareInfo(ZimbraSoapContext zsc, Map<String, Object> context,
+    private void doGetShareInfo(ZimbraSoapContext zsc, Map<String, Object> context,
             Account targetAcct, Element request, Element response) throws ServiceException {
         
         Provisioning prov = Provisioning.getInstance();
@@ -82,7 +98,14 @@ public class GetShareInfo  extends AccountDocumentHandler {
         
         OperationContext octxt = getOperationContext(zsc, context);
             
-        ShareInfo.MountedFolders mountedFolders = new ShareInfo.MountedFolders(octxt, targetAcct);
+        
+        ShareInfo.MountedFolders mountedFolders = null;
+        if (!isInternal(request)) {
+            // this (new ShareInfo.MountedFolders) should be executed on the requested 
+            // account's home server.  
+            // If we get here, we should be proxied to the right server naturally by the framework.
+            mountedFolders = new ShareInfo.MountedFolders(octxt, targetAcct);
+        }
         
         ResultFilter resultFilter = new ResultFilterByTarget(granteeId, granteeName);
         ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, mountedFolders, resultFilter);
@@ -93,13 +116,51 @@ public class GetShareInfo  extends AccountDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("invalid grantee type for retrieving published share info", null);
             ShareInfo.Published.get(prov, targetAcct, granteeType, owner, visitor);
         } else {
-            // iterate all folders of the owner
+            // iterate all folders of the owner, this should be proxied to the owner account's
+            // home server if the owner account does not reside on the same server as the requesting 
+            // account.
+            
             if (targetAcct.getId().equals(owner.getId()))
                 throw ServiceException.INVALID_REQUEST("cannot discover shares on self", null);
-            ShareInfo.Discover.discover(octxt, prov, targetAcct, granteeType, owner, visitor);
+            
+            if (Provisioning.onLocalServer(owner))
+                ShareInfo.Discover.discover(octxt, prov, targetAcct, granteeType, owner, visitor);
+            else {
+                // issue an GetShareInfoRequest to the home server of the owner, and tell it *not* 
+                // to proxy to the requesting account's mailbox server.
+                fetchRemoteShareInfo(zsc, context, request, owner.getId(), visitor);
+            }
         }
 
         visitor.finish();
+    }
+    
+    private void fetchRemoteShareInfo(ZimbraSoapContext zsc, Map<String, Object> context, 
+            Element request, String ownerId, ShareInfoVisitor visitor)
+    throws ServiceException {
+       
+        /*
+         * hack, there is no way to tell the proxying code to set
+         * the <targetServer> element in the SOAP context so the 
+         * request won't be proxied again back to this server.
+         * 
+         * mark the proxy request "internal" to indicate to the 
+         * handler to:
+         * 
+         * 1. Do not proxy the request again (normal flow would be to 
+         *    proxy to the home server of the requested account, which is this server)
+         *    
+         * 2. Do not get the mounted info of the requesting account, because 
+         *    it won't be able to access the mailbox of the requested account, 
+         *    which lives on this server.   
+         */
+        request.addAttribute(AccountConstants.A_INTERNAL, true);
+
+        Element response = proxyRequest(request, context, getServer(ownerId), zsc);
+        for (Element eShare : response.listElements(AccountConstants.E_SHARE)) {
+            ShareInfo si = ShareInfo.fromXML(eShare);
+            visitor.visit(si);
+        }
     }
 
     public static byte getGranteeType(Element eGrantee) throws ServiceException {

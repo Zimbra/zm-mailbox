@@ -36,6 +36,9 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetShareInfo extends ShareInfoHandler {
     
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_OWNER };
+    protected String[] getProxiedAccountElementPath()  { return TARGET_ACCOUNT_PATH; }
+    
     @Override
     public Element handle(Element request, Map<String, Object> context)
             throws ServiceException {
