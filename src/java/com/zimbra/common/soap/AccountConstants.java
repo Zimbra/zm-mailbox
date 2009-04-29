@@ -176,6 +176,7 @@ public class AccountConstants {
     public static final String A_GRANTEE_NAME = "granteeName";
     public static final String A_GRANTEE_DISPLAY_NAME = "granteeDisplayName";
     public static final String A_GRANTEE_TYPE = "granteeType";
+    public static final String A_INTERNAL = "internal";
     public static final String A_OWNER_ID = "ownerId";
     public static final String A_OWNER_EMAIL = "ownerEmail";
     public static final String A_OWNER_DISPLAY_NAME = "ownerName";
