@@ -59,8 +59,6 @@ public class PropFind extends DavMethod {
 		resp.addResource(ctxt, resource, reqProp, false);
 
 		if (resource.isCollection() && ctxt.getDepth() != Depth.zero) {
-			//ZimbraLog.dav.debug("depth: "+ctxt.getDepth().name());
-
 			for (DavResource child : resource.getChildren(ctxt))
 				resp.addResource(ctxt, child, reqProp, ctxt.getDepth() == Depth.infinity);
 		}

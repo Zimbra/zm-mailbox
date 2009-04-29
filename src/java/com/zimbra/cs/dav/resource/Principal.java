@@ -30,12 +30,16 @@ import com.zimbra.cs.dav.DavException;
 public class Principal extends DavResource {
 
     public Principal(Account authUser, String mainUrl) throws ServiceException {
-        super(mainUrl, getOwner(authUser, mainUrl));
-        if (!mainUrl.endsWith("/")) mainUrl = mainUrl + "/";
-        setProperty(DavElements.E_HREF, mainUrl);
-        mUri = mainUrl;
+        this(getOwner(authUser, mainUrl), mainUrl);
     }
     
+    public Principal(String user, String mainUrl) throws ServiceException {
+    	super(mainUrl, user);
+        if (!mainUrl.endsWith("/")) mainUrl = mainUrl + "/";
+        setProperty(DavElements.E_HREF, mainUrl);
+        addResourceType(DavElements.E_PRINCIPAL);
+        mUri = mainUrl;
+    }
 	protected static String getOwner(Account acct, String url) throws ServiceException {
 		String owner = acct.getName();
 		Provisioning prov = Provisioning.getInstance();

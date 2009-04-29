@@ -29,6 +29,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.dav.property.VersioningProperty;
 
 public class User extends Principal {
 
@@ -38,11 +39,13 @@ public class User extends Principal {
     
     public User(Account authUser, String url) throws ServiceException {
     	super(authUser, url);
+    	mUser = authUser;
         String user = getOwner();
-        addResourceType(DavElements.E_PRINCIPAL);
         addProperty(CalDavProperty.getCalendarHomeSet(user));
         addProperty(CalDavProperty.getScheduleInboxURL(user));
         addProperty(CalDavProperty.getScheduleOutboxURL(user));
+        addProperty(VersioningProperty.getSupportedReportSet());
+		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getPrincipalUrl(authUser), true);
         ArrayList<String> addrs = new ArrayList<String>();
         for (String addr : authUser.getMultiAttr(Provisioning.A_zimbraMailDeliveryAddress))
             addrs.add(addr);
@@ -58,6 +61,19 @@ public class User extends Principal {
         mUri = url;
     }
     
+    private Account mUser;
+    
+    @Override
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+		ArrayList<DavResource> proxies = new ArrayList<DavResource>();
+		try {
+			proxies.add(new CalendarProxyRead(getOwner(), mUri));
+			proxies.add(new CalendarProxyWrite(getOwner(), mUri));
+		} catch (ServiceException e) {
+		}
+		return proxies;
+	}
+    
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
@@ -71,6 +87,32 @@ public class User extends Principal {
 
     @Override
     public boolean isCollection() {
-        return false;
+        return true;
+    }
+    
+    private class CalendarProxyRead extends Principal {
+    	public CalendarProxyRead(String user, String url) throws ServiceException {
+    		super(user, url+"calendar-proxy-read");
+            addResourceType(DavElements.E_CALENDAR_PROXY_READ);
+            addProperty(VersioningProperty.getSupportedReportSet());
+    		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getPrincipalUrl(mUser), true);
+    	}
+        @Override
+        public boolean isCollection() {
+            return true;
+        }
+    }
+    
+    private class CalendarProxyWrite extends Principal {
+    	public CalendarProxyWrite(String user, String url) throws ServiceException {
+    		super(user, url+"calendar-proxy-write");
+            addResourceType(DavElements.E_CALENDAR_PROXY_WRITE);
+            addProperty(VersioningProperty.getSupportedReportSet());
+    		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getPrincipalUrl(mUser), true);
+    	}
+        @Override
+        public boolean isCollection() {
+            return true;
+        }
     }
 }
