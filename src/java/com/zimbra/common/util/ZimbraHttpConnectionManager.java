@@ -144,8 +144,8 @@ public class ZimbraHttpConnectionManager {
         sHttpConnMgr.setParams(sConnParams);
         sHttpClient = new HttpClient(sHttpConnMgr);
         
-        sLog.info("initailized with parameters:\n" + 
-                  dumpParams(sConnParams));
+//        sLog.info("initailized with parameters:\n" + 
+//                  dumpParams(sConnParams));
     }
     
     public static HttpConnectionManager getDefaultHttpConnectinMangager() {
