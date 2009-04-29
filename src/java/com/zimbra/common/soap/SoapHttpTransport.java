@@ -21,42 +21,48 @@ package com.zimbra.common.soap;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpRecoverableException;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpVersion;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.params.HttpClientParams;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.util.ByteUtil;
-
+import org.apache.commons.httpclient.URI;
 import org.dom4j.ElementHandler;
-import java.util.HashMap;
+
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 public class SoapHttpTransport extends SoapTransport {
-
-    private static final String X_ORIGINATING_IP = "X-Originating-IP";
-    
-    private boolean mKeepAlive;
-    private int mRetryCount;
-    private int mTimeout;
-    private String mUri;
-	private HttpClient mClient;
+    private HttpClient mClient = ZimbraHttpConnectionManager.getDefaultHttpClient();
     private Map<String, String> mCustomHeaders;
+    private HostConfiguration mHostConfig = null;
     private HttpDebugListener mHttpDebugListener;
+    private boolean mKeepAlive = keepAlive;
+    private int mRetryCount = retryCount;
+    HttpState mState = null;
+    private int mTimeout = timeout;
+    private String mUri;
+    private URI mURI;
+    private static boolean keepAlive = LC.httpclient_connmgr_keepalive_connections.booleanValue();
+    private static int retryCount = LC.httpclient_connmgr_retry_count.intValue();
+    private static int timeout = LC.httpclient_connmgr_so_timeout.intValue();
+    private static final String X_ORIGINATING_IP = "X-Originating-IP";
     
     public interface HttpDebugListener {
         public void sendSoapMessage(PostMethod postMethod, Element envelope);
@@ -66,14 +72,6 @@ public class SoapHttpTransport extends SoapTransport {
     public String toString() { 
         return "SoapHTTPTransport(uri="+mUri+")";
     }
-
-    private static final HttpClientParams sDefaultParams = new HttpClientParams();
-        static {
-            // we're doing the retry logic at the SoapHttpTransport level, so don't do it at the HttpClient level as well
-            sDefaultParams.setParameter(HttpMethodParams.RETRY_HANDLER, new HttpMethodRetryHandler() {
-                public boolean retryMethod(HttpMethod method, IOException exception, int executionCount)  { return false; }
-            });
-        }
 
     /**
      * Create a new SoapHttpTransport object for the specified URI.
@@ -88,7 +86,8 @@ public class SoapHttpTransport extends SoapTransport {
     }
     
     /**
-     * Create a new SoapHttpTransport object for the specified URI, with specific proxy information.
+     * Create a new SoapHttpTransport object for the specified URI, with specific
+     *  proxy information.
      * 
      * @param uri the origin server URL
      * @param proxyHost hostname of proxy
@@ -99,8 +98,8 @@ public class SoapHttpTransport extends SoapTransport {
     }
     
     /**
-     * Create a new SoapHttpTransport object for the specified URI, with specific proxy information including
-     * proxy auth credentials.
+     * Create a new SoapHttpTransport object for the specified URI, with specific
+     *  proxy information including proxy auth credentials.
      * 
      * @param uri the origin server URL
      * @param proxyHost hostname of proxy
@@ -108,36 +107,27 @@ public class SoapHttpTransport extends SoapTransport {
      * @param proxyUser username for proxy auth
      * @param proxyPass password for proxy auth
      */
-    public SoapHttpTransport(String uri, String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
+    public SoapHttpTransport(String uri, String proxyHost, int proxyPort,
+        String proxyUser, String proxyPass) {
     	super();
-    	mClient = new HttpClient(new HttpClientParams(sDefaultParams));
-    	commonInit(uri);
-    	
+        mUri = uri;
+        try {
+            mURI = new URI(uri, false);
+        } catch (Exception e) {
+        }
     	if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
-    		mClient.getHostConfiguration().setProxy(proxyHost, proxyPort);
-    		if (proxyUser != null && proxyUser.length() > 0 && proxyPass != null && proxyPass.length() > 0) {
-    			mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
-    		}
+    	    mHostConfig = new HostConfiguration();
+            mHostConfig.setHost(mURI);
+            mHostConfig.setProxy(proxyHost, proxyPort);
+    	    if (proxyUser != null && proxyUser.length() > 0 && proxyPass != null &&
+    	        proxyPass.length() > 0) {
+    	        mClient = new HttpClient(ZimbraHttpConnectionManager.getDefaultHttpConnectinMangager());
+    	        mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort),
+    	            new UsernamePasswordCredentials(proxyUser, proxyPass));
+    	    }
     	}
     }
 
-    /**
-     * Creates a new SoapHttpTransport that supports multiple connections
-     * to the specified URI.  Multiple threads can call the invoke()
-     * method safely without synchronization.
-     *
-     * @param uri
-     * @param maxConnections Note RFC2616 recommends the default of 2.
-     */
-    public SoapHttpTransport(String uri, int maxConnections, boolean connectionStaleCheckEnabled) {
-    	super();
-    	MultiThreadedHttpConnectionManager connMgr = new MultiThreadedHttpConnectionManager();
-    	connMgr.setMaxConnectionsPerHost(maxConnections);
-    	connMgr.setConnectionStaleCheckingEnabled(connectionStaleCheckEnabled);
-    	mClient = new HttpClient(sDefaultParams, connMgr);
-    	commonInit(uri);
-    }
-    
     public void setHttpDebugListener(HttpDebugListener listener) {
         mHttpDebugListener = listener;
     }
@@ -150,63 +140,69 @@ public class SoapHttpTransport extends SoapTransport {
      * Frees any resources such as connection pool held by this transport.
      */
     public void shutdown() {
-        if (mClient != null) { 
-            HttpConnectionManager connMgr = mClient.getHttpConnectionManager();
-            if (connMgr instanceof MultiThreadedHttpConnectionManager) {
-                MultiThreadedHttpConnectionManager multiConnMgr = (MultiThreadedHttpConnectionManager) connMgr;
-                multiConnMgr.shutdown();
-            }
+        if (mClient != null && mClient != ZimbraHttpConnectionManager.getDefaultHttpClient()) {
+            mClient.getHttpConnectionManager().closeIdleConnections(0);
             mClient = null;
+            mHostConfig = null;
         }
     }
 
-    private void commonInit(String uri) {
-        mUri = uri;
-        mKeepAlive = false;
-        mRetryCount = 3;
-        setTimeout(0);
-    }
-
-    /**
-     *  Gets the URI
-     */
-    public String getURI() {
-        return mUri;
+    public void setAuthToken(String authToken) {
+        super.setAuthToken(authToken);
+        setAuthToken();
     }
     
-    /**
-     * The number of times the invoke method retries when it catches a 
-     * RetryableIOException.
-     *
-     * <p> Default value is <code>3</code>.
-     */
-    public void setRetryCount(int retryCount) {
-        this.mRetryCount = retryCount;
+    public void setAuthToken(ZAuthToken authToken) {
+        super.setAuthToken(authToken);
+        setAuthToken();
     }
 
+    private void setAuthToken() {
+        Map<String, String> cookieMap = getAuthToken().cookieMap(false);
+
+        if (cookieMap != null) {
+            mState = new HttpState();
+            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                try {
+                    mState.addCookie(new Cookie(mURI.getHost(), ck.getKey(),
+                        ck.getValue(), "/", null, false));
+                } catch (URIException e ) {
+                }
+            }
+        }
+    }
+    
+    
+    public Map<String, String> getCustomHeaders() {
+        if (mCustomHeaders == null)
+            mCustomHeaders = new HashMap<String, String>();
+        return mCustomHeaders;
+    }
+
+    /**
+     * Whether to use HTTP keep-alive connections 
+     *
+     * <p> Default value is <code>true</code>.
+     */
+    public void setKeepAlive(boolean keepAlive) {
+        mKeepAlive = keepAlive;
+    }
+
+   
+    /**
+     * The number of times the invoke method retries 
+     *
+     * <p> Default value is <code>1</code>.
+     */
+    public void setRetryCount(int retryCount) {
+        mRetryCount = retryCount;
+    }
 
     /**
      * Get the mRetryCount value.
      */
     public int getRetryCount() {
         return mRetryCount;
-    }
-
-    /**
-     * Whether or not to keep the connection alive in between
-     * invoke calls.
-     *
-     * <p> Default value is <code>false</code>.
-     */
-    private void setKeepAlive(boolean keepAlive) {
-        this.mKeepAlive = keepAlive;
-    }
-
-    /**
-     * Get the mKeepAlive value.
-     */
-    private boolean getKeepAlive() {
-        return mKeepAlive;
     }
 
     /**
@@ -217,8 +213,6 @@ public class SoapHttpTransport extends SoapTransport {
      */
     public void setTimeout(int timeout) {
         mTimeout = timeout;
-        mClient.setConnectionTimeout(mTimeout);
-        mClient.setTimeout(mTimeout);
     }
 
     /**
@@ -227,44 +221,42 @@ public class SoapHttpTransport extends SoapTransport {
     public int getTimeout() {
         return mTimeout;
     }
-    public Map<String, String> getCustomHeaders() {
-        if (mCustomHeaders == null) {
-            mCustomHeaders = new HashMap<String, String>();
-        }
-        return mCustomHeaders;
-    }
     
+    /**
+     *  Gets the URI
+     */
+    public String getURI() {
+        return mUri;
+    }
+
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
-    throws SoapFaultException, IOException, HttpException {
+        throws SoapFaultException, IOException, HttpException {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
     }
     
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType,
         Map<String, ElementHandler> saxHandlers) throws SoapFaultException, IOException, HttpException {
-    	int statusCode = -1;
-
         PostMethod method = null;
+        
         try {
             // Assemble post method.  Append document name, so that the request
             // type is written to the access log.
-            String documentName = getDocumentName(document);
-            String uri = null;
-            if (mUri.endsWith("/")) {
-                uri = mUri + documentName;
-            } else {
-                uri = mUri + "/" + documentName;
-            }
+            String uri = mUri.toString();
+            
+            if (!uri.endsWith("/"))
+                uri += '/';
+            uri += getDocumentName(document);
             method = new PostMethod(uri);
             
             // Set user agent if it's specified.
             String agentName = getUserAgentName();
+            
             if (agentName != null) {
                 String agentVersion = getUserAgentVersion();
-                if (agentVersion == null) {
-                    method.setRequestHeader(new Header("User-Agent", agentName));
-                } else {
-                    method.setRequestHeader(new Header("User-Agent", agentName + " " + agentVersion));
-                }
+                
+                if (agentVersion != null)
+                    agentName += " " + agentVersion;
+                method.setRequestHeader(new Header("User-Agent", agentName));
             }            
 
             // the content-type charset will determine encoding used
@@ -275,37 +267,36 @@ public class SoapHttpTransport extends SoapTransport {
 
             Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
-            method.setRequestBody(soapMessage);
-            method.setRequestContentLength(EntityEnclosingMethod.CONTENT_LENGTH_AUTO);
+            
+            method.setRequestEntity(new StringRequestEntity(soapMessage));
     	
             if (getRequestProtocol().hasSOAPActionHeader())
                 method.setRequestHeader("SOAPAction", mUri);
 
             if (mCustomHeaders != null) {
-                for (Map.Entry<String, String> entry : mCustomHeaders.entrySet()) {
+                for (Map.Entry<String, String> entry : mCustomHeaders.entrySet())
                     method.setRequestHeader(entry.getKey(), entry.getValue());
-                }
             }
             
             if (mHttpDebugListener != null)
                 mHttpDebugListener.sendSoapMessage(method, soapReq);
             
-            for (int attempt = 0; statusCode == -1 && attempt < mRetryCount; attempt++) {
-                try {
-                    // execute the method.
-                    statusCode = mClient.executeMethod(method);
-                } catch (HttpRecoverableException e) {
-                    if (attempt == mRetryCount - 1)
-                        throw e;
-                    System.err.println("A recoverable exception occurred, retrying." + e.getMessage());
-                }
-            }
+            method.getParams().setCookiePolicy(mState == null ?
+                CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
+            method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
+                new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
+            method.getParams().setSoTimeout(mTimeout);
+            method.getParams().setVersion(HttpVersion.HTTP_1_1);
+            method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" :
+                "Close");
+
+            mClient.executeMethod(mHostConfig, method, mState);
 
             // Read the response body.  Use the stream API instead of the byte[] one
             // to avoid HTTPClient whining about a large response.        
             InputStreamReader reader = new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
-            
             String responseStr = "";
+            
             try {
                 if (saxHandlers != null) {
                     parseLargeSoapResponse(reader, saxHandlers);
@@ -316,7 +307,6 @@ public class SoapHttpTransport extends SoapTransport {
                     
                     if (mHttpDebugListener != null)
                         mHttpDebugListener.receiveSoapMessage(method, soapResp);
-                    
                     return soapResp;
                 }
             } catch (SoapFaultException x) {
@@ -329,10 +319,6 @@ public class SoapHttpTransport extends SoapTransport {
             // Release the connection.
             if (method != null)
                 method.releaseConnection();        
-            
-            long idleTimeout = LC.httpclient_idle_connection_timeout.longValue();
-            if (idleTimeout != -1)
-                mClient.getHttpConnectionManager().closeIdleConnections(idleTimeout);
         }
     }
     
@@ -356,11 +342,5 @@ public class SoapHttpTransport extends SoapTransport {
         }
         return name;
     }
-
 }
 
-/*
- * TODOs:
- * retry?
- * validation
- */

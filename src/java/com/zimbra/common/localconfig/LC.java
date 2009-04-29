@@ -418,13 +418,14 @@ public class LC {
     
     public static final KnownKey httpclient_connmgr_max_host_connections;
     public static final KnownKey httpclient_connmgr_max_total_connections;
+    public static final KnownKey httpclient_connmgr_keepalive_connections;
+    public static final KnownKey httpclient_connmgr_retry_count;
+    public static final KnownKey httpclient_connmgr_tcp_nodelay;
     public static final KnownKey httpclient_connmgr_connection_timeout;
     public static final KnownKey httpclient_connmgr_so_timeout;
     // public static final KnownKey httpclient_connmgr_idle_reaper_initial_sleep_time;  don't use this for now
     public static final KnownKey httpclient_connmgr_idle_reaper_sleep_interval;
     public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
-    
-    public static final KnownKey httpclient_idle_connection_timeout;
     
     public static final KnownKey shared_mime_info_globs;
     public static final KnownKey shared_mime_info_magic;
@@ -1294,7 +1295,7 @@ public class LC {
         
         httpclient_connmgr_max_host_connections = new KnownKey(
                 "httpclient_connmgr_max_host_connections", 
-                "50",
+                "30",
                 "httpclient connection manager: " + 
                 "Defines the maximum number of connections allowed per host configuration");
         
@@ -1304,30 +1305,39 @@ public class LC {
                 "httpclient connection manager: " +
                 "Defines the maximum number of connections allowed overall");
 
+        httpclient_connmgr_keepalive_connections = new KnownKey(
+                "httpclient_connmgr_keepalive_connections", 
+                "true",
+                "httpclient connection manager: " +
+                "Defines whether HTTP keep-alive connections should be used");
+
+        httpclient_connmgr_retry_count = new KnownKey(
+                "httpclient_connmgr_retry_count", 
+                "1",
+                "httpclient connection manager: " +
+                "Defines the number retries after a temporary failure");
+
+        httpclient_connmgr_tcp_nodelay = new KnownKey(
+                "httpclient_connmgr_tcp_nodelay", 
+                "false",
+                "httpclient connection manager: " +
+                "Defines whether to disable Nagle algorithm on HTTP socket");
+
         httpclient_connmgr_connection_timeout = new KnownKey(
                 "httpclient_connmgr_connection_timeout", 
-                "0",
+                "30000",
                 "httpclient connection manager: " +
                 "Determines the timeout until a connection is established. A value of zero means the timeout is not used");
         
         httpclient_connmgr_so_timeout = new KnownKey(
                 "httpclient_connmgr_so_timeout", 
-                "30000",
+                "60000",
                 "httpclient connection manager: " +
                 "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
 
-
-        /*
-        httpclient_connmgr_idle_reaper_initial_sleep_time = new KnownKey(
-                "httpclient_connmgr_idle_reaper_initial_sleep_time", 
-                Long.toString(15 * Constants.MILLIS_PER_MINUTE),
-                "httpclient connection manager idle reaper: " +
-                "Amount of time (in milliseconds) that the http client connection manager idle connection reaper thread sleeps on startup before doing work");
-        */
-        
         httpclient_connmgr_idle_reaper_sleep_interval = new KnownKey(
                 "httpclient_connmgr_idle_reaper_sleep_interval", 
-                Long.toString(15 * Constants.MILLIS_PER_MINUTE),
+                Long.toString(5 * Constants.MILLIS_PER_MINUTE),
                 "httpclient connection manager idle reaper: " +
                 "Amount of time (in milliseconds) that the http client connection manager idle connection reaper thread sleeps between doing work. " +
                 "0 means that reaper thread is disabled");
@@ -1337,13 +1347,6 @@ public class LC {
                 Long.toString(5 * Constants.MILLIS_PER_MINUTE),
                 "httpclient connection manager idle reaper: " +
                 "the timeout value to use when testing for idle connections.");
-        
-        httpclient_idle_connection_timeout = new KnownKey(
-                "httpclient_idle_connection_timeout", 
-                "0",
-                "the minimum idle time, in milliseconds, for the connection used by a SoapHttpTransport to be closed. " +
-                "if set to 0, the connection is always closed after each http method invocation, " + 
-                "if set to -1, the connection will not be explicit closed, it could be closed by finalizer, which should not be relied on.");
         
         shared_mime_info_globs = new KnownKey("shared_mime_info_globs",
             "${zimbra_home}" + FS + "conf" + FS + "globs2",

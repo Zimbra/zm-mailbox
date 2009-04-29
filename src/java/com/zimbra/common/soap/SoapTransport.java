@@ -95,10 +95,13 @@ public abstract class SoapTransport {
         mAuthToken = authToken;
     }
     
+    public ZAuthToken getAuthToken() {
+        return mAuthToken;
+    }
+    
     public void setTargetAcctId(String acctId) {
         mTargetAcctId = acctId;
     }
-    
     
     public String getTargetAcctId() {
         return mTargetAcctId;

@@ -52,6 +52,7 @@ public class ZimbraHttpConnectionManager {
     // private static MultiThreadedHttpConnectionManager sHttpConnMgr;
     private static HttpConnectionManager sHttpConnMgr;
     private static IdleConnectionTimeoutThread sReaperThread;
+    private static HttpClient sHttpClient;
     
     private static final Log sLog = LogFactory.getLog(ZimbraHttpConnectionManager.class);
     
@@ -129,22 +130,26 @@ public class ZimbraHttpConnectionManager {
         //
         // HttpConnectionParams.STALE_CONNECTION_CHECK
         //
-        // use default and do not expose in LC
-        //
+         sConnParams.setStaleCheckingEnabled(LC.httpclient_connmgr_keepalive_connections.booleanValue());
         
         //
         // Determines whether Nagle's algorithm is to be used.
         //
         // HttpConnectionParams.TCP_NODELAY
         //
-        // use default and do not expose in LC
-        //
-        
+         sConnParams.setTcpNoDelay(LC.httpclient_connmgr_tcp_nodelay.booleanValue());
+
+         
         sHttpConnMgr = new MultiThreadedHttpConnectionManager();
         sHttpConnMgr.setParams(sConnParams);
+        sHttpClient = new HttpClient(sHttpConnMgr);
         
         sLog.info("initailized with parameters:\n" + 
                   dumpParams(sConnParams));
+    }
+    
+    public static HttpConnectionManager getDefaultHttpConnectinMangager() {
+        return sHttpConnMgr;
     }
     
     /**
@@ -193,6 +198,10 @@ public class ZimbraHttpConnectionManager {
     
     public static ZimbraHttpClient getHttpClient(HttpClientParams httpClientParams) {
         return new ZimbraHttpClient(httpClientParams);
+    }
+
+    public static HttpClient getDefaultHttpClient() {
+        return sHttpClient;
     }
     
     /*
