@@ -1730,7 +1730,7 @@ public class ProvUtil implements HttpDebugListener {
 
         SearchGalResult result = mProv.searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, token);
         if (result.getToken() != null)
-            System.out.println("# token = "+result.getToken());
+            System.out.println("# token = "+result.getToken() + "\n");
         for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }    

@@ -1626,6 +1626,7 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
 
         SearchGalResult result = SearchGalResult.newSearchGalResult(null);
+        result.setToken(resp.getAttribute(AdminConstants.A_TOKEN, null));
         result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE));
         result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
