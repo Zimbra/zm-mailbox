@@ -205,4 +205,30 @@ public class WebDavClient {
 	private String mPassword;
 	private HttpClient mClient;
 	private boolean mDebugEnabled = false;
+    public static void main(String[] args) throws Exception {
+        WebDavClient cl = new WebDavClient("http://localhost:7070", "tester");
+        cl.setDebugEnabled(true);
+        cl.setCredential("user2", "test123");
+        DavRequest req = propfind();
+        cl.sendMultiResponseRequest(req);
+    }
+
+    private static DavRequest timerange() {
+    	DavRequest req = DavRequest.CALENDARQUERY("/dav/user1@jylee-macbook.zimbra.com/Calendar");
+    	req.addRequestProp(DavElements.E_GETETAG);
+    	req.addRequestProp(DavElements.E_RESOURCETYPE);
+    	Element filter = req.getRequestMessage().getRootElement().element(DavElements.E_FILTER);
+    	Element comp = filter.element(DavElements.E_COMP_FILTER).addElement(DavElements.E_COMP_FILTER);
+    	comp.addAttribute(DavElements.P_NAME, "VEVENT");
+    	comp.addElement(DavElements.E_TIME_RANGE).addAttribute(DavElements.P_START, "20090308T000000Z");
+    	return req;
+    }
+
+    private static DavRequest propfind() {
+    	DavRequest req = DavRequest.PROPFIND("/principals/users/user2/");
+    	req.addRequestProp(DavElements.E_RESOURCETYPE);
+    	req.addRequestProp(DavElements.E_CALENDAR_PROXY_READ_FOR);
+    	req.addRequestProp(DavElements.E_CALENDAR_PROXY_WRITE_FOR);
+    	return req;
+    }
 }
