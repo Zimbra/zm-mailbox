@@ -621,6 +621,7 @@ public class AdminConstants {
     public static final String A_MT_LASTSOAPACCESS   = "lastSoapAccess";
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
+    public static final String A_MI_HIGHEST_INDEXED  = "highestIndexed";
     
     // right
     public static final String E_ALL         = "all";
