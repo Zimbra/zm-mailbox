@@ -303,7 +303,7 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException TOO_MANY_HOPS() {
-        return new ServiceException("mountpoint loop detected", TOO_MANY_HOPS, SENDERS_FAULT);
+        return new ServiceException("mountpoint or proxy loop detected", TOO_MANY_HOPS, SENDERS_FAULT);
     }
     
     public static ServiceException ALREADY_IN_PROGRESS(String message) {
