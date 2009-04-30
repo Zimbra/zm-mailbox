@@ -164,7 +164,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
                     if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
-                        return proxyRequest(request, context, server, zsc);
+                        return proxyRequest(request, context, server);
                 }
             }
             
@@ -175,7 +175,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
                     if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
-                        return proxyRequest(request, context, server, zsc);
+                        return proxyRequest(request, context, server);
                 }
             }
  
@@ -185,7 +185,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (serverId != null) {
                 Server server = prov.get(ServerBy.id, serverId);
                 if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
-                    return proxyRequest(request, context, server, zsc);
+                    return proxyRequest(request, context, server);
             }
 
             return null;
@@ -197,8 +197,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             throw e;
         }
     }
-
-
+    
     @Override
     public Session.Type getDefaultSessionType() {
         return Session.Type.ADMIN;

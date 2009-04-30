@@ -187,7 +187,7 @@ public class ModifyAccount extends AdminDocumentHandler {
                 Element eCache = request.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, Provisioning.CacheEntryType.account.name());
                 eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Provisioning.CacheEntryBy.id.name()).addText(acct.getId());
 
-                Element response = proxyRequest(request, context, newServer, zsc);
+                Element response = proxyRequest(request, context, newServer);
             }
         } catch (ServiceException e) {
             // ignore any error and continue

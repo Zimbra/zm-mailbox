@@ -441,10 +441,22 @@ public abstract class DocumentHandler {
 
     protected Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        // new context for proxied request has a different "requested account"
+        
+        // new context for proxied request has a different "requested account" 
+        // and an incremented hop count
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
 
         return proxyRequest(request, context, getServer(acctId), zscTarget);
+    }
+    
+
+    protected Element proxyRequest(Element request, Map<String, Object> context, Server server)
+    throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+     
+        // new context for proxied request has an incremented hop count
+        ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
+        return proxyRequest(request, context, server, pxyCtxt);
     }
 
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)

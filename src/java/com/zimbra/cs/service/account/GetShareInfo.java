@@ -128,14 +128,14 @@ public class GetShareInfo  extends AccountDocumentHandler {
             else {
                 // issue an GetShareInfoRequest to the home server of the owner, and tell it *not* 
                 // to proxy to the requesting account's mailbox server.
-                fetchRemoteShareInfo(zsc, context, request, owner.getId(), visitor);
+                fetchRemoteShareInfo(context, request, owner.getId(), visitor);
             }
         }
 
         visitor.finish();
     }
     
-    private void fetchRemoteShareInfo(ZimbraSoapContext zsc, Map<String, Object> context, 
+    private void fetchRemoteShareInfo(Map<String, Object> context, 
             Element request, String ownerId, ShareInfoVisitor visitor)
     throws ServiceException {
        
@@ -156,7 +156,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
          */
         request.addAttribute(AccountConstants.A_INTERNAL, true);
 
-        Element response = proxyRequest(request, context, getServer(ownerId), zsc);
+        Element response = proxyRequest(request, context, getServer(ownerId));
         for (Element eShare : response.listElements(AccountConstants.E_SHARE)) {
             ShareInfo si = ShareInfo.fromXML(eShare);
             visitor.visit(si);

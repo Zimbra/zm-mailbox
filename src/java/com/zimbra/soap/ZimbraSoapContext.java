@@ -121,6 +121,8 @@ public class ZimbraSoapContext {
     
     /**
      * For Search-Proxying, allows us to manually specify the HopCount to use
+     * 
+     * Hop count is not checked for TOO_MANY_HOPS in this route.
      */
     public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount) throws ServiceException {
         mAuthToken = authToken;
@@ -138,10 +140,17 @@ public class ZimbraSoapContext {
     /** Creates a <code>ZimbraSoapContext</code> from another existing
      *  <code>ZimbraSoapContext</code> for use in proxying. */
     public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
+        this(zsc);
+        mRequestedAccountId = targetAccountId;
+    }
+    
+    /** Creates a <code>ZimbraSoapContext</code> from another existing
+     *  <code>ZimbraSoapContext</code> for use in proxying. */
+    public ZimbraSoapContext(ZimbraSoapContext zsc) throws ServiceException {
         mRawAuthToken = zsc.mRawAuthToken;
         mAuthToken = zsc.mAuthToken;
         mAuthTokenAccountId = zsc.mAuthTokenAccountId;
-        mRequestedAccountId = targetAccountId;
+        mRequestedAccountId = zsc.mRequestedAccountId;
 
         mRequestProtocol = zsc.mRequestProtocol;
         mResponseProtocol = zsc.mResponseProtocol;
@@ -151,11 +160,12 @@ public class ZimbraSoapContext {
         mSessionProxied = true;
         mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
 
-        mHopCount = zsc.mHopCount + 1;
-        if (mHopCount > MAX_HOP_COUNT)
-            throw ServiceException.TOO_MANY_HOPS();
         mMountpointTraversed = zsc.mMountpointTraversed;
+        
+        int hopCount = zsc.mHopCount + 1;
+        setHopCount(hopCount);
     }
+    
 
     /** Creates a <code>ZimbraSoapContext</code> from the <tt>&lt;context></tt>
      *  {@link Element} from the SOAP header.
@@ -216,15 +226,16 @@ public class ZimbraSoapContext {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
             }
 
-            // while we're here, check the hop count to detect loops
-            mHopCount = (int) Math.max(eAccount.getAttributeLong(HeaderConstants.A_HOPCOUNT, 0), 0);
-            if (mHopCount > MAX_HOP_COUNT)
-                throw ServiceException.TOO_MANY_HOPS();
             mMountpointTraversed = eAccount.getAttributeBool(HeaderConstants.A_MOUNTPOINT, false);
         } else {
             mRequestedAccountId = null;
         }
-                
+        
+        // retrieve hop count from the SOAP context and check the hop count to detect loops
+        if (ctxt != null) {
+            int hopCount = (int) Math.max(ctxt.getAttributeLong(HeaderConstants.A_HOPCOUNT, 0), 0);
+            setHopCount(hopCount);
+        }
         
         // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_CHANGE));
@@ -454,6 +465,8 @@ public class ZimbraSoapContext {
     public Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
         
+        ctxt.addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount);
+        
         String pxyAuthToken = mAuthToken.getProxyAuthToken();
         if (pxyAuthToken != null)
             (new ZAuthToken(pxyAuthToken)).encodeSoapCtxt(ctxt);
@@ -470,7 +483,7 @@ public class ZimbraSoapContext {
         else
             ctxt.addUniqueElement(HeaderConstants.E_SESSION).addAttribute(HeaderConstants.A_PROXIED, true);
 
-        Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
+        Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
 
@@ -549,6 +562,12 @@ public class ZimbraSoapContext {
 
     public boolean wantsUnqualifiedIds() {
         return mUnqualifiedItemIds;
+    }
+    
+    private void setHopCount(int hopCount) throws ServiceException {
+        if (hopCount > MAX_HOP_COUNT)
+            throw ServiceException.TOO_MANY_HOPS();
+        mHopCount = hopCount;
     }
     
     public int getHopCount() {
