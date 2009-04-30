@@ -85,6 +85,7 @@ public class Derby extends Db {
             case ON_UPDATE_CASCADE:          return false;
             case READ_COMMITTED_ISOLATION:   return true;
             case REPLACE_INTO:               return false;
+            case ROW_LEVEL_LOCKING:          return true;
             case UNIQUE_NAME_INDEX:          return false;
             case AVOID_OR_IN_WHERE_CLAUSE:   return true;
         }

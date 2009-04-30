@@ -847,11 +847,22 @@ class DBQueryOperation extends QueryOperation {
         return mConstraints.tryDbFirst(getMailbox());
     }
 
+    /** If the database doesn't support row-level locking, try to synchronize
+     *  database accesses on the Mailbox object to avoid having read/write
+     *  conflicts with Mailbox write transactions.  In the case where the DB
+     *  <u>does</u> support row-level locking, synchronizing on a local
+     *  <code>Object</code> shouldn't add problematic overhead. */
+    private Object getSearchSynchronizer(Mailbox mbox) {
+        return Db.supports(Db.Capability.ROW_LEVEL_LOCKING) ? new Object() : mbox;
+    }
+
     private void noLuceneGetNextChunk(Connection conn, Mailbox mbox, SortBy sort) throws ServiceException {
-        if (mParams.getEstimateSize() && mSizeEstimate == -1)
-            mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
-        
-        DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
+        synchronized (getSearchSynchronizer(mbox)) {
+            if (mParams.getEstimateSize() && mSizeEstimate == -1)
+                mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
+
+            DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
+        }
 
         if (mDBHits.size() < mHitsPerChunk) {
             mEndOfHits = true;
@@ -875,14 +886,16 @@ class DBQueryOperation extends QueryOperation {
             // (1) Get the next chunk of results from the DB
             //
             List<SearchResult> dbRes = new ArrayList<SearchResult>();
-            
-            // FIXME TODO could do a better job here
-            if (mParams.getEstimateSize() && mSizeEstimate == -1) {
-                mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
+
+            synchronized (getSearchSynchronizer(mbox)) {
+                // FIXME TODO could do a better job here
+                if (mParams.getEstimateSize() && mSizeEstimate == -1) {
+                    mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
+                }
+
+                DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_HITS_PER_CHUNK, mExtra);
             }
-            
-            DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_HITS_PER_CHUNK, mExtra);
-            
+
             if (dbRes.size() < MAX_HITS_PER_CHUNK) {
                 mEndOfHits = true;
             }
@@ -992,8 +1005,12 @@ class DBQueryOperation extends QueryOperation {
             if (mParams.getEstimateSize() && mSizeEstimate==-1) {
                 // FIXME TODO should probably be a %age, this is worst-case
                 sc.indexIds = new HashSet<Integer>();
-                int dbResultCount = DbSearch.countResults(conn, mConstraints, mbox);
-                
+                int dbResultCount;
+
+                synchronized (getSearchSynchronizer(mbox)) {
+                    dbResultCount = DbSearch.countResults(conn, mConstraints, mbox);
+                }
+
                 int numTextHits = mLuceneOp.countHits();
 
                 if (ZimbraLog.index.isDebugEnabled()) 
@@ -1022,8 +1039,10 @@ class DBQueryOperation extends QueryOperation {
                 long dbStart = System.currentTimeMillis();
 
                 // must not ask for offset,limit here b/c of indexId constraints!,  
-                DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
-                
+                synchronized (getSearchSynchronizer(mbox)) {
+                    DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
+                }
+
                 if (mLog.isDebugEnabled()) {
                     long dbTime = System.currentTimeMillis() - dbStart;
                     mLog.debug("Fetched DB-second chunk in "+dbTime+"ms");
@@ -1054,7 +1073,6 @@ class DBQueryOperation extends QueryOperation {
             long overallTime = System.currentTimeMillis() - overallStart;
             mLog.debug("Done fetching LUCENE-FIRST chunk (took "+overallTime+"ms)");
         }
-        
     }
 
 
@@ -1358,7 +1376,9 @@ class DBQueryOperation extends QueryOperation {
     
     protected int getDbHitCount(Connection conn, Mailbox mbox) throws ServiceException {
         if (mCountDbResults == -1) {
-            mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox);
+            synchronized (getSearchSynchronizer(mbox)) {
+                mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox);
+            }
         }
         return mCountDbResults;
     }
@@ -1366,6 +1386,7 @@ class DBQueryOperation extends QueryOperation {
     protected int getDbHitCount() throws ServiceException {
         if (mCountDbResults == -1) {
             Mailbox mbox = getMailbox();
+
             Connection conn = DbPool.getConnection();
             try {
                 mCountDbResults = getDbHitCount(conn, mbox);

@@ -60,6 +60,7 @@ public class SQLite extends Db {
             case ON_UPDATE_CASCADE:          return false;
             case READ_COMMITTED_ISOLATION:   return false;
             case REPLACE_INTO:               return true;
+            case ROW_LEVEL_LOCKING:          return false;
             case UNIQUE_NAME_INDEX:          return false;
         }
         return false;
