@@ -61,8 +61,6 @@ import com.zimbra.cs.service.util.ItemId;
  */
 class DBQueryOperation extends QueryOperation {
 
-    protected static Log mLog = LogFactory.getLog(DBQueryOperation.class);
-    
     protected int mSizeEstimate = -1; // will only be set if the search parameters call for it
     
     protected int mCountDbResults = -1; // count of DB hits
@@ -654,7 +652,7 @@ class DBQueryOperation extends QueryOperation {
                             // is really happening.  If it *does* somehow happen it isn't the end of the world: we don't lose hits,
                             // we only lose separate part hits -- the net result would be that a document which had a match in multiple
                             // parts would only be returned as a single hit for the document.
-                            mLog.info("Missing ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type+" part hits may be list");
+                            ZimbraLog.index_search.info("Missing ScoredLuceneHit for sr.indexId="+sr.indexId+" sr.id="+sr.id+" type="+sr.type+" part hits may be list");
                             docs = null;
                             score = 1.0f;
                         }
@@ -815,7 +813,7 @@ class DBQueryOperation extends QueryOperation {
 
         Set<Byte> types = getDbQueryTypes();
         if (types.size() == 0)  {
-            mLog.debug("NO RESULTS -- no known types requested");
+            ZimbraLog.index_search.debug("NO RESULTS -- no known types requested");
             return false;
         } else {
             mConstraints.setTypes(types);
@@ -876,8 +874,8 @@ class DBQueryOperation extends QueryOperation {
 
     private void dbFirstGetNextChunk(Connection conn, Mailbox mbox, SortBy sort) throws ServiceException {
         long overallStart = 0;
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Fetching a DB-FIRST chunk");
+        if (ZimbraLog.index_search.isDebugEnabled()) {
+            ZimbraLog.index_search.debug("Fetching a DB-FIRST chunk");
             overallStart = System.currentTimeMillis();
         }
         
@@ -950,13 +948,13 @@ class DBQueryOperation extends QueryOperation {
                             List<SearchResult> l = mailItemToResultsMap.get(indexId);
                             
                             if (l == null) {
-                                if (mLog.isDebugEnabled()) {
+                                if (ZimbraLog.index_search.isDebugEnabled()) {
                                     if (!printedQuery) {
-                                        mLog.debug("DBQueryOperation.dbFirstGetNextChunk: LuceneQuery is \""+mLuceneOp.getCurrentQuery().toString()+"\"");
+                                        ZimbraLog.index_search.debug("DBQueryOperation.dbFirstGetNextChunk: LuceneQuery is \""+mLuceneOp.getCurrentQuery().toString()+"\"");
                                         printedQuery = true;
                                     }
                                 }
-                                mLog.warn("DBQueryOperation.dbFirstGetNextChunk: Lucene returned item ID "+indexId+" but wasn't in resultMap");
+                                ZimbraLog.index_search.warn("DBQueryOperation.dbFirstGetNextChunk: Lucene returned item ID "+indexId+" but wasn't in resultMap");
                                 throw ServiceException.FAILURE("Inconsistent DB/Index query results: Text Index returned item ID "+indexId+" but wasn't in resultMap", null);
                             } else for (SearchResult sr : l) {
                                 mDBHits.add(sr);
@@ -972,16 +970,16 @@ class DBQueryOperation extends QueryOperation {
                 
         } while(mDBHits.size() ==0 && !mEndOfHits);
         
-        if (mLog.isDebugEnabled()) {
+        if (ZimbraLog.index_search.isDebugEnabled()) {
             long overallTime = System.currentTimeMillis() - overallStart;
-            mLog.debug("Done fetching DB-FIRST chunk (took "+overallTime+"ms)");
+            ZimbraLog.index_search.debug("Done fetching DB-FIRST chunk (took "+overallTime+"ms)");
         }
     }
 
     private void luceneFirstGetNextChunk(Connection conn, Mailbox mbox, SortBy sort) throws ServiceException {
         long overallStart = 0;
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Fetching a LUCENE-FIRST chunk");
+        if (ZimbraLog.index_search.isDebugEnabled()) {
+            ZimbraLog.index_search.debug("Fetching a LUCENE-FIRST chunk");
             overallStart = System.currentTimeMillis();
         }
         
@@ -994,7 +992,7 @@ class DBQueryOperation extends QueryOperation {
             boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
 
             long luceneStart = 0;
-            if (mLog.isDebugEnabled())
+            if (ZimbraLog.index_search.isDebugEnabled())
                 luceneStart = System.currentTimeMillis();
             
             mLuceneChunk = mLuceneOp.getNextResultsChunk(forceOneHitPerChunk ? 1 : mHitsPerChunk);
@@ -1020,9 +1018,9 @@ class DBQueryOperation extends QueryOperation {
             
             sc.indexIds = mLuceneChunk.getIndexIds();
             
-            if (mLog.isDebugEnabled()) {
+            if (ZimbraLog.index_search.isDebugEnabled()) {
                 long luceneTime = System.currentTimeMillis() - luceneStart;
-                mLog.debug("Fetched Lucene Chunk of "+sc.indexIds.size()+" hits in "+luceneTime+"ms");
+                ZimbraLog.index_search.debug("Fetched Lucene Chunk of "+sc.indexIds.size()+" hits in "+luceneTime+"ms");
             }
 
             // exponentially expand the chunk size in case we have to go back to the DB
@@ -1043,9 +1041,9 @@ class DBQueryOperation extends QueryOperation {
                     DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
                 }
 
-                if (mLog.isDebugEnabled()) {
+                if (ZimbraLog.index_search.isDebugEnabled()) {
                     long dbTime = System.currentTimeMillis() - dbStart;
-                    mLog.debug("Fetched DB-second chunk in "+dbTime+"ms");
+                    ZimbraLog.index_search.debug("Fetched DB-second chunk in "+dbTime+"ms");
                 }
 
                 if (getSortBy() == SortBy.SCORE_DESCENDING) {
@@ -1069,9 +1067,9 @@ class DBQueryOperation extends QueryOperation {
             }
         } while (mDBHits.size() == 0 && !mEndOfHits);
         
-        if (mLog.isDebugEnabled()) {
+        if (ZimbraLog.index_search.isDebugEnabled()) {
             long overallTime = System.currentTimeMillis() - overallStart;
-            mLog.debug("Done fetching LUCENE-FIRST chunk (took "+overallTime+"ms)");
+            ZimbraLog.index_search.debug("Done fetching LUCENE-FIRST chunk (took "+overallTime+"ms)");
         }
     }
 
@@ -1100,8 +1098,8 @@ class DBQueryOperation extends QueryOperation {
         assert(mDBHitsIter == null || !mDBHitsIter.hasNext());
 
         if (mExecuteMode == QueryExecuteMode.NO_RESULTS) {
-            if (mLog.isDebugEnabled()) {
-                mLog.debug(" Returned **NO DB RESULTS (no-results-query-optimization)**");
+            if (ZimbraLog.index_search.isDebugEnabled()) {
+                ZimbraLog.index_search.debug(" Returned **NO DB RESULTS (no-results-query-optimization)**");
             }
             mDBHitsIter = null;
             mEndOfHits = true;
@@ -1323,7 +1321,7 @@ class DBQueryOperation extends QueryOperation {
 
             if (mQueryTarget != QueryTarget.UNSPECIFIED && dbOther.mQueryTarget != QueryTarget.UNSPECIFIED) {
                 if (!mQueryTarget.equals(dbOther.mQueryTarget)) {
-                    mLog.debug("ANDing two DBOps with different targets -- this is a no results query!");
+                    ZimbraLog.index_search.debug("ANDing two DBOps with different targets -- this is a no results query!");
                     return new NoResultsQueryOperation();
                 }
             }

@@ -190,6 +190,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Collection<NumericRange> calStartDates = new ArrayList<NumericRange>();    /* optional */
     public Collection<NumericRange> calEndDates = new ArrayList<NumericRange>();    /* optional */
     public Collection<NumericRange> modified = new ArrayList<NumericRange>(); /* optional */
+    public Collection<NumericRange> modifiedContent = new ArrayList<NumericRange>(); /* optional */
     public Collection<NumericRange> sizes = new ArrayList<NumericRange>();    /* optional */
     public Collection<NumericRange> convCounts = new ArrayList<NumericRange>(); /* optional */
     public Collection<StringRange> subjectRanges = new ArrayList<StringRange>(); /* optional */
@@ -287,6 +288,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             calStartDates.isEmpty() &&
             calEndDates.isEmpty() &&
             modified.isEmpty() &&
+            modifiedContent.isEmpty() &&
             sizes.isEmpty() &&
             convCounts.isEmpty() &&
             subjectRanges.isEmpty() &&
@@ -353,6 +355,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         toRet.calEndDates = SetHelper.cloneHashSet(calEndDates);
 
         toRet.modified = SetHelper.cloneHashSet(modified);
+        toRet.modifiedContent = SetHelper.cloneHashSet(modifiedContent);
         toRet.sizes = SetHelper.cloneHashSet(sizes);
         toRet.convCounts = SetHelper.cloneHashSet(convCounts);
         toRet.subjectRanges = SetHelper.cloneHashSet(subjectRanges);
@@ -539,6 +542,9 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
 
         if (!modified.isEmpty())
             new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD") ;
+        
+        if (!modifiedContent.isEmpty())
+            new ObjectPrinter<NumericRange>().run(retVal, modified, "MOD-CONTENT") ;
         
         if (!sizes.isEmpty()) 
             new ObjectPrinter<NumericRange>().run(retVal, sizes, "SIZE");
@@ -825,6 +831,13 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             modified.addAll(other.modified);
         }
         
+        // modifiedContent
+        if (other.modifiedContent != null) {
+            if (modifiedContent == null) 
+                modifiedContent = new ArrayList<NumericRange>();
+            modifiedContent.addAll(other.modifiedContent);
+        }
+        
         // sizes
         if (other.sizes!= null) {
             if (sizes == null) 
@@ -952,6 +965,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         checkIntervals(calStartDates);
         checkIntervals(calEndDates);
         checkIntervals(modified);
+        checkIntervals(modifiedContent);
         checkIntervals(convCounts);
     }
     

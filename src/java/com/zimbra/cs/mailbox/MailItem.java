@@ -610,6 +610,15 @@ public abstract class MailItem implements Comparable<MailItem> {
     public int getModifiedSequence() {
         return mData.modMetadata;
     }
+    
+    /**
+     * Similar to getModifiedSequence(), the mod_content value tracks changes to the 'content'
+     * of the item but does not change when purely dynamic things change (e.g. tags/flags)
+     * @return
+     */
+    public int getModifiedContentSequence() {
+        return mData.modContent;
+    }
 
     /** Returns the item's size as it counts against mailbox quota.  For items
      *  that have a blob, this is the size in bytes of the raw blob. */
@@ -1905,8 +1914,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         
         if (indexId > 0 && indexId != mData.indexId) {
             // if the copy needs to be reindexed, just set the deferred flag now and index it later
-            mMailbox.incrementIndexDeferredCount(1);
-            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
+//            mMailbox.incrementIndexDeferredCount(1);
+//            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
+            mMailbox.queueForIndexing(this, false, null);
         }
         
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
@@ -1993,8 +2003,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         boolean shared = data.indexId > 0 && data.indexId == mData.indexId;
         if (data.indexId > 0 && data.indexId != mData.indexId) {
             // if the copy needs to be reindexed, just set the deferred flag now and index it later
-            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
-            mMailbox.incrementIndexDeferredCount(1);
+            mMailbox.queueForIndexing(this, false, null);
+//            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
+//            mMailbox.incrementIndexDeferredCount(1);
         }
 
         data.contentChanged(mMailbox);

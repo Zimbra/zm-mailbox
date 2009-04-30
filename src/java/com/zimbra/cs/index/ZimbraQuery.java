@@ -550,8 +550,8 @@ public final class ZimbraQuery {
                     } // else (relative/absolute check)
                 } // else (numeric check)
 
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("Parsed date range to: ("+mDate.toString()+"-"+mEndDate.toString()+")");
+                if (ZimbraLog.index_search.isDebugEnabled()) {
+                    ZimbraLog.index_search.debug("Parsed date range to: ("+mDate.toString()+"-"+mEndDate.toString()+")");
                 }
             }
 
@@ -1906,8 +1906,6 @@ public final class ZimbraQuery {
         }
     }
 
-    private static Log mLog = LogFactory.getLog(ZimbraQuery.class);
-
     private static final int SUBQUERY_TOKEN = 9999;
 
     private AbstractList mClauses;
@@ -2412,7 +2410,7 @@ public final class ZimbraQuery {
             throw ServiceException.FAILURE("ZimbraQueryParser threw Error: "+error, error);
         }
         
-        if (ZimbraLog.index.isDebugEnabled()) {
+        if (ZimbraLog.index_search.isDebugEnabled()) {
             String str = this.toString() +" search([";
             for (int i = 0; i < mParams.getTypes().length; i++) {
                 if (i > 0) {
@@ -2421,7 +2419,7 @@ public final class ZimbraQuery {
                 str+=mParams.getTypes()[i];
             }
             str += "]," + mParams.getSortBy()+ ")";
-            ZimbraLog.index.debug(str);
+            ZimbraLog.index_search.debug(str);
         }
 
         //
@@ -2445,8 +2443,8 @@ public final class ZimbraQuery {
         //
         // handle the special "sort:" tag in the search string
         if (mSortByOverride != null) {
-            if (mLog.isDebugEnabled())
-                mLog.debug("Overriding SortBy parameter to execute ("+params.getSortBy().toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
+            if (ZimbraLog.index_search.isDebugEnabled())
+                ZimbraLog.index_search.debug("Overriding SortBy parameter to execute ("+params.getSortBy().toString()+") w/ specification from QueryString: "+mSortByOverride.toString());
 
             params.setSortBy(mSortByOverride);
         }
@@ -2458,22 +2456,22 @@ public final class ZimbraQuery {
             // this generates all of the query operations
             mOp = mParseTree.getQueryOperation();
 
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("OP="+mOp.toString());
+            if (ZimbraLog.index_search.isDebugEnabled()) {
+                ZimbraLog.index_search.debug("OP="+mOp.toString());
             }
 
             // expand the is:local and is:remote parts into in:(LIST)'s
             mOp = mOp.expandLocalRemotePart(mbox);
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("AFTEREXP="+mOp.toString());
+            if (ZimbraLog.index_search.isDebugEnabled()) {
+                ZimbraLog.index_search.debug("AFTEREXP="+mOp.toString());
             }
 
             // optimize the query down
             mOp = mOp.optimize(mMbox);
             if (mOp == null)
                 mOp = new NoResultsQueryOperation();
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("OPTIMIZED="+mOp.toString());
+            if (ZimbraLog.index_search.isDebugEnabled()) {
+                ZimbraLog.index_search.debug("OPTIMIZED="+mOp.toString());
             }
         }
         
@@ -2573,7 +2571,7 @@ public final class ZimbraQuery {
                         RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
                         remote.setup(proto, octxt.getAuthToken(), params);
                     } catch(Exception e) {
-                        ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+remoteOps.toString());
+                        ZimbraLog.index_search.info("Ignoring "+e+" during RemoteQuery generation for "+remoteOps.toString());
                     }
                 }
             }                
@@ -2582,8 +2580,8 @@ public final class ZimbraQuery {
             // For the LOCAL parts of the query, do permission checks, do trash/spam exclusion
             //
             if (!localOps.mQueryOperations.isEmpty()) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("LOCAL_IN="+localOps.toString());
+                if (ZimbraLog.index_search.isDebugEnabled()) {
+                    ZimbraLog.index_search.debug("LOCAL_IN="+localOps.toString());
                 }                
 
                 Account authAcct = null;
@@ -2616,8 +2614,8 @@ public final class ZimbraQuery {
                     localOps.mQueryOperations.addAll(toAdd);
                 }
                 
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("LOCAL_AFTERTS="+localOps.toString());
+                if (ZimbraLog.index_search.isDebugEnabled()) {
+                    ZimbraLog.index_search.debug("LOCAL_AFTERTS="+localOps.toString());
                 }                
                 
                 //
@@ -2677,13 +2675,13 @@ public final class ZimbraQuery {
                                                        visibleFolders,
                                                        allowPrivateAccess);
                 
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("LOCAL_AFTER_PERM_CHECKS="+localOps.toString());
+                if (ZimbraLog.index_search.isDebugEnabled()) {
+                    ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS="+localOps.toString());
                 }
                 
                 if (!hasFolderRightPrivateSet.isEmpty()) {
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("CLONED_LOCAL_BEFORE_PERM="+clonedLocal.toString());
+                    if (ZimbraLog.index_search.isDebugEnabled()) {
+                        ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM="+clonedLocal.toString());
                     }
                     
                     // 
@@ -2697,16 +2695,16 @@ public final class ZimbraQuery {
                                                               hasFolderRightPrivateSet,
                                                               true);
                     
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("CLONED_LOCAL_AFTER_PERM="+clonedLocal.toString());
+                    if (ZimbraLog.index_search.isDebugEnabled()) {
+                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM="+clonedLocal.toString());
                     }
 
                     // clonedLocal should only have the single INTERSECT in it
                     assert(clonedLocal.mQueryOperations.size() == 1);
                     
                     QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("CLONED_LOCAL_AFTER_OPTIMIZE="+optimizedClonedLocal.toString());
+                    if (ZimbraLog.index_search.isDebugEnabled()) {
+                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE="+optimizedClonedLocal.toString());
                     }
                     
                     UnionQueryOperation withPrivateExcluded = localOps;
@@ -2714,8 +2712,8 @@ public final class ZimbraQuery {
                     localOps.add(withPrivateExcluded);
                     localOps.add(optimizedClonedLocal);
                     
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("LOCAL_WITH_CLONED="+localOps.toString());
+                    if (ZimbraLog.index_search.isDebugEnabled()) {
+                        ZimbraLog.index_search.debug("LOCAL_WITH_CLONED="+localOps.toString());
                     }
                     
                     //
@@ -2736,14 +2734,14 @@ public final class ZimbraQuery {
             UnionQueryOperation union = new UnionQueryOperation();
             union.add(localOps);
             union.add(remoteOps);
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("BEFORE_FINAL_OPT="+union.toString());
+            if (ZimbraLog.index_search.isDebugEnabled()) {
+                ZimbraLog.index_search.debug("BEFORE_FINAL_OPT="+union.toString());
             }                
             mOp = union.optimize(mbox);
             assert(union.mQueryOperations.size() > 0);
         }
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("END_ZIMBRAQUERY_CONSTRUCTOR="+mOp.toString());
+        if (ZimbraLog.index_search.isDebugEnabled()) {
+            ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR="+mOp.toString());
         }                
     }
 
@@ -2775,8 +2773,8 @@ public final class ZimbraQuery {
             assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
             assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
 
-            if (mLog.isDebugEnabled())
-                mLog.debug("OPERATION:"+mOp.toString());
+            if (ZimbraLog.index_search.isDebugEnabled())
+                ZimbraLog.index_search.debug("OPERATION:"+mOp.toString());
 
             assert(mResults == null);
 
@@ -2797,7 +2795,7 @@ public final class ZimbraQuery {
             
             return mResults;
         } else {
-            mLog.debug("Operation optimized to nothing.  Returning no results");
+            ZimbraLog.index_search.debug("Operation optimized to nothing.  Returning no results");
             return new EmptyQueryResults(mParams.getTypes(), mParams.getSortBy(), mParams.getMode());
         }
     }
@@ -2851,7 +2849,7 @@ public final class ZimbraQuery {
                 if (visibleFolders != null) {
                     if (visibleFolders.size() == 0) {
                         union.mQueryOperations.remove(i);
-                        ZimbraLog.index.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
+                        ZimbraLog.index_search.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
                         union.mQueryOperations.add(i, new NoResultsQueryOperation());
                     } else {
                         union.mQueryOperations.remove(i);

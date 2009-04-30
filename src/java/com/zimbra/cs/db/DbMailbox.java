@@ -34,12 +34,14 @@ import java.util.Set;
 
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.util.Config;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,7 +63,8 @@ public class DbMailbox {
     public static final int CI_LAST_SOAP_ACCESS;
     public static final int CI_NEW_MESSAGES;
     public static final int CI_IDX_DEFERRED_COUNT;
-
+    public static final int CI_HIGHEST_INDEXED;    
+    
     static {
         int pos = 1;
         // Order must match the order of column definition in zimbra.mailbox
@@ -81,6 +84,7 @@ public class DbMailbox {
         CI_LAST_SOAP_ACCESS = pos++;
         CI_NEW_MESSAGES = pos++;
         CI_IDX_DEFERRED_COUNT = pos++;
+        CI_HIGHEST_INDEXED = pos++;
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
@@ -426,7 +430,7 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
                     " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?," +
-                    "  size_checkpoint = ?, new_messages = ?, idx_deferred_count = ?" +
+                    "  size_checkpoint = ?, new_messages = ?, idx_deferred_count = ?, highest_indexed = ?" +
                     " WHERE id = ?");
             int pos = 1;
             stmt.setInt(pos++, mbox.getLastItemId());
@@ -435,6 +439,7 @@ public class DbMailbox {
             stmt.setLong(pos++, mbox.getSize());
             stmt.setInt(pos++, mbox.getRecentMessageCount());
             stmt.setInt(pos++, mbox.getIndexDeferredCount());
+            stmt.setString(pos++, mbox.getHighestFlushedToIndex().toString());
             stmt.setInt(pos++, mbox.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -641,7 +646,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id," + (DebugConfig.disableMailboxGroups ? mailboxId : " group_id") + "," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages, idx_deferred_count " +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages, idx_deferred_count, highest_indexed " +
                     "FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
             stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
@@ -667,6 +672,20 @@ public class DbMailbox {
             mbd.lastWriteDate = rs.getInt(pos++);
             mbd.recentMessages = rs.getInt(pos++);
             mbd.idxDeferredCount = rs.getInt(pos++);
+
+            String highestModContentIndexed = rs.getString(pos++);
+            if (highestModContentIndexed == null || highestModContentIndexed.length() == 0)
+                mbd.highestModContentIndexed = new SyncToken(0);
+            else {
+                try {
+                    mbd.highestModContentIndexed = new SyncToken(highestModContentIndexed);
+                } catch (MailServiceException e) {
+                    ZimbraLog.mailbox.warn("Exception loading index high water mark from DB.  " +
+                    		"Using current mod_content value: "+mbd.lastChangeId, e);
+                    mbd.highestModContentIndexed = new SyncToken(mbd.lastChangeId);
+                }
+            }
+            
             mbd.lastBackupDate = -1;
 
             // round lastItemId and lastChangeId up so that they get written on the next change
@@ -964,8 +983,10 @@ public class DbMailbox {
         try {
             if (!DebugConfig.disableMailboxGroups) {
                 stmt = conn.prepareStatement(
-                        "SELECT id, group_id, account_id, index_volume_id, item_id_checkpoint, contact_count, size_checkpoint," +
-                        " change_checkpoint, tracking_sync, tracking_imap, last_backup_at, last_soap_access, new_messages, idx_deferred_count " +
+                        "SELECT id, group_id, account_id, index_volume_id, item_id_checkpoint, " +
+                        "contact_count, size_checkpoint, change_checkpoint, tracking_sync, " +
+                        "tracking_imap, last_backup_at, last_soap_access, new_messages, " +
+                        "idx_deferred_count, highest_indexed " +
                         "FROM mailbox");
                 rs = stmt.executeQuery();
                 readMailboxRawData(results, rs);
@@ -976,7 +997,8 @@ public class DbMailbox {
 
                     stmt = conn.prepareStatement(
                             "SELECT id, id, account_id, index_volume_id, item_id_checkpoint, contact_count, size_checkpoint," +
-                            " change_checkpoint, tracking_sync, tracking_imap, -1, last_soap_access, new_messages, idx_deferred_count " +
+                            " change_checkpoint, tracking_sync, tracking_imap, -1, last_soap_access, new_messages," +
+                            " idx_deferred_count, highest_indexed" +
                             "FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX));
                     rs = stmt.executeQuery();
                     readMailboxRawData(results, rs);
@@ -1016,6 +1038,20 @@ public class DbMailbox {
             data.lastWriteDate = rs.getInt(pos++);
             data.recentMessages = rs.getInt(pos++);
             data.idxDeferredCount = rs.getInt(pos++);
+            
+            String highestModContentIndexed = rs.getString(pos++);
+            if (highestModContentIndexed == null || highestModContentIndexed.length() == 0)
+                data.highestModContentIndexed = new SyncToken(0);
+            else {
+                try {
+                    data.highestModContentIndexed = new SyncToken(highestModContentIndexed);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("Exception loading index high water mark from DB.  " +
+                                           "Using current mod_content value: "+data.lastChangeId, e);
+                    data.highestModContentIndexed = new SyncToken(data.lastChangeId);
+                }
+            }
+            
             results.add(data);
         }
     }

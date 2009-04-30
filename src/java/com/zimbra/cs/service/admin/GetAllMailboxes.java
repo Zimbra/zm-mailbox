@@ -93,6 +93,7 @@ public class GetAllMailboxes extends AdminDocumentHandler {
             mbx.addAttribute(AdminConstants.A_MT_LASTSOAPACCESS, mailbox.lastWriteDate);
             mbx.addAttribute(AdminConstants.A_MT_NEWNESSAGES, mailbox.recentMessages);
             mbx.addAttribute(AdminConstants.A_MT_IDXDEFERREDCOUNT, mailbox.idxDeferredCount);
+            mbx.addAttribute(AdminConstants.A_MI_HIGHEST_INDEXED, mailbox.highestModContentIndexed.toString());
         }
         response.addAttribute(AdminConstants.A_MORE, i < mailboxes.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, mailboxes.size());

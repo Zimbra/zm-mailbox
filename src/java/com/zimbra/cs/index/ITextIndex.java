@@ -29,15 +29,11 @@ import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
  */
 interface ITextIndex {
     
-    void beginBatchOperation();
-    
-    void endBatchOperation();
-
     /**
      * Store the specified MailItem in the Index.  If deleteFirst is false, then we are sure that
      * this MailItem is not already in the index, and so we can skip the check-update step.
      */
-    void addDocument(Document[] docs, int indexId, long receivedDate, long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException;
+    void addDocument(Document[] docs, int indexId, int modContent, long receivedDate, long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException;
 
     /**
      * Delete all the documents from the index that have indexIds as specified 

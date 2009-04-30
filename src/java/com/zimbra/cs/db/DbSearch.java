@@ -58,7 +58,7 @@ public class DbSearch {
         public Object sortkey;
         public Object extraData;
 
-        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG, MODSEQ, PARENT };
+        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG, MODSEQ, PARENT, MODCONTENT };
 
         public static class SizeEstimate {
             public SizeEstimate() {}
@@ -101,7 +101,7 @@ public class DbSearch {
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(offset + 2) ? Flag.BITMASK_UNREAD | rs.getInt(offset + 3) : rs.getInt(offset + 3);
                 result.extraData = new ImapMessage(result.id, result.type, rs.getInt(offset + 1), flags, rs.getLong(offset + 4));
-            } else if (extra == ExtraData.MODSEQ || extra == ExtraData.PARENT) {
+            } else if (extra == ExtraData.MODSEQ || extra == ExtraData.PARENT || extra==ExtraData.MODCONTENT) {
                 int value = rs.getInt(offset + 1);
                 result.extraData = rs.wasNull() ? -1 : value;
             }
@@ -358,6 +358,8 @@ public class DbSearch {
             select.append(", mi.mod_metadata");
         else if (extra == SearchResult.ExtraData.PARENT)
             select.append(", mi.parent_id");
+        else if (extra == SearchResult.ExtraData.MODCONTENT)
+            select.append(", mi.mod_content");
 
         select.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi"));
         if (includeCalTable) 
@@ -472,6 +474,7 @@ public class DbSearch {
         num += encode(statement, "mi.index_id", true, c.indexIds);
         num += encodeRangeWithMinimum(statement, "mi.date", c.dates, 1);
         num += encodeRangeWithMinimum(statement, "mi.mod_metadata", c.modified, 1);
+        num += encodeRangeWithMinimum(statement, "mi.mod_content", c.modifiedContent, 1);
         num += encodeRangeWithMinimum(statement, "mi.size", c.sizes, 0);
         num += encodeRange(statement, "mi.subject", c.subjectRanges);
         num += encodeRange(statement, "mi.sender", c.senderRanges);
@@ -1131,6 +1134,7 @@ public class DbSearch {
         param = setIntegers(stmt, param, c.indexIds);
         param = setDateRange(stmt, param, c.dates);
         param = setLongRangeWithMinimum(stmt, param, c.modified, 1);
+        param = setLongRangeWithMinimum(stmt, param, c.modifiedContent, 1);
         param = setIntRangeWithMinimum(stmt, param, c.sizes, 0);
         param = setStringRange(stmt, param, c.subjectRanges);
         param = setStringRange(stmt, param, c.senderRanges);

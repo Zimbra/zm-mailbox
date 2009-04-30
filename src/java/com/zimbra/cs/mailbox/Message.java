@@ -616,8 +616,9 @@ public class Message extends MailItem {
                                 (method.equals(ICalTok.PUBLISH.toString()) &&
                                  getAccount().getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false))) {
                                 if (autoAddNew) {
-                                    int flags = Flag.BITMASK_INDEXING_DEFERRED;
-                                    mMailbox.incrementIndexDeferredCount(1);
+                                    int flags = 0;
+//                                  int flags = Flag.BITMASK_INDEXING_DEFERRED;
+//                                  mMailbox.incrementIndexDeferredCount(1);
                                     int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
                                     calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur, null);
                                     calItemIsNew = true;

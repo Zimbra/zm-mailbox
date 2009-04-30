@@ -46,6 +46,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.service.util.SyncToken;
 
 
 /**
@@ -172,7 +173,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     public void endBatchOperation() {
     }
 
-    public void addDocument(Document[] docs, int indexId, long receivedDate, 
+    public void addDocument(Document[] docs, int indexId, int modContent, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
@@ -220,7 +221,18 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                     } // synchronized(doc)
                 } // foreach Document
 
-                mUncommittedItems.add(indexId);
+                if (modContent > 0) {
+                    SyncToken token = new SyncToken(modContent, indexId); 
+                    mNumUncommittedItems++;
+                    assert(token.after(mHighestUncomittedModContent));
+                    if (token.after(mHighestUncomittedModContent)) {
+                        mHighestUncomittedModContent = token;
+                    } else {
+                        ZimbraLog.index_add.info("Index items not submitted in order: curHighest="+
+                                             mHighestUncomittedModContent+" new highest="+modContent+"" +
+                                             "indexId="+indexId);
+                    }
+                }
                 
                 // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
                 // however we also track the number of uncomitted-operations on the index, and will force a 
@@ -246,11 +258,11 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         // already be deleted and just not be optimized out yet -- some lucene
                         // APIs (e.g. docFreq) will still return the old count until the indexes 
                         // are optimized...
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("Deleted index documents for itemId "+itemIdStr);
+                        if (ZimbraLog.index_add.isDebugEnabled()) {
+                            ZimbraLog.index_add.debug("Deleted index documents for itemId "+itemIdStr);
                         }
                     } catch (IOException ioe) {
-                        sLog.debug("deleteDocuments exception on index "+i+" out of "+itemIds.size()+" (id="+itemIds.get(i)+")");
+                        ZimbraLog.index_add.debug("deleteDocuments exception on index "+i+" out of "+itemIds.size()+" (id="+itemIds.get(i)+")");
                         List<Integer> toRet = new ArrayList<Integer>(i);
                         for (int j = 0; j < i; j++)
                             toRet.add(itemIds.get(j));
@@ -269,8 +281,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         synchronized(getLock()) {        
             IndexWriter writer = null;
             flush();
-            if (sLog.isDebugEnabled())
-                sLog.debug("****Deleting index " + mIdxDirectory.toString());
+            if (ZimbraLog.index_add.isDebugEnabled())
+                ZimbraLog.index_add.debug("****Deleting index " + mIdxDirectory.toString());
             
             String[] files = mIdxDirectory.list();
             for (String file : files) {
@@ -680,9 +692,9 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     
     private void doneWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
-        if (mUncommittedItems.size() > sMaxUncommittedOps) {
-            if (sLog.isDebugEnabled()) {
-                sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
+        if (mNumUncommittedItems > sMaxUncommittedOps) {
+            if (ZimbraLog.index_add.isDebugEnabled()) {
+                ZimbraLog.index_add.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
             }
             flush();
         } else {
@@ -722,22 +734,22 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
         
         try {
-//          sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//          ZimbraLog.index.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, null);
             if (ZimbraLog.index_lucene.isDebugEnabled())
                 mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-//          sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//          ZimbraLog.index.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
         } catch (IOException e1) {
-            sLog.debug("Caught exception trying to open index: "+e1, e1);
+            ZimbraLog.index_add.debug("Caught exception trying to open index: "+e1, e1);
             File indexDir  = mIdxDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
-//              sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//              ZimbraLog.index.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, null);
                 if (ZimbraLog.index_lucene.isDebugEnabled())
                     mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
                 
-//              sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
+//              ZimbraLog.index.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 if (mIndexWriter == null) 
                     throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
             } else {
@@ -781,8 +793,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             return;
         }
 
-        if (sLog.isDebugEnabled())
-            sLog.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
+        if (ZimbraLog.index_add.isDebugEnabled())
+            ZimbraLog.index_add.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
 
         IndexWriter writer = mIndexWriter;
         mIndexWriter = null;
@@ -793,24 +805,22 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             writer.close();
             success = true;
         } catch (IOException e) {
-            sLog.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
-            // TODO: Is it okay to eat up the exception?
+            ZimbraLog.index_add.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
+            // fall through to finally here with success=false 
         } finally {
-            // Write commit entries to redo log for all IndexItem entries
-            // whose changes were written to disk by mIndexWriter.close()
-            // above.
-            mMbidx.indexingCompleted(mUncommittedItems, success);
-            mUncommittedItems.clear();
+            if (mNumUncommittedItems > 0) {
+                assert(mHighestUncomittedModContent.getChangeId() > 0);
+                mMbidx.indexingCompleted(mNumUncommittedItems, mHighestUncomittedModContent, success);
+            }
+            mNumUncommittedItems = 0;
+            mHighestUncomittedModContent = new SyncToken(0);
         }
     }
-    
 
     private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); }
 
     private static IndexReadersCache sIndexReadersCache;
     private static IndexWritersCache sIndexWritersCache;
-    
-    private static Log sLog = ZimbraLog.index;
     
     /**
      * If documents are being constantly added to an index, then it will stay at the front of the LRU cache
@@ -834,8 +844,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
     private MailboxIndex mMbidx;
-    //private ArrayList<IndexItem>mUncommittedRedoOps = new ArrayList<IndexItem>();
-    private List<Integer> mUncommittedItems = new ArrayList<Integer>(); 
+    private int mNumUncommittedItems = 0;
+    private SyncToken mHighestUncomittedModContent = new SyncToken(0);
     
     
     static abstract class DocEnumInterface {

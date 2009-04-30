@@ -19,6 +19,7 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -42,6 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.op.IndexItem;
 //import com.zimbra.cs.service.admin.ReIndex;
+import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.Zimbra;
 
@@ -53,8 +55,8 @@ public final class MailboxIndex
     public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params, boolean textIndexOutOfSync) 
     throws IOException, ParseException, ServiceException {
 
-        if (ZimbraLog.index.isDebugEnabled()) {
-            ZimbraLog.index.debug("SearchRequest: "+params.getQueryStr());
+        if (ZimbraLog.index_search.isDebugEnabled()) {
+            ZimbraLog.index_search.debug("SearchRequest: "+params.getQueryStr());
         }
 
         String qs = params.getQueryStr();
@@ -263,14 +265,6 @@ public final class MailboxIndex
         mTextIndex.flush();
     }
     
-    public void beginBatchOperation() {
-        mTextIndex.beginBatchOperation();
-    }
-    
-    public void endBatchOperation() {
-        mTextIndex.endBatchOperation();
-    }
-
     /**
      * @param itemIds array of itemIds to be deleted
      * 
@@ -310,7 +304,7 @@ public final class MailboxIndex
         else
             mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
 
-        sLog.info("Initialized Index for mailbox " + mailboxId+" directory: "+mTextIndex.toString()+" Analyzer="+mAnalyzer.toString());
+        ZimbraLog.index.info("Initialized Index for mailbox " + mailboxId+" directory: "+mTextIndex.toString()+" Analyzer="+mAnalyzer.toString());
     }
 
     TextQueryOperation createTextQueryOperation() {
@@ -348,7 +342,7 @@ public final class MailboxIndex
                 Zimbra.halt("Unable to instantiate Index Factory "+factClassname+" specified in LC.zimbra_index_factory_classname");
             }
         } else {
-            sIndexFactory = new Lucene23Factory();
+            sIndexFactory = new LuceneFactory();
         }
     }
 
@@ -357,8 +351,7 @@ public final class MailboxIndex
 
     private int mMailboxId;
     private Mailbox mMailbox;
-    private static Log sLog = LogFactory.getLog(MailboxIndex.class);
-
+    
     public static void startup() {
         if (DebugConfig.disableIndexing)
             return;
@@ -490,7 +483,19 @@ public final class MailboxIndex
         mTextIndex.deleteIndex();
     }
 
-    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<Document> docList, MailItem mi) 
+    /**
+     * @param mbox
+     * @param deleteFirst
+     * @param docList
+     * @param mi
+     * @param modContent passed-in, can't use the one from the MailItem because it could potentially change underneath us
+     *                   and we need to guarantee that we're submitting to the index in strict mod-content-order
+     *                   Note that a modContent of -1 means that this is an out-of-sequence index
+     *                   add (IE a reindex of specific items or types).  Out-of-index adds 
+     *                   SHOULD NOT BE TRACKED -- do not call indexingCompleted for them
+     * @throws ServiceException
+     */
+    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<Document> docList, MailItem mi, int modContent) 
     throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {
@@ -499,17 +504,23 @@ public final class MailboxIndex
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    mTextIndex.addDocument(docs, indexId, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
+                    mTextIndex.addDocument(docs, indexId, modContent, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMailItem caught IOException", e);
             }
         }
     }
-
-    void indexingCompleted(List<Integer> ids, boolean succeeded) {
-        if (ids.size() > 0)
-            mMailbox.indexingCompleted(ids, succeeded);
+    
+    void indexingCompleted(int count, SyncToken highestToken, boolean succeeded) {
+        if (count > 0) {
+            if (ZimbraLog.index_add.isDebugEnabled()) {
+                ZimbraLog.index_add.debug("indexingCompleted("+count+","+highestToken+","+
+                                      (succeeded?"SUCCEEDED)":"FAILED)"));
+            }
+            
+            mMailbox.indexingCompleted(count, highestToken, succeeded);
+        }
     }
 
     /**
