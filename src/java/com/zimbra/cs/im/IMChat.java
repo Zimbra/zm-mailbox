@@ -48,8 +48,8 @@ import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMMessage.TextPart;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.Zimbra;
 

@@ -29,7 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetShareInfo  extends AccountDocumentHandler {

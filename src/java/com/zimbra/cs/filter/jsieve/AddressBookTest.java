@@ -47,6 +47,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 
 public class AddressBookTest extends AbstractTest {
 
@@ -146,7 +147,7 @@ public class AddressBookTest extends AbstractTest {
                                 iaddrStr = iaddr.getAddress();
                             } catch (AddressException e1) {
                             }
-                            results = mbox.search(new Mailbox.OperationContext(mbox), "To:" + iaddrStr, 
+                            results = mbox.search(new OperationContext(mbox), "To:" + iaddrStr, 
                                     SEARCH_TYPE, SortBy.DATE_ASCENDING, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {

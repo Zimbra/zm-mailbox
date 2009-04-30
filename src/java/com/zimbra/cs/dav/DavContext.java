@@ -39,8 +39,7 @@ import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.FileUploadServlet;
 
 /**
@@ -205,7 +204,7 @@ public class DavContext {
 		}
 		mStatus = HttpServletResponse.SC_OK;
 		mAuthAccount = authUser;
-		mOpCtxt = new Mailbox.OperationContext(authUser);
+		mOpCtxt = new OperationContext(authUser);
 		mOpCtxt.setUserAgent(req.getHeader("User-Agent"));
 	}
 	

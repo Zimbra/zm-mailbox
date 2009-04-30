@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.operation.Scheduler.Priority;
@@ -33,7 +34,7 @@ public abstract class IMDocumentHandler extends DocumentHandler {
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Session session = getSession(zsc);
-        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        OperationContext octxt = getOperationContext(zsc, context);
         Mailbox mbox = getRequestedMailbox(zsc);
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }

@@ -29,7 +29,7 @@ import com.zimbra.cs.im.IMMessage;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMUtils;
 import com.zimbra.cs.im.IMMessage.TextPart;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMSendMessage extends IMDocumentHandler {

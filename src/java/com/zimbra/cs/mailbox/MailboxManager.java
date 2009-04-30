@@ -690,7 +690,7 @@ public class MailboxManager {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul>
      * @see #initialize() */
-    public Mailbox createMailbox(Mailbox.OperationContext octxt, Account account) throws ServiceException {
+    public Mailbox createMailbox(OperationContext octxt, Account account) throws ServiceException {
         if (account == null)
             throw ServiceException.FAILURE("createMailbox: must specify an account", null);
         if (!Provisioning.onLocalServer(account))

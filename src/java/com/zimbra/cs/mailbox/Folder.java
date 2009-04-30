@@ -455,7 +455,7 @@ public class Folder extends MailItem {
     /** Returns an unmodifiable list of the folder's subfolders sorted by
      *  name.  The sort is case-insensitive.
      * @throws ServiceException */
-    public List<Folder> getSubfolders(Mailbox.OperationContext octxt) throws ServiceException {
+    public List<Folder> getSubfolders(OperationContext octxt) throws ServiceException {
         if (mSubfolders == null)
             return Collections.emptyList();
 

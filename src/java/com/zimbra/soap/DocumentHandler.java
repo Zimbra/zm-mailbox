@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.RemoteSoapSession;
 import com.zimbra.cs.session.Session;
@@ -111,7 +111,7 @@ public abstract class DocumentHandler {
         return (ZimbraSoapContext) context.get(SoapEngine.ZIMBRA_CONTEXT);
     }
 
-    /** Generates a new {@link com.zimbra.cs.mailbox.Mailbox.OperationContext}
+    /** Generates a new {@link com.zimbra.cs.mailbox.OperationContext}
      *  object reflecting the constraints serialized in the <tt>&lt;context></tt>
      *  element in the SOAP header.<p>
      * 

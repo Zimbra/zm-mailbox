@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -292,7 +293,7 @@ public class UrlNamespace {
             path = path.substring(0, index);
             id = params.get("id");
         }
-        Mailbox.OperationContext octxt = ctxt.getOperationContext();
+        OperationContext octxt = ctxt.getOperationContext();
         MailItem item = null;
         
         DavResource rs = checkRenamedResource(path);

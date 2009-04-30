@@ -23,7 +23,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.operation.Scheduler.Priority;
@@ -43,7 +43,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
 
         Session session = isLocal ? getSession(zsc, context) : null;
         Mailbox mbox = isLocal ? getRequestedMailbox(zsc) : null;
-        Mailbox.OperationContext octxt = getOperationContext(zsc, session);
+        OperationContext octxt = getOperationContext(zsc, session);
 
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }

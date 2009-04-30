@@ -22,7 +22,7 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.operation.Scheduler.IOperation;
 import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.session.Session;

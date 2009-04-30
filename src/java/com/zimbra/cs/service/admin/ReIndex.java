@@ -32,7 +32,6 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ReIndex extends AdminDocumentHandler {

@@ -46,6 +46,7 @@ import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.operation.Scheduler.Priority;
@@ -64,7 +65,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Session session = getSession(zsc);
-        Mailbox.OperationContext octxt = null;
+        OperationContext octxt = null;
         Mailbox mbox = null;
 
         if (zsc.getAuthToken() != null)

@@ -72,6 +72,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
@@ -301,7 +302,7 @@ extends Assert {
         types[0] = type;
 
         List<Integer> ids = new ArrayList<Integer>();
-        ZimbraQueryResults r = mbox.search(new Mailbox.OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
+        ZimbraQueryResults r = mbox.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));

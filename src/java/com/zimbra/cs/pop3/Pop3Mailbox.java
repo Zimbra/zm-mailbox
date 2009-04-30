@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 
 class Pop3Mailbox {
     private int mId; // id of the mailbox
@@ -47,7 +48,7 @@ class Pop3Mailbox {
     private long mTotalSize; // raw size from blob store
     private long mDeletedSize; // raw size from blob store    
     private List<Pop3Message> mMessages; // array of pop messages
-    private Mailbox.OperationContext mOpContext;
+    private OperationContext mOpContext;
 
     private static final byte[] POP3_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 
@@ -63,7 +64,7 @@ class Pop3Mailbox {
         mId = mbox.getId();
         mNumDeleted = 0;
         mDeletedSize = 0;
-        mOpContext = new Mailbox.OperationContext(acct);
+        mOpContext = new OperationContext(acct);
 
         if (query == null || query.equals("")) {
             String dateConstraint = acct.getAttr(Provisioning.A_zimbraPrefPop3DownloadSince);

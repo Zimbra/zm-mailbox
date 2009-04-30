@@ -28,7 +28,7 @@ import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.account.GetShareInfo.ResultFilter;
 import com.zimbra.cs.service.account.GetShareInfo.ResultFilterByTarget;
 import com.zimbra.cs.service.account.GetShareInfo.ShareInfoVisitor;

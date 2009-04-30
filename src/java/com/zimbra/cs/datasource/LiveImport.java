@@ -52,7 +52,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 
@@ -126,7 +126,7 @@ public class LiveImport extends MailItemImport {
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         DataSource ds = getDataSource();
-        OperationContext octxt = new Mailbox.OperationContext(mbox);
+        OperationContext octxt = new OperationContext(mbox);
 
         connect(ds);
         try {

@@ -339,127 +339,6 @@ public class Mailbox {
         }
     }
 
-    public static class OperationContext {
-        public static final boolean CHECK_CREATED = false, CHECK_MODIFIED = true;
-
-        private Account    authuser;
-        private boolean    isAdmin;
-        private Session    session;
-        private RedoableOp player;
-        private String     requestIP;
-        private String     userAgent;
-        private AuthToken  authToken;
-        
-        boolean changetype = CHECK_CREATED;
-        int     change = -1;
-
-        public OperationContext(RedoableOp redoPlayer) {
-            player = redoPlayer;
-        }
-        public OperationContext(Account acct) {
-            this(acct, false);
-        }
-        public OperationContext(Mailbox mbox) throws ServiceException {
-            this(mbox.getAccount());
-        }
-        public OperationContext(Account acct, boolean admin) {
-            authuser = acct;  isAdmin = admin;
-        }
-        public OperationContext(String accountId) throws ServiceException {
-            authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
-            if (authuser == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        }
-        public OperationContext(AuthToken auth) throws ServiceException {
-            authToken = auth;
-            String accountId = auth.getAccountId();
-            isAdmin = auth.isAdmin() || auth.isDomainAdmin();
-            authuser = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
-            if (authuser == null || !auth.isZimbraUser()) {
-                if (auth.getDigest() != null || auth.getAccessKey() != null)
-                    authuser = new ACL.GuestAccount(auth);
-                else
-                    authuser = ACL.ANONYMOUS_ACCT;
-            }
-            if (authuser == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        }
-        public OperationContext(OperationContext octxt) {
-            player     = octxt.player;      session = octxt.session;
-            authuser   = octxt.authuser;    isAdmin = octxt.isAdmin;
-            changetype = octxt.changetype;  change  = octxt.change;
-            authToken  = octxt.authToken;
-        }
-
-        public OperationContext setChangeConstraint(boolean checkModified, int changeId) {
-            changetype = checkModified;  change = changeId;  return this;
-        }
-        public OperationContext unsetChangeConstraint() {
-            changetype = CHECK_CREATED;  change = -1;  return this;
-        }
-
-        public OperationContext setSession(Session s) {
-            session = s;  return this;
-        }
-        Session getSession() {
-            return session;
-        }
-
-        public RedoableOp getPlayer() {
-            return player;
-        }
-        public long getTimestamp() {
-            return (player == null ? System.currentTimeMillis() : player.getTimestamp());
-        }
-        int getChangeId() {
-            return (player == null ? -1 : player.getChangeId());
-        }
-        public boolean needRedo() {
-            return player == null || !player.getUnloggedReplay();
-        }
-
-        public Account getAuthenticatedUser() {
-            return authuser;
-        }
-        
-        public AuthToken getAuthToken() throws ServiceException {
-            return getAuthToken(true);
-        }
-        
-        public AuthToken getAuthToken(boolean constructIfNotPresent) throws ServiceException {
-            if (authToken != null)
-                return authToken;
-            else if (constructIfNotPresent) {
-                if (getAuthenticatedUser() != null)
-                    return AuthProvider.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());
-            }
-            return null;
-        }
-        
-        public boolean isUsingAdminPrivileges() {
-            return isAdmin;
-        }
-        public boolean isDelegatedRequest(Mailbox mbox) {
-            return authuser != null && !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
-        }
-        
-        public OperationContext setRequestIP(String addr) {
-            requestIP = addr;  return this;
-        }
-        
-        public String getRequestIP() {
-            return requestIP;
-        }
-        
-        public OperationContext setUserAgent(String ua) {
-            userAgent = ua;  return this;
-        }
-        
-        public String getUserAgent() {
-            return userAgent;
-        }
-    }
-
     /**
      * Called by the indexing subsystem when indexing has completed for the specified items.
      * 
@@ -1025,7 +904,7 @@ public class Mailbox {
 
     /** Returns the {@link Account} for the authenticated user for the
      *  transaction.  Returns <tt>null</tt> if none was supplied in the
-     *  transaction's {@link Mailbox.OperationContext} or if the authenticated
+     *  transaction's {@link OperationContext} or if the authenticated
      *  user is the same as the <tt>Mailbox</tt>'s owner. */
     Account getAuthenticatedAccount() {
         Account authuser = null;
@@ -2101,7 +1980,7 @@ public class Mailbox {
      *  in the Mailbox, as do all admin accounts.  All other users must be
      *  explicitly granted access.  <i>(Tag sharing and negative rights not
      *  yet implemented.)</i>  This operation will succeed even if the
-     *  authenticated user from the {@link Mailbox.OperationContext} does
+     *  authenticated user from the {@link OperationContext} does
      *  not have {@link ACL#RIGHT_READ} on the requested item.<p>
      * 
      *  If you want to know if an account has {@link ACL#RIGHT_WRITE} on an
@@ -3393,7 +3272,7 @@ public class Mailbox {
      *  in that folder are returned.  If {@link #ID_AUTO_INCREMENT} is passed
      *  in as the <tt>folderId</tt>, all calendar items not in
      *  <tt>Spam</tt> or <tt>Trash</tt> are returned.
-     * @param octxt     The {@link Mailbox.OperationContext}.
+     * @param octxt     The {@link OperationContext}.
      * @param type      If MailItem.TYPE_APPOINTMENT, return only appointments.
      *                  If MailItem.TYPE_TASK, return only tasks.
      *                  If MailItem.TYPE_UNKNOWN, return both.

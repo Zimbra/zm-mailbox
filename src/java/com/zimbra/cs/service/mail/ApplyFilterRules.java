@@ -34,6 +34,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -103,7 +104,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
             ZimbraQueryResults results = null;
             
             try {
-                results = mbox.search(new Mailbox.OperationContext(mbox), query, types,
+                results = mbox.search(new OperationContext(mbox), query, types,
                     SortBy.NONE, Integer.MAX_VALUE);
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();

@@ -22,7 +22,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMPresence;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMSetPresence extends IMDocumentHandler {

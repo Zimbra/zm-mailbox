@@ -344,7 +344,7 @@ public class ContactAutoComplete {
         ZimbraQueryResults qres = null;
         try {
     		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-    		Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
+    		OperationContext octxt = new OperationContext(mbox);
     		HashMap<ItemId,Integer> mountpoints = new HashMap<ItemId,Integer>();
     		if (folders == null) {
     			ArrayList<Integer> allFolders = new ArrayList<Integer>();

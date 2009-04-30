@@ -41,7 +41,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -71,7 +71,7 @@ public class CalDavDataImport extends MailItemImport {
         	mbox.beginTrackingSync();
         	if (folderIds == null)
         		folderIds = syncFolders();
-        	OperationContext octxt = new Mailbox.OperationContext(mbox);
+        	OperationContext octxt = new OperationContext(mbox);
         	for (int fid : folderIds) {
             	Folder syncFolder = mbox.getFolderById(octxt, fid);
             	if (syncFolder.getDefaultView() == MailItem.TYPE_APPOINTMENT)
@@ -176,7 +176,7 @@ public class CalDavDataImport extends MailItemImport {
     	DataSource ds = getDataSource();
 		CalDavClient client = getClient();
 		Map<String,DavObject> calendars = client.getCalendars();
-		OperationContext octxt = new Mailbox.OperationContext(mbox);
+		OperationContext octxt = new OperationContext(mbox);
 		Folder rootFolder = mbox.getFolderById(octxt, getRootFolderId(ds));
 		HashMap<String,DataSourceItem> allFolders = getAllFolderMappings(ds);
 		List<Integer> deleted = new ArrayList<Integer>();
@@ -448,7 +448,7 @@ public class CalDavDataImport extends MailItemImport {
     	RemoteCalendarItem item = (RemoteCalendarItem) remoteItem;
     	DataSource ds = getDataSource();
     	DataSourceItem dsItem = DbDataSource.getReverseMapping(ds, item.href);
-    	OperationContext octxt = new Mailbox.OperationContext(mbox);
+    	OperationContext octxt = new OperationContext(mbox);
     	MailItem mi = null;
     	boolean isStale = false;
     	if (dsItem.md == null) {

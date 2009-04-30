@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.common.util.ZimbraLog;
@@ -60,7 +61,7 @@ public class TestConversion extends TestCase {
         Account account = TestUtil.getAccount("user1");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         String query = "subject:Rich text (TNEF) test";
-        ZimbraQueryResults results = mbox.search(new Mailbox.OperationContext(mbox), query,
+        ZimbraQueryResults results = mbox.search(new OperationContext(mbox), query,
             new byte[] { MailItem.TYPE_MESSAGE}, SortBy.SUBJ_ASCENDING, 100);
         assertTrue("No results found for '" + query + "'", results.hasNext());
         

@@ -35,10 +35,10 @@ import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
 
 public class GalImport extends MailItemImport {
@@ -97,7 +97,7 @@ public class GalImport extends MailItemImport {
 	        for (DataSourceItem dsItem : DbDataSource.getAllMappings(ds))
 	        	if (dsItem.md == null || dsItem.md.get(TYPE, null) == null)  // non-folder items
 	        		allMappings.put(dsItem.remoteId, dsItem);
-    	OperationContext octxt = new Mailbox.OperationContext(mbox);
+    	OperationContext octxt = new OperationContext(mbox);
     	SearchGalResult result = SearchGalResult.newSearchGalResult(new GalSearchVisitor(mbox, allMappings, fid, force));
     	try {
     		searchGal(syncToken, result);

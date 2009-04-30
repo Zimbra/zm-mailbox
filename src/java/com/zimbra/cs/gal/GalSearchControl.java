@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -230,7 +231,7 @@ public class GalSearchControl {
 		try {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
 			SearchParams searchParams = mParams.getSearchParams();
-			zqr = mbox.search(SoapProtocol.Soap12, new Mailbox.OperationContext(mbox), searchParams);
+			zqr = mbox.search(SoapProtocol.Soap12, new OperationContext(mbox), searchParams);
             ResultsPager pager = ResultsPager.create(zqr, searchParams);
             GalSearchResultCallback callback = mParams.getResultCallback();
             int limit  = mParams.getLimit();
@@ -263,7 +264,7 @@ public class GalSearchControl {
     	GalSyncToken token = mParams.getGalSyncToken();
 		try {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-			Mailbox.OperationContext octxt = new Mailbox.OperationContext(mbox);
+			OperationContext octxt = new OperationContext(mbox);
             GalSearchResultCallback callback = mParams.getResultCallback();
             HashSet<Integer> folderIds = new HashSet<Integer>();
             GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();

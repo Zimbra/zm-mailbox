@@ -27,7 +27,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 
 /**
  * draft-dusseault-caldav section 9.9.

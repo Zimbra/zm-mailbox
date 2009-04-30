@@ -17,6 +17,7 @@ package com.zimbra.cs.util.yauth;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
@@ -38,14 +39,14 @@ public class MetadataTokenStore extends TokenStore {
     private static final long VERSION = 2;
 
     public static void clearTokens(Mailbox mbox) throws ServiceException {
-        mbox.setConfig(new Mailbox.OperationContext(mbox), YAUTH_KEY, null);
+        mbox.setConfig(new OperationContext(mbox), YAUTH_KEY, null);
     }
     
     public static void copyTokens(Mailbox from, Mailbox to) throws ServiceException {
-        Metadata md = from.getConfig(new Mailbox.OperationContext(from), YAUTH_KEY);
+        Metadata md = from.getConfig(new OperationContext(from), YAUTH_KEY);
         if (md != null) {
             LOG.debug("Copying auth tokens from mailbox '%s' to '%s'", from.getId(), to.getId());
-            to.setConfig(new Mailbox.OperationContext(to), YAUTH_KEY, md);
+            to.setConfig(new OperationContext(to), YAUTH_KEY, md);
         }
     }
 
@@ -86,7 +87,7 @@ public class MetadataTokenStore extends TokenStore {
     }
 
     private void loadTokens() throws ServiceException {
-        Metadata md = mbox.getConfig(new Mailbox.OperationContext(mbox), YAUTH_KEY);
+        Metadata md = mbox.getConfig(new OperationContext(mbox), YAUTH_KEY);
         if (md != null) {
             long version = md.getLong(VERSION_KEY, 0);
             if (version == VERSION) {
@@ -121,7 +122,7 @@ public class MetadataTokenStore extends TokenStore {
             Metadata md = new Metadata();
             md.put(VERSION_KEY, VERSION);
             md.put(TOKENS_KEY, saveTokens(tokens));
-            mbox.setConfig(new Mailbox.OperationContext(mbox), YAUTH_KEY, md);
+            mbox.setConfig(new OperationContext(mbox), YAUTH_KEY, md);
         } catch (ServiceException e) {
             throw new IllegalStateException("Unable to save tokens", e);
         }

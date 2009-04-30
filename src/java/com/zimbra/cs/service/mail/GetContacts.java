@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -47,7 +48,7 @@ public class GetContacts extends MailDocumentHandler  {
 	@Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		Mailbox mbox = getRequestedMailbox(zsc);
-		Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+		OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
 		boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);

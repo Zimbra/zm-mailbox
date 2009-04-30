@@ -17,7 +17,7 @@ package com.zimbra.cs.operation;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.session.Session;
 

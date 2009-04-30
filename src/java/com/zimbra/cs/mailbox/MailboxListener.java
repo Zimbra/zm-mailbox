@@ -17,7 +17,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashSet;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
 
 public abstract class MailboxListener {

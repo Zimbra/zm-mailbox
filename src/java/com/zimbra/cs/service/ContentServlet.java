@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -128,7 +129,7 @@ public class ContentServlet extends ZimbraServlet {
             }
             ZimbraLog.addMboxToContext(mbox.getId());
 
-            MailItem item = mbox.getItemById(new Mailbox.OperationContext(token), iid.getId(), MailItem.TYPE_UNKNOWN);
+            MailItem item = mbox.getItemById(new OperationContext(token), iid.getId(), MailItem.TYPE_UNKNOWN);
             if (item == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errMessageNotFound, req));
                 return;				

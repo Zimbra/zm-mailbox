@@ -45,7 +45,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
@@ -821,7 +820,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  in the Mailbox, as do all admin accounts.  All other users must be
      *  explicitly granted access.  <i>(Tag sharing and negative rights not
      *  yet implemented.)</i>  The authenticated user is fetched from the
-     *  transaction's {@link Mailbox.OperationContext} via a call to
+     *  transaction's {@link OperationContext} via a call to
      *  {@link Mailbox#getAuthenticatedAccount}.
      * 
      * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}

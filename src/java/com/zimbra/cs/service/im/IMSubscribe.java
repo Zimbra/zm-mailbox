@@ -22,7 +22,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMAddr;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.im.IMUtils;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMSubscribe extends IMDocumentHandler {

@@ -26,6 +26,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -45,7 +46,7 @@ public class CreateNote extends MailDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
-        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element t = request.getElement(MailConstants.E_NOTE);

@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 
 /**
@@ -366,7 +367,7 @@ public class TestUnread extends TestCase
         verifySetUp();
         
         byte[] types = { MailItem.TYPE_MESSAGE };
-        ZimbraQueryResults results = mMbox.search(new Mailbox.OperationContext(mMbox), "is:unread", types, SortBy.DATE_DESCENDING, 100);
+        ZimbraQueryResults results = mMbox.search(new OperationContext(mMbox), "is:unread", types, SortBy.DATE_DESCENDING, 100);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }
