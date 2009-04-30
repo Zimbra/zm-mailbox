@@ -40,13 +40,16 @@ public class DomainCOSMaxAccounts extends AttributeCallback {
         String delAttr = "-" + attr;
             
         Map<String, String> cur = new HashMap<String, String>();
+        
+        // parse existing values, if ther are any
         if (entry != null) {
             Set<String> curValues = entry.getMultiAttrSet(attr);
             for (String v : curValues) {
-                Pair<String, String> parsed = parse(v);
-                cur.put(parsed.getFirst(), parsed.getSecond());
+                // if somehow there is a bad existing value, ignore it
+                Pair<String, String> parsed = parse(v, false);
+                if (parsed != null)
+                    cur.put(parsed.getFirst(), parsed.getSecond());
             }
-            curValues = new HashSet<String>();
         }
             
         // go through the attrsToModify once first to check all removing ones
@@ -58,7 +61,10 @@ public class DomainCOSMaxAccounts extends AttributeCallback {
             if (delAttr.equals(aName)) {
                 // removing
                 for (String v : vals) {
-                    Pair<String, String> parsed = parse(v);
+                    if (v.length() == 0)
+                        continue;
+                    
+                    Pair<String, String> parsed = parse(v, true);
                     cur.remove(parsed.getFirst());
                 }
             }
@@ -82,7 +88,10 @@ public class DomainCOSMaxAccounts extends AttributeCallback {
     
     private void checkDup(Map<String, String> curVals, List<String> newVals) throws ServiceException {
         for (String v : newVals) {
-            Pair<String, String> parsed = parse(v);
+            if (v.length() == 0)
+                continue;
+            
+            Pair<String, String> parsed = parse(v, true);
             String other = curVals.get(parsed.getFirst());
             if (other != null)
                 throw ServiceException.INVALID_REQUEST("cannot contain multiple values for the same cos " + parsed.getFirst() + 
@@ -92,10 +101,14 @@ public class DomainCOSMaxAccounts extends AttributeCallback {
         }
     }
     
-    private Pair<String, String> parse(String value) throws ServiceException {
+    private Pair<String, String> parse(String value, boolean throwOnError) throws ServiceException {
         String[] parts = value.split(":");
-        if (parts.length != 2)
-            throw ServiceException.INVALID_REQUEST("invalid format", null);
+        if (parts.length != 2) {
+            if (throwOnError)
+                throw ServiceException.INVALID_REQUEST("invalid format", null);
+            else
+                return null;
+        }
         return new Pair<String, String>(parts[0], parts[1]);
     }
 
