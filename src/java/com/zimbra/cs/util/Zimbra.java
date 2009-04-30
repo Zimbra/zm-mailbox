@@ -184,7 +184,7 @@ public class Zimbra {
         app.startup();
         	
         if (app.supports(ExtensionUtil.class.getName())) {
-	    	ExtensionUtil.initAll();
+            ExtensionUtil.initAll();
         }
 
     	// ZimletUtil.loadZimlets();
@@ -312,7 +312,7 @@ public class Zimbra {
             StoreManager.getInstance().shutdown();
 
         if (app.supports(ExtensionUtil.class.getName()))
-        	ExtensionUtil.destroyAll();
+            ExtensionUtil.destroyAll();
 
         MailboxManager.getInstance().shutdown();
         
