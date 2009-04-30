@@ -3332,25 +3332,6 @@ public class LdapProvisioning extends Provisioning {
             throw e;
         }
     }
-    
-    private void pppaaa(Account acct, String password, AuthMechanism authMech, Map<String, Object> authCtxt) throws ServiceException {
-        
-        LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
-        try {
-            if (lockoutPolicy.isLockedOut())
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account lockout");
-
-            // attempt to verify the password
-            verifyPasswordInternal(acct, password, authMech, authCtxt);
-
-            lockoutPolicy.successfulLogin();
-        } catch (AccountServiceException e) {
-            // TODO: only consider it failed if exception was due to password-mismatch
-            lockoutPolicy.failedLogin();
-            // re-throw original exception
-            throw e;
-        }
-    }
 
     /*
      * authAccount does all the status/mustChange checks, this just takes the
