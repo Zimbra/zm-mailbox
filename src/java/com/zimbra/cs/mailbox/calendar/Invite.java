@@ -1691,6 +1691,7 @@ public class Invite {
             try {
                 byte type;
                 ICalTok compTypeTok = comp.getTok();
+                if (compTypeTok == null) continue;
                 if (ICalTok.VTODO.equals(compTypeTok))
                     type = MailItem.TYPE_TASK;
                 else
