@@ -510,7 +510,7 @@ public class TarFormatter extends Formatter {
                         }
                         tos.closeEntry();
                         entry.setName(path + ".err");
-                        entry.setSize(miSize);
+                        entry.setSize(0);
                         tos.putNextEntry(entry);
                     }
                 } else {
