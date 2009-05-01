@@ -94,7 +94,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mime.ParsedContact;
@@ -1614,7 +1614,7 @@ public class Mailbox {
 
                 // Remove all data related to this mailbox from calendar cache, so the data doesn't
                 // get used by another user later by mistake if/when mailbox id gets reused.
-                CalendarCache.getInstance().removeMailbox(this);
+                CalendarCacheManager.getInstance().removeMailbox(this);
 
                 success = true;
             } finally {
@@ -2909,6 +2909,15 @@ public class Mailbox {
         return new ArrayList<Folder>(mFolderCache.values());
     }
 
+    public synchronized List<Folder> getCalendarFolders(OperationContext octxt, byte sort) throws ServiceException {
+        ArrayList<Folder> calFolders = new ArrayList<Folder>();
+        for (Folder f : getFolderList(octxt, sort)) {
+            byte view = f.getDefaultView();
+            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK)
+                calFolders.add(f);
+        }
+        return calFolders;
+    }
 
     public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
         return (SearchFolder) getItemById(octxt, searchId, MailItem.TYPE_SEARCHFOLDER);
@@ -3390,7 +3399,7 @@ public class Mailbox {
         Folder folder = getFolderById(folderId);
         if (!folder.canAccess(ACL.RIGHT_READ))
             throw MailServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
-        return CalendarCache.getInstance().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
+        return CalendarCacheManager.getInstance().getSummaryCache().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
     }
 
     public synchronized List<CalendarData> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
@@ -3411,7 +3420,7 @@ public class Mailbox {
                     continue;
                 if (!folder.canAccess(ACL.RIGHT_READ))
                     continue;
-                CalendarData calData = CalendarCache.getInstance().getCalendarSummary(octxt, this, folder.getId(), itemType, start, end, true);
+                CalendarData calData = CalendarCacheManager.getInstance().getSummaryCache().getCalendarSummary(octxt, this, folder.getId(), itemType, start, end, true);
                 if (calData != null)
                     list.add(calData);
             }
@@ -7264,7 +7273,8 @@ public class Mailbox {
                 }
             }
         }
-        CalendarCache.getInstance().notifyCommittedChanges(dirty, mData.lastChangeId);
+        if (dirty != null)
+            CalendarCacheManager.getInstance().notifyCommittedChanges(dirty, mData.lastChangeId);
     }
 
     private void rollbackCache(MailboxChange change) {

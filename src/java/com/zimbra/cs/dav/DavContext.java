@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -402,6 +403,7 @@ public class DavContext {
 	
 	private static final String EVOLUTION = "Evolution";
 	private static final String ICAL = "DAVKit";
+	private static final String IPHONE = "iPhone";
 	
 	private boolean userAgentHeaderContains(String str) {
 		String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
@@ -413,12 +415,33 @@ public class DavContext {
 	public boolean isEvolutionClient() {
 		return userAgentHeaderContains(EVOLUTION);
 	}
-	
+
 	public boolean isIcalClient() {
 		return userAgentHeaderContains(ICAL);
 	}
-	
-	public boolean isSchedulingEnabled() {
+
+    public static enum KnownUserAgent {
+        iCal, iPhone, Evolution;
+
+        static KnownUserAgent lookup(String userAgent) {
+            if (userAgent != null) {
+                if (userAgent.indexOf(ICAL) >= 0)
+                    return iCal;
+                else if (userAgent.indexOf(IPHONE) >= 0)
+                    return iPhone;
+                else if (userAgent.indexOf(EVOLUTION) >= 0)
+                    return Evolution;
+            }
+            return null;
+        }
+    }
+
+    public KnownUserAgent getKnownUserAgent() {
+        String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
+        return KnownUserAgent.lookup(userAgent);
+    }
+
+    public boolean isSchedulingEnabled() {
 		try {
 			return !Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavDisableScheduling, false);
 		} catch (ServiceException se) {
@@ -432,5 +455,16 @@ public class DavContext {
 		} catch (ServiceException se) {
 			return false;
 		}
+	}
+
+    public boolean isGzipAccepted() {
+        Enumeration acceptEncHdrs = mReq.getHeaders(DavProtocol.HEADER_ACCEPT_ENCODING);
+        while (acceptEncHdrs.hasMoreElements()) {
+            String acceptEnc = (String) acceptEncHdrs.nextElement();
+            // Not the most rigorous check, but it works.
+            if (acceptEnc != null && acceptEnc.toLowerCase().contains(DavProtocol.ENCODING_GZIP))
+                return true;
+        }
+	    return false;
 	}
 }

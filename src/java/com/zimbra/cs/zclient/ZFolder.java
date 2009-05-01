@@ -58,6 +58,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     private String mFlags;
     private int mMessageCount;
     private String mParentId;
+    private int mModifiedSequence;
     private int mContentSequence;
     private int mImapUIDNEXT;
     private int mImapMODSEQ;
@@ -186,6 +187,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, View.conversation.name()));
+        mModifiedSequence = (int) e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, -1);
         mContentSequence = (int) e.getAttributeLong(MailConstants.A_REVISION, -1);
         mImapUIDNEXT = (int) e.getAttributeLong(MailConstants.A_IMAP_UIDNEXT, -1);
         mImapMODSEQ = (int) e.getAttributeLong(MailConstants.A_IMAP_MODSEQ, -1);
@@ -243,6 +245,7 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
             mUnreadCount = fevent.getUnreadCount(mUnreadCount);
             mMessageCount = fevent.getMessageCount(mMessageCount);
             mDefaultView = fevent.getDefaultView(mDefaultView);
+            mModifiedSequence = fevent.getModifiedSequence(mModifiedSequence);
             mContentSequence = fevent.getContentSequence(mContentSequence);
             mImapUIDNEXT = fevent.getImapUIDNEXT(mImapUIDNEXT);
             mImapMODSEQ = fevent.getImapMODSEQ(mImapMODSEQ);
@@ -394,6 +397,12 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
      */
     public View getDefaultView() {
         return mDefaultView;
+    }
+
+    /** Returns the sequence number for the last change in the folder's metadata.
+     */
+    public int getModifiedSequence() {
+        return mModifiedSequence;
     }
 
     /** Returns the sequence number for the last change in the folder's location or name.

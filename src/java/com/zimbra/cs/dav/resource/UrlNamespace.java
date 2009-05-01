@@ -381,7 +381,7 @@ public class UrlNamespace {
         remoteFolder.folder = new RemoteCalendarCollection(ctxt, mp);
         remoteFolder.ts = System.currentTimeMillis();
         synchronized (sApptSummariesMap) {
-        	sApptSummariesMap.put(key, remoteFolder);
+//        	sApptSummariesMap.put(key, remoteFolder);
         }
         return (RemoteCalendarCollection)remoteFolder.folder;
     }

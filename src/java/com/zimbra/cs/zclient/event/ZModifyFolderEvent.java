@@ -126,6 +126,15 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
 
     /**
      * @param defaultValue value to return if unchanged
+     * @return new metadata sequence or defaultValue if unchanged
+     * @throws ServiceException
+     */
+    public int getModifiedSequence(int defaultValue) throws ServiceException {
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
      * @return new content sequence or defaultValue if unchanged
      * @throws ServiceException
      */
