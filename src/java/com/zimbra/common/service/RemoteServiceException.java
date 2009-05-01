@@ -46,6 +46,7 @@ public class RemoteServiceException extends ServiceException {
     public static final String SSL_HANDSHAKE        = "remote.SSL_HANDSHAKE";
     public static final String SSL_FAILURE          = "remote.SSL_FAILURE";
     
+    public static final String AUTH_DENIED          = "remote.AUTH_DENIED";
     public static final String AUTH_FAILURE         = "remote.AUTH_FAILURE";
     public static final String SMTP_AUTH_FAILURE    = "remote.SMTP_AUTH_FAILURE";
     public static final String SMTP_AUTH_REQUIRED   = "remote.SMTP_AUTH_REQUIRED";
@@ -99,6 +100,10 @@ public class RemoteServiceException extends ServiceException {
     
     public static RemoteServiceException SSL_FAILURE(String msg, Throwable cause) {
         return new RemoteServiceException(msg, SSL_FAILURE, SENDERS_FAULT, cause);
+    }
+    
+    public static RemoteServiceException AUTH_DENIED(String msg, Throwable cause) {
+        return new RemoteServiceException(msg, AUTH_DENIED, SENDERS_FAULT, cause);
     }
     
     public static RemoteServiceException AUTH_FAILURE(String msg, Throwable cause) {
