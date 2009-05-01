@@ -281,7 +281,6 @@ public class TarFormatter extends Formatter {
         Set<String> names, boolean version, TarOutputStream tos) throws
         ServiceException {
         String charset = context.params.get("charset");
-        int cnt = 1;
         String ext = null, name = null;
         String extra = null;
         Integer fid = mi.getFolderId();
@@ -382,11 +381,12 @@ public class TarFormatter extends Formatter {
             fldrs.put(fid, fldr);
         } else if (!(mi instanceof Folder)) {
             final int BATCH = 500;
+            int cnt = cnts.get(fid) + 1;
             
-            cnt = cnts.get(fid) + 1;
             cnts.put(fid, cnt);
-            if (cnt / BATCH > 0)
-                fldr = fldr + '!' + (cnt / BATCH); 
+            cnt /= BATCH;
+            if (cnt > 0)
+                fldr = fldr + '!' + cnt; 
         }
         try {
             byte data[] = null;
