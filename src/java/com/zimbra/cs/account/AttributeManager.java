@@ -92,6 +92,7 @@ public class AttributeManager {
     private static final String A_FLAGS = "flags";
     private static final String A_DEPRECATED_SINCE = "deprecatedSince";
     private static final String A_SINCE = "since";
+    private static final String A_REQUIRES_RESTART = "requiresRestart";
     
     private static final String E_OBJECTCLASS = "objectclass";
     private static final String E_SUP = "sup";
@@ -257,7 +258,8 @@ public class AttributeManager {
                 continue;
             }
             canonicalName = name.toLowerCase();
-
+            
+            List<AttributeServerType> requiresRestart = null;
             BuildInfo.Version deprecatedSinceVer = null;
             BuildInfo.Version sinceVer = null;
 
@@ -313,6 +315,9 @@ public class AttributeManager {
                 	} catch (IllegalArgumentException iae) {
                         error(name, file, aname + " is not valid: " + attr.getValue());
                 	}
+                } else if (aname.equals(A_REQUIRES_RESTART)) {  
+                    requiresRestart = parseRequiresRestart(name, file, attr.getValue());
+                    
                 } else if (aname.equals(A_DEPRECATED_SINCE)) {  
                     String depreSince = attr.getValue();
                     if (depreSince != null) {
@@ -429,7 +434,7 @@ public class AttributeManager {
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
-                    description, sinceVer, deprecatedSinceVer);
+                    description, requiresRestart, sinceVer, deprecatedSinceVer);
             
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
@@ -704,6 +709,23 @@ public class AttributeManager {
                 error(attrName, file, "flag " + flag + " requires that attr be in all these classes: " + classes);
             }
         }
+    }
+    
+    private List<AttributeServerType> parseRequiresRestart(String attrName, File file, String value) {
+        List<AttributeServerType> result = new ArrayList<AttributeServerType>();
+        String[] serverTypes = value.split(",");
+        for (String server : serverTypes) {
+            try {
+                AttributeServerType ast = AttributeServerType.valueOf(server);
+                if (result.contains(ast)) {
+                    error(attrName, file, "duplicate server type: " + server);
+                }
+                result.add(ast);
+            } catch (IllegalArgumentException iae) {
+                error(attrName, file, "invalid server type: " + server);
+            }
+        }
+        return result;
     }
 
     /*

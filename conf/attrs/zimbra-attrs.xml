@@ -52,9 +52,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
        cadinality="single|multi"
        requiredIn="{class-names-comma-seperated}"
        optionalIn="{class-names-comma-seperated}"
-       [flags="{flag-names-comma-seperated}"]]
+       [flags="{flag-names-comma-seperated}"]
+       [requiresRestart="{comma-separated-server-types}"]
        [deprecatedSince="{version}"]
-       [since="{version}"]>
+       [since="{version}"]]>
    <desc>Documentation</desc>
    [<deprecateDesc>Documentation for how the attribute was deprecated</deprecateDesc>]
    [<globalConfigValue>{initial-value-in-global-config}</globalConfigValue>]*
@@ -135,6 +136,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
                            server will convert the values to unicode in utf8
                            encoding in SOAP responses.
 
+  requiresRestart: server(s) need be to restarted after changing this attribute.
+                   values are comma-separated if more than one servers need to be restarted.
+                   valid servers:
+                         antivirus
+                         antispam
+					     archiving
+					     convertd
+					     mta
+					     mailbox
+					     logger
+					     snmp
+					     ldap
+					     spell
+					     memcached
+					     stats
+   
   deprecatedSince:
   	version since which the attribute had been deprecated.  Deprecated
   	attributes are still generated into the schema.  This flag is only for

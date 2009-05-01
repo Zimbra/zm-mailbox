@@ -93,6 +93,8 @@ public class AttributeInfo {
     
     private String mDescription;
     
+    private List<AttributeServerType> mRequiresRestart;
+    
     private BuildInfo.Version mSince;
     
     private BuildInfo.Version mDeprecatedSince;
@@ -133,7 +135,8 @@ public class AttributeInfo {
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
                    List<String> globalConfigValues, List<String> defaultCOSValues, 
                    List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade, 
-                   String description, BuildInfo.Version since, BuildInfo.Version deprecatedSince)
+                   String description, List<AttributeServerType> requiresRestart,
+                   BuildInfo.Version since, BuildInfo.Version deprecatedSince)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -153,6 +156,7 @@ public class AttributeInfo {
         mDefaultCOSValues = defaultCOSValues;
         mDefaultCOSValuesUpgrade = defaultCOSValuesUpgrade;
         mDescription = description;
+        mRequiresRestart = requiresRestart;
         mSince = since;
         mDeprecatedSince = deprecatedSince;
         
@@ -490,6 +494,10 @@ public class AttributeInfo {
     
     String getValue() {
         return mValue;
+    }
+    
+    public List<AttributeServerType> getRequiresRestart() {
+        return mRequiresRestart;
     }
     
     public BuildInfo.Version getSince() {

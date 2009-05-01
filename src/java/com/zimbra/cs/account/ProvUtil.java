@@ -2719,6 +2719,7 @@ public class ProvUtil implements HttpDebugListener {
             min("min value for integers and durations. defaults to Integer.MIN_VALUE"),
             max("max value for integers and durations, max length for strings/email, defaults to Integer.MAX_VALUE"),
             id("leaf OID of the attribute"),
+            requiresRestart("server(s) need be to restarted after changing this attribute"),
             since("version since which the attribute had been introduced"),
             deprecatedSince("version since which the attribute had been deprecaed");
             // desc("description");
@@ -2783,6 +2784,17 @@ public class ProvUtil implements HttpDebugListener {
                 return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending , 
             }
             
+            static String formatRequiresRestart(AttributeInfo ai) {
+                StringBuilder sb = new StringBuilder();
+                List<AttributeServerType> requiresRetstart = ai.getRequiresRestart();
+                if (requiresRetstart != null) {
+                    for (AttributeServerType ast : requiresRetstart) {
+                        sb.append(ast.name() + ",");
+                    }
+                }
+                return sb.length() == 0 ? "" : sb.substring(0, sb.length()-1); // trim the ending , 
+            }
+            
             static String print(Field field, AttributeInfo ai) {
                 String out = null;
                 
@@ -2832,6 +2844,9 @@ public class ProvUtil implements HttpDebugListener {
                     int id = ai.getId();
                     if (id != -1)
                         out = Integer.toString(ai.getId());
+                    break;
+                case requiresRestart:
+                    out = formatRequiresRestart(ai);
                     break;
                 case since:
                     BuildInfo.Version since = ai.getSince();
