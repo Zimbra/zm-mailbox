@@ -90,7 +90,7 @@ public class UrlNamespace {
 
 	/* Returns DavResource at the specified URL. */
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
-        if (url.indexOf(PRINCIPALS_PATH) > 0)
+        if (url.indexOf(PRINCIPALS_PATH) >= 0)
             return getPrincipalAtUrl(ctxt, url);
 		int index = url.indexOf(DavServlet.DAV_PATH);
 		if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
@@ -156,14 +156,14 @@ public class UrlNamespace {
 			resource = getPhantomResource(ctxt, user);
 		} else {
 		    try {
-		        resource = getMailItemResource(ctxt, user, target);
+		        resource = getMailItemResource(ctxt, user, path);
 		    } catch (ServiceException se) {
-		        ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+target, se);
+		        ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+path, se);
 		    }
 		}
 		
 		if (resource == null)
-			throw new DavException("no DAV resource for "+target, HttpServletResponse.SC_NOT_FOUND, null);
+			throw new DavException("no DAV resource for "+path, HttpServletResponse.SC_NOT_FOUND, null);
 		
 		return resource;
 	}
@@ -226,7 +226,7 @@ public class UrlNamespace {
 	        	target = target.substring(0, target.indexOf('@'));
 	        Server mine = prov.getServer(authAccount);
 	        Server theirs = prov.getServer(targetAccount);
-	        useAbsoluteUrl = mine.getId().equals(theirs.getId());
+	        useAbsoluteUrl = !mine.getId().equals(theirs.getId());
 		} catch (ServiceException se) {
 	        ZimbraLog.dav.warn("can't get domain or server for "+target, se);
 		}
@@ -340,7 +340,7 @@ public class UrlNamespace {
             } catch (MailServiceException.NoSuchItemException e) {
             }
         }
-        if (f != null && path.endsWith(CalendarObject.CAL_EXTENSION)) {
+        if (f != null && path.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
             String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
             index = uid.indexOf(',');
             if (f.getType() == MailItem.TYPE_MOUNTPOINT) {

@@ -18,9 +18,6 @@ package com.zimbra.cs.dav.service.method;
 
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.dom4j.DocumentHelper;
@@ -63,19 +60,6 @@ public class ExpandProperty extends Report {
 		DavResource rs = ctxt.getRequestedResource();
 		Element resp = ctxt.getDavResponse().getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		expandProperties(ctxt, rs, query, resp);
-		
-		ArrayList<String> hrefs = new ArrayList<String>();
-		for (Object obj : query.elements(DavElements.E_HREF)) {
-			if (obj instanceof Element) {
-				String href = ((Element)obj).getText();
-				try {
-					href = URLDecoder.decode(href, "UTF-8");
-				} catch (IOException e) {
-					ZimbraLog.dav.warn("can't decode href "+href, e);
-				}
-				hrefs.add(href);
-			}
-		}
 	}
 	
 	@SuppressWarnings("unchecked")
