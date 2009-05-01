@@ -87,7 +87,21 @@ public class ByteUtil {
 		}
 		return buffer;
 	}
-
+	
+	/**
+	 * Count the total number of bytes of the <code>InputStream</code>
+	 * @param is The stream to read from.
+	 * @return total number of bytes
+	 * @throws IOException
+	 */
+	public static int countBytes(InputStream is) throws IOException {
+		byte[] buf = new byte[8192];
+		int count = 0;
+		int num = 0;
+		while ((num = is.read(buf)) != -1)
+			count += num;
+		return count;
+	}
 
     /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
      *  array.  Closes the stream, regardless of whether an error occurs.
