@@ -177,17 +177,16 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * The number of miliseconds to wait when connecting or reading
+     * Sets the number of milliseconds to wait when connecting or reading
      * during a invoke call. 
-     * <p>
-     * Default value is <code>0</code>, which means no mTimeout.
      */
     public void setTimeout(int newTimeout) {
         mTimeout = newTimeout < 0 ? timeout : newTimeout;
     }
 
     /**
-     * Get the mTimeout value.
+     * Get the mTimeout value in milliseconds.  The default is <tt>60000</tt>,
+     * specified by the <tt>httpclient_connmgr_so_timeout</tt> localconfig variable.
      */
     public int getTimeout() {
         return mTimeout;

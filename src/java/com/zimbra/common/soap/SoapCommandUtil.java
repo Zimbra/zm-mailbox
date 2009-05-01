@@ -436,6 +436,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         // Send request and print response.
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
         transport.setDebugListener(this);
+        transport.setTimeout(0);
         
         transport.setAuthToken(mAuthToken);
         if (!mType.equals(TYPE_ADMIN) && mTargetAccountName != null) {
