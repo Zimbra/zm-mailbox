@@ -16,6 +16,7 @@ package com.zimbra.cs.dav.service;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -43,7 +45,7 @@ import com.zimbra.cs.dav.resource.DavResource;
  */
 public class DavResponse {
 	
-	private static Map<Integer, String> sStatusTextMap;
+	public static Map<Integer, String> sStatusTextMap;
 	
 	static {
 		sStatusTextMap = new HashMap<Integer, String>();
@@ -124,15 +126,22 @@ public class DavResponse {
 	 * append them to the response.
 	 */
 	public void addResource(DavContext ctxt, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
+		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+		Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
+		addResourceTo(ctxt, resp, rs, props, includeChildren);
+		
+		if (rs.isCollection() && includeChildren)
+			for (DavResource child : rs.getChildren(ctxt))
+				addResource(ctxt, child, props, includeChildren);
+	}
+
+	public void addResourceTo(DavContext ctxt, Element top, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
 		if (!rs.isValid()) {
 			addStatus(ctxt, rs.getUri(), HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
-		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
-		Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
-		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, false);
+		rs.getProperty(DavElements.E_HREF).toElement(ctxt, top, false);
 		
-		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
 		Collection<QName> propNames;
 		
 		if (props.isAllProp())
@@ -140,26 +149,22 @@ public class DavResponse {
 		else
 			propNames = props.getProps();
 		
+		PropStat propstat = new PropStat();
 		Map<QName,DavException> errPropMap = props.getErrProps();
 		for (QName name : propNames) {
 			ResourceProperty prop = rs.getProperty(name);
 			if (errPropMap.containsKey(name)) {
 				DavException ex = errPropMap.get(name);
-				Element propstat = findPropstat(resp, propstatMap, ex.getStatus());
-				propstat.element(DavElements.E_PROP).addElement(name);
-				propstat.addElement(DavElements.E_RESPONSEDESCRIPTION).setText(ex.getMessage());
+				propstat.add(name, ex.getMessage(), ex.getStatus());
 			} else if (prop == null) {
-				findProp(resp, propstatMap, HttpServletResponse.SC_NOT_FOUND).addElement(name);
+				propstat.add(name, null, HttpServletResponse.SC_NOT_FOUND);
 			} else {
-				prop.toElement(ctxt, findProp(resp, propstatMap, HttpServletResponse.SC_OK), props.isNameOnly());
+				propstat.add(prop);
 			}
 		}
-		
-		if (rs.isCollection() && includeChildren)
-			for (DavResource child : rs.getChildren(ctxt))
-				addResource(ctxt, child, props, includeChildren);
-	}
 
+		propstat.toResponse(ctxt, top, props.isNameOnly());
+	}
     public void addStatus(DavContext ctxt, String href, int status) {
         ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
         Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
@@ -171,25 +176,54 @@ public class DavResponse {
     	ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
     	getTop(DavElements.E_MULTISTATUS);
     }
-	private Element findProp(Element top, Map<Integer,Element> propstatMap, int status) {
-		Element propstat = findPropstat(top, propstatMap, status);
-		return propstat.element(DavElements.E_PROP);
-	}
-	private Element findPropstat(Element top, Map<Integer,Element> propstatMap, int status) {
-		Element propStat = propstatMap.get(status);
-		if (propStat == null) {
-			propStat = top.addElement(DavElements.E_PROPSTAT);
-			propStat.addElement(DavElements.E_STATUS).setText(sStatusTextMap.get(status));
-			propStat.addElement(DavElements.E_PROP);
-			propstatMap.put(status, propStat);
-		}
-		return propStat;
-	}
 	
 	/* Writes response XML Document to OutputStream. */
 	public void writeTo(OutputStream out) throws IOException {
 		if (ZimbraLog.dav.isDebugEnabled())
 			ZimbraLog.dav.debug("RESPONSE:\n"+new String(DomUtil.getBytes(mResponse), "UTF-8"));
 		DomUtil.writeDocumentToStream(mResponse, out);
+	}
+	
+	public static class PropStat {
+		private HashMap<Integer,Element> mMap;
+		private ArrayList<ResourceProperty> mProps;
+		public PropStat() {
+			mProps = new ArrayList<ResourceProperty>();
+			mMap = new HashMap<Integer,Element>();
+		}
+		public void toResponse(DavContext ctxt, Element response, boolean nameOnly) {
+			Element propElem = findProp(HttpServletResponse.SC_OK);
+			for (ResourceProperty prop : mProps)
+				prop.toElement(ctxt, propElem, nameOnly);
+			for (Integer code : mMap.keySet())
+				response.add(mMap.get(code));
+		}
+		public void add(ResourceProperty prop) {
+			mProps.add(prop);
+		}
+		public void add(QName name, String msg, int code) {
+			Element e = findProp(code).addElement(name);
+			if (msg != null)
+				e.setText(msg);
+		}
+		public void add(QName name, Element value) {
+			value.detach();
+			Element e = findProp(HttpServletResponse.SC_OK).addElement(name);
+			e.add(value);
+		}
+		private Element findProp(int status) {
+			Element propstat = findPropstat(status);
+			return propstat.element(DavElements.E_PROP);
+		}
+		private Element findPropstat(int status) {
+			Element propStat = mMap.get(status);
+			if (propStat == null) {
+				propStat = DocumentHelper.createElement(DavElements.E_PROPSTAT);
+				propStat.addElement(DavElements.E_STATUS).setText(sStatusTextMap.get(status));
+				propStat.addElement(DavElements.E_PROP);
+				mMap.put(status, propStat);
+			}
+			return propStat;
+		}
 	}
 }

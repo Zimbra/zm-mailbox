@@ -195,6 +195,13 @@ public class DavRequest {
 		return req;
 	}
 	
+	public static DavRequest EXPAND(String uri) {
+		DavRequest req = new DavRequest(uri, REPORT);
+    	Element root = DocumentHelper.createElement(DavElements.E_EXPAND_PROPERTY);
+    	req.setRequestMessage(root);
+		return req;
+	}
+	
 	public static DavRequest CALENDARQUERY(String uri) {
 		DavRequest req = new DavRequest(uri, REPORT);
     	Element root = DocumentHelper.createElement(DavElements.E_CALENDAR_QUERY);

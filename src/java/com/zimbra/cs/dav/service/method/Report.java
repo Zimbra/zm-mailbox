@@ -44,6 +44,9 @@ public class Report extends DavMethod {
 		sReports.put(DavElements.E_FREE_BUSY_QUERY, new FreeBusyQuery());
 		sReports.put(DavElements.E_PRINCIPAL_PROPERTY_SEARCH, new AclReports());
 		sReports.put(DavElements.E_ACL_PRINCIPAL_PROP_SET, new AclReports());
+		sReports.put(DavElements.E_PRINCIPAL_MATCH, new AclReports());
+		sReports.put(DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET, new AclReports());
+		sReports.put(DavElements.E_EXPAND_PROPERTY, new ExpandProperty());
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		if (!ctxt.hasRequestMessage())

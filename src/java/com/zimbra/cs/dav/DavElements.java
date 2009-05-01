@@ -138,6 +138,7 @@ public class DavElements {
 	public static final String P_MULTISTATUS = "multistatus";
 	
 	public static final String P_NAME = "name";
+	public static final String P_NAMESPACE = "namespace";
 	public static final String P_NEED_PRIVILEGES = "need-privileges";
 	public static final String P_NO_INVERT = "no-invert";
 	public static final String P_NOVALUE = "novalue";
@@ -318,6 +319,7 @@ public class DavElements {
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_PROP = QName.get(P_PROP, WEBDAV_NS);
+	public static final QName E_PROPERTY = QName.get(P_PROPERTY, WEBDAV_NS);
 	public static final QName E_PROPERTYUPDATE = QName.get(P_PROPERTYUPDATE, WEBDAV_NS);
 	public static final QName E_PROPFIND = QName.get(P_PROPFIND, WEBDAV_NS);
 	public static final QName E_PROPNAME = QName.get(P_PROPNAME, WEBDAV_NS);
