@@ -19,18 +19,11 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -41,8 +34,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.redolog.op.IndexItem;
-//import com.zimbra.cs.service.admin.ReIndex;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.Zimbra;
