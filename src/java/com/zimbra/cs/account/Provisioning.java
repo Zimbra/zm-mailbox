@@ -868,6 +868,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
     
     public abstract List<Domain> getAllDomains()  throws ServiceException;
+    
+    public void getAllDomains(NamedEntry.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 

@@ -29,6 +29,7 @@ import org.jivesoftware.wildfire.net.CloudRoutingSocketReader.CloudRoutingSessio
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.provider.CloudRouteSession;
@@ -44,17 +45,20 @@ public class ZimbraIM {
         try {
             LdapConfig.setProvider(new IMServerConfig());
             
-            ArrayList<String> domainStrs = new ArrayList<String>();
+            final ArrayList<String> domainStrs = new ArrayList<String>();
             
             String defaultDomain = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
             if (defaultDomain != null) {
                 ZimbraLog.im.info("Setting default XMPP domain to: "+defaultDomain);
                 domainStrs.add(defaultDomain);
             } 
-            List<Domain> domains = Provisioning.getInstance().getAllDomains();
-            for (Domain d : domains) {
-                domainStrs.add(d.getName());
-            }
+            
+            NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+                public void visit(NamedEntry entry) {
+                    domainStrs.add(entry.getName());
+                }
+            };
+            Provisioning.getInstance().getAllDomains(visitor);
             
             // set the special msgs ClassLoader -- so that WF looks in our conf/msgs directory
             // for its localization .properties bundles.

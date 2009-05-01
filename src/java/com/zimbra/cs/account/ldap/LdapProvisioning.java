@@ -1795,8 +1795,23 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getAllDomains()
      */
+    @Override
     public List<Domain> getAllDomains() throws ServiceException {
-        List<Domain> result = new ArrayList<Domain>();
+        final List<Domain> result = new ArrayList<Domain>();
+        
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            public void visit(NamedEntry entry) {
+                result.add((LdapDomain)entry);
+            }
+        };
+        
+        getAllDomains(visitor);
+        Collections.sort(result);
+        return result;
+    }
+    
+    @Override
+    public void getAllDomains(NamedEntry.Visitor visitor) throws ServiceException {
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext();
@@ -1804,7 +1819,8 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = zlc.searchDir(mDIT.domainBaseDN(), LdapFilter.allDomains(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
-                result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults(), this));
+                LdapDomain domain = new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
+                visitor.visit(domain);
             }
             ne.close();
         } catch (NamingException e) {
@@ -1812,8 +1828,6 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
-        Collections.sort(result);
-        return result;
     }
 
     private static boolean domainDnExists(ZimbraLdapContext zlc, String dn) throws NamingException {
