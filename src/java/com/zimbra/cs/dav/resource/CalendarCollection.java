@@ -65,6 +65,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -106,7 +107,7 @@ public class CalendarCollection extends Collection {
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		
-		mCtag = "" + f.getImapMODSEQ();
+		mCtag = CtagInfo.makeCtag(f);
 		setProperty(DavElements.E_GETCTAG, mCtag);
 		
 		byte color = f.getColor();

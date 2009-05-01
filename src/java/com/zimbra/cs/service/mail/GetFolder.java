@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -85,10 +86,12 @@ public class GetFolder extends MailDocumentHandler {
 
 	private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey) {
 		Element eFolder;
-        if (node.mFolder != null)
-            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, exposeAclAccessKey);
-        else
+        if (node.mFolder != null) {
+            int fields = Change.ALL_FIELDS;  // In particular, we want Change.MODIFIED_CONFLICT included.
+            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, fields, exposeAclAccessKey);
+        } else {
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
+        }
 
 		for (FolderNode subNode : node.mSubfolders)
 			encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey);

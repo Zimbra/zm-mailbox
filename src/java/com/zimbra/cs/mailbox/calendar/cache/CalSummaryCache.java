@@ -56,11 +56,11 @@ import com.zimbra.cs.stats.ZimbraPerf;
 // TODO: DUE property of tasks
 // TODO: review other TODOs throughout code (in calendar.cache package)
 
-public class CalendarCache {
+public class CalSummaryCache {
 
     // mSummaryCache
     //
-    // key = "mboxId:folderId" (local mailbox) or "accountId:folderId" (remote mailbox)
+    // key = "accountId:folderId"
     // value = CalendarData type
     //
     // CalendarData = {
@@ -322,15 +322,11 @@ public class CalendarCache {
     }
 
 
-    private static CalendarCache sInstance;
-    public static CalendarCache getInstance() { return sInstance; }
-
     private static final int sRangeMonthFrom;
     private static final int sRangeNumMonths;
     private static final int sMaxStaleItems;
     private static final int sMaxStaleItemsBeforeInvalidatingCalendar;
     private static final int sMaxSearchDays;
-    private static final int sLRUCapacity;
 
     private static final long MSEC_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -340,135 +336,94 @@ public class CalendarCache {
         sMaxStaleItems = LC.calendar_cache_max_stale_items.intValue();
         sMaxStaleItemsBeforeInvalidatingCalendar = 100;
         sMaxSearchDays = LC.calendar_search_max_days.intValueWithinRange(0, 3660);
-        if (LC.calendar_cache_enabled.booleanValue())
-            sLRUCapacity = LC.calendar_cache_lru_size.intValue();
-        else
-            sLRUCapacity = 0;
-        sInstance = new CalendarCache(sLRUCapacity);
-    }
-
-    public static class SummaryCacheKey {
-//      private String mKeyVal;
-        private int mMboxId;
-        private int mFolderId;
-
-        public SummaryCacheKey(int mboxId, int folderId) {
-//          mKeyVal = mboxId + ":" + folderId;
-            mMboxId = mboxId;
-            mFolderId = folderId;
-        }
-//      public SummaryCacheKey(String accountId, int folderId) {
-//          mKeyVal = accountId + ":" + folderId;
-//      }
-//      public SummaryCacheKey(String fullyQualifiedItemId) {
-//          mKeyVal = fullyQualifiedItemId;
-//      }
-
-//      public String getKey() { return mKeyVal; }
-        public int getMboxId() { return mMboxId; }
-        public int getFolderId() { return mFolderId; }
-
-        public boolean equals(Object other) {
-            if (other instanceof SummaryCacheKey) {
-                SummaryCacheKey otherKey = (SummaryCacheKey) other;
-//              return mKeyVal.equals(otherKey.getKey());
-                return mMboxId == otherKey.mMboxId && mFolderId == otherKey.mFolderId;
-            }
-            return false;
-        }
-
-        public int hashCode() {
-//          return mKeyVal.hashCode();
-            return mMboxId << 16 | mFolderId;
-        }
     }
 
     @SuppressWarnings("serial")
-    private static class SummaryLRU extends LinkedHashMap<SummaryCacheKey, CalendarData> {
+    private static class SummaryLRU extends LinkedHashMap<CalendarKey, CalendarData> {
         private int mMaxAllowed;
 
-        // map that keeps track of which calendar folders are cached for each mailbox
+        // map that keeps track of which calendar folders are cached for each account
         // This map is updated every time a calendar folder is added, removed, or aged out
         // of the LRU.
-        private Map<Integer /* mailbox id */, Set<Integer> /* folder ids */> mMboxFolders;
+        private Map<String /* account id */, Set<Integer> /* folder ids */> mAccountFolders;
 
         private SummaryLRU(int capacity) {
             super(capacity + 1, 1.0f, true);
             mMaxAllowed = Math.max(capacity, 1);
-            mMboxFolders = new HashMap<Integer, Set<Integer>>();
+            mAccountFolders = new HashMap<String, Set<Integer>>();
         }
 
         @Override
         public void clear() {
             super.clear();
-            mMboxFolders.clear();
+            mAccountFolders.clear();
         }
 
         @Override
-        public CalendarData put(SummaryCacheKey key, CalendarData value) {
+        public CalendarData put(CalendarKey key, CalendarData value) {
             CalendarData prevVal = super.put(key, value);
             if (prevVal == null)
-                registerWithMbox(key);
+                registerWithAccount(key);
             return prevVal;
         }
 
         @Override
-        public void putAll(Map<? extends SummaryCacheKey, ? extends CalendarData> t) {
+        public void putAll(Map<? extends CalendarKey, ? extends CalendarData> t) {
             super.putAll(t);
-            for (SummaryCacheKey key : t.keySet()) {
-                registerWithMbox(key);
+            for (CalendarKey key : t.keySet()) {
+                registerWithAccount(key);
             }
         }
 
         @Override
         public CalendarData remove(Object key) {
             CalendarData prevVal = super.remove(key);
-            if (prevVal != null && key instanceof SummaryCacheKey) {
-                SummaryCacheKey k = (SummaryCacheKey) key;
-                deregisterFromMbox(k);
+            if (prevVal != null && key instanceof CalendarKey) {
+                CalendarKey k = (CalendarKey) key;
+                deregisterFromAccount(k);
             }
             return prevVal;
         }        
 
         @Override
-        protected boolean removeEldestEntry(Map.Entry<SummaryCacheKey, CalendarData> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<CalendarKey, CalendarData> eldest) {
             boolean remove = size() > mMaxAllowed;
             if (remove)
-                deregisterFromMbox(eldest.getKey());
+                deregisterFromAccount(eldest.getKey());
             return remove;
         }
 
-        private void registerWithMbox(SummaryCacheKey key) {
-            int mboxId = key.getMboxId();
+        private void registerWithAccount(CalendarKey key) {
+            String accountId = key.getAccountId();
             int folderId = key.getFolderId();
-            Set<Integer> folders = mMboxFolders.get(mboxId);
+            Set<Integer> folders = mAccountFolders.get(accountId);
             if (folders == null) {
                 folders = new HashSet<Integer>();
-                mMboxFolders.put(mboxId, folders);
+                mAccountFolders.put(accountId, folders);
             }
             folders.add(folderId);
         }
 
-        private void deregisterFromMbox(SummaryCacheKey key) {
-            int mboxId = key.getMboxId();
+        private void deregisterFromAccount(CalendarKey key) {
+            String accountId = key.getAccountId();
             int folderId = key.getFolderId();
-            Set<Integer> folders = mMboxFolders.get(mboxId);
+            Set<Integer> folders = mAccountFolders.get(accountId);
             if (folders != null) {
                 folders.remove(folderId);
-                // If no folders are cached for the mailbox, drop the mailbox entry from the map to save memory.
+                // If no folders are cached for the account, drop the account entry from the map to save memory.
                 if (folders.isEmpty())
-                    mMboxFolders.remove(mboxId);
+                    mAccountFolders.remove(accountId);
             }
         }
 
         public static final int FOLDER_NOT_FOUND = -1;
 
-        public int getFolderForItem(int mboxId, int itemId) {
+        public int getFolderForItem(String accountId, int itemId) {
             int retval = FOLDER_NOT_FOUND;
-            Set<Integer> folders = mMboxFolders.get(mboxId);
+            Set<Integer> folders = mAccountFolders.get(accountId);
             if (folders != null) {
                 for (int folderId : folders) {
-                    SummaryCacheKey key = new SummaryCacheKey(mboxId, folderId);
+                    CalendarKey key = new CalendarKey(accountId, folderId);
                     CalendarData calData = get(key);
                     if (calData != null) {
                         CalendarItemData ci = calData.getCalendarItemData(itemId);
@@ -483,16 +438,16 @@ public class CalendarCache {
         }
 
         /**
-         * Toss all folders of the mailbox from the LRU.
+         * Toss all folders of the account from the LRU.
          * @param mboxId
          */
-        public void removeMailbox(int mboxId) {
-            Set<Integer> folders = mMboxFolders.get(mboxId);
+        public void removeAccount(String accountId) {
+            Set<Integer> folders = mAccountFolders.get(accountId);
             if (folders != null) {
                 // Get a copy of the folder list to avoid ConcurrentModificationException on mMboxFolders.
                 Integer[] fids = folders.toArray(new Integer[0]);
                 for (int folderId : fids) {
-                    SummaryCacheKey key = new SummaryCacheKey(mboxId, folderId);
+                    CalendarKey key = new CalendarKey(accountId, folderId);
                     remove(key);
                 }
             }
@@ -501,8 +456,10 @@ public class CalendarCache {
 
     // LRU cache containing range-limited calendar summary by calendar folder
     private SummaryLRU mSummaryCache;
+    private int mLRUCapacity;
 
-    private CalendarCache(final int capacity) {
+    CalSummaryCache(final int capacity) {
+        mLRUCapacity = capacity;
         mSummaryCache = new SummaryLRU(capacity);
     }
 
@@ -529,10 +486,10 @@ public class CalendarCache {
         Folder folder = mbox.getFolderById(octxt, folderId);
         int currentModSeq = folder.getImapMODSEQ();
 
-        SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
+        CalendarKey key = new CalendarKey(mbox.getAccountId(), folderId);
         CalendarData calData = null;
         synchronized (mSummaryCache) {
-            if (sLRUCapacity > 0) {
+            if (mLRUCapacity > 0) {
                 calData = mSummaryCache.get(key);
                 lruSize = mSummaryCache.size();
             }
@@ -548,7 +505,7 @@ public class CalendarCache {
                 if (calData != null) {
                     // If data is up to date, add to cache.
                     if (calData.getModSeq() == currentModSeq) {
-                        if (sLRUCapacity > 0) {
+                        if (mLRUCapacity > 0) {
                             synchronized (mSummaryCache) {
                                 mSummaryCache.put(key, calData);
                                 lruSize = mSummaryCache.size();
@@ -597,7 +554,7 @@ public class CalendarCache {
             calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
                                               defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
             synchronized (mSummaryCache) {
-                if (sLRUCapacity > 0) {
+                if (mLRUCapacity > 0) {
                     mSummaryCache.put(key, calData);
                     lruSize = mSummaryCache.size();
                 }
@@ -652,7 +609,7 @@ public class CalendarCache {
             return;
 
         int mboxId = mbox.getId();
-        SummaryCacheKey key = new SummaryCacheKey(mboxId, folderId);
+        CalendarKey key = new CalendarKey(mbox.getAccountId(), folderId);
         synchronized (mSummaryCache) {
             mSummaryCache.remove(key);
         }
@@ -666,10 +623,10 @@ public class CalendarCache {
     private void invalidateItem(Mailbox mbox, int folderId, int calItemId) {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
-        SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
+        CalendarKey key = new CalendarKey(mbox.getAccountId(), folderId);
         CalendarData calData = null;
         synchronized (mSummaryCache) {
-            if (sLRUCapacity > 0) {
+            if (mLRUCapacity > 0) {
                 calData = mSummaryCache.get(key);
             }
         }
@@ -683,7 +640,7 @@ public class CalendarCache {
         }
     }
 
-    public void notifyCommittedChanges(PendingModifications mods, int changeId) {
+    void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
         if (mods == null)
@@ -710,10 +667,10 @@ public class CalendarCache {
 
                     // If this is a folder move, invalidate the item from the old folder too.
                     if ((change.why & Change.MODIFIED_FOLDER) != 0) {
-                        int mboxId = mbox.getId();
+                        String accountId = mbox.getAccountId();
                         int prevFolderId;
                         synchronized (mSummaryCache) {
-                            prevFolderId = mSummaryCache.getFolderForItem(mboxId, itemId);
+                            prevFolderId = mSummaryCache.getFolderForItem(accountId, itemId);
                         }
                         if (prevFolderId != folderId && prevFolderId != SummaryLRU.FOLDER_NOT_FOUND)
                             invalidateItem(mbox, prevFolderId, itemId);
@@ -756,10 +713,10 @@ public class CalendarCache {
                         lastAcctId = acctId;
                         lastMbox = mbox;
                         int itemId = ((Integer) deletedObj).intValue();
-                        int mboxId = mbox.getId();
+                        String accountId = mbox.getAccountId();
                         int folderId;
                         synchronized (mSummaryCache) {
-                            folderId = mSummaryCache.getFolderForItem(mboxId, itemId);
+                            folderId = mSummaryCache.getFolderForItem(accountId, itemId);
                         }
                         if (folderId != SummaryLRU.FOLDER_NOT_FOUND)
                             invalidateItem(mbox, folderId, itemId);
@@ -769,10 +726,10 @@ public class CalendarCache {
         }
     }
 
-    public void removeMailbox(Mailbox mbox) {
+    void removeMailbox(Mailbox mbox) {
         int mboxId = mbox.getId();
         synchronized (mSummaryCache) {
-            mSummaryCache.removeMailbox(mboxId);
+            mSummaryCache.removeAccount(mbox.getAccountId());
         }
         FileStore.removeMailbox(mboxId);
     }

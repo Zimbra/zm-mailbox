@@ -72,13 +72,16 @@ public class DavProtocol {
 	
 	public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
 	public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
-	
+	public static final String ENCODING_GZIP = "gzip";
+
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+    public static final String HEADER_CONTENT_ENCODING = "Content-Encoding";
 	public static final String HEADER_ALLOW = "Allow";
 	public static final String HEADER_CACHE_CONTROL = "Cache-Control";
 	public static final String HEADER_ETAG = "ETag";
 	public static final String HEADER_USER_AGENT = "User-Agent";
+	public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
 	
 	public static final String NO_CACHE = "no-cache";
 	

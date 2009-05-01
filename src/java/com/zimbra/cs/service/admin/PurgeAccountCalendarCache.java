@@ -30,7 +30,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -72,7 +73,7 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
         ZimbraLog.calendar.info("Purging calendar cache for account " + account.getName());
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId(), false);
         if (mbox != null) {
-            CalendarCache calCache = CalendarCache.getInstance();
+            CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
             synchronized (mbox) {
                 List<Folder> folders = mbox.getFolderList(octxt, SortBy.NONE);
                 for (Folder folder : folders) {

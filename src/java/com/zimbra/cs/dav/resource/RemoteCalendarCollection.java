@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.UserServlet;
@@ -267,7 +268,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             ZFolder folder = zmbx.getFolder(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
             if (folder == null)
             	return;
-            mCtag = "" + folder.getImapMODSEQ();
+            mCtag = CtagInfo.makeCtag(folder);
             short rights = ACL.stringToRights(folder.getEffectivePerms());
             addProperty(Acl.getCurrentUserPrivilegeSet(rights));
             addProperty(Acl.getMountpointTargetPrivilegeSet(rights));
