@@ -40,6 +40,7 @@ import com.posisoft.jdavmail.JDAVMailFolder;
 import com.posisoft.jdavmail.JDAVMailMessage;
 import com.posisoft.jdavmail.JDAVMailStore;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
@@ -946,7 +947,9 @@ public class LiveImport extends MailItemImport {
             try {
                 store.connect(null, ds.getUsername(), ds.getDecryptedPassword());
             } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Unable to connect to mail store: " + ds, e);
+                throw e.getCause().getLocalizedMessage().contains("DAV error: 998") ?
+                    RemoteServiceException.AUTH_DENIED("Unable to connect to mail store: " + ds, e) :
+                    RemoteServiceException.AUTH_FAILURE("Unable to connect to mail store: " + ds, e);
             }
         }
     }
