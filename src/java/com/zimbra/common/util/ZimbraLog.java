@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,12 +11,12 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,7 +24,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -111,7 +111,7 @@ public class ZimbraLog {
     public static final Log misc = LogFactory.getLog("zimbra.misc");
     
     /**
-     * the "zimbra.index" logger. For general indexing-related events.
+     * the "zimbra.index" logger. For indexing-related events.
      */
     public static final Log index = LogFactory.getLog("zimbra.index");
     
@@ -119,17 +119,6 @@ public class ZimbraLog {
      * the "zimbra.index.lucene" logger. For logging of low-level lucene operations (debug-level only)
      */
     public static final Log index_lucene = LogFactory.getLog("zimbra.index.lucene");
-    
-    /**
-     * the "zimbra.index.search" logger. For logging of the search side of indexing
-     */
-    public static final Log index_search = LogFactory.getLog("zimbra.index.search");
-    
-    /**
-     * the "zimbra.index.add" logger. For the add-to-the-index part of indexing
-     */
-    public static final Log index_add = LogFactory.getLog("zimbra.index.indexadd");
-
     
     /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
@@ -192,7 +181,7 @@ public class ZimbraLog {
     public static final Log account = LogFactory.getLog("zimbra.account");
     
     /**
-     * the "zimbra.gal" logger. For gal-related events.
+     * the "zimbra.gal" logger. For account-related events.
      */
     public static final Log gal = LogFactory.getLog("zimbra.gal");
     
@@ -200,11 +189,6 @@ public class ZimbraLog {
      * the "zimbra.ldap" logger. For ldap-related events.
      */
     public static final Log ldap = LogFactory.getLog("zimbra.ldap");
-    
-    /**
-     * the "zimbra.acl" logger. For acl-related events.
-     */
-    public static final Log acl = LogFactory.getLog("zimbra.acl");
     
     /**
      * the "zimbra.security" logger. For security-related events
@@ -332,11 +316,6 @@ public class ZimbraLog {
     public static final Log scheduler = LogFactory.getLog("zimbra.scheduler");
     
     /**
-     * the "zimbra.store" logger.  Logs filesystem storage operations.
-     */
-    public static final Log store = LogFactory.getLog("zimbra.store");
-    
-    /**
      * the "zimbra.fb" logger.  Logs free/busy operations.
      */
     public static final Log fb = LogFactory.getLog("zimbra.fb");
@@ -352,20 +331,9 @@ public class ZimbraLog {
     public static final Log mailop = LogFactory.getLog("zimbra.mailop");
     
     /**
-     * "zimbra.slogger" logger.  Used for "logger service", publishes stats events to syslog
-     */
-    public static final Log slogger = LogFactory.getLog("zimbra.slogger");
-    
-    /**
      * the "zimbra.mbxmgr" logger is used to track mailbox loading/maintenance mode
      */
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
-
-    
-    /**
-     * Maps the log category name to its description.
-     */
-    public static final Map<String, String> CATEGORY_DESCRIPTIONS;
     
     /**
      * Keeps track of the account associated with the current thread, for
@@ -398,42 +366,6 @@ public class ZimbraLog {
         CONTEXT_KEY_ORDER.add(C_ANAME);
         CONTEXT_KEY_ORDER.add(C_MID);
         CONTEXT_KEY_ORDER.add(C_IP);
-
-        // Initialize log category descriptions.  Categories that don't have a description
-        // won't be listed in zmprov online help.
-        Map<String, String> descriptions = new TreeMap<String, String>();
-        descriptions.put(misc.getCategory(), "Miscellaneous");
-        descriptions.put(index.getCategory(), "Index operations");
-        descriptions.put(redolog.getCategory(), "Redo log operations");
-        descriptions.put(lmtp.getCategory(), "LMTP operations (incoming mail)");
-        descriptions.put(smtp.getCategory(), "SMTP operations (outgoing mail)");
-        descriptions.put(imap.getCategory(), "IMAP protocol operations");
-        descriptions.put(pop.getCategory(), "POP protocol operations");
-        descriptions.put(mailbox.getCategory(), "General mailbox operations");
-        descriptions.put(calendar.getCategory(), "Calendar operations");
-        descriptions.put(im.getCategory(), "Instant messaging operations");
-        descriptions.put(account.getCategory(), "Account operations");
-        descriptions.put(gal.getCategory(), "GAL operations");
-        descriptions.put(ldap.getCategory(), "LDAP operations");
-        descriptions.put(acl.getCategory(), "ACL operations");
-        descriptions.put(security.getCategory(), "Security events");
-        descriptions.put(soap.getCategory(), "SOAP protocol");
-        descriptions.put(sqltrace.getCategory(), "SQL tracing");
-        descriptions.put(dbconn.getCategory(), "Database connection tracing");
-        descriptions.put(cache.getCategory(), "In-memory cache operations");
-        descriptions.put(filter.getCategory(), "Mail filtering");
-        descriptions.put(session.getCategory(), "User session tracking");
-        descriptions.put(backup.getCategory(), "Backup and restore");
-        descriptions.put(system.getCategory(), "Startup/shutdown and other system messages");
-        descriptions.put(sync.getCategory(), "Sync client operations");
-        descriptions.put(extensions.getCategory(), "Server extension loading");
-        descriptions.put(zimlet.getCategory(), "Zimlet operations");
-        descriptions.put(wiki.getCategory(), "Wiki operations");
-        descriptions.put(op.getCategory(), "Changes to mailbox state");
-        descriptions.put(dav.getCategory(), "DAV operations");
-        descriptions.put(io.getCategory(), "Filesystem operations");
-        descriptions.put(store.getCategory(), "Mail store disk operations");
-        CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
     
     static String getContextString() {
@@ -552,6 +484,10 @@ public class ZimbraLog {
         ZimbraLog.addToContext(C_NAME, accountName);
     }
     
+    public static void removeAccountNameFromContext() {
+        removeFromContext(C_NAME);
+    }
+    
     /**
      * Removes all account-specific values from the current thread's
      * logging context.
@@ -644,10 +580,7 @@ public class ZimbraLog {
         if (contextMap != null) {
             contextMap.clear();
         }
-        Set<String> accountNames = sAccountNames.get();
-        if (accountNames != null) {
-            accountNames.clear();
-        }
+        getAccountNamesForThread().clear();
         sContextString.remove();
     }
 

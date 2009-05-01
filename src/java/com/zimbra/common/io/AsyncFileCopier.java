@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -130,12 +132,6 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
                         done = true;
                         break;
                     }
-                } catch (OutOfMemoryError e) {
-                    try {
-                        ZimbraLog.system.fatal("out of memory", e);
-                    } finally {
-                        Runtime.getRuntime().halt(1);
-                    }
                 } catch (Throwable t) {
                     err = t;
                 } finally {
@@ -191,7 +187,7 @@ class AsyncFileCopier extends AbstractAsyncFileCopier implements FileCopier {
             }
         }
 
-        private void delete(File file) {
+        private void delete(File file) throws IOException {
             boolean deleted = file.delete();
             if (deleted) {
                 if (ZimbraLog.io.isDebugEnabled())
