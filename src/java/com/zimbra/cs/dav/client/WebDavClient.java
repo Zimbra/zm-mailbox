@@ -35,6 +35,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
@@ -209,7 +210,7 @@ public class WebDavClient {
         WebDavClient cl = new WebDavClient("http://localhost:7070", "tester");
         cl.setDebugEnabled(true);
         cl.setCredential("user2", "test123");
-        DavRequest req = propfind();
+        DavRequest req = expand();
         cl.sendMultiResponseRequest(req);
     }
 
@@ -229,6 +230,34 @@ public class WebDavClient {
     	req.addRequestProp(DavElements.E_RESOURCETYPE);
     	req.addRequestProp(DavElements.E_CALENDAR_PROXY_READ_FOR);
     	req.addRequestProp(DavElements.E_CALENDAR_PROXY_WRITE_FOR);
+    	return req;
+    }
+
+    private static DavRequest expand() {
+    	DavRequest req = DavRequest.EXPAND("/principals/users/user2/");
+    	Element root = req.getRequestMessage().getRootElement();
+    	Element top = root.addElement(DavElements.E_PROPERTY);
+    	top.addAttribute(DavElements.P_NAME, DavElements.P_CALENDAR_PROXY_WRITE_FOR);
+    	top.addAttribute(DavElements.P_NAMESPACE, DavElements.CS_NS_STRING);
+    	Element sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, DavElements.P_DISPLAYNAME);
+    	sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, DavElements.P_PRINCIPAL_URL);
+    	sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, DavElements.P_CALENDAR_USER_ADDRESS_SET);
+    	sub.addAttribute(DavElements.P_NAMESPACE, DavElements.CALDAV_NS_STRING);
+    	top = root.addElement(DavElements.E_PROPERTY);
+    	top.addAttribute(DavElements.P_NAME, DavElements.P_CALENDAR_PROXY_READ_FOR);
+    	top.addAttribute(DavElements.P_NAMESPACE, DavElements.CS_NS_STRING);
+    	sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, DavElements.P_DISPLAYNAME);
+    	sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, DavElements.P_PRINCIPAL_URL);
+    	sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, DavElements.P_CALENDAR_USER_ADDRESS_SET);
+    	sub.addAttribute(DavElements.P_NAMESPACE, DavElements.CALDAV_NS_STRING);
+    	sub = top.addElement(DavElements.E_PROPERTY);
+    	sub.addAttribute(DavElements.P_NAME, "foobar");
     	return req;
     }
 }

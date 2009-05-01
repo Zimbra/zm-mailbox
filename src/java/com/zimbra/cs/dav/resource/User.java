@@ -171,7 +171,7 @@ public class User extends Principal {
         			if ((rights & ACL.RIGHT_READ) > 0) {
         				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
         				if (owner != null)
-        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(owner));
+        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mUser, owner));
         			}
         		} catch (ServiceException se) {
             		ZimbraLog.dav.warn("can't convert rights", se);
@@ -195,7 +195,7 @@ public class User extends Principal {
         			if ((rights & ACL.RIGHT_WRITE) > 0) {
         				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
         				if (owner != null)
-        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(owner));
+        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mUser, owner));
         			}
         		} catch (ServiceException se) {
             		ZimbraLog.dav.warn("can't convert rights", se);

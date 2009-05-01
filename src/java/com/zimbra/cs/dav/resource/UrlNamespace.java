@@ -91,7 +91,7 @@ public class UrlNamespace {
 
 	/* Returns DavResource at the specified URL. */
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
-        if (url.startsWith(PRINCIPALS_PATH))
+        if (url.indexOf(PRINCIPALS_PATH) > 0)
             return getPrincipalAtUrl(ctxt, url);
 		int index = url.indexOf(DavServlet.DAV_PATH);
 		if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
@@ -122,7 +122,7 @@ public class UrlNamespace {
         try {
             Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
             // allow only the owner can access the principal URL for now.
-            if (a == null || ctxt.getAuthAccount().compareTo(a) != 0)
+            if (a == null)
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
             return new User(ctxt, url);
         } catch (ServiceException se) {
@@ -210,16 +210,32 @@ public class UrlNamespace {
 	}
     
 	public static String getPrincipalUrl(Account account) {
-		String owner = account.getName();
+		return getPrincipalUrl(account, account);
+	}
+	public static String getPrincipalUrl(Account authAccount, Account targetAccount) {
+		String target = targetAccount.getName();
+		boolean useAbsoluteUrl = false;
 		try {
 			Provisioning prov = Provisioning.getInstance();
 	        Config config = prov.getConfig();
 	        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-	        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(account.getDomainName()))
-	        	owner = owner.substring(0, owner.indexOf('@'));
+	        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(targetAccount.getDomainName()))
+	        	target = target.substring(0, target.indexOf('@'));
+	        Server mine = prov.getServer(authAccount);
+	        Server theirs = prov.getServer(targetAccount);
+	        useAbsoluteUrl = mine.getId().equals(theirs.getId());
 		} catch (ServiceException se) {
+	        ZimbraLog.dav.warn("can't get domain or server for "+target, se);
 		}
-        return getPrincipalUrl(owner);
+        String url = getPrincipalUrl(target);
+        if (useAbsoluteUrl) {
+        	try {
+            	url = getAbsoluteUrl(targetAccount, url);
+    		} catch (ServiceException se) {
+    	        ZimbraLog.dav.warn("can't generate absolute url for "+target, se);
+    		}
+        }
+        return url;
 	}
     public static String getPrincipalUrl(String user) {
         return URLUtil.urlEscape(PRINCIPALS_PATH + user + "/");
