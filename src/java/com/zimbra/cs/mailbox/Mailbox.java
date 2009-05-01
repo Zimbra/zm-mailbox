@@ -62,13 +62,13 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
@@ -335,7 +335,7 @@ public class Mailbox {
     }
 
     // This class handles all the indexing internals for the Mailbox
-    private Index mIndex = new Index(this);
+    private IndexHelper mIndexHelper = new IndexHelper(this);
 
     /**
      * Upcall from the indexing subsystem when indexing has completed for the specified items.
@@ -348,7 +348,7 @@ public class Mailbox {
      * @param ids
      */
     synchronized public void indexingCompleted(int count, SyncToken highestModContent, boolean succeeded) {
-        mIndex.indexingCompleted(count, highestModContent, succeeded);
+        mIndexHelper.indexingCompleted(count, highestModContent, succeeded);
     }
 
     // TODO: figure out correct caching strategy
@@ -400,7 +400,7 @@ public class Mailbox {
     	if (!mInitializationComplete) {
     		// init the index
             if (!DebugConfig.disableIndexing) 
-                mIndex.instantiateMailboxIndex();
+                mIndexHelper.instantiateMailboxIndex();
             
             if (mVersion == null) { 
                 // if we've just initialized() the mailbox, then the version will
@@ -415,7 +415,7 @@ public class Mailbox {
 
             // check for mailbox upgrade
     		if (!getVersion().atLeast(1, 2)) {
-    		    mIndex.upgradeMailboxTo1_2();
+    		    mIndexHelper.upgradeMailboxTo1_2();
     		}
 
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
@@ -476,7 +476,7 @@ public class Mailbox {
 
     /** Returns the Mailbox's Lucene index. */
     public MailboxIndex getMailboxIndex() {
-        return mIndex.getMailboxIndex();
+        return mIndexHelper.getMailboxIndex();
     }
 
     /** Retuns the ID of the volume this <tt>Mailbox</tt>'s index lives on. */
@@ -985,7 +985,7 @@ public class Mailbox {
             mCurrentChange.addIndexDelete(item.getId());
         
         // if no data is provided then we ALWAYS batch
-        if (data != null && getBatchedIndexingCount() == 0) {
+        if (data != null && indexImmediately()) {
             if (item.getIndexId() > 0)
                 mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, item.getModifiedContentSequence(), data));
         } else {
@@ -994,14 +994,12 @@ public class Mailbox {
             mCurrentChange.idxDeferred = Math.max(0, oldCount + 1);
         }
     }
-
-    /** Returns the maximum number of items to be batched in a single indexing
-     *  pass.  (If a search comes in that requires use of the index, all
-     *  pending unindexed items are immediately indexed regardless of batch
-     *  size.)  If this number is <tt>0</tt>, all items are indexed immediately
-     *  when they are added. */
-    int getBatchedIndexingCount() {
-        return mIndex.getBatchedIndexingCount();
+    
+    /**
+     * @return TRUE if we are indexing items immediately, FALSE otherwise
+     */
+    private boolean indexImmediately() {
+        return mIndexHelper.getBatchedIndexingCount() == 0;
     }
     
     public synchronized Connection getOperationConnection() throws ServiceException {
@@ -1033,7 +1031,7 @@ public class Mailbox {
         ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
 
         purgeListeners();
-        mIndex.flush();
+        mIndexHelper.flush();
         
         mMaintenance = new MailboxLock(mData.accountId, mId, this);
         return mMaintenance;
@@ -1499,7 +1497,7 @@ public class Mailbox {
                 // attempt to nuke the store and index
                 // FIXME: we're assuming a lot about the store and index here; should use their functions
                 try {
-                    mIndex.deleteIndex();
+                    mIndexHelper.deleteIndex();
                 } catch (IOException iox) {
                     ZimbraLog.store.warn("Unable to delete index data.", iox);
                 }
@@ -1600,11 +1598,11 @@ public class Mailbox {
     }
 
     public synchronized BatchedIndexStatus getReIndexStatus() {
-        return mIndex.getReIndexStatus();
+        return mIndexHelper.getReIndexStatus();
     }
     
     public void reIndex(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds, boolean skipDelete) throws ServiceException {
-        mIndex.reIndex(octxt, types, itemIds, skipDelete);
+        mIndexHelper.reIndex(octxt, types, itemIds, skipDelete);
     }
                         
     /**
@@ -1616,7 +1614,7 @@ public class Mailbox {
      * @param itemIds
      */
     public void reIndexInBackgroundThread(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds) throws ServiceException {
-        mIndex.reIndexInBackgroundThread(octxt, types, itemIds);
+        mIndexHelper.reIndexInBackgroundThread(octxt, types, itemIds);
     }
     
     /** Recalculates the size, metadata, etc. for an existing MailItem and
@@ -3237,7 +3235,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
-        return mIndex.search(proto, octxt, params);
+        return mIndexHelper.search(proto, octxt, params);
     }
     
     /**
@@ -3679,14 +3677,14 @@ public class Mailbox {
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, null, false, false, addRevision);
     }
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, pm, false, false, addRevision);
     }
@@ -3694,7 +3692,7 @@ public class Mailbox {
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
                            boolean addRevision)
     throws ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false, addRevision);
     }
 
@@ -3979,9 +3977,9 @@ public class Mailbox {
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         // make sure the message has been analyzed before taking the Mailbox lock
-        if (getBatchedIndexingCount() == 0)
+        if (indexImmediately())
             pm.analyzeFully();
 
         // and then actually add the message
@@ -4088,7 +4086,7 @@ public class Mailbox {
         Message msg = null;
         boolean success = false;
         Folder folder = null;
-        boolean deferIndexing = (getBatchedIndexingCount() > 0 || pm.hasTemporaryAnalysisFailure());
+        boolean deferIndexing = (!indexImmediately() || pm.hasTemporaryAnalysisFailure());
 
         CustomMetadata.CustomMetadataList extended = MetadataCallback.preDelivery(pm);
         if (customData != null) {
@@ -4347,10 +4345,10 @@ public class Mailbox {
 
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType, String identityId)
     throws IOException, ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         
         // make sure the message has been analyzed before taking the Mailbox lock
-        if (getBatchedIndexingCount() == 0)
+        if (indexImmediately())
             pm.analyzeFully();
 
         // special-case saving a new draft
@@ -4372,7 +4370,7 @@ public class Mailbox {
         SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
         boolean success = false;
         
-        boolean deferIndexing = this.getBatchedIndexingCount() > 0 || pm.hasTemporaryAnalysisFailure();
+        boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
         InputStream in = null;
             
         try {
@@ -5216,7 +5214,7 @@ public class Mailbox {
     throws ServiceException {
         CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
-        boolean deferIndexing = getBatchedIndexingCount() > 0 || pc.hasTemporaryAnalysisFailure();
+        boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
         List<org.apache.lucene.document.Document> indexData = null;
         if (!deferIndexing) {
             try {
@@ -5279,7 +5277,7 @@ public class Mailbox {
         pc.analyze(this);
         
         List<org.apache.lucene.document.Document> indexData = null;
-        boolean deferIndexing = this.getBatchedIndexingCount() > 0 || pc.hasTemporaryAnalysisFailure();
+        boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
         if (!deferIndexing) {
             try {
                 indexData = pc.getLuceneDocuments(this);
@@ -5883,7 +5881,7 @@ public class Mailbox {
     	
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, InputStream data, byte type)
     throws ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author);
             return createDocument(octxt, folderId, pd, type);
@@ -5917,7 +5915,7 @@ public class Mailbox {
             Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
             redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
 
-            queueForIndexing(doc, false, getBatchedIndexingCount() > 0 ? null : pd.getDocumentList());
+            queueForIndexing(doc, false, !indexImmediately() ? null : pd.getDocumentList());
             success = true;
             return doc;
         } catch (IOException ioe) {
@@ -5929,7 +5927,7 @@ public class Mailbox {
 
     public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author, String name)
     throws ServiceException {
-        mIndex.maybeIndexDeferredItems();
+        mIndexHelper.maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
         try {
             ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author);
@@ -5943,7 +5941,7 @@ public class Mailbox {
     throws ServiceException {
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
         
-        boolean deferIndexing = getBatchedIndexingCount() > 0 || pd.hasTemporaryAnalysisFailure();
+        boolean deferIndexing = !indexImmediately() || pd.hasTemporaryAnalysisFailure();
         
         boolean success = false;
         try {
@@ -5971,7 +5969,7 @@ public class Mailbox {
 
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
-        if (getBatchedIndexingCount() == 0)
+        if (indexImmediately())
             pm.analyzeFully();
         try {
             pm.getRawData();
@@ -6001,8 +5999,8 @@ public class Mailbox {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
 
-        mIndex.maybeIndexDeferredItems();
-        boolean deferIndexing = getBatchedIndexingCount() > 0;
+        mIndexHelper.maybeIndexDeferredItems();
+        boolean deferIndexing = !indexImmediately();
         List<org.apache.lucene.document.Document> docList = null;
         if (!deferIndexing) {
             pm.analyzeFully();
@@ -6052,7 +6050,7 @@ public class Mailbox {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
 
-        boolean deferIndexing = getBatchedIndexingCount() > 0 || pm.hasTemporaryAnalysisFailure();
+        boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
         List<org.apache.lucene.document.Document> docList = null;
         if (!deferIndexing)
             docList = pm.getLuceneDocuments();
@@ -6300,7 +6298,7 @@ public class Mailbox {
                 // here, just in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
 
-                mIndex.indexingPartOfEndTransaction(itemsToIndex, mCurrentChange.indexItemsToDelete);
+                mIndexHelper.indexingPartOfEndTransaction(itemsToIndex, mCurrentChange.indexItemsToDelete);
             } // if indexing needed
             
             // 3. Commit the main transaction in database.
@@ -6490,7 +6488,7 @@ public class Mailbox {
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty()) {
                 try {
-                    List<Integer> idxDeleted = mIndex.deleteDocuments(deletes.indexIds);
+                    List<Integer> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
                     if (idxDeleted.size() != deletes.indexIds.size()) {
                         if (ZimbraLog.index_add.isInfoEnabled()) 
                             ZimbraLog.index_add.info("could not delete all index entries for items: " + deletes.itemIds.getAll());

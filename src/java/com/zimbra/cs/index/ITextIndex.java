@@ -21,7 +21,6 @@ import java.util.List;
 import org.apache.lucene.document.Document;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 
 /**
  * Currently, only the index-write APIs are fully abstracted from Lucene.  The search APIs

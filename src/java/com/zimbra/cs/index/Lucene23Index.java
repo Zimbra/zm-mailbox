@@ -48,7 +48,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;

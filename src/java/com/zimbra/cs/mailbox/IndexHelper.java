@@ -48,7 +48,7 @@ import com.zimbra.cs.index.queryparser.ParseException;
  * Helper class -- basically a dumping ground to move all of the index-oriented things out of Mailbox
  * to try to keep it all in one place
  */
-class Index {
+class IndexHelper {
     private static final long sBatchIndexMaxBytesPerTransaction = LC.zimbra_index_max_transaction_bytes.longValue();
     private static final int sBatchIndexMaxItemsPerTransaction = LC.zimbra_index_max_transaction_items.intValue();
     
@@ -57,7 +57,6 @@ class Index {
     private static final long sIndexDeferredItemsRetryIntervalMs = LC.zimbra_index_deferred_items_delay.longValue() * 1000;
     private static final long sIndexItemDeferredRetryDelayAfterFailureMs = 1000 * LC.zimbra_index_deferred_items_failure_delay.longValue();
 
-    
     private SyncToken mHighestSubmittedToIndex = null;
     private int mNumIndexingInProgress = 0;
     // the timestamp of the last time we had a failure-to-index.  Not persisted anywhere.
@@ -75,15 +74,14 @@ class Index {
     static ThreadPool sReIndexThreadPool = new ThreadPool("MailboxReindex", 5);
     private MailboxIndex   mMailboxIndex = null;
     
-    Index(Mailbox mbox) { mMbox = mbox; }
+    IndexHelper(Mailbox mbox) { mMbox = mbox; }
     
     void instantiateMailboxIndex() throws ServiceException {
         mMailboxIndex = new MailboxIndex(getMailbox(), null);
     }
     
-    private Mailbox getMailbox() { return mMbox; }
-    MailboxIndex getMailboxIndex() { return mMailboxIndex; }
-    
+    final private Mailbox getMailbox() { return mMbox; }
+    final MailboxIndex getMailboxIndex() { return mMailboxIndex; }
     
     ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
         if (Thread.holdsLock(getMailbox()))
@@ -140,7 +138,7 @@ class Index {
         boolean shouldIndexDeferred = false;
         synchronized (getMailbox()) {
             if (!mIndexingDeferredItems) {
-                if (getNumNotSubmittedToIndex() >= getMailbox().getBatchedIndexingCount()) {
+                if (getNumNotSubmittedToIndex() >= getBatchedIndexingCount()) {
                     long now = System.currentTimeMillis();
                     
                     if (((now - sIndexItemDeferredRetryDelayAfterFailureMs) > mLastIndexingFailureTimestamp) &&
@@ -157,7 +155,7 @@ class Index {
      * @return Number of items NOT submitted to the index (deferredCount - num in progress)
      */
     int getNumNotSubmittedToIndex() {
-        return getMailbox().getIndexDeferredCount() - getNumIndexingInProgress();
+        return getMailbox().getIndexDeferredCount() - mNumIndexingInProgress;
     }
     
     /**
@@ -350,9 +348,7 @@ class Index {
                         mHighestSubmittedToIndex = new SyncToken(0);
 
                         // update the idx change tracking
-//                        getMailbox().mCurrentChange.idxDeferred = 100000; // big number
                         getMailbox().setCurrentChangeIndexDeferredCount(100000); // big number
-//                        getMailbox().mCurrentChange.highestModContentIndexed = new SyncToken(0);
                         getMailbox().setCurrentChangeHighestModContentIndexed(new SyncToken(0));
 
                         success = true;
@@ -845,47 +841,7 @@ class Index {
         }
     }
 
-    final SyncToken getHighestSubmittedToIndex() {
-        return mHighestSubmittedToIndex;
-    }
-
-    final int getNumIndexingInProgress() {
-        return mNumIndexingInProgress;
-    }
-
-    final long getLastIndexingFailureTimestamp() {
-        return mLastIndexingFailureTimestamp;
-    }
-
     final BatchedIndexStatus getReIndexStatus() {
         return mReIndexStatus;
-    }
-
-    final long getLastIndexDeferredTime() {
-        return mLastIndexDeferredTime;
-    }
-
-    final Mailbox getMbox() {
-        return mMbox;
-    }
-
-    final void setHighestSubmittedToIndex(SyncToken highestSubmittedToIndex) {
-        mHighestSubmittedToIndex = highestSubmittedToIndex;
-    }
-
-    final void setNumIndexingInProgress(int numIndexingInProgress) {
-        mNumIndexingInProgress = numIndexingInProgress;
-    }
-
-    final void setLastIndexingFailureTimestamp(long lastIndexingFailureTimestamp) {
-        mLastIndexingFailureTimestamp = lastIndexingFailureTimestamp;
-    }
-
-    final void setReIndexStatus(BatchedIndexStatus reIndexStatus) {
-        mReIndexStatus = reIndexStatus;
-    }
-
-    final void setLastIndexDeferredTime(long lastIndexDeferredTime) {
-        mLastIndexDeferredTime = lastIndexDeferredTime;
     }
 }

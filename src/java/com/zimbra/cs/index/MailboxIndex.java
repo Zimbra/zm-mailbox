@@ -43,6 +43,20 @@ import com.zimbra.cs.util.Zimbra;
  */
 public final class MailboxIndex 
 {
+    /**
+     * Primary search API.  
+     * 
+     * @param proto
+     * @param octxt
+     * @param mbox
+     * @param params
+     * @param textIndexOutOfSync if set, then this API will throw {@link MailServiceException.TEXT_INDEX_OUT_OF_SYNC} if and only if the search
+     *        contains a text part.  Searches without a text part can be run even if the text index is behind.
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     * @throws ServiceException
+     */
     public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params, boolean textIndexOutOfSync) 
     throws IOException, ParseException, ServiceException {
 
@@ -162,6 +176,11 @@ public final class MailboxIndex
         }
     }
     
+    /**
+     * For logging - return the total index disk written for this index
+     * 
+     * @return
+     */
     public long getBytesWritten() {
         if (mLucene != null)
             return mLucene.getBytesWritten();
@@ -169,6 +188,11 @@ public final class MailboxIndex
             return 0;
     }
 
+    /**
+     * For logging - return the total index read for this index
+     * 
+     * @return
+     */
     public long getBytesRead() {
         if (mLucene != null)
             return mLucene.getBytesRead();
@@ -189,40 +213,6 @@ public final class MailboxIndex
         return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
     }
     
-    public static class BrowseTerm {
-        public final String term;
-        public final int freq;
-        
-        public BrowseTerm(String term, int freq) {
-            this.term = term;
-            this.freq = freq;
-        }
-
-        @Override
-        public int hashCode() {
-            return term.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            final BrowseTerm other = (BrowseTerm) obj;
-            if (term == null) {
-                if (other.term != null)
-                    return false;
-            } else if (!term.equals(other.term))
-                return false;
-            return true;
-        }
-        
-        
-    }
-
     /**
      * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
@@ -403,13 +393,7 @@ public final class MailboxIndex
      *  Index Search Results
      *  
      ********************************************************************************/
-    // What level of result grouping do we want?  ConversationResult, MessageResult, or DocumentResult?
-    public static final int FIRST_SEARCH_RETURN_NUM = 1;
-    public static final int SEARCH_RETURN_CONVERSATIONS = 1;
-    public static final int SEARCH_RETURN_MESSAGES      = 2;
-    public static final int SEARCH_RETURN_DOCUMENTS     = 3;
-    public static final int LAST_SEARCH_RETURN_NUM = 3;
-
+    
     public static final String GROUP_BY_CONVERSATION = "conversation";
     public static final String GROUP_BY_MESSAGE      = "message";
     public static final String GROUP_BY_NONE         = "none";

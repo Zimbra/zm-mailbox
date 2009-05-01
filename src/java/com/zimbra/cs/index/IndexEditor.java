@@ -60,6 +60,10 @@ import com.zimbra.common.util.*;
 
 public class IndexEditor {
 
+    static final int SEARCH_RETURN_CONVERSATIONS = 1;
+    static final int SEARCH_RETURN_MESSAGES = 2;
+    static final int SEARCH_RETURN_DOCUMENTS = 3;
+    
     private static SortBy sortOrder = SortBy.DATE_DESCENDING;
     private BufferedReader inputReader = null;
     private PrintStream outputStream = null;
@@ -111,34 +115,7 @@ public class IndexEditor {
     }
 
     public void checkIndex(int mailboxId, boolean repair) {
-//        MailboxIndex midx = null;
-//        try {
-//            midx = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-//            if (midx != null)
-//                midx.chkIndex(repair);
-//        } catch(Exception e) {
-//            outputStream.println("Index Check FAILED with " + ExceptionToString.ToString(e));
-//        } finally {
-//        }
     }
-
-
-//    public void reIndexMsg(int mailboxId, int msg) {
-//        MailboxIndex midx = null;
-//        try {
-//            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-//            midx = mbox.getMailboxIndex();
-//            MailItem item = mbox.getItemById(null, msg, MailItem.TYPE_MESSAGE);
-//            item.reindex(null, true, null);
-//        } catch(Exception e) {
-//            outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
-//        } finally {
-//            if (midx != null) {
-//                midx.flush();
-//            }
-//        }
-//    }
-
 
     public interface QueryRunner
     {
@@ -231,10 +208,10 @@ public class IndexEditor {
 
             byte[] types = new byte[1];
             switch(groupBy) {
-                case MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
+                case SEARCH_RETURN_CONVERSATIONS:
                     types[0]=MailItem.TYPE_CONVERSATION;
                     break;
-                case MailboxIndex.SEARCH_RETURN_MESSAGES:
+                case SEARCH_RETURN_MESSAGES:
                     types[0]=MailItem.TYPE_MESSAGE;
                     break;
                 default:
@@ -289,7 +266,7 @@ public class IndexEditor {
 
     public void displayHit(ZimbraHit hit, int groupBy) {
         outputStream.print("HIT: ");
-        if (groupBy == MailboxIndex.SEARCH_RETURN_CONVERSATIONS) {
+        if (groupBy == SEARCH_RETURN_CONVERSATIONS) {
             ConversationHit ch = (ConversationHit) hit;
             outputStream.println(ch.toString() + " \"  (" + ch.getNumMessageHits() + ")");
             Collection mhs = ch.getMessageHits();
@@ -1222,18 +1199,18 @@ public class IndexEditor {
                     outputStream.println("---->Search order = SIZE_DESCENDING");
                 } else if (command.equals("q") || command.equals("query")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
-                    doQuery(runner,false, MailboxIndex.SEARCH_RETURN_MESSAGES);
+                    doQuery(runner,false, SEARCH_RETURN_MESSAGES);
                 } else if (command.equals("qd") || command.equals("querydump")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
-                    doQuery(runner,true, MailboxIndex.SEARCH_RETURN_DOCUMENTS);
+                    doQuery(runner,true, SEARCH_RETURN_DOCUMENTS);
                 } else if (command.equals("qc") || command.equals("queryconv")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
-                    doQuery(runner,true, MailboxIndex.SEARCH_RETURN_CONVERSATIONS);
+                    doQuery(runner,true, SEARCH_RETURN_CONVERSATIONS);
 //                  } else if (command.equals("nq") || command.equals("newquery")) {
 //                  newQuery(mailboxId);
                 } else if (command.equals("qp") || command.equals("queryconv")) {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
-                    doQuery(runner,true, MailboxIndex.SEARCH_RETURN_DOCUMENTS);
+                    doQuery(runner,true, SEARCH_RETURN_DOCUMENTS);
                 } else if (command.equals("mq")) {
                     ArrayList ids = new ArrayList();
                     do {
@@ -1247,7 +1224,7 @@ public class IndexEditor {
                         }
                     } while (!mailboxIdStr.equals(""));
                     QueryRunner runner = new MultiQueryRunner(ids);
-                    doQuery(runner, false, MailboxIndex.SEARCH_RETURN_CONVERSATIONS);
+                    doQuery(runner, false, SEARCH_RETURN_CONVERSATIONS);
                 } else if (command.equals("mbox")) {
                     outputStream.print("Enter New Mailbox ID: ");
                     mailboxIdStr = inputReader.readLine();

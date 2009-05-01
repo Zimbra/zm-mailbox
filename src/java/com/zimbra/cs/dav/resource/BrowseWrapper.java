@@ -26,7 +26,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
-import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
+import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;

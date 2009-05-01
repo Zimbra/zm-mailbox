@@ -24,7 +24,7 @@ package com.zimbra.cs.mailbox;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
+import com.zimbra.cs.index.BrowseTerm;
 
 /**
  * @author schemers
