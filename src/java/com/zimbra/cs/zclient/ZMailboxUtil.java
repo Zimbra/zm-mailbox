@@ -550,7 +550,12 @@ public class ZMailboxUtil implements DebugListener {
         ZMailbox.Options options = prov.getMailboxOptions(AccountBy.name, mMailboxName, 60*60*24);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
-        options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener()); // use the same debug listener used by zmprov
+        
+        if (prov.soapGetTransportDebugListener() != null)
+            options.setDebugListener(prov.soapGetTransportDebugListener());
+        else  // use the same debug listener used by zmprov
+            options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener()); 
+        
         mMbox = ZMailbox.getMailbox(options);
         dumpMailboxConnect();
         mPrompt = String.format("mbox %s> ", mMbox.getName());

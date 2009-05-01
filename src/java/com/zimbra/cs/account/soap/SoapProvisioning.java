@@ -261,6 +261,10 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport != null)
             mTransport.setDebugListener(mDebugListener);
     }
+    
+    public DebugListener soapGetTransportDebugListener() {
+        return mDebugListener;
+    }
 
     public void soapSetHttpTransportDebugListener(HttpDebugListener listener) {
         mHttpDebugListener = listener;
