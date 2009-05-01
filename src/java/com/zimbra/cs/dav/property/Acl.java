@@ -272,7 +272,7 @@ public class Acl extends ResourceProperty {
 		}
 		
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element sps = super.toElement(ctxt, parent, true);
+			Element sps = parent.addElement(getName());
 			if (nameOnly)
 				return sps;
 
@@ -302,7 +302,7 @@ public class Acl extends ResourceProperty {
 		}
 
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element cups = super.toElement(ctxt, parent, true);
+			Element cups = parent.addElement(getName());
 			if (nameOnly)
 				return cups;
 
@@ -315,10 +315,13 @@ public class Acl extends ResourceProperty {
 				return cups;
 			}
 			
+			// the requestor still has full permission if owner.
+			if (ctxt.getAuthAccount().getId().equals(mOwnerId)) {
+				addPrivileges(cups, (short)(ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT));
+				return cups;
+			}
+			
 			if (mAcl == null) {
-				// the requestor still has full permission if owner.
-				if (ctxt.getAuthAccount().getId().equals(mOwnerId))
-					addPrivileges(cups, (short)(ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_DELETE | ACL.RIGHT_INSERT));
 				return cups;
 			}
 
@@ -346,7 +349,7 @@ public class Acl extends ResourceProperty {
 		}
 
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element mtps = super.toElement(ctxt, parent, true);
+			Element mtps = parent.addElement(getName());
 			if (nameOnly)
 				return mtps;
 
@@ -364,7 +367,7 @@ public class Acl extends ResourceProperty {
 			super(DavElements.E_CURRENT_USER_PRINCIPAL, null, null);
 		}
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element cup = super.toElement(ctxt, parent, true);
+			Element cup = parent.addElement(getName());
 			cup.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(ctxt.getAuthAccount()));
 			return cup;
 		}
@@ -379,7 +382,7 @@ public class Acl extends ResourceProperty {
 			super(DavElements.E_ACL_RESTRICTIONS, null, null);
 		}
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element ar = super.toElement(ctxt, parent, true);
+			Element ar = parent.addElement(getName());
 			ar.addElement(DavElements.E_GRANT_ONLY);
 			ar.addElement(DavElements.E_NO_INVERT);
 			return ar;
