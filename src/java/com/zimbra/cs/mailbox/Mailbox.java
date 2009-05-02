@@ -397,8 +397,8 @@ public class Mailbox {
      * @throws ServiceException
      */
     synchronized boolean finishInitialization() throws ServiceException {
-    	if (!mInitializationComplete) {
-    		// init the index
+        if (!mInitializationComplete) {
+            // init the index
             if (!DebugConfig.disableIndexing) 
                 mIndexHelper.instantiateMailboxIndex();
             
@@ -424,10 +424,9 @@ public class Mailbox {
                 updateVersion(new MailboxVersion((short) 1, (short) 4));
     		}
             
-// Tim: commented this out until more testing is complete
-//            if (!getVersion().atLeast(1, 5)) {
-//                indexAllDeferredFlagItems();
-//            }
+            if (!getVersion().atLeast(1, 5)) {
+                mIndexHelper.indexAllDeferredFlagItems();            
+            }
 
     		// done!
     		mInitializationComplete = true;
@@ -1601,10 +1600,6 @@ public class Mailbox {
         return mIndexHelper.getReIndexStatus();
     }
     
-    public void reIndex(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds, boolean skipDelete) throws ServiceException {
-        mIndexHelper.reIndex(octxt, types, itemIds, skipDelete);
-    }
-                        
     /**
      * Kick off the requested reindexing in a background thread.  The reindexing is run on a best-effort basis, if it fails a WARN 
      * message is logged but it is not retried.
@@ -1613,10 +1608,10 @@ public class Mailbox {
      * @param types
      * @param itemIds
      */
-    public void reIndexInBackgroundThread(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds) throws ServiceException {
-        mIndexHelper.reIndexInBackgroundThread(octxt, types, itemIds);
+    public void reIndex(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds, boolean skipDelete) throws ServiceException {
+        mIndexHelper.reIndexInBackgroundThread(octxt, types, itemIds, skipDelete);
     }
-    
+                        
     /** Recalculates the size, metadata, etc. for an existing MailItem and
      *  persists that information to the database.  Maintains any existing
      *  mutable metadata.  Updates mailbox and folder sizes appropriately.

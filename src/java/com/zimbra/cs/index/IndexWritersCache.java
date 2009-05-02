@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
@@ -307,7 +308,7 @@ class IndexWritersCache {
                         mPool.execute(af);
                     } catch (OutOfMemoryError e) {
                     	Zimbra.halt("OutOfMemory in IndexWritersCache.doSweep", e);
-                    } catch (InterruptedException e) {
+                    } catch (RejectedExecutionException e) {
                     	ZimbraLog.index.debug("Sweeper hit interruptedException attempting to async flush "+w+". Flushing synchronously.");
                     	flushInternal(w);
                     } catch (Throwable t) {
@@ -597,7 +598,7 @@ class IndexWritersCache {
 //                        testPool.execute(new DoFlush(cache, w));
 //                    else
                         testPool.execute(new DoWrites(num, cache, w));
-                } catch (InterruptedException e) {
+                } catch (RejectedExecutionException e) {
                     e.printStackTrace();
                     System.err.println("InterruptedException: "+e);
                 }

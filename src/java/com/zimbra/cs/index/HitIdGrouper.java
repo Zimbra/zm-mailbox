@@ -24,8 +24,7 @@ package com.zimbra.cs.index;
 import java.util.*;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 
 /**
@@ -39,7 +38,6 @@ import com.zimbra.common.util.LogFactory;
  */
 public class HitIdGrouper extends BufferingResultsGrouper {
     private SortBy mSortOrder;
-    private static Log mLog = LogFactory.getLog(HitIdGrouper.class);
     
     public static ZimbraQueryResults Create(ZimbraQueryResults hits, SortBy sortOrder) {
         if (sortOrder == SortBy.NONE)
@@ -72,8 +70,8 @@ public class HitIdGrouper extends BufferingResultsGrouper {
         // buffer all the hits with the same sort field
         while(mHits.hasNext() && (curGroupHit.compareBySortField(mSortOrder, mHits.peekNext()) == 0))
         {
-            if (mLog.isDebugEnabled()) {
-                mLog.debug("HitIdGrouper buffering "+mHits.peekNext());
+            if (ZimbraLog.index_search.isDebugEnabled()) {
+                ZimbraLog.index_search.debug("HitIdGrouper buffering "+mHits.peekNext());
             }
             mBufferedHit.add(mHits.getNext());
         }

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.cli.CommandLine;
@@ -405,7 +406,7 @@ public class LmtpInject {
         LmtpInjectTask task = new LmtpInjectTask(this, file);
         try {
             mThreadPool.execute(task);
-        } catch (InterruptedException e) {
+        } catch (RejectedExecutionException e) {
             mLog.error("InterruptedException while processing " + file.getName(), e);
             result = false;
         }

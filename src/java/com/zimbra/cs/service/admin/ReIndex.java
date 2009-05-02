@@ -100,7 +100,7 @@ public class ReIndex extends AdminDocumentHandler {
                 }
             }
             
-            mbox.reIndexInBackgroundThread(getOperationContext(zsc, context), typesSet, itemIds);
+            mbox.reIndex(getOperationContext(zsc, context), typesSet, itemIds, false);
             
             response.addAttribute(AdminConstants.A_STATUS, "started");
         } else if (action.equalsIgnoreCase(ACTION_STATUS)) {
