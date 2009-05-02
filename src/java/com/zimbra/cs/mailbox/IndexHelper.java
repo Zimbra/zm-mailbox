@@ -65,6 +65,11 @@ public class IndexHelper {
     // is corrupt.  '0' means we think the index is good (we've successfully added to it), nonzero
     // means that we've had failures without success.
     private long mLastIndexingFailureTimestamp = 0;
+    
+    // special-case if we're doing a 'full reindex' of the mailbox -- don't block text
+    // searches while doing a full reindex...
+    private boolean mFullReindexInProgress = false;
+    
     /** Status of current reindexing operation for this mailbox, or NULL 
      *  if a re-index is not in progress. */
     private BatchedIndexStatus mReIndexStatus = null;
@@ -101,7 +106,10 @@ public class IndexHelper {
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
         try {
-            return MailboxIndex.search(proto, octxt, getMailbox(), params, getNumNotSubmittedToIndex()>0);
+            boolean textIndexOutOfSync = (getNumNotSubmittedToIndex()>0);
+            if (mFullReindexInProgress) // if we're doing a full index rebuild, then don't block us waiting for it to complete
+                textIndexOutOfSync = false;
+            return MailboxIndex.search(proto, octxt, getMailbox(), params, textIndexOutOfSync);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.TEXT_INDEX_OUT_OF_SYNC) {
                 indexDeferredItems();
@@ -372,33 +380,40 @@ public class IndexHelper {
                 // special case for reindexing WHOLE mailbox.  We do this differently so that we lean 
                 // on the existing high-water-mark system (allows us to restart where we left off even 
                 // if server restarts)
-                synchronized(getMailbox()) {
-                    getMailbox().beginTransaction("reIndex_all", octxt, null);
-                    boolean success = false;
-                    try {
-                        // reindexing everything, just delete the index
-                        if (getMailboxIndex() != null)
-                            getMailboxIndex().deleteIndex();
-
-                        // index has been deleted, cancel pending indexes
-                        mNumIndexingInProgress = 0;
-                        mHighestSubmittedToIndex = new SyncToken(0);
-
-                        // update the idx change tracking
-                        getMailbox().setCurrentChangeIndexDeferredCount(100000); // big number
-                        getMailbox().setCurrentChangeHighestModContentIndexed(new SyncToken(0));
-
-                        success = true;
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("Error deleting index before re-indexing", e);
-                    } finally {
-                        getMailbox().endTransaction(success);
-                    }
-                }
                 long start = 0;
                 if (ZimbraLog.mailbox.isInfoEnabled()) 
                     start = System.currentTimeMillis();
-                indexDeferredItems();
+                try {
+                    synchronized(getMailbox()) {
+                        mFullReindexInProgress = true;
+                        getMailbox().beginTransaction("reIndex_all", octxt, null);
+                        boolean success = false;
+                        try {
+                            // reindexing everything, just delete the index
+                        if (getMailboxIndex() != null)
+                            getMailboxIndex().deleteIndex();
+                        
+                        // index has been deleted, cancel pending indexes
+                        mNumIndexingInProgress = 0;
+                        mHighestSubmittedToIndex = new SyncToken(0);
+                        
+                        // update the idx change tracking
+                        getMailbox().setCurrentChangeIndexDeferredCount(100000); // big number
+                        getMailbox().setCurrentChangeHighestModContentIndexed(new SyncToken(0));
+                        
+                        success = true;
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("Error deleting index before re-indexing", e);
+                        } finally {
+                            getMailbox().endTransaction(success);
+                        }
+                    }
+                    indexDeferredItems();
+                } finally {
+                    synchronized(getMailbox()) {
+                        mFullReindexInProgress = false;
+                    }
+                }
                 if (ZimbraLog.mailbox.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
                     if (getMailboxIndex() != null)
