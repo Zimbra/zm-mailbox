@@ -620,7 +620,7 @@ public class LC {
         zimbra_index_deferred_items_delay = new KnownKey("zimbra_index_deferred_items_delay", "10");
         zimbra_index_deferred_items_failure_delay = new KnownKey("zimbra_index_deferred_items_failure_delay", "300");
         
-        zimbra_index_max_transaction_bytes = new KnownKey("zimbra_index_max_transaction_bytes", "1000000");
+        zimbra_index_max_transaction_bytes = new KnownKey("zimbra_index_max_transaction_bytes", "5000000");
         zimbra_index_max_transaction_items = new KnownKey("zimbra_index_max_transaction_items", "100");
         
         zimbra_index_lucene_autocommit = new KnownKey("zimbra_index_lucene_autocommit", "false");
