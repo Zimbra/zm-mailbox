@@ -675,7 +675,7 @@ public class DbMailbox {
 
             String highestModContentIndexed = rs.getString(pos++);
             if (highestModContentIndexed == null || highestModContentIndexed.length() == 0)
-                mbd.highestModContentIndexed = new SyncToken(0);
+                mbd.highestModContentIndexed = new SyncToken(mbd.lastChangeId);
             else {
                 try {
                     mbd.highestModContentIndexed = new SyncToken(highestModContentIndexed);
@@ -1041,7 +1041,7 @@ public class DbMailbox {
             
             String highestModContentIndexed = rs.getString(pos++);
             if (highestModContentIndexed == null || highestModContentIndexed.length() == 0)
-                data.highestModContentIndexed = new SyncToken(0);
+                data.highestModContentIndexed = new SyncToken(data.lastChangeId);
             else {
                 try {
                     data.highestModContentIndexed = new SyncToken(highestModContentIndexed);
