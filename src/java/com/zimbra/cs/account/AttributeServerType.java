@@ -12,6 +12,6 @@ public enum AttributeServerType {
     ldap,
     spell,
     memcached,
-    imapproxy,
+    nginxproxy,
     stats;
 }
