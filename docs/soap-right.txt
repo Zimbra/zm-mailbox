@@ -151,19 +151,13 @@ all = whether to include grants granted to groups the specified grantee belongs 
       0: do not include
 
 <GetGrantsResponse>
-    <grant type="{grantee-type}" id="{grantee-id}" name="{grantee-name}" 
-           right="{right-name}" deny="{deny}" canDelegate="{canDelegate}">
-           
-        <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-        <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-        <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
+  <grant>
+    <target type={target-type} by="{target-by}">{target-name-or-id}</target>
+    <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+    <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
   </grant>+
 </GetGrantsResponse>  
-   
-Note: all attribute in the <grant> element are for backward compatibility, 
-      where only <target> can be specified in the request.
-      It will be deprecated after admin console switches to use the new interface
-      (i.e. use info in the <grantee> and <right> elements).
+
          
 ----------------------------------------------------------
 Returns *effective* rights the authenticated admin has on the specified target entry.

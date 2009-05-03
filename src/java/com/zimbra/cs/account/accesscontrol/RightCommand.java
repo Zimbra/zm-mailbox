@@ -142,16 +142,10 @@ public class RightCommand {
                  *        right="{right-name}" deny="{deny}" canDelegate="{canDelegate}"/>
                  */
                 Element eGrant = parent.addElement(AdminConstants.E_GRANT);
-                eGrant.addAttribute(AdminConstants.A_TYPE, ace.granteeType());
-                eGrant.addAttribute(AdminConstants.A_ID, ace.granteeId());
-                eGrant.addAttribute(AdminConstants.A_NAME, ace.granteeName());
-                eGrant.addAttribute(AdminConstants.A_RIGHT, ace.right());
                 
                 RightModifier rightModifier = ace.rightModifier();
                 boolean deny = (rightModifier == RightModifier.RM_DENY);
                 boolean canDelegate = (rightModifier == RightModifier.RM_CAN_DELEGATE);
-                eGrant.addAttribute(AdminConstants.A_DENY, deny);
-                eGrant.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
                 
                 /*
                  * new format:
