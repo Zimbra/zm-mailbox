@@ -1614,7 +1614,7 @@ public class Mailbox {
 
                 // Remove all data related to this mailbox from calendar cache, so the data doesn't
                 // get used by another user later by mistake if/when mailbox id gets reused.
-                CalendarCacheManager.getInstance().removeMailbox(this);
+                CalendarCacheManager.getInstance().purgeMailbox(this);
 
                 success = true;
             } finally {
@@ -2911,10 +2911,17 @@ public class Mailbox {
 
     public synchronized List<Folder> getCalendarFolders(OperationContext octxt, byte sort) throws ServiceException {
         ArrayList<Folder> calFolders = new ArrayList<Folder>();
-        for (Folder f : getFolderList(octxt, sort)) {
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort)) {
+            Folder f = (Folder) item;
             byte view = f.getDefaultView();
             if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK)
-                calFolders.add(f);
+                calFolders.add((Folder) item);
+        }
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_MOUNTPOINT, -1, sort)) {
+            Folder f = (Folder) item;
+            byte view = f.getDefaultView();
+            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK)
+                calFolders.add((Folder) item);
         }
         return calFolders;
     }

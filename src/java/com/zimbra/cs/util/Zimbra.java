@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -199,6 +200,8 @@ public class Zimbra {
         MailboxManager.getInstance().startup();
 
         if (sIsMailboxd) {
+            CalendarCacheManager.getInstance().startup();
+
             SessionCache.startup();
 
             if (!redoLog.isSlave()) {
@@ -298,6 +301,9 @@ public class Zimbra {
 
         if (app.supports(ExtensionUtil.class.getName()))
         	ExtensionUtil.destroyAll();
+
+        if (sIsMailboxd)
+            CalendarCacheManager.getInstance().shutdown();
 
         MailboxManager.getInstance().shutdown();
 

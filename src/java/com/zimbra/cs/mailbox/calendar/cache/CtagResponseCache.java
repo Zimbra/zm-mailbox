@@ -1,22 +1,23 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
-import java.util.LinkedHashMap;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraMemcachedClient;
+import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
+import com.zimbra.cs.mailbox.Metadata;
 
 // for CalDAV
 // caches responses for PROPFIND-ctag requests
 public class CtagResponseCache {
 
-    private CtagResponseLRU mLRU;
+    private static final KeyPrefix MEMCACHED_PREFIX = CalendarCacheManager.MEMCACHED_PREFIX_CALDAV_CTAG_RESPONSE;
+    private ZimbraMemcachedClient mMemcachedClient;
 
-    CtagResponseCache() {
-        // TODO: Use memcached instead of LRU on heap.
-        int lruSize = 0;
-        if (LC.calendar_cache_enabled.booleanValue())
-            lruSize = LC.calendar_cache_lru_size.intValue();
-        mLRU = new CtagResponseLRU(lruSize);
+    CtagResponseCache(ZimbraMemcachedClient memcachedClient) {
+        mMemcachedClient = memcachedClient;
     }
 
     // CTAG response cache key is account + client (User-Agent) + root folder
@@ -30,7 +31,7 @@ public class CtagResponseCache {
             mAccountId = accountId;
             mUserAgent = userAgent;
             mRootFolderId = rootFolderId;
-            mKeyVal = String.format("%s-%s-%d", mAccountId, mUserAgent, mRootFolderId);
+            mKeyVal = String.format("%s:%s:%d", mAccountId, mUserAgent, mRootFolderId);
         }
 
         public String getAccountId() { return mAccountId; }
@@ -48,6 +49,8 @@ public class CtagResponseCache {
         public int hashCode() {
             return mKeyVal.hashCode();
         }
+
+        public String getKeyString() { return mKeyVal; }
     }
 
     public static class CtagResponseCacheValue {
@@ -75,60 +78,90 @@ public class CtagResponseCache {
         public boolean isGzipped() { return mGzipped; }
         public String getVersion() { return mVersion; }
         public Map<Integer, String> getCtags() { return mCtags; }
+
+        private static final String FN_RESPONSE_BODY = "b";
+        private static final String FN_BODY_LENGTH = "bl";
+        private static final String FN_RAW_LENGTH = "rl";
+        private static final String FN_IS_GZIPPED = "gz";
+        private static final String FN_CALLIST_VERSION = "clv";
+        private static final String FN_NUM_CTAGS = "nct";
+        private static final String FN_CTAGS_CAL_ID = "ci";
+        private static final String FN_CTAGS_CTAG = "ct";
+
+        Metadata encodeMetadata() throws ServiceException {
+            Metadata meta = new Metadata();
+            String body = null;
+            try {
+                body = new String(mRespBody, "iso-8859-1");  // must use iso-8859-1 to allow all bytes
+            } catch (UnsupportedEncodingException e) {
+                throw ServiceException.FAILURE("Unable to encode ctag response body", e);
+            } 
+            meta.put(FN_BODY_LENGTH, mRespBody.length);
+            meta.put(FN_RESPONSE_BODY, body);
+            meta.put(FN_RAW_LENGTH, mRawLen);
+            if (mGzipped)
+                meta.put(FN_IS_GZIPPED, true);
+            meta.put(FN_CALLIST_VERSION, mVersion);
+            int i = 0;
+            for (Map.Entry<Integer, String> entry : mCtags.entrySet()) {
+                meta.put(FN_CTAGS_CAL_ID + i, entry.getKey());
+                meta.put(FN_CTAGS_CTAG + i, entry.getValue());
+                ++i;
+            }
+            meta.put(FN_NUM_CTAGS, i);
+            return meta;
+        }
+
+        CtagResponseCacheValue(Metadata meta) throws ServiceException {
+            int bodyLen = (int) meta.getLong(FN_BODY_LENGTH, 0);
+            String body = meta.get(FN_RESPONSE_BODY, null);
+            if (body == null)
+                throw ServiceException.FAILURE("Ctag response body not found in cached entry", null);
+            if (body.length() != bodyLen)
+                throw ServiceException.FAILURE("Ctag response body has wrong length: " + body.length() +
+                                               " when expecting " + bodyLen, null);
+            try {
+                mRespBody = body.getBytes("iso-8859-1");  // must use iso-8859-1 to allow all bytes
+            } catch (UnsupportedEncodingException e) {
+                throw ServiceException.FAILURE("Unable to decode ctag response body", e);
+            }
+            mRawLen = (int) meta.getLong(FN_RAW_LENGTH, 0);
+            mGzipped = meta.getBool(FN_IS_GZIPPED, false);
+            mVersion = meta.get(FN_CALLIST_VERSION, "");
+            int numCtags = (int) meta.getLong(FN_NUM_CTAGS, 0);
+            mCtags = new HashMap<Integer, String>(Math.min(numCtags, 100));
+            if (numCtags > 0) {
+                for (int i = 0; i < numCtags; ++i) {
+                    int calId = (int) meta.getLong(FN_CTAGS_CAL_ID + i, -1);
+                    String ctag = meta.get(FN_CTAGS_CTAG + i, null);
+                    if (calId != -1 && ctag != null)
+                        mCtags.put(calId, ctag);
+                    else
+                        break;
+                }
+            }
+        }
     }
 
-    @SuppressWarnings("serial")
-    private static class CtagResponseLRU extends LinkedHashMap<CtagResponseCacheKey, CtagResponseCacheValue> {
-        private int mMaxAllowed;
+    private CtagResponseCacheValue cacheGet(CtagResponseCacheKey key) throws ServiceException {
+        Object value = mMemcachedClient.get(MEMCACHED_PREFIX, key.getKeyString());
+        if (value == null) return null;
 
-        private CtagResponseLRU(int capacity) {
-            super(capacity + 1, 1.0f, true);
-            mMaxAllowed = Math.max(capacity, 1);
-        }
-
-        @Override
-        public void clear() {
-            super.clear();
-        }
-
-        @Override
-        public CtagResponseCacheValue get(Object key) {
-            return super.get(key);
-        }
-
-        @Override
-        public CtagResponseCacheValue put(CtagResponseCacheKey key, CtagResponseCacheValue value) {
-            CtagResponseCacheValue prevVal = super.put(key, value);
-            return prevVal;
-        }
-
-        @Override
-        public void putAll(Map<? extends CtagResponseCacheKey, ? extends CtagResponseCacheValue> t) {
-            super.putAll(t);
-        }
-
-        @Override
-        public CtagResponseCacheValue remove(Object key) {
-            CtagResponseCacheValue prevVal = super.remove(key);
-            return prevVal;
-        }        
-
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<CtagResponseCacheKey, CtagResponseCacheValue> eldest) {
-            boolean remove = size() > mMaxAllowed;
-            return remove;
-        }
+        String encoded = (String) value;
+        Metadata meta = new Metadata(encoded);
+        return new CtagResponseCacheValue(meta);
     }
 
-    public CtagResponseCacheValue get(CtagResponseCacheKey key) {
-        synchronized (mLRU) {
-            return mLRU.get(key);
-        }
+    private void cachePut(CtagResponseCacheKey key, CtagResponseCacheValue value) throws ServiceException {
+        String encoded = value.encodeMetadata().toString();
+        mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
     }
 
-    public void put(CtagResponseCacheKey key, CtagResponseCacheValue value) {
-        synchronized (mLRU) {
-            mLRU.put(key, value);
-        }
+    public CtagResponseCacheValue get(CtagResponseCacheKey key) throws ServiceException {
+        return cacheGet(key);
+    }
+
+    public void put(CtagResponseCacheKey key, CtagResponseCacheValue value) throws ServiceException {
+        cachePut(key, value);
     }
 }

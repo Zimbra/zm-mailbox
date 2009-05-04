@@ -16,23 +16,26 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraMemcachedClient;
+import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -43,63 +46,73 @@ import com.zimbra.cs.zclient.ZMailbox;
 
 public class CtagInfoCache {
 
-    @SuppressWarnings("serial")
-    private static class InfoLRU extends LinkedHashMap<CalendarKey, CtagInfo> {
-        private int mMaxAllowed;
+    private static final KeyPrefix MEMCACHED_PREFIX = CalendarCacheManager.MEMCACHED_PREFIX_CTAGINFO;
+    private ZimbraMemcachedClient mMemcachedClient;
 
-        private InfoLRU(int capacity) {
-            super(capacity + 1, 1.0f, true);
-            mMaxAllowed = Math.max(capacity, 1);
-        }
+    private CtagInfo cacheGet(CalendarKey key) throws ServiceException {
+        Object value = mMemcachedClient.get(MEMCACHED_PREFIX, key.getKeyString());
+        if (value == null) return null;
 
-        @Override
-        public void clear() {
-            super.clear();
-        }
-
-        @Override
-        public CtagInfo get(Object key) {
-            return super.get(key);
-        }
-
-        @Override
-        public CtagInfo put(CalendarKey key, CtagInfo value) {
-            CtagInfo prevVal = super.put(key, value);
-            return prevVal;
-        }
-
-        @Override
-        public void putAll(Map<? extends CalendarKey, ? extends CtagInfo> t) {
-            super.putAll(t);
-        }
-
-        @Override
-        public CtagInfo remove(Object key) {
-            CtagInfo prevVal = super.remove(key);
-            return prevVal;
-        }        
-
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<CalendarKey, CtagInfo> eldest) {
-            boolean remove = size() > mMaxAllowed;
-            return remove;
-        }
+        String encoded = (String) value;
+        Metadata meta = new Metadata(encoded);
+        return new CtagInfo(meta);
     }
 
-    private InfoLRU mInfoLRU;
+    private Map<CalendarKey, CtagInfo> cacheGetMulti(List<CalendarKey> keys) throws ServiceException {
+        int size = keys.size();
+        Map<CalendarKey, CtagInfo> result = new HashMap<CalendarKey, CtagInfo>(size);
+        Map<String, CalendarKey> keymap = new HashMap<String, CalendarKey>(size);
+        List<String> keystrs = new ArrayList<String>(size);
+        for (CalendarKey key : keys) {
+            result.put(key, null);
+            String kval = key.getKeyString();
+            keymap.put(kval, key);
+            keystrs.add(kval);
+        }
+        Map<String, Object> values = mMemcachedClient.getMulti(MEMCACHED_PREFIX, keystrs);
+        if (values != null) {
+            for (Map.Entry<String, Object> entry : values.entrySet()) {
+                String kval = entry.getKey();
+                CalendarKey ckey = keymap.get(kval);
+                if (ckey != null) {
+                    CtagInfo info = null;
+                    String encoded = (String) entry.getValue();
+                    if (encoded != null) {
+                        Metadata meta = new Metadata(encoded);
+                        info = new CtagInfo(meta);
+                    }
+                    result.put(ckey, info);
+                }
+            }
+        }
+        return result;
+    }
 
-    CtagInfoCache() {
-        // TODO: Use memcached instead of LRU on heap.
-        int lruSize = 0;
-        if (LC.calendar_cache_enabled.booleanValue())
-            lruSize = LC.calendar_cache_lru_size.intValue();
-        mInfoLRU = new InfoLRU(lruSize);
+    private void cacheRemove(CalendarKey key) {
+        mMemcachedClient.remove(MEMCACHED_PREFIX, key.getKeyString());
+    }
+
+    private boolean cacheContains(CalendarKey key) {
+        return mMemcachedClient.contains(MEMCACHED_PREFIX, key.getKeyString());
+    }
+
+    private void cachePut(CalendarKey key, CtagInfo value) {
+        String encoded = value.encodeMetadata().toString();
+        mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
+    }
+
+    CtagInfoCache(ZimbraMemcachedClient memcachedClient) {
+        mMemcachedClient = memcachedClient;
     }
 
     public CtagInfo get(CalendarKey key) throws ServiceException {
         return get(key, false);
+//        CtagInfo info = cacheGet(key);
+//        if (info == null || info.isMountpoint())
+//            info = resolve(key, info, false);
+//        return info;
     }
-    
+
     /**
      * @param key
      * @param wasMountpoint If true, this call is being made to resolve a mountpoint.  This information
@@ -108,17 +121,17 @@ public class CtagInfoCache {
      * @throws ServiceException
      */
     private CtagInfo get(CalendarKey key, boolean wasMountpoint) throws ServiceException {
-        CtagInfo info = null;
-        synchronized (mInfoLRU) {
-            info = mInfoLRU.get(key);
-        }
+        CtagInfo info = cacheGet(key);
         // Always resolve mountpoint to actual calendar folder.
         if (info != null && !info.isMountpoint())
             return info;
 
-        // Not currently in the cache.  Get it the hard way.
-        if (info == null)
-            info = getFolder(key.getAccountId(), key.getFolderId());
+        boolean needToPut = false;
+        if (info == null) {
+            // Not currently in the cache.  Get it the hard way.
+            info = getFolder(key);
+            needToPut = true;
+        }
         if (info != null) {
             // Don't follow mountpoint of mountpoint.  Only one level of indirection is allowed.
             if (info.isMountpoint() && !wasMountpoint) {
@@ -126,29 +139,80 @@ public class CtagInfoCache {
                 CtagInfo infoTarget = get(keyTarget, true);  // recurse
                 if (infoTarget != null) {
                     // Mountpoint inherits ctag from the target.
-                    info.setCtag(infoTarget.getCtag());
+                    String remoteCtag = infoTarget.getCtag();
+                    if (!remoteCtag.equals(info.getCtag())) {
+                        info.setCtag(remoteCtag);
+                        needToPut = true;
+                    }
                 } else {
                     ZimbraLog.calendar.warn("Mounpoint target %s:%d not found during cache lookup",
                             keyTarget.getAccountId(), keyTarget.getFolderId());
                 }
             }
-            synchronized (mInfoLRU) {
-                mInfoLRU.put(key, info);
-            }
+            if (needToPut)
+                cachePut(key, info);
         }
         return info;
     }
 
-    public List<CtagInfo> gets(List<CalendarKey> keys) throws ServiceException {
-        List<CtagInfo> values = new ArrayList<CtagInfo>(keys.size());
+    public Map<CalendarKey, CtagInfo> getMultiSerial(List<CalendarKey> keys) throws ServiceException {
+        Map<CalendarKey, CtagInfo> result = new HashMap<CalendarKey, CtagInfo>(keys.size());
         for (CalendarKey key : keys) {
             CtagInfo value = get(key);
-            values.add(value);  // Null values are added too.
+            result.put(key, value);  // Null values are added too.
         }
-        return values;
+        return result;
     }
 
-    private CtagInfo getFolder(String accountId, int folderId) throws ServiceException {
+    public Map<CalendarKey, CtagInfo> getMulti(List<CalendarKey> keys) throws ServiceException {
+        // entries to put back to cache
+        Map<CalendarKey, CtagInfo> toPut = new HashMap<CalendarKey, CtagInfo>(keys.size());
+
+        // Use multi-get from cache.
+        Map<CalendarKey, CtagInfo> result = cacheGetMulti(keys);
+
+        // Resolve as necessary.
+        for (Map.Entry<CalendarKey, CtagInfo> entry : result.entrySet()) {
+            CalendarKey key = entry.getKey();
+            CtagInfo info = entry.getValue();
+            boolean needToPut = false;
+            if (info == null) {
+                info = getFolder(key);
+                needToPut = true;
+            }
+            if (info != null) {
+                if (info.isMountpoint()) {
+                    CalendarKey keyTarget = new CalendarKey(info.getRemoteAccount(), info.getRemoteId());
+                    CtagInfo target = get(keyTarget, true);  // no multi-get for mountpoint resolution
+                    if (target != null) {
+                        // Mountpoint inherits ctag from the target.
+                        String remoteCtag = target.getCtag();
+                        if (!remoteCtag.equals(info.getCtag())) {
+                            info.setCtag(remoteCtag);
+                            needToPut = true;
+                        }
+                    }
+                }
+                if (needToPut) {
+                    toPut.put(key, info);
+                    entry.setValue(info);
+                }
+            }
+        }
+
+        // Add new entries to cache.
+        for (Map.Entry<CalendarKey, CtagInfo> entry : toPut.entrySet()) {
+            CalendarKey key = entry.getKey();
+            CtagInfo info = entry.getValue();
+            cachePut(key, info);
+        }
+
+        return result;
+    }
+
+    private CtagInfo getFolder(CalendarKey key) throws ServiceException {
+        String accountId = key.getAccountId();
+        int folderId = key.getFolderId();
         CtagInfo calInfo = null;
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, accountId);
@@ -182,8 +246,15 @@ public class CtagInfoCache {
     }
 
     public boolean containsKey(CalendarKey key) {
-        synchronized (mInfoLRU) {
-            return mInfoLRU.containsKey(key);
+        return cacheContains(key);
+    }
+
+    void purgeMailbox(Mailbox mbox) throws ServiceException {
+        String accountId = mbox.getAccountId();
+        List<Folder> folders = mbox.getCalendarFolders(null, DbSearch.SORT_NONE);
+        for (Folder folder : folders) {
+            CalendarKey key = new CalendarKey(accountId, folder.getId());
+            cacheRemove(key);
         }
     }
 
@@ -198,9 +269,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        synchronized (mInfoLRU) {
-                            mInfoLRU.remove(key);
-                        }
+                        cacheRemove(key);
                     }
                 }
             }
@@ -214,9 +283,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        synchronized (mInfoLRU) {
-                            mInfoLRU.remove(key);
-                        }
+                        cacheRemove(key);
                     }
                 }
             }
@@ -232,9 +299,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        synchronized (mInfoLRU) {
-                            mInfoLRU.remove(key);
-                        }
+                        cacheRemove(key);
                     }
                 } else if (deletedObj instanceof Integer) {
                     // We only have item id.  Assume it's a folder id and issue a delete.
@@ -242,9 +307,7 @@ public class CtagInfoCache {
                     if (acctId == null) continue;  // just to be safe
                     int itemId = ((Integer) deletedObj).intValue();
                     CalendarKey key = new CalendarKey(acctId, itemId);
-                    synchronized (mInfoLRU) {
-                        mInfoLRU.remove(key);
-                    }
+                    cacheRemove(key);
                 }
             }
         }

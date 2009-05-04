@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -199,15 +198,16 @@ public class DavServlet extends ZimbraServlet {
             } catch (Exception e) {}
         }
 
-        boolean gzipAccepted = ctxt.isGzipAccepted();
         CtagResponseCache ctagResponseCache = CalendarCacheManager.getInstance().getCtagResponseCache();
+        boolean ctagCacheEnabled = ctagResponseCache != null;
+        boolean gzipAccepted = ctxt.isGzipAccepted();
         boolean cacheThisCtagResponse = false;
         CtagResponseCacheKey ctagCacheKey = null;
         String acctVerSnapshot = null;
         Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
         try {
             // Are we running with cache enabled, and is this a cachable CalDAV ctag request?
-    		if (LC.calendar_cache_enabled.booleanValue() && isCtagRequest(ctxt.getRequestMessage())) {
+    		if (ctagCacheEnabled && isCtagRequest(ctxt)) {
     		    String targetUser = ctxt.getUser();
     		    Account targetAcct = Provisioning.getInstance().get(AccountBy.name, targetUser);
     		    boolean ownAcct = targetAcct != null && targetAcct.getId().equals(authUser.getId());
@@ -369,7 +369,7 @@ public class DavServlet extends ZimbraServlet {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} catch (Exception ex) {}
 		} finally {
-		    if (cacheThisCtagResponse && ctxt.getStatus() == DavProtocol.STATUS_MULTI_STATUS) {
+		    if (ctagCacheEnabled && cacheThisCtagResponse && ctxt.getStatus() == DavProtocol.STATUS_MULTI_STATUS) {
 		        assert(ctagCacheKey != null && acctVerSnapshot != null && !ctagsSnapshot.isEmpty());
 		        DavResponse dresp = ctxt.getDavResponse();
                 ByteArrayOutputStream baosRaw = null;
@@ -399,7 +399,12 @@ public class DavServlet extends ZimbraServlet {
 
                 CtagResponseCacheValue ctagCacheVal = new CtagResponseCacheValue(
 		                respData, rawLen, responseGzipped, acctVerSnapshot, ctagsSnapshot);
-		        ctagResponseCache.put(ctagCacheKey, ctagCacheVal);
+		        try {
+                    ctagResponseCache.put(ctagCacheKey, ctagCacheVal);
+                } catch (ServiceException e) {
+                    ZimbraLog.dav.warn("Unable to cache ctag response", e);
+                    // No big deal if we can't cache the response.  Just move on.
+                }
 		    }
 
 		    ctxt.cleanup();
@@ -414,19 +419,24 @@ public class DavServlet extends ZimbraServlet {
         return getServiceUrl(account, DAV_PATH);
 	}
 
-	private boolean isCtagRequest(Document doc) {
-        Element top = doc.getRootElement();
-        if (top == null || !top.getQName().equals(DavElements.E_PROPFIND))
-            return false;
-        Element prop = top.element(DavElements.E_PROP);
-        if (prop == null)
-            return false;
-        Iterator iter = prop.elementIterator();
-        while (iter.hasNext()) {
-            prop = (Element) iter.next();
-            if (prop.getQName().equals(DavElements.E_GETCTAG))
-                return true;
-        }
+	@SuppressWarnings("unchecked")
+    private boolean isCtagRequest(DavContext ctxt) throws DavException {
+	    String httpMethod = ctxt.getRequest().getMethod();
+	    if (PropFind.PROPFIND.equalsIgnoreCase(httpMethod)) {
+    	    Document doc = ctxt.getRequestMessage();
+            Element top = doc.getRootElement();
+            if (top == null || !top.getQName().equals(DavElements.E_PROPFIND))
+                return false;
+            Element prop = top.element(DavElements.E_PROP);
+            if (prop == null)
+                return false;
+            Iterator iter = prop.elementIterator();
+            while (iter.hasNext()) {
+                prop = (Element) iter.next();
+                if (prop.getQName().equals(DavElements.E_GETCTAG))
+                    return true;
+            }
+	    }
         return false;
     }
 }

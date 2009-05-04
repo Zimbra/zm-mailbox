@@ -36,4 +36,6 @@ public class AccountKey {
     public int hashCode() {
         return mAccountId.hashCode();
     }
+
+    public String getKeyString() { return mAccountId; }
 }

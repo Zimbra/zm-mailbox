@@ -15,7 +15,9 @@
 
 package com.zimbra.cs.mailbox.calendar.cache;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMountpoint;
@@ -96,5 +98,43 @@ public class CtagInfo {
 
     public static String makeCtag(ZFolder calFolder) {
         return makeCtag(calFolder.getModifiedSequence(), calFolder.getImapMODSEQ());
+    }
+
+    private static final String FN_ID = "i";
+    private static final String FN_FOLDER_ID = "f";
+    private static final String FN_PATH = "p";
+    private static final String FN_CTAG = "c";
+    private static final String FN_REMOTE_ACCOUNT = "ra";
+    private static final String FN_REMOTE_ID = "ri";
+
+    Metadata encodeMetadata() {
+        Metadata meta = new Metadata();
+        meta.put(FN_ID, mId);
+        meta.put(FN_FOLDER_ID, mFolderId);
+        meta.put(FN_PATH, mPath);
+        meta.put(FN_CTAG, mCtag);
+        if (mIsMountpoint) {
+            meta.put(FN_REMOTE_ACCOUNT, mRemoteAccount);
+            meta.put(FN_REMOTE_ID, mRemoteId);
+        }
+        return meta;
+    }
+
+    CtagInfo(Metadata meta) throws ServiceException {
+        int id = (int) meta.getLong(FN_ID, -1);
+        int folderId = (int) meta.getLong(FN_FOLDER_ID, -1);
+        String path = meta.get(FN_PATH, null);
+        String ctag = meta.get(FN_CTAG, null);
+        String remoteAccountId = meta.get(FN_REMOTE_ACCOUNT, null);
+        int remoteId;
+        boolean isMountpoint;
+        if (remoteAccountId == null) {
+            isMountpoint = false;
+            remoteId = -1;
+        } else {
+            isMountpoint = true;
+            remoteId = (int) meta.getLong(FN_REMOTE_ID, -1);
+        }
+        init(id, folderId, ctag, path, isMountpoint, remoteAccountId, remoteId);
     }
 }

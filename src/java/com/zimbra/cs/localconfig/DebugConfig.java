@@ -115,6 +115,13 @@ public class DebugConfig {
 
     public static boolean forceMimeConvertersForCalendarBlobs;
 
+    public static boolean calendarMemcachedEnabled;
+    public static String calendarMemcachedServerList;
+    public static boolean calendarMemcachedUseBinaryProtocol;
+    public static String calendarMemcachedHashAlgorithm;
+    public static int calendarMemcachedExpirySecs;
+    public static int calendarMemcachedTimeoutMillis;
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -150,6 +157,13 @@ public class DebugConfig {
         disableGalSyncVisitor = booleanValue("debug_disable_gal_sync_visitor", false);
 
         forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
+
+        calendarMemcachedEnabled = booleanValue("debug_calendar_memcached_enabled", false);
+        calendarMemcachedServerList = LC.get("debug_calendar_memcached_server_list");
+        calendarMemcachedUseBinaryProtocol = booleanValue("debug_calendar_memcached_use_binary_protocol", false);
+        calendarMemcachedHashAlgorithm = LC.get("debug_calendar_memcached_hash_algorithm");
+        calendarMemcachedExpirySecs = intValue("debug_calendar_memcached_expiry_secs", 0);
+        calendarMemcachedTimeoutMillis = intValue("debug_calendar_memcached_timeout_millis", 5000);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
