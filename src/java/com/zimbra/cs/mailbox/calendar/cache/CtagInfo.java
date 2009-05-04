@@ -17,8 +17,10 @@ package com.zimbra.cs.mailbox.calendar.cache;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMountpoint;
 
@@ -59,7 +61,7 @@ public class CtagInfo {
              isMountpoint, remoteAccount, remoteId);
     }
 
-    CtagInfo(ZFolder calFolder) {
+    CtagInfo(ZFolder calFolder) throws ServiceException {
         boolean isMountpoint = calFolder instanceof ZMountpoint;
         String remoteAccount = null;
         int remoteId = -1;
@@ -69,8 +71,16 @@ public class CtagInfo {
             remoteId = Integer.parseInt(mp.getRemoteId());
         }
         String ctag = makeCtag(calFolder);
-        init(Integer.parseInt(calFolder.getId()), Integer.parseInt(calFolder.getParentId()),
-             ctag, calFolder.getPath(), isMountpoint, remoteAccount, remoteId);
+
+        ItemId iidId = new ItemId(calFolder.getId(), (String) null);
+        int id = iidId.getId();
+        int folderId = Mailbox.ID_FOLDER_USER_ROOT;
+        String folderIdStr = calFolder.getParentId();
+        if (folderIdStr != null && folderIdStr.length() > 0) {
+            ItemId iidFolderId = new ItemId(folderIdStr, (String) null);
+            folderId = iidFolderId.getId();
+        }
+        init(id, folderId, ctag, calFolder.getPath(), isMountpoint, remoteAccount, remoteId);
     }
 
     private void init(int id, int parentFolderId, String ctag, String path,
