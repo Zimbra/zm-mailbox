@@ -381,7 +381,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
         
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 3, 7),
+        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 2, 7),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_PUBLISHED_DISTRIBUTION_LIST_SHARE_INFO("getPublishedDistributionListShareInfo", "gpdlsi", "{dl-name|dl-id} [{owner-name|owner-id}]", Category.SHARE, 1, 2),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
