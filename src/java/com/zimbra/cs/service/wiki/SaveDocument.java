@@ -78,6 +78,16 @@ public class SaveDocument extends WikiDocumentHandler {
             String explicitName = docElem.getAttribute(MailConstants.A_NAME, null);
             String explicitCtype = docElem.getAttribute(MailConstants.A_CONTENT_TYPE, null);
 
+            //bug 37180, extract the filename from the path (for IE). IE sends the full path.
+            if(explicitName != null){
+                try{
+                    explicitName = explicitName.replaceAll("\\\\","/");
+                    explicitName = explicitName.substring(explicitName.lastIndexOf("/")+1);
+                }catch (Exception e){
+                    //Do nothing
+                }
+            }
+
             Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
             Element msgElem = docElem.getOptionalElement(MailConstants.E_MSG);
             if (attElem != null) {
