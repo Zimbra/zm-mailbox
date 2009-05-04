@@ -19,9 +19,11 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.DataHandler;
 import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -195,7 +197,11 @@ public class ImapSync extends MailItemImport {
             } catch (CommandFailedException e) {
                 throw new LoginException(e.getError());
             }
+            checkImportingSelf();
             delimiter = connection.getDelimiter();
+        } catch (ServiceException e) {
+            connection.close();
+            throw e;
         } catch (Exception e) {
             connection.close();
             throw ServiceException.FAILURE(
@@ -203,6 +209,21 @@ public class ImapSync extends MailItemImport {
         }
     }
 
+    private void checkImportingSelf() throws IOException, ServiceException {
+        try {
+            IDInfo id = connection.id();
+            if ("Zimbra".equalsIgnoreCase(id.getName())) {
+                String user = id.get("user");
+                if (user != null && user.equals(dataSource.getAccount().getName())) {
+                    throw ServiceException.INVALID_REQUEST(
+                        "User attempted to import messages from his/her own mailbox", null);
+                }
+            }
+        } catch (CommandFailedException e) {
+            // Skip check if ID command fails
+        }
+
+    }
     private void syncFolders(List<Integer> folderIds, boolean fullSync)
         throws ServiceException, IOException {
         if (dataSource.isOffline()) {

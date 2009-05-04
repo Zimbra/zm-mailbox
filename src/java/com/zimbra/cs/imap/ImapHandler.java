@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URLEncoder;
-import java.text.DateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -84,6 +83,9 @@ abstract class ImapHandler extends ProtocolHandler {
     enum ImapExtension { CONDSTORE, QRESYNC };
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
+
+    // ID response parameters
+    private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"";
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
@@ -939,6 +941,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
+
     // RFC 2971 3: "The sole purpose of the ID extension is to enable clients and servers
     //              to exchange information on their implementations for the purposes of
     //              statistical analysis and problem determination."
@@ -987,7 +990,11 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         sendNotifications(true, false);
-        sendUntagged("ID (\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\")");
+        if (isAuthenticated()) {
+            sendUntagged("ID (" + ID_PARAMS + " \"USER\" \"" + mCredentials.getUsername() + "\")");
+        } else {
+            sendUntagged("ID (" + ID_PARAMS + ")");
+        }
         sendOK(tag, "ID completed");
         return CONTINUE_PROCESSING;
     }
