@@ -1669,7 +1669,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Private key this server should use to access another server</desc>
 </attr>
 
-<attr id="339" name="zimbraRemoteManagementPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="339" name="zimbraRemoteManagementPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox">
   <globalConfigValue>22</globalConfigValue>
   <desc>Port on which remote management sshd listening on this server.</desc>
 </attr>
@@ -2528,7 +2528,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of https handler threads</desc>
 </attr>
 
-<attr id="520" name="zimbraLogToSyslog" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="520" name="zimbraLogToSyslog" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether mailbox server should log to syslog</desc>
 </attr>
@@ -3892,7 +3892,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimbraId of domain alias target</desc>
 </attr>
 
-<attr id="776" name="zimbraConvertdURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA1">
+<attr id="776" name="zimbraConvertdURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="6.0.0_BETA1">
   <desc>convertd URL</desc>
 </attr>
 
