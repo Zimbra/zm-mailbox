@@ -25,12 +25,8 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -52,7 +48,6 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
 
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        OperationContext octxt = getOperationContext(zsc, context);
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminConstants.A_ID);
@@ -70,17 +65,12 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
         if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
 
+        CalendarCacheManager calCache = CalendarCacheManager.getInstance();
         ZimbraLog.calendar.info("Purging calendar cache for account " + account.getName());
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId(), false);
-        if (mbox != null) {
-            CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
-            synchronized (mbox) {
-                List<Folder> folders = mbox.getFolderList(octxt, SortBy.NONE);
-                for (Folder folder : folders) {
-                    calCache.invalidateSummary(mbox, folder.getId());
-                }
-            }
-        }
+        if (mbox != null)
+            calCache.purgeMailbox(mbox);
+        calCache.reloadMemcachedConfig();  // TODO: Move this to its own command.
         Element response = zsc.createElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_RESPONSE);
         return response;
     }

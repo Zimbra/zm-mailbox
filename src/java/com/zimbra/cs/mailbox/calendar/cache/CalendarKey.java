@@ -41,4 +41,6 @@ public class CalendarKey {
     public int hashCode() {
         return mKeyVal.hashCode();
     }
+
+    public String getKeyString() { return mKeyVal; }
 }

@@ -30,7 +30,7 @@ public class AccountCtags {
     private CalList mCalList;
     private Map<Integer /* cal folder id */, CtagInfo> mCtagMap;
 
-    AccountCtags(CalList calList, List<CtagInfo> ctags) {
+    AccountCtags(CalList calList, Collection<CtagInfo> ctags) {
         mCalList = calList;
         mCtagMap = new HashMap<Integer, CtagInfo>(ctags.size());
         for (CtagInfo ctag : ctags) {

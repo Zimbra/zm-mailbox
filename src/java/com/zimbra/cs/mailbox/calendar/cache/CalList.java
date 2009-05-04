@@ -15,9 +15,15 @@
 
 package com.zimbra.cs.mailbox.calendar.cache;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.MetadataList;
 
 // mainly for CalDAV but could be useful for other protocols
 // list of calendar folders (or mountpoints) in an account
@@ -40,6 +46,44 @@ public class CalList {
         mVerPrefix = other.mVerPrefix;
         mVerSeq = other.mVerSeq;
         mVerString = other.mVerString;
+    }
+
+    private static final String FN_CALS = "c";
+    private static final String FN_VERSION_PREFIX = "vp";
+    private static final String FN_VERSION_SEQ = "vs";
+
+    Metadata encodeMetadata() {
+        Metadata meta = new Metadata();
+        List<Integer> list = new ArrayList<Integer>(mCalendars);
+        MetadataList calsMetaList = new MetadataList(list);
+        meta.put(FN_CALS, calsMetaList);
+        meta.put(FN_VERSION_PREFIX, mVerPrefix);
+        meta.put(FN_VERSION_SEQ, mVerSeq);
+        return meta;
+    }
+
+    @SuppressWarnings("unchecked")
+    CalList(Metadata meta) throws ServiceException {
+        MetadataList calsMetaList = meta.getList(FN_CALS, true);
+        if (calsMetaList != null) {
+            mCalendars = new HashSet<Integer>(calsMetaList.size());
+            List vals = calsMetaList.asList();
+            for (Object val : vals) {
+                if (val instanceof Long) {
+                    // force integer
+                    mCalendars.add((int) ((Long) val).longValue());
+                } else if (val instanceof Integer) {
+                    mCalendars.add((Integer) val);
+                } else {
+                    throw ServiceException.FAILURE("Invalid calendar id value: " + val.toString(), null);
+                }
+            }
+        } else {
+            mCalendars = new HashSet<Integer>(0);
+        }
+        mVerPrefix = meta.get(FN_VERSION_PREFIX, "");
+        mVerSeq = meta.getLong(FN_VERSION_SEQ, 1);
+        setVersion();
     }
 
     public void add(int calFolderId) {
@@ -68,4 +112,5 @@ public class CalList {
     }
 
     public Collection<Integer> getCalendars() { return mCalendars; }
+
 }

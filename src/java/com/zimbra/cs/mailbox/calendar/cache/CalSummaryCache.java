@@ -726,11 +726,10 @@ public class CalSummaryCache {
         }
     }
 
-    void removeMailbox(Mailbox mbox) {
-        int mboxId = mbox.getId();
+    void purgeMailbox(Mailbox mbox) {
         synchronized (mSummaryCache) {
             mSummaryCache.removeAccount(mbox.getAccountId());
         }
-        FileStore.removeMailbox(mboxId);
+        FileStore.removeMailbox(mbox.getId());
     }
 }
