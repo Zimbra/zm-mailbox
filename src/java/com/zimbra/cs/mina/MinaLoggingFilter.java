@@ -35,53 +35,63 @@ class MinaLoggingFilter extends IoFilterAdapter {
     }
     
     public void sessionCreated(NextFilter nextFilter, IoSession session) {
-        log(session, "CREATED");
+        info(session, "CREATED");
         nextFilter.sessionCreated(session);
     }
 
     public void sessionOpened(NextFilter nextFilter, IoSession session) {
-        log(session, "OPENED");
+        info(session, "OPENED");
         nextFilter.sessionOpened(session);
     }
 
     public void sessionClosed(NextFilter nextFilter, IoSession session) {
-        log(session, "CLOSED");
+        info(session, "CLOSED");
         nextFilter.sessionClosed(session);
     }
 
     public void sessionIdle(NextFilter nextFilter, IoSession session,
                             IdleStatus status) {
-        if (isLoggable()) log(session, "IDLE: " + status);
+        if (isInfo()) {
+            info(session, "IDLE: " + status);
+        }
         nextFilter.sessionIdle(session, status);
     }
 
     public void exceptionCaught(NextFilter nextFilter, IoSession session,
                                 Throwable cause) {
-        if (isLoggable()) log(session, "EXCEPTION:", cause);
+        if (isInfo()) {
+            info(session, "EXCEPTION: " + cause, cause);
+        }
         nextFilter.exceptionCaught(session, cause);
     }
 
     public void messageReceived(NextFilter nextFilter, IoSession session,
                                 Object message) {
-        if (isLoggable()) log(session, "RECEIVED: " + pp(message));
+        if (isDebug()) {
+            debug(session, "RECEIVED: " + pp(message));
+        }
         nextFilter.messageReceived(session, message);
     }
 
     public void messageSent(NextFilter nextFilter, IoSession session,
                             Object message) {
-        if (isLoggable()) log(session, "SENT: " + pp(message));
+        if (isDebug()) {
+            debug(session, "SENT: " + pp(message));
+        }
         nextFilter.messageSent(session, message);
     }
 
     public void filterWrite(NextFilter nextFilter, IoSession session,
                             WriteRequest writeRequest) {
-        if (isLoggable()) log(session, "WRITE: " + pp(writeRequest));
+        if (isDebug()) {
+            debug(session, "WRITE: " + pp(writeRequest));
+        }
         nextFilter.filterWrite(session, writeRequest);
     }
 
     public void filterClose(NextFilter nextFilter, IoSession session)
             throws Exception {
-        log(session, "CLOSE");
+        info(session, "CLOSE");
         nextFilter.filterClose(session);
     }
 
@@ -129,16 +139,38 @@ class MinaLoggingFilter extends IoFilterAdapter {
         return sb.toString();
     }
 
-    // TODO Should this log at debug level instead?
-    private boolean isLoggable() {
+    private boolean isDebug() {
+        return mLog.isDebugEnabled();
+    }
+
+    private boolean isInfo() {
         return mLog.isInfoEnabled();
     }
 
-    private void log(IoSession session, String msg, Throwable e) {
-        if (isLoggable()) mLog.info("%s %s", session.getRemoteAddress(), msg, e);
+    private void info(IoSession session, String msg) {
+        info(session, msg, null);
+    }
+    
+    private void info(IoSession session, String msg, Throwable e) {
+        // bug 20632: only show stack trace if debug level
+        if (isDebug()) {
+            mLog.info(fmt(session, msg), e);
+        } else if (isInfo()) {
+            mLog.info(fmt(session, msg));
+        }
     }
 
-    private void log(IoSession session, String msg) {
-        log(session, msg, null);
+    private void debug(IoSession session, String msg) {
+        debug(session, msg, null);
+    }
+    
+    private void debug(IoSession session, String msg, Throwable e) {
+        if (isInfo()) {
+            mLog.debug(fmt(session, msg));
+        }
+    }
+    
+    private String fmt(IoSession session, String msg) {
+        return String.format("[%s] %s", session.getRemoteAddress(), msg);
     }
 }

@@ -155,7 +155,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             }
             mSession.close();
         } catch (IOException e) {
-            info("exception while closing connection", e);
+            info("I/O error while closing connection: " + e, e);
         }
     }
 
@@ -216,13 +216,15 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void info(String msg, Throwable e) {
-        if (!ZimbraLog.imap.isInfoEnabled())
-            return;
-        StringBuilder sb = new StringBuilder(64);
-        sb.append('[').append(mSession.getRemoteAddress()).append("] ").append(msg);
-        if (e != null)
-            ZimbraLog.imap.info(sb.toString(), e);
-        else
-            ZimbraLog.imap.info(sb.toString());
+        if (ZimbraLog.imap.isDebugEnabled()) {
+            ZimbraLog.imap.info(fmt(msg), e);
+        } else {
+            ZimbraLog.imap.info(fmt(msg));
+        }
+
+    }
+
+    private String fmt(String msg) {
+        return String.format("[%s] %s", mSession.getRemoteAddress(), msg);
     }
 }

@@ -180,21 +180,27 @@ public class TestImapClient extends TestCase {
     }
 
     public void testFetch() throws Exception {
+        connect(true);
         login();
         connection.setDataHandler(new DataHandler() {
             public Object handleData(ImapData data) throws Exception {
                 LOG.debug("handleData: data = " + data);
                 InputStream is = data.getInputStream();
+                is.skip(10);
+                connection.close();
+                return 0;
+                /*
                 int n, count = 0;
                 while ((n = (int) is.skip(data.getSize())) > 0) {
                     count += n;
                 }
                 assertEquals(data.getSize(), count);
                 return count;
+                */
             }
         });
         Mailbox mb = connection.select("INBOX");
-        MessageData md = connection.fetch(1, "(UID BODY.PEEK[])");
+        MessageData md = connection.fetch(94, "(UID BODY.PEEK[])");
         Object data = md.getBodySections()[0].getData();
         assertNotNull(data);
         assertTrue("Expected Integer but got " + data.getClass(), data instanceof Integer);
