@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZMailbox;
 
@@ -77,7 +78,7 @@ extends TestCase {
                 MimeMessage message = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
-                    assertTrue(body.length > 0);
+                    assertTrue(entry.getName() + " has no body", body.length > 0);
                 } else {
                     assertEquals(entry.getName() + " has a body", 0, body.length);
                 }
@@ -114,7 +115,7 @@ extends TestCase {
                 MimeMessage message = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
-                    assertTrue(body.length > 0);
+                    assertTrue(entry.getName() + " has no body", body.length > 0);
                 } else {
                     assertEquals(entry.getName() + " has a body", 0, body.length);
                 }

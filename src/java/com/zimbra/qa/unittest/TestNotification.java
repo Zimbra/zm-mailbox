@@ -160,7 +160,7 @@ extends TestCase {
     }
     
     // @Test
-    public void xtestIntercept()
+    public void testIntercept()
     throws Exception {
         // Turn on legal intercept for recipient account
         String interceptorAddress = TestUtil.getAddress(INTERCEPTOR_NAME);
@@ -255,8 +255,8 @@ extends TestCase {
         ZMailbox interceptor1Mbox = TestUtil.getZMailbox(INTERCEPTOR_NAME);
         ZMailbox interceptor2Mbox = TestUtil.getZMailbox(INTERCEPTOR2_NAME);
         ZMessage tappedMsg = TestUtil.getMessage(tappedMbox, "subject:\"" + subject + "\"");
-        ZMessage interceptMsg1 = TestUtil.getMessage(interceptor1Mbox, "subject:\"" + subject + "\"");
-        ZMessage interceptMsg2 = TestUtil.getMessage(interceptor2Mbox, "subject:\"" + subject + "\"");
+        ZMessage interceptMsg1 = TestUtil.waitForMessage(interceptor1Mbox, "subject:\"" + subject + "\"");
+        ZMessage interceptMsg2 = TestUtil.waitForMessage(interceptor2Mbox, "subject:\"" + subject + "\"");
         verifyInterceptMessage(interceptMsg1, "add message", "Inbox", Integer.toString(Mailbox.ID_FOLDER_INBOX));
         verifyInterceptMessage(interceptMsg2, "add message", "Inbox", Integer.toString(Mailbox.ID_FOLDER_INBOX));
         compareContent(tappedMbox, tappedMsg, interceptor1Mbox, interceptMsg1);
