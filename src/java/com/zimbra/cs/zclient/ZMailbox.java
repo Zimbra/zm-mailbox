@@ -2476,7 +2476,8 @@ public class ZMailbox implements ToZJSONObject {
      * @param os the stream to send the output to
      * @param closeOs whether or not to close the output stream when done
      * @param msecTimeout connection timeout
-     * @param alternateUrl alternate url to connect to
+     * @param alternateUrl if not <tt>null</tt>, this URL will be used instead of
+     * <tt>relativePath</tt>
      * @throws ServiceException on error
      */
     public void getRESTResource(
