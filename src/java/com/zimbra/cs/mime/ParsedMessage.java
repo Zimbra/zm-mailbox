@@ -18,14 +18,12 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -46,6 +44,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
+import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.lucene.document.Document;
@@ -55,6 +54,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CalculatorStream;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
@@ -71,11 +72,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.FileBlobStore;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -121,12 +118,10 @@ public class ParsedMessage {
     private List<Document> mLuceneDocuments = new ArrayList<Document>();
     private CalendarPartInfo mCalendarPartInfo;
 
-    private Blob mIncomingBlob;
-    private byte[] mRawData;
     private String mRawDigest;
-    private BlobInputStream mBlobInputStream;
     private boolean mWasMutated;
     private Integer mRawSize;
+    private InputStream mSharedStream;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments)
     throws ServiceException {
@@ -154,7 +149,8 @@ public class ParsedMessage {
         if (rawData == null || rawData.length == 0) {
             throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
         }
-        mRawData = rawData;
+        mSharedStream = new SharedByteArrayInputStream(rawData);
+        mRawSize = rawData.length;
     }
     
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
@@ -175,10 +171,11 @@ public class ParsedMessage {
         if (file.length() == 0) {
             throw new IOException("File " + file.getPath() + " is empty.");
         }
-        
-        // Initialize Blob object
-        Volume volume = Volume.getCurrentMessageVolume();
-        mIncomingBlob = new Blob(file, volume.getId());
+
+        mSharedStream = new BlobInputStream(file);
+        if (!FileUtil.isGzipped(file)) {
+            mRawSize = (int) file.length();
+        }
         initialize(receivedDate, indexAttachments);
     }
 
@@ -187,50 +184,13 @@ public class ParsedMessage {
      * input stream. Used in IMAP import where initialization and parsing must
      * be delayed until we've had a chance to fully read the IMAP response.
      */
-    public ParsedMessage(InputStream in, int sizeHint) throws ServiceException {
-        try {
-            if (in == null) {
-                throw new IOException("InputStream cannot be null");
-            }
-            int threshold = FileBlobStore.getDiskStreamingThreshold();
-            if (threshold == Integer.MAX_VALUE) {
-                threshold--;
-            }
-            byte[] data = ByteUtil.readInput(in, sizeHint, threshold + 1);
-            if (data.length <= threshold) {
-                // Data size is under the disk streaming threshold.
-                ZimbraLog.lmtp.debug("Reading message of size %d into memory.", data.length);
-                mRawData = data;
-            } else {
-                // Data size exceeded threshold.  Stream to disk.
-                ZimbraLog.lmtp.debug("Message of size %d exceeded disk streaming threshold (%d).  Streaming from disk.",
-                    sizeHint, threshold);
-                InputStream firstChunk = new ByteArrayInputStream(data);
-                InputStream jointStream = new SequenceInputStream(firstChunk, in);
-                CompressedBlobReader reader = new CompressedBlobReader(sizeHint);
-                Volume volume = Volume.getCurrentMessageVolume();
-                mIncomingBlob = StoreManager.getInstance().storeIncoming(jointStream, sizeHint, null, volume.getId(), reader);
-                mRawData = reader.getData();  // Returns data only for compressed blobs, otherwise null.
-            }
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
-        }
+    public ParsedMessage(InputStream in, int sizeHint) {
+        mSharedStream = in;
     }
 
     public ParsedMessage(InputStream in, int sizeHint, Long receivedDate, boolean indexAttachments)
     throws ServiceException {
         this(in, sizeHint);
-        initialize(receivedDate, indexAttachments);
-    }
-
-    /**
-     * Creates a new <tt>ParsedMessage</tt> that references the same data (byte array
-     * or blob) as an existing <tt>ParsedMessage</tt>.
-     */
-    public ParsedMessage(ParsedMessage original, Long receivedDate, boolean indexAttachments)
-    throws ServiceException {
-        mRawData = original.mRawData;
-        mIncomingBlob = original.mIncomingBlob;
         initialize(receivedDate, indexAttachments);
     }
 
@@ -252,48 +212,48 @@ public class ParsedMessage {
     private void init(Long receivedDate, boolean indexAttachments)
     throws MessagingException, IOException {
         mIndexAttachments = indexAttachments;
-        initMimeMessages();
+        
+        if (mMimeMessage == null) {
+            if (mSharedStream == null) {
+                throw new IOException("Content stream has not been initialized.");
+            }
+            if (!(mSharedStream instanceof SharedInputStream)) {
+                InputStream in = mSharedStream;
+                mSharedStream = null;
+                CalculatorStream calc = new CalculatorStream(in);
+                try {
+                    byte[] content = ByteUtil.getContent(calc, 0);
+                    mSharedStream = new SharedByteArrayInputStream(content);
+                    mRawSize = (int) calc.getSize();
+                    mRawDigest = calc.getDigest();
+                } finally {
+                    ByteUtil.closeStream(calc);
+                }
+            }
+
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), mSharedStream);
+        }
         
         // Run mutators.
         try {
             runMimeMutators();
         } catch (Exception e) {
-            if (mRawData != null || mIncomingBlob != null) {
-                ZimbraLog.extensions.warn(
-                    "Error applying message mutator.  Reverting to original MIME message.", e);
-                mMimeMessage = null;
-                mExpandedMessage = null;
-                mWasMutated = false;
-                if (mBlobInputStream != null) {
-                    mBlobInputStream.close();
-                }
-                initMimeMessages();
-            } else {
-                // MimeMessage is now invalid, and we don't have the original data.
-                if (e instanceof MessagingException) {
-                    throw (MessagingException) e;
-                } else {
-                    throw new MessagingException("Cannot recover from MIME mutator failure", e);
-                }
-            }
+            mWasMutated = false;
+            // Original stream has been read, so get a new one.
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), getRawInputStream());
         }
 
         if (wasMutated()) {
             // Original data is now invalid.
-            if (mBlobInputStream != null) {
-                // File on disk is no longer valid, so drop the reference and delete it.
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                mMimeMessage.writeTo(buffer);
-                mRawData = buffer.toByteArray();
-                mMimeMessage = null;
-                mExpandedMessage = null;
-                deleteIncomingBlob();
-                initMimeMessages();
-            } else {
-                // Not streaming from disk, so just wipe out the byte array and blob.
-                mRawData = null;
-                deleteIncomingBlob();
-            }
+            mRawDigest = null;
+            mRawSize = null;
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            mMimeMessage.writeTo(buffer);
+            byte[] content = buffer.toByteArray();
+            ByteUtil.closeStream(mSharedStream);
+            mSharedStream = new SharedByteArrayInputStream(content); 
+            mMimeMessage = mExpandedMessage = null;
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), mSharedStream);
         }
         
         ExpandMimeMessage expand = new ExpandMimeMessage(mMimeMessage);
@@ -311,72 +271,6 @@ public class ParsedMessage {
             receivedDate = getZimbraDateHeader(mMimeMessage); 
         }
         setReceivedDate(receivedDate);
-    }
-    
-    /**
-     * Initializes <tt>mMimeMessage</tt> and <tt>mExpandedMessage</tt>
-     * based on <tt>mRawData</tt> and <tt>mIncomingBlob</tt>.
-     */
-    private void initMimeMessages()
-    throws IOException, MessagingException {
-        // Initialize MimeMessage if necessary.
-        if (mMimeMessage == null) {
-            InputStream in = null;
-            if (mRawData != null) {
-                // Data is in memory.
-                in = new SharedByteArrayInputStream(mRawData);
-            } else if (mIncomingBlob != null) {
-                int threshold = FileBlobStore.getDiskStreamingThreshold();
-                if (mIncomingBlob.isCompressed() || mIncomingBlob.getRawSize() <= threshold) {
-                    // Compressed or small file.  Read into memory.
-                    int size = mIncomingBlob.getRawSize();
-                    mRawData = ByteUtil.getContent(StoreManager.getInstance().getContent(mIncomingBlob), size);
-                    in = new SharedByteArrayInputStream(mRawData);
-                } else {
-                    // Large uncompressed file.  Stream from disk.
-                    mBlobInputStream = new BlobInputStream(mIncomingBlob.getFile());
-                    in = mBlobInputStream;
-                }
-            } else {
-                throw new MessagingException("Message content is not available.");
-            }
-
-            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
-        }
-    }
-    
-    /**
-     * Stores the data for this <tt>ParsedMessage</tt> as a blob in the
-     * incoming directory.  Does nothing if the blob already exists.
-     */
-    public Blob storeOrGetIncomingBlob()
-    throws ServiceException, IOException {
-        if (mIncomingBlob == null) {
-            int sizeHint = 0;
-            if (mRawData != null) {
-                sizeHint = mRawData.length;
-            }
-            Volume volume = Volume.getCurrentMessageVolume();
-            mIncomingBlob = StoreManager.getInstance().storeIncoming(getRawInputStream(), sizeHint, null, volume.getId(), null);
-        }
-        
-        return mIncomingBlob;
-    }
-    
-    public Blob getIncomingBlob() {
-        return mIncomingBlob;
-    }
-    
-    public void deleteIncomingBlob()
-    throws IOException {
-        if (mBlobInputStream != null) {
-            mBlobInputStream.close();
-            mBlobInputStream.closeFile();
-        }
-        if (mIncomingBlob != null) {
-            StoreManager.getInstance().delete(mIncomingBlob);
-            mIncomingBlob = null;
-        }
     }
     
     public boolean wasMutated() {
@@ -559,11 +453,7 @@ public class ParsedMessage {
      */
     public int getRawSize() throws IOException, ServiceException {
         if (mRawSize == null) {
-            if (mRawData != null) {
-                mRawSize = mRawData.length;
-            } else {
-                initializeDigestAndSize();
-            }
+            initializeDigestAndSize();
         }
         return mRawSize;
     }
@@ -572,31 +462,9 @@ public class ParsedMessage {
      * Returns the raw MIME data.  Affected by mutation but
      * not conversion.
      */
-    public byte[] getRawData() throws IOException, MessagingException {
-        if (mRawData != null) {
-            return mRawData;
-        }
-        if (mIncomingBlob != null) {
-            mRawData = ByteUtil.getContent(mIncomingBlob.getFile());
-            return mRawData;
-        }
-        if (mMimeMessage != null) {
-            // Note that this will result in two copies of the message data: one
-            // referenced by the MimeMessage and one referenced by mRawData.
-            int size = mMimeMessage.getSize();
-            ByteArrayOutputStream baos;
-            if (size > 0) {
-                baos = new ByteArrayOutputStream(size);
-            } else {
-                baos = new ByteArrayOutputStream();
-            }
-            mMimeMessage.writeTo(baos);
-            mRawData = baos.toByteArray();
-            return mRawData;
-        }
-        ZimbraLog.mailbox.warn("%s.getRawData(): Unable to get MIME message data.",
-            ParsedMessage.class.getSimpleName());
-        return null;
+    public byte[] getRawData() throws IOException {
+        int sizeHint = (mRawSize == null ? 0 : mRawSize);
+        return ByteUtil.getContent(getRawInputStream(), sizeHint);
     }
 
     /**
@@ -614,39 +482,32 @@ public class ParsedMessage {
         if (mRawDigest != null && mRawSize != null) {
             return;
         }
-        if (mRawData != null) {
-            mRawDigest = ByteUtil.getSHA1Digest(mRawData, true);
-            mRawSize = mRawData.length;
-        } else if (mIncomingBlob != null) {
-            mRawDigest = mIncomingBlob.getDigest();
-            mRawSize = mIncomingBlob.getRawSize();
-        } else {
-            int size = 0;
-            InputStream in = null;
-            MessageDigest digest;
+        int size = 0;
+        InputStream in = null;
+        MessageDigest digest;
 
-            // Initialize streams and digest calculator.
-            try {
-                digest = MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                throw ServiceException.FAILURE("Unable to calculate digest", e);
+        // Initialize streams and digest calculator.
+        try {
+            digest = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            throw ServiceException.FAILURE("Unable to calculate digest", e);
+        }
+
+        try {
+            in = getRawInputStream();
+            DigestInputStream digestStream = new DigestInputStream(in, digest);
+            int numRead = -1;
+            byte[] buf = new byte[1024];
+            while ((numRead = digestStream.read(buf)) >= 0) {
+                size += numRead;
             }
-            
-            try {
-                in = getRawInputStream();
-                DigestInputStream digestStream = new DigestInputStream(in, digest);
-                int numRead = -1;
-                byte[] buf = new byte[1024];
-                while ((numRead = digestStream.read(buf)) >= 0) {
-                    size += numRead;
-                }
-                mRawSize = size;
-                mRawDigest = ByteUtil.encodeFSSafeBase64(digest.digest());
-            } finally {
-                ByteUtil.closeStream(in);
-            }
+            mRawSize = size;
+            mRawDigest = ByteUtil.encodeFSSafeBase64(digest.digest());
+        } finally {
+            ByteUtil.closeStream(in);
         }
     }
+    
     /**
      * Returns a stream to the raw MIME message.  Affected by mutation but
      * not conversion.<p>
@@ -658,24 +519,13 @@ public class ParsedMessage {
      * in the finally block.  This guarantees that the stream is drained and
      * the <tt>MimeMessageOutputThread</tt> exits.
      */
-    public InputStream getRawInputStream() throws ServiceException {
-        if (mRawData != null) {
-            return new ByteArrayInputStream(mRawData);
+    public InputStream getRawInputStream()
+    throws IOException {
+        if (mSharedStream != null) {
+            return ((SharedInputStream) mSharedStream).newStream(0, -1);
+        } else {
+            return Mime.getInputStream(mMimeMessage);
         }
-        try {
-            if (mIncomingBlob != null) {
-                return StoreManager.getInstance().getContent(mIncomingBlob);
-            }
-            if (mMimeMessage != null) {
-                return Mime.getInputStream(mMimeMessage);
-            }
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to get InputStream.", e);
-        }
-        
-        ZimbraLog.mailbox.warn("%s.getInputStream(): Unable to get input stream because message data is not available.",
-            ParsedMessage.class.getSimpleName());
-        return null;
     }
     
     public boolean isAttachmentIndexingEnabled() {
@@ -692,12 +542,19 @@ public class ParsedMessage {
         return mHasAttachments;
     }
     
+    /**
+     * Returns the <tt>BlobInputStream</tt> if this message is being streamed
+     * from a file, otherwise returns <tt>null</tt>.
+     */
     public BlobInputStream getBlobInputStream() {
-        return mBlobInputStream;
+        if (mSharedStream instanceof BlobInputStream) {
+            return (BlobInputStream) mSharedStream;
+        }
+        return null;
     }
     
     public boolean isStreamedFromDisk() {
-        return (mBlobInputStream != null);
+        return (getBlobInputStream() != null);
     }
 
     public int getPriorityBitmask() {

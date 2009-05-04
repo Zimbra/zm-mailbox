@@ -35,6 +35,7 @@ import com.zimbra.cs.store.Blob;
 public class SharedDeliveryContext {
 
     private boolean mShared;
+    private Blob mIncomingBlob;
     private MailboxBlob mMailboxBlob;
     private List<Integer> mMailboxIdList;
     private boolean mIsFirst = true;
@@ -67,6 +68,14 @@ public class SharedDeliveryContext {
     	return mMailboxIdList;
     }
 
+    public Blob getIncomingBlob() {
+        return mIncomingBlob;
+    }
+    
+    public void setIncomingBlob(Blob blob) {
+        mIncomingBlob = blob;
+    }
+    
     public MailboxBlob getMailboxBlob() {
     	return mMailboxBlob;
     }

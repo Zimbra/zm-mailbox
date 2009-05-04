@@ -3730,8 +3730,6 @@ public class Mailbox {
         try {
             if (pm != null)
                 data = pm.getRawData();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("Caught IOException", ioe);
         }
@@ -3974,7 +3972,57 @@ public class Mailbox {
     throws IOException, ServiceException {
         return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, customData, sharedDeliveryCtxt);
     }
-
+    
+    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, int folderId, boolean noIcal,
+                              int flags, String tagStr, int conversationId, String rcptEmail,
+                              CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+    throws IOException, ServiceException {
+        Volume vol = Volume.getCurrentMessageVolume();
+        Blob incomingBlob = null;
+        ParsedMessage pm = null;
+        if (sharedDeliveryCtxt == null) {
+            sharedDeliveryCtxt = new SharedDeliveryContext();
+        }
+        
+        try {
+            incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), null);
+            pm = new ParsedMessage(incomingBlob.getFile(), receivedDate, attachmentsIndexingEnabled());
+            sharedDeliveryCtxt.setIncomingBlob(incomingBlob);
+            return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
+                customData, sharedDeliveryCtxt);
+        } finally {
+            if (incomingBlob != null) {
+                StoreManager.getInstance().delete(incomingBlob);
+            }
+            if (pm != null) {
+                ByteUtil.closeStream(pm.getBlobInputStream());
+            }
+        }
+    }
+    
+    public Message addMessage(OperationContext octxt, byte[] content, Long receivedDate, int folderId, boolean noIcal,
+                              int flags, String tagStr, int conversationId, String rcptEmail,
+                              CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+    throws IOException, ServiceException {
+        ParsedMessage pm = new ParsedMessage(content, receivedDate, attachmentsIndexingEnabled());
+        Volume vol = Volume.getCurrentMessageVolume();
+        Blob incomingBlob = null;
+        if (sharedDeliveryCtxt == null) {
+            sharedDeliveryCtxt = new SharedDeliveryContext();
+        }
+        
+        try {
+            incomingBlob = StoreManager.getInstance().storeIncoming(content, pm.getRawDigest(), null, vol.getId());
+            sharedDeliveryCtxt.setIncomingBlob(incomingBlob);
+            return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
+                customData, sharedDeliveryCtxt);
+        } finally {
+            if (incomingBlob != null) {
+                StoreManager.getInstance().delete(incomingBlob);
+            }
+        }
+    }
+    
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
@@ -4014,7 +4062,34 @@ public class Mailbox {
             }
         }
 
-        Message msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, customData, sharedDeliveryCtxt);
+        // Store the incoming blob if necessary.
+        if (sharedDeliveryCtxt == null) {
+            sharedDeliveryCtxt = new SharedDeliveryContext();
+        }
+        boolean deleteIncoming = false;
+        if (sharedDeliveryCtxt.getIncomingBlob() == null) {
+            InputStream in = null; 
+            Volume vol = Volume.getCurrentMessageVolume();
+            Blob blob = null;
+            try {
+                in = pm.getRawInputStream();
+                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null, vol.getId(), null);
+            } finally {
+                ByteUtil.closeStream(in);
+            }
+            sharedDeliveryCtxt.setIncomingBlob(blob);
+            deleteIncoming = true;
+        }
+
+        Message msg = null;
+        try {
+            msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
+                rcptEmail, null, customData, sharedDeliveryCtxt);
+        } finally {
+            if (deleteIncoming) {
+                StoreManager.getInstance().delete(sharedDeliveryCtxt.getIncomingBlob());
+            }
+        }
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
     }
@@ -4035,6 +4110,11 @@ public class Mailbox {
         boolean needRedo = octxt == null || octxt.needRedo();
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
         boolean isRedo = redoPlayer != null;
+        
+        Blob blob = sharedDeliveryCtxt.getIncomingBlob();
+        if (blob == null) {
+            throw ServiceException.FAILURE("Incoming blob not found.", null);
+        }
 
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();
@@ -4219,15 +4299,13 @@ public class Mailbox {
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
 
             // step 5: write the redolog entries
-            Blob blob = pm.storeOrGetIncomingBlob();
-            
             if (sharedDeliveryCtxt.getShared()) {
                 if (sharedDeliveryCtxt.isFirst() && needRedo) {
-                    // Log entry in redolog for blob save.  Blob bytes are logged in StoreToIncoming entry.
+                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
                     // Subsequent CreateMessage ops will reference this blob.  
                     storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
                     storeRedoRecorder.start(getOperationTimestampMillis());
-                    storeRedoRecorder.setBlobBodyInfo(pm.getIncomingBlob().getFile(), blob.getVolumeId());
+                    storeRedoRecorder.setBlobBodyInfo(blob.getFile(), blob.getVolumeId());
                     storeRedoRecorder.log();
                 }
                 // Link to the file created by StoreIncomingBlob.
@@ -4237,17 +4315,6 @@ public class Mailbox {
                 redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
             }
             
-            // Handle the case where a single user files into multiple folders (bug 2283).
-            // Since the blob gets cleaned up in the finally clause of this method, we now
-            // have to link to the mailbox blob.
-            if (blob == null) {
-                MailboxBlob sourceMboxBlob = sharedDeliveryCtxt.getMailboxBlob();
-                if (sourceMboxBlob == null) {
-                    throw ServiceException.FAILURE("Unable to link to mailbox blob.", null);
-                }
-                blob = sourceMboxBlob.getBlob();
-            }
-
             // step 6: link to existing blob
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob mboxBlob = sm.link(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
@@ -4283,14 +4350,6 @@ public class Mailbox {
                 // so the next recipient in the multi-recipient case will link
                 // to this blob as opposed to saving its own copy.
                 sharedDeliveryCtxt.setFirst(false);
-                
-                if (!sharedDeliveryCtxt.getShared()) {
-                    // If this is the only recipient, clean up the incoming blob.  Kind of
-                    // a hack, but pretty much all of the Mailbox.addMessage() callsites
-                    // except LMTP don't do shared delivery and assume that this method
-                    // will clean up the incoming blob.
-                    pm.deleteIncomingBlob();
-                }
             }
         }
         
@@ -4341,6 +4400,27 @@ public class Mailbox {
         return conv;
     }
     
+    public Message saveDraft(OperationContext octxt, InputStream in, int sizeHint,
+                             Long receivedDate, int id, String origId, String replyType, String identityId)
+    throws IOException, ServiceException {
+        Volume vol = Volume.getCurrentMessageVolume();
+        Blob blob = null;
+        ParsedMessage pm = null;
+        
+        try {
+            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), null);
+            pm = new ParsedMessage(blob.getFile(), receivedDate, attachmentsIndexingEnabled());
+            return saveDraft(octxt, pm, id, origId, replyType, identityId);
+        } finally {
+            if (blob != null) {
+                StoreManager.getInstance().delete(blob);
+            }
+            if (pm != null) {
+                ByteUtil.closeStream(pm.getBlobInputStream());
+            }
+        }
+    }
+    
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         return saveDraft(octxt, pm, id, null, null, null);
     }
@@ -4358,8 +4438,21 @@ public class Mailbox {
             Message.DraftInfo dinfo = null;
             if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")))
                 dinfo = new Message.DraftInfo(replyType, origId, identityId);
-            return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
-                                      ID_AUTO_INCREMENT, ":API:", dinfo, null, new SharedDeliveryContext());
+            
+            Volume vol = Volume.getCurrentMessageVolume();
+            Blob blob = null;
+            InputStream in = null;
+            try {
+                in = pm.getRawInputStream();
+                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null, vol.getId(), null);
+                SharedDeliveryContext ctxt = new SharedDeliveryContext();
+                ctxt.setIncomingBlob(blob);
+                return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
+                    ID_AUTO_INCREMENT, ":API:", dinfo, null, ctxt);
+            } finally {
+                ByteUtil.closeStream(in);
+                StoreManager.getInstance().delete(blob);
+            }
         } else {
             return saveDraftInternal(octxt, pm, id);
         }
@@ -5973,11 +6066,6 @@ public class Mailbox {
         // make sure the message has been analzyed before taking the Mailbox lock
         if (indexImmediately())
             pm.analyzeFully();
-        try {
-            pm.getRawData();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
         // special-case saving a new Chat
         if (id == ID_AUTO_INCREMENT)
             return createChat(octxt, pm, ID_FOLDER_IM_LOGS, Flag.BITMASK_FROM_ME, null);
@@ -5993,13 +6081,9 @@ public class Mailbox {
         byte[] data;
         String digest;
         int msgSize;
-        try {
-            data = pm.getRawData();  
-            digest = pm.getRawDigest();  
-            msgSize = pm.getRawSize();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
+        data = pm.getRawData();  
+        digest = pm.getRawDigest();  
+        msgSize = pm.getRawSize();
 
         mIndexHelper.maybeIndexDeferredItems();
         boolean deferIndexing = !indexImmediately();
@@ -6044,13 +6128,9 @@ public class Mailbox {
         byte[] data;
         String digest;
         int size;
-        try {
-            data = pm.getRawData();  
-            digest = pm.getRawDigest();  
-            size = pm.getRawSize();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
+        data = pm.getRawData();  
+        digest = pm.getRawDigest();  
+        size = pm.getRawSize();
 
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
         List<org.apache.lucene.document.Document> docList = null;

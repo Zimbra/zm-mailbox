@@ -1002,17 +1002,13 @@ class ImapFolderSync {
     private void handleFetch(MessageData md,
                              Map<Long, MessageData> flagsByUid,
                              List<Long> uidsToDelete)
-        throws ServiceException, MessagingException, IOException {
+        throws ServiceException, IOException {
         long uid = md.getUid();
         if (uid == -1) {
             throw new MailException("Missing UID in FETCH response");
         }
         ParsedMessage pm = getBody(md);
         MessageData flagsData = flagsByUid.get(uid);
-        if (flagsData == null) {
-            pm.deleteIncomingBlob();
-            return;
-        }
         remoteFolder.debug("Found new IMAP message with uid %d", uid);
         // Parse the message data
         Date date = md.getInternalDate();

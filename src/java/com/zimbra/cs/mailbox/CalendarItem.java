@@ -1906,16 +1906,10 @@ public abstract class CalendarItem extends MailItem {
          * @throws IOException
          */
         public InputStream getInputStream() throws IOException {
-            try {
-                if (mPm == null) {
-                    return new ByteArrayInputStream(new byte[0]);
-                } else {
-                    return new ByteArrayInputStream(mPm.getRawData());
-                }
-            } catch (MessagingException e) {
-                IOException ioe = new IOException("getInputStream");
-                ioe.initCause(e);
-                throw ioe;
+            if (mPm == null) {
+                return new ByteArrayInputStream(new byte[0]);
+            } else {
+                return new ByteArrayInputStream(mPm.getRawData());
             }
         }
 
@@ -1927,16 +1921,12 @@ public abstract class CalendarItem extends MailItem {
     private void storeUpdatedBlob(MimeMessage mm, short volumeId)
     throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
-        try {
-            byte[] data = pm.getRawData();
-            if (data == null)
-                ZimbraLog.calendar.warn(
-                        "Invalid state: updating blob with null data for calendar item " + getId() +
-                        " in mailbox " + getMailboxId());
-            setContent(data, pm.getRawDigest(), volumeId, pm);
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
+        byte[] data = pm.getRawData();
+        if (data == null)
+            ZimbraLog.calendar.warn(
+                "Invalid state: updating blob with null data for calendar item " + getId() +
+                " in mailbox " + getMailboxId());
+        setContent(data, pm.getRawDigest(), volumeId, pm);
     }
     
     void reanalyze(Object data) throws ServiceException {

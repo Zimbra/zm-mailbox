@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -19,15 +19,13 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -39,8 +37,8 @@ import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.FileBlobStore;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 
 public class CreateMessage extends RedoableOp
@@ -57,7 +55,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                                     // mailbox may be addressed using any of the defined aliases
     private boolean mShared;        // whether message is shared with other mailboxes
     private String mDigest;			// Message blob is referenced by digest rather than blob ID.
-    private int mMsgSize;			// original, uncompressed message size in bytes
+    protected int mMsgSize;			// original, uncompressed message size in bytes
     private int mMsgId;				// ID assigned to newly created message
     private int mFolderId;			// folder to which the message belongs
     private int mConvId;			// conversation to which the message belongs; may be newly created
@@ -68,7 +66,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
     private CustomMetadata mExtendedData; // extra data associated with the message at delivery time
-    private RedoableOpData mData;
+    protected RedoableOpData mData;
 
     private byte mMsgBodyType;
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
@@ -395,40 +393,6 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    protected ParsedMessage getParsedMessageFromData(long date) throws ServiceException, IOException {
-        int mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        ParsedMessage pm;
-        boolean compressed = mData.getLength() != mMsgSize;
-        if (mData.hasDataInMemory() && !compressed) {
-            pm = new ParsedMessage(mData.getData(), date, mbox.attachmentsIndexingEnabled());
-        } else {
-            Volume volume = Volume.getCurrentMessageVolume();
-            short volId = volume.getId();
-            StoreManager sm = StoreManager.getInstance();
-            String path = sm.getUniqueIncomingPath(volId);
-            File blobFile = new File(path);
-            FileUtil.copy(mData.getInputStream(), true, blobFile);  // Save data to a temp file.
-            if (compressed) {
-                // Assume size mismatch means blob is compressed.  Use store manager API to uncompress it.
-                File uncompressedFile = new File(sm.getUniqueIncomingPath(volId));
-                Blob compressedBlob = new Blob(blobFile, volId);
-                InputStream uncompressed = sm.getContent(compressedBlob);  // Returned InputStream is uncompressed.
-                FileUtil.copy(uncompressed, true, uncompressedFile);
-                blobFile.delete();
-                blobFile = uncompressedFile;
-            }
-            InputStream in = null;
-            try {
-                in = new FileInputStream(blobFile);
-                pm = new ParsedMessage(in, mMsgSize, date, mbox.attachmentsIndexingEnabled());
-            } finally {
-                ByteUtil.closeStream(in);
-            }
-        }
-        return pm;
-    }
-
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
@@ -436,7 +400,6 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         List<Integer> mboxList = new ArrayList<Integer>(1);
         mboxList.add(new Integer(mboxId));
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(mShared, mboxList);
-        ParsedMessage pm = null;
         
         if (mMsgBodyType == MSGBODY_LINK) {
             File file = new File(mPath);
@@ -444,47 +407,44 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 throw new RedoException("Missing link source blob " + mPath +
                             " (digest=" + mDigest + ")",
                             this);
-
-            // Manipulate the shared delivery context to make it look like we're calling addMessage
-            // for 2nd or later of a shared delivery.  The purpose is to prevent addMessage from
-            // saving the blob to incoming directory or write StoreIncomingBlob redo op.
-            sharedDeliveryCtxt.setFirst(false);
-
-            if (file.length() != mMsgSize) {
-                // Possibly compressed file.  We have to pass uncompressed file to ParsedMessage.
-                StoreManager sm = StoreManager.getInstance();
-                Volume volume = Volume.getCurrentMessageVolume();
-                short volId = volume.getId();
-                File uncompressed = new File(file.getParent(), file.getName() + ".unzip");
-                // If .unzip file exists, assume it was unzipped by another mailbox doing redo.
-                if (!uncompressed.exists()) {
-                    File temp = new File(uncompressed.getParent(), uncompressed.getName() + "-" + mboxId);
-                    Blob compressed = new Blob(file, volId);
-                    FileUtil.copy(sm.getContent(compressed), true, temp);  // unzip to temp file
-                    temp.renameTo(uncompressed);
-                }
-                file = uncompressed;
-            }
-            InputStream in = null;
+            Volume volume = Volume.getCurrentMessageVolume();
+            Blob blob = new Blob(file, volume.getId()); 
+            sharedDeliveryCtxt.setIncomingBlob(blob);
+            BlobInputStream bis = null;
             try {
-                in = new FileInputStream(file);
-                pm = new ParsedMessage(in, mMsgSize, mReceivedDate, mbox.attachmentsIndexingEnabled());
+                bis = new BlobInputStream(file);
+                ParsedMessage pm = new ParsedMessage(bis, mMsgSize, mReceivedDate, mbox.attachmentsIndexingEnabled());
+                mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags,
+                    mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);
+            } catch (MailServiceException e) {
+                if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                    mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
+                    return;
+                } else {
+                    throw e;
+                }
             } finally {
-                ByteUtil.closeStream(in);
+                ByteUtil.closeStream(bis);
             }
         } else { // mMsgBodyType == MSGBODY_INLINE
             // Just one recipient.  Blob data is stored inline.
-            pm = getParsedMessageFromData(mReceivedDate);
-        }
-
-        try {
-            mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags, mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);
-        } catch (MailServiceException e) {
-            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
-                return;
-            } else {
-                throw e;
+            InputStream in = null;
+            try {
+                in = mData.getInputStream();
+                if (mData.getLength() != mMsgSize) {
+                    in = new GZIPInputStream(in);
+                }
+                mbox.addMessage(getOperationContext(), in, mMsgSize, mReceivedDate, mFolderId, mNoICal, mFlags,
+                    mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt); 
+            } catch (MailServiceException e) {
+                if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                    mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
+                    return;
+                } else {
+                    throw e;
+                }
+            } finally {
+                ByteUtil.closeStream(in);
             }
         }
     }

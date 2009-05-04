@@ -19,11 +19,12 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -71,13 +72,14 @@ public class SaveDraft extends CreateMessage {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
-        // Assemble ParsedMessage from memory or disk
-        ParsedMessage pm = null;
-        pm = getParsedMessageFromData(getTimestamp());
+        InputStream in = null;
 
         try {
-            mbox.saveDraft(getOperationContext(), pm, getMessageId());
+            in = mData.getInputStream();
+            if (mData.getLength() != mMsgSize) {
+                in = new GZIPInputStream(in);
+            }
+            mbox.saveDraft(getOperationContext(), in, mMsgSize, getTimestamp(), getMessageId(), null, null, null);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Draft " + getMessageId() + " is already in mailbox " + mboxId);
