@@ -356,7 +356,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to save outgoing mail (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="23" name="zimbraLmtpAdvertisedName" type="string" max="128" cardinality="single" optionalIn="server">
+<attr id="23" name="zimbraLmtpAdvertisedName" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox">
   <desc>name to use in greeting and sign-off; if empty, uses hostname</desc>
 </attr>
 
@@ -536,32 +536,32 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>public hostname of the host</desc>
 </attr>
 
-<attr id="74" name="zimbraRedoLogEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="74" name="zimbraRedoLogEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether redo logging is enabled</desc>
 </attr>
 
-<attr id="75" name="zimbraRedoLogLogPath" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="75" name="zimbraRedoLogLogPath" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>redolog/redo.log</globalConfigValue>
   <desc>name and location of the redolog file</desc>
 </attr>
 
-<attr id="76" name="zimbraRedoLogArchiveDir" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="76" name="zimbraRedoLogArchiveDir" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>redolog/archive</globalConfigValue>
   <desc>redolog rollover destination</desc>
 </attr>
 
-<attr id="78" name="zimbraRedoLogRolloverFileSizeKB" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="78" name="zimbraRedoLogRolloverFileSizeKB" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>1048576</globalConfigValue>
   <desc>redo.log file rolls over when it gets to this size</desc>
 </attr>
 
-<attr id="79" name="zimbraRedoLogFsyncIntervalMS" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="79" name="zimbraRedoLogFsyncIntervalMS" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>10</globalConfigValue>
   <desc>how frequently writes to redo log get fsynced to disk</desc>
 </attr>
 
-<attr id="93" name="zimbraPop3AdvertisedName" type="string" max="128" cardinality="single" optionalIn="server">
+<attr id="93" name="zimbraPop3AdvertisedName" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox">
   <desc>name to use in greeting and sign-off; if empty, uses hostname</desc>
 </attr>
 
@@ -837,7 +837,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
-<attr id="154" name="zimbraMailPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="154" name="zimbraMailPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox,mta,nginxproxy">
   <globalConfigValue>80</globalConfigValue>
   <desc>HTTP port for end-user UI</desc>
 </attr>
@@ -888,7 +888,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>config for this type</desc>
 </attr>
 
-<attr id="166" name="zimbraMailSSLPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="166" name="zimbraMailSSLPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox,mta,nginxproxy">
   <globalConfigValue>0</globalConfigValue>
   <desc>SSL port for end-user UI</desc>
 </attr>
@@ -941,17 +941,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether POP3 is enabled for an account</desc>
 </attr>
 
-<attr id="176" name="zimbraImapServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="176" name="zimbraImapServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether IMAP server is enabled for a given server</desc>
 </attr>
 
-<attr id="177" name="zimbraPop3ServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="177" name="zimbraPop3ServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether IMAP is enabled for a server</desc>
 </attr>
 
-<attr id="178" name="zimbraImapAdvertisedName" type="string" max="128" cardinality="single" optionalIn="server">
+<attr id="178" name="zimbraImapAdvertisedName" type="string" max="128" cardinality="single" optionalIn="server" requiresRestart="mailbox">
   <desc>name to use in greeting and sign-off; if empty, uses hostname</desc>
 </attr>
 
@@ -978,7 +978,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>port number on which IMAP SSL server should listen on</desc>
 </attr>
 
-<attr id="184" name="zimbraImapSSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="184" name="zimbraImapSSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether IMAP SSL server is enabled for a given server</desc>
 </attr>
@@ -997,7 +997,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>port number on which POP3 server should listen</desc>
 </attr>
 
-<attr id="188" name="zimbraPop3SSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="188" name="zimbraPop3SSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether POP3 SSL server is enabled for a server</desc>
 </attr>
@@ -1007,7 +1007,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to allow cleartext logins over a non SSL/TLS connection</desc>
 </attr>
 
-<attr id="191" name="zimbraVirusDefinitionsUpdateFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="191" name="zimbraVirusDefinitionsUpdateFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
   <globalConfigValue>2h</globalConfigValue>
   <desc>how often (nnnnn[hmsd]) the virus definitions are updated</desc>
 </attr>
@@ -1186,7 +1186,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to show search box or not</desc>
 </attr>
 
-<attr id="225" name="zimbraRedoLogProvider" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="225" name="zimbraRedoLogProvider" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <desc>provider class name for redo logging</desc>
 </attr>
 
@@ -1289,7 +1289,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>destination for syslog messages</desc>
 </attr>
 
-<attr id="251" name="zimbraRedoLogDeleteOnRollover" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="251" name="zimbraRedoLogDeleteOnRollover" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether logs are delete on rollover or archived</desc>
 </attr>
@@ -1532,11 +1532,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to run HTTP or HTTPS or both/mixed mode or redirect mode.  See also related attributes zimbraMailPort and zimbraMailSSLPort</desc>
 </attr>
 
-<attr id="309" name="zimbraMtaAuthHost" type="astring" max="256" callback="MtaAuthHost" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="309" name="zimbraMtaAuthHost" type="astring" max="256" callback="MtaAuthHost" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
   <desc>Host running SOAP service for use by MTA auth.  Setting this sets zimbraMtaAuthURL via attr callback mechanism.</desc>
 </attr>
 
-<attr id="310" name="zimbraMtaAuthURL" type="astring" max="256" immutable="1" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="310" name="zimbraMtaAuthURL" type="astring" max="256" immutable="1" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
   <desc>URL at which this MTA (via zimbra saslauthd) should authenticate.  Set by setting zimbraMtaAuthHost.</desc>
 </attr>
 
@@ -1710,22 +1710,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to permit mobile sync</desc>
 </attr>
 
-<attr id="348" name="zimbraImapProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="348" name="zimbraImapProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy">
   <globalConfigValue>143</globalConfigValue>
   <desc>port number on which IMAP proxy server should listen</desc>
 </attr>
 
-<attr id="349" name="zimbraImapSSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="349" name="zimbraImapSSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy">
   <globalConfigValue>993</globalConfigValue>
   <desc>port number on which IMAPS proxy server should listen</desc>
 </attr>
 
-<attr id="350" name="zimbraPop3ProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="350" name="zimbraPop3ProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy">
   <globalConfigValue>110</globalConfigValue>
   <desc>port number on which POP3 proxy server should listen</desc>
 </attr>
 
-<attr id="351" name="zimbraPop3SSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+<attr id="351" name="zimbraPop3SSLProxyBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy">
   <globalConfigValue>995</globalConfigValue>
   <desc>port number on which POP3S proxy server should listen</desc>
 </attr>
@@ -2153,11 +2153,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="443" name="zimbraImapDisabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="443" name="zimbraImapDisabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <desc>disabled IMAP capabilities.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
 </attr>
 
-<attr id="444" name="zimbraImapSSLDisabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="444" name="zimbraImapSSLDisabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox">
   <desc>disabled IMAP SSL capabilities.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
 </attr>
 
@@ -2449,7 +2449,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether this server is a reverse proxy lookup target</desc>
 </attr>
@@ -2750,12 +2750,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimbraId of visible child accounts</desc>
 </attr>
 
-<attr id="554" name="zimbraPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
+<attr id="554" name="zimbraPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether POP3 SASL GSSAPI is enabled for a given server</desc>
 </attr>
 
-<attr id="555" name="zimbraImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.0">
+<attr id="555" name="zimbraImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether POP3 SASL GSSAPI is enabled for a given server</desc>
 </attr>
@@ -2821,7 +2821,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether user is allowed to retrieve mail from an external IMAP data source</desc>
 </attr>
 
-<attr id="569" name="zimbraReverseProxyAuthWaitInterval" type="duration" cardinality="single" optionalIn="globalConfig" since="5.0.0">
+<attr id="569" name="zimbraReverseProxyAuthWaitInterval" type="duration" cardinality="single" optionalIn="globalConfig" requiresRestart="nginxproxy" since="5.0.0">
   <globalConfigValue>10s</globalConfigValue>
   <desc>wait duration before nginx sending back the NO response for failed imap/pop3 reverse proxy lookups</desc>
 </attr>
@@ -3134,27 +3134,27 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="626" name="zimbraMailProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="5.0.3">
+<attr id="626" name="zimbraMailProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy" since="5.0.3">
   <globalConfigValue>0</globalConfigValue>
   <desc>HTTP proxy port</desc>
 </attr>
 
-<attr id="627" name="zimbraMailSSLProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="5.0.3">
+<attr id="627" name="zimbraMailSSLProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy" since="5.0.3">
   <globalConfigValue>0</globalConfigValue>
   <desc>SSL port HTTP proxy</desc>
 </attr>
 
-<attr id="628" name="zimbraReverseProxyHttpEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.3">
+<attr id="628" name="zimbraReverseProxyHttpEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.3">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable HTTP proxy</desc>
 </attr>
 
-<attr id="629" name="zimbraReverseProxyMailEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.3">
+<attr id="629" name="zimbraReverseProxyMailEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.3">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable IMAP/POP proxy</desc>
 </attr>
 
-<attr id="630" name="zimbraLmtpServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.4">
+<attr id="630" name="zimbraLmtpServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.4">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether LMTP server is enabled for a given server</desc>
 </attr>
@@ -3427,7 +3427,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
 </attr>
 
-<attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.7">
+<attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.7">
   <desc>whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.  See also related attributes zimbraMailProxyPort and zimbraMailSSLProxyPort</desc>
 </attr>
 
@@ -3451,17 +3451,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set true to turn off handling free/busy lookup for CalDAV</desc>
 </attr>
 
-<attr id="691" name="zimbraLmtpExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
+<attr id="691" name="zimbraLmtpExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on LMTP banner</desc>
 </attr>
 
-<attr id="692" name="zimbraPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
+<attr id="692" name="zimbraPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on POP3 banner</desc>
 </attr>
 
-<attr id="693" name="zimbraImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
+<attr id="693" name="zimbraImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.9">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on IMAP banner</desc>
 </attr>
@@ -3504,7 +3504,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to allow a cancel email sent to organizer of appointment</desc>
 </attr>
 
-<attr id="703" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.9">
+<attr id="703" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.9">
   <desc>The default realm that will be used by NGINX mail proxy, when the realm is not specified in GSSAPI Authentication</desc>
 </attr>
 
@@ -3548,12 +3548,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether GAL sync feature is enabled</desc>
 </attr>
 
-<attr id="712" name="zimbraReverseProxyPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="712" name="zimbraReverseProxyPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on Proxy POP3 banner</desc>
 </attr>
 
-<attr id="713" name="zimbraReverseProxyImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="713" name="zimbraReverseProxyImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to expose version on Proxy IMAP banner</desc>
 </attr>
@@ -3578,7 +3578,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>properties for data source</desc>
 </attr>
 
-<attr id="719" name="zimbraReverseProxyImapEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="719" name="zimbraReverseProxyImapEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>IMAP4rev1</globalConfigValue>
   <globalConfigValue>ACL</globalConfigValue>
   <globalConfigValue>BINARY</globalConfigValue>
@@ -3608,7 +3608,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>NGINX reverse proxy imap capabilities</desc>
 </attr>
 
-<attr id="721" name="zimbraReverseProxyPop3EnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="721" name="zimbraReverseProxyPop3EnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>TOP</globalConfigValue>
   <globalConfigValue>USER</globalConfigValue>
   <globalConfigValue>UIDL</globalConfigValue>
@@ -3617,17 +3617,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>NGINX reverse proxy pop3 capabilities</desc>
 </attr>
 
-<attr id="723" name="zimbraReverseProxyLogLevel" type="enum" value="debug,info,notice,warn,error,crit" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="723" name="zimbraReverseProxyLogLevel" type="enum" value="debug,info,notice,warn,error,crit" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>info</globalConfigValue>
   <desc>Log level for NGINX Proxy error log</desc>
 </attr>
 
-<attr id="724" name="zimbraReverseProxyWorkerProcesses" type="integer" min="1" max="16" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="724" name="zimbraReverseProxyWorkerProcesses" type="integer" min="1" max="16" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>4</globalConfigValue>
   <desc>Number of worker processes of NGINX Proxy</desc>
 </attr>
 
-<attr id="725" name="zimbraReverseProxyWorkerConnections" type="integer" min="1" max="40960" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="725" name="zimbraReverseProxyWorkerConnections" type="integer" min="1" max="40960" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>10240</globalConfigValue>
   <desc>Maximum number of connections that an NGINX Proxy worker process is allowed to handle</desc>
 </attr>
@@ -3642,12 +3642,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The error message with which a connection attempt from an IP address will be throttled, if the connection count exceeds the configured limit</desc>
 </attr>
 
-<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether IMAP SASL PLAIN is enabled for reverse proxy</desc>
 </attr>
 
-<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether POP3 SASL PLAIN is enabled for reverse proxy</desc>
 </attr>
@@ -3667,12 +3667,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>time interval that an entry cached by NGINX will remain in the cache</desc>
 </attr>
 
-<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>1h</globalConfigValue>
   <desc>Time interval after which NGINX mail proxy will disconnect an inactive IMAP/POP connection</desc>
 </attr>
 
-<attr id="736" name="zimbraReverseProxyPassErrors" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="736" name="zimbraReverseProxyPassErrors" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether NGINX mail proxy will pass upstream server errors back to the downstream email clients</desc>
 </attr>
@@ -3710,7 +3710,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
    <desc>This attribute is used for DNS check by customers that configure their MX to point at spam relays or other non-zimbra inbox smtp servers</desc>
 </attr>
 
-<attr id="745" name="zimbraReverseProxyRouteLookupTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
+<attr id="745" name="zimbraReverseProxyRouteLookupTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
   <globalConfigValue>15s</globalConfigValue>
   <desc>Time interval after which NGINX will fail over to the next route lookup handler, if a handler does not respond to the route lookup request within this time</desc>
 </attr>
@@ -3900,7 +3900,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>change password URL</desc>
 </attr>
 
-<attr id="778" name="zimbraReverseProxyRouteLookupTimeoutCache" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.12">
+<attr id="778" name="zimbraReverseProxyRouteLookupTimeoutCache" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.12">
   <globalConfigValue>60s</globalConfigValue>
   <desc>Time interval (ms) given to mail route lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)</desc>
 </attr>
@@ -4017,7 +4017,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Value for postconf smtpd_sasl_auth_enable</desc>
 </attr>
 
-<attr id="797" name="zimbraReverseProxyConnectTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA1">
+<attr id="797" name="zimbraReverseProxyConnectTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="6.0.0_BETA1">
   <globalConfigValue>120000ms</globalConfigValue>
   <desc>Time interval after which NGINX mail proxy will disconnect while establishing an upstream IMAP/POP connection</desc>
 </attr>
@@ -4362,7 +4362,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>containing a list of all custom metadata sections cannot be modified outside of a callback.</desc>
 </attr>
 
-<attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+<attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
     Used to control whether Java NIO direct buffers are used. 
@@ -4401,7 +4401,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>if true, exclude blobs on secondary (HSM) volumes from mailbox move</desc>
 </attr>
 
-<attr id="1009" name="zimbraRedoLogCrashRecoveryLookbackSec" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+<attr id="1009" name="zimbraRedoLogCrashRecoveryLookbackSec" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="6.0.0_BETA2">
   <globalConfigValue>10</globalConfigValue>
   <desc>how many seconds worth of committed redo ops to re-execute during crash recovery; related to mysql parameter innodb_flush_log_at_trx_commit=0</desc>
 </attr>
