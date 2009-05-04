@@ -313,7 +313,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         } catch (ConnectException e) {
             System.err.format("Unable to connect to %s: %s\n", mUrl, e.getMessage());
         }
-        mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
         transport.setAuthToken(mAuthToken);
         
         // Do delegate auth if this is a mail or account service request
