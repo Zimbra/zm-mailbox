@@ -29,12 +29,14 @@ import java.util.regex.Pattern;
 import com.zimbra.common.service.ServiceException;
 
 public class DateUtil {
+    
+    public static final String ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT = "yyyyMMddHHmmss'Z'";
 
     /**
      * to LDAP generalized time string
      */
     public static String toGeneralizedTime(Date date) {
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss'Z'");
+        SimpleDateFormat fmt = new SimpleDateFormat(ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT);
         TimeZone tz = fmt.getCalendar().getTimeZone();
         Date gmtDate;
         if (tz.inDaylightTime(date))
