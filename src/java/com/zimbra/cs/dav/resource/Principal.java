@@ -65,4 +65,10 @@ public class Principal extends DavResource {
     public boolean isCollection() {
         return false;
     }
+    
+    public Account getAccount() {
+    	return mAccount;
+    }
+    
+    protected Account mAccount;
 }

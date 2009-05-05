@@ -30,6 +30,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
+import com.zimbra.cs.dav.resource.Principal;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -84,6 +85,10 @@ public class CalDavProperty extends ResourceProperty {
 	
 	public static ResourceProperty getCalendarFreeBusySet(String user, Collection<Folder> folders) {
 		return new CalendarFreeBusySet(user, folders);
+	}
+	
+	public static ResourceProperty getCalendarUserType(Principal p) {
+		return new CalendarUserType(p);
 	}
 	
 	protected CalDavProperty(QName name) {
@@ -276,4 +281,29 @@ public class CalDavProperty extends ResourceProperty {
 			}
 		}
 	}
+	
+	/*
+	 * rfc 2445 section 4.2.3
+	 */
+	private static final String INDIVIDUAL = "INDIVIDUAL";
+	//private static final String GROUP = "GROUP";
+	private static final String RESOURCE = "RESOURCE";
+	private static final String ROOM = "ROOM";
+	private static final String UNKNOWN = "UNKNOWN";
+	
+	private static class CalendarUserType extends CalDavProperty {
+		public CalendarUserType(Principal p) {
+			super(DavElements.E_CALENDAR_USER_TYPE);
+			String resType = p.getAccount().getAttr(Provisioning.A_zimbraCalResType);
+			if (resType == null)
+				setStringValue(INDIVIDUAL);
+			else if (resType.compareTo("Equipment") == 0)
+				setStringValue(RESOURCE);
+			else if (resType.compareTo("Location") == 0)
+				setStringValue(ROOM);
+			else
+				setStringValue(UNKNOWN);
+		}
+	}
+	
 }
