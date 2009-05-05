@@ -113,6 +113,16 @@ public class ByteUtil {
     }
 
     /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
+     *  array.
+     * @param is        The stream to read from.
+     * @param sizeHint  A (non-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint.
+     * @param close     <tt>true</tt> to close the stream after reading. */
+    public static byte[] getContent(InputStream is, int sizeHint, boolean close) throws IOException {
+        return getContent(is, -1, sizeHint, -1, close);
+    }
+
+    /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
      *  array.  Closes the stream, regardless of whether an error occurs.  If
      *  a positive <code>sizeLimit</code> is specified and the stream is
      *  larger than that limit, an <code>IOException</code> is thrown.
@@ -123,7 +133,7 @@ public class ByteUtil {
      *                  stream before an <code>IOException</code> is thrown,
      *                  or <tt>-1</tt> for no limit. */
     public static byte[] getContent(InputStream is, int sizeHint, long sizeLimit) throws IOException {
-        return getContent(is, -1, sizeHint, sizeLimit);
+        return getContent(is, -1, sizeHint, sizeLimit, true);
     }
 
     /** Reads a certain quantity of data from the <code>InputStream</code> into
@@ -137,10 +147,10 @@ public class ByteUtil {
      * @param sizeHint  A (non-binding) hint as to the size of the resulting
      *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint. */
     public static byte[] getPartialContent(InputStream is, int length, int sizeHint) throws IOException {
-        return getContent(is, length, sizeHint, -1);
+        return getContent(is, length, sizeHint, -1, true);
     }
 
-    private static byte[] getContent(InputStream is, int length, int sizeHint, long sizeLimit) throws IOException {
+    private static byte[] getContent(InputStream is, int length, int sizeHint, long sizeLimit, boolean close) throws IOException {
         if (length == 0)
             return new byte[0];
 
@@ -164,7 +174,9 @@ public class ByteUtil {
             }
             return baos.toByteArray();
         } finally {
-            closeStream(is);
+            if (close) {
+                closeStream(is);
+            }
         }
     }
 
