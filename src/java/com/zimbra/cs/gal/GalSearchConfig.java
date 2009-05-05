@@ -90,6 +90,7 @@ public class GalSearchConfig {
 				mBindPassword = ds.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword, mBindPassword);
 				mKerberosPrincipal = ds.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal, mKerberosPrincipal);
 				mKerberosKeytab = ds.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab, mKerberosKeytab);
+				mTimestampFormat = ds.getAttr(Provisioning.A_zimbraGalSyncTimestampFormat, mTimestampFormat);
 				mPageSize = ds.getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, mPageSize);
 			}
 			String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
@@ -126,6 +127,7 @@ public class GalSearchConfig {
 		mFilter = "(&("+mFilter+")(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 		mSearchBase = LdapUtil.getZimbraSearchBase(domain, op);
 		mGalType = GalType.zimbra;
+		mTimestampFormat = GalSyncToken.LDAP_GENERALIZED_TIME_FORMAT;
 		mPageSize = 1000;
 	}
 	
@@ -155,6 +157,7 @@ public class GalSearchConfig {
             mBindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
             mKerberosPrincipal = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
             mKerberosKeytab = domain.getAttr(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
+            mTimestampFormat = domain.getAttr(Provisioning.A_zimbraGalSyncTimestampFormat, GalSyncToken.LDAP_GENERALIZED_TIME_FORMAT);
 			mPageSize = domain.getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, 1000);
             if (isConfigComplete())
             	break;
@@ -201,6 +204,7 @@ public class GalSearchConfig {
 	protected String mBindPassword;
 	protected String mKerberosPrincipal;
 	protected String mKerberosKeytab;
+	protected String mTimestampFormat;
 	protected String mTokenizeKey;
 	protected int mPageSize;
 	protected LdapGalMapRules mRules;

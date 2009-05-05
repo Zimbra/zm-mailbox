@@ -213,8 +213,8 @@ public class GalSearchParams {
 	
 	public String generateLdapQuery() throws ServiceException {
 		assert(mConfig != null);
-		String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp() : null;
-        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, false);
+		String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp(mConfig.mTimestampFormat) : null;
+		return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, false);
 	}
 	
 	public void setGalSyncAccount(Account acct) {

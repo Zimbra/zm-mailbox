@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090505-0111 */
+    /* build: 5.0 pshao 20090505-1107 */
 
     /**
      * RFC2256: descriptive information
@@ -6649,6 +6649,78 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetGalSyncLdapURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalSyncLdapURL, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP generalized time format for external GAL sync
+     *
+     * @return zimbraGalSyncTimestampFormat, or "yyyyMMddHHmmss'Z'" if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1019)
+    public String getGalSyncTimestampFormat() {
+        return getAttr(Provisioning.A_zimbraGalSyncTimestampFormat, "yyyyMMddHHmmss'Z'");
+    }
+
+    /**
+     * LDAP generalized time format for external GAL sync
+     *
+     * @param zimbraGalSyncTimestampFormat new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1019)
+    public void setGalSyncTimestampFormat(String zimbraGalSyncTimestampFormat) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncTimestampFormat, zimbraGalSyncTimestampFormat);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP generalized time format for external GAL sync
+     *
+     * @param zimbraGalSyncTimestampFormat new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1019)
+    public Map<String,Object> setGalSyncTimestampFormat(String zimbraGalSyncTimestampFormat, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncTimestampFormat, zimbraGalSyncTimestampFormat);
+        return attrs;
+    }
+
+    /**
+     * LDAP generalized time format for external GAL sync
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1019)
+    public void unsetGalSyncTimestampFormat() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncTimestampFormat, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP generalized time format for external GAL sync
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1019)
+    public Map<String,Object> unsetGalSyncTimestampFormat(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncTimestampFormat, "");
         return attrs;
     }
 

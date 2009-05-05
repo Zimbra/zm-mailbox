@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090505-0111 */
+    /* build: 5.0 pshao 20090505-1107 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3099,6 +3099,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=589)
     public static final String A_zimbraGalSyncLdapURL = "zimbraGalSyncLdapURL";
+
+    /**
+     * LDAP generalized time format for external GAL sync
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1019)
+    public static final String A_zimbraGalSyncTimestampFormat = "zimbraGalSyncTimestampFormat";
 
     /**
      * whether to tokenize key and AND or OR the tokenized queries for GAL

@@ -14,8 +14,13 @@
  */
 package com.zimbra.cs.gal;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapUtil;
 
@@ -30,6 +35,7 @@ public class GalSyncToken {
 		mChangeIdMap.put(accountId, "" + changeId);
 	}
 	
+	static final String LDAP_GENERALIZED_TIME_FORMAT = DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT;
 	private String mLdapTimestamp;
 	private HashMap<String,String> mChangeIdMap;
 	
@@ -63,6 +69,20 @@ public class GalSyncToken {
 	
 	public String getLdapTimestamp() {
 		return mLdapTimestamp;
+	}
+	
+	public String getLdapTimestamp(String format) throws ServiceException {
+	    // mLdapTimestamp should be always in this format
+	    SimpleDateFormat standardFormat = new SimpleDateFormat(DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT);
+	    SimpleDateFormat fmt = new SimpleDateFormat(format);
+	    try {
+		Date ts = standardFormat.parse(mLdapTimestamp);
+		return fmt.format(ts); 
+	    } catch (ParseException e) {
+		// throw ServiceException.INVALID_REQUEST("invalid sync token:" + mLdapTimestamp, e);
+		// can't parse, just return the original
+		return mLdapTimestamp;
+	    }
 	}
 	
 	public int getChangeId(String accountId) {

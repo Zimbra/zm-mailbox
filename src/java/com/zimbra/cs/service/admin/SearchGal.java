@@ -59,7 +59,7 @@ public class SearchGal extends AdminDocumentHandler {
 
         String domain = request.getAttribute(AdminConstants.A_DOMAIN);
         String typeStr = request.getAttribute(AdminConstants.A_TYPE, "account");
-        String token = request.getAttribute(AdminConstants.A_TOKEN, "");
+        String token = request.getAttribute(AdminConstants.A_TOKEN, null);
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
 
         Provisioning.GAL_SEARCH_TYPE type;
@@ -80,7 +80,8 @@ public class SearchGal extends AdminDocumentHandler {
         checkDomainRight(zsc, d, Admin.R_accessGAL); 
 
         GalSearchParams params = new GalSearchParams(d, zsc);
-        params.setToken(token);
+        if (token != null)
+            params.setToken(token);
         params.setType(type);
         params.setRequest(request);
         params.setQuery(n);

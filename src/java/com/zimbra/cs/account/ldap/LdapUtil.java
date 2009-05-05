@@ -765,7 +765,7 @@ public class LdapUtil {
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");
                         result.setToken(getLaterTimestamp(result.getToken(), cts));
                         result.addMatch(lgc);
-                        ZimbraLog.gal.debug("dn=" + dn + ", modifyTimeStamp=" + mts + ", createTimeStamp=" + cts);
+                        ZimbraLog.gal.debug("dn=" + dn + ", mts=" + mts + ", cts=" + cts);
                     
                     }
                     if (pageSize > 0)
@@ -819,6 +819,11 @@ public class LdapUtil {
                 if (parsedToken != null) {
                     long ts = parsedToken.getTime();
                     ts += 1000;
+                    
+                    // Note, this will "normalize" the token to our standard format
+                    // DateUtil.ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT
+                    // Whenever we've got a new token, it will be returned in the
+                    // normalized format.
                     result.setToken(DateUtil.toGeneralizedTime(new Date(ts)));
                 }
                 /*
