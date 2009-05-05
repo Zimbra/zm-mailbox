@@ -146,7 +146,7 @@ public class MimeDetect {
 
             public boolean detect(byte data[], int limit) {
                 for (int pos = offset; pos < offset + range; pos++) {
-                    if (limit < pos + value.length)
+                    if (pos + value.length >= Math.min(limit, data.length))
                         return false;
                     for (int i = 0; i < value.length; i++) {
                         if ((value[i] & mask[i]) != (data[pos + i] & mask[i]))
