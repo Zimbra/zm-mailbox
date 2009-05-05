@@ -51,37 +51,32 @@ import com.zimbra.cs.zclient.ZMailbox;
 
 public class User extends Principal {
 
-    public User(DavContext ctxt, String mainUrl) throws ServiceException {
-        this(ctxt.getAuthAccount(), mainUrl);
-    }
-    
-    public User(Account authUser, String url) throws ServiceException {
-    	super(authUser, url);
-    	mUser = authUser;
+    public User(Account account, String url) throws ServiceException {
+    	super(account, url);
+    	mAccount = account;
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarHomeSet(user));
         addProperty(CalDavProperty.getScheduleInboxURL(user));
         addProperty(CalDavProperty.getScheduleOutboxURL(user));
+        addProperty(CalDavProperty.getCalendarUserType(this));
         addProperty(VersioningProperty.getSupportedReportSet());
-        addProperty(new CalendarProxyReadFor(mUser));
-        addProperty(new CalendarProxyWriteFor(mUser));
+        addProperty(new CalendarProxyReadFor(mAccount));
+        addProperty(new CalendarProxyWriteFor(mAccount));
 		addProperty(Acl.getPrincipalUrl(this));
         ArrayList<String> addrs = new ArrayList<String>();
-        for (String addr : authUser.getMultiAttr(Provisioning.A_zimbraMailDeliveryAddress))
+        for (String addr : account.getMultiAttr(Provisioning.A_zimbraMailDeliveryAddress))
             addrs.add(addr);
-        for (String alias : authUser.getMultiAttr(Provisioning.A_zimbraMailAlias))
+        for (String alias : account.getMultiAttr(Provisioning.A_zimbraMailAlias))
             addrs.add(alias);
         addrs.add(url);
         addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
         setProperty(DavElements.E_HREF, url);
-        String cn = authUser.getAttr(Provisioning.A_cn);
+        String cn = account.getAttr(Provisioning.A_cn);
         if (cn == null)
-            cn = authUser.getName();
+            cn = account.getName();
         setProperty(DavElements.E_DISPLAYNAME, cn);
         mUri = url;
     }
-    
-    private Account mUser;
     
     @Override
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
@@ -143,12 +138,12 @@ public class User extends Principal {
     	protected ArrayList<Pair<Mountpoint,ZFolder>> getMountpoints(DavContext ctxt) {
     		ArrayList<Pair<Mountpoint,ZFolder>> mps = new ArrayList<Pair<Mountpoint,ZFolder>>();
         	try {
-            	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mUser);
+            	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
             	for (MailItem item : mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT)) {
             		Mountpoint mp = (Mountpoint)item;
             		ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             		ZMailbox zmbx = RemoteCollection.getRemoteMailbox(zat, mp.getOwnerId());
-            		ZFolder folder = zmbx.getFolderById(new ItemId(mp.getOwnerId(), mp.getRemoteId()).toString(mUser));
+            		ZFolder folder = zmbx.getFolderById(new ItemId(mp.getOwnerId(), mp.getRemoteId()).toString(mAccount));
             		mps.add(new Pair<Mountpoint,ZFolder>(mp, folder));
             	}
         	} catch (ServiceException se) {
@@ -172,7 +167,7 @@ public class User extends Principal {
         			if ((rights & ACL.RIGHT_READ) > 0) {
         				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
         				if (owner != null)
-        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mUser, owner));
+        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner));
         			}
         		} catch (ServiceException se) {
             		ZimbraLog.dav.warn("can't convert rights", se);
@@ -196,7 +191,7 @@ public class User extends Principal {
         			if ((rights & ACL.RIGHT_WRITE) > 0) {
         				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
         				if (owner != null)
-        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mUser, owner));
+        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner));
         			}
         		} catch (ServiceException se) {
             		ZimbraLog.dav.warn("can't convert rights", se);
