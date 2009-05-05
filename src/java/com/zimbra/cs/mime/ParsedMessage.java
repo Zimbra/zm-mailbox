@@ -188,6 +188,11 @@ public class ParsedMessage {
         mSharedStream = in;
     }
 
+    /**
+     * Creates a <tt>ParsedMessage</tt> from a stream.  If <tt>in</tt> is
+     * not an instance of <tt>SharedInputStream</tt>, the message content
+     * will be read into memory.
+     */
     public ParsedMessage(InputStream in, int sizeHint, Long receivedDate, boolean indexAttachments)
     throws ServiceException {
         this(in, sizeHint);
@@ -221,14 +226,10 @@ public class ParsedMessage {
                 InputStream in = mSharedStream;
                 mSharedStream = null;
                 CalculatorStream calc = new CalculatorStream(in);
-                try {
-                    byte[] content = ByteUtil.getContent(calc, 0);
-                    mSharedStream = new SharedByteArrayInputStream(content);
-                    mRawSize = (int) calc.getSize();
-                    mRawDigest = calc.getDigest();
-                } finally {
-                    ByteUtil.closeStream(calc);
-                }
+                byte[] content = ByteUtil.getContent(calc, 0);
+                mSharedStream = new SharedByteArrayInputStream(content);
+                mRawSize = (int) calc.getSize();
+                mRawDigest = calc.getDigest();
             }
 
             mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), mSharedStream);

@@ -45,7 +45,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.PopMessage;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -249,7 +249,7 @@ public class Pop3Import extends MailItemImport {
         } else {
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                 mbox, pm, dataSource.getEmailAddress(),
-                new SharedDeliveryContext(), dataSource.getFolderId());
+                new DeliveryContext(), dataSource.getFolderId());
             Integer localId = getFirstLocalId(ids);
             if (localId != null) {
                 msg = mbox.getMessageById(null, localId);

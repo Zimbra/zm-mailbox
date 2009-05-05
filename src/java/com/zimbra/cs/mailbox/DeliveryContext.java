@@ -32,7 +32,7 @@ import com.zimbra.cs.store.Blob;
  * This class is used to carry information across multiple calls to
  * Mailbox.addMessage() for a single message being delivered.
  */
-public class SharedDeliveryContext {
+public class DeliveryContext {
 
     private boolean mShared;
     private Blob mIncomingBlob;
@@ -43,7 +43,7 @@ public class SharedDeliveryContext {
     /**
      * Constructor for non-shared case
      */
-    public SharedDeliveryContext() {
+    public DeliveryContext() {
     	mShared = false;
         mMailboxBlob = null;
         mMailboxIdList = null;
@@ -54,7 +54,7 @@ public class SharedDeliveryContext {
      * @param shared
      * @param mboxIdList list of ID of mailboxes being delivered to
      */
-    public SharedDeliveryContext(boolean shared, List<Integer> mboxIdList) {
+    public DeliveryContext(boolean shared, List<Integer> mboxIdList) {
     	mShared = shared;
         mMailboxBlob = null;
         mMailboxIdList = mboxIdList;

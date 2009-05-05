@@ -25,7 +25,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -151,7 +151,7 @@ extends FilterHandler {
             return new ItemId(mMailbox, mMessageId);
         }
         
-        ItemId id = FilterUtil.addMessage(new SharedDeliveryContext(), mMailbox, getParsedMessage(),
+        ItemId id = FilterUtil.addMessage(new DeliveryContext(), mMailbox, getParsedMessage(),
             mMailbox.getAccount().getName(), folderPath, flagBitmask, tags);
         if (id != null) {
             mFiltered = true;

@@ -43,7 +43,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
@@ -340,8 +340,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             ZimbraLog.removeAccountFromContext();
             logEnvelope(env, msgId);
 
-            SharedDeliveryContext sharedDeliveryCtxt =
-            	new SharedDeliveryContext(shared, targetMailboxIds);
+            DeliveryContext sharedDeliveryCtxt =
+            	new DeliveryContext(shared, targetMailboxIds);
             sharedDeliveryCtxt.setIncomingBlob(blob);
 
             // We now know which addresses are valid and which ParsedMessage

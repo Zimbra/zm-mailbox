@@ -29,7 +29,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -399,7 +399,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
         List<Integer> mboxList = new ArrayList<Integer>(1);
         mboxList.add(new Integer(mboxId));
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(mShared, mboxList);
+        DeliveryContext sharedDeliveryCtxt = new DeliveryContext(mShared, mboxList);
         
         if (mMsgBodyType == MSGBODY_LINK) {
             File file = new File(mPath);
@@ -410,10 +410,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             Volume volume = Volume.getCurrentMessageVolume();
             Blob blob = new Blob(file, volume.getId()); 
             sharedDeliveryCtxt.setIncomingBlob(blob);
-            BlobInputStream bis = null;
+            ParsedMessage pm = null;
             try {
-                bis = new BlobInputStream(file);
-                ParsedMessage pm = new ParsedMessage(bis, mMsgSize, mReceivedDate, mbox.attachmentsIndexingEnabled());
+                pm = new ParsedMessage(file, mReceivedDate, mbox.attachmentsIndexingEnabled());
                 mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags,
                     mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);
             } catch (MailServiceException e) {
@@ -424,7 +423,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                     throw e;
                 }
             } finally {
-                ByteUtil.closeStream(bis);
+                if (pm != null) {
+                    ByteUtil.closeStream(pm.getBlobInputStream());
+                }
             }
         } else { // mMsgBodyType == MSGBODY_INLINE
             // Just one recipient.  Blob data is stored inline.

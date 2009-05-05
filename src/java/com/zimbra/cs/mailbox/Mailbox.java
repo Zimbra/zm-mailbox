@@ -70,6 +70,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.lmtpserver.InMemoryDataCallback;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -115,6 +116,7 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
@@ -3949,47 +3951,65 @@ public class Mailbox {
         }
     }
 
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions opt)
+    throws IOException, ServiceException {
+        return addMessage(octxt, pm, opt.getFolderId(), opt.getNoICal(), opt.getFlags(), opt.getTagString(),
+            opt.getConversationId(), opt.getRecipientEmail(), opt.getCustomMetadata(), null);
+    }
+    
+    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, DeliveryOptions opt)
+    throws IOException, ServiceException {
+        return addMessage(octxt, in, sizeHint, receivedDate, opt.getFolderId(), opt.getNoICal(),
+            opt.getFlags(), opt.getTagString(), opt.getConversationId(), opt.getRecipientEmail(),
+            opt.getCustomMetadata(), null);
+    }
+    
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", null, sharedDeliveryCtxt);
-    } 
+        DeliveryContext deliveryCtxt = new DeliveryContext();
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", null, deliveryCtxt);
+    }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
-        SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", null, sharedDeliveryCtxt);
+        DeliveryContext deliveryCtxt = new DeliveryContext();
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", null, deliveryCtxt);
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                              String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
+                              String rcptEmail, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, null, sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, null, deliveryCtxt);
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
-                              String rcptEmail, CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+                              String rcptEmail, CustomMetadata customData, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, customData, sharedDeliveryCtxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, rcptEmail, customData, deliveryCtxt);
     }
     
     public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, int folderId, boolean noIcal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
-                              CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+                              CustomMetadata customData, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
         Volume vol = Volume.getCurrentMessageVolume();
         Blob incomingBlob = null;
         ParsedMessage pm = null;
-        if (sharedDeliveryCtxt == null) {
-            sharedDeliveryCtxt = new SharedDeliveryContext();
+        if (deliveryCtxt == null) {
+            deliveryCtxt = new DeliveryContext();
         }
         
         try {
-            incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), null);
-            pm = new ParsedMessage(incomingBlob.getFile(), receivedDate, attachmentsIndexingEnabled());
-            sharedDeliveryCtxt.setIncomingBlob(incomingBlob);
+            InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
+            incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), callback);
+            if (callback.getData() != null) {
+                pm = new ParsedMessage(callback.getData(), receivedDate, attachmentsIndexingEnabled());
+            } else {
+                pm = new ParsedMessage(incomingBlob.getFile(), receivedDate, attachmentsIndexingEnabled());
+            }
+            deliveryCtxt.setIncomingBlob(incomingBlob);
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
-                customData, sharedDeliveryCtxt);
+                customData, deliveryCtxt);
         } finally {
             if (incomingBlob != null) {
                 StoreManager.getInstance().delete(incomingBlob);
@@ -4000,32 +4020,9 @@ public class Mailbox {
         }
     }
     
-    public Message addMessage(OperationContext octxt, byte[] content, Long receivedDate, int folderId, boolean noIcal,
-                              int flags, String tagStr, int conversationId, String rcptEmail,
-                              CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
-    throws IOException, ServiceException {
-        ParsedMessage pm = new ParsedMessage(content, receivedDate, attachmentsIndexingEnabled());
-        Volume vol = Volume.getCurrentMessageVolume();
-        Blob incomingBlob = null;
-        if (sharedDeliveryCtxt == null) {
-            sharedDeliveryCtxt = new SharedDeliveryContext();
-        }
-        
-        try {
-            incomingBlob = StoreManager.getInstance().storeIncoming(content, pm.getRawDigest(), null, vol.getId());
-            sharedDeliveryCtxt.setIncomingBlob(incomingBlob);
-            return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
-                customData, sharedDeliveryCtxt);
-        } finally {
-            if (incomingBlob != null) {
-                StoreManager.getInstance().delete(incomingBlob);
-            }
-        }
-    }
-    
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
-                              CustomMetadata customData, SharedDeliveryContext sharedDeliveryCtxt)
+                              CustomMetadata customData, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
         // make sure the message has been analyzed before taking the Mailbox lock
@@ -4063,11 +4060,11 @@ public class Mailbox {
         }
 
         // Store the incoming blob if necessary.
-        if (sharedDeliveryCtxt == null) {
-            sharedDeliveryCtxt = new SharedDeliveryContext();
+        if (deliveryCtxt == null) {
+            deliveryCtxt = new DeliveryContext();
         }
         boolean deleteIncoming = false;
-        if (sharedDeliveryCtxt.getIncomingBlob() == null) {
+        if (deliveryCtxt.getIncomingBlob() == null) {
             InputStream in = null; 
             Volume vol = Volume.getCurrentMessageVolume();
             Blob blob = null;
@@ -4077,17 +4074,17 @@ public class Mailbox {
             } finally {
                 ByteUtil.closeStream(in);
             }
-            sharedDeliveryCtxt.setIncomingBlob(blob);
+            deliveryCtxt.setIncomingBlob(blob);
             deleteIncoming = true;
         }
 
         Message msg = null;
         try {
             msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
-                rcptEmail, null, customData, sharedDeliveryCtxt);
+                rcptEmail, null, customData, deliveryCtxt);
         } finally {
             if (deleteIncoming) {
-                StoreManager.getInstance().delete(sharedDeliveryCtxt.getIncomingBlob());
+                StoreManager.getInstance().delete(deliveryCtxt.getIncomingBlob());
             }
         }
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
@@ -4097,7 +4094,7 @@ public class Mailbox {
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                                                     int flags, String tagStr, int conversationId, String rcptEmail,
                                                     Message.DraftInfo dinfo, CustomMetadata customData,
-                                                    SharedDeliveryContext sharedDeliveryCtxt)
+                                                    DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
@@ -4111,7 +4108,7 @@ public class Mailbox {
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
         boolean isRedo = redoPlayer != null;
         
-        Blob blob = sharedDeliveryCtxt.getIncomingBlob();
+        Blob blob = deliveryCtxt.getIncomingBlob();
         if (blob == null) {
             throw ServiceException.FAILURE("Incoming blob not found.", null);
         }
@@ -4154,7 +4151,7 @@ public class Mailbox {
             throw ServiceException.FAILURE("Unable to get message properties.", e);
         }
 
-        CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), sharedDeliveryCtxt.getShared(),
+        CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), deliveryCtxt.getShared(),
                                                        digest, msgSize, folderId, noICal, flags, tagStr, customData);
         StoreIncomingBlob storeRedoRecorder = null;
 
@@ -4299,11 +4296,11 @@ public class Mailbox {
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
 
             // step 5: write the redolog entries
-            if (sharedDeliveryCtxt.getShared()) {
-                if (sharedDeliveryCtxt.isFirst() && needRedo) {
+            if (deliveryCtxt.getShared()) {
+                if (deliveryCtxt.isFirst() && needRedo) {
                     // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
                     // Subsequent CreateMessage ops will reference this blob.  
-                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
+                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, deliveryCtxt.getMailboxIdList());
                     storeRedoRecorder.start(getOperationTimestampMillis());
                     storeRedoRecorder.setBlobBodyInfo(blob.getFile(), blob.getVolumeId());
                     storeRedoRecorder.log();
@@ -4320,10 +4317,10 @@ public class Mailbox {
             MailboxBlob mboxBlob = sm.link(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
             markOtherItemDirty(mboxBlob);
             
-            if (sharedDeliveryCtxt.getMailboxBlob() == null) {
+            if (deliveryCtxt.getMailboxBlob() == null) {
                 // Set mailbox blob for in case we want to add the message to the
                 // message cache after delivery.
-                sharedDeliveryCtxt.setMailboxBlob(mboxBlob);
+                deliveryCtxt.setMailboxBlob(mboxBlob);
             }
 
             // don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't
@@ -4349,7 +4346,7 @@ public class Mailbox {
                 // Everything worked.  Update the blob field in ParsedMessage
                 // so the next recipient in the multi-recipient case will link
                 // to this blob as opposed to saving its own copy.
-                sharedDeliveryCtxt.setFirst(false);
+                deliveryCtxt.setFirst(false);
             }
         }
         
@@ -4445,7 +4442,7 @@ public class Mailbox {
             try {
                 in = pm.getRawInputStream();
                 blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null, vol.getId(), null);
-                SharedDeliveryContext ctxt = new SharedDeliveryContext();
+                DeliveryContext ctxt = new DeliveryContext();
                 ctxt.setIncomingBlob(blob);
                 return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
                     ID_AUTO_INCREMENT, ":API:", dinfo, null, ctxt);

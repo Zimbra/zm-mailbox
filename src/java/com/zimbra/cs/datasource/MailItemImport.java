@@ -21,7 +21,7 @@ import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -62,7 +62,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
     protected Message addMessage(OperationContext octxt, ParsedMessage pm,
                                  int folderId, int flags)
         throws ServiceException, IOException {
-        SharedDeliveryContext context = new SharedDeliveryContext();
+        DeliveryContext context = new DeliveryContext();
         Message msg = null;
         switch (folderId) {
         case Mailbox.ID_FOLDER_INBOX:

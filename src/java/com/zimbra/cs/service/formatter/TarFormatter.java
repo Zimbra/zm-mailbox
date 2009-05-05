@@ -55,26 +55,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Chat;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.Note;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Task;
-import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
@@ -885,8 +866,8 @@ public class TarFormatter extends Formatter {
             case MailItem.TYPE_CHAT:
                 Chat chat = (Chat)mi;
                 
-                pm = new ParsedMessage(tis, (int)te.getSize(),
-                    mi.getDate(), mbox.attachmentsIndexingEnabled());
+                byte[] content = ByteUtil.getContent(tis, (int) te.getSize(), false);
+                pm = new ParsedMessage(content, mi.getDate(), mbox.attachmentsIndexingEnabled());
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
                 if (root && r != Resolve.Reset) {
                     Chat oldChat = null;
@@ -1099,10 +1080,9 @@ public class TarFormatter extends Formatter {
                         oldItem = oldMsg;
                 }
                 if (oldItem == null) {
-                    pm = new ParsedMessage(tis, (int)te.getSize(),
-                        msg.getDate(), mbox.attachmentsIndexingEnabled());
-                    newItem = mbox.addMessage(oc, pm, fldr.getId(), true,
-                        msg.getFlagBitmask(), msg.getTagString());
+                    DeliveryOptions opt = new DeliveryOptions().setFolderId(fldr.getId()).setNoICal(true)
+                        .setFlags(msg.getFlagBitmask()).setTagString(msg.getTagString());
+                    newItem = mbox.addMessage(oc, tis, (int) te.getSize(), msg.getDate(), opt);
                 }
                 break;
             case MailItem.TYPE_MOUNTPOINT:
@@ -1383,11 +1363,9 @@ public class TarFormatter extends Formatter {
                 }
                 break;
             case MailItem.TYPE_MESSAGE:
-                ParsedMessage pm = new ParsedMessage(tis, (int)te.getSize(),
-                    te.getModTime().getTime(), mbox.attachmentsIndexingEnabled());
-                
-                mbox.addMessage(oc, pm, fldr.getId(), true,
-		    (te.getMode() & 0200) == 0 ? 0 : Flag.ID_FLAG_UNREAD, null);
+                int flags = (te.getMode() & 0200) == 0 ? 0 : Flag.ID_FLAG_UNREAD;
+                DeliveryOptions opt = new DeliveryOptions().setFolderId(fldr.getId()).setNoICal(true).setFlags(flags);
+                mbox.addMessage(oc, tis, (int) te.getSize(), te.getModTime().getTime(), opt);
                 break;
             }
         } catch (Exception e) {

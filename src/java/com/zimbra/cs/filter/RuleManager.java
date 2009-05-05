@@ -45,7 +45,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -300,7 +300,7 @@ public class RuleManager {
      */
     public static List<ItemId> applyRulesToIncomingMessage(
         Mailbox mailbox, ParsedMessage pm, String recipient,
-        SharedDeliveryContext sharedDeliveryCtxt, int incomingFolderId)
+        DeliveryContext sharedDeliveryCtxt, int incomingFolderId)
     throws ServiceException {
         List<ItemId> addedMessageIds = null;
         IncomingMessageHandler handler = new IncomingMessageHandler(

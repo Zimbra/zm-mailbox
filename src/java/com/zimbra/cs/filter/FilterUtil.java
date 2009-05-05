@@ -42,7 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
@@ -224,7 +224,7 @@ public class FilterUtil {
      * Adds a message to the given folder.  Handles both local folders and mountpoints.
      * @return the id of the new message, or <tt>null</tt> if it was a duplicate
      */
-    public static ItemId addMessage(SharedDeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
+    public static ItemId addMessage(DeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
                                     String folderPath, int flags, String tags)
     throws ServiceException {
         // Do initial lookup.

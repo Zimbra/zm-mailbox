@@ -25,7 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -37,13 +37,13 @@ import com.zimbra.cs.service.util.SpamHandler;
 public class IncomingMessageHandler
 extends FilterHandler {
 
-    private SharedDeliveryContext mContext;
+    private DeliveryContext mContext;
     private ParsedMessage mParsedMessage;
     private Mailbox mMailbox;
     private int mDefaultFolderId;
     private String mRecipientAddress;
     
-    public IncomingMessageHandler(SharedDeliveryContext context, Mailbox mbox,
+    public IncomingMessageHandler(DeliveryContext context, Mailbox mbox,
                                   String recipientAddress, ParsedMessage pm, int defaultFolderId) {
         mContext = context;
         mMailbox = mbox;
