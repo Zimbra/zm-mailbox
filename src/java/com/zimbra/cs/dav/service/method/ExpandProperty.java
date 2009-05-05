@@ -29,6 +29,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
@@ -58,6 +59,7 @@ public class ExpandProperty extends Report {
 			throw new DavException("msg "+query.getName()+" is not expand-property", HttpServletResponse.SC_BAD_REQUEST, null);
 
 		DavResource rs = ctxt.getRequestedResource();
+		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element resp = ctxt.getDavResponse().getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		expandProperties(ctxt, rs, query, resp);
 	}

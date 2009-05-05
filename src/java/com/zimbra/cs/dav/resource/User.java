@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.VersioningProperty;
@@ -64,7 +65,7 @@ public class User extends Principal {
         addProperty(VersioningProperty.getSupportedReportSet());
         addProperty(new CalendarProxyReadFor(mUser));
         addProperty(new CalendarProxyWriteFor(mUser));
-		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getPrincipalUrl(authUser), true);
+		addProperty(Acl.getPrincipalUrl(this));
         ArrayList<String> addrs = new ArrayList<String>();
         for (String addr : authUser.getMultiAttr(Provisioning.A_zimbraMailDeliveryAddress))
             addrs.add(addr);
@@ -114,7 +115,7 @@ public class User extends Principal {
     		super(user, url+"calendar-proxy-read");
             addResourceType(DavElements.E_CALENDAR_PROXY_READ);
             addProperty(VersioningProperty.getSupportedReportSet());
-    		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getPrincipalUrl(mUser), true);
+    		addProperty(Acl.getPrincipalUrl(this));
     	}
         @Override
         public boolean isCollection() {
@@ -127,7 +128,7 @@ public class User extends Principal {
     		super(user, url+"calendar-proxy-write");
             addResourceType(DavElements.E_CALENDAR_PROXY_WRITE);
             addProperty(VersioningProperty.getSupportedReportSet());
-    		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getPrincipalUrl(mUser), true);
+    		addProperty(Acl.getPrincipalUrl(this));
     	}
         @Override
         public boolean isCollection() {
