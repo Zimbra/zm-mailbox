@@ -55,6 +55,7 @@ import com.sun.mail.imap.protocol.Status;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.CommandFailedException;
+import com.sun.mail.iap.BadCommandException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -430,7 +431,23 @@ public class ImapImport extends MailItemImport {
             }
         });
     }
-    
+
+    private String doIDCommand(final String params) throws MessagingException {
+        IMAPFolder folder = (IMAPFolder) store.getDefaultFolder();
+        return (String) folder.doCommand(new IMAPFolder.ProtocolCommand() {
+            public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
+                try {
+                    protocol.idExtension(params);
+                } catch (BadCommandException e) {
+                    // bug 29653: Ignore BAD command response from ZDS 4.5.11
+                } catch (CommandFailedException e) {
+                    // Ignore ID command failure
+                }
+                return null;
+            }
+        });
+    }
+
     private void renameJavaMailFolder(Folder remoteFolder, String jmPath)
     throws MessagingException {
         ZimbraLog.datasource.info("Renaming IMAP folder from %s to %s", remoteFolder.getFullName(), jmPath);
@@ -542,8 +559,6 @@ public class ImapImport extends MailItemImport {
         if (DEBUG) {
             props.setProperty("mail.debug", "true");
         }
-        props.setProperty("mail.imap.idextension", ID_EXT);
-        props.setProperty("mail.imaps.idextension", ID_EXT);
         if (LC.javamail_imap_enable_starttls.booleanValue()) {
             props.setProperty("mail.imap.starttls.enable", "true");
             props.setProperty("mail.imap.socketFactory.class", TlsSocketFactory.class.getName());
@@ -915,6 +930,7 @@ public class ImapImport extends MailItemImport {
             try {
                 store.connect(ds.getHost(), ds.getPort(), ds.getUsername(),
                     ds.getDecryptedPassword());
+                doIDCommand(ID_EXT);
             } catch (MessagingException e) {
                 throw ServiceException.FAILURE("Unable to connect to mail store: " + ds, e);
             }
