@@ -150,8 +150,7 @@ public abstract class SieveVisitor {
             if (isRuleNode(node)) {
                 // New rule tree.
                 RuleProperties newProps = new RuleProperties();
-                SieveNode sieveNode = (SieveNode) node;
-                if ("disabled_if".equals(sieveNode.getName())) {
+                if ("disabled_if".equals(getNodeName(node))) {
                     newProps.isEnabled = false;
                 }
                 newProps.condition = getCondition(getNode(node, 0, 0));
@@ -178,7 +177,7 @@ public abstract class SieveVisitor {
         if (!(node instanceof ASTtest)) {
             return Condition.allof;
         }
-        String name = ((SieveNode) node).getName();
+        String name = getNodeName(node);
         if ("anyof".equals(name)) {
             return Condition.anyof;
         } else {
@@ -189,7 +188,7 @@ public abstract class SieveVisitor {
     private void acceptTest(Node node, RuleProperties props)
     throws ServiceException {
         visitTest(node, VisitPhase.begin, props);
-        String nodeName = ((SieveNode) node).getName();
+        String nodeName = getNodeName(node);
         
         if ("not".equals(nodeName)) {
             props.isNegativeTest = true;
@@ -266,7 +265,7 @@ public abstract class SieveVisitor {
     private void acceptAction(Node node, RuleProperties props)
     throws ServiceException {
         visitAction(node, VisitPhase.begin, props);
-        String nodeName = ((SieveNode) node).getName();
+        String nodeName = getNodeName(node);
 
         if ("keep".equals(nodeName)) {
             visitKeepAction(node, VisitPhase.begin, props);
@@ -308,17 +307,22 @@ public abstract class SieveVisitor {
         
         visitAction(node, VisitPhase.end, props);
     }
-
     
-    private int parseInt(String s)
-    throws ServiceException {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            throw ServiceException.PARSE_ERROR("Invalid integer: " + s, e);
+    /**
+     * Returns the given node's name in lower case.
+     */
+    private String getNodeName(Node node) {
+        if (node == null || !(node instanceof SieveNode)) {
+            return null;
         }
+        String name = ((SieveNode) node).getName();
+        if (name != null) {
+            name = name.toLowerCase();
+        }
+        return name;
     }
 
+    
     protected Node getNode(Node parent, int ... indexes)
     throws ServiceException {
         Node node = parent;
@@ -379,54 +383,8 @@ public abstract class SieveVisitor {
         if (!(node instanceof ASTcommand)) {
             return false;
         }
-        String name = ((SieveNode) node).getName();
+        String name = getNodeName(node);
         return RULE_NODE_NAMES.contains(name);
     }
-
-    /*
-    private Node findNode(Node root, Class<? extends Node> nodeClass, Set<String> matchingNames) {
-        int numChildren = root.jjtGetNumChildren();
-        for (int i = 0; i < numChildren; i++) {
-            Node child = root.jjtGetChild(i);
-            if (nodeClass.isAssignableFrom(child.getClass())) {
-                boolean nameMatches;
-                if (matchingNames == null) {
-                    nameMatches = true;
-                } else {
-                    String name = ((SieveNode) child).getName();
-                    nameMatches = (matchingNames.contains(name));
-                }
-                if (nameMatches) {
-                    return child;
-                } else {
-                    return findNode(child, nodeClass, matchingNames);
-                }
-            }
-        }
-        return null;
-    }
-    */
-    
-    /*
-    private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = new ThreadLocal<SimpleDateFormat>();
-    private static final String DATE_PATTERN = "yyyyMMdd";
-    
-    private Date parseDate(String s)
-    throws ParseException {
-        if (s == null) {
-            throw new ParseException("date cannot be null", 0);
-        }
-        SimpleDateFormat format = DATE_FORMAT.get();
-        if (format == null) {
-            format = new SimpleDateFormat(DATE_PATTERN);
-            DATE_FORMAT.set(format);
-        }
-        Date d = format.parse(s, new ParsePosition(0));
-        if (d == null) {
-            throw new ParseException("Invalid date: " + s, 0);
-        }
-        return d;
-    }
-    */
 }
 

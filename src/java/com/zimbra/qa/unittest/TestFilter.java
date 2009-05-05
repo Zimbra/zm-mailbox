@@ -357,6 +357,11 @@ extends TestCase {
         // Compare result.
         script = normalizeWhiteSpace(script);
         convertedScript = normalizeWhiteSpace(convertedScript);
+        
+        // Change "fileInto" to "fileinto".  We have both in the test script
+        // to test case insensitivity, but the converted script will only have
+        // the lower case version.
+        script = script.replace("fileInto", "fileinto");
         assertEquals(script, convertedScript);
     }
     

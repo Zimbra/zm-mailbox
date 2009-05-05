@@ -11,7 +11,7 @@ if anyof (header :contains "to" "devel-db",
 disabled_if allof (header :contains "to" "james.apache.org",
  header :contains "cc" "james.apache.org")
 {
-    fileinto "jSieve";
+    fileInto "jSieve";
     stop;
 }
 # Exists
