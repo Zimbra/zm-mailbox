@@ -341,10 +341,15 @@ public class GalSearchControl {
 			iter = resp.elementIterator(MailConstants.E_DELETED);
 			while (iter.hasNext())
 				callback.handleElement(iter.next());
-			GalSyncToken newToken = new GalSyncToken(resp.getAttribute(MailConstants.A_TOKEN));
-			ZimbraLog.gal.debug("computing new sync token for proxied account "+targetAcct.getId()+": "+newToken);
-            callback.setNewToken(newToken);
-            callback.setHasMoreResult(false);
+			String newTokenStr = resp.getAttribute(MailConstants.A_TOKEN, null);
+			if (newTokenStr != null) {
+				GalSyncToken newToken = new GalSyncToken(newTokenStr);
+				ZimbraLog.gal.debug("computing new sync token for proxied account "+targetAcct.getId()+": "+newToken);
+	            callback.setNewToken(newToken);
+			}
+			boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
+			if (hasMore)
+				callback.setHasMoreResult(true);
 		} catch (Exception e) {
 			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
 			return false;
