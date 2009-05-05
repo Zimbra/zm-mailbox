@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -174,6 +175,8 @@ public class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
+        MemcachedConnector.startup();
+        CalendarCacheManager.getInstance().startup();
         MailboxManager.getInstance();
 
         ZimbraApplication app = ZimbraApplication.getInstance();
@@ -200,8 +203,6 @@ public class Zimbra {
         MailboxManager.getInstance().startup();
 
         if (sIsMailboxd) {
-            CalendarCacheManager.getInstance().startup();
-
             SessionCache.startup();
 
             if (!redoLog.isSlave()) {
@@ -302,9 +303,8 @@ public class Zimbra {
         if (app.supports(ExtensionUtil.class.getName()))
         	ExtensionUtil.destroyAll();
 
-        if (sIsMailboxd)
-            CalendarCacheManager.getInstance().shutdown();
-
+        CalendarCacheManager.getInstance().shutdown();
+        MemcachedConnector.shutdown();
         MailboxManager.getInstance().shutdown();
 
         sTimer.cancel();

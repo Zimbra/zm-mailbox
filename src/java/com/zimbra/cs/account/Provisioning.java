@@ -1491,9 +1491,18 @@ public abstract class Provisioning {
     public static final String A_zimbraVirtualIPAddress                 = "zimbraVirtualIPAddress";
     
     /*
-     * memcached
+     * memcached server
      */
     public static final String A_zimbraMemcachedBindPort = "zimbraMemcachedBindPort";
+
+    /*
+     * memcached client
+     */
+    public static final String A_zimbraMemcachedClientServerList            = "zimbraMemcachedClientServerList";
+    public static final String A_zimbraMemcachedClientBinaryProtocolEnabled = "zimbraMemcachedClientBinaryProtocolEnabled";
+    public static final String A_zimbraMemcachedClientHashAlgorithm         = "zimbraMemcachedClientHashAlgorithm";
+    public static final String A_zimbraMemcachedClientExpirySeconds         = "zimbraMemcachedClientExpirySeconds";
+    public static final String A_zimbraMemcachedClientTimeoutMillis         = "zimbraMemcachedClientTimeoutMillis";
 
     /*
      * HTTP proxying

@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.mailbox.calendar.cache;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,18 +22,11 @@ import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.ZimbraMemcachedClient;
-import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
 
 public class CalendarCacheManager {
-
-    static final KeyPrefix MEMCACHED_PREFIX_CALENDAR_LIST = new KeyPrefix("zmCalsList");
-    static final KeyPrefix MEMCACHED_PREFIX_CTAGINFO      = new KeyPrefix("zmCtagInfo");
-    static final KeyPrefix MEMCACHED_PREFIX_CALDAV_CTAG_RESPONSE = new KeyPrefix("zmCtagResp");
 
     // for appointment summary caching (primarily for ZWC)
     private boolean mSummaryCacheEnabled;
@@ -45,28 +37,14 @@ public class CalendarCacheManager {
     private CtagInfoCache mCtagCache;
     private CtagResponseCache mCtagResponseCache;
 
-    private ZimbraMemcachedClient mMemcachedClient;
-
     private static CalendarCacheManager sInstance = new CalendarCacheManager();
 
     public static CalendarCacheManager getInstance() { return sInstance; }
 
-    public void startup() throws ServiceException {
-        if (DebugConfig.calendarMemcachedEnabled) {
-            List<InetSocketAddress> serverAddrs = getMemcachedServerListConfig();
-            if (serverAddrs.isEmpty())
-                throw ServiceException.FAILURE(
-                        "Invalid memcached server list: " + DebugConfig.calendarMemcachedServerList, null);
-            int expiry = DebugConfig.calendarMemcachedExpirySecs;
-            long timeout = DebugConfig.calendarMemcachedTimeoutMillis;
-            boolean useBinaryProto = DebugConfig.calendarMemcachedUseBinaryProtocol;
-            String hashAlgorithm = DebugConfig.calendarMemcachedHashAlgorithm;
-            mMemcachedClient = new ZimbraMemcachedClient(
-                    serverAddrs, useBinaryProto, hashAlgorithm, expiry, timeout);
-            mCtagCache = new CtagInfoCache(mMemcachedClient);
-            mCalListCache = new CalListCache(mMemcachedClient);
-            mCtagResponseCache = new CtagResponseCache(mMemcachedClient);
-        }
+    private CalendarCacheManager() {
+        mCtagCache = new CtagInfoCache();
+        mCalListCache = new CalListCache();
+        mCtagResponseCache = new CtagResponseCache();
 
         int summaryLRUSize = 0;
         mSummaryCacheEnabled = LC.calendar_cache_enabled.booleanValue();
@@ -75,54 +53,27 @@ public class CalendarCacheManager {
         mSummaryCache = new CalSummaryCache(summaryLRUSize);
     }
 
+    public void startup() {
+    }
+
     public void shutdown() {
-        if (mMemcachedClient != null)
-            mMemcachedClient.shutdown(10000);
-    }
-
-    // never returns null
-    private List<InetSocketAddress> getMemcachedServerListConfig() {
-        List<InetSocketAddress> serverAddrs;
-        String memcachedServerList = DebugConfig.calendarMemcachedServerList;
-        if (memcachedServerList != null && memcachedServerList.length() > 0)
-            serverAddrs = ZimbraMemcachedClient.parseServerList(memcachedServerList);
-        else
-            serverAddrs = new ArrayList<InetSocketAddress>(0);
-        return serverAddrs;
-    }
-
-    /**
-     * Resets the memcached client to use the new servers/protocol/hashing configuration.
-     * @throws ServiceException
-     */
-    public void reloadMemcachedConfig() throws ServiceException {
-        List<InetSocketAddress> serverAddrs = getMemcachedServerListConfig();
-        if (!serverAddrs.isEmpty()) {
-            boolean useBinaryProto = DebugConfig.calendarMemcachedUseBinaryProtocol;
-            String hashAlgorithm = DebugConfig.calendarMemcachedHashAlgorithm;
-            mMemcachedClient.reconnect(serverAddrs, useBinaryProto, hashAlgorithm);
-        } else {
-            ZimbraLog.calendar.warn(
-                    "Memcached client not reset; Ignoring invalid memcached server list: " +
-                    DebugConfig.calendarMemcachedServerList);
-        }
     }
 
     public void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (mSummaryCacheEnabled)
             mSummaryCache.notifyCommittedChanges(mods, changeId);
-        if (mCalListCache != null)
+        if (MemcachedConnector.isConnected()) {
             mCalListCache.notifyCommittedChanges(mods, changeId);
-        if (mCtagCache != null)
             mCtagCache.notifyCommittedChanges(mods, changeId);
+        }
     }
 
     public void purgeMailbox(Mailbox mbox) throws ServiceException {
         mSummaryCache.purgeMailbox(mbox);
-        if (mCalListCache != null)
+        if (MemcachedConnector.isConnected()) {
             mCalListCache.purgeMailbox(mbox);
-        if (mCtagCache != null)
             mCtagCache.purgeMailbox(mbox);
+        }
     }
 
     CtagInfoCache getCtagCache() { return mCtagCache; }
@@ -130,8 +81,6 @@ public class CalendarCacheManager {
     public CtagResponseCache getCtagResponseCache() { return mCtagResponseCache; }
 
     public AccountCtags getCtags(AccountKey key) throws ServiceException {
-        if (mCalListCache == null || mCtagCache == null)
-            return null;
         CalList calList = mCalListCache.get(key);
         if (calList == null) return null;
         Collection<Integer> calendarIds = calList.getCalendars();

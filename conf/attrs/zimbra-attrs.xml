@@ -3711,5 +3711,28 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               Please talk to phoebe if you have any question.
    ===============================================================================
  -->
+<attr id="1014" name="zimbraMemcachedClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <desc>list of host:port for memcached servers; set to empty value to disable the use of memcached</desc>
+</attr>
+
+<attr id="1015" name="zimbraMemcachedClientBinaryProtocolEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>if true, use binary protocol of memcached; if false, use ascii protocol</desc>
+</attr>
+
+<attr id="1016" name="zimbraMemcachedClientHashAlgorithm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>KETAMA_HASH</globalConfigValue>
+  <desc>memcached hash algorithm</desc>
+</attr>
+
+<attr id="1017" name="zimbraMemcachedClientExpirySeconds" type="integer" min="0" max="2592000" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>86400</globalConfigValue>
+  <desc>default expiration time in seconds for memcached values; default is 1 day</desc>
+</attr>
+
+<attr id="1018" name="zimbraMemcachedClientTimeoutMillis" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>1000</globalConfigValue>
+  <desc>default timeout in milliseconds for async memcached operations</desc>
+</attr>
 
 </attrs>

@@ -8,16 +8,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraMemcachedClient;
 import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.memcached.MemcachedKeyPrefix;
+import com.zimbra.cs.memcached.MemcachedConnector;
 
 // for CalDAV
 // caches responses for PROPFIND-ctag requests
 public class CtagResponseCache {
 
-    private static final KeyPrefix MEMCACHED_PREFIX = CalendarCacheManager.MEMCACHED_PREFIX_CALDAV_CTAG_RESPONSE;
+    private static final KeyPrefix MEMCACHED_PREFIX = MemcachedKeyPrefix.CALDAV_CTAG_RESPONSE;
     private ZimbraMemcachedClient mMemcachedClient;
 
-    CtagResponseCache(ZimbraMemcachedClient memcachedClient) {
-        mMemcachedClient = memcachedClient;
+    CtagResponseCache() {
+        mMemcachedClient = MemcachedConnector.getClient();
     }
 
     // CTAG response cache key is account + client (User-Agent) + root folder
