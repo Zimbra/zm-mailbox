@@ -44,25 +44,26 @@ public class ZimbraMemcachedClient {
     }
 
     private MemcachedClient mMCDClient;
-    private final Object mMCDClientGuard = new Object();
     private int mDefaultExpiry;  // in seconds
     private long mDefaultTimeout;  // in millis
 
     /**
-     * Constructs a memcached client with a list of servers, default expiry (in seconds) and timeout
-     * (in milliseconds).  Ascii protocol is used.  NATIVE_HASH hashing algorithm is used.
-     * @param servers
-     * @param defaultExpiry
-     * @param defaultTimeout
-     * @throws ServiceException
+     * Constructs a memcached client.  Call connect() before using this.
      */
-    public ZimbraMemcachedClient(List<InetSocketAddress> servers, int defaultExpiry, long defaultTimeout)
-    throws ServiceException {
-        this(servers, false, null, defaultExpiry, defaultTimeout);
+    public ZimbraMemcachedClient() {
+        mMCDClient = null;
+        mDefaultExpiry = 86400;
+        mDefaultTimeout = 1000;
+    }
+
+    public boolean isConnected() {
+        synchronized (this) {
+            return mMCDClient != null;
+        }
     }
 
     /**
-     * Constructs a memcached client.
+     * Connects/reconnects the memcached client with server list, protocol and hashing algorithm.
      * @param servers memcached server list
      * @param useBinaryProtocol if true, use the binary protocol; if false, use the ascii protocol
      * @param hashAlgorithm net.spy.memcached.HashAlgorithm enum
@@ -70,24 +71,10 @@ public class ZimbraMemcachedClient {
      * @param defaultTimeout in milliseconds
      * @throws ServiceException
      */
-    public ZimbraMemcachedClient(List<InetSocketAddress> servers, boolean useBinaryProtocol, String hashAlgorithm,
-                                 int defaultExpiry, long defaultTimeout)
+    public void connect(List<InetSocketAddress> servers, boolean useBinaryProtocol, String hashAlgorithm,
+                          int defaultExpiry, long defaultTimeout)
     throws ServiceException {
-        mDefaultExpiry = defaultExpiry;
-        mDefaultTimeout = defaultTimeout;
-        reconnect(servers, useBinaryProtocol, hashAlgorithm);
-    }
-
-    /**
-     * Reset/reconnect the memcached client with new server list, protocol and hashing algorithm.
-     * @param servers memcached server list
-     * @param useBinaryProtocol if true, use the binary protocol; if false, use the ascii protocol
-     * @param hashAlgorithm net.spy.memcached.HashAlgorithm enum
-     * @throws ServiceException
-     */
-    public void reconnect(List<InetSocketAddress> servers, boolean useBinaryProtocol, String hashAlgorithm)
-    throws ServiceException {
-        HashAlgorithm hashAlgo = HashAlgorithm.NATIVE_HASH;
+        HashAlgorithm hashAlgo = HashAlgorithm.KETAMA_HASH;
         if (hashAlgorithm != null && hashAlgorithm.length() > 0) {
             HashAlgorithm ha = HashAlgorithm.valueOf(hashAlgorithm);
             if (ha != null)
@@ -96,36 +83,29 @@ public class ZimbraMemcachedClient {
         int qLen = DefaultConnectionFactory.DEFAULT_OP_QUEUE_LEN;
         int bufSize = DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE;
 
-        MemcachedClient client;
-        ConnectionFactory cf;
-        if (useBinaryProtocol)
-            cf = new BinaryConnectionFactory(qLen, bufSize, hashAlgo);
-        else
-            cf = new DefaultConnectionFactory(qLen, bufSize, hashAlgo);
-        try {
-            client = new MemcachedClient(cf, servers);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to initialize memcached client", e);
+        MemcachedClient client = null;
+        if (servers != null && servers.size() > 0) {
+            ConnectionFactory cf;
+            if (useBinaryProtocol)
+                cf = new BinaryConnectionFactory(qLen, bufSize, hashAlgo);
+            else
+                cf = new DefaultConnectionFactory(qLen, bufSize, hashAlgo);
+            try {
+                client = new MemcachedClient(cf, servers);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Unable to initialize memcached client", e);
+            }
         }
-        MemcachedClient oldClient = setTheClient(client);
-        // New client is ready for use by other threads at this point.
-        if (oldClient != null)
-            shutdown(oldClient, 30000);
-    }
-
-    private MemcachedClient getTheClient() {
-        synchronized (mMCDClientGuard) {
-            return mMCDClient;
-        }
-    }
-
-    private MemcachedClient setTheClient(MemcachedClient client) {
-        MemcachedClient oldClient;
-        synchronized (mMCDClientGuard) {
+        MemcachedClient oldClient = null;
+        synchronized (this) {
             oldClient = mMCDClient;
             mMCDClient = client;
+            mDefaultExpiry = defaultExpiry;
+            mDefaultTimeout = defaultTimeout;
         }
-        return oldClient;
+        // New client is ready for use by other threads at this point.
+        if (oldClient != null)
+            disconnect(oldClient, 30000);
     }
 
     /**
@@ -134,14 +114,20 @@ public class ZimbraMemcachedClient {
      * the client immediately.
      * @param timeout in millis
      */
-    public void shutdown(long timeout) {
-        MemcachedClient client = getTheClient();
+    public void disconnect(long timeout) {
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            mMCDClient = null;
+            if (timeout == -1)
+                timeout = mDefaultTimeout;
+        }
         if (client != null) {
-            shutdown(client, timeout);
+            disconnect(client, timeout);
         }
     }
 
-    private void shutdown(MemcachedClient client, long timeout) {
+    private void disconnect(MemcachedClient client, long timeout) {
         boolean drained = client.waitForQueues(timeout, TimeUnit.MILLISECONDS);
         if (!drained)
             ZimbraLog.misc.warn("Memcached client did not drain queue in " + timeout + "ms");
@@ -172,47 +158,61 @@ public class ZimbraMemcachedClient {
     private static final int DEFAULT_PORT = 11211;
 
     /**
+     * Parse a server list.
+     * Each server value is hostname:port or just hostname.  Default port is 11211.
+     * @param serverList
+     * @return
+     */
+    public static List<InetSocketAddress> parseServerList(String[] servers) {
+        if (servers != null) {
+            List<InetSocketAddress> addrs = new ArrayList<InetSocketAddress>(servers.length);
+            for (String server : servers) {
+                if (server.length() == 0)
+                    continue;
+                String[] parts = server.split(":");
+                if (parts != null) {
+                    String host;
+                    int port = DEFAULT_PORT;
+                    if (parts.length == 1) {
+                        host = parts[0];
+                    } else if (parts.length == 2) {
+                        host = parts[0];
+                        try {
+                            port = Integer.parseInt(parts[1]);
+                        } catch (NumberFormatException e) {
+                            ZimbraLog.misc.warn("Invalid server " + server);
+                            continue;
+                        }
+                    } else {
+                        ZimbraLog.misc.warn("Invalid server " + server);
+                        continue;
+                    }
+                    InetSocketAddress addr = new InetSocketAddress(host, port);
+                    addrs.add(addr);
+                } else {
+                    ZimbraLog.misc.warn("Invalid server " + server);
+                    continue;
+                }
+            }
+            return addrs;
+        } else {
+            return new ArrayList<InetSocketAddress>(0);
+        }
+    }
+
+    /**
      * Parse a server list string.  Values are delimited by a sequence of commas and/or whitespace chars.
      * Each server value is hostname:port or just hostname.  Default port is 11211.
      * @param serverList
      * @return
      */
     public static List<InetSocketAddress> parseServerList(String serverList) {
-        List<InetSocketAddress> addrs = new ArrayList<InetSocketAddress>();
         if (serverList != null) {
             String[] servers = serverList.split("[\\s,]+");
-            if (servers != null) {
-                for (String server : servers) {
-                    if (server.length() == 0)
-                        continue;
-                    String[] parts = server.split(":");
-                    if (parts != null) {
-                        String host;
-                        int port = DEFAULT_PORT;
-                        if (parts.length == 1) {
-                            host = parts[0];
-                        } else if (parts.length == 2) {
-                            host = parts[0];
-                            try {
-                                port = Integer.parseInt(parts[1]);
-                            } catch (NumberFormatException e) {
-                                ZimbraLog.misc.warn("Invalid server " + server);
-                                break;
-                            }
-                        } else {
-                            ZimbraLog.misc.warn("Invalid server " + server);
-                            break;
-                        }
-                        InetSocketAddress addr = new InetSocketAddress(host, port);
-                        addrs.add(addr);
-                    } else {
-                        ZimbraLog.misc.warn("Invalid server " + server);
-                        break;
-                    }
-                }
-            }
+            return parseServerList(servers);
+        } else {
+            return new ArrayList<InetSocketAddress>(0);
         }
-        return addrs;
     }
 
     // get
@@ -225,7 +225,7 @@ public class ZimbraMemcachedClient {
      * @return null if no value is found for the key
      */
     public Object get(KeyPrefix prefix, String key) {
-        return getWithRawKey(addPrefix(prefix, key), mDefaultTimeout);
+        return getWithRawKey(addPrefix(prefix, key), -1);
     }
 
     /**
@@ -236,7 +236,7 @@ public class ZimbraMemcachedClient {
      * @return null if no value is found for the key
      */
     public Object getWithRawKey(String rawkey) {
-        return getWithRawKey(rawkey, mDefaultTimeout);
+        return getWithRawKey(rawkey, -1);
     }
 
     /**
@@ -259,7 +259,14 @@ public class ZimbraMemcachedClient {
      */
     public Object getWithRawKey(String rawkey, long timeout) {
         Object value = null;
-        Future<Object> future = getTheClient().asyncGet(rawkey);
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            if (timeout == -1)
+                timeout = mDefaultTimeout;
+        }
+        if (client == null) return null;
+        Future<Object> future = client.asyncGet(rawkey);
         try {
             value = future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
@@ -283,7 +290,7 @@ public class ZimbraMemcachedClient {
      * @return map of (key, value); key is without prefix; missing keys have null value
      */
     public Map<String, Object> getMulti(KeyPrefix prefix, List<String> keys) {
-        return getMulti(prefix, keys, mDefaultTimeout);
+        return getMulti(prefix, keys, -1);
     }
 
     /**
@@ -294,7 +301,7 @@ public class ZimbraMemcachedClient {
      * @return map of (key, value); missing keys have null value
      */
     public Map<String, Object> getMultiWithRawKeys(List<String> rawkeys) {
-        return getMultiWithRawKeys(rawkeys, mDefaultTimeout);
+        return getMultiWithRawKeys(rawkeys, -1);
     }
 
     /**
@@ -328,16 +335,30 @@ public class ZimbraMemcachedClient {
      */
     public Map<String, Object> getMultiWithRawKeys(List<String> rawkeys, long timeout) {
         Map<String, Object> value = null;
-        Future<Map<String, Object>> future = getTheClient().asyncGetBulk(rawkeys);
-        try {
-            value = future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            ZimbraLog.misc.warn("memcached asyncGetBulk timed out after " + timeout + "ms", e);
-            future.cancel(false);
-        } catch (InterruptedException e) {
-            ZimbraLog.misc.warn("InterruptedException during memcached asyncGetBulk operation", e);
-        } catch (ExecutionException e) {
-            ZimbraLog.misc.warn("ExecutionException during memcached asyncGetBulk operation", e);
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            if (timeout == -1)
+                timeout = mDefaultTimeout;
+        }
+        if (client != null) {
+            Future<Map<String, Object>> future = client.asyncGetBulk(rawkeys);
+            try {
+                value = future.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                ZimbraLog.misc.warn("memcached asyncGetBulk timed out after " + timeout + "ms", e);
+                future.cancel(false);
+            } catch (InterruptedException e) {
+                ZimbraLog.misc.warn("InterruptedException during memcached asyncGetBulk operation", e);
+            } catch (ExecutionException e) {
+                ZimbraLog.misc.warn("ExecutionException during memcached asyncGetBulk operation", e);
+            }
+        }
+        if (value == null) {  // Never return null.
+            value = new HashMap<String, Object>(rawkeys.size());
+            for (String k : rawkeys) {
+                value.put(k, null);
+            }
         }
         return value;
     }
@@ -352,7 +373,7 @@ public class ZimbraMemcachedClient {
      * @return true if cache contains an entry for the key
      */
     public boolean contains(KeyPrefix prefix, String key) {
-        return containsWithRawKey(addPrefix(prefix, key), mDefaultTimeout);
+        return containsWithRawKey(addPrefix(prefix, key), -1);
     }
 
     /**
@@ -363,7 +384,7 @@ public class ZimbraMemcachedClient {
      * @return true if cache contains an entry for the key
      */
     public boolean containsWithRawKey(String rawkey) {
-        return containsWithRawKey(rawkey, mDefaultTimeout);
+        return containsWithRawKey(rawkey, -1);
     }
 
     /**
@@ -399,7 +420,7 @@ public class ZimbraMemcachedClient {
      * @return
      */
     public boolean put(KeyPrefix prefix, String key, Object value) {
-        return putWithRawKey(addPrefix(prefix, key), value, mDefaultExpiry, mDefaultTimeout);
+        return putWithRawKey(addPrefix(prefix, key), value, -1, -1);
     }
 
     /**
@@ -410,7 +431,7 @@ public class ZimbraMemcachedClient {
      * @return
      */
     public boolean putWithRawKey(String rawkey, Object value) {
-        return putWithRawKey(rawkey, value, mDefaultExpiry, mDefaultTimeout);
+        return putWithRawKey(rawkey, value, -1, -1);
     }
 
     /**
@@ -435,7 +456,16 @@ public class ZimbraMemcachedClient {
      * @return
      */
     public boolean putWithRawKey(String rawkey, Object value, int expirySec, long timeout) {
-        Future<Boolean> future = getTheClient().set(rawkey, expirySec, value);
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            if (expirySec == -1)
+                expirySec = mDefaultExpiry;
+            if (timeout == -1)
+                timeout = mDefaultTimeout;
+        }
+        if (client == null) return true;
+        Future<Boolean> future = client.set(rawkey, expirySec, value);
         Boolean success = null;
         try {
             success = future.get(timeout, TimeUnit.MILLISECONDS);
@@ -461,7 +491,7 @@ public class ZimbraMemcachedClient {
      * @return
      */
     public boolean remove(KeyPrefix prefix, String key) {
-        return removeWithRawKey(addPrefix(prefix, key), mDefaultTimeout);
+        return removeWithRawKey(addPrefix(prefix, key), -1);
     }
 
     /**
@@ -471,7 +501,7 @@ public class ZimbraMemcachedClient {
      * @return
      */
     public boolean removeWithRawKey(String rawkey) {
-        return removeWithRawKey(rawkey, mDefaultTimeout);
+        return removeWithRawKey(rawkey, -1);
     }
 
     /**
@@ -493,7 +523,14 @@ public class ZimbraMemcachedClient {
      */
     public boolean removeWithRawKey(String rawkey, long timeout) {
         Boolean success = null;
-        Future<Boolean> future = getTheClient().delete(rawkey);
+        MemcachedClient client;
+        synchronized (this) {
+            client = mMCDClient;
+            if (timeout == -1)
+                timeout = mDefaultTimeout;
+        }
+        if (client == null) return true;
+        Future<Boolean> future = client.delete(rawkey);
         try {
             success = future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
