@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.gal;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +60,6 @@ public class GalSearchControl {
 	}
 	
 	public void autocomplete() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
 		String query = mParams.getQuery();
 		if (!query.endsWith("*"))
 			mParams.setQuery(query+"*");
@@ -68,13 +68,8 @@ public class GalSearchControl {
 			if (galAcct != null) {
 				accountSearch(galAcct);
 			} else {
-				for (String galAccountId : getGalSyncAccounts()) {
-					galAcct = prov.getAccountById(galAccountId);
-					if (galAcct == null) {
-						ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
-						throw new GalAccountNotConfiguredException();
-					}
-					accountSearch(galAcct);
+				for (Account galAccount : getGalSyncAccounts()) {
+					accountSearch(galAccount);
 				}
 			}
 		} catch (GalAccountNotConfiguredException e) {
@@ -86,7 +81,6 @@ public class GalSearchControl {
 	}
 	
 	public void search() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
 		String query = mParams.getQuery();
 		if (query == null)
 			query = "*";
@@ -102,13 +96,8 @@ public class GalSearchControl {
 			if (galAcct != null) {
 				accountSearch(galAcct);
 			} else {
-				for (String galAccountId : getGalSyncAccounts()) {
-					galAcct = prov.getAccountById(galAccountId);
-		    		if (galAcct == null) {
-		    			ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
-		    			throw new GalAccountNotConfiguredException();
-		    		}
-		    		accountSearch(galAcct);
+				for (Account galAccount : getGalSyncAccounts()) {
+		    		accountSearch(galAccount);
 		    	}
 			}
 		} catch (GalAccountNotConfiguredException e) {
@@ -120,20 +109,14 @@ public class GalSearchControl {
 	}
 	
 	public void sync() throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
 		mParams.setQuery("");
 		Account galAcct = mParams.getGalSyncAccount();
 		try {
 			if (galAcct != null) {
 				accountSync(galAcct);
 			} else {
-				for (String galAccountId : getGalSyncAccounts()) {
-					galAcct = prov.getAccountById(galAccountId);
-					if (galAcct == null) {
-						ZimbraLog.gal.warn("GalSync account not found: "+galAccountId);
-						throw new GalAccountNotConfiguredException();
-					}
-					accountSync(galAcct);
+				for (Account galAccount : getGalSyncAccounts()) {
+					accountSync(galAccount);
 				}
 			}
 			// account based sync was finished
@@ -149,12 +132,31 @@ public class GalSearchControl {
 		ldapSearch(GalOp.sync);
 	}
 	
-	private String[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
+	private Account[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
         Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();
         if (accts.length == 0)
         	throw new GalAccountNotConfiguredException();
-        return accts;
+        Provisioning prov = Provisioning.getInstance();
+        ArrayList<Account> accounts = new ArrayList<Account>();
+        for (String acctId : accts) {
+        	Account a = prov.getAccountById(acctId);
+        	if (a == null)
+            	throw new GalAccountNotConfiguredException();
+    		for (DataSource ds : a.getAllDataSources()) {
+    			if (ds.getType() != DataSource.Type.gal)
+    				continue;
+    			// check if there was any successful import from gal
+    			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
+    	        	throw new GalAccountNotConfiguredException();
+    			if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
+    	        	throw new GalAccountNotConfiguredException();
+    			if (ds.getAttr(Provisioning.A_zimbraDataSourceEnabled).compareTo("TRUE") != 0)
+    	        	throw new GalAccountNotConfiguredException();
+    		}
+    		accounts.add(a);
+        }
+        return accounts.toArray(new Account[0]);
 	}
 	
 	private void generateSearchQuery(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
@@ -168,11 +170,6 @@ public class GalSearchControl {
 		for (DataSource ds : galAcct.getAllDataSources()) {
 			if (ds.getType() != DataSource.Type.gal)
 				continue;
-			// check if there was any successful import from gal
-			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
-	        	throw new GalAccountNotConfiguredException();
-			if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
-	        	throw new GalAccountNotConfiguredException();
 			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
 			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
 				continue;
@@ -272,11 +269,6 @@ public class GalSearchControl {
     		for (DataSource ds : galAcct.getAllDataSources()) {
     			if (ds.getType() != DataSource.Type.gal)
     				continue;
-    			// check if there was any successful import from gal
-    			if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
-    	        	throw new GalAccountNotConfiguredException();
-    			if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
-    	        	throw new GalAccountNotConfiguredException();
     			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
     			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
     				continue;
@@ -311,7 +303,7 @@ public class GalSearchControl {
             callback.setNewToken(newToken);
             callback.setHasMoreResult(false);
 		} catch (Exception e) {
-			ZimbraLog.gal.warn("search on GalSync account failed for"+galAcct.getId(), e);
+			ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
 			return false;
 		}
 		return true;
