@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -81,6 +82,9 @@ public class Acl extends ResourceProperty {
 		return props;
 	}
 	
+	public static ResourceProperty getPrincipalUrl(DavResource rs) {
+		return new PrincipalUrl(rs);
+	}
 	public static ResourceProperty getAcl(ACL acl, String owner) {
 		return new Acl(acl, owner);
 	}
@@ -353,6 +357,28 @@ public class Acl extends ResourceProperty {
 
 			addPrivileges(mtps, mRights);
 			return mtps;
+		}
+	}
+	
+	/*
+	 * DAV:principal-URL
+	 * RFC3744 section 4.2
+	 */
+	private static class PrincipalUrl extends Acl {
+		private Account mAccount;
+		public PrincipalUrl(DavResource rs) {
+			super(DavElements.E_PRINCIPAL_URL, null, null);
+			try {
+				mAccount = Provisioning.getInstance().get(AccountBy.name, rs.getOwner());
+			} catch (ServiceException e) {
+				ZimbraLog.dav.warn("can't get account "+rs.getOwner(), e);
+			}
+		}
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			Element pu = parent.addElement(getName());
+			if (mAccount != null)
+				pu.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount));
+			return pu;
 		}
 	}
 	

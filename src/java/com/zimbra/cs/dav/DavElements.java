@@ -72,6 +72,7 @@ public class DavElements {
 	public static final String P_CALENDAR_QUERY = "calendar-query";
 	public static final String P_CALENDAR_TIMEZONE = "calendar-timezone";
 	public static final String P_CALENDAR_USER_ADDRESS_SET = "calendar-user-address-set";
+	public static final String P_CALENDAR_USER_TYPE = "calendar-user-type";
 	public static final String P_COLLATION = "collation";
 	public static final String P_COLLECTION = "collection";
 	public static final String P_COMP = "comp";
@@ -88,6 +89,7 @@ public class DavElements {
 	public static final String P_DESCRIPTION = "description";
 	public static final String P_DISPLAYNAME = "displayname";
 	
+	public static final String P_EMAIL_ADDRESS_SET = "email-address-set";
 	public static final String P_END = "end";
 	public static final String P_ERROR = "error";
 	public static final String P_EXCLUSIVE = "exclusive";
@@ -95,6 +97,7 @@ public class DavElements {
 	public static final String P_EXPAND_PROPERTY = "expand-property";
 	
 	public static final String P_FILTER = "filter";
+	public static final String P_FIRST_NAME = "first-name";
 	public static final String P_FREE_BUSY_QUERY = "free-busy-query";
 	
 	public static final String P_GETCONTENTLANGUAGE = "getcontentlanguage";
@@ -117,6 +120,7 @@ public class DavElements {
 	public static final String P_INHERITED_ACL_SET = "inherited-acl-set";
 	public static final String P_IS_NOT_DEFINED = "is-not-defined";
 	
+	public static final String P_LAST_NAME = "last-name";
 	public static final String P_LIMIT_FREEBUSY_SET = "limit-freebusy-set";
 	public static final String P_LIMIT_RECURRENCE_SET = "limit-recurrence-set";
 	public static final String P_LOCKINFO = "lockinfo";
@@ -170,6 +174,7 @@ public class DavElements {
 	public static final String P_READ_CURRENT_USER_PRIVILEGE_SET = "read-current-user-privilege-set";
 	public static final String P_READ_FREE_BUSY = "read-free-busy";
 	public static final String P_RECIPIENT = "recipient";
+	public static final String P_RECORD_TYPE = "record-type";
 	public static final String P_REMOVE = "remove";
 	public static final String P_REPORT = "report";
 	public static final String P_REQUEST_STATUS = "request-status";
@@ -253,6 +258,7 @@ public class DavElements {
 	public static final QName E_CALENDAR_QUERY = QName.get(P_CALENDAR_QUERY, CALDAV_NS);
 	public static final QName E_CALENDAR_TIMEZONE = QName.get(P_CALENDAR_TIMEZONE, CALDAV_NS);
 	public static final QName E_CALENDAR_USER_ADDRESS_SET = QName.get(P_CALENDAR_USER_ADDRESS_SET, CALDAV_NS);
+	public static final QName E_CALENDAR_USER_TYPE = QName.get(P_CALENDAR_USER_TYPE, CALDAV_NS);
 	public static final QName E_COLLATION = QName.get(P_COLLATION, WEBDAV_NS);
 	public static final QName E_COLLECTION = QName.get(P_COLLECTION, WEBDAV_NS);
 	public static final QName E_COMP = QName.get(P_COMP, CALDAV_NS);
@@ -268,11 +274,13 @@ public class DavElements {
 	public static final QName E_DESCRIPTION = QName.get(P_DESCRIPTION, WEBDAV_NS);
 	public static final QName E_DISPLAYNAME = QName.get(P_DISPLAYNAME, WEBDAV_NS);
 	
+	public static final QName E_EMAIL_ADDRESS_SET = QName.get(P_EMAIL_ADDRESS_SET, CS_NS);
 	public static final QName E_ERROR = QName.get(P_ERROR, WEBDAV_NS);
 	public static final QName E_EXCLUSIVE = QName.get(P_EXCLUSIVE, WEBDAV_NS);
 	public static final QName E_EXPAND_PROPERTY = QName.get(P_EXPAND_PROPERTY, WEBDAV_NS);
 	
 	public static final QName E_FILTER = QName.get(P_FILTER, CALDAV_NS);
+	public static final QName E_FIRST_NAME = QName.get(P_FIRST_NAME, CS_NS);
 	public static final QName E_FREE_BUSY_QUERY = QName.get(P_FREE_BUSY_QUERY, CALDAV_NS);
 	
 	public static final QName E_GETCONTENTLANGUAGE = QName.get(P_GETCONTENTLANGUAGE, WEBDAV_NS);
@@ -293,6 +301,7 @@ public class DavElements {
 	public static final QName E_INHERITED_ACL_SET = QName.get(P_INHERITED_ACL_SET, WEBDAV_NS);
 	public static final QName E_IS_NOT_DEFINED = QName.get(P_IS_NOT_DEFINED, CALDAV_NS);
 	
+	public static final QName E_LAST_NAME = QName.get(P_LAST_NAME, CS_NS);
 	public static final QName E_LOCKDISCOVERY = QName.get(P_LOCKDISCOVERY, WEBDAV_NS);
 	public static final QName E_LOCKSCOPE = QName.get(P_LOCKSCOPE, WEBDAV_NS);
 	public static final QName E_LOCKTYPE = QName.get(P_LOCKTYPE, WEBDAV_NS);
@@ -333,6 +342,7 @@ public class DavElements {
 	public static final QName E_READ_CURRENT_USER_PRIVILEGE_SET = QName.get(P_READ_CURRENT_USER_PRIVILEGE_SET, WEBDAV_NS);
 	public static final QName E_READ_FREE_BUSY = QName.get(P_READ_FREE_BUSY, WEBDAV_NS);
 	public static final QName E_RECIPIENT = QName.get(P_RECIPIENT, CALDAV_NS);
+	public static final QName E_RECORD_TYPE = QName.get(P_RECORD_TYPE, CS_NS);
 	public static final QName E_REPORT = QName.get(P_REPORT, WEBDAV_NS);
 	public static final QName E_REQUEST_STATUS = QName.get(P_REQUEST_STATUS, CALDAV_NS);
 	public static final QName E_REQUIRED_PRINCIPAL = QName.get(P_REQUIRED_PRINCIPAL, WEBDAV_NS);

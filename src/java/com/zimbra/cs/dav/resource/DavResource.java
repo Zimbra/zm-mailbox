@@ -81,6 +81,9 @@ public abstract class DavResource {
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
 		mDavCompliance.add(Compliance.calendar_schedule);
+		mDavCompliance.add(Compliance.version_control);
+		mDavCompliance.add(Compliance.calendar_proxy);
+		mDavCompliance.add(Compliance.calendarserver_principal_property_search);
 		
 		ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
 		addProperty(rtype);

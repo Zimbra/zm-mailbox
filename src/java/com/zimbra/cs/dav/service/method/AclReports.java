@@ -33,6 +33,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
@@ -42,6 +43,7 @@ import com.zimbra.cs.mailbox.Contact;
 
 public class AclReports extends Report {
 	public void handle(DavContext ctxt) throws DavException, ServiceException {
+		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element query = ctxt.getRequestMessage().getRootElement();
 		if (query.getQName().equals(DavElements.E_PRINCIPAL_PROPERTY_SEARCH))
 			handlePrincipalPropertySearch(ctxt, query);
@@ -89,7 +91,7 @@ public class AclReports extends Report {
 	private ArrayList<DavResource> getMatchingPrincipals(Account authAccount, QName prop, String match) throws DavException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
-		if (prop.equals(DavElements.E_DISPLAYNAME)) {
+		if (prop.equals(DavElements.E_EMAIL_ADDRESS_SET)) {
 	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, Provisioning.GalMode.zimbra, null);
 	        for (GalContact ct : result.getMatches()) {
 	            String email = (String)ct.getAttrs().get(Contact.A_email);
@@ -164,14 +166,18 @@ public class AclReports extends Report {
 	
 	static {
 		PRINCIPAL_SEARCH_PROPERTIES = new ArrayList<Pair<QName,Element>>();
-		Element elem = DocumentHelper.createElement(DavElements.E_DISPLAYNAME);
+		addSearchProperty(DavElements.E_DISPLAYNAME, "Full name");
+		addSearchProperty(DavElements.E_EMAIL_ADDRESS_SET, "Email Address");
+		addSearchProperty(DavElements.E_CALENDAR_USER_TYPE, "User type");
+		addSearchProperty(DavElements.E_CALENDAR_USER_ADDRESS_SET, "Calendar user address");
+		addSearchProperty(DavElements.E_CALENDAR_HOME_SET, "Calendar home");
+	}
+
+	private static void addSearchProperty(QName prop, String desc) {
+		Element elem = DocumentHelper.createElement(prop);
 		elem.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
-		elem.setText("Full name");
-		PRINCIPAL_SEARCH_PROPERTIES.add(new Pair<QName,Element>(DavElements.E_DISPLAYNAME, elem));
-		elem = DocumentHelper.createElement(DavElements.E_CALENDAR_HOME_SET);
-		elem.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
-		elem.setText("Calendar home set");
-		PRINCIPAL_SEARCH_PROPERTIES.add(new Pair<QName,Element>(DavElements.E_CALENDAR_HOME_SET, elem));
+		elem.setText(desc);
+		PRINCIPAL_SEARCH_PROPERTIES.add(new Pair<QName,Element>(prop, elem));
 	}
 	
 	private void handlePrincipalSearchPropertySet(DavContext ctxt) throws DavException, ServiceException {

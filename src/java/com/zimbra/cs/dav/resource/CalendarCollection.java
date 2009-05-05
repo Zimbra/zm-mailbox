@@ -45,6 +45,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.caldav.TimeRange;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
@@ -115,10 +116,10 @@ public class CalendarCollection extends Collection {
 			color = 0;
 		setProperty(DavElements.E_DISPLAYNAME, f.getName());
 		setProperty(DavElements.E_CALENDAR_COLOR, COLOR_MAP[color]);
-		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getResourceUrl(this), true);
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
+		addProperty(Acl.getPrincipalUrl(this));
 
 		// remaining recommented attributes: calendar-timezone, max-resource-size,
 		// min-date-time, max-date-time, max-instances, max-attendees-per-instance,

@@ -23,7 +23,10 @@ public class DavProtocol {
 		one, two, three, 
 		update, bind, access_control, 
 		calendar_access, calendar_schedule,
-		version_control
+		version_control,
+		// Apple extensions
+		calendar_proxy,
+		calendarserver_principal_property_search
 	}
 	
 	private static HashMap<Compliance,String> sComplianceStrMap;
@@ -44,6 +47,7 @@ public class DavProtocol {
 	// access-control* : RFC 3744
 	// redirectrefs : RFC 4437
 	// bind : draft-ietf-webdav-bind
+	// calendar-proxy, calendarserver-principal-property-search : Apple extension
 	
 	static {
 		sComplianceStrMap = new HashMap<Compliance,String>();
@@ -56,6 +60,8 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.calendar_access, "calendar-access");
 		sComplianceStrMap.put(Compliance.calendar_schedule, "calendar-schedule");
 		sComplianceStrMap.put(Compliance.version_control, "version-control");
+		sComplianceStrMap.put(Compliance.calendar_proxy, "calendar-proxy");
+		sComplianceStrMap.put(Compliance.calendarserver_principal_property_search, "calendarserver-principal-property-search");
 	}
 	
 	public static String getComplianceString(Collection<Compliance> comp) {
