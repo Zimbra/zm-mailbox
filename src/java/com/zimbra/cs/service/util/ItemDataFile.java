@@ -287,14 +287,13 @@ public class ItemDataFile {
             if (cl.getArgs().length != 1)
                 usage(opts);
             file = cl.getArgs()[0];
-            if (cl.hasOption('c'))
+            if (cl.hasOption('a'))
                 create(path, types, cset, new FileOutputStream(file));
             else if (cl.hasOption('e'))
                 extract(new FileInputStream(file), meta, types, cset, path);
-            else if (cl.hasOption('l') && file.equals("-"))
-                list(System.in, types, cset, System.out);
             else if (cl.hasOption('l'))
-                list(new FileInputStream(file), types, cset, System.out);
+                list(file.equals("-") ? System.in : new FileInputStream(file),
+                    types, cset, System.out);
             else
                 usage(opts);
         } catch (Exception e) {
