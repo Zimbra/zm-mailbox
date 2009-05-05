@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090501-1518 */
+    /* build: 5.0 jhahm 20090505-0111 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -287,7 +287,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * RFC2256: descriptive information
      *
-     * @return description, or ampty array if unset
+     * @return description, or empty array if unset
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
@@ -1581,7 +1581,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Zimbra access control list
      *
-     * @return zimbraACE, or ampty array if unset
+     * @return zimbraACE, or empty array if unset
      *
      * @since ZCS 5.0.7
      */
@@ -2021,7 +2021,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * UI components available for the authed admin in admin console
      *
-     * @return zimbraAdminConsoleUIComponents, or ampty array if unset
+     * @return zimbraAdminConsoleUIComponents, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2155,7 +2155,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * admin saved searches
      *
-     * @return zimbraAdminSavedSearches, or ampty array if unset
+     * @return zimbraAdminSavedSearches, or empty array if unset
      */
     @ZAttr(id=446)
     public String[] getAdminSavedSearches() {
@@ -2339,7 +2339,7 @@ public class ZAttrAccount  extends MailTarget {
      * Addresses that this account can as from address if
      * arbitrary-addresses-allowed setting is not set
      *
-     * @return zimbraAllowFromAddress, or ampty array if unset
+     * @return zimbraAllowFromAddress, or empty array if unset
      */
     @ZAttr(id=428)
     public String[] getAllowFromAddress() {
@@ -2466,7 +2466,7 @@ public class ZAttrAccount  extends MailTarget {
      * user-2007@example.com.archive } that tells us that user@example.com
      * has been archived into those two mailboxes.
      *
-     * @return zimbraArchiveAccount, or ampty array if unset
+     * @return zimbraArchiveAccount, or empty array if unset
      */
     @ZAttr(id=429)
     public String[] getArchiveAccount() {
@@ -3079,7 +3079,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Locales available for this account
      *
-     * @return zimbraAvailableLocale, or ampty array if unset
+     * @return zimbraAvailableLocale, or empty array if unset
      */
     @ZAttr(id=487)
     public String[] getAvailableLocale() {
@@ -3197,7 +3197,7 @@ public class ZAttrAccount  extends MailTarget {
      * account/cos inheritance 2. if not set on account/cos, use the value on
      * the domain of the account
      *
-     * @return zimbraAvailableSkin, or ampty array if unset
+     * @return zimbraAvailableSkin, or empty array if unset
      */
     @ZAttr(id=364)
     public String[] getAvailableSkin() {
@@ -3840,7 +3840,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * zimbraId of child accounts
      *
-     * @return zimbraChildAccount, or ampty array if unset
+     * @return zimbraChildAccount, or empty array if unset
      */
     @ZAttr(id=449)
     public String[] getChildAccount() {
@@ -3958,7 +3958,7 @@ public class ZAttrAccount  extends MailTarget {
      * attribute zimbraPrefChildVisibleAccount . Orig desc: zimbraId of
      * visible child accounts
      *
-     * @return zimbraChildVisibleAccount, or ampty array if unset
+     * @return zimbraChildVisibleAccount, or empty array if unset
      */
     @ZAttr(id=450)
     public String[] getChildVisibleAccount() {
@@ -5674,7 +5674,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * For selective enabling of debug logging
      *
-     * @return zimbraDebugInfo, or ampty array if unset
+     * @return zimbraDebugInfo, or empty array if unset
      */
     @ZAttr(id=365)
     public String[] getDebugInfo() {
@@ -10289,7 +10289,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * mapping to foreign principal identifier
      *
-     * @return zimbraForeignPrincipal, or ampty array if unset
+     * @return zimbraForeignPrincipal, or empty array if unset
      */
     @ZAttr(id=295)
     public String[] getForeignPrincipal() {
@@ -11145,7 +11145,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * available IM interop gateways
      *
-     * @return zimbraIMAvailableInteropGateways, or ampty array if unset
+     * @return zimbraIMAvailableInteropGateways, or empty array if unset
      *
      * @since ZCS 5.0.0
      */
@@ -11596,7 +11596,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The address to which legal intercept messages will be sent.
      *
-     * @return zimbraInterceptAddress, or ampty array if unset
+     * @return zimbraInterceptAddress, or empty array if unset
      *
      * @since ZCS 5.0.3
      */
@@ -12603,7 +12603,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * RFC822 email address of this recipient for accepting mail
      *
-     * @return zimbraMailAddress, or ampty array if unset
+     * @return zimbraMailAddress, or empty array if unset
      */
     @ZAttr(id=3)
     public String[] getMailAddress() {
@@ -12719,7 +12719,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * RFC822 email address of this recipient for accepting mail
      *
-     * @return zimbraMailAlias, or ampty array if unset
+     * @return zimbraMailAlias, or empty array if unset
      */
     @ZAttr(id=20)
     public String[] getMailAlias() {
@@ -12984,7 +12984,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Address to catch all messages to specified domain
      *
-     * @return zimbraMailCatchAllAddress, or ampty array if unset
+     * @return zimbraMailCatchAllAddress, or empty array if unset
      */
     @ZAttr(id=214)
     public String[] getMailCatchAllAddress() {
@@ -13224,7 +13224,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * RFC822 email address of this recipient for local delivery
      *
-     * @return zimbraMailDeliveryAddress, or ampty array if unset
+     * @return zimbraMailDeliveryAddress, or empty array if unset
      */
     @ZAttr(id=13)
     public String[] getMailDeliveryAddress() {
@@ -13340,7 +13340,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * RFC822 forwarding address for an account
      *
-     * @return zimbraMailForwardingAddress, or ampty array if unset
+     * @return zimbraMailForwardingAddress, or empty array if unset
      */
     @ZAttr(id=12)
     public String[] getMailForwardingAddress() {
@@ -14770,7 +14770,7 @@ public class ZAttrAccount  extends MailTarget {
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
      * for group membership, included with person object
      *
-     * @return zimbraMemberOf, or ampty array if unset
+     * @return zimbraMemberOf, or empty array if unset
      */
     @ZAttr(id=11)
     public String[] getMemberOf() {
@@ -16491,7 +16491,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * historical password values
      *
-     * @return zimbraPasswordHistory, or ampty array if unset
+     * @return zimbraPasswordHistory, or empty array if unset
      */
     @ZAttr(id=38)
     public String[] getPasswordHistory() {
@@ -16917,7 +16917,7 @@ public class ZAttrAccount  extends MailTarget {
      * this attribute contains the timestamps of each of the consecutive
      * authentication failures made on an account
      *
-     * @return zimbraPasswordLockoutFailureTime, or ampty array if unset
+     * @return zimbraPasswordLockoutFailureTime, or empty array if unset
      */
     @ZAttr(id=383)
     public String[] getPasswordLockoutFailureTimeAsString() {
@@ -19018,7 +19018,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Forward a copy of calendar invites received to these users.
      *
-     * @return zimbraPrefCalendarForwardInvitesTo, or ampty array if unset
+     * @return zimbraPrefCalendarForwardInvitesTo, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -20193,7 +20193,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * zimbraId of visible child accounts
      *
-     * @return zimbraPrefChildVisibleAccount, or ampty array if unset
+     * @return zimbraPrefChildVisibleAccount, or empty array if unset
      *
      * @since ZCS 5.0.0
      */
@@ -22591,7 +22591,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Custom IM status messages
      *
-     * @return zimbraPrefIMCustomStatusMessage, or ampty array if unset
+     * @return zimbraPrefIMCustomStatusMessage, or empty array if unset
      *
      * @since ZCS 5.0.6
      */
@@ -26213,7 +26213,7 @@ public class ZAttrAccount  extends MailTarget {
      * external address in To/Cc, add those address, then you can specify
      * those external addresses here.
      *
-     * @return zimbraPrefOutOfOfficeDirectAddress, or ampty array if unset
+     * @return zimbraPrefOutOfOfficeDirectAddress, or empty array if unset
      */
     @ZAttr(id=387)
     public String[] getPrefOutOfOfficeDirectAddress() {
@@ -28252,7 +28252,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * time zone of user or COS
      *
-     * @return zimbraPrefTimeZoneId, or ampty array if unset
+     * @return zimbraPrefTimeZoneId, or empty array if unset
      */
     @ZAttr(id=235)
     public String[] getPrefTimeZoneId() {
@@ -28877,7 +28877,7 @@ public class ZAttrAccount  extends MailTarget {
      * if replying/forwarding a message in this folder, use this identity
      * (deprecatedSince 5.0 in account)
      *
-     * @return zimbraPrefWhenInFolderIds, or ampty array if unset
+     * @return zimbraPrefWhenInFolderIds, or empty array if unset
      */
     @ZAttr(id=409)
     public String[] getPrefWhenInFolderIds() {
@@ -29069,7 +29069,7 @@ public class ZAttrAccount  extends MailTarget {
      * addresses that we will look at to see if we should use an identity
      * (deprecatedSince 5.0 in account)
      *
-     * @return zimbraPrefWhenSentToAddresses, or ampty array if unset
+     * @return zimbraPrefWhenSentToAddresses, or empty array if unset
      */
     @ZAttr(id=407)
     public String[] getPrefWhenSentToAddresses() {
@@ -29334,7 +29334,7 @@ public class ZAttrAccount  extends MailTarget {
      * is the union of account/cos attr zimbraZimletAvailableZimlets and
      * domain attr zimbraZimletDomainAvailableZimlets
      *
-     * @return zimbraPrefZimlets, or ampty array if unset
+     * @return zimbraPrefZimlets, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -29484,7 +29484,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Allowed domains for Proxy servlet
      *
-     * @return zimbraProxyAllowedDomains, or ampty array if unset
+     * @return zimbraProxyAllowedDomains, or empty array if unset
      */
     @ZAttr(id=294)
     public String[] getProxyAllowedDomains() {
@@ -30000,7 +30000,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * items an account or group has shared
      *
-     * @return zimbraShareInfo, or ampty array if unset
+     * @return zimbraShareInfo, or empty array if unset
      */
     @ZAttr(id=357)
     public String[] getShareInfo() {
@@ -30811,7 +30811,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * List of Zimlets available to this COS
      *
-     * @return zimbraZimletAvailableZimlets, or ampty array if unset
+     * @return zimbraZimletAvailableZimlets, or empty array if unset
      */
     @ZAttr(id=291)
     public String[] getZimletAvailableZimlets() {
@@ -30927,7 +30927,7 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * User properties for Zimlets
      *
-     * @return zimbraZimletUserProperties, or ampty array if unset
+     * @return zimbraZimletUserProperties, or empty array if unset
      */
     @ZAttr(id=296)
     public String[] getZimletUserProperties() {

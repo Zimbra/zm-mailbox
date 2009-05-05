@@ -40,12 +40,12 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090501-1518 */
+    /* build: 5.0 jhahm 20090505-0111 */
 
     /**
      * RFC2256: descriptive information
      *
-     * @return description, or ampty array if unset
+     * @return description, or empty array if unset
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
@@ -161,7 +161,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * Zimbra access control list
      *
-     * @return zimbraACE, or ampty array if unset
+     * @return zimbraACE, or empty array if unset
      *
      * @since ZCS 5.0.7
      */
@@ -511,7 +511,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * admin console login message
      *
-     * @return zimbraAdminConsoleLoginMessage, or ampty array if unset
+     * @return zimbraAdminConsoleLoginMessage, or empty array if unset
      *
      * @since ZCS 5.0.12
      */
@@ -1387,7 +1387,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * LDAP URL for ldap auth mech
      *
-     * @return zimbraAuthLdapURL, or ampty array if unset
+     * @return zimbraAuthLdapURL, or empty array if unset
      */
     @ZAttr(id=43)
     public String[] getAuthLdapURL() {
@@ -1572,7 +1572,7 @@ public class ZAttrDomain extends NamedEntry {
      * account/cos inheritance 2. if not set on account/cos, use the value on
      * the domain of the account
      *
-     * @return zimbraAvailableSkin, or ampty array if unset
+     * @return zimbraAvailableSkin, or empty array if unset
      */
     @ZAttr(id=364)
     public String[] getAvailableSkin() {
@@ -2045,7 +2045,7 @@ public class ZAttrDomain extends NamedEntry {
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain
      *
-     * @return zimbraDomainCOSMaxAccounts, or ampty array if unset
+     * @return zimbraDomainCOSMaxAccounts, or empty array if unset
      *
      * @since ZCS 5.0.10
      */
@@ -2250,7 +2250,7 @@ public class ZAttrDomain extends NamedEntry {
      * maximum number of accounts allowed to have specified features in a
      * domain
      *
-     * @return zimbraDomainFeatureMaxAccounts, or ampty array if unset
+     * @return zimbraDomainFeatureMaxAccounts, or empty array if unset
      *
      * @since ZCS 5.0.10
      */
@@ -4227,7 +4227,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * zimbraId of GAL sync accounts
      *
-     * @return zimbraGalAccountId, or ampty array if unset
+     * @return zimbraGalAccountId, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -4495,7 +4495,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * LDAP Gal attribute to contact attr mapping
      *
-     * @return zimbraGalLdapAttrMap, or ampty array if unset
+     * @return zimbraGalLdapAttrMap, or empty array if unset
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
@@ -5327,7 +5327,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * LDAP URL for external GAL queries
      *
-     * @return zimbraGalLdapURL, or ampty array if unset
+     * @return zimbraGalLdapURL, or empty array if unset
      */
     @ZAttr(id=47)
     public String[] getGalLdapURL() {
@@ -6513,7 +6513,7 @@ public class ZAttrDomain extends NamedEntry {
      * LDAP URL for external GAL sync, if not set fallback to
      * zimbraGalLdapURL
      *
-     * @return zimbraGalSyncLdapURL, or ampty array if unset
+     * @return zimbraGalSyncLdapURL, or empty array if unset
      *
      * @since ZCS 5.0.2
      */
@@ -7665,7 +7665,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * time zone of user or COS
      *
-     * @return zimbraPrefTimeZoneId, or ampty array if unset
+     * @return zimbraPrefTimeZoneId, or empty array if unset
      */
     @ZAttr(id=235)
     public String[] getPrefTimeZoneId() {
@@ -8563,7 +8563,7 @@ public class ZAttrDomain extends NamedEntry {
     /**
      * the SMTP server to connect to when sending mail
      *
-     * @return zimbraSmtpHostname, or ampty array if unset
+     * @return zimbraSmtpHostname, or empty array if unset
      */
     @ZAttr(id=97)
     public String[] getSmtpHostname() {
@@ -8866,7 +8866,7 @@ public class ZAttrDomain extends NamedEntry {
      * An alias for this domain, used to determine default login domain based
      * on URL client is visiting
      *
-     * @return zimbraVirtualHostname, or ampty array if unset
+     * @return zimbraVirtualHostname, or empty array if unset
      */
     @ZAttr(id=352)
     public String[] getVirtualHostname() {
@@ -8991,7 +8991,7 @@ public class ZAttrDomain extends NamedEntry {
      * An virtual IP address for this domain, used to determine domain based
      * on an IP address
      *
-     * @return zimbraVirtualIPAddress, or ampty array if unset
+     * @return zimbraVirtualIPAddress, or empty array if unset
      *
      * @since ZCS 5.0.0
      */
@@ -9336,7 +9336,7 @@ public class ZAttrDomain extends NamedEntry {
      * accounts in the domain is the union of account/cos attribute
      * zimbraZimletAvailableZimlets and this attribute.
      *
-     * @return zimbraZimletDomainAvailableZimlets, or ampty array if unset
+     * @return zimbraZimletDomainAvailableZimlets, or empty array if unset
      *
      * @since ZCS 5.0.10
      */

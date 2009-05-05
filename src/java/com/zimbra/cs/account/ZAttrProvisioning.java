@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090501-1518 */
+    /* build: 5.0 jhahm 20090505-0111 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3962,6 +3962,49 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=580)
     public static final String A_zimbraMemcachedBindPort = "zimbraMemcachedBindPort";
+
+    /**
+     * if true, use binary protocol of memcached; if false, use ascii
+     * protocol
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1015)
+    public static final String A_zimbraMemcachedClientBinaryProtocolEnabled = "zimbraMemcachedClientBinaryProtocolEnabled";
+
+    /**
+     * default expiration time in seconds for memcached values; default is 1
+     * day
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1017)
+    public static final String A_zimbraMemcachedClientExpirySeconds = "zimbraMemcachedClientExpirySeconds";
+
+    /**
+     * memcached hash algorithm
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1016)
+    public static final String A_zimbraMemcachedClientHashAlgorithm = "zimbraMemcachedClientHashAlgorithm";
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public static final String A_zimbraMemcachedClientServerList = "zimbraMemcachedClientServerList";
+
+    /**
+     * default timeout in milliseconds for async memcached operations
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1018)
+    public static final String A_zimbraMemcachedClientTimeoutMillis = "zimbraMemcachedClientTimeoutMillis";
 
     /**
      * Maximum number of JavaMail MimeMessage objects in the message cache.

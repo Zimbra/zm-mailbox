@@ -36,6 +36,8 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.memcached.MemcachedKeyPrefix;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -46,7 +48,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 
 public class CtagInfoCache {
 
-    private static final KeyPrefix MEMCACHED_PREFIX = CalendarCacheManager.MEMCACHED_PREFIX_CTAGINFO;
+    private static final KeyPrefix MEMCACHED_PREFIX = MemcachedKeyPrefix.CTAGINFO;
     private ZimbraMemcachedClient mMemcachedClient;
 
     private CtagInfo cacheGet(CalendarKey key) throws ServiceException {
@@ -101,8 +103,8 @@ public class CtagInfoCache {
         mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
     }
 
-    CtagInfoCache(ZimbraMemcachedClient memcachedClient) {
-        mMemcachedClient = memcachedClient;
+    CtagInfoCache() {
+        mMemcachedClient = MemcachedConnector.getClient();
     }
 
     public CtagInfo get(CalendarKey key) throws ServiceException {

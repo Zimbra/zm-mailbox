@@ -2151,7 +2151,7 @@ public class AttributeManager {
                     } else {
                         javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s); return value.length > 0 ? value : %s;", name, defaultValue);    
                     }
-                    javaDocReturns = ", or ampty array if unset";
+                    javaDocReturns = ", or empty array if unset";
                 }
                 break;
         }

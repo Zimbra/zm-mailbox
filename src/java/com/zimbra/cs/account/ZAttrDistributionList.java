@@ -34,7 +34,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090501-1518 */
+    /* build: 5.0 jhahm 20090505-0111 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -101,7 +101,7 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * RFC2256: descriptive information
      *
-     * @return description, or ampty array if unset
+     * @return description, or empty array if unset
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
@@ -403,7 +403,7 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * Zimbra access control list
      *
-     * @return zimbraACE, or ampty array if unset
+     * @return zimbraACE, or empty array if unset
      *
      * @since ZCS 5.0.7
      */
@@ -537,7 +537,7 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * UI components available for the authed admin in admin console
      *
-     * @return zimbraAdminConsoleUIComponents, or ampty array if unset
+     * @return zimbraAdminConsoleUIComponents, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -1274,7 +1274,7 @@ public class ZAttrDistributionList extends MailTarget {
     /**
      * items an account or group has shared
      *
-     * @return zimbraShareInfo, or ampty array if unset
+     * @return zimbraShareInfo, or empty array if unset
      */
     @ZAttr(id=357)
     public String[] getShareInfo() {

@@ -30,13 +30,15 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.memcached.MemcachedKeyPrefix;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public class CalListCache {
 
-    private static final KeyPrefix MEMCACHED_PREFIX = CalendarCacheManager.MEMCACHED_PREFIX_CALENDAR_LIST;
+    private static final KeyPrefix MEMCACHED_PREFIX = MemcachedKeyPrefix.CALENDAR_LIST;
     private ZimbraMemcachedClient mMemcachedClient;
 
     private CalList cacheGet(AccountKey key) throws ServiceException {
@@ -62,8 +64,8 @@ public class CalListCache {
         mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
     }
 
-    CalListCache(ZimbraMemcachedClient memcachedClient) {
-        mMemcachedClient = memcachedClient;
+    CalListCache() {
+        mMemcachedClient = MemcachedConnector.getClient();
     }
 
     public CalList get(AccountKey key) throws ServiceException{

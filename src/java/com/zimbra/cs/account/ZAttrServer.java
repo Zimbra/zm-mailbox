@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090501-1518 */
+    /* build: 5.0 jhahm 20090505-0111 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -106,7 +106,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * RFC2256: descriptive information
      *
-     * @return description, or ampty array if unset
+     * @return description, or empty array if unset
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
@@ -222,7 +222,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Zimbra access control list
      *
-     * @return zimbraACE, or ampty array if unset
+     * @return zimbraACE, or empty array if unset
      *
      * @since ZCS 5.0.7
      */
@@ -925,7 +925,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Backup report email recipients
      *
-     * @return zimbraBackupReportEmailRecipients, or ampty array if unset
+     * @return zimbraBackupReportEmailRecipients, or empty array if unset
      */
     @ZAttr(id=459)
     public String[] getBackupReportEmailRecipients() {
@@ -2526,7 +2526,7 @@ public class ZAttrServer extends NamedEntry {
      * the http proxy URL to connect to when making outgoing connections
      * (Zimlet proxy, RSS/ATOM feeds, etc)
      *
-     * @return zimbraHttpProxyURL, or ampty array if unset
+     * @return zimbraHttpProxyURL, or empty array if unset
      */
     @ZAttr(id=388)
     public String[] getHttpProxyURL() {
@@ -2718,7 +2718,7 @@ public class ZAttrServer extends NamedEntry {
      * interface address(es) on which IM server should listen; if empty,
      * binds to all interfaces
      *
-     * @return zimbraIMBindAddress, or ampty array if unset
+     * @return zimbraIMBindAddress, or empty array if unset
      *
      * @since ZCS 5.0.0
      */
@@ -2985,7 +2985,7 @@ public class ZAttrServer extends NamedEntry {
      * interface address(es) on which IMAP server should listen; if empty,
      * binds to all interfaces
      *
-     * @return zimbraImapBindAddress, or ampty array if unset
+     * @return zimbraImapBindAddress, or empty array if unset
      */
     @ZAttr(id=179)
     public String[] getImapBindAddress() {
@@ -3306,7 +3306,7 @@ public class ZAttrServer extends NamedEntry {
      * disabled IMAP capabilities. Capabilities are listed on the CAPABILITY
      * line, also known in RFCs as extensions
      *
-     * @return zimbraImapDisabledCapability, or ampty array if unset
+     * @return zimbraImapDisabledCapability, or empty array if unset
      */
     @ZAttr(id=443)
     public String[] getImapDisabledCapability() {
@@ -3627,7 +3627,7 @@ public class ZAttrServer extends NamedEntry {
      * interface address(es) on which IMAP server should listen; if empty,
      * binds to all interfaces
      *
-     * @return zimbraImapSSLBindAddress, or ampty array if unset
+     * @return zimbraImapSSLBindAddress, or empty array if unset
      */
     @ZAttr(id=182)
     public String[] getImapSSLBindAddress() {
@@ -3886,7 +3886,7 @@ public class ZAttrServer extends NamedEntry {
      * disabled IMAP SSL capabilities. Capabilities are listed on the
      * CAPABILITY line, also known in RFCs as extensions
      *
-     * @return zimbraImapSSLDisabledCapability, or ampty array if unset
+     * @return zimbraImapSSLDisabledCapability, or empty array if unset
      */
     @ZAttr(id=444)
     public String[] getImapSSLDisabledCapability() {
@@ -4393,7 +4393,7 @@ public class ZAttrServer extends NamedEntry {
      * interface address(es) on which LMTP server should listen; if empty,
      * binds to all interfaces
      *
-     * @return zimbraLmtpBindAddress, or ampty array if unset
+     * @return zimbraLmtpBindAddress, or empty array if unset
      */
     @ZAttr(id=25)
     public String[] getLmtpBindAddress() {
@@ -6620,7 +6620,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * interface address(es) on which memcached server
      *
-     * @return zimbraMemcachedBindAddress, or ampty array if unset
+     * @return zimbraMemcachedBindAddress, or empty array if unset
      *
      * @since ZCS 5.0.0
      */
@@ -6820,6 +6820,447 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMemcachedBindPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMemcachedBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * if true, use binary protocol of memcached; if false, use ascii
+     * protocol
+     *
+     * @return zimbraMemcachedClientBinaryProtocolEnabled, or false if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1015)
+    public boolean isMemcachedClientBinaryProtocolEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, false);
+    }
+
+    /**
+     * if true, use binary protocol of memcached; if false, use ascii
+     * protocol
+     *
+     * @param zimbraMemcachedClientBinaryProtocolEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1015)
+    public void setMemcachedClientBinaryProtocolEnabled(boolean zimbraMemcachedClientBinaryProtocolEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, zimbraMemcachedClientBinaryProtocolEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, use binary protocol of memcached; if false, use ascii
+     * protocol
+     *
+     * @param zimbraMemcachedClientBinaryProtocolEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1015)
+    public Map<String,Object> setMemcachedClientBinaryProtocolEnabled(boolean zimbraMemcachedClientBinaryProtocolEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, zimbraMemcachedClientBinaryProtocolEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if true, use binary protocol of memcached; if false, use ascii
+     * protocol
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1015)
+    public void unsetMemcachedClientBinaryProtocolEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if true, use binary protocol of memcached; if false, use ascii
+     * protocol
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1015)
+    public Map<String,Object> unsetMemcachedClientBinaryProtocolEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientBinaryProtocolEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * default expiration time in seconds for memcached values; default is 1
+     * day
+     *
+     * @return zimbraMemcachedClientExpirySeconds, or 86400 if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1017)
+    public int getMemcachedClientExpirySeconds() {
+        return getIntAttr(Provisioning.A_zimbraMemcachedClientExpirySeconds, 86400);
+    }
+
+    /**
+     * default expiration time in seconds for memcached values; default is 1
+     * day
+     *
+     * @param zimbraMemcachedClientExpirySeconds new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1017)
+    public void setMemcachedClientExpirySeconds(int zimbraMemcachedClientExpirySeconds) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientExpirySeconds, Integer.toString(zimbraMemcachedClientExpirySeconds));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default expiration time in seconds for memcached values; default is 1
+     * day
+     *
+     * @param zimbraMemcachedClientExpirySeconds new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1017)
+    public Map<String,Object> setMemcachedClientExpirySeconds(int zimbraMemcachedClientExpirySeconds, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientExpirySeconds, Integer.toString(zimbraMemcachedClientExpirySeconds));
+        return attrs;
+    }
+
+    /**
+     * default expiration time in seconds for memcached values; default is 1
+     * day
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1017)
+    public void unsetMemcachedClientExpirySeconds() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientExpirySeconds, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default expiration time in seconds for memcached values; default is 1
+     * day
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1017)
+    public Map<String,Object> unsetMemcachedClientExpirySeconds(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientExpirySeconds, "");
+        return attrs;
+    }
+
+    /**
+     * memcached hash algorithm
+     *
+     * @return zimbraMemcachedClientHashAlgorithm, or "KETAMA_HASH" if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1016)
+    public String getMemcachedClientHashAlgorithm() {
+        return getAttr(Provisioning.A_zimbraMemcachedClientHashAlgorithm, "KETAMA_HASH");
+    }
+
+    /**
+     * memcached hash algorithm
+     *
+     * @param zimbraMemcachedClientHashAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1016)
+    public void setMemcachedClientHashAlgorithm(String zimbraMemcachedClientHashAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientHashAlgorithm, zimbraMemcachedClientHashAlgorithm);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * memcached hash algorithm
+     *
+     * @param zimbraMemcachedClientHashAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1016)
+    public Map<String,Object> setMemcachedClientHashAlgorithm(String zimbraMemcachedClientHashAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientHashAlgorithm, zimbraMemcachedClientHashAlgorithm);
+        return attrs;
+    }
+
+    /**
+     * memcached hash algorithm
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1016)
+    public void unsetMemcachedClientHashAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientHashAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * memcached hash algorithm
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1016)
+    public Map<String,Object> unsetMemcachedClientHashAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientHashAlgorithm, "");
+        return attrs;
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @return zimbraMemcachedClientServerList, or empty array if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public String[] getMemcachedClientServerList() {
+        return getMultiAttr(Provisioning.A_zimbraMemcachedClientServerList);
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param zimbraMemcachedClientServerList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public void setMemcachedClientServerList(String[] zimbraMemcachedClientServerList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param zimbraMemcachedClientServerList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public Map<String,Object> setMemcachedClientServerList(String[] zimbraMemcachedClientServerList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
+        return attrs;
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param zimbraMemcachedClientServerList new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public void addMemcachedClientServerList(String zimbraMemcachedClientServerList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param zimbraMemcachedClientServerList new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public Map<String,Object> addMemcachedClientServerList(String zimbraMemcachedClientServerList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
+        return attrs;
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param zimbraMemcachedClientServerList existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public void removeMemcachedClientServerList(String zimbraMemcachedClientServerList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param zimbraMemcachedClientServerList existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public Map<String,Object> removeMemcachedClientServerList(String zimbraMemcachedClientServerList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMemcachedClientServerList, zimbraMemcachedClientServerList);
+        return attrs;
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public void unsetMemcachedClientServerList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * list of host:port for memcached servers; set to empty value to disable
+     * the use of memcached
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1014)
+    public Map<String,Object> unsetMemcachedClientServerList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientServerList, "");
+        return attrs;
+    }
+
+    /**
+     * default timeout in milliseconds for async memcached operations
+     *
+     * @return zimbraMemcachedClientTimeoutMillis, or 1000 if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1018)
+    public int getMemcachedClientTimeoutMillis() {
+        return getIntAttr(Provisioning.A_zimbraMemcachedClientTimeoutMillis, 1000);
+    }
+
+    /**
+     * default timeout in milliseconds for async memcached operations
+     *
+     * @param zimbraMemcachedClientTimeoutMillis new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1018)
+    public void setMemcachedClientTimeoutMillis(int zimbraMemcachedClientTimeoutMillis) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientTimeoutMillis, Integer.toString(zimbraMemcachedClientTimeoutMillis));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default timeout in milliseconds for async memcached operations
+     *
+     * @param zimbraMemcachedClientTimeoutMillis new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1018)
+    public Map<String,Object> setMemcachedClientTimeoutMillis(int zimbraMemcachedClientTimeoutMillis, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientTimeoutMillis, Integer.toString(zimbraMemcachedClientTimeoutMillis));
+        return attrs;
+    }
+
+    /**
+     * default timeout in milliseconds for async memcached operations
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1018)
+    public void unsetMemcachedClientTimeoutMillis() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientTimeoutMillis, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * default timeout in milliseconds for async memcached operations
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1018)
+    public Map<String,Object> unsetMemcachedClientTimeoutMillis(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedClientTimeoutMillis, "");
         return attrs;
     }
 
@@ -7033,7 +7474,7 @@ public class ZAttrServer extends NamedEntry {
      * Host running SOAP service for use by MTA auth. Setting this sets
      * zimbraMtaAuthURL via attr callback mechanism.
      *
-     * @return zimbraMtaAuthHost, or ampty array if unset
+     * @return zimbraMtaAuthHost, or empty array if unset
      */
     @ZAttr(id=309)
     public String[] getMtaAuthHost() {
@@ -7220,7 +7661,7 @@ public class ZAttrServer extends NamedEntry {
      * URL at which this MTA (via zimbra saslauthd) should authenticate. Set
      * by setting zimbraMtaAuthHost.
      *
-     * @return zimbraMtaAuthURL, or ampty array if unset
+     * @return zimbraMtaAuthURL, or empty array if unset
      */
     @ZAttr(id=310)
     public String[] getMtaAuthURL() {
@@ -7530,7 +7971,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * value of postfix mynetworks
      *
-     * @return zimbraMtaMyNetworks, or ampty array if unset
+     * @return zimbraMtaMyNetworks, or empty array if unset
      */
     @ZAttr(id=311)
     public String[] getMtaMyNetworks() {
@@ -7780,7 +8221,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * Value for postconf relayhost
      *
-     * @return zimbraMtaRelayHost, or ampty array if unset
+     * @return zimbraMtaRelayHost, or empty array if unset
      */
     @ZAttr(id=199)
     public String[] getMtaRelayHost() {
@@ -8488,7 +8929,7 @@ public class ZAttrServer extends NamedEntry {
      * feature. Orig desc: Network interface on which notification server
      * should listen; if empty, binds to all interfaces.
      *
-     * @return zimbraNotifyBindAddress, or ampty array if unset
+     * @return zimbraNotifyBindAddress, or empty array if unset
      */
     @ZAttr(id=317)
     public String[] getNotifyBindAddress() {
@@ -8694,7 +9135,7 @@ public class ZAttrServer extends NamedEntry {
      * feature. Orig desc: Network interface on which SSL notification server
      * should listen; if empty, binds to all interfaces
      *
-     * @return zimbraNotifySSLBindAddress, or ampty array if unset
+     * @return zimbraNotifySSLBindAddress, or empty array if unset
      */
     @ZAttr(id=320)
     public String[] getNotifySSLBindAddress() {
@@ -9095,7 +9536,7 @@ public class ZAttrServer extends NamedEntry {
      * interface address(es) on which POP3 server should listen; if empty,
      * binds to all interfaces
      *
-     * @return zimbraPop3BindAddress, or ampty array if unset
+     * @return zimbraPop3BindAddress, or empty array if unset
      */
     @ZAttr(id=95)
     public String[] getPop3BindAddress() {
@@ -9612,7 +10053,7 @@ public class ZAttrServer extends NamedEntry {
      * interface address(es) on which POP3 server should listen; if empty,
      * binds to all interfaces
      *
-     * @return zimbraPop3SSLBindAddress, or ampty array if unset
+     * @return zimbraPop3SSLBindAddress, or empty array if unset
      */
     @ZAttr(id=186)
     public String[] getPop3SSLBindAddress() {
@@ -10520,7 +10961,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * provider class name for redo logging
      *
-     * @return zimbraRedoLogProvider, or ampty array if unset
+     * @return zimbraRedoLogProvider, or empty array if unset
      */
     @ZAttr(id=225)
     public String[] getRedoLogProvider() {
@@ -11189,7 +11630,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * NGINX reverse proxy imap capabilities
      *
-     * @return zimbraReverseProxyImapEnabledCapability, or ampty array if unset
+     * @return zimbraReverseProxyImapEnabledCapability, or empty array if unset
      *
      * @since ZCS 5.0.10
      */
@@ -12269,7 +12710,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * NGINX reverse proxy pop3 capabilities
      *
-     * @return zimbraReverseProxyPop3EnabledCapability, or ampty array if unset
+     * @return zimbraReverseProxyPop3EnabledCapability, or empty array if unset
      *
      * @since ZCS 5.0.10
      */
@@ -13321,7 +13762,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * services that are enabled on this server
      *
-     * @return zimbraServiceEnabled, or ampty array if unset
+     * @return zimbraServiceEnabled, or empty array if unset
      */
     @ZAttr(id=220)
     public String[] getServiceEnabled() {
@@ -13499,7 +13940,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * services that are installed on this server
      *
-     * @return zimbraServiceInstalled, or ampty array if unset
+     * @return zimbraServiceInstalled, or empty array if unset
      */
     @ZAttr(id=221)
     public String[] getServiceInstalled() {
@@ -13615,7 +14056,7 @@ public class ZAttrServer extends NamedEntry {
     /**
      * the SMTP server to connect to when sending mail
      *
-     * @return zimbraSmtpHostname, or ampty array if unset
+     * @return zimbraSmtpHostname, or empty array if unset
      */
     @ZAttr(id=97)
     public String[] getSmtpHostname() {
@@ -14069,7 +14510,7 @@ public class ZAttrServer extends NamedEntry {
      * the request to the first server fails, a request to the second server
      * is sent and so on.
      *
-     * @return zimbraSpellCheckURL, or ampty array if unset
+     * @return zimbraSpellCheckURL, or empty array if unset
      */
     @ZAttr(id=267)
     public String[] getSpellCheckURL() {
@@ -14277,7 +14718,7 @@ public class ZAttrServer extends NamedEntry {
      * Prefixes of thread names. Each value is a column in threads.csv that
      * tracks the number of threads whose name starts with the given prefix.
      *
-     * @return zimbraStatThreadNamePrefix, or ampty array if unset
+     * @return zimbraStatThreadNamePrefix, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */

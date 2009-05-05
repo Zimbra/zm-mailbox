@@ -56,6 +56,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache;
 import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheKey;
 import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheValue;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
@@ -196,16 +197,18 @@ public class DavServlet extends ZimbraServlet {
             } catch (Exception e) {}
         }
 
-        CtagResponseCache ctagResponseCache = CalendarCacheManager.getInstance().getCtagResponseCache();
-        boolean ctagCacheEnabled = ctagResponseCache != null;
-        boolean gzipAccepted = ctxt.isGzipAccepted();
+        boolean ctagCacheEnabled = MemcachedConnector.isConnected();
+        boolean gzipAccepted = false;
         boolean cacheThisCtagResponse = false;
         CtagResponseCacheKey ctagCacheKey = null;
         String acctVerSnapshot = null;
         Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
+        CtagResponseCache ctagResponseCache = null;
         try {
             // Are we running with cache enabled, and is this a cachable CalDAV ctag request?
     		if (ctagCacheEnabled && isCtagRequest(ctxt)) {
+                ctagResponseCache = CalendarCacheManager.getInstance().getCtagResponseCache();
+                gzipAccepted = ctxt.isGzipAccepted();
     		    String targetUser = ctxt.getUser();
     		    Account targetAcct = Provisioning.getInstance().get(AccountBy.name, targetUser);
     		    boolean ownAcct = targetAcct != null && targetAcct.getId().equals(authUser.getId());

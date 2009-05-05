@@ -28,6 +28,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -70,7 +71,7 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId(), false);
         if (mbox != null)
             calCache.purgeMailbox(mbox);
-        calCache.reloadMemcachedConfig();  // TODO: Move this to its own command.
+        MemcachedConnector.reloadConfig();  // TODO: Move this to its own command.
         Element response = zsc.createElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_RESPONSE);
         return response;
     }

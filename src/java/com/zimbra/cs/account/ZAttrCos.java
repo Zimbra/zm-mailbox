@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090501-1518 */
+    /* build: 5.0 jhahm 20090505-0111 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -106,7 +106,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * RFC2256: descriptive information
      *
-     * @return description, or ampty array if unset
+     * @return description, or empty array if unset
      */
     @ZAttr(id=-1)
     public String[] getDescription() {
@@ -222,7 +222,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Zimbra access control list
      *
-     * @return zimbraACE, or ampty array if unset
+     * @return zimbraACE, or empty array if unset
      *
      * @since ZCS 5.0.7
      */
@@ -432,7 +432,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * admin saved searches
      *
-     * @return zimbraAdminSavedSearches, or ampty array if unset
+     * @return zimbraAdminSavedSearches, or empty array if unset
      */
     @ZAttr(id=446)
     public String[] getAdminSavedSearches() {
@@ -1026,7 +1026,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Locales available for this account
      *
-     * @return zimbraAvailableLocale, or ampty array if unset
+     * @return zimbraAvailableLocale, or empty array if unset
      */
     @ZAttr(id=487)
     public String[] getAvailableLocale() {
@@ -1144,7 +1144,7 @@ public class ZAttrCos extends NamedEntry {
      * account/cos inheritance 2. if not set on account/cos, use the value on
      * the domain of the account
      *
-     * @return zimbraAvailableSkin, or ampty array if unset
+     * @return zimbraAvailableSkin, or empty array if unset
      */
     @ZAttr(id=364)
     public String[] getAvailableSkin() {
@@ -1725,7 +1725,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * attribute constraints TODO: fill all the constraints
      *
-     * @return zimbraConstraint, or ampty array if unset
+     * @return zimbraConstraint, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -7910,7 +7910,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * available IM interop gateways
      *
-     * @return zimbraIMAvailableInteropGateways, or ampty array if unset
+     * @return zimbraIMAvailableInteropGateways, or empty array if unset
      *
      * @since ZCS 5.0.0
      */
@@ -8361,7 +8361,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The address to which legal intercept messages will be sent.
      *
-     * @return zimbraInterceptAddress, or ampty array if unset
+     * @return zimbraInterceptAddress, or empty array if unset
      *
      * @since ZCS 5.0.3
      */
@@ -9009,7 +9009,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * servers that an account can be initially provisioned on
      *
-     * @return zimbraMailHostPool, or ampty array if unset
+     * @return zimbraMailHostPool, or empty array if unset
      */
     @ZAttr(id=125)
     public String[] getMailHostPool() {
@@ -20802,7 +20802,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * time zone of user or COS
      *
-     * @return zimbraPrefTimeZoneId, or ampty array if unset
+     * @return zimbraPrefTimeZoneId, or empty array if unset
      */
     @ZAttr(id=235)
     public String[] getPrefTimeZoneId() {
@@ -21428,7 +21428,7 @@ public class ZAttrCos extends NamedEntry {
      * is the union of account/cos attr zimbraZimletAvailableZimlets and
      * domain attr zimbraZimletDomainAvailableZimlets
      *
-     * @return zimbraPrefZimlets, or ampty array if unset
+     * @return zimbraPrefZimlets, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -21578,7 +21578,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Allowed domains for Proxy servlet
      *
-     * @return zimbraProxyAllowedDomains, or ampty array if unset
+     * @return zimbraProxyAllowedDomains, or empty array if unset
      */
     @ZAttr(id=294)
     public String[] getProxyAllowedDomains() {
@@ -21694,7 +21694,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * Content types that can be cached by proxy servlet
      *
-     * @return zimbraProxyCacheableContentTypes, or ampty array if unset
+     * @return zimbraProxyCacheableContentTypes, or empty array if unset
      */
     @ZAttr(id=303)
     public String[] getProxyCacheableContentTypes() {
@@ -22447,7 +22447,7 @@ public class ZAttrCos extends NamedEntry {
     /**
      * List of Zimlets available to this COS
      *
-     * @return zimbraZimletAvailableZimlets, or ampty array if unset
+     * @return zimbraZimletAvailableZimlets, or empty array if unset
      */
     @ZAttr(id=291)
     public String[] getZimletAvailableZimlets() {
