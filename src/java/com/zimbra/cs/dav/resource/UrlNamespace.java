@@ -245,7 +245,7 @@ public class UrlNamespace {
     }
 	
     public static String getPrincipalCollectionUrl(Account acct) throws ServiceException {
-    	return getAbsoluteUrl(acct, PRINCIPALS_PATH);
+    	return URLUtil.urlEscape(PRINCIPALS_PATH);
     }
     
     public static String getResourceUrl(Account user, String path) throws ServiceException {
