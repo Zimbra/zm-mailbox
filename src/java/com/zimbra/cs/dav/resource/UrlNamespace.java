@@ -143,9 +143,18 @@ public class UrlNamespace {
 		if (path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		
+		java.util.Collection<DavResource> rss = getResources(ctxt, user, path, false);
+		if (rss.size() > 0)
+			return rss.iterator().next();
+		throw new DavException("no DAV resource for "+path, HttpServletResponse.SC_NOT_FOUND, null);
+	}
+
+	public static java.util.Collection<DavResource> getResources(DavContext ctxt, String user, String path, boolean includeChildren) throws DavException {
+		ArrayList<DavResource> rss = new ArrayList<DavResource>();
 		if (user.equals(""))
 			try {
-				return new Principal(ctxt.getAuthAccount(), DavServlet.DAV_PATH);
+				rss.add(new Principal(ctxt.getAuthAccount(), DavServlet.DAV_PATH));
+				return rss;
 			} catch (ServiceException e) {
 			}
 		
@@ -158,16 +167,27 @@ public class UrlNamespace {
 		    try {
 		        resource = getMailItemResource(ctxt, user, path);
 		    } catch (ServiceException se) {
-		        ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+path, se);
+		    	if (path.length() == 1 && path.charAt(0) == '/' && se.getCode().equals(ServiceException.PERM_DENIED)) {
+		    		// return the list of folders the authUser has access to
+		    		try {
+						return getFolders(ctxt, user);
+					} catch (ServiceException e) {
+				        ZimbraLog.dav.warn("can't get folders for "+user, e);
+					}
+		    	} else {
+			        ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+path, se);
+		    	}
 		    }
 		}
 		
-		if (resource == null)
-			throw new DavException("no DAV resource for "+path, HttpServletResponse.SC_NOT_FOUND, null);
-		
-		return resource;
-	}
+		if (resource != null)
+			rss.add(resource);
+		if (resource != null && includeChildren)
+			rss.addAll(resource.getChildren(ctxt));
 
+		return rss;
+	}
+	
 	/* Returns DavResource identified by MailItem id .*/
 	public static DavResource getResourceByItemId(DavContext ctxt, String user, int id) throws ServiceException, DavException {
 		MailItem item = getMailItemById(ctxt, user, id);
@@ -360,6 +380,20 @@ public class UrlNamespace {
         }
         
         return getResourceFromMailItem(ctxt, item);
+    }
+    
+    private static java.util.Collection<DavResource> getFolders(DavContext ctxt, String user) throws ServiceException, DavException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.name, user);
+        if (account == null)
+            throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Mailbox.OperationContext octxt = ctxt.getOperationContext();
+        ArrayList<DavResource> rss = new ArrayList<DavResource>();
+        for (Folder f : mbox.getVisibleFolders(octxt))
+        	rss.add(getResourceFromMailItem(ctxt, f));
+        return rss;
     }
     
     private static RemoteCalendarCollection getRemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {

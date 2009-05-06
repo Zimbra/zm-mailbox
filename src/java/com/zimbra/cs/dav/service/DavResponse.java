@@ -167,6 +167,15 @@ public class DavResponse {
 
 		propstat.toResponse(ctxt, top, props.isNameOnly());
 	}
+	
+	public void addResources(DavContext ctxt, Collection<DavResource> rss, DavContext.RequestProp props) throws DavException {
+		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+		for (DavResource rs : rss) {
+			Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
+			addResourceTo(ctxt, resp, rs, props, false);
+		}
+	}
+	
     public void addStatus(DavContext ctxt, String href, int status) {
         ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
         Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);

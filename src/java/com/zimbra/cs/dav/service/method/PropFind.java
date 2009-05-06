@@ -54,14 +54,13 @@ public class PropFind extends DavMethod {
 		RequestProp reqProp = ctxt.getRequestProp();
 		DavResource resource = ctxt.getRequestedResource();
 		addComplianceHeader(ctxt, resource);
-		DavResponse resp = ctxt.getDavResponse();
 		
-		resp.addResource(ctxt, resource, reqProp, false);
+		DavResponse resp = ctxt.getDavResponse();
+		if (ctxt.getDepth() == Depth.one)
+			resp.addResources(ctxt, ctxt.getAllRequestedResources(), reqProp);
+		else
+			resp.addResource(ctxt, resource, reqProp, false);
 
-		if (resource.isCollection() && ctxt.getDepth() != Depth.zero) {
-			for (DavResource child : resource.getChildren(ctxt))
-				resp.addResource(ctxt, child, reqProp, ctxt.getDepth() == Depth.infinity);
-		}
 		sendResponse(ctxt);
 	}
 }

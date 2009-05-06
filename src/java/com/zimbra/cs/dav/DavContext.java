@@ -401,6 +401,22 @@ public class DavContext {
 		return mRequestedResource;
 	}
 	
+	public Collection<DavResource> getAllRequestedResources() throws DavException, ServiceException {
+    	ArrayList<DavResource> rss = new ArrayList<DavResource>();
+        if (mRequestType == RequestType.RESOURCE)
+        	return UrlNamespace.getResources(this, mUser, mPath, getDepth() == Depth.one);
+        else {
+            DavResource rs = UrlNamespace.getPrincipalAtUrl(this, mUri);
+			if (rs != null) {
+				ZimbraLog.addToContext(ZimbraLog.C_NAME, rs.getOwner());
+				rss.add(rs);
+				if (getDepth() == Depth.one)
+					rss.addAll(rs.getChildren(this));
+			}
+        }
+        return rss;
+	}
+	
 	private static final String EVOLUTION = "Evolution";
 	private static final String ICAL = "DAVKit";
 	private static final String IPHONE = "iPhone";
