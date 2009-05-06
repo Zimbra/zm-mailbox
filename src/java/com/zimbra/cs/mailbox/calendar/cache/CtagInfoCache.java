@@ -24,8 +24,9 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.ZimbraMemcachedClient;
-import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
+import com.zimbra.common.util.memcached.MemcachedMap;
+import com.zimbra.common.util.memcached.MemcachedSerializer;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -36,7 +37,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
@@ -48,71 +48,32 @@ import com.zimbra.cs.zclient.ZMailbox;
 
 public class CtagInfoCache {
 
-    private static final KeyPrefix MEMCACHED_PREFIX = MemcachedKeyPrefix.CTAGINFO;
-    private ZimbraMemcachedClient mMemcachedClient;
-
-    private CtagInfo cacheGet(CalendarKey key) throws ServiceException {
-        Object value = mMemcachedClient.get(MEMCACHED_PREFIX, key.getKeyString());
-        if (value == null) return null;
-
-        String encoded = (String) value;
-        Metadata meta = new Metadata(encoded);
-        return new CtagInfo(meta);
-    }
-
-    private Map<CalendarKey, CtagInfo> cacheGetMulti(List<CalendarKey> keys) throws ServiceException {
-        int size = keys.size();
-        Map<CalendarKey, CtagInfo> result = new HashMap<CalendarKey, CtagInfo>(size);
-        Map<String, CalendarKey> keymap = new HashMap<String, CalendarKey>(size);
-        List<String> keystrs = new ArrayList<String>(size);
-        for (CalendarKey key : keys) {
-            result.put(key, null);
-            String kval = key.getKeyString();
-            keymap.put(kval, key);
-            keystrs.add(kval);
-        }
-        Map<String, Object> values = mMemcachedClient.getMulti(MEMCACHED_PREFIX, keystrs);
-        if (values != null) {
-            for (Map.Entry<String, Object> entry : values.entrySet()) {
-                String kval = entry.getKey();
-                CalendarKey ckey = keymap.get(kval);
-                if (ckey != null) {
-                    CtagInfo info = null;
-                    String encoded = (String) entry.getValue();
-                    if (encoded != null) {
-                        Metadata meta = new Metadata(encoded);
-                        info = new CtagInfo(meta);
-                    }
-                    result.put(ckey, info);
-                }
-            }
-        }
-        return result;
-    }
-
-    private void cacheRemove(CalendarKey key) {
-        mMemcachedClient.remove(MEMCACHED_PREFIX, key.getKeyString());
-    }
-
-    private boolean cacheContains(CalendarKey key) {
-        return mMemcachedClient.contains(MEMCACHED_PREFIX, key.getKeyString());
-    }
-
-    private void cachePut(CalendarKey key, CtagInfo value) {
-        String encoded = value.encodeMetadata().toString();
-        mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
-    }
+    private MemcachedMap<CalendarKey, CtagInfo> mMemcachedLookup;
 
     CtagInfoCache() {
-        mMemcachedClient = MemcachedConnector.getClient();
+        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
+        CtagInfoSerializer serializer = new CtagInfoSerializer();
+        mMemcachedLookup = new MemcachedMap<CalendarKey, CtagInfo>(memcachedClient, serializer); 
+    }
+
+    private static class CtagInfoSerializer implements MemcachedSerializer<CtagInfo> {
+        
+        public String serialize(CtagInfo value) {
+            return value.encodeMetadata().toString();
+        }
+
+        public CtagInfo deserialize(String str) throws ServiceException {
+            Metadata meta = new Metadata(str);
+            return new CtagInfo(meta);
+        }
+    }
+
+    public boolean containsKey(CalendarKey key) throws ServiceException {
+        return mMemcachedLookup.containsKey(key);
     }
 
     public CtagInfo get(CalendarKey key) throws ServiceException {
         return get(key, false);
-//        CtagInfo info = cacheGet(key);
-//        if (info == null || info.isMountpoint())
-//            info = resolve(key, info, false);
-//        return info;
     }
 
     /**
@@ -123,7 +84,7 @@ public class CtagInfoCache {
      * @throws ServiceException
      */
     private CtagInfo get(CalendarKey key, boolean wasMountpoint) throws ServiceException {
-        CtagInfo info = cacheGet(key);
+        CtagInfo info = mMemcachedLookup.get(key);
         // Always resolve mountpoint to actual calendar folder.
         if (info != null && !info.isMountpoint())
             return info;
@@ -152,7 +113,7 @@ public class CtagInfoCache {
                 }
             }
             if (needToPut)
-                cachePut(key, info);
+                mMemcachedLookup.put(key, info);
         }
         return info;
     }
@@ -171,7 +132,7 @@ public class CtagInfoCache {
         Map<CalendarKey, CtagInfo> toPut = new HashMap<CalendarKey, CtagInfo>(keys.size());
 
         // Use multi-get from cache.
-        Map<CalendarKey, CtagInfo> result = cacheGetMulti(keys);
+        Map<CalendarKey, CtagInfo> result = mMemcachedLookup.getMulti(keys);
 
         // Resolve as necessary.
         for (Map.Entry<CalendarKey, CtagInfo> entry : result.entrySet()) {
@@ -203,11 +164,7 @@ public class CtagInfoCache {
         }
 
         // Add new entries to cache.
-        for (Map.Entry<CalendarKey, CtagInfo> entry : toPut.entrySet()) {
-            CalendarKey key = entry.getKey();
-            CtagInfo info = entry.getValue();
-            cachePut(key, info);
-        }
+        mMemcachedLookup.putMulti(toPut);
 
         return result;
     }
@@ -247,22 +204,21 @@ public class CtagInfoCache {
         return calInfo;
     }
 
-    public boolean containsKey(CalendarKey key) {
-        return cacheContains(key);
-    }
-
     void purgeMailbox(Mailbox mbox) throws ServiceException {
         String accountId = mbox.getAccountId();
         List<Folder> folders = mbox.getCalendarFolders(null, SortBy.NONE);
+        List<CalendarKey> keys = new ArrayList<CalendarKey>(folders.size());
         for (Folder folder : folders) {
             CalendarKey key = new CalendarKey(accountId, folder.getId());
-            cacheRemove(key);
+            keys.add(key);
         }
+        mMemcachedLookup.removeMulti(keys);
     }
 
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (mods == null)
             return;
+        List<CalendarKey> keysToRemove = new ArrayList<CalendarKey>();
         if (mods.created != null) {
             for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
@@ -271,7 +227,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        cacheRemove(key);
+                        keysToRemove.add(key);
                     }
                 }
             }
@@ -285,7 +241,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        cacheRemove(key);
+                        keysToRemove.add(key);
                     }
                 }
             }
@@ -301,7 +257,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        cacheRemove(key);
+                        keysToRemove.add(key);
                     }
                 } else if (deletedObj instanceof Integer) {
                     // We only have item id.  Assume it's a folder id and issue a delete.
@@ -309,9 +265,14 @@ public class CtagInfoCache {
                     if (acctId == null) continue;  // just to be safe
                     int itemId = ((Integer) deletedObj).intValue();
                     CalendarKey key = new CalendarKey(acctId, itemId);
-                    cacheRemove(key);
+                    keysToRemove.add(key);
                 }
             }
+        }
+        try {
+            mMemcachedLookup.removeMulti(keysToRemove);
+        } catch (ServiceException e) {
+            ZimbraLog.calendar.warn("Unable to notify ctag info cache.  Some cached data may become stale.", e);
         }
     }
 }

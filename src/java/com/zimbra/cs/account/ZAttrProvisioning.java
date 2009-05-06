@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090505-1107 */
+    /* build: 5.0 jhahm 20090505-2310 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4380,14 +4380,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNotebookAccount = "zimbraNotebookAccount";
 
     /**
-     * The size of Wiki / Notebook folder cache on the server.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
+     * / Notebook folder cache on the server.
      */
     @ZAttr(id=370)
     public static final String A_zimbraNotebookFolderCacheSize = "zimbraNotebookFolderCacheSize";
 
     /**
-     * The maximum number of cached templates in each Wiki / Notebook folder
-     * cache.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The maximum
+     * number of cached templates in each Wiki / Notebook folder cache.
      */
     @ZAttr(id=371)
     public static final String A_zimbraNotebookMaxCachedTemplatesPerFolder = "zimbraNotebookMaxCachedTemplatesPerFolder";

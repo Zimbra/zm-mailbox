@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090505-1107 */
+    /* build: 5.0 jhahm 20090505-2310 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -7195,13 +7195,13 @@ public class ZAttrServer extends NamedEntry {
     /**
      * default timeout in milliseconds for async memcached operations
      *
-     * @return zimbraMemcachedClientTimeoutMillis, or 1000 if unset
+     * @return zimbraMemcachedClientTimeoutMillis, or 10000 if unset
      *
      * @since ZCS 5.0.17
      */
     @ZAttr(id=1018)
     public int getMemcachedClientTimeoutMillis() {
-        return getIntAttr(Provisioning.A_zimbraMemcachedClientTimeoutMillis, 1000);
+        return getIntAttr(Provisioning.A_zimbraMemcachedClientTimeoutMillis, 10000);
     }
 
     /**
@@ -8672,7 +8672,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The size of Wiki / Notebook folder cache on the server.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
+     * / Notebook folder cache on the server.
      *
      * @return zimbraNotebookFolderCacheSize, or 1024 if unset
      */
@@ -8682,7 +8683,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The size of Wiki / Notebook folder cache on the server.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
+     * / Notebook folder cache on the server.
      *
      * @param zimbraNotebookFolderCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8695,7 +8697,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The size of Wiki / Notebook folder cache on the server.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
+     * / Notebook folder cache on the server.
      *
      * @param zimbraNotebookFolderCacheSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8709,7 +8712,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The size of Wiki / Notebook folder cache on the server.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
+     * / Notebook folder cache on the server.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -8721,7 +8725,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The size of Wiki / Notebook folder cache on the server.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
+     * / Notebook folder cache on the server.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8734,8 +8739,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The maximum number of cached templates in each Wiki / Notebook folder
-     * cache.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The maximum
+     * number of cached templates in each Wiki / Notebook folder cache.
      *
      * @return zimbraNotebookMaxCachedTemplatesPerFolder, or 256 if unset
      */
@@ -8745,8 +8750,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The maximum number of cached templates in each Wiki / Notebook folder
-     * cache.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The maximum
+     * number of cached templates in each Wiki / Notebook folder cache.
      *
      * @param zimbraNotebookMaxCachedTemplatesPerFolder new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8759,8 +8764,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The maximum number of cached templates in each Wiki / Notebook folder
-     * cache.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The maximum
+     * number of cached templates in each Wiki / Notebook folder cache.
      *
      * @param zimbraNotebookMaxCachedTemplatesPerFolder new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8774,8 +8779,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The maximum number of cached templates in each Wiki / Notebook folder
-     * cache.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The maximum
+     * number of cached templates in each Wiki / Notebook folder cache.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -8787,8 +8792,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * The maximum number of cached templates in each Wiki / Notebook folder
-     * cache.
+     * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The maximum
+     * number of cached templates in each Wiki / Notebook folder cache.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
