@@ -13,11 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.util.memcached;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,21 +29,41 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 import net.spy.memcached.BinaryConnectionFactory;
 import net.spy.memcached.ConnectionFactory;
+import net.spy.memcached.ConnectionObserver;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.HashAlgorithm;
 import net.spy.memcached.MemcachedClient;
 
 public class ZimbraMemcachedClient {
 
-    public static class KeyPrefix {
-        private String mValue;
-        public KeyPrefix(String val) { mValue = val; }
-        public String toString() { return mValue; }
-        public int length() { return mValue.length(); }
+    private static class ConnObserver implements ConnectionObserver {
+        public void connectionEstablished(SocketAddress sa, int reconnectCount) {
+            if (sa instanceof InetSocketAddress) {
+                InetSocketAddress isa = (InetSocketAddress) sa;
+                String hostPort = isa.getHostName() + ":" + isa.getPort();
+                ZimbraLog.misc.info("Reconnected to memcached at " + hostPort);
+            } else {
+                ZimbraLog.misc.info("Reconnected to memcached at " + sa.toString());
+            }
+        }
+
+        public void connectionLost(SocketAddress sa) {
+            if (sa instanceof InetSocketAddress) {
+                InetSocketAddress isa = (InetSocketAddress) sa;
+                String hostPort = isa.getHostName() + ":" + isa.getPort();
+                ZimbraLog.misc.warn("Lost connection to memcached at " + hostPort);
+            } else {
+                ZimbraLog.misc.warn("Lost connection to memcached at " + sa.toString());
+            }
+        }        
     }
+
+    public static final int DEFAULT_EXPIRY = -1;
+    public static final long DEFAULT_TIMEOUT = -1;
 
     private MemcachedClient mMCDClient;
     private int mDefaultExpiry;  // in seconds
@@ -53,7 +75,7 @@ public class ZimbraMemcachedClient {
     public ZimbraMemcachedClient() {
         mMCDClient = null;
         mDefaultExpiry = 86400;
-        mDefaultTimeout = 1000;
+        mDefaultTimeout = 10000;
     }
 
     public boolean isConnected() {
@@ -92,6 +114,9 @@ public class ZimbraMemcachedClient {
                 cf = new DefaultConnectionFactory(qLen, bufSize, hashAlgo);
             try {
                 client = new MemcachedClient(cf, servers);
+                boolean added = client.addObserver(new ConnObserver());
+                if (!added)
+                    ZimbraLog.misc.error("Unable to add connection observer to memcached client");
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Unable to initialize memcached client", e);
             }
@@ -119,7 +144,7 @@ public class ZimbraMemcachedClient {
         synchronized (this) {
             client = mMCDClient;
             mMCDClient = null;
-            if (timeout == -1)
+            if (timeout == DEFAULT_TIMEOUT)
                 timeout = mDefaultTimeout;
         }
         if (client != null) {
@@ -137,22 +162,6 @@ public class ZimbraMemcachedClient {
                                 "ms; forcing immediate shutdowb");
             client.shutdown();
         }
-    }
-
-    private static final char KEY_DELIMITER = ':';
-
-    private String addPrefix(KeyPrefix prefix, String keyval) {
-        StringBuilder sb = new StringBuilder(prefix.length() + 1 + keyval.length());
-        sb.append(prefix.toString()).append(KEY_DELIMITER).append(keyval);
-        return sb.toString();
-    }
-
-    private String removePrefix(KeyPrefix prefix, String keyval) {
-        String prefixStr = prefix.toString() + KEY_DELIMITER;
-        if (keyval.startsWith(prefixStr))
-            return keyval.substring(prefixStr.length());
-        else
-            return keyval;
     }
 
     private static final int DEFAULT_PORT = 11211;
@@ -218,55 +227,31 @@ public class ZimbraMemcachedClient {
     // get
 
     /**
-     * Retrieves the value corresponding to the given key prefix and key.
+     * Retrieves the value corresponding to the given key.
      * Default timeout is used.
-     * @param prefix Rawkey = prefix + ":" + key
      * @param key
      * @return null if no value is found for the key
      */
-    public Object get(KeyPrefix prefix, String key) {
-        return getWithRawKey(addPrefix(prefix, key), -1);
+    public Object get(String key) {
+        return get(key, DEFAULT_TIMEOUT);
     }
 
     /**
-     * Retrieves the value corresponding to the given key.  The key is "raw", meaning
-     * any prefix is already contained in the key.
-     * Default timeout is used.
-     * @param rawkey
-     * @return null if no value is found for the key
-     */
-    public Object getWithRawKey(String rawkey) {
-        return getWithRawKey(rawkey, -1);
-    }
-
-    /**
-     * Retrieves the value corresponding to the given key prefix and key.
-     * @param prefix Rawkey = prefix + ":" + key
+     * Retrieves the value corresponding to the given key.
      * @param key
      * @param timeout in millis
      * @return null if no value is found for the key
      */
-    public Object get(KeyPrefix prefix, String key, long timeout) {
-        return getWithRawKey(addPrefix(prefix, key), timeout);
-    }
-
-    /**
-     * Retrieves the value corresponding to the given key.  The key is "raw", meaning
-     * any prefix is already contained in the key.
-     * @param rawkey
-     * @param timeout in millis
-     * @return null if no value is found for the key
-     */
-    public Object getWithRawKey(String rawkey, long timeout) {
+    public Object get(String key, long timeout) {
         Object value = null;
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
-            if (timeout == -1)
+            if (timeout == DEFAULT_TIMEOUT)
                 timeout = mDefaultTimeout;
         }
         if (client == null) return null;
-        Future<Object> future = client.asyncGet(rawkey);
+        Future<Object> future = client.asyncGet(key);
         try {
             value = future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
@@ -283,66 +268,35 @@ public class ZimbraMemcachedClient {
     // getMulti
 
     /**
-     * Retrieves the values corresponding to the given keys, using a common prefix.
+     * Retrieves the values corresponding to the given keys.
      * Default timeout is used.
-     * @param prefix Rawkey = prefix + ":" + key
+     * The returned map is never null and always contains an entry for every key.
+     * Null value is used for any key not found in memcached.
      * @param keys
-     * @return map of (key, value); key is without prefix; missing keys have null value
-     */
-    public Map<String, Object> getMulti(KeyPrefix prefix, List<String> keys) {
-        return getMulti(prefix, keys, -1);
-    }
-
-    /**
-     * Retrieves the values corresponding to the given keys.  The keys are "raw", meaning
-     * any prefix is already contained in the keys.
-     * Default timeout is used.
-     * @param rawkeys
      * @return map of (key, value); missing keys have null value
      */
-    public Map<String, Object> getMultiWithRawKeys(List<String> rawkeys) {
-        return getMultiWithRawKeys(rawkeys, -1);
+    public Map<String, Object> getMulti(Collection<String> keys) {
+        return getMulti(keys, DEFAULT_TIMEOUT);
     }
 
     /**
-     * Retrieves the values corresponding to the given keys, using a common prefix.
-     * @param prefix Rawkey = prefix + ":" + key
+     * Retrieves the values corresponding to the given keys.
+     * The returned map is never null and always contains an entry for every key.
+     * Null value is used for any key not found in memcached.
      * @param keys
-     * @param timeout in millis
-     * @return map of (key, value); key is without prefix; missing keys have null value
-     */
-    public Map<String, Object> getMulti(KeyPrefix prefix, List<String> keys, long timeout) {
-        List<String> rawkeys = new ArrayList<String>(keys.size());
-        for (String key : keys) {
-            rawkeys.add(addPrefix(prefix, key));
-        }
-        Map<String, Object> rawValues = getMultiWithRawKeys(rawkeys, timeout);
-        Map<String, Object> result = new HashMap<String, Object>(rawValues.size());
-        for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
-            String rawkey = entry.getKey();
-            String key = removePrefix(prefix, rawkey);
-            result.put(key, entry.getValue());
-        }
-        return result;
-    }
-
-    /**
-     * Retrieves the values corresponding to the given keys.  The keys are "raw", meaning
-     * any prefix is already contained in the keys.
-     * @param rawkeys
      * @param timeout in millis
      * @return map of (key, value); missing keys have null value
      */
-    public Map<String, Object> getMultiWithRawKeys(List<String> rawkeys, long timeout) {
+    public Map<String, Object> getMulti(Collection<String> keys, long timeout) {
         Map<String, Object> value = null;
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
-            if (timeout == -1)
+            if (timeout == DEFAULT_TIMEOUT)
                 timeout = mDefaultTimeout;
         }
         if (client != null) {
-            Future<Map<String, Object>> future = client.asyncGetBulk(rawkeys);
+            Future<Map<String, Object>> future = client.asyncGetBulk(keys);
             try {
                 value = future.get(timeout, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
@@ -354,118 +308,49 @@ public class ZimbraMemcachedClient {
                 ZimbraLog.misc.warn("ExecutionException during memcached asyncGetBulk operation", e);
             }
         }
-        if (value == null) {  // Never return null.
-            value = new HashMap<String, Object>(rawkeys.size());
-            for (String k : rawkeys) {
-                value.put(k, null);
-            }
+        // Make sure the returned map contains an entry for every key passed in.  Add null value
+        // for any keys missing from memcached response.
+        if (value == null)
+            value = new HashMap<String, Object>(keys.size());
+        for (String key : keys) {
+            if (!value.containsKey(key))
+                value.put(key, null);
         }
         return value;
-    }
-
-    // contains
-
-    /**
-     * Tests if the cache has an entry for the given prefix and key.
-     * Default timeout is used.
-     * @param prefix Rawkey = prefix + ":" + key
-     * @param key
-     * @return true if cache contains an entry for the key
-     */
-    public boolean contains(KeyPrefix prefix, String key) {
-        return containsWithRawKey(addPrefix(prefix, key), -1);
-    }
-
-    /**
-     * Tests if the cache has an entry for the given key.
-     * The key is "raw", meaning any prefix is already contained in the key.
-     * Default timeout is used.
-     * @param rawkey
-     * @return true if cache contains an entry for the key
-     */
-    public boolean containsWithRawKey(String rawkey) {
-        return containsWithRawKey(rawkey, -1);
-    }
-
-    /**
-     * Tests if the cache has an entry for the given prefix and key.
-     * @param prefix Rawkey = prefix + ":" + key
-     * @param key
-     * @param timeout in millis
-     * @return true if cache contains an entry for the key
-     */
-    public boolean contains(KeyPrefix prefix, String key, long timeout) {
-        return containsWithRawKey(addPrefix(prefix, key), timeout);
-    }
-
-    /**
-     * Tests if the cache has an entry for the given key.
-     * The key is "raw", meaning any prefix is already contained in the key.
-     * @param rawkey
-     * @param timeout in millis
-     * @return true if cache contains an entry for the key
-     */
-    public boolean containsWithRawKey(String rawkey, long timeout) {
-        Object value = getWithRawKey(rawkey, timeout);
-        return value != null;
     }
 
     // put
 
     /**
-     * Puts the prefix+key/value pair.  Default expiry and timeout are used.
-     * @param prefix Rawkey = prefix + ":" + key
-     * @param key
-     * @param value
-     * @return
-     */
-    public boolean put(KeyPrefix prefix, String key, Object value) {
-        return putWithRawKey(addPrefix(prefix, key), value, -1, -1);
-    }
-
-    /**
-     * Puts the key/value pair.  The key is "raw", meaning any prefix is already contained in the key.
+     * Puts the key/value pair.
      * Default expiry and timeout are used.
-     * @param rawkey
+     * @param key
      * @param value
      * @return
      */
-    public boolean putWithRawKey(String rawkey, Object value) {
-        return putWithRawKey(rawkey, value, -1, -1);
+    public boolean put(String key, Object value) {
+        return put(key, value, DEFAULT_EXPIRY, DEFAULT_TIMEOUT);
     }
 
     /**
-     * Puts the prefix+key/value pair.
-     * @param prefix Rawkey = prefix + ":" + key
+     * Puts the key/value pair.
      * @param key
      * @param value
      * @param expirySec expiry in seconds
      * @param timeout in millis
      * @return
      */
-    public boolean put(KeyPrefix prefix, String key, Object value, int expirySec, long timeout) {
-        return putWithRawKey(addPrefix(prefix, key), value, expirySec, timeout);
-    }
-
-    /**
-     * Puts the key/value pair.  The key is "raw", meaning any prefix is already contained in the key.
-     * @param rawkey
-     * @param value
-     * @param expirySec expiry in seconds
-     * @param timeout in millis
-     * @return
-     */
-    public boolean putWithRawKey(String rawkey, Object value, int expirySec, long timeout) {
+    public boolean put(String key, Object value, int expirySec, long timeout) {
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
-            if (expirySec == -1)
+            if (expirySec == DEFAULT_EXPIRY)
                 expirySec = mDefaultExpiry;
-            if (timeout == -1)
+            if (timeout == DEFAULT_TIMEOUT)
                 timeout = mDefaultTimeout;
         }
         if (client == null) return true;
-        Future<Boolean> future = client.set(rawkey, expirySec, value);
+        Future<Boolean> future = client.set(key, expirySec, value);
         Boolean success = null;
         try {
             success = future.get(timeout, TimeUnit.MILLISECONDS);
@@ -483,54 +368,31 @@ public class ZimbraMemcachedClient {
     // remove
 
     /**
-     * Removes the value for given prefix and key.
+     * Removes the value for given key.
      * Default timeout is used.
-     * @param prefix Rawkey = prefix + ":" + key
+     * @param key
+     * @return
+     */
+    public boolean remove(String key) {
+        return remove(key, DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * Removes the value for given key.
      * @param key
      * @param timeout in millis
      * @return
      */
-    public boolean remove(KeyPrefix prefix, String key) {
-        return removeWithRawKey(addPrefix(prefix, key), -1);
-    }
-
-    /**
-     * Removes the value for given key.  The key is "raw", meaning any prefix is already contained in the key.
-     * Default timeout is used.
-     * @param rawkey
-     * @return
-     */
-    public boolean removeWithRawKey(String rawkey) {
-        return removeWithRawKey(rawkey, -1);
-    }
-
-    /**
-     * Removes the value for given prefix and key.
-     * @param prefix Rawkey = prefix + ":" + key
-     * @param key
-     * @param timeout in millis
-     * @return
-     */
-    public boolean remove(KeyPrefix prefix, String key, long timeout) {
-        return removeWithRawKey(addPrefix(prefix, key), timeout);
-    }
-
-    /**
-     * Removes the value for given key.  The key is "raw", meaning any prefix is already contained in the key.
-     * @param rawkey
-     * @param timeout in millis
-     * @return
-     */
-    public boolean removeWithRawKey(String rawkey, long timeout) {
+    public boolean remove(String key, long timeout) {
         Boolean success = null;
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
-            if (timeout == -1)
+            if (timeout == DEFAULT_TIMEOUT)
                 timeout = mDefaultTimeout;
         }
         if (client == null) return true;
-        Future<Boolean> future = client.delete(rawkey);
+        Future<Boolean> future = client.delete(key);
         try {
             success = future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
