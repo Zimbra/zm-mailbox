@@ -87,7 +87,8 @@ public class CalendarCollection extends Collection {
 		mDavCompliance.add(Compliance.three);
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
-		mDavCompliance.add(Compliance.calendar_schedule);
+		if (ctxt.isSchedulingEnabled())
+			mDavCompliance.add(Compliance.calendar_schedule);
 
 		if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
 			addResourceType(DavElements.E_CALENDAR);
