@@ -233,12 +233,6 @@ public class LC {
     public static final KnownKey mysql_bind_address;
     public static final KnownKey mysql_port;
     public static final KnownKey mysql_root_password;
-    public static final KnownKey mysql_memory_percent;
-    public static final KnownKey mysql_innodb_log_buffer_size;
-    public static final KnownKey mysql_innodb_log_file_size;
-    public static final KnownKey mysql_sort_buffer_size;
-    public static final KnownKey mysql_read_buffer_size;
-    public static final KnownKey mysql_table_cache;
 
     public static final KnownKey derby_properties;
 
@@ -676,7 +670,6 @@ public class LC {
 
         zimbra_converter_depth_max = new KnownKey("zimbra_converter_depth_max");
         zimbra_converter_depth_max.setDefault("100");
-
         
         zimbra_ssl_enabled = new KnownKey("zimbra_ssl_enabled", "true");
         stats_img_folder = new KnownKey("stats_img_folder");
@@ -848,7 +841,6 @@ public class LC {
 
         ldap_cache_reverseproxylookup_server_maxage = new KnownKey("ldap_cache_reverseproxylookup_server_maxage", "15");
         
-
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
 
@@ -877,24 +869,6 @@ public class LC {
         mysql_root_password.setDefault("zimbra");
         mysql_root_password.setForceToEdit(true);
 
-        mysql_memory_percent = new KnownKey("mysql_memory_percent");
-        mysql_memory_percent.setDefault("40");
-
-        mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
-        mysql_innodb_log_buffer_size.setDefault("8388608");
-
-        mysql_innodb_log_file_size = new KnownKey("mysql_innodb_log_file_size");
-        mysql_innodb_log_file_size.setDefault("104857600");
-
-        mysql_sort_buffer_size = new KnownKey("mysql_sort_buffer_size");
-        mysql_sort_buffer_size.setDefault("1048576");
-
-        mysql_read_buffer_size = new KnownKey("mysql_read_buffer_size");
-        mysql_read_buffer_size.setDefault("1048576");
-
-        mysql_table_cache = new KnownKey("mysql_table_cache");
-        mysql_table_cache.setDefault("1200");
-        
         derby_properties = new KnownKey("derby_properties");
         derby_properties.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "derby.properties");
 
@@ -1292,7 +1266,6 @@ public class LC {
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
             "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
         
-        
         httpclient_connmgr_max_host_connections = new KnownKey(
                 "httpclient_connmgr_max_host_connections", 
                 "30",
@@ -1411,11 +1384,9 @@ public class LC {
         
         xmpp_dns_override = new KnownKey("xmpp_dns_override", "", "Override DNS for XMPP server, comma-separated list of entries of the form \"{domain:hostname:port}\"");         
         
-        
         zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
               
         contact_ranking_enabled = new KnownKey("contact_ranking_enabled", "true", "Enable contact ranking table");
-        
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
