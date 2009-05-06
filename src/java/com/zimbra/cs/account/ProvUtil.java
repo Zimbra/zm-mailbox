@@ -2847,6 +2847,10 @@ public class ProvUtil implements HttpDebugListener {
                     break;
                 case requiresRestart:
                     out = formatRequiresRestart(ai);
+                    /*
+                    if (out.length() == 0)
+                        out= Bug26161.removeMeAfterBug26161IsFixed(ai);
+                    */    
                     break;
                 case since:
                     BuildInfo.Version since = ai.getSince();
@@ -2872,6 +2876,7 @@ public class ProvUtil implements HttpDebugListener {
          * args when an object class is specified 
          */
         boolean mNonInheritedOnly;
+        boolean mOnThisObjectTypeOnly;
         AttributeClass mAttrClass;
         boolean mVerbose;
         
@@ -2932,12 +2937,18 @@ public class ProvUtil implements HttpDebugListener {
         System.out.println("    print attribute name of all non-inherited domain attributes, ");
         System.out.println("    that is, attributes that are on domain but not on global config"+ "\n");
         
+        /*  -only is *not* a documented option, we could expose it if we want, 
+         *  handy for engineering tasks, not as useful for users
+         *  
+        System.out.println("zmprov desc -only globalConfig");
+        System.out.println("    print attribute name of all attributes that are on global config only" + "\n");
+        */
+        
         System.out.println("zmprov desc -a zimbraId");
         System.out.println("    print attribute name, description, and all properties of attribute zimbraId\n");
 
         System.out.println("zmprov desc account -a zimbraId");
         System.out.println("    error: can only specify either an entry type or a specific attribute\n");
-
         
         usage();
     }
@@ -2957,7 +2968,11 @@ public class ProvUtil implements HttpDebugListener {
                 if (descArgs.mAttr != null)
                     throw ServiceException.INVALID_REQUEST("cannot specify -ni when -a is specified", null);
                 descArgs.mNonInheritedOnly = true;
-                
+            } else if (args[i].startsWith("-only")) {
+                if (descArgs.mAttr != null)
+                    throw ServiceException.INVALID_REQUEST("cannot specify -only when -a is specified", null);
+                descArgs.mOnThisObjectTypeOnly = true;
+
             } else if (args[i].startsWith("-a")) {
                 if (descArgs.mAttrClass != null)
                     throw ServiceException.INVALID_REQUEST("cannot specify -a when entry type is specified", null);
@@ -2982,8 +2997,8 @@ public class ProvUtil implements HttpDebugListener {
             i++;
         }
         
-        if (descArgs.mNonInheritedOnly == true && descArgs.mAttrClass == null)
-            throw ServiceException.INVALID_REQUEST("-ni must be specified with an entry type", null);
+        if ((descArgs.mNonInheritedOnly == true || descArgs.mOnThisObjectTypeOnly == true) && descArgs.mAttrClass == null)
+            throw ServiceException.INVALID_REQUEST("-ni -only must be specified with an entry type", null);
         
         return descArgs;
     }
@@ -3037,6 +3052,20 @@ public class ProvUtil implements HttpDebugListener {
                 if (netAttrs != null)
                     attrs = new TreeSet<String>(netAttrs);
             }
+            
+            if (descArgs.mOnThisObjectTypeOnly) {
+                TreeSet<String> netAttrs = new TreeSet<String>();
+                for (String attr : attrs) {
+                    AttributeInfo ai = am.getAttributeInfo(attr);
+                    Set<AttributeClass> requiredIn = ai.getRequiredIn();
+                    Set<AttributeClass> optionalIn = ai.getOptionalIn();
+                    if ((requiredIn == null || requiredIn.size() == 1) &&
+                        (optionalIn == null || optionalIn.size() == 1))
+                	netAttrs.add(attr);
+                }
+                attrs = netAttrs;
+            }
+            
         } else {
             attrs = new TreeSet<String>(am.getAllAttrs());
         }
@@ -3063,6 +3092,11 @@ public class ProvUtil implements HttpDebugListener {
             for (String attr : attrs) {
                 AttributeInfo ai = am.getAttributeInfo(attr);
                 System.out.println(attr);
+                /* for tracking progress of bug 26161
+                System.out.format("%-48s %-25s %s\n", attr, 
+                        DescribeArgs.Field.print(DescribeArgs.Field.requiresRestart, ai),
+                        DescribeArgs.Field.print(DescribeArgs.Field.deprecatedSince, ai));
+                */
                 
                 if (descArgs.mVerbose) {
                     String desc = ai.getDescription();
@@ -3739,5 +3773,6 @@ public class ProvUtil implements HttpDebugListener {
     void throwLdapOnly() throws ServiceException {
         throw ServiceException.INVALID_REQUEST(ERR_VIA_LDAP_ONLY, null);
     }
+
 }
 
