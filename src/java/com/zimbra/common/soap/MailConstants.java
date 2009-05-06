@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -40,11 +42,6 @@ public class MailConstants {
     public static final QName GET_ITEM_RESPONSE = QName.get("GetItemResponse", NAMESPACE);
     public static final QName ITEM_ACTION_REQUEST = QName.get("ItemActionRequest", NAMESPACE);
     public static final QName ITEM_ACTION_RESPONSE = QName.get("ItemActionResponse", NAMESPACE);
-    public static final QName GET_METADATA_REQUEST = QName.get("GetCustomMetadataRequest", NAMESPACE);
-    public static final QName GET_METADATA_RESPONSE = QName.get("GetCustomMetadataResponse", NAMESPACE);
-    public static final QName SET_METADATA_REQUEST = QName.get("SetCustomMetadataRequest", NAMESPACE);
-    public static final QName SET_METADATA_RESPONSE = QName.get("SetCustomMetadataResponse", NAMESPACE);
-
     // conversations
     public static final QName GET_CONV_REQUEST = QName.get("GetConvRequest", NAMESPACE);
     public static final QName GET_CONV_RESPONSE = QName.get("GetConvResponse", NAMESPACE);
@@ -60,10 +57,6 @@ public class MailConstants {
     //   SendMsg/AddMsg/SaveDraft
     public static final QName SEND_MSG_REQUEST = QName.get("SendMsgRequest", NAMESPACE);
     public static final QName SEND_MSG_RESPONSE = QName.get("SendMsgResponse", NAMESPACE);
-    public static final QName SEND_REPORT_REQUEST = QName.get("SendDeliveryReportRequest", NAMESPACE);
-    public static final QName SEND_REPORT_RESPONSE = QName.get("SendDeliveryReportResponse", NAMESPACE);
-    public static final QName SEND_SHARE_NOTIFICATION_REQUEST = QName.get("SendShareNotificationRequest", NAMESPACE);
-    public static final QName SEND_SHARE_NOTIFICATION_RESPONSE = QName.get("SendShareNotificationResponse", NAMESPACE);
     public static final QName ADD_MSG_REQUEST = QName.get("AddMsgRequest", NAMESPACE);
     public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get("SaveDraftRequest", NAMESPACE);
@@ -103,6 +96,7 @@ public class MailConstants {
     public static final QName IMPORT_CONTACTS_RESPONSE = QName.get("ImportContactsResponse", NAMESPACE);
     public static final QName EXPORT_CONTACTS_REQUEST = QName.get("ExportContactsRequest", NAMESPACE);
     public static final QName EXPORT_CONTACTS_RESPONSE = QName.get("ExportContactsResponse", NAMESPACE);
+
     public static final QName CONTACT_ACTION_REQUEST = QName.get("ContactActionRequest", NAMESPACE);
     public static final QName CONTACT_ACTION_RESPONSE = QName.get("ContactActionResponse", NAMESPACE);
     // notes
@@ -115,20 +109,12 @@ public class MailConstants {
     // sync for Outlook
     public static final QName SYNC_REQUEST = QName.get("SyncRequest", NAMESPACE);
     public static final QName SYNC_RESPONSE = QName.get("SyncResponse", NAMESPACE);
-    
-    // Filter rules - old format
+    // filter rules
     public static final QName GET_RULES_REQUEST = QName.get("GetRulesRequest", NAMESPACE);
     public static final QName GET_RULES_RESPONSE = QName.get("GetRulesResponse", NAMESPACE);
     public static final QName SAVE_RULES_REQUEST = QName.get("SaveRulesRequest", NAMESPACE);
     public static final QName SAVE_RULES_RESPONSE = QName.get("SaveRulesResponse", NAMESPACE);
-    
-    // Filter rules - new format
-    public static final QName GET_FILTER_RULES_REQUEST = QName.get("GetFilterRulesRequest", NAMESPACE);
-    public static final QName GET_FILTER_RULES_RESPONSE = QName.get("GetFilterRulesResponse", NAMESPACE);
-    public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get("ModifyFilterRulesRequest", NAMESPACE);
-    public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get("ModifyFilterRulesResponse", NAMESPACE);
-    public static final QName APPLY_FILTER_RULES_REQUEST = QName.get("ApplyFilterRulesRequest", NAMESPACE);
-    public static final QName APPLY_FILTER_RULES_RESPONSE = QName.get("ApplyFilterRulesResponse", NAMESPACE);
+
 
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
@@ -138,8 +124,6 @@ public class MailConstants {
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
     public static final QName MODIFY_APPOINTMENT_REQUEST = QName.get("ModifyAppointmentRequest", NAMESPACE);
     public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
-    public static final QName ADD_APPOINTMENT_INVITE_REQUEST = QName.get("AddAppointmentInviteRequest", NAMESPACE);
-    public static final QName ADD_APPOINTMENT_INVITE_RESPONSE = QName.get("AddAppointmentInviteResponse", NAMESPACE);
     public static final QName IMPORT_APPOINTMENTS_REQUEST = QName.get("ImportAppointmentsRequest", NAMESPACE);
     public static final QName IMPORT_APPOINTMENTS_RESPONSE = QName.get("ImportAppointmentsResponse", NAMESPACE);
 
@@ -149,8 +133,6 @@ public class MailConstants {
     public static final QName CREATE_TASK_REQUEST = QName.get("CreateTaskRequest", NAMESPACE);
     public static final QName CREATE_TASK_EXCEPTION_REQUEST = QName.get("CreateTaskExceptionRequest", NAMESPACE);
     public static final QName MODIFY_TASK_REQUEST = QName.get("ModifyTaskRequest", NAMESPACE);
-    public static final QName ADD_TASK_INVITE_REQUEST = QName.get("AddTaskInviteRequest", NAMESPACE);
-    public static final QName ADD_TASK_INVITE_RESPONSE = QName.get("AddTaskInviteResponse", NAMESPACE);
     public static final QName CANCEL_TASK_REQUEST = QName.get("CancelTaskRequest", NAMESPACE);
     public static final QName COMPLETE_TASK_INSTANCE_REQUEST = QName.get("CompleteTaskInstanceRequest", NAMESPACE);
 
@@ -227,16 +209,6 @@ public class MailConstants {
     public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
     public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
     
-    // Yahoo Auth 
-    public static final QName GET_YAHOO_COOKIE_REQUEST = QName.get("GetYahooCookieRequest", NAMESPACE);
-    public static final QName GET_YAHOO_COOKIE_RESPONSE = QName.get("GetYahooCookieResponse", NAMESPACE);
-    public static final QName GET_YAHOO_AUTH_TOKEN_REQUEST = QName.get("GetYahooAuthTokenRequest", NAMESPACE);
-    public static final QName GET_YAHOO_AUTH_TOKEN_RESPONSE = QName.get("GetYahooAuthTokenResponse", NAMESPACE);
-    
-    // autocomplete
-    public static final QName AUTO_COMPLETE_REQUEST  = QName.get("AutoCompleteRequest", NAMESPACE);
-    public static final QName AUTO_COMPLETE_RESPONSE = QName.get("AutoCompleteResponse", NAMESPACE);
-    
     
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
@@ -260,53 +232,17 @@ public class MailConstants {
     public static final String E_DESCRIPTION = "desc";
     public static final String E_VCARD = "vcard";
     public static final String E_SIGNATURE = "signature";
-    public static final String E_METADATA = "meta";
-    public static final String A_SECTION = "section";
 
-    // Old filter rules constants
+    // filter rules
     public static final String E_RULE = "r";
     public static final String E_RULES = "rules";
     public static final String E_CONDITION_GROUP = "g";
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
 
-    // Filter rules constants
-    public static final String E_FILTER_RULES = "filterRules";
-    public static final String E_FILTER_RULE = "filterRule";
-    public static final String E_FILTER_TESTS = "filterTests";
-    
-    public static final String E_HEADER_TEST = "headerTest";
-    public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
-    public static final String E_SIZE_TEST = "sizeTest";
-    public static final String E_DATE_TEST = "dateTest";
-    public static final String E_BODY_TEST = "bodyTest";
-    public static final String E_ATTACHMENT_TEST = "attachmentTest";
-    public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
-    
-    public static final String E_FILTER_ACTIONS = "filterActions";
-    public static final String E_ACTION_KEEP = "actionKeep";
-    public static final String E_ACTION_DISCARD = "actionDiscard";
-    public static final String E_ACTION_FILE_INTO = "actionFileInto";
-    public static final String E_ACTION_TAG = "actionTag";
-    public static final String E_ACTION_FLAG = "actionFlag";
-    public static final String E_ACTION_REDIRECT = "actionRedirect";
-    public static final String E_ACTION_STOP = "actionStop";
-
-    public static final String A_STRING_COMPARISON = "stringComparison";
-    public static final String A_NUMBER_COMPARISON = "numberComparison";
-    public static final String A_DATE_COMPARISON = "dateComparison";
-    public static final String A_CONDITION = "condition";
-    public static final String A_NEGATIVE = "negative";
-    public static final String A_FOLDER_PATH = "folderPath";
-    public static final String A_FLAG_NAME = "flagName";
-    public static final String A_TAG_NAME = "tagName";
-    public static final String A_INDEX = "index";
-
-    // grants and shares
+    // grants
     public static final String E_ACL = "acl";
     public static final String E_GRANT = "grant";
-    public static final String E_NOTES = "notes";
-    public static final String E_SHARE = "share";
     public static final String A_ZIMBRA_ID = "zid";
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";
@@ -317,11 +253,13 @@ public class MailConstants {
     public static final String E_ACE = "ace";
     public static final String E_RIGHT = "right";
     public static final String E_TARGET = "target";
-    public static final String A_ALLOW = "allow";
     public static final String A_DENY = "deny";
     public static final String A_RIGHT = "right";
     public static final String A_TARGET_BY = "by";
     public static final String A_TARGET_TYPE = "type";
+    public static final String A_ACCOUNT = "account";
+    public static final String A_CALENDAR_RESOURCE = "calresource";
+    public static final String A_DISTRIBUTION_LIST = "distributionlist";
 
     // email addresses
     public static final String E_EMAIL = "e";
@@ -439,7 +377,6 @@ public class MailConstants {
     public static final String A_ITEM_TYPE = "t";
     public static final String A_FIELD = "field";
     public static final String A_INCLUDE_TAG_DELETED = "includeTagDeleted"; //
-    public static final String A_ALLOWABLE_TASK_STATUS = "allowableTaskStatus";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
@@ -534,7 +471,6 @@ public class MailConstants {
     public static final String E_CAL_XPROP = "xprop";
     public static final String E_CAL_XPARAM = "xparam";
 
-    public static final String A_CAL_METHOD = "method";
     public static final String A_CAL_ALARM_DISMISSED_AT = "dismissedAt";
     public static final String A_CAL_NEXT_ALARM = "nextAlarm";
     public static final String A_CAL_NO_NEXT_ALARM = "noNextAlarm";
@@ -629,8 +565,6 @@ public class MailConstants {
 
     public static final String A_CAL_TZ_STDOFFSET = "stdoff";
     public static final String A_CAL_TZ_DAYOFFSET = "dayoff";
-    public static final String A_CAL_TZ_STDNAME = "stdname";
-    public static final String A_CAL_TZ_DAYNAME = "dayname";
     public static final String A_CAL_TZ_WEEK = "week";
     public static final String A_CAL_TZ_DAYOFWEEK = "wkday";
     public static final String A_CAL_TZ_MONTH = "mon";
@@ -650,8 +584,6 @@ public class MailConstants {
 
     public static final String E_CAL_MINICAL_DATE = "date";
 
-    public static final String A_CAL_INTENDED_FOR = "cif";
-
     // spell checking
     public static final String A_AVAILABLE = "available";
     public static final String E_MISSPELLED = "misspelled";
@@ -665,9 +597,6 @@ public class MailConstants {
     public static final String E_DS_LIVE = "live";
     public static final String E_DS_CALDAV = "caldav";
     public static final String E_DS_YAB = "yab";
-    public static final String E_DS_RSS = "rss";
-    public static final String E_DS_GAL = "gal";
-    public static final String E_DS_CAL = "cal";
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
@@ -717,7 +646,6 @@ public class MailConstants {
     public static final String E_WAITSET_UPDATE = "update";
     public static final String E_WAITSET_REMOVE = "remove";
     public static final String E_ERROR = "error";
-    public static final String A_ACCOUNT = "account";
     public static final String A_WAITSET_ID = "waitSet";
     public static final String A_SEQ = "seq";
     public static final String A_BLOCK = "block";
@@ -727,14 +655,5 @@ public class MailConstants {
     public static final String A_TYPES = "types";
     public static final String E_A = "a";
     
-    // AutoComplete
-    public static final String E_MATCH = "match";
-    public static final String A_LIMIT = "limit";
-    public static final String A_FOLDERS = "folders";
-    public static final String A_INCLUDE_GAL = "includeGal";
-    public static final String A_EMAIL = "email";
-    public static final String A_RANKING = "ranking";
-    public static final String A_CANBECACHED = "canBeCached";
-    public static final String A_DISPLAYNAME = "display";
-    public static final String A_MATCH_TYPE = "type";
+    
 }
