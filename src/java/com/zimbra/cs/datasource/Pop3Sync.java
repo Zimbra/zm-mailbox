@@ -45,7 +45,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 
 public class Pop3Sync extends MailItemImport {
     private final Pop3Connection connection;
-    private final boolean attachmentsIndexingEnabled;
+    private final boolean indexAttachments;
 
     private static final boolean DEBUG = LC.javamail_pop3_debug.booleanValue();
 
@@ -61,7 +61,7 @@ public class Pop3Sync extends MailItemImport {
     public Pop3Sync(DataSource ds) throws ServiceException {
         super(ds);
         connection = new Pop3Connection(getPop3Config(ds));
-        attachmentsIndexingEnabled = mbox.attachmentsIndexingEnabled();
+        indexAttachments = mbox.attachmentsIndexingEnabled();
     }
 
     private static Pop3Config getPop3Config(DataSource ds) {
@@ -182,28 +182,33 @@ public class Pop3Sync extends MailItemImport {
 
     private void fetchAndAddMessage(int msgno, int size, String uid)
         throws ServiceException, MessagingException, IOException {
+        MessageContent mc = null;
         try {
-            InputStream is = connection.getMessage(msgno);
-            ParsedMessage pm = new ParsedMessage(is, size, null, attachmentsIndexingEnabled);
+            mc = MessageContent.read(connection.getMessage(msgno), size);
+            ParsedMessage pm = mc.getParsedMessage(null, indexAttachments);
             Message msg = null;
-            
-            if (isOffline()) {
-                msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
-            } else {
-                Integer localId = getFirstLocalId(RuleManager.applyRulesToIncomingMessage(
-                    mbox, pm, dataSource.getEmailAddress(),
-                    new DeliveryContext(), dataSource.getFolderId()));
 
-                if (localId != null)
+            DeliveryContext dc = mc.getDeliveryContext();
+            if (isOffline()) {
+                msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD, dc);
+            } else {
+                Integer localId = getFirstLocalId(
+                    RuleManager.applyRulesToIncomingMessage(
+                        mbox, pm, dataSource.getEmailAddress(), dc, dataSource.getFolderId()));
+                if (localId != null) {
                     msg = mbox.getMessageById(null, localId);
+                }
             }
             if (msg != null && uid != null) {
                 PopMessage msgTracker = new PopMessage(dataSource, msg.getId(), uid);
-                
                 msgTracker.add();
             }
         } catch (CommandFailedException e) {
             LOG.warn("Error fetching message number %d: %s", msgno, e.getMessage());
+        } finally {
+            if (mc != null) {
+                mc.cleanup();
+            }
         }
     }
 

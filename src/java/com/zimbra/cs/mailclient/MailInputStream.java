@@ -44,13 +44,22 @@ public class MailInputStream extends InputStream {
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        if (nextByte != -1 && len > 0) {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if ((off < 0) || (off > b.length) || (len < 0) ||
+            ((off + len) > b.length) || ((off + len) < 0)) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        }
+        if (nextByte != -1) {
             b[off++] = (byte) nextByte;
             nextByte = -1;
             len = in.read(b, off, len - 1);
             return len != -1 ? len + 1 : 1;
+        } else {
+            return in.read(b, off, len);
         }
-        return in.read(b, off, len);
     }
 
     /**
@@ -80,8 +89,9 @@ public class MailInputStream extends InputStream {
             int b = nextByte;
             nextByte = -1;
             return b;
+        } else {
+            return in.read();
         }
-        return in.read();
     }
 
     /**
@@ -144,9 +154,10 @@ public class MailInputStream extends InputStream {
         }
         if (nextByte != -1) {
             nextByte = -1;
-            --n;
+            return in.skip(n - 1) + 1;
+        } else {
+            return in.skip(n);
         }
-        return in.skip(n);
     }
     
     @Override

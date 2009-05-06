@@ -59,16 +59,22 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return getDataSource().isOffline();
     }
 
+
     protected Message addMessage(OperationContext octxt, ParsedMessage pm,
                                  int folderId, int flags)
         throws ServiceException, IOException {
-        DeliveryContext context = new DeliveryContext();
+        return addMessage(octxt, pm, folderId, flags, new DeliveryContext());
+    }
+    
+    protected Message addMessage(OperationContext octxt, ParsedMessage pm,
+                                 int folderId, int flags, DeliveryContext dc)
+        throws ServiceException, IOException {
         Message msg = null;
         switch (folderId) {
         case Mailbox.ID_FOLDER_INBOX:
             try {
                 List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, 
-                    dataSource.getEmailAddress(), context, Mailbox.ID_FOLDER_INBOX);
+                    dataSource.getEmailAddress(), dc, Mailbox.ID_FOLDER_INBOX);
                 Integer newMessageId = getFirstLocalId(addedMessageIds);
                 if (newMessageId == null) {
                     return null; // Message was discarded or filed remotely

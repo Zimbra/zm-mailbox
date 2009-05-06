@@ -1007,17 +1007,21 @@ class ImapFolderSync {
         if (uid == -1) {
             throw new MailException("Missing UID in FETCH response");
         }
-        ParsedMessage pm = getBody(md);
         MessageData flagsData = flagsByUid.get(uid);
         remoteFolder.debug("Found new IMAP message with uid %d", uid);
         // Parse the message data
         Date date = md.getInternalDate();
-        Long time = date != null ? date.getTime() : null;
-        pm.initialize(time, mailbox.attachmentsIndexingEnabled());
+        Long receivedDate = date != null ? date.getTime() : null;
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
         int folderId = localFolder.getId();
-        Message msg = imapSync.addMessage(null, pm, folderId, zflags);
-
+        MessageContent mc = getContent(md);
+        Message msg;
+        try {
+            ParsedMessage pm = mc.getParsedMessage(receivedDate, mailbox.attachmentsIndexingEnabled());
+            msg = imapSync.addMessage(null, pm, folderId, zflags, mc.getDeliveryContext());
+        } finally {
+            mc.cleanup();
+        }
         if (msg != null && msg.getFolderId() == folderId) {
             storeImapMessage(uid, msg.getId(), zflags);
             stats.msgsAddedLocally++;
@@ -1032,13 +1036,13 @@ class ImapFolderSync {
         }
     }
 
-    private static ParsedMessage getBody(MessageData md) throws MailException {
+    private static MessageContent getContent(MessageData md) throws MailException {
         Body[] sections = md.getBodySections();
         if (sections == null || sections.length != 1) {
             throw new MailException(
               "Invalid body section FETCH response for uid " +  md.getUid());
         }
-        return (ParsedMessage) sections[0].getData();
+        return (MessageContent) sections[0].getData();
     }
     
     // Deletes remote messages for specified uids. Returns the UIDs that were

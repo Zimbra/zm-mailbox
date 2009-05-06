@@ -140,25 +140,16 @@ public class ParsedMessage {
         this(rawData, null, indexAttachments);
     }
 
-    /*
-     * Creates a new, uninitialized instance of ParsedMessage from the specified
-     * raw bytes. Used in IMAP import where initialization and parsing must
-     * be delayed until we've had a chance to fully read the IMAP response.
-     */
-    public ParsedMessage(byte[] rawData) throws ServiceException {
+    public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
+        throws ServiceException {
         if (rawData == null || rawData.length == 0) {
             throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
         }
         mSharedStream = new SharedByteArrayInputStream(rawData);
         mRawSize = rawData.length;
-    }
-    
-    public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
-    throws ServiceException {
-        this(rawData);
         initialize(receivedDate, indexAttachments);
     }
-
+    
     /**
      * Creates a <tt>ParsedMessage</tt> from a file already stored on disk.
      * @param file the file on disk.
@@ -176,26 +167,6 @@ public class ParsedMessage {
         if (!FileUtil.isGzipped(file)) {
             mRawSize = (int) file.length();
         }
-        initialize(receivedDate, indexAttachments);
-    }
-
-    /*
-     * Creates a new, uninitialized instance of ParsedMessage from the specified
-     * input stream. Used in IMAP import where initialization and parsing must
-     * be delayed until we've had a chance to fully read the IMAP response.
-     */
-    public ParsedMessage(InputStream in, int sizeHint) {
-        mSharedStream = in;
-    }
-
-    /**
-     * Creates a <tt>ParsedMessage</tt> from a stream.  If <tt>in</tt> is
-     * not an instance of <tt>SharedInputStream</tt>, the message content
-     * will be read into memory.
-     */
-    public ParsedMessage(InputStream in, int sizeHint, Long receivedDate, boolean indexAttachments)
-    throws ServiceException {
-        this(in, sizeHint);
         initialize(receivedDate, indexAttachments);
     }
 
