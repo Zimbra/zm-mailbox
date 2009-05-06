@@ -505,15 +505,17 @@ public class TarFormatter extends Formatter {
             (name = mi.getName()).length() == 0 &&
             (name = mi.getSubject()).length() == 0)
             name = MailItem.getNameForType(mi) + '-' + mi.getId();
-        else if (name.length() > 127)
-            name = name.substring(0, 126);
+        else if (name.length() > 121)
+            name = name.substring(0, 120);
+        if (mi.isTagged(Flag.ID_FLAG_VERSIONED))
+            name += String.format("-%05d", mi.getVersion());
         name = ILLEGAL_FILE_CHARS.matcher(name).replaceAll("_").trim();
         while (name.endsWith("."))
             name = name.substring(0, name.length() - 1).trim();
         do {
             path = fldr.equals("") ? name : fldr + '/' + name;
             if (counter > 0)
-                path += "-" + counter;
+                path += String.format("-%02d", counter);
             if (ext != null)
                 path += '.' + ext;
             counter++;

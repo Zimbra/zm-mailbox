@@ -44,12 +44,13 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.ItemData;
 
 public class ItemDataFile {
-    public static void create(String path, OutputStream os) throws IOException {
-        create(path, null, "UTF-8", os);
+    public static void create(String path, OutputStream os, boolean verbose)
+        throws IOException {
+        create(path, null, "UTF-8", os, verbose);
     }
 
     public static void create(String path, byte[] types, String cset,
-        OutputStream os) throws IOException {
+        OutputStream os, boolean verbose) throws IOException {
         File f = new File(path);
         TarOutputStream tos = new TarOutputStream(new GZIPOutputStream(os),
             cset == null ? "UTF-8" : cset);
@@ -57,20 +58,20 @@ public class ItemDataFile {
         tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
         try {
             if (f.isDirectory())
-                addDir(f, f.getPath(), types, tos);
+                addDir(f, f.getPath(), types, tos, verbose);
             else
-                addFile(f, f.getParent(), types, tos);
+                addFile(f, f.getParent(), types, tos, verbose);
         } finally {
             tos.close();
         }
     }
     
-    public static void extract(InputStream is) throws IOException {
-        extract(is, true, null, null, "UTF-8");
+    public static void extract(InputStream is, boolean verbose) throws IOException {
+        extract(is, true, null, null, "UTF-8", verbose);
     }
     
     public static void extract(InputStream is, boolean meta, byte[] types,
-        String cset, String dir) throws IOException {
+        String cset, String dir, boolean verbose) throws IOException {
         byte[] buf = new byte[TarBuffer.DEFAULT_BLKSIZE];
         TarEntry te;
         TarInputStream tis = new TarInputStream(new GZIPInputStream(is),
@@ -91,12 +92,14 @@ public class ItemDataFile {
                 if (te.getName().endsWith(".meta")) {
                     if (!meta)
                         continue;
+                    System.out.println(f);
                     out = new FileOutputStream(f);
                     ItemData id = new ItemData(getData(tis, te));
                     out.write(id.encode(2).getBytes("UTF-8"));
                 } else {
                     int in;
                     
+                    System.out.println(f);
                     out = new FileOutputStream(f);
                     while ((in = tis.read(buf)) != -1)
                         out.write(buf, 0, in);
@@ -173,8 +176,8 @@ public class ItemDataFile {
         return true;
     }
     
-    static void addDir(File f, String topdir, byte[] types, TarOutputStream tos)
-        throws IOException {
+    static void addDir(File f, String topdir, byte[] types, TarOutputStream tos,
+        boolean verbose) throws IOException {
         String path = f.getPath();
         String[] all = f.list();
         List<File>dirs = new ArrayList<File>();
@@ -185,7 +188,7 @@ public class ItemDataFile {
             File subf = new File(path + File.separator + file);
       
             if (subf.getName().equals("Tags") && path.equals(topdir)) {
-                addDir(subf, topdir, types, tos);
+                addDir(subf, topdir, types, tos, verbose);
             } else if (subf.isDirectory()) {
                 dirs.add(subf);
             } else if (subf.getName().endsWith(".meta")) {
@@ -199,17 +202,18 @@ public class ItemDataFile {
             }
         }
         for (File file : files)
-            addFile(file, topdir, types, tos);
+            addFile(file, topdir, types, tos, verbose);
         for (File dir : dirs)
-            addDir(dir, topdir, types, tos);
+            addDir(dir, topdir, types, tos, verbose);
     }
 
-    static void addFile(File f, String topdir, byte[] types, TarOutputStream tos)
-        throws IOException {
+    static void addFile(File f, String topdir, byte[] types, TarOutputStream tos,
+        boolean verbose) throws IOException {
         ItemData id = null;
         String path = f.getPath();
         File mf = new File(path + ".meta");
         TarEntry te;
+        byte type;
     
         if (path.indexOf(topdir) == 0)
             path = path.substring(topdir.length() + 1);
@@ -222,32 +226,54 @@ public class ItemDataFile {
                throw new IOException("meta read err: " + f.getPath());
             fis.close();
             id = new ItemData(meta);
-            if (skip(types, id.ud.type))
+            type = id.ud.type;
+            if (skip(types, type))
                 return;
             te = new TarEntry(path + ".meta");
+            System.out.println(te.getName());
             te.setGroupName(MailItem.getNameForType(id.ud.type));
             te.setMajorDeviceId(id.ud.type);
             te.setModTime(mf.lastModified());
             te.setSize(meta.length);
             tos.putNextEntry(te);
             tos.write(meta);
+            tos.closeEntry();
+        } else {
+            if (path.endsWith(".csv") || path.endsWith(".vcf")) {
+                type = MailItem.TYPE_CONTACT;
+            } else if (path.endsWith(".eml")) {
+                type = MailItem.TYPE_MESSAGE;
+            } else if (path.endsWith(".ics")) {
+                if (path.startsWith("Tasks/")) {
+                    type = MailItem.TYPE_TASK;
+                } else {
+                    type = MailItem.TYPE_APPOINTMENT;
+                }
+            } else if (path.endsWith(".wiki")) {
+                type = MailItem.TYPE_WIKI;
+            } else {
+                type = MailItem.TYPE_DOCUMENT;
+            }
+            if (skip(types, type))
+                return;
         }
         if (f.exists() && !f.isDirectory() && (id != null || types == null)) {
             byte[] buf = new byte[TarBuffer.DEFAULT_BLKSIZE];
             FileInputStream fis = new FileInputStream(f);
             int in;
             
-            te = new TarEntry(path + ".meta");
+            te = new TarEntry(path);
+            System.out.println(te.getName());
             te.setGroupName(MailItem.getNameForType(id.ud.type));
             te.setMajorDeviceId(id.ud.type);
             te.setModTime(mf.lastModified());
             te.setSize(f.length());
             tos.putNextEntry(te);
-            if ((in = fis.read(buf)) > 0)
+            while ((in = fis.read(buf)) > 0)
                 tos.write(buf, 0, in);
             fis.close();
+            tos.closeEntry();
         }
-        tos.closeEntry();
     }
 
     private static void usage(Options opts) {
@@ -260,6 +286,7 @@ public class ItemDataFile {
         String cset = null;
         Options opts = new Options();
         CommandLineParser parser = new GnuParser();
+        boolean verbose = false;
 
         opts.addOption("a", "assemble", false, "assemble backup");
         opts.addOption("c", "charset", true, "path charset");
@@ -268,6 +295,7 @@ public class ItemDataFile {
         opts.addOption("n", "nometa", false, "ignore metadata");
         opts.addOption("p", "path", true, "extracted backup path");
         opts.addOption("t", "types", true, "item types");
+        opts.addOption("v", "verbose", false, "verbose");
         ZimbraLog.toolSetupLog4j("ERROR", null);
         try {
             CommandLine cl = parser.parse(opts, args);
@@ -286,11 +314,13 @@ public class ItemDataFile {
                 types = MailboxIndex.parseTypesString(cl.getOptionValue('t'));
             if (cl.getArgs().length != 1)
                 usage(opts);
+            if (cl.hasOption('v'))
+                verbose = true;
             file = cl.getArgs()[0];
             if (cl.hasOption('a'))
-                create(path, types, cset, new FileOutputStream(file));
+                create(path, types, cset, new FileOutputStream(file), verbose);
             else if (cl.hasOption('e'))
-                extract(new FileInputStream(file), meta, types, cset, path);
+                extract(new FileInputStream(file), meta, types, cset, path, verbose);
             else if (cl.hasOption('l'))
                 list(file.equals("-") ? System.in : new FileInputStream(file),
                     types, cset, System.out);
