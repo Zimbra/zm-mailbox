@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.dav;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -62,6 +63,14 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.version_control, "version-control");
 		sComplianceStrMap.put(Compliance.calendar_proxy, "calendar-proxy");
 		sComplianceStrMap.put(Compliance.calendarserver_principal_property_search, "calendarserver-principal-property-search");
+	}
+	
+	public static Compliance[] COMPLIANCES = {
+		Compliance.one, Compliance.two, Compliance.three, Compliance.calendar_access, Compliance.access_control
+	};
+	
+	public static String getDefaultComplianceString() {
+		return getComplianceString(Arrays.asList(COMPLIANCES));
 	}
 	
 	public static String getComplianceString(Collection<Compliance> comp) {

@@ -30,9 +30,9 @@ public class Options extends DavMethod {
 		return OPTIONS;
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
-		addComplianceHeader(ctxt, ctxt.getRequestedResource());
 		HttpServletResponse resp = ctxt.getResponse();
 		DavServlet.setAllowHeader(resp);
 		resp.setContentLength(0);
+		sendResponse(ctxt);
 	}
 }

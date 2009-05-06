@@ -89,6 +89,7 @@ public class DavContext {
     private RequestType mRequestType;
     private String mCollectionPath;
     private RequestProp mResponseProp;
+    private String mDavCompliance;
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
@@ -207,6 +208,7 @@ public class DavContext {
 		mAuthAccount = authUser;
 		mOpCtxt = new OperationContext(authUser);
 		mOpCtxt.setUserAgent(req.getHeader("User-Agent"));
+		mDavCompliance = DavProtocol.getDefaultComplianceString();
 	}
 	
 	/* Returns HttpServletRequest object containing the current DAV request. */
@@ -470,7 +472,8 @@ public class DavContext {
 		}
 	}
 
-    public boolean isGzipAccepted() {
+    @SuppressWarnings("unchecked")
+	public boolean isGzipAccepted() {
         Enumeration acceptEncHdrs = mReq.getHeaders(DavProtocol.HEADER_ACCEPT_ENCODING);
         while (acceptEncHdrs.hasMoreElements()) {
             String acceptEnc = (String) acceptEncHdrs.nextElement();
@@ -480,4 +483,12 @@ public class DavContext {
         }
 	    return false;
 	}
+    
+    public void setDavCompliance(String comp) {
+    	mDavCompliance = comp;
+    }
+    
+    public String getDavCompliance() {
+    	return mDavCompliance;
+    }
 }

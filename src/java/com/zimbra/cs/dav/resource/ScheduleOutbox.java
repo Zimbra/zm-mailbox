@@ -224,6 +224,7 @@ public class ScheduleOutbox extends Collection {
         } catch (ServiceException e) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.1");
+            return;
         }
         resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
         resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");

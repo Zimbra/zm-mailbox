@@ -29,7 +29,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.resource.DavResource;
 
 /**
  * Base class for DAV methods.
@@ -57,18 +56,14 @@ public abstract class DavMethod {
 	
 	protected static final int STATUS_OK = HttpServletResponse.SC_OK;
 	
-	protected void addComplianceHeader(DavContext ctxt, DavResource rs) throws IOException {
-		HttpServletResponse resp = ctxt.getResponse();
-		String comp = DavProtocol.getComplianceString(rs.getComplianceList());
-		if (comp != null)
-			resp.setHeader(DavProtocol.HEADER_DAV, comp);
-	}
-	
 	protected void sendResponse(DavContext ctxt) throws IOException {
 		if (ctxt.isResponseSent())
 			return;
 		HttpServletResponse resp = ctxt.getResponse();
 		resp.setStatus(ctxt.getStatus());
+		String compliance = ctxt.getDavCompliance();
+		if (compliance != null)
+			resp.setHeader(DavProtocol.HEADER_DAV, compliance);
 		if (ctxt.hasResponseMessage()) {
 			resp.setContentType(DavProtocol.DAV_CONTENT_TYPE);
 			DavResponse respMsg = ctxt.getDavResponse();

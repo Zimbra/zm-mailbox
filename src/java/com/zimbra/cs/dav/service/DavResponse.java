@@ -127,6 +127,7 @@ public class DavResponse {
 	 */
 	public void addResource(DavContext ctxt, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+		ctxt.setDavCompliance(DavProtocol.getComplianceString(rs.getComplianceList()));
 		Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		addResourceTo(ctxt, resp, rs, props, includeChildren);
 		
@@ -168,9 +169,13 @@ public class DavResponse {
 	
 	public void addResources(DavContext ctxt, Collection<DavResource> rss, DavContext.RequestProp props) throws DavException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+		boolean first = true;
 		for (DavResource rs : rss) {
+			if (first)
+				ctxt.setDavCompliance(DavProtocol.getComplianceString(rs.getComplianceList()));
 			Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 			addResourceTo(ctxt, resp, rs, props, false);
+			first = false;
 		}
 	}
 	
