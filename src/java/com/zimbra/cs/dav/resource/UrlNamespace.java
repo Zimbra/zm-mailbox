@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -122,15 +123,15 @@ public class UrlNamespace {
             Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
             if (a == null)
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
-            return new User(a, url);
+            return new User(ctxt, a, url);
         } catch (ServiceException se) {
             throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
         }
     }
     
-    public static DavResource getPrincipal(Account acct) throws DavException {
+    public static DavResource getPrincipal(DavContext ctxt, Account acct) throws DavException {
         try {
-            return new User(acct, getPrincipalUrl(acct.getName()));
+            return new User(ctxt, acct, getPrincipalUrl(acct.getName()));
         } catch (ServiceException se) {
             throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
         }
@@ -168,6 +169,7 @@ public class UrlNamespace {
 		    } catch (ServiceException se) {
 		    	if (path.length() == 1 && path.charAt(0) == '/' && se.getCode().equals(ServiceException.PERM_DENIED)) {
 		    		// return the list of folders the authUser has access to
+		            ctxt.setCollectionPath("/");
 		    		try {
 						return getFolders(ctxt, user);
 					} catch (ServiceException e) {

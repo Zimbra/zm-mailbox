@@ -81,16 +81,17 @@ public class AclReports extends Report {
 			Element match = ps.element(DavElements.E_MATCH);
 			if (prop != null && match != null) {
 				Element e = (Element)prop.elements().get(0);
-				ret.addAll(getMatchingPrincipals(ctxt.getAuthAccount(), e.getQName(), match.getText()));
+				ret.addAll(getMatchingPrincipals(ctxt, e.getQName(), match.getText()));
 			}
 		}
 		
 		return ret;
 	}
 	
-	private ArrayList<DavResource> getMatchingPrincipals(Account authAccount, QName prop, String match) throws DavException, ServiceException {
+	private ArrayList<DavResource> getMatchingPrincipals(DavContext ctxt, QName prop, String match) throws DavException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
+		Account authAccount = ctxt.getAuthAccount();
 		if (prop.equals(DavElements.E_EMAIL_ADDRESS_SET)) {
 	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, Provisioning.GalMode.zimbra, null);
 	        for (GalContact ct : result.getMatches()) {
@@ -98,7 +99,7 @@ public class AclReports extends Report {
 	            if (email != null) {
 	            	Account acct = prov.get(Provisioning.AccountBy.name, email);
 	            	if (acct != null)
-	            		ret.add(UrlNamespace.getPrincipal(acct));
+	            		ret.add(UrlNamespace.getPrincipal(ctxt, acct));
 	            }
 	        }
 		} else if (prop.equals(DavElements.E_CALENDAR_HOME_SET)) {
@@ -107,7 +108,7 @@ public class AclReports extends Report {
 				match = match.substring(index+1);
 			Account acct = prov.get(Provisioning.AccountBy.name, match);
 			if (acct != null)
-        		ret.add(UrlNamespace.getPrincipal(acct));
+        		ret.add(UrlNamespace.getPrincipal(ctxt, acct));
 		}
 		return ret;
 	}
@@ -130,7 +131,7 @@ public class AclReports extends Report {
 			if (ace.hasHref()) {
 				Account acct = prov.get(Provisioning.AccountBy.id, ace.getZimbraId());
 				if (acct != null)
-					ret.add(UrlNamespace.getPrincipal(acct));
+					ret.add(UrlNamespace.getPrincipal(ctxt, acct));
 			}
 		}
 		return ret;
@@ -147,7 +148,7 @@ public class AclReports extends Report {
 			// request must be to the principals path
 			String path = ctxt.getUri();
 			if (path.startsWith(UrlNamespace.PRINCIPALS_PATH))
-				ret.add(UrlNamespace.getPrincipal(ctxt.getAuthAccount()));
+				ret.add(UrlNamespace.getPrincipal(ctxt, ctxt.getAuthAccount()));
 		} else {
 			// we know of only <owner/> element
 			Element owner = principalProp.element(DavElements.E_OWNER);

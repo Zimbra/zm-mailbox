@@ -49,17 +49,19 @@ import com.zimbra.cs.zclient.ZMailbox;
 
 public class User extends Principal {
 
-    public User(Account account, String url) throws ServiceException {
+    public User(DavContext ctxt, Account account, String url) throws ServiceException {
     	super(account, url);
     	mAccount = account;
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarHomeSet(user));
-        addProperty(CalDavProperty.getScheduleInboxURL(user));
-        addProperty(CalDavProperty.getScheduleOutboxURL(user));
-        addProperty(CalDavProperty.getCalendarUserType(this));
-        addProperty(VersioningProperty.getSupportedReportSet());
-        addProperty(new CalendarProxyReadFor(mAccount));
-        addProperty(new CalendarProxyWriteFor(mAccount));
+        if (ctxt.getAuthAccount().equals(account)) {
+            addProperty(CalDavProperty.getScheduleInboxURL(user));
+            addProperty(CalDavProperty.getScheduleOutboxURL(user));
+            addProperty(CalDavProperty.getCalendarUserType(this));
+            addProperty(VersioningProperty.getSupportedReportSet());
+            addProperty(new CalendarProxyReadFor(mAccount));
+            addProperty(new CalendarProxyWriteFor(mAccount));
+        }
 		addProperty(Acl.getPrincipalUrl(this));
         ArrayList<String> addrs = new ArrayList<String>();
         for (String addr : account.getMailDeliveryAddress())
