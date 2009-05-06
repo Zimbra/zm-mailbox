@@ -89,7 +89,8 @@ public class CalendarCollection extends Collection {
 		mDavCompliance.add(Compliance.three);
 		mDavCompliance.add(Compliance.access_control);
 		mDavCompliance.add(Compliance.calendar_access);
-		mDavCompliance.add(Compliance.calendar_schedule);
+		if (ctxt.isSchedulingEnabled())
+			mDavCompliance.add(Compliance.calendar_schedule);
 
 		addResourceType(DavElements.E_CALENDAR);
 		

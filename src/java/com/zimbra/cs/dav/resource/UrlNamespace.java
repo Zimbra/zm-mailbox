@@ -468,9 +468,9 @@ public class UrlNamespace {
 			case MailItem.TYPE_FOLDER :
 				Folder f = (Folder) item;
 				viewType = f.getDefaultView();
-				if (f.getId() == Mailbox.ID_FOLDER_INBOX)
+				if (f.getId() == Mailbox.ID_FOLDER_INBOX && ctxt.isSchedulingEnabled())
 					resource = new ScheduleInbox(ctxt, f);
-				else if (f.getId() == Mailbox.ID_FOLDER_SENT)
+				else if (f.getId() == Mailbox.ID_FOLDER_SENT && ctxt.isSchedulingEnabled())
 					resource = new ScheduleOutbox(ctxt, f);
 				else if (viewType == MailItem.TYPE_APPOINTMENT ||
 						viewType == MailItem.TYPE_TASK)
