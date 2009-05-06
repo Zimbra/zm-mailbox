@@ -15,13 +15,12 @@
 
 package com.zimbra.cs.memcached;
 
-import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
-
 // list of all memcached key prefixes used by ZCS
 public class MemcachedKeyPrefix {
 
-    public static final KeyPrefix CALENDAR_LIST        = new KeyPrefix("zmCalsList");
-    public static final KeyPrefix CTAGINFO             = new KeyPrefix("zmCtagInfo");
-    public static final KeyPrefix CALDAV_CTAG_RESPONSE = new KeyPrefix("zmCtagResp");
+    private static final String DELIMITER = ":";
 
+    public static final String CALENDAR_LIST        = "zmCalsList" + DELIMITER;
+    public static final String CTAGINFO             = "zmCtagInfo" + DELIMITER;
+    public static final String CALDAV_CTAG_RESPONSE = "zmCtagResp" + DELIMITER;
 }

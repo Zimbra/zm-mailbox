@@ -15,8 +15,11 @@
 
 package com.zimbra.cs.mailbox.calendar.cache;
 
+import com.zimbra.common.util.memcached.MemcachedKey;
+import com.zimbra.cs.memcached.MemcachedKeyPrefix;
+
 // cache key for an account
-public class AccountKey {
+public class AccountKey implements MemcachedKey {
     private String mAccountId;
 
     public AccountKey(String accountId) {
@@ -37,5 +40,7 @@ public class AccountKey {
         return mAccountId.hashCode();
     }
 
-    public String getKeyString() { return mAccountId; }
+    // MemcachedKey interface
+    public String getKeyPrefix() { return MemcachedKeyPrefix.CALENDAR_LIST; }
+    public String getKeyValue() { return mAccountId; }
 }

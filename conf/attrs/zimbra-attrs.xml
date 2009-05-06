@@ -3731,7 +3731,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1018" name="zimbraMemcachedClientTimeoutMillis" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
-  <globalConfigValue>1000</globalConfigValue>
+  <globalConfigValue>10000</globalConfigValue>
   <desc>default timeout in milliseconds for async memcached operations</desc>
 </attr>
 

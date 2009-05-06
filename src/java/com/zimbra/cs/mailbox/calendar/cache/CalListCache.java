@@ -22,15 +22,15 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.ZimbraMemcachedClient;
-import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
+import com.zimbra.common.util.memcached.MemcachedMap;
+import com.zimbra.common.util.memcached.MemcachedSerializer;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -38,38 +38,28 @@ import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public class CalListCache {
 
-    private static final KeyPrefix MEMCACHED_PREFIX = MemcachedKeyPrefix.CALENDAR_LIST;
-    private ZimbraMemcachedClient mMemcachedClient;
-
-    private CalList cacheGet(AccountKey key) throws ServiceException {
-        Object value = mMemcachedClient.get(MEMCACHED_PREFIX, key.getKeyString());
-        if (value == null) return null;
-
-        String encoded = (String) value;
-        Metadata meta = new Metadata(encoded);
-        return new CalList(meta);
-    }
-
-    private void cacheRemove(AccountKey key) {
-        mMemcachedClient.remove(MEMCACHED_PREFIX, key.getKeyString());
-    }
-
-    @SuppressWarnings("unused")
-    private boolean cacheContains(AccountKey key) {
-        return mMemcachedClient.contains(MEMCACHED_PREFIX, key.getKeyString());
-    }
-
-    private void cachePut(AccountKey key, CalList value) {
-        String encoded = value.encodeMetadata().toString();
-        mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
-    }
+    private MemcachedMap<AccountKey, CalList> mMemcachedLookup;
 
     CalListCache() {
-        mMemcachedClient = MemcachedConnector.getClient();
+        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
+        CalListSerializer serializer = new CalListSerializer();
+        mMemcachedLookup = new MemcachedMap<AccountKey, CalList>(memcachedClient, serializer); 
+    }
+
+    private static class CalListSerializer implements MemcachedSerializer<CalList> {
+        
+        public String serialize(CalList value) {
+            return value.encodeMetadata().toString();
+        }
+
+        public CalList deserialize(String str) throws ServiceException {
+            Metadata meta = new Metadata(str);
+            return new CalList(meta);
+        }
     }
 
     public CalList get(AccountKey key) throws ServiceException{
-        CalList list = cacheGet(key);
+        CalList list = mMemcachedLookup.get(key);
         if (list != null) return list;
 
         // Not currently in the cache.  Get it the hard way.
@@ -84,41 +74,41 @@ public class CalListCache {
             idset.add(calFolder.getId());
         }
         list = new CalList(idset);
-        cachePut(key, list);
+        mMemcachedLookup.put(key, list);
         return list;
     }
 
     private void addCalendar(AccountKey key, int calFolderId) throws ServiceException {
-        CalList list = cacheGet(key);
+        CalList list = mMemcachedLookup.get(key);
         if (list != null && !list.contains(calFolderId)) {
             CalList newList = new CalList(list);
             newList.add(calFolderId);
-            cachePut(key, newList);
+            mMemcachedLookup.put(key, newList);
         }
     }
 
     // Remove a calendar from account's calendar list.
     private void removeCalendar(AccountKey key, int calFolderId) throws ServiceException {
-        CalList list = cacheGet(key);
+        CalList list = mMemcachedLookup.get(key);
         if (list != null && list.contains(calFolderId)) {
             CalList newList = new CalList(list);
             newList.remove(calFolderId);
-            cachePut(key, newList);
+            mMemcachedLookup.put(key, newList);
         }
     }
 
     private void touchCalendar(AccountKey key, int calFolderId) throws ServiceException {
-        CalList list = cacheGet(key);
+        CalList list = mMemcachedLookup.get(key);
         if (list != null && list.contains(calFolderId)) {
             CalList newList = new CalList(list);
             newList.incrementSeq();
-            cachePut(key, newList);
+            mMemcachedLookup.put(key, newList);
         }
     }
 
-    void purgeMailbox(Mailbox mbox) {
+    void purgeMailbox(Mailbox mbox) throws ServiceException {
         AccountKey key = new AccountKey(mbox.getAccountId());
-        cacheRemove(key);
+        mMemcachedLookup.remove(key);
     }
 
     void notifyCommittedChanges(PendingModifications mods, int changeId) {

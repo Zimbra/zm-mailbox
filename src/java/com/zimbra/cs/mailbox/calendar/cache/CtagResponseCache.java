@@ -1,3 +1,18 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2009 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.io.UnsupportedEncodingException;
@@ -5,8 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraMemcachedClient;
-import com.zimbra.common.util.ZimbraMemcachedClient.KeyPrefix;
+import com.zimbra.common.util.memcached.MemcachedKey;
+import com.zimbra.common.util.memcached.MemcachedMap;
+import com.zimbra.common.util.memcached.MemcachedSerializer;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 import com.zimbra.cs.memcached.MemcachedConnector;
@@ -15,15 +32,29 @@ import com.zimbra.cs.memcached.MemcachedConnector;
 // caches responses for PROPFIND-ctag requests
 public class CtagResponseCache {
 
-    private static final KeyPrefix MEMCACHED_PREFIX = MemcachedKeyPrefix.CALDAV_CTAG_RESPONSE;
-    private ZimbraMemcachedClient mMemcachedClient;
+    private MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue> mMemcachedLookup;
 
     CtagResponseCache() {
-        mMemcachedClient = MemcachedConnector.getClient();
+        ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
+        CtagResponseSerializer serializer = new CtagResponseSerializer();
+        mMemcachedLookup =
+            new MemcachedMap<CtagResponseCacheKey, CtagResponseCacheValue>(memcachedClient, serializer); 
+    }
+
+    private static class CtagResponseSerializer implements MemcachedSerializer<CtagResponseCacheValue> {
+        
+        public String serialize(CtagResponseCacheValue value) throws ServiceException {
+            return value.encodeMetadata().toString();
+        }
+
+        public CtagResponseCacheValue deserialize(String str) throws ServiceException {
+            Metadata meta = new Metadata(str);
+            return new CtagResponseCacheValue(meta);
+        }
     }
 
     // CTAG response cache key is account + client (User-Agent) + root folder
-    public static class CtagResponseCacheKey {
+    public static class CtagResponseCacheKey implements MemcachedKey {
         private String mAccountId;
         private String mUserAgent;
         private int mRootFolderId;
@@ -52,7 +83,9 @@ public class CtagResponseCache {
             return mKeyVal.hashCode();
         }
 
-        public String getKeyString() { return mKeyVal; }
+        // MemcachedKey interface
+        public String getKeyPrefix() { return MemcachedKeyPrefix.CALDAV_CTAG_RESPONSE; }
+        public String getKeyValue() { return mKeyVal; }
     }
 
     public static class CtagResponseCacheValue {
@@ -145,25 +178,11 @@ public class CtagResponseCache {
         }
     }
 
-    private CtagResponseCacheValue cacheGet(CtagResponseCacheKey key) throws ServiceException {
-        Object value = mMemcachedClient.get(MEMCACHED_PREFIX, key.getKeyString());
-        if (value == null) return null;
-
-        String encoded = (String) value;
-        Metadata meta = new Metadata(encoded);
-        return new CtagResponseCacheValue(meta);
-    }
-
-    private void cachePut(CtagResponseCacheKey key, CtagResponseCacheValue value) throws ServiceException {
-        String encoded = value.encodeMetadata().toString();
-        mMemcachedClient.put(MEMCACHED_PREFIX, key.getKeyString(), encoded);
-    }
-
     public CtagResponseCacheValue get(CtagResponseCacheKey key) throws ServiceException {
-        return cacheGet(key);
+        return mMemcachedLookup.get(key);
     }
 
     public void put(CtagResponseCacheKey key, CtagResponseCacheValue value) throws ServiceException {
-        cachePut(key, value);
+        mMemcachedLookup.put(key, value);
     }
 }
