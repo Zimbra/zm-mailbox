@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 
 public class ScheduleInbox extends Collection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -51,6 +52,8 @@ public class ScheduleInbox extends Collection {
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
+		mCtag = CtagInfo.makeCtag(f);
+		setProperty(DavElements.E_GETCTAG, mCtag);
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return getChildren(ctxt, null);
@@ -64,6 +67,7 @@ public class ScheduleInbox extends Collection {
 		}
 	}
 
+	private String mCtag;
 	protected static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 	
 	protected java.util.Collection<DavResource> getScheduleMessages(DavContext ctxt, java.util.Collection<String> hrefs) throws ServiceException, DavException {
