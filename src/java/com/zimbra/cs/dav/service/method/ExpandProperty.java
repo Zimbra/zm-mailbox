@@ -59,6 +59,7 @@ public class ExpandProperty extends Report {
 			throw new DavException("msg "+query.getName()+" is not expand-property", HttpServletResponse.SC_BAD_REQUEST, null);
 
 		DavResource rs = ctxt.getRequestedResource();
+		ctxt.setDavCompliance(DavProtocol.getComplianceString(rs.getComplianceList()));
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element resp = ctxt.getDavResponse().getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		expandProperties(ctxt, rs, query, resp);
