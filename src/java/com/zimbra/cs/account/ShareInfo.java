@@ -789,10 +789,13 @@ public class ShareInfo {
 
         
         private boolean matches(ACL.Grant grant, NamedEntry publishingOnEntry) throws ServiceException {
-            String granteeId = grant.getGranteeId();
+            String granteeId = grant.getGranteeId();  // note: granteeId can be null if this is a pub or all grant!
             byte granteeType = grant.getGranteeType();
             
             if (publishingOnEntry instanceof DistributionList) {
+                if (granteeType != ACL.GRANTEE_GROUP || granteeId == null)
+                    return false;
+                    
                 return (granteeId.equals(publishingOnEntry.getId()) ||
                         Provisioning.getInstance().inDistributionList((DistributionList)publishingOnEntry, granteeId));
             } else
