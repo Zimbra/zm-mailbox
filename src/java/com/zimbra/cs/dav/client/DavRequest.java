@@ -34,7 +34,7 @@ import com.zimbra.cs.dav.DavElements;
 
 public class DavRequest {
 	
-	private DavRequest(String uri, String method) {
+	public DavRequest(String uri, String method) {
 		mUri = uri;
 		mMethod = method;
 		mDepth = Depth.zero;
