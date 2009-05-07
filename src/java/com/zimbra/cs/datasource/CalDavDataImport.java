@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -155,6 +156,7 @@ public class CalDavDataImport extends MailItemImport {
     	public RemoteCalendarItem(String h, String e) { href = h; etag = e; }
     	String href;
     	String etag;
+    	int itemId;
     }
     
     protected int getRootFolderId(DataSource ds) throws ServiceException {
@@ -361,25 +363,31 @@ public class CalDavDataImport extends MailItemImport {
     		ret.add(new RemoteCalendarItem(a.href, a.etag));
     		allItems.remove(a.href);
     	}
+    	ArrayList<Integer> deletedIds = new ArrayList<Integer>();
     	for (DataSourceItem deletedItem : allItems.values()) {
     		// what's left in the collection are previous mapping that has disappeared.
     		// we need to delete the appointments that are mapped locally.
 			RemoteCalendarItem rci = new RemoteCalendarItem(deletedItem.remoteId, null);
 			rci.status = Status.deleted;
+			rci.itemId = deletedItem.itemId;
     		ret.add(rci);
+    		deletedIds.add(deletedItem.itemId);
+    		ZimbraLog.datasource.debug("deleting: %d (%s) ", deletedItem.itemId, deletedItem.remoteId);
     	}
+    	if (!deletedIds.isEmpty())
+    		DbDataSource.deleteMappings(ds, deletedIds);
     	return ret;
     }
     private MailItem applyRemoteItem(RemoteItem remoteItem, Folder where) throws ServiceException, IOException {
     	if (!(remoteItem instanceof RemoteCalendarItem)) {
-    		ZimbraLog.datasource.warn("applyRemoteItem: note a calendar item: ", remoteItem);
+    		ZimbraLog.datasource.warn("applyRemoteItem: note a calendar item: %s", remoteItem);
     		return null;
     	}
     	RemoteCalendarItem item = (RemoteCalendarItem) remoteItem;
     	DataSource ds = getDataSource();
     	DataSourceItem dsItem = DbDataSource.getReverseMapping(ds, item.href);
     	boolean isStale = false;
-    	if (dsItem.md == null) {
+    	if (dsItem.md == null && item.status != Status.deleted) {
     		dsItem.md = new Metadata();
     		dsItem.md.put(METADATA_KEY_TYPE, METADATA_TYPE_APPOINTMENT);
     	}
@@ -399,10 +407,18 @@ public class CalDavDataImport extends MailItemImport {
     	}
     	OperationContext octxt = new Mailbox.OperationContext(mbox);
     	MailItem mi = null;
-    	if (isStale && item.status == Status.deleted) {
+    	if (item.status == Status.deleted) {
         	ZimbraLog.datasource.debug("Deleting appointment %s", item.href);
-        	mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
-        	mbox.delete(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
+        	try {
+            	mi = mbox.getItemById(octxt, item.itemId, MailItem.TYPE_UNKNOWN);
+        	} catch (NoSuchItemException se) {
+        		mi = null;
+        	}
+        	try {
+            	mbox.delete(octxt, item.itemId, MailItem.TYPE_UNKNOWN);
+        	} catch (ServiceException se) {
+        		ZimbraLog.datasource.warn("Error deleting remotely deleted item %d (%s)", item.itemId, dsItem.remoteId);
+        	}
     	} else if (isStale) {
         	ZimbraLog.datasource.debug("Updating stale appointment %s", item.href);
     		ZCalendar.ZVCalendar vcalendar;
@@ -450,7 +466,14 @@ public class CalDavDataImport extends MailItemImport {
     		DbDataSource.addMapping(ds, dsItem);
     	} else {
         	ZimbraLog.datasource.debug("Appointment up to date %s", item.href);
-    		mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
+        	try {
+        		mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
+        	} catch (NoSuchItemException se) {
+        		// item not found.  delete the mapping so it can be downloaded again if needed.
+            	ArrayList<Integer> deletedIds = new ArrayList<Integer>();
+            	deletedIds.add(dsItem.itemId);
+            	DbDataSource.deleteMappings(ds, deletedIds);
+        	}
     	}
     	return mi;
     }
