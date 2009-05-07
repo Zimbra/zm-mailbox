@@ -36,7 +36,7 @@ public class FileStore {
     private static final int FILE_GROUP_BITS = 8;
     private static final int FILE_BITS = 12;
 
-    private static final int CURRENT_VERSION = 1;
+    private static final int CURRENT_VERSION = 2;
     private static final String FN_VERSION = "ver";
     private static final String FN_CALDATA = "calData";
     private static final String FN_MODSEQ = "modSeq";

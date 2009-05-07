@@ -49,10 +49,26 @@ public class FullInstanceData extends InstanceData {
     private List<ZAttendee> mAttendees;
     private Boolean mHasAlarm;
 
+    // attachment flag
+    private Boolean mHasAttachment;
+
     // summary/location/fragment
     private String mSummary;
     private String mLocation;
     private String mFragment;
+
+    // description
+    // mDesc is the plain text description.
+    // mDescHtml is the HTML version of the description.
+    // mDescInMeta tells if the description values are in metadata or blob file.  This applies to
+    // both mDesc and mDescHtml.
+    // If mDescInMeta is false, mDesc and mDescHtml are set to null.
+    // If mDescInMeta is true, mDesc and mDescHtml have the value but one or both can still be null
+    // depending on what data was present in the original calendar component.  Both will be null in
+    // a simple appointment with no meeting notes.
+    private String mDesc;
+    private String mDescHtml;
+    private Boolean mDescInMeta;
 
     // time/recurrence
     private Boolean mIsAllDay;
@@ -81,10 +97,14 @@ public class FullInstanceData extends InstanceData {
     public Integer getNumAttendees()      { return mNumAttendees; }
     public List<ZAttendee> getAttendees() { return mAttendees; }
     public Boolean hasAlarm()             { return mHasAlarm; }
+    public Boolean hasAttachment()        { return mHasAttachment; }
 
     public String getSummary()     { return mSummary; }
     public String getLocation()    { return mLocation; }
     public String getFragment()    { return mFragment; }
+    public Boolean descInMeta()    { return mDescInMeta; }
+    public String getDesc()        { return mDesc; }
+    public String getDescHtml()    { return mDescHtml; }
 
     public Boolean isAllDay() { return mIsAllDay; }
 
@@ -110,22 +130,25 @@ public class FullInstanceData extends InstanceData {
             String partStat, String freeBusyActual, String percentComplete,
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
-            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees, Boolean hasAlarm,
-            String summary, String location, String fragment,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
+            Boolean hasAlarm, Boolean hasAttachment,
+            String summary, String location, String fragment, Boolean descInMeta, String desc, String descHtml,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         super(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
         init(invId, compNum, recurrenceId, sequence, dtStamp,
-             organizer, isOrganizer, attendees, hasAlarm, summary, location, fragment,
+             organizer, isOrganizer, attendees, hasAlarm, hasAttachment,
+             summary, location, fragment, descInMeta, desc, descHtml,
              isAllDay, status, priority, classProp, freeBusyIntended, transparency, categories, geo);
     }
 
     private void init(
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
-            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees, Boolean hasAlarm,
-            String summary, String location, String fragment,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
+            Boolean hasAlarm, Boolean hasAttachment,
+            String summary, String location, String fragment, Boolean descInMeta, String desc, String descHtml,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
@@ -135,8 +158,9 @@ public class FullInstanceData extends InstanceData {
         mOrganizer = organizer; mIsOrganizer = isOrganizer;
         mAttendees = attendees;
         mNumAttendees = attendees != null ? (Integer) attendees.size() : null;
-        mHasAlarm = hasAlarm;
+        mHasAlarm = hasAlarm; mHasAttachment = hasAttachment;
         mSummary = summary; mLocation = location; mFragment = fragment;
+        mDescInMeta = descInMeta; mDesc = desc; mDescHtml = descHtml;
         mIsAllDay = isAllDay;
         mStatus = status; mPriority = priority; mClassProp = classProp;
         mFreeBusyIntended = freeBusyIntended; mTransparency = transparency;
@@ -152,34 +176,28 @@ public class FullInstanceData extends InstanceData {
         super(recurIdZ, dtStart, duration, alarmAt,
               dtStart != null ? Util.getTZOffsetForInvite(inv, dtStart) : null,
               partStat, freeBusyActual, inv.getPercentComplete());
-        mInvId = inv.getMailItemId();
-        mCompNum = inv.getComponentNum();
+        long recurId = 0;
         if (inv.hasRecurId()) {
             RecurId rid = inv.getRecurId();
             ParsedDateTime ridDt = rid.getDt();
-            mRecurrenceId = ridDt.getUtcTime();
+            recurId = ridDt.getUtcTime();
         }
-        mSequence = inv.getSeqNo();
-        mDtStamp = inv.getDTStamp();
-        if (inv.hasOrganizer())
-            mOrganizer = inv.getOrganizer();
-        mIsOrganizer = inv.isOrganizer();
-        if (inv.hasOtherAttendees()) {
-            mAttendees = inv.getAttendees();
-            mNumAttendees = mAttendees.size();
+        List<ZAttendee> attendees = null;
+        if (inv.hasOtherAttendees())
+            attendees = inv.getAttendees();
+        String desc = null, descHtml = null;
+        boolean descInMeta = inv.descInMeta();
+        if (descInMeta) {
+            // Important: Call Invite.getDescription[Html]() only when descInMeta is true.
+            // Otherwise, this will cause expensive file read and MIME parsing.
+            desc = inv.getDescription();
+            descHtml = inv.getDescriptionHtml();
         }
-        mHasAlarm = inv.hasAlarm();
-        mSummary = inv.getName();
-        mLocation = inv.getLocation();
-        mFragment = inv.getFragment();
-        mIsAllDay = inv.isAllDayEvent();
-        mStatus = inv.getStatus();
-        mPriority = inv.getPriority();
-        mClassProp = inv.getClassProp();
-        mFreeBusyIntended = inv.getFreeBusy();
-        mTransparency = inv.getTransparency();
-        mCategories = inv.getCategories();
-        mGeo = inv.getGeo();
+        init(inv.getMailItemId(), inv.getComponentNum(), recurId, inv.getSeqNo(), inv.getDTStamp(),
+             inv.getOrganizer(), inv.isOrganizer(), attendees, inv.hasAlarm(), inv.hasAttachment(),
+             inv.getName(), inv.getLocation(), inv.getFragment(), descInMeta, desc, descHtml,
+             inv.isAllDayEvent(), inv.getStatus(), inv.getPriority(), inv.getClassProp(),
+             inv.getFreeBusy(), inv.getTransparency(), inv.getCategories(), inv.getGeo());
         clearUnchangedFields(defaultInstance);
     }
 
@@ -194,12 +212,20 @@ public class FullInstanceData extends InstanceData {
                 mNumAttendees = null;
             if (Util.sameValues(mHasAlarm, other.hasAlarm()))
             	mHasAlarm = null;
+            if (Util.sameValues(mHasAttachment, other.hasAttachment()))
+                mHasAttachment = null;
             if (Util.sameValues(mSummary, other.getSummary()))
                  mSummary = null;
             if (Util.sameValues(mLocation, other.getLocation()))
                 mLocation = null;
             if (Util.sameValues(mFragment, other.getFragment()))
                 mFragment = null;
+            if (Util.sameValues(mDescInMeta, other.descInMeta()))
+                mDescInMeta = null;
+            if (Util.sameValues(mDesc, other.getDesc()))
+                mDesc = null;
+            if (Util.sameValues(mDescHtml, other.getDescHtml()))
+                mDescHtml = null;
             if (Util.sameValues(mIsAllDay, other.isAllDay()))
                 mIsAllDay = null;
             if (Util.sameValues(mStatus, other.getStatus()))
@@ -230,9 +256,13 @@ public class FullInstanceData extends InstanceData {
     private static final String FN_NUM_ATTENDEES = "numAt";
     private static final String FN_ATTENDEE = "at";
     private static final String FN_HAS_ALARM = "ha";
+    private static final String FN_HAS_ATTACHMENT = "hAttach";
     private static final String FN_SUMMARY = "summ";
     private static final String FN_LOCATION = "loc";
     private static final String FN_FRAGMENT = "fr";
+    private static final String FN_DESC_IN_META    = "dinM";
+    private static final String FN_DESC            = "desc";
+    private static final String FN_DESC_HTML       = "descH";
     private static final String FN_IS_ALLDAY = "allDay";
     private static final String FN_STATUS = "status";
     private static final String FN_PRIORITY = "prio";
@@ -275,10 +305,18 @@ public class FullInstanceData extends InstanceData {
         Boolean hasAlarm = null;
         if (meta.containsKey(FN_HAS_ALARM))
         	hasAlarm = new Boolean(meta.getBool(FN_HAS_ALARM));
+        Boolean hasAttachment = null;
+        if (meta.containsKey(FN_HAS_ATTACHMENT))
+            hasAttachment = new Boolean(meta.getBool(FN_HAS_ATTACHMENT));
 
         String summary = meta.get(FN_SUMMARY, null);
         String location = meta.get(FN_LOCATION, null);
         String fragment = meta.get(FN_FRAGMENT, null);
+        Boolean descInMeta = null;
+        if (meta.containsKey(FN_DESC_IN_META))
+            descInMeta = new Boolean(meta.getBool(FN_DESC_IN_META));
+        String desc = meta.get(FN_DESC, null);
+        String descHtml = meta.get(FN_DESC_HTML, null);
 
         Boolean isAllDay = null;
         if (meta.containsKey(FN_IS_ALLDAY))
@@ -305,9 +343,9 @@ public class FullInstanceData extends InstanceData {
         if (metaGeo != null)
             geo = Geo.decodeMetadata(metaGeo);
 
-        init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees, hasAlarm,
-             summary, location, fragment, isAllDay,
-             status, priority, classProp, fb, transp, categories, geo);
+        init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees, hasAlarm, hasAttachment,
+             summary, location, fragment, descInMeta, desc, descHtml,
+             isAllDay, status, priority, classProp, fb, transp, categories, geo);
     }
 
     Metadata encodeMetadata() {
@@ -334,10 +372,16 @@ public class FullInstanceData extends InstanceData {
         }
         if (mHasAlarm != null)
         	meta.put(FN_HAS_ALARM, mHasAlarm.booleanValue());
+        if (mHasAttachment != null)
+            meta.put(FN_HAS_ATTACHMENT, mHasAttachment.booleanValue());
 
         meta.put(FN_SUMMARY, mSummary);
         meta.put(FN_LOCATION, mLocation);
         meta.put(FN_FRAGMENT, mFragment);
+        if (mDescInMeta != null)
+            meta.put(FN_DESC_IN_META, mDescInMeta.booleanValue());
+        meta.put(FN_DESC, mDesc);
+        meta.put(FN_DESC_HTML, mDescHtml);
 
         if (mIsAllDay != null)
             meta.put(FN_IS_ALLDAY, mIsAllDay.booleanValue());
