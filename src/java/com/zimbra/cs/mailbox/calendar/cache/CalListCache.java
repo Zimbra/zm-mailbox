@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.mailbox.calendar.cache;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
@@ -70,6 +72,7 @@ public class CalListCache {
         }
         List<Folder> calFolders = mbox.getCalendarFolders(null, SortBy.NONE);
         Set<Integer> idset = new HashSet<Integer>(calFolders.size());
+        idset.add(Mailbox.ID_FOLDER_INBOX);  // Inbox is always included for scheduling support.
         for (Folder calFolder : calFolders) {
             idset.add(calFolder.getId());
         }
@@ -78,107 +81,145 @@ public class CalListCache {
         return list;
     }
 
-    private void addCalendar(AccountKey key, int calFolderId) throws ServiceException {
-        CalList list = mMemcachedLookup.get(key);
-        if (list != null && !list.contains(calFolderId)) {
-            CalList newList = new CalList(list);
-            newList.add(calFolderId);
-            mMemcachedLookup.put(key, newList);
-        }
-    }
-
-    // Remove a calendar from account's calendar list.
-    private void removeCalendar(AccountKey key, int calFolderId) throws ServiceException {
-        CalList list = mMemcachedLookup.get(key);
-        if (list != null && list.contains(calFolderId)) {
-            CalList newList = new CalList(list);
-            newList.remove(calFolderId);
-            mMemcachedLookup.put(key, newList);
-        }
-    }
-
-    private void touchCalendar(AccountKey key, int calFolderId) throws ServiceException {
-        CalList list = mMemcachedLookup.get(key);
-        if (list != null && list.contains(calFolderId)) {
-            CalList newList = new CalList(list);
-            newList.incrementSeq();
-            mMemcachedLookup.put(key, newList);
-        }
-    }
-
     void purgeMailbox(Mailbox mbox) throws ServiceException {
         AccountKey key = new AccountKey(mbox.getAccountId());
         mMemcachedLookup.remove(key);
     }
 
+    private static class ChangedFolders {
+        public Set<Integer> created = new HashSet<Integer>();
+        public Set<Integer> modified = new HashSet<Integer>();
+        public Set<Integer> deleted = new HashSet<Integer>();
+
+        public boolean isEmpty() {
+            return created.isEmpty() && modified.isEmpty() && deleted.isEmpty();
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private static class ChangeMap extends HashMap<String /* account id */, ChangedFolders> {
+        public ChangeMap(int capacity) {
+            super(capacity);
+        }
+
+        public ChangedFolders getAccount(String accountId) {
+            ChangedFolders cf = get(accountId);
+            if (cf == null) {
+                cf = new ChangedFolders();
+                put(accountId, cf);
+            }
+            return cf;
+        }
+    }
+
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
-        if (mods == null)
-            return;
+        ChangeMap changeMap = new ChangeMap(1);
+        if (mods.created != null) {
+            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
+                MailItem item = entry.getValue();
+                if (item instanceof Folder) {
+                    Folder folder = (Folder) item;
+                    byte viewType = folder.getDefaultView();
+                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                        ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
+                        changedFolders.created.add(folder.getId());
+                    }
+                }
+            }
+        }
+        if (mods.modified != null) {
+            for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
+                Change change = entry.getValue();
+                Object whatChanged = change.what;
+                if (whatChanged instanceof Folder) {
+                    Folder folder = (Folder) whatChanged;
+                    byte viewType = folder.getDefaultView();
+                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                        ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
+                        int folderId = folder.getId();
+                        if ((change.why & Change.MODIFIED_FOLDER) != 0) {
+                            // moving the calendar folder to another parent folder
+                            int parentFolder = folder.getFolderId();
+                            changedFolders.created.add(folderId);
+                            if (parentFolder == Mailbox.ID_FOLDER_TRASH)
+                                changedFolders.deleted.add(folderId);
+                            else
+                                changedFolders.created.add(folderId);
+                        } else {
+                            // not a folder move, but something else changed, either calendar's metadata
+                            // or a child item (appointment/task)
+                            changedFolders.modified.add(folderId);
+                        }
+                    }
+                } else if (whatChanged instanceof Message) {
+                    Message msg = (Message) whatChanged;
+                    if (msg.hasCalendarItemInfos()) {
+                        if (msg.getFolderId() == Mailbox.ID_FOLDER_INBOX || (change.why & Change.MODIFIED_FOLDER) != 0) {
+                            // If message was moved, we don't know which folder it was moved from.
+                            // Just invalidate the Inbox because that's the only message folder we care
+                            // about in calendaring.
+                            ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
+                            changedFolders.modified.add(Mailbox.ID_FOLDER_INBOX);
+                        }
+                    }
+                }
+            }
+        }
+        if (mods.deleted != null) {
+            // This code gets called even for non-calendar items, for example it's called for every email
+            // being emptied from Trash.  But there's no way to short circuit out of here because the delete
+            // notification doesn't tell us the item type of what's being deleted.  Oh well.
+            for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
+                Object deletedObj = entry.getValue();
+                if (deletedObj instanceof Folder) {
+                    Folder folder = (Folder) deletedObj;
+                    byte viewType = folder.getDefaultView();
+                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                        ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
+                        changedFolders.deleted.add(folder.getId());
+                    }
+                } else if (deletedObj instanceof Integer) {
+                    // We only have item id.  Let's just assume it's a calendar folder id and check
+                    // against the cached list.
+                    ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
+                    int itemId = ((Integer) deletedObj).intValue();
+                    changedFolders.deleted.add(itemId);
+                }
+                // Let's not worry about hard deletes of invite/reply emails.  It has no practical benefit.
+                // Besides, when deletedObj is an Integer, we can't tell if it's a calendaring Message.
+            }
+        }
+
         try {
-            if (mods.created != null) {
-                for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                    MailItem item = entry.getValue();
-                    if (item instanceof Folder) {
-                        Folder folder = (Folder) item;
-                        byte viewType = folder.getDefaultView();
-                        if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
-                            AccountKey key = new AccountKey(folder.getMailbox().getAccountId());
-                            addCalendar(key, folder.getId());
+            for (Map.Entry<String, ChangedFolders> entry : changeMap.entrySet()) {
+                ChangedFolders changedFolders = entry.getValue();
+                if (changedFolders.isEmpty()) continue;
+                String accountId = entry.getKey();
+                AccountKey key = new AccountKey(accountId);
+                CalList list = mMemcachedLookup.get(key);
+                if (list != null) {
+                    boolean updated = false;
+                    CalList newList = new CalList(list);
+                    for (Integer folderId : changedFolders.created) {
+                        if (!list.contains(folderId)) {
+                            updated = true;
+                            newList.add(folderId);
                         }
                     }
-                }
-            }
-            if (mods.modified != null) {
-                for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
-                    Change change = entry.getValue();
-                    Object whatChanged = change.what;
-                    if (whatChanged instanceof Folder) {
-                        Folder folder = (Folder) whatChanged;
-                        byte viewType = folder.getDefaultView();
-                        if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
-                            AccountKey key = new AccountKey(folder.getMailbox().getAccountId());
-                            int folderId = folder.getId();
-                            if ((change.why & Change.MODIFIED_FOLDER) != 0) {
-                                // moving the calendar folder to another parent folder
-                                int parentFolder = folder.getFolderId();
-                                if (parentFolder == Mailbox.ID_FOLDER_TRASH)
-                                    removeCalendar(key, folderId);
-                                else
-                                    addCalendar(key, folderId);
-                            } else {
-                                // not a folder move, but something else changed, either calendar's metadata
-                                // or a child item (appointment/task)
-                                touchCalendar(key, folderId);
-                            }
+                    for (Integer folderId : changedFolders.modified) {
+                        if (list.contains(folderId))
+                            updated = true;
+                    }
+                    for (Integer folderId : changedFolders.deleted) {
+                        if (list.contains(folderId)) {
+                            updated = true;
+                            newList.remove(folderId);
                         }
                     }
-                }
-            }
-            if (mods.deleted != null) {
-                // This code gets called even for non-calendar items, for example it's called for every email
-                // being emptied from Trash.  But there's no way to short circuit out of here because the delete
-                // notification doesn't tell us the item type of what's being deleted.  Oh well.
-                CtagInfoCache infoCache = CalendarCacheManager.getInstance().getCtagCache();
-                for (Map.Entry<ModificationKey, Object> entry : mods.deleted.entrySet()) {
-                    Object deletedObj = entry.getValue();
-                    if (deletedObj instanceof Folder) {
-                        Folder folder = (Folder) deletedObj;
-                        byte viewType = folder.getDefaultView();
-                        if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
-                            AccountKey key = new AccountKey(folder.getMailbox().getAccountId());
-                            removeCalendar(key, folder.getId());
-                        }
-                    } else if (deletedObj instanceof Integer) {
-                        // We only have item id.  Consult the calendar info cache to see if we're dealing with
-                        // a calendar folder.
-                        String acctId = entry.getKey().getAccountId();
-                        if (acctId == null) continue;  // just to be safe
-                        int itemId = ((Integer) deletedObj).intValue();
-                        CalendarKey calkey = new CalendarKey(acctId, itemId);
-                        if (infoCache.containsKey(calkey)) {
-                            AccountKey key = new AccountKey(acctId);
-                            removeCalendar(key, itemId);
-                        }
+                    // There was a change.  Increment the version and put back to cache.
+                    if (updated) {
+                        newList.incrementSeq();
+                        mMemcachedLookup.put(key, newList);
                     }
                 }
             }
