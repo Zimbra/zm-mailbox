@@ -37,6 +37,8 @@ public class Principal extends DavResource {
     	super(mainUrl, user);
         if (!mainUrl.endsWith("/")) mainUrl = mainUrl + "/";
         setProperty(DavElements.E_HREF, mainUrl);
+		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
+		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
         addResourceType(DavElements.E_PRINCIPAL);
         mUri = mainUrl;
     }

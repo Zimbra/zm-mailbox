@@ -175,7 +175,7 @@ public class AclReports extends Report {
 	}
 
 	private static void addSearchProperty(QName prop, String desc) {
-		Element elem = DocumentHelper.createElement(prop);
+		Element elem = DocumentHelper.createElement(DavElements.E_DESCRIPTION);
 		elem.addAttribute(DavElements.E_LANG, DavElements.LANG_EN_US);
 		elem.setText(desc);
 		PRINCIPAL_SEARCH_PROPERTIES.add(new Pair<QName,Element>(prop, elem));
@@ -185,6 +185,7 @@ public class AclReports extends Report {
 		if (ctxt.getDepth() != DavContext.Depth.zero)
 			throw new DavException("non-zero depth", HttpServletResponse.SC_BAD_REQUEST);
 		Element response = ctxt.getDavResponse().getTop(DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET);
+		ctxt.setStatus(HttpServletResponse.SC_OK);
 		for (Pair<QName,Element> prop : PRINCIPAL_SEARCH_PROPERTIES) {
 			Element searchProp = response.addElement(DavElements.E_PRINCIPAL_SEARCH_PROPERTY);
 			searchProp.addElement(DavElements.E_PROP).addElement(prop.getFirst());
