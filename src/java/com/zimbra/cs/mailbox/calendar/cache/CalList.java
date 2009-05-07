@@ -86,22 +86,20 @@ public class CalList {
         setVersion();
     }
 
-    public void add(int calFolderId) {
+    void add(int calFolderId) {
         mCalendars.add(calFolderId);
-        incrementSeq();
     }
 
-    public void remove(int calFolderId) {
+    void remove(int calFolderId) {
         mCalendars.remove(calFolderId);
-        incrementSeq();
     }
 
-    public void incrementSeq() {
+    void incrementSeq() {
         ++mVerSeq;
         setVersion();
     }
 
-    public boolean contains(int calFolderId) {
+    boolean contains(int calFolderId) {
         return mCalendars.contains(calFolderId);
     }
 

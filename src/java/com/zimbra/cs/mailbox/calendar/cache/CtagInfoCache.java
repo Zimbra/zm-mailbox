@@ -17,8 +17,10 @@ package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -36,6 +38,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.util.ItemId;
@@ -216,9 +219,8 @@ public class CtagInfoCache {
     }
 
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
-        if (mods == null)
-            return;
-        List<CalendarKey> keysToRemove = new ArrayList<CalendarKey>();
+        int inboxFolder = Mailbox.ID_FOLDER_INBOX;
+        Set<CalendarKey> keysToInvalidate = new HashSet<CalendarKey>();
         if (mods.created != null) {
             for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
@@ -227,7 +229,13 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToRemove.add(key);
+                        keysToInvalidate.add(key);
+                    }
+                } else if (item instanceof Message) {
+                    Message msg = (Message) item;
+                    if (msg.hasCalendarItemInfos() && msg.getFolderId() == inboxFolder) {
+                        CalendarKey key = new CalendarKey(msg.getMailbox().getAccountId(), inboxFolder);
+                        keysToInvalidate.add(key);
                     }
                 }
             }
@@ -241,7 +249,18 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToRemove.add(key);
+                        keysToInvalidate.add(key);
+                    }
+                } else if (whatChanged instanceof Message) {
+                    Message msg = (Message) whatChanged;
+                    if (msg.hasCalendarItemInfos()) {
+                        if (msg.getFolderId() == inboxFolder || (change.why & Change.MODIFIED_FOLDER) != 0) {
+                            // If message was moved, we don't know which folder it was moved from.
+                            // Just invalidate the Inbox because that's the only message folder we care
+                            // about in calendaring.
+                            CalendarKey key = new CalendarKey(msg.getMailbox().getAccountId(), inboxFolder);
+                            keysToInvalidate.add(key);
+                        }
                     }
                 }
             }
@@ -257,7 +276,7 @@ public class CtagInfoCache {
                     byte viewType = folder.getDefaultView();
                     if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToRemove.add(key);
+                        keysToInvalidate.add(key);
                     }
                 } else if (deletedObj instanceof Integer) {
                     // We only have item id.  Assume it's a folder id and issue a delete.
@@ -265,12 +284,14 @@ public class CtagInfoCache {
                     if (acctId == null) continue;  // just to be safe
                     int itemId = ((Integer) deletedObj).intValue();
                     CalendarKey key = new CalendarKey(acctId, itemId);
-                    keysToRemove.add(key);
+                    keysToInvalidate.add(key);
                 }
+                // Let's not worry about hard deletes of invite/reply emails.  It has no practical benefit.
+                // Besides, when deletedObj is an Integer, we can't tell if it's a calendaring Message.
             }
         }
         try {
-            mMemcachedLookup.removeMulti(keysToRemove);
+            mMemcachedLookup.removeMulti(keysToInvalidate);
         } catch (ServiceException e) {
             ZimbraLog.calendar.warn("Unable to notify ctag info cache.  Some cached data may become stale.", e);
         }

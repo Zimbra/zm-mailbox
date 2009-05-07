@@ -643,8 +643,6 @@ public class CalSummaryCache {
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
-        if (mods == null)
-            return;
         if (mods.created != null) {
             for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
