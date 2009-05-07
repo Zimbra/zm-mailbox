@@ -17,8 +17,9 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.util.Arrays;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -41,6 +43,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -51,7 +54,6 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
@@ -74,6 +76,8 @@ public class MailSender {
 
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
+    
+    private List<String> mSmtpHosts = null;
 
     public MailSender()  { }
 
@@ -195,8 +199,6 @@ public class MailSender {
                                   boolean skipSendAsCheck)
     throws ServiceException {
         try {
-            logMessage(mm, origMsgId, uploads, replyType);
-            
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
             boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
@@ -273,13 +275,16 @@ public class MailSender {
                 rollback[1] = new RollbackData(msg);
             }
 
-            // Apply SMTP session settings from the account and domain.
+            // Apply SMTP session settings from the account and domain.  We do this here
+            // because we can't assume that the callsite passed in the domain when creating
+            // the FixedMimeMessage.
             if (mm instanceof FixedMimeMessage) {
                 ((FixedMimeMessage) mm).setSession(JMSession.getSmtpSession(acct));
             }
+            logMessage(mm, origMsgId, uploads, replyType);
 
             // actually send the message via SMTP
-            Collection<Address> sentAddresses = sendMessage(mm, ignoreFailedAddresses, rollback);
+            Collection<Address> sentAddresses = sendMessage(mbox, mm, ignoreFailedAddresses, rollback);
         	Collection<InternetAddress> newContacts = null;
 
             if (!sentAddresses.isEmpty() && octxt != null) {
@@ -355,7 +360,7 @@ public class MailSender {
             throw ServiceException.FAILURE("Unable to send message", ioe);
         } catch (MessagingException me) {
             Exception chained = me.getNextException();
-            if (chained instanceof ConnectException) {
+            if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
                 throw MailServiceException.TRY_AGAIN("Unable to connect to the MTA", chained);
             } else {
                 throw ServiceException.FAILURE("Unable to send message", me);
@@ -521,24 +526,37 @@ public class MailSender {
      * returns a Collection of successfully sent recipient Addresses
      */
     @SuppressWarnings("unused")
-    protected Collection<Address> sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
-    throws SafeMessagingException, IOException {
+    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
+    throws SafeMessagingException, IOException  {
         // send the message via SMTP
     	HashSet<Address> sentAddresses = new HashSet<Address>();
         try {
             Address[] rcptAddresses = mm.getAllRecipients();
             while (rcptAddresses != null && rcptAddresses.length > 0) {
-            	try {
+                try {
                     Transport.send(mm, rcptAddresses);
                     sentAddresses.addAll(Arrays.asList(rcptAddresses));
                     break;
                 } catch (SendFailedException sfe) {
-                	if (!ignoreFailedAddresses)
-                		throw sfe;
+                    if (!ignoreFailedAddresses)
+                        throw sfe;
                     rcptAddresses = sfe.getValidUnsentAddresses();
                     Address[] sent = sfe.getValidSentAddresses();
                     if (sent != null && sent.length > 0)
                         sentAddresses.addAll(Arrays.asList(sent));
+                } catch (MessagingException e) {
+                    Exception chained = e.getNextException(); 
+                    if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
+                        ZimbraLog.smtp.warn("Unable to connect to SMTP server: %s.", chained.toString());
+                        if (!(mm instanceof FixedMimeMessage)) {
+                            ZimbraLog.smtp.warn("SMTP retry not supported for %s.", mm.getClass().getName());
+                            throw e;
+                        }
+                        String newHost = updateSmtpHost((FixedMimeMessage) mm, mbox, e);
+                        ZimbraLog.smtp.info("Attempting to send to %s.", newHost);
+                    } else {
+                        throw e;
+                    }
                 }
             }
         } catch (SendFailedException e) {
@@ -558,6 +576,50 @@ public class MailSender {
             throw e;
         }
         return sentAddresses;
+    }
+    
+    private static final Random RANDOM = new Random();
+
+    /**
+     * Updates the <tt>mail.smtp.host</tt> property on the given message with a new
+     * SMTP host.  Removes the bad host from the SMTP hostname cache, so that the
+     * host is not retried for 60 seconds.
+     * 
+     * @return the new hostname
+     */
+    private String updateSmtpHost(FixedMimeMessage mm, Mailbox mbox, MessagingException originalException)
+    throws MessagingException {
+        Session session = mm.getSession();
+        String badHost = session.getProperty("mail.smtp.host");
+        Domain domain = null;
+        
+        try {
+            domain = Provisioning.getInstance().getDomain(mbox.getAccount());
+            if (mSmtpHosts == null) {
+                // Get the current SMTP hosts first, then remove the bad one.  If we
+                // removed the bad one first, it could create an infinite loop, since
+                // removing the last host will trigger a reload from LDAP.
+                mSmtpHosts = JMSession.getSmtpHosts(domain);
+                if (mSmtpHosts.size() == 0) {
+                    ZimbraLog.smtp.warn("No SMTP hosts available for retry.");
+                    throw originalException;
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.smtp.error("Unable to load SMTP hosts.", e);
+            throw originalException;
+        }
+        
+        // Remove the bad host and update the MimeMessage with another hostname.
+        mSmtpHosts.remove(badHost);
+        if (mSmtpHosts.size() == 0) {
+            ZimbraLog.smtp.error("Unable to find a working SMTP host.");
+            throw originalException;
+        }
+        JMSession.removeSmtpHost(domain, badHost);
+        String smtpHost = mSmtpHosts.get(RANDOM.nextInt(mSmtpHosts.size()));
+        session.getProperties().setProperty("mail.smtp.host", smtpHost);
+        return smtpHost;
     }
 
 

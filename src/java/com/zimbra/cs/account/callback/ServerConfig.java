@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.FileBlobStore;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * Central place for updating server attributes that we cache in memory.
@@ -39,6 +40,8 @@ public class ServerConfig extends AttributeCallback {
                 FileBlobStore.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraMessageCacheSize)) {
                 MessageCache.loadSettings();
+            } else if (attrName.equals(Provisioning.A_zimbraSmtpHostname)) {
+                JMSession.resetSmtpHosts();
             }
         } catch (ServiceException e) {
             ZimbraLog.account.warn("Unable to update %s.", attrName, e);

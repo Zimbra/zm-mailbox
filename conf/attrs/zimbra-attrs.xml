@@ -582,7 +582,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of handler threads</desc>
 </attr>
 
-<attr id="97" name="zimbraSmtpHostname" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server,domain" flags="serverInherited">
+<attr id="97" name="zimbraSmtpHostname" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server,domain" flags="serverInherited" callback="ServerConfig">
   <globalConfigValue>localhost</globalConfigValue>
   <desc>the SMTP server to connect to when sending mail</desc>
 </attr>
