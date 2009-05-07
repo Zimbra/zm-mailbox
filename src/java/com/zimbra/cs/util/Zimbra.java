@@ -168,7 +168,7 @@ public class Zimbra {
         waitForDatabase();
         
     	if (!Versions.checkVersions())
-            throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
+    	    Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
 
         String tzFilePath = LC.timezone_file.value();
         try {
