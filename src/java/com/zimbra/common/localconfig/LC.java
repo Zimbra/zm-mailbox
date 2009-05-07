@@ -477,6 +477,8 @@ public class LC {
     
     public static final KnownKey contact_ranking_enabled;
     
+    public static final KnownKey smtp_host_retry_millis;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -1387,6 +1389,8 @@ public class LC {
         zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
               
         contact_ranking_enabled = new KnownKey("contact_ranking_enabled", "true", "Enable contact ranking table");
+        
+        smtp_host_retry_millis = new KnownKey("smtp_host_retry_millis", "60000");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
