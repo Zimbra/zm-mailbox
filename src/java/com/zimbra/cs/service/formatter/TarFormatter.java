@@ -507,7 +507,7 @@ public class TarFormatter extends Formatter {
             name = MailItem.getNameForType(mi) + '-' + mi.getId();
         else if (name.length() > 121)
             name = name.substring(0, 120);
-        if (mi.isTagged(Flag.ID_FLAG_VERSIONED))
+        if (mi.isTagged(mi.getMailbox().mVersionedFlag))
             name += String.format("-%05d", mi.getVersion());
         name = ILLEGAL_FILE_CHARS.matcher(name).replaceAll("_").trim();
         while (name.endsWith("."))
