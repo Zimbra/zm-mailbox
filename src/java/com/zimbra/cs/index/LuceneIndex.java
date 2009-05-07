@@ -94,7 +94,10 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
         sIndexReadersCache.start();
         
-        sIndexWritersCache = new IndexWritersCache(); 
+        if (LC.get("zimbra_index_use_dummy_writer_cache").length() != 0)
+            sIndexWritersCache = new DummyIndexWritersCache();
+        else
+            sIndexWritersCache = new IndexWritersCache();
     }
 
     /**
@@ -164,12 +167,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                 throw ServiceException.FAILURE("Cannot create FSDirectory at path: "+idxPath, e);
             }
         }
-    }
-    
-    public void beginBatchOperation() {
-    }
-
-    public void endBatchOperation() {
     }
 
     public void addDocument(Document[] docs, int indexId, int modContent, long receivedDate, 
@@ -688,28 +685,46 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         return (numFiles <= 0);
     }
     
-    
     private void doneWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
-        if (mNumUncommittedItems > sMaxUncommittedOps) {
-            if (ZimbraLog.index_add.isDebugEnabled()) {
-                ZimbraLog.index_add.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
+        assert(beginWritingNestLevel>0);
+        beginWritingNestLevel--;
+        if (beginWritingNestLevel == 0) {
+            if (mNumUncommittedItems > sMaxUncommittedOps) {
+                if (ZimbraLog.index_add.isDebugEnabled()) {
+                    ZimbraLog.index_add.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
+                }
+                flush();
+            } else {
+                sIndexWritersCache.doneWriting(this);
             }
-            flush();
-        } else {
-            sIndexWritersCache.doneWriting(this);
+            updateLastWriteTime();
         }
-        updateLastWriteTime();
+    }
+
+    public void beginWriteOperation() throws IOException {
+        assert(Thread.holdsLock(getLock()));
+        beginWriting();
     }
     
+    public void endWriteOperation() throws IOException {
+        assert(Thread.holdsLock(getLock()));
+        doneWriting();
+    }
+    
+    private int beginWritingNestLevel = 0;
+
     private void beginWriting() throws IOException
     {
         assert(Thread.holdsLock(getLock()));
-        
-        // uncache the IndexReader if it is cached
-        sIndexReadersCache.removeIndexReader(this);
-        
-        sIndexWritersCache.beginWriting(this);
+
+        if (beginWritingNestLevel == 0) {
+            // uncache the IndexReader if it is cached
+            sIndexReadersCache.removeIndexReader(this);
+            
+            sIndexWritersCache.beginWriting(this);
+        }
+        beginWritingNestLevel++;
     }
     
     void doWriterOpen() throws IOException {
@@ -819,7 +834,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); }
 
     private static IndexReadersCache sIndexReadersCache;
-    private static IndexWritersCache sIndexWritersCache;
+    private static IIndexWritersCache sIndexWritersCache;
     
     /**
      * If documents are being constantly added to an index, then it will stay at the front of the LRU cache

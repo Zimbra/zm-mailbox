@@ -28,6 +28,9 @@ import com.zimbra.common.service.ServiceException;
  */
 interface ITextIndex {
     
+    public void beginWriteOperation() throws IOException;
+    public void endWriteOperation() throws IOException;
+    
     /**
      * Store the specified MailItem in the Index.  If deleteFirst is false, then we are sure that
      * this MailItem is not already in the index, and so we can skip the check-update step.

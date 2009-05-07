@@ -54,7 +54,7 @@ import com.zimbra.cs.util.Zimbra;
       3) The sweeper waits on the global cache lock
       
  */
-class IndexWritersCache {
+class IndexWritersCache implements IIndexWritersCache {
     // all open writers
     private Set<IndexWriter> mOpenWriters = new LinkedHashSet<IndexWriter>();
 
@@ -103,7 +103,7 @@ class IndexWritersCache {
     public IndexWritersCache() {
         Runnable sweeper = new Runnable() {
             public void run() {
-                doSweep();
+                doSweep(mSweeperTimeout);
             }
         };
         mSweeperThread = new Thread(sweeper, "IndexWriterSweeper");
@@ -139,10 +139,6 @@ class IndexWritersCache {
     private int mNumCacheHits = 0;
     private int mNumCacheOpens = 0;
     
-    public synchronized boolean isWriterOpen(IndexWriter w) {
-        return (w.getState() != WriterState.CLOSED);
-    }
-    
     public void flushAllWriters() {
         List<IndexWriter> toFlush = new ArrayList<IndexWriter>();
         synchronized(this) {
@@ -159,8 +155,10 @@ class IndexWritersCache {
         ZimbraPerf.COUNTER_IDX_WRT_OPENED.increment();
         do {
             CountDownLatch l = null;
+            WriterState curState;
             synchronized(this) {
-                switch (w.getState()) {
+                curState = w.getState();
+                switch (curState) {
                     case FLUSHING:
                         l = w.getFlushWaiterLatch();
                         assert(!mIdleWriters.contains(w));
@@ -198,6 +196,7 @@ class IndexWritersCache {
             }
             if (!done) {
                 try {
+                    ZimbraLog.index.info("Blocked in beginWriting for "+w+" because state was "+curState);
                     l.await();
                 } catch (InterruptedException e) {}
             }
@@ -256,9 +255,9 @@ class IndexWritersCache {
     /**
      * Called in the sweeper thread
      */
-    private void doSweep() {
+    private void doSweep(long sweepTime) {
         try {
-            while(true) {
+            do {
                 Set<IndexWriter> toFlush = new HashSet<IndexWriter>();
                 long idleCutoff = System.currentTimeMillis() - mMaxIdleTime;
                 synchronized(this) {
@@ -288,7 +287,8 @@ class IndexWritersCache {
                     
                     if (toFlush.isEmpty()) {
                         try {
-                            this.wait(mSweeperTimeout);
+                            if (sweepTime > 0)
+                                this.wait(sweepTime);
                         } catch (InterruptedException e) { }
                     } else {
                         for (IndexWriter w : toFlush) {
@@ -300,6 +300,11 @@ class IndexWritersCache {
                     }
                 }
                 
+//                if (toFlush.size() > 0 && ZimbraLog.index.isDebugEnabled())
+//                    ZimbraLog.index.debug("IndexWritersCache Sweeper - sweeping "+toFlush.size()+ " entries");
+//                if (toFlush.size() > 1)
+//                    System.out.println("IndexWritersCache Sweeper - sweeping "+toFlush.size()+ " entries");
+                            
                 // submit outside the global lock, so we don't deadlock if the
                 // work queue fills up
                 for (IndexWriter w : toFlush) {
@@ -320,7 +325,7 @@ class IndexWritersCache {
                         }
                     }
                 }
-            }
+            } while(sweepTime > 0);
         } catch (OutOfMemoryError e) {
         	Zimbra.halt("OutOfMemory in IndexWritersCache.doSweep", e);
         }
@@ -342,7 +347,7 @@ class IndexWritersCache {
         }
     }
     
-    void flush(IndexWriter target) {
+    public void flush(IndexWriter target) {
         synchronized(this) {
             while (target.getState() == WriterState.FLUSHING) {
                 // already flushing...have to wait for that flush to finish
@@ -391,7 +396,8 @@ class IndexWritersCache {
     ////////////////////////////////////////////////////////////////////////////////////
     // test harness code below here
     ////////////////////////////////////////////////////////////////////////////////////
-    static class TestWriter extends IndexWriter {
+    
+static class TestWriter extends IndexWriter {
         
         Random r;
         boolean opened = false;
@@ -408,7 +414,8 @@ class IndexWritersCache {
         public void doWriterOpen() {
             if (!opened) {
                 try {
-                    Thread.sleep(0);
+                    if (false)
+                        Thread.sleep(1);
                     opened = true;
                 } catch (InterruptedException e) {}
             }
@@ -417,9 +424,11 @@ class IndexWritersCache {
         public void doWriterClose() {
             assert(opened);
             try {
-                Thread.sleep(0);
+                long length = randomLong(100);
+                if (length > 0)
+                    Thread.sleep(length);
                 opened = false;
-            } catch (InterruptedException e) {}
+          } catch (InterruptedException e) {}
         }
         
         public long getLastWriteTime() {
@@ -435,7 +444,8 @@ class IndexWritersCache {
                 }
                 assert(opened);
                 try {
-                    Thread.sleep(0);
+                    if (false)
+                        Thread.sleep(1);
                 } catch (InterruptedException e) {}
                 assert(opened);
                 mCache.doneWriting(this);
@@ -445,6 +455,12 @@ class IndexWritersCache {
         
         public void flush() {
             synchronized(this) {
+                if (opened) {
+                    try {
+                        if (false)
+                            Thread.sleep(50);
+                    } catch (InterruptedException e) {}
+                }
                 mCache.flush(this);
             }
         }
@@ -459,58 +475,60 @@ class IndexWritersCache {
         IndexWritersCache mCache;
     }
     
-    static class TestBase {
-        IndexWritersCache mCache;
-        TestWriter mWriter;
-        
-        TestBase(IndexWritersCache cache, TestWriter writer) {
+    static class TestThread extends Thread {
+        int mNumIters;
+        Random mR;
+        IIndexWritersCache mCache;
+        List<TestWriter> mWriters;
+        int mSleepTime;
+        int mWritePct;
+        int mFlushPct;
+        volatile int mCurrentIteration;
+        TestThread(IIndexWritersCache cache, List<TestWriter> writers, int numIters, int writePct, int flushPct) {
             mCache = cache;
-            mWriter = writer;
-        }
-        
-    }
-    
-    static class DoWrites extends TestBase implements Runnable {
-        int mNum;
-        DoWrites(int num, IndexWritersCache cache, TestWriter writer) {
-            super(cache, writer);
-            mNum = num;
+            mWriters = writers;
+            mWritePct = writePct;
+            mFlushPct = flushPct;
+            mNumIters = numIters;
+            mR = new Random(System.currentTimeMillis());
         }
         public void run() {
-            try {
-                for (int i=0; i< mNum; i++) { 
-                    mWriter.write();
+            for (int i = 0; i < mNumIters; i++) {
+                mCurrentIteration = i;
+                
+//                if (i>0 && i % 100000 == 0)
+//                    System.out.println("Thread "+this.toString()+" On iter "+i);
+//                try {
+//                    Thread.sleep(1);
+//                } catch (InterruptedException ex) {};
+                int dpct = mR.nextInt(1000);
+                if (dpct <= (mWritePct + mFlushPct)) {
+                    TestWriter w = mWriters.get(mR.nextInt(mWriters.size()));
+                    synchronized(w) {
+                        if (dpct <= mFlushPct) {
+//                            System.out.println("Flushing");
+//                            mCache.flush(w);
+                        } else {
+                            try {
+//                                System.out.println("Writing");
+                                mCache.beginWriting(w);
+                                try {
+                                    Thread.sleep(5);
+                                } catch (InterruptedException e) {}
+                                mCache.doneWriting(w);
+                            } catch (IOException e) {
+                                System.err.println("Caught IOException: "+e);
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                } else {
+                    System.out.println("Sleeping...");
+//                    try {
+//                        Thread.sleep(5);
+//                    } catch (InterruptedException e) {}
                 }
-//                System.out.println("Done "+mNum+" writes");
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.err.println("Caught IllegalArgumentException: "+e);
             }
-        }
-    }
-    
-    static class DoFlush extends TestBase implements Runnable {
-        DoFlush(IndexWritersCache cache, TestWriter writer) {
-            super(cache, writer);
-        }
-        public void run() {
-            try {
-                mWriter.flush();
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.err.println("Caught IllegalArgumentException: "+e);
-            }
-        }
-    }
-    
-    static class DoNothing extends TestBase implements Runnable {
-        DoNothing(IndexWritersCache cache, TestWriter writer) {
-            super(cache, writer);
-        }
-        public void run() {
-//            try {
-//                Thread.sleep(100);                
-//            } catch (InterruptedException e) {}
         }
     }
     
@@ -518,104 +536,108 @@ class IndexWritersCache {
      * @param args
      */
    public static void main(String[] args) {
-        
-        int numWriters  = 10000;
-        for (int testNum = 0; testNum < 10; testNum++) {
-            int cacheSize = (testNum+1)*200;
-            LC.zimbra_index_lru_size.setDefault(Integer.toString(cacheSize));
-            IndexWritersCache cache = new IndexWritersCache();
-            ThreadPool testPool = new ThreadPool("Test",10);
-            Random r = new Random(1234);
+       int cacheSize = 100;
+       int numWriters = 70;
+       int numThreads = 10;
+       int sweepFrequencyS = 1;
+       int idleFlushTimeS = 2000;
+       
+       int flushDeciPercent = 1; // 1%
+       int writeDeciPercent = 999; // 99%
 
-            List<TestWriter> writers = new ArrayList<TestWriter>();
-            for (int i = 0; i < numWriters; i++) {
-                TestWriter w = new TestWriter(r, cache); 
-                writers.add(w);
-            }
-            
-            int preloadNum = Math.min(cacheSize, numWriters);
-            
-            System.out.println("Preloading "+preloadNum+" writers into cache"); 
-            // preload
-            for (int i = 0; i < preloadNum; i++) {
-                TestWriter w = writers.get(i);
-                synchronized(w) {
-                    try {
-                        cache.beginWriting(w);
-                        cache.doneWriting(w);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+       ZimbraLog.toolSetupLog4j("WARN", "/tmp/iwc_test.txt");
+       LC.zimbra_index_lru_size.setDefault(Integer.toString(cacheSize));
+       LC.zimbra_index_sweep_frequency.setDefault(Integer.toString(sweepFrequencyS));
+       LC.zimbra_index_idle_flush_time.setDefault(Integer.toString(idleFlushTimeS));
+//       LC.zimbra_index_flush_pool_size.setDefault(Integer.toString(100));
+       
+       IndexWritersCache cache = new IndexWritersCache();
+       Random r = new Random(System.currentTimeMillis());
+       
+       List<TestWriter> writers = new ArrayList<TestWriter>();
+       for (int i = 0; i < numWriters; i++) {
+           TestWriter w = new TestWriter(r, cache); 
+           writers.add(w);
+       }
 
-            long start = System.currentTimeMillis();
-            int numIters = 900;
-            
-            System.out.println("Beginning run ("+numIters+" iterations) w/ cache size = "+cacheSize+
-                               " numWriters="+numWriters);
-            synchronized(cache) {
-                cache.mNumCacheHits = 0;
-                cache.mNumCacheOpens = 0;
-            }
-            
-            int totalOpens = 0;
-            int totalHits = 0;
+       if (false) {
+           int preloadNum = Math.min(cacheSize, numWriters);
+           
+           System.out.println("Preloading "+preloadNum+" writers into cache"); 
+           // preload
+           for (int i = 0; i < preloadNum; i++) {
+               TestWriter w = writers.get(i);
+               synchronized(w) {
+                   try {
+                       cache.beginWriting(w);
+                       cache.doneWriting(w);
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+               }
+           }
+       }
 
-            for (int i = 0; i < numIters; i++) {
-                if (true)
-                    synchronized(cache) {
-                        if ((i+1) % 100 == 0) {
-                            float hitPct = (float)cache.mNumCacheHits / (float)cache.mNumCacheOpens;
-                            hitPct *= 100.0;
-                            System.out.println("Submitted iteration "+(i+1)+" - open="+cache.mOpenWriters.size()+
-                                               " idle="+cache.mIdleWriters.size()+" flushing="+cache.mNumFlushing+
-                                               " waiting="+cache.mWaitingForSlot.size()+" cache hit rate="+hitPct+"%");
-                            totalOpens += cache.mNumCacheOpens;
-                            totalHits += cache.mNumCacheHits;
-                            cache.mNumCacheHits = 0;
-                            cache.mNumCacheOpens = 0;
-                        }
-                    }
-                int writerId = r.nextInt(writers.size());
-                TestWriter w = writers.get(writerId);
+       long start = System.currentTimeMillis();
 
-                long l = r.nextLong();
-                if (l < 0) 
-                    l = -1 * l;
-                l = l % 1000;
+       System.out.println("Beginning run w/ cache size = "+cacheSize+
+                          " numWriters="+numWriters+
+                          " numThreads="+numThreads);
 
-                int num = r.nextInt(10);
-                if (num <= 8)
-                    num = 1;
-                else 
-                    num = num-8; 
+//       cache.flushAllWriters();
 
-                try {
-/*                    if (l > 800)
-                        testPool.execute(new DoNothing(cache, w));
-                    else *///if (l <= 100)
-//                        testPool.execute(new DoFlush(cache, w));
-//                    else
-                        testPool.execute(new DoWrites(num, cache, w));
-                } catch (RejectedExecutionException e) {
-                    e.printStackTrace();
-                    System.err.println("InterruptedException: "+e);
-                }
-            }
+       synchronized(cache) {
+           cache.mNumCacheHits = 0;
+           cache.mNumCacheOpens = 0;
+       }
 
-            long end  = System.currentTimeMillis();
+       TestThread[] t = new TestThread[numThreads];
+       for (int i = 0; i < numThreads; i++) {
+           t[i] = new TestThread(cache, writers, Integer.MAX_VALUE, writeDeciPercent, flushDeciPercent);
+       }
 
-            testPool.shutdown();
+       for (int i = 0; i < numThreads; i++) 
+           t[i].start();
 
-            long total = end - start;
-            System.out.println("Test "+testNum+" Done w/ cache="+cacheSize+" Took "+ total+"ms");
-            float hitPct = (float)totalHits / (float)totalOpens;
-            hitPct *= 100.0;
-            System.out.println("\t"+totalOpens+" opens, "+totalHits+" hits "+
-                               hitPct+"% hit rate");
 
-            cache.shutdown();
-        }
-    }
+       boolean stop = false;
+       while(!stop) {
+           try {
+               Thread.sleep(3000);
+           } catch (InterruptedException e) {}
+           int lowestIter = Integer.MAX_VALUE;
+           int highestIter = -1;
+           for (TestThread tt : t) {
+               int threadIter = tt.mCurrentIteration;
+               lowestIter = Math.min(lowestIter, threadIter);
+               highestIter = Math.max(highestIter, threadIter);
+           }
+           System.out.println("Lowest iter is "+lowestIter+" Highest="+highestIter);
+       }
+
+       
+       for (int i = 0; i < numThreads; i++) {
+           try {
+               t[i].join();
+           } catch (InterruptedException e) {
+             System.err.println("Interrupted: "+e);
+               e.printStackTrace();
+           }
+       }
+
+       cache.mShutdown = true;
+//       try {
+//           sweeperThread.join();
+//       } catch (InterruptedException e) {
+//           System.err.println("Interrupted: "+e);
+//           e.printStackTrace();
+//       }
+
+       long end  = System.currentTimeMillis();
+
+       long total = end - start;
+       System.out.println("Test Done w/ cache="+cacheSize+" Took "+ total+"ms");
+
+       cache.shutdown();
+   }
 }

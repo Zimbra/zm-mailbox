@@ -237,6 +237,23 @@ public final class MailboxIndex
         mTextIndex.getObjects(regex, collection);
     }
 
+    /**
+     * A hint to the indexing system that we're doing a 'bulk' write to the index -- writing
+     * multiple items to the index.  
+     * 
+     *   Caller MUST hold call endWriteOperation() at the end.  
+     *   Caller MUST the mailbox lock for the duration of the begin/end pair
+     *   
+     * @throws IOException
+     */
+    public void beginWriteOperation() throws IOException {
+        mTextIndex.beginWriteOperation();
+    }
+    
+    public void endWriteOperation() throws IOException {
+        mTextIndex.endWriteOperation();
+    }
+    
 
     /**
      * Force all outstanding index writes to go through.  
@@ -292,10 +309,6 @@ public final class MailboxIndex
         return sIndexFactory.createTextQueryOperation();
     }
     
-    RefCountedIndexSearcher getCountedIndexSearcher() throws IOException {
-        return mLucene.getCountedIndexSearcher();
-    }
-
     RefCountedIndexSearcher getCountedIndexSearcher(SortBy sort) throws IOException {
         RefCountedIndexSearcher toRet = mLucene.getCountedIndexSearcher();
         toRet.setSort(mLucene.getSort(sort));

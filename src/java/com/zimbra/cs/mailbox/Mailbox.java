@@ -349,7 +349,7 @@ public class Mailbox {
      *  
      * @param ids
      */
-    synchronized public void indexingCompleted(int count, SyncToken highestModContent, boolean succeeded) {
+    public void indexingCompleted(int count, SyncToken highestModContent, boolean succeeded) {
         mIndexHelper.indexingCompleted(count, highestModContent, succeeded);
     }
 
@@ -3213,13 +3213,7 @@ public class Mailbox {
     synchronized public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, byte itemType, long timestamp, 
                               boolean noRedo, List<org.apache.lucene.document.Document> docList)
     {
-        try {
-            if (getMailboxIndex() != null) {
-                getMailboxIndex().indexMailItem(this, deleteFirst, docList, item, MailboxChange.NO_CHANGE);
-            }
-        } catch (Exception e) {
-            ZimbraLog.index_add.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
-        }
+        mIndexHelper.redoIndexItem(item, deleteFirst, itemId, itemType, timestamp, noRedo, docList);
     }
             
     /**

@@ -61,6 +61,10 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z23FSDirectory");
     }
     
+    public void beginWriteOperation() throws IOException  {};
+    public void endWriteOperation() throws IOException {};
+    
+    
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
