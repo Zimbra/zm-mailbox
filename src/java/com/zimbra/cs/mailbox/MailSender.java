@@ -77,8 +77,6 @@ public class MailSender {
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
     
-    private List<String> mSmtpHosts = null;
-
     public MailSender()  { }
 
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
@@ -578,8 +576,6 @@ public class MailSender {
         return sentAddresses;
     }
     
-    private static final Random RANDOM = new Random();
-
     /**
      * Updates the <tt>mail.smtp.host</tt> property on the given message with a new
      * SMTP host.  Removes the bad host from the SMTP hostname cache, so that the
@@ -591,33 +587,22 @@ public class MailSender {
     throws MessagingException {
         Session session = mm.getSession();
         String badHost = session.getProperty("mail.smtp.host");
-        Domain domain = null;
+        JMSession.markSmtpHostBad(badHost);
+        String smtpHost = null;
         
         try {
-            domain = Provisioning.getInstance().getDomain(mbox.getAccount());
-            if (mSmtpHosts == null) {
-                // Get the current SMTP hosts first, then remove the bad one.  If we
-                // removed the bad one first, it could create an infinite loop, since
-                // removing the last host will trigger a reload from LDAP.
-                mSmtpHosts = JMSession.getSmtpHosts(domain);
-                if (mSmtpHosts.size() == 0) {
-                    ZimbraLog.smtp.warn("No SMTP hosts available for retry.");
-                    throw originalException;
-                }
-            }
+            Domain domain = Provisioning.getInstance().getDomain(mbox.getAccount());
+            smtpHost = JMSession.getRandomSmtpHost(domain);
         } catch (ServiceException e) {
-            ZimbraLog.smtp.error("Unable to load SMTP hosts.", e);
+            ZimbraLog.smtp.error("Unable to update SMTP host.", e);
             throw originalException;
         }
         
-        // Remove the bad host and update the MimeMessage with another hostname.
-        mSmtpHosts.remove(badHost);
-        if (mSmtpHosts.size() == 0) {
-            ZimbraLog.smtp.error("Unable to find a working SMTP host.");
+        if (smtpHost == null) {
+            ZimbraLog.smtp.error("No alternate SMTP host available.");
             throw originalException;
         }
-        JMSession.removeSmtpHost(domain, badHost);
-        String smtpHost = mSmtpHosts.get(RANDOM.nextInt(mSmtpHosts.size()));
+        
         session.getProperties().setProperty("mail.smtp.host", smtpHost);
         return smtpHost;
     }

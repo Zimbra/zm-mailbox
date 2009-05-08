@@ -74,7 +74,11 @@ public class JMSession {
             throw new MessagingException("Unable initialize JavaMail session", e);
         }
         if (smtpHost == null) {
-            throw new MessagingException("Unable to determine SMTP host for " + domain);
+            String msg = "No SMTP hosts available";
+            if (domain != null) {
+                msg += " for domain " + domain.getName();
+            }
+            throw new MessagingException(msg);
         }
         
         Properties props = new Properties();
@@ -136,15 +140,15 @@ public class JMSession {
     private static final Random RANDOM = new Random();
     
     /**
-     * Caches the list of SMTP hosts per domain.  The key is the domain name
-     * (or <tt>null</tt> for no domain).
+     * Caches the set of SMTP hosts that we've failed to connect to.  Only
+     * the key is used.  The value is ignored.
      */
-    private static Map<String, List<String>> sSmtpHosts =
-        Collections.synchronizedMap(new TimeoutMap<String, List<String>>(LC.smtp_host_retry_millis.intValue()));
+    private static Map<String, Object> sBadSmtpHosts =
+        Collections.synchronizedMap(new TimeoutMap<String, Object>(LC.smtp_host_retry_millis.intValue()));
     
     public static void resetSmtpHosts() {
-        ZimbraLog.smtp.info("Resetting cached SMTP hosts.");
-        sSmtpHosts.clear();
+        ZimbraLog.smtp.debug("Resetting bad SMTP hosts.");
+        sBadSmtpHosts.clear();
     }
     
     /**
@@ -154,80 +158,50 @@ public class JMSession {
      * @param server the server
      * @param domain the domain, or <tt>null</tt> to use server settings
      */
-    private static String getRandomSmtpHost(Domain domain)
+    public static String getRandomSmtpHost(Domain domain)
     throws ServiceException {
-        List<String> hosts = getSmtpHostsInternal(domain);
-        if (hosts.size() == 0) {
+        String[] hosts = getSmtpHostsFromLdap(domain);
+        if (hosts.length == 0) {
             return null;
         }
-        if (hosts.size() == 1) {
-            return hosts.get(0);
+
+        String host = null;
+        if (hosts.length == 1) {
+            host = hosts[0];
         } else {
-            return hosts.get(RANDOM.nextInt(hosts.size()));
+            host = hosts[RANDOM.nextInt(hosts.length)];
         }
-    }
-    
-    /**
-     * Returns the SMTP hosts.  Domain settings override server settings.
-     * 
-     * @param domain the domain, or <tt>null</tt> to get the SMTP hosts
-     * from the local server
-     */
-    public static List<String> getSmtpHosts(Domain domain)
-    throws ServiceException {
-        // Return a copy of the list, so callers don't modify the original.
-        List<String> copy = new ArrayList<String>();
-        copy.addAll(getSmtpHostsInternal(domain));
-        return copy;
-    }
-    
-    private static List<String> getSmtpHostsInternal(Domain domain)
-    throws ServiceException {
-        String domainName = (domain == null ? null : domain.getName());
-        List<String> hosts = sSmtpHosts.get(domainName);
-        if (hosts == null) {
-            // Load from LDAP and put in the cache.
-            String[] hostsFromLdap = getSmtpHostsFromLdap(domain);
-            if (hostsFromLdap.length > 0) {
-                hosts = Collections.synchronizedList(new ArrayList<String>());
-                Collections.addAll(hosts, hostsFromLdap);
-                sSmtpHosts.put(domainName, hosts);
-            } else {
-                return Collections.emptyList();
-            }
+        if (!sBadSmtpHosts.containsKey(host)) {
+            return host;
         }
-        return hosts;
-    }
-    
-    /**
-     * Remove the specified host from the SMTP hosts list for the given
-     * domain.  This host will not be retried for the remainder of the
-     * interval specified by {@link LC#smtp_host_retry_millis}.  If the
-     * last host is removed, the next call to {@link #getSmtpHost} will
-     * reload from LDAP.
-     * 
-     * @param domain the domain or <tt>null</tt>
-     * @param hostName the SMTP server hostname
-     * @return the number of remaining SMTP hosts
-     */
-    public static int removeSmtpHost(Domain domain, String hostName) {
-        ZimbraLog.smtp.info("Removing bad smtp host '%s' from the cache.", hostName);
+        if (hosts.length == 1) {
+            // No other hosts to try.
+            return null;
+        }
         
-        String domainName = (domain == null ? null : domain.getName());
-        List<String> hosts = sSmtpHosts.get(domainName);
-        if (hosts != null) {
-            hosts.remove(hostName);
-            if (hosts.size() > 0) { 
-                // Reset timeout
-                sSmtpHosts.put(domainName, hosts);
-            } else {
-                // Remove cached hostnames so we reload from LDAP next time.
-                sSmtpHosts.remove(domainName);
+        // Current host is bad.  Find another one.
+        List<String> hostList = new ArrayList<String>();
+        Collections.addAll(hostList, hosts);
+        Collections.shuffle(hostList);
+        for (String currentHost : hostList) {
+            if (!sBadSmtpHosts.containsKey(currentHost)) {
+                return currentHost;
             }
-            return hosts.size();
-        } else {
-            return 0;
         }
+        return null;
+    }
+    
+    /**
+     * Mark the given SMTP host as bad.  We will not attempt to
+     * connect to this host for the
+     * interval specified by {@link LC#smtp_host_retry_millis}.
+     * 
+     * @param hostName the SMTP server hostname
+     */
+    public static void markSmtpHostBad(String hostName) {
+        ZimbraLog.smtp.info(
+            "Disallowing connections to %s for %d milliseconds.", hostName, LC.smtp_host_retry_millis.intValue());
+        sBadSmtpHosts.put(hostName, null);
     }
     
     private static final String[] NO_HOSTS = new String[0];

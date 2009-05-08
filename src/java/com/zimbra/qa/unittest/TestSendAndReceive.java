@@ -16,7 +16,9 @@ package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,12 +44,14 @@ public class TestSendAndReceive extends TestCase {
     
     private String mOriginalSmtpSendAddAuthenticatedUser;
     private String mOriginalDomainSmtpPort;
+    private String[] mOriginalSmtpHostname;
     
     public void setUp()
     throws Exception {
         cleanUp();
         mOriginalSmtpSendAddAuthenticatedUser = TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
         mOriginalDomainSmtpPort = TestUtil.getDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort);
+        mOriginalSmtpHostname = Provisioning.getInstance().getLocalServer().getSmtpHostname();
     }
     
     /**
@@ -163,11 +167,32 @@ public class TestSendAndReceive extends TestCase {
         assertTrue("Message send should have failed", sendFailed);
     }
     
+    public void testBogusSmtpHostname()
+    throws Exception {
+        // Create a list that contains the original valid SMTP host
+        // and a bunch of bogus ones.
+        List<String> smtpHosts = new ArrayList<String>();
+        Collections.addAll(smtpHosts, mOriginalSmtpHostname);
+        for (int i = 1; i <= 10; i++) {
+            smtpHosts.add("bogushost" + i);
+        }
+        String[] hostsArray = new String[smtpHosts.size()];
+        smtpHosts.toArray(hostsArray);
+        Provisioning.getInstance().getLocalServer().setSmtpHostname(hostsArray);
+        
+        // Send a message and make sure it arrives.
+        String subject = NAME_PREFIX + " testBogusSmtpHostname";
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.sendMessage(mbox, USER_NAME, subject);
+        TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+    }
+    
     public void tearDown()
     throws Exception {
         cleanUp();
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
         TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, mOriginalDomainSmtpPort);
+        Provisioning.getInstance().getLocalServer().setSmtpHostname(mOriginalSmtpHostname);
     }
     
     private void cleanUp()
