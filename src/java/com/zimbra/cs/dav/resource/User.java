@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,6 +44,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.zclient.ZFolder;
@@ -108,14 +110,61 @@ public class User extends Principal {
     
     @Override
 	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException, IOException {
+    	if (true)
+    		return;
+    	// supporting ACL manipulation in CalDAV will be confusing.  In Zimbra model we send out
+    	// share notification email, and recipient actively accepts the share.  But iCal
+    	// supports proxy read/write groups and memberships of each users.  We can partly
+    	// support iCal models for existing shares.  for new shares, we can try sending out
+    	// new share notification email, but that doesn't work well with YCC who don't
+    	// support emails today.  punt this until later.
+    	String path = ctxt.getPath();
+    	if (!path.endsWith(CALENDAR_PROXY_READ + "/") &&
+    			!path.endsWith(CALENDAR_PROXY_WRITE + "/")) {
+    		return;
+    	}
+    	short perm = path.endsWith(CALENDAR_PROXY_READ + "/") ? ACL.RIGHT_READ : ACL.RIGHT_READ | ACL.RIGHT_WRITE;
+		for (Element setElem : set) {
+			if (setElem.getQName().equals(DavElements.E_GROUP_MEMBER_SET)) {
+				Iterator hrefs = setElem.elementIterator(DavElements.E_HREF);
+				while (hrefs.hasNext()) {
+					Element href = (Element) hrefs.next();
+					String principalPath = href.getText();
+					DavResource principal = null;
+					try {
+						UrlNamespace.getPrincipalAtUrl(ctxt, principalPath);
+					} catch (DavException e) {
+	            		ZimbraLog.dav.warn("can't find principal at %s", path);
+						continue;
+					}
+					if (!(principal instanceof User)) {
+	            		ZimbraLog.dav.warn("not a user principal path %s", path);
+						continue;
+					}
+					Account target = ((User)principal).mAccount;
+		        	try {
+		            	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+		            	// share default Calendar folder and Tasks folder
+		            	mbox.grantAccess(ctxt.getOperationContext(), Mailbox.ID_FOLDER_CALENDAR, target.getId(), ACL.GRANTEE_USER, perm, null);
+		            	mbox.grantAccess(ctxt.getOperationContext(), Mailbox.ID_FOLDER_TASKS, target.getId(), ACL.GRANTEE_USER, perm, null);
+		        	} catch (ServiceException se) {
+	            		ZimbraLog.dav.warn("can't modify acl on %s for %s", mAccount.getName(), path);
+		        	}
+				}
+			}
+		}
 	}
 	
+    private static final String CALENDAR_PROXY_READ  = "calendar-proxy-read";
+    private static final String CALENDAR_PROXY_WRITE = "calendar-proxy-write";
+    
     private class CalendarProxyRead extends Principal {
     	public CalendarProxyRead(String user, String url) throws ServiceException {
     		super(user, url+"calendar-proxy-read");
             addResourceType(DavElements.E_CALENDAR_PROXY_READ);
             addProperty(VersioningProperty.getSupportedReportSet());
     		addProperty(Acl.getPrincipalUrl(this));
+    		addProperty(new ProxyGroupMemberSet(true));
     	}
         @Override
         public boolean isCollection() {
@@ -129,6 +178,7 @@ public class User extends Principal {
             addResourceType(DavElements.E_CALENDAR_PROXY_WRITE);
             addProperty(VersioningProperty.getSupportedReportSet());
     		addProperty(Acl.getPrincipalUrl(this));
+    		addProperty(new ProxyGroupMemberSet(false));
     	}
         @Override
         public boolean isCollection() {
@@ -158,6 +208,37 @@ public class User extends Principal {
     	}
     }
     
+    private class ProxyGroupMemberSet extends ResourceProperty {
+    	public ProxyGroupMemberSet(boolean readOnly) {
+    		super(DavElements.E_GROUP_MEMBER_SET);
+    		mReadOnly = readOnly;
+    		setProtected(true);
+    	}
+    	private boolean mReadOnly;
+        @Override
+    	public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+        	Element group = super.toElement(ctxt, parent, nameOnly);
+        	if (nameOnly)
+        		return group;
+        	try {
+            	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+            	for (Grant g : mbox.getFolderById(ctxt.getOperationContext(), Mailbox.ID_FOLDER_CALENDAR).getEffectiveACL().getGrants()) {
+            		if (g.getGranteeType() != ACL.GRANTEE_USER)
+            			continue;
+            		boolean match = mReadOnly ?
+            			(g.getGrantedRights() & ACL.RIGHT_READ) != 0 && (g.getGrantedRights() & ACL.RIGHT_WRITE) == 0 :
+            			(g.getGrantedRights() & ACL.RIGHT_WRITE) != 0;
+            		if (match) {
+        				Account user = Provisioning.getInstance().get(AccountBy.id, g.getGranteeId());
+            			group.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, user));
+            		}
+            	}
+        	} catch (ServiceException se) {
+        		ZimbraLog.dav.warn("can't get mailbox", se);
+        	}
+        	return group;
+        }
+    }
     private class CalendarProxyReadFor extends ProxyProperty {
     	public CalendarProxyReadFor(Account acct) {
     		super(DavElements.E_CALENDAR_PROXY_READ_FOR);
@@ -165,6 +246,8 @@ public class User extends Principal {
         @Override
     	public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element proxy = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return proxy;
         	ArrayList<Pair<Mountpoint,ZFolder>> mps = getMountpoints(ctxt);
         	for (Pair<Mountpoint,ZFolder> folder : mps) {
         		try {
@@ -189,6 +272,8 @@ public class User extends Principal {
         @Override
     	public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
 			Element proxy = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return proxy;
         	ArrayList<Pair<Mountpoint,ZFolder>> mps = getMountpoints(ctxt);
         	for (Pair<Mountpoint,ZFolder> folder : mps) {
         		try {
