@@ -17,6 +17,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,10 +55,10 @@ public class User extends Principal {
     	mAccount = account;
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarHomeSet(user));
+        addProperty(CalDavProperty.getCalendarUserType(this));
         if (ctxt.getAuthAccount().equals(account)) {
             addProperty(CalDavProperty.getScheduleInboxURL(user));
             addProperty(CalDavProperty.getScheduleOutboxURL(user));
-            addProperty(CalDavProperty.getCalendarUserType(this));
             addProperty(VersioningProperty.getSupportedReportSet());
             addProperty(new CalendarProxyReadFor(mAccount));
             addProperty(new CalendarProxyWriteFor(mAccount));
@@ -105,6 +106,10 @@ public class User extends Principal {
         return true;
     }
     
+    @Override
+	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException, IOException {
+	}
+	
     private class CalendarProxyRead extends Principal {
     	public CalendarProxyRead(String user, String url) throws ServiceException {
     		super(user, url+"calendar-proxy-read");
