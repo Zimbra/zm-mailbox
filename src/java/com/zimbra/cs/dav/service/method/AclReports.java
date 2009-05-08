@@ -74,6 +74,15 @@ public class AclReports extends Report {
 		if (!applyToPrincipalCollection && !path.startsWith(UrlNamespace.PRINCIPALS_PATH))
 			return ret;
 		
+		// apple hack to do user / resource search
+		Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.ALL;
+		String queryType = query.attributeValue("type");
+		if (queryType != null) {
+			if (queryType.compareToIgnoreCase("INDIVIDUAL") == 0)
+				type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
+			else if (queryType.compareToIgnoreCase("RESOURCE") == 0)
+				type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
+		}
 		List propSearch = query.elements(DavElements.E_PROPERTY_SEARCH);
 		for (Object obj : propSearch) {
 			if (!(obj instanceof Element))
@@ -83,19 +92,19 @@ public class AclReports extends Report {
 			Element match = ps.element(DavElements.E_MATCH);
 			if (prop != null && match != null) {
 				Element e = (Element)prop.elements().get(0);
-				ret.addAll(getMatchingPrincipals(ctxt, e.getQName(), match.getText()));
+				ret.addAll(getMatchingPrincipals(ctxt, e.getQName(), match.getText(), type));
 			}
 		}
 		
 		return ret;
 	}
 	
-	private ArrayList<DavResource> getMatchingPrincipals(DavContext ctxt, QName prop, String match) throws DavException, ServiceException {
+	private ArrayList<DavResource> getMatchingPrincipals(DavContext ctxt, QName prop, String match, Provisioning.GAL_SEARCH_TYPE type) throws DavException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
 		Account authAccount = ctxt.getAuthAccount();
-		if (prop.equals(DavElements.E_EMAIL_ADDRESS_SET)) {
-	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, Provisioning.GalMode.zimbra, null);
+		if (prop.equals(DavElements.E_DISPLAYNAME)) {
+	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, type, Provisioning.GalMode.zimbra, null);
 	        for (GalContact ct : result.getMatches()) {
 	            String email = (String)ct.getAttrs().get(Contact.A_email);
 	            if (email != null) {

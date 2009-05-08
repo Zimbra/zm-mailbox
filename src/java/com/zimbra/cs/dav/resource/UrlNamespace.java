@@ -117,8 +117,8 @@ public class UrlNamespace {
 			}
         index += PRINCIPALS_PATH.length();
         String name = url.substring(index);
-        if (name.endsWith("/"))
-            name = name.substring(0, name.length()-1);
+        if (name.indexOf('/') > 0)
+            name = name.substring(0, name.indexOf('/'));
         ZimbraLog.dav.debug("name: "+name);
         try {
             Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
