@@ -28,7 +28,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -266,9 +268,12 @@ public class RedoLogVerify {
         return good;
     }
 
+    private static SimpleDateFormat sDateFormatter = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS z");
+
     private static void printOp(PrintStream out, RedoableOp op, boolean hideOffset, long beginOffset, long size) {
         if (!hideOffset)
-            out.printf("[%08x - %08x: %d bytes] ", beginOffset, beginOffset + size - 1, size);
+            out.printf("[%08x - %08x: %d bytes; tstamp: %s] ",
+                       beginOffset, beginOffset + size - 1, size, sDateFormatter.format(new Date(op.getTimestamp())));
         out.println(op.toString());
     }
 

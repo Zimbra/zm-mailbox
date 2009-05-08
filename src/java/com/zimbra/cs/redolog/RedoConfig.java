@@ -66,6 +66,12 @@ public class RedoConfig {
         mRedoLogRolloverFileSizeKB =
             config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverFileSizeKB,
                                D_REDOLOG_ROLLOVER_FILESIZE_KB);
+        mRedoLogRolloverHardMaxFileSizeKB =
+            config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB,
+                               D_REDOLOG_ROLLOVER_HARDMAX_FILESIZE_KB);
+        mRedoLogRolloverMinFileAge =
+            config.getLongAttr(Provisioning.A_zimbraRedoLogRolloverMinFileAge,
+                               D_REDOLOG_ROLLOVER_MIN_FILE_AGE);
         mRedoLogDeleteOnRollover =
             config.getBooleanAttr(Provisioning.A_zimbraRedoLogDeleteOnRollover,
                                   D_REDOLOG_DELETE_ON_ROLLOVER);
@@ -126,11 +132,35 @@ public class RedoConfig {
     /**
      * Returns the redolog rollover threshold filesize.
      * The current redolog file is rolled over if it reaches or exceeds
-     * this size.
+     * this size and file is old enough.
      * @return threshold filesize in kilobytes
      */
     public static synchronized long redoLogRolloverFileSizeKB() {
         return theInstance.mRedoLogRolloverFileSizeKB;
+    }
+
+    private long mRedoLogRolloverHardMaxFileSizeKB;
+    private static final long D_REDOLOG_ROLLOVER_HARDMAX_FILESIZE_KB = 1048576;
+    /**
+     * Returns the redolog rollover hard threshold filesize.
+     * The current redolog file is rolled over if it reaches or exceeds
+     * this size, regardless of file age.
+     * @return threshold filesize in kilobytes
+     */
+    public static synchronized long redoLogRolloverHardMaxFileSizeKB() {
+        return theInstance.mRedoLogRolloverHardMaxFileSizeKB;
+    }
+
+    private long mRedoLogRolloverMinFileAge;
+    private static final long D_REDOLOG_ROLLOVER_MIN_FILE_AGE = 30;
+    /**
+     * Returns the redolog rollover minimum file age.
+     * The current redolog file is rolled over if it is older than this
+     * and reaches the size threshold.
+     * @return age in minutes
+     */
+    public static synchronized long redoLogRolloverMinFileAge() {
+        return theInstance.mRedoLogRolloverMinFileAge;
     }
 
     private boolean mRedoLogDeleteOnRollover;

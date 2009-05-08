@@ -32,8 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
@@ -56,22 +54,19 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class FileLogWriter implements LogWriter {
 
-    private static Log mLog = LogFactory.getLog(FileLogWriter.class);
-
     private static String sServerId;
     static {
         try {
 			sServerId = Provisioning.getInstance().getLocalServer().getId();
 		} catch (ServiceException e) {
-            mLog.error("Unable to get local server ID", e);
+            ZimbraLog.redolog.error("Unable to get local server ID", e);
             sServerId = "unknown";
 		}
     }
 
     protected RedoLogManager mRedoLogMgr;
 
-    // Synchronizes access to mRAF, mFileSize, mLogSeq, mFsyncSeq,
-    // mLogCount, mFsyncCount, and mFsyncTime.
+    // Synchronizes access to mRAF, mFileSize, mLogSeq, mFsyncSeq, mLogCount, and mFsyncCount.
     private final Object mLock = new Object();
 
     // wait/notify between logger threads and fsync thread
@@ -80,6 +75,7 @@ public class FileLogWriter implements LogWriter {
     private FileHeader mHeader;
     private long mFirstOpTstamp;
     private long mLastOpTstamp;
+    private long mCreateTime;
 
     private File mFile;
     private RandomAccessFile mRAF;
@@ -97,7 +93,6 @@ public class FileLogWriter implements LogWriter {
     // for gathering some stats; nonessential for functionality
     private int mLogCount;          // how many times log was called
     private int mFsyncCount;        // how many times fsync was called
-    private long mFsyncTime;        // sum of sync durations
 
     private CommitNotifyQueue mCommitNotifyQueue;
 
@@ -115,7 +110,6 @@ public class FileLogWriter implements LogWriter {
         mFsyncDisabled = DebugConfig.disableRedoLogFsync;
 
         mFsyncCount = mLogCount = 0;
-        mFsyncTime = 0;
 
         mCommitNotifyQueue = new CommitNotifyQueue(100);
     }
@@ -132,6 +126,15 @@ public class FileLogWriter implements LogWriter {
     public long getSize() {
         synchronized (mLock) {
             return mFileSize;
+        }
+    }
+
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.redolog.logger.LogWriter#getCreateTime()
+     */
+    public long getCreateTime() {
+        synchronized (mLock) {
+            return mCreateTime;
         }
     }
 
@@ -190,8 +193,16 @@ public class FileLogWriter implements LogWriter {
 
             if (mRAF.length() >= FileHeader.HEADER_LEN) {
                 mHeader.read(mRAF);
+                mCreateTime = mHeader.getCreateTime();
+                if (mCreateTime == 0) {
+                    mCreateTime = System.currentTimeMillis();
+                    mHeader.setCreateTime(mCreateTime);
+                }
                 mFirstOpTstamp = mHeader.getFirstOpTstamp();
+                mLastOpTstamp = mHeader.getLastOpTstamp();
             } else {
+                mCreateTime = System.currentTimeMillis();
+                mHeader.setCreateTime(mCreateTime);
                 mHeader.setSequence(mRedoLogMgr.getCurrentLogSequence());
             }
             mHeader.setOpen(true);
@@ -230,18 +241,9 @@ public class FileLogWriter implements LogWriter {
                 return;
         }
 
-        // Write some stats, so we can see how many times we were able
-        // to avoid calling fsync.
-        if (!mNoStat && mLogCount > 0 && mLog.isDebugEnabled()) {
-            double msPerSync = 0;
-            if (mFsyncCount > 0)
-            	msPerSync =
-                    ((double) Math.round(
-                        ((double) mFsyncTime ) / mFsyncCount * 1000
-                    )) / 1000;
-            mLog.debug("Logged: " + mLogCount + " items, " +
-                      mFsyncCount + " fsyncs, " + msPerSync + " ms/fsync");
-        }
+        // Write some stats, so we can see how many times we were able to avoid calling fsync.
+        if (!mNoStat && mLogCount > 0 && ZimbraLog.redolog.isDebugEnabled())
+            ZimbraLog.redolog.debug("Logged: " + mLogCount + " items, " + mFsyncCount + " fsyncs");
     }
 
     /**
@@ -277,7 +279,7 @@ public class FileLogWriter implements LogWriter {
 
             // Record first transaction in header.
             long tstamp = op.getTimestamp();
-            mLastOpTstamp = tstamp;
+            mLastOpTstamp = Math.max(tstamp, mLastOpTstamp);
             if (mFirstOpTstamp == 0) {
             	mFirstOpTstamp = tstamp;
                 mHeader.setFirstOpTstamp(mFirstOpTstamp);
@@ -332,7 +334,7 @@ public class FileLogWriter implements LogWriter {
                         mFsyncCond.wait(10000);
                     }
                 } catch (InterruptedException e) {
-                    mLog.info("Thread interrupted during fsync");
+                    ZimbraLog.redolog.info("Thread interrupted during fsync");
                 }
                 synchronized (mLock) {
                     // timed out, so fsync in this thread
@@ -363,6 +365,7 @@ public class FileLogWriter implements LogWriter {
     	mNoStat = b;
     }
 
+    @SuppressWarnings("unchecked")
     public synchronized File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
     throws IOException {
         RolloverManager romgr = mRedoLogMgr.getRolloverManager();
@@ -462,7 +465,6 @@ public class FileLogWriter implements LogWriter {
         }
         if (fsyncNeeded) {
             if (!mFsyncDisabled) {
-                long start = System.currentTimeMillis();
                 synchronized (mLock) {
                     if (mRAF != null)
                         mRAF.getChannel().force(false);
@@ -470,8 +472,6 @@ public class FileLogWriter implements LogWriter {
                         throw new IOException("Redolog file closed");
                     mCommitNotifyQueue.flush(false);
                 }
-                long elapsed = System.currentTimeMillis() - start;
-                mFsyncTime += elapsed;
             }
             synchronized (mLock) {
                 mFsyncSeq = seq;
@@ -494,9 +494,23 @@ public class FileLogWriter implements LogWriter {
         private Object mFsyncLock;  // synchronizes access to mRunning
         private boolean mRunning;
 
+        private static final long MIN_SLEEP_MILLIS = 1;
+        private static final long MAX_SLEEP_MILLIS = 1000;  // never sleep longer than 1 seconds
+
         public FsyncThread(long fsyncIntervalMS) {
             super("FileLogWriter.FsyncThread");
-            mSleepMS = fsyncIntervalMS;
+            // Sanity check the sleep interval.
+            if (fsyncIntervalMS < MIN_SLEEP_MILLIS) {
+                ZimbraLog.redolog.warn("Invalid fsync thread sleep interval %dms; using %dms instead",
+                        fsyncIntervalMS, MIN_SLEEP_MILLIS);
+                mSleepMS = MIN_SLEEP_MILLIS;
+            } else if (fsyncIntervalMS > MAX_SLEEP_MILLIS) {
+                ZimbraLog.redolog.warn("Fsync thread sleep interval %ms is too long; using %dms instead",
+                        fsyncIntervalMS, MAX_SLEEP_MILLIS);
+                mSleepMS = MAX_SLEEP_MILLIS;
+            } else {
+                mSleepMS = fsyncIntervalMS;
+            }
             mFsyncLock = new Object();
             mRunning = true;
         }
@@ -508,7 +522,7 @@ public class FileLogWriter implements LogWriter {
                 try {
                     Thread.sleep(mSleepMS);
                 } catch (InterruptedException e) {
-                    mLog.warn("Sync thread interrupted", e);
+                    ZimbraLog.redolog.warn("Sync thread interrupted", e);
                 }
 
                 try {
@@ -532,7 +546,7 @@ public class FileLogWriter implements LogWriter {
             try {
                 join();
             } catch (InterruptedException e) {
-                mLog.warn("InterruptedException while stopping FsyncThread", e);
+                ZimbraLog.redolog.warn("InterruptedException while stopping FsyncThread", e);
             }
         }
     }

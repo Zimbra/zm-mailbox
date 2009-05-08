@@ -1200,7 +1200,9 @@ public abstract class Provisioning {
     public static final String A_zimbraRedoLogEnabled            = "zimbraRedoLogEnabled";
     public static final String A_zimbraRedoLogLogPath            = "zimbraRedoLogLogPath";
     public static final String A_zimbraRedoLogArchiveDir         = "zimbraRedoLogArchiveDir";
+    public static final String A_zimbraRedoLogRolloverMinFileAge = "zimbraRedoLogRolloverMinFileAge";
     public static final String A_zimbraRedoLogRolloverFileSizeKB = "zimbraRedoLogRolloverFileSizeKB";
+    public static final String A_zimbraRedoLogRolloverHardMaxFileSizeKB = "zimbraRedoLogRolloverHardMaxFileSizeKB";
     public static final String A_zimbraRedoLogDeleteOnRollover   = "zimbraRedoLogDeleteOnRollover";
     public static final String A_zimbraRedoLogFsyncIntervalMS    = "zimbraRedoLogFsyncIntervalMS";
 

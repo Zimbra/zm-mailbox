@@ -473,7 +473,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="78" name="zimbraRedoLogRolloverFileSizeKB" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>102400</globalConfigValue>
-  <desc>redo.log file rolls over when it gets to this size</desc>
+  <desc>redo.log file becomes eligible for rollover over when it goes over this size</desc>
 </attr>
 
 <attr id="79" name="zimbraRedoLogFsyncIntervalMS" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
@@ -3733,6 +3733,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1018" name="zimbraMemcachedClientTimeoutMillis" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
   <globalConfigValue>10000</globalConfigValue>
   <desc>default timeout in milliseconds for async memcached operations</desc>
+</attr>
+
+<attr id="1020" name="zimbraRedoLogRolloverMinFileAge" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>60</globalConfigValue>
+  <desc>minimum age in minutes for redo.log file before it becomes eligible for rollover based on size</desc>
+</attr>
+
+<attr id="1021" name="zimbraRedoLogRolloverHardMaxFileSizeKB" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>4194304</globalConfigValue>
+  <desc>redo.log file rolls over when it goes over this size, even if it does not meet the minimum file age requirement</desc>
 </attr>
 
 </attrs>
