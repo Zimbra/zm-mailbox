@@ -78,7 +78,13 @@ public interface LogWriter {
 	 */
 	public long getSize();
 
-    /**
+	/**
+	 * Returns the time of the log creation.
+	 * @return
+	 */
+	public long getCreateTime();
+
+	/**
      * Returns the time of the last entry logged.
      * @return
      */

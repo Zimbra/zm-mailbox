@@ -30,8 +30,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -56,8 +54,6 @@ import com.zimbra.znative.IO;
  * @author jhahm
  */
 public class RedoLogManager {
-
-    private static Log mLog = LogFactory.getLog(RedoLogManager.class);
 
 	private static class TxnIdGenerator {
 		private int mTime;
@@ -105,7 +101,9 @@ public class RedoLogManager {
 	// This is done to prevent deadlock.
 	private LinkedHashMap<TransactionId, RedoableOp> mActiveOps;
 
-	private long mLogRolloverSizeLimit;
+	private long mLogRolloverMinAgeMillis;
+	private long mLogRolloverSoftMaxBytes;
+	private long mLogRolloverHardMaxBytes;
 
 	private TxnIdGenerator mTxnIdGenerator;
 	private RolloverManager mRolloverMgr;
@@ -132,7 +130,10 @@ public class RedoLogManager {
         mRWLock = new ReentrantWriterPreferenceReadWriteLock();
         mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
         mTxnIdGenerator = new TxnIdGenerator();
-        setRolloverSizeLimit(RedoConfig.redoLogRolloverFileSizeKB() * 1024);
+        long minAge = RedoConfig.redoLogRolloverMinFileAge() * 60 * 1000;     // milliseconds
+        long softMax = RedoConfig.redoLogRolloverFileSizeKB() * 1024;         // bytes
+        long hardMax = RedoConfig.redoLogRolloverHardMaxFileSizeKB() * 1024;  // bytes
+        setRolloverLimits(minAge, softMax, hardMax);
         mRolloverMgr = new RolloverManager(this, mLogFile);
         mLogWriter = null;
 
@@ -207,7 +208,7 @@ public class RedoLogManager {
         try {
             mRolloverMgr.crashRecovery();
         } catch (IOException e) {
-            mLog.fatal("Exception during crash recovery");
+            ZimbraLog.redolog.fatal("Exception during crash recovery");
             signalFatalError(e);
         }
 
@@ -218,7 +219,7 @@ public class RedoLogManager {
         int numRecoveredOps = 0;
 		if (mSupportsCrashRecovery) {
 			mRecoveryMode = true;
-			mLog.info("Starting pre-startup crash recovery");
+			ZimbraLog.redolog.info("Starting pre-startup crash recovery");
 			// Run crash recovery.
 			try {
 				mLogWriter.open();
@@ -231,10 +232,10 @@ public class RedoLogManager {
 				}
 				mLogWriter.close();
 			} catch (Exception e) {
-				mLog.fatal("Exception during crash recovery");
+				ZimbraLog.redolog.fatal("Exception during crash recovery");
 				signalFatalError(e);
 			}
-			mLog.info("Finished pre-startup crash recovery");
+			ZimbraLog.redolog.info("Finished pre-startup crash recovery");
 			mRecoveryMode = false;
 		}
 
@@ -246,7 +247,7 @@ public class RedoLogManager {
             mRolloverMgr.initSequence(mLogWriter.getSequence());
 			mInitialLogSize = mLogWriter.getSize();
 		} catch (IOException e) {
-			mLog.fatal("Unable to open redo log");
+			ZimbraLog.redolog.fatal("Unable to open redo log");
 			signalFatalError(e);
 		}
 
@@ -290,7 +291,7 @@ public class RedoLogManager {
         }
 
         public void run() {
-            mLog.info("Starting post-startup crash recovery");
+            ZimbraLog.redolog.info("Starting post-startup crash recovery");
             boolean interrupted = false;
             for (Iterator iter = mOps.iterator(); iter.hasNext(); ) {
                 synchronized (mShuttingDownGuard) {
@@ -301,15 +302,16 @@ public class RedoLogManager {
                 }
             	RedoableOp op = (RedoableOp) iter.next();
                 try {
-                    mLog.info("REDOING: " + op);
+                    if (ZimbraLog.redolog.isDebugEnabled())
+                        ZimbraLog.redolog.debug("REDOING: " + op);
 					op.redo();
 				} catch (Exception e) {
                     // If there's any problem, just log the error and move on.
                     // The alternative is to abort the server, but that may be
                     // too drastic.
-                    mLog.error("Redo failed for [" + op + "]." +
-                               "  Backend state of affected item is indeterminate." +
-                               "  Marking operation as aborted and moving on.", e);
+                    ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
+                                            "  Backend state of affected item is indeterminate." +
+                                            "  Marking operation as aborted and moving on.", e);
 				} finally {
                     // If the redo didn't work, we need to mark this operation
                     // as aborted in the redolog so it doesn't get reattempted
@@ -329,7 +331,7 @@ public class RedoLogManager {
             MailboxIndex.flushAllWriters();
 
             if (!interrupted)
-                mLog.info("Finished post-startup crash recovery");
+                ZimbraLog.redolog.info("Finished post-startup crash recovery");
 
             // Being paranoid...
             mOps.clear();
@@ -362,7 +364,7 @@ public class RedoLogManager {
             mLogWriter.flush();
 			mLogWriter.close();
 		} catch (Exception e) {
-			mLog.error("Error closing redo log " + mLogFile.getName(), e);
+			ZimbraLog.redolog.error("Error closing redo log " + mLogFile.getName(), e);
 		}
 
         double rate = 0.0;
@@ -371,7 +373,7 @@ public class RedoLogManager {
                 ((double) Math.round(
                     ((double) mElapsed ) / mCounter * 1000
                 )) / 1000;
-        mLog.info("Logged: " + mCounter + " items, " + rate + "ms/item");
+        ZimbraLog.redolog.info("Logged: " + mCounter + " items, " + rate + "ms/item");
     }
 
 	public TransactionId getNewTxnId() {
@@ -453,11 +455,11 @@ public class RedoLogManager {
                 } catch (NullPointerException e) {
                     StackTraceElement stack[] = e.getStackTrace();
                     if (stack == null || stack.length == 0) {
-                        mLog.warn("Caught NullPointerException during redo logging, but " +
-                                  "there is no stack trace in the exception.  " +
-                                  "If you are running Sun server VM, you could be hitting " +
-                                  "Java bug 4292742.  (http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4292742)  " +
-                                  "Re-run the test case with client VM to see the stack trace.", e);
+                        ZimbraLog.redolog.warn("Caught NullPointerException during redo logging, but " +
+                                               "there is no stack trace in the exception.  " +
+                                               "If you are running Sun server VM, you could be hitting " +
+                                               "Java bug 4292742.  (http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4292742)  " +
+                                               "Re-run the test case with client VM to see the stack trace.", e);
                     }
 
                     // When running with server VM ("java -server" command line) some NPEs
@@ -488,21 +490,21 @@ public class RedoLogManager {
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);
                 } catch (Throwable e) {
-					mLog.error("Redo logging to logger " + mLogWriter.getClass().getName() + " failed", e);
+					ZimbraLog.redolog.error("Redo logging to logger " + mLogWriter.getClass().getName() + " failed", e);
 					signalFatalError(e);
 				}
 
-				if (mLog.isDebugEnabled())
-					mLog.debug(op.toString());
+				if (ZimbraLog.redolog.isDebugEnabled())
+					ZimbraLog.redolog.debug(op.toString());
 			} finally {
 				readLock.release();
 			}
 		} catch (InterruptedException e) {
 		    synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
-        			mLog.warn("InterruptedException while logging", e);
+        			ZimbraLog.redolog.warn("InterruptedException while logging", e);
                 else
-                    mLog.info("Thread interrupted for shutdown");
+                    ZimbraLog.redolog.info("Thread interrupted for shutdown");
 		    }
 		}
 	}
@@ -543,17 +545,28 @@ public class RedoLogManager {
 				result = !mLogWriter.isEmpty();
 			} else {
 				long size = mLogWriter.getSize();
-				result = size >= mLogRolloverSizeLimit && size > mInitialLogSize;
+				if (size >= mLogRolloverHardMaxBytes) {
+				    // Log is bigger than hard max.
+				    result = true;
+				} else if (size >= mLogRolloverSoftMaxBytes && size > mInitialLogSize) {
+				    // Log is bigger than soft max, but it it old enough?
+				    long now = System.currentTimeMillis();
+                    long createTime = Math.min(mLogWriter.getCreateTime(), now);
+                    long age = now - createTime;
+				    result = age >= mLogRolloverMinAgeMillis;
+				}
 			}
 		} catch (IOException e) {
-			mLog.fatal("Unable to get redo log size");
+			ZimbraLog.redolog.fatal("Unable to get redo log size");
 			signalFatalError(e);
 		}
 		return result;
 	}
 
-	protected void setRolloverSizeLimit(long bytes) {
-		mLogRolloverSizeLimit = bytes;
+	protected void setRolloverLimits(long minAgeMillis, long softMaxBytes, long hardMaxBytes) {
+	    mLogRolloverMinAgeMillis = minAgeMillis;
+	    mLogRolloverSoftMaxBytes = softMaxBytes;
+	    mLogRolloverHardMaxBytes = hardMaxBytes;
 	}
 
 	/**
@@ -574,17 +587,18 @@ public class RedoLogManager {
 		} catch (InterruptedException e) {
 		    synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
-        			mLog.error("InterruptedException during log rollover", e);
+        			ZimbraLog.redolog.error("InterruptedException during log rollover", e);
                 else
-                    mLog.debug("Rollover interrupted during shutdown");
+                    ZimbraLog.redolog.debug("Rollover interrupted during shutdown");
 		    }
 			return rolledOverFile;
 		}
 
 		try {
 			if (isRolloverNeeded(force)) {
-				mLog.debug("Redo log rollover started");
+				ZimbraLog.redolog.debug("Redo log rollover started");
 
+				long start = System.currentTimeMillis();
 				// Force the database to persist the committed changes to disk.
                 // This is very important when running mysql with innodb_flush_log_at_trx_commit=0 (or 2).
                 Db.getInstance().flushToDisk();
@@ -595,10 +609,11 @@ public class RedoLogManager {
                     rolledOverFile = mLogWriter.rollover(mActiveOps);
 					mInitialLogSize = mLogWriter.getSize();
 				}
-				mLog.debug("Redo log rollover finished");
+                long elapsed = System.currentTimeMillis() - start;
+				ZimbraLog.redolog.info("Redo log rollover took " + elapsed + "ms");
 			}
 		} catch (IOException e) {
-			mLog.error("IOException during redo log rollover");
+			ZimbraLog.redolog.error("IOException during redo log rollover");
 			signalFatalError(e);
         } finally {
 			writeLock.release();
@@ -607,7 +622,7 @@ public class RedoLogManager {
         /* TODO: Finish implementing Rollover as a replicated op.
          * Checking in this partial code to work on something else.
         if (rolledOverFile != null) {
-            mLog.info("Rollover: " + rolledOverFile.getName());
+            ZimbraLog.redolog.info("Rollover: " + rolledOverFile.getName());
             // Log rollover marker to redolog stream.
             Rollover ro = new Rollover(rolledOverFile);
             ro.start(System.currentTimeMillis());
@@ -710,9 +725,9 @@ public class RedoLogManager {
         } catch (InterruptedException e) {
             synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
-                    mLog.error("InterruptedException during redo log scan for CommitId", e);
+                    ZimbraLog.redolog.error("InterruptedException during redo log scan for CommitId", e);
                 else
-                    mLog.debug("Redo log scan for CommitId interrupted for shutdown");
+                    ZimbraLog.redolog.debug("Redo log scan for CommitId interrupted for shutdown");
             }
             return null;
         }

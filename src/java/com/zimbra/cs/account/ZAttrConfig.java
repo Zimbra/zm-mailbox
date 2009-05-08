@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090505-2310 */
+    /* build: 5.0 jhahm 20090508-1224 */
 
     /**
      * RFC2256: descriptive information
@@ -293,7 +293,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @return zimbraAccountClientAttr, or empty array if unset
      */
@@ -303,7 +304,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param zimbraAccountClientAttr new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -316,7 +318,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param zimbraAccountClientAttr new value
      * @param attrs existing map to populate, or null to create a new map
@@ -330,7 +333,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param zimbraAccountClientAttr new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -343,7 +347,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param zimbraAccountClientAttr new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -357,7 +362,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param zimbraAccountClientAttr existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -370,7 +376,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param zimbraAccountClientAttr existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -384,7 +391,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -396,7 +404,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2700,7 +2709,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @return zimbraCOSInheritedAttr, or empty array if unset
      */
@@ -2710,7 +2720,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param zimbraCOSInheritedAttr new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2723,7 +2734,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param zimbraCOSInheritedAttr new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2737,7 +2749,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param zimbraCOSInheritedAttr new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2750,7 +2763,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param zimbraCOSInheritedAttr new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -2764,7 +2778,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param zimbraCOSInheritedAttr existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2777,7 +2792,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param zimbraCOSInheritedAttr existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -2791,7 +2807,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -2803,7 +2820,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5075,7 +5093,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @return zimbraDomainAdminModifiableAttr, or empty array if unset
      */
@@ -5085,7 +5105,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param zimbraDomainAdminModifiableAttr new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5098,7 +5120,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param zimbraDomainAdminModifiableAttr new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5112,7 +5136,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param zimbraDomainAdminModifiableAttr new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5125,7 +5151,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param zimbraDomainAdminModifiableAttr new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -5139,7 +5167,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param zimbraDomainAdminModifiableAttr existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5152,7 +5182,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param zimbraDomainAdminModifiableAttr existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -5166,7 +5198,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5178,7 +5212,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5325,7 +5361,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @return zimbraDomainInheritedAttr, or empty array if unset
      */
@@ -5335,7 +5373,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param zimbraDomainInheritedAttr new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5348,7 +5388,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param zimbraDomainInheritedAttr new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5362,7 +5404,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param zimbraDomainInheritedAttr new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5375,7 +5419,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param zimbraDomainInheritedAttr new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -5389,7 +5435,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param zimbraDomainInheritedAttr existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5402,7 +5450,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param zimbraDomainInheritedAttr existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -5416,7 +5466,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5428,7 +5480,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16710,7 +16764,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @return zimbraRedoLogRolloverFileSizeKB, or 1048576 if unset
      */
@@ -16720,7 +16775,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @param zimbraRedoLogRolloverFileSizeKB new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16733,7 +16789,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @param zimbraRedoLogRolloverFileSizeKB new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16747,7 +16804,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -16759,7 +16817,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16768,6 +16827,160 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetRedoLogRolloverFileSizeKB(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRedoLogRolloverFileSizeKB, "");
+        return attrs;
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @return zimbraRedoLogRolloverHardMaxFileSizeKB, or 4194304 if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public int getRedoLogRolloverHardMaxFileSizeKB() {
+        return getIntAttr(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, 4194304);
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @param zimbraRedoLogRolloverHardMaxFileSizeKB new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public void setRedoLogRolloverHardMaxFileSizeKB(int zimbraRedoLogRolloverHardMaxFileSizeKB) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, Integer.toString(zimbraRedoLogRolloverHardMaxFileSizeKB));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @param zimbraRedoLogRolloverHardMaxFileSizeKB new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public Map<String,Object> setRedoLogRolloverHardMaxFileSizeKB(int zimbraRedoLogRolloverHardMaxFileSizeKB, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, Integer.toString(zimbraRedoLogRolloverHardMaxFileSizeKB));
+        return attrs;
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public void unsetRedoLogRolloverHardMaxFileSizeKB() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public Map<String,Object> unsetRedoLogRolloverHardMaxFileSizeKB(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, "");
+        return attrs;
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @return zimbraRedoLogRolloverMinFileAge, or 60 if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public int getRedoLogRolloverMinFileAge() {
+        return getIntAttr(Provisioning.A_zimbraRedoLogRolloverMinFileAge, 60);
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @param zimbraRedoLogRolloverMinFileAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public void setRedoLogRolloverMinFileAge(int zimbraRedoLogRolloverMinFileAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, Integer.toString(zimbraRedoLogRolloverMinFileAge));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @param zimbraRedoLogRolloverMinFileAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public Map<String,Object> setRedoLogRolloverMinFileAge(int zimbraRedoLogRolloverMinFileAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, Integer.toString(zimbraRedoLogRolloverMinFileAge));
+        return attrs;
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public void unsetRedoLogRolloverMinFileAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public Map<String,Object> unsetRedoLogRolloverMinFileAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, "");
         return attrs;
     }
 
@@ -21974,7 +22187,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @return zimbraServerInheritedAttr, or empty array if unset
      */
@@ -21984,7 +22199,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param zimbraServerInheritedAttr new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21997,7 +22214,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param zimbraServerInheritedAttr new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22011,7 +22230,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param zimbraServerInheritedAttr new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22024,7 +22245,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param zimbraServerInheritedAttr new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -22038,7 +22261,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param zimbraServerInheritedAttr existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22051,7 +22276,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param zimbraServerInheritedAttr existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -22065,7 +22292,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -22077,7 +22306,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

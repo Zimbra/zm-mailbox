@@ -371,10 +371,12 @@ public class RedoPlayer {
         long lookBackDuration = RedoConfig.redoLogCrashRecoveryLookbackSec() * 1000;
         if (lookBackDuration > 0) {
             // Guess the last op's timestamp.  Use the log file's last modified time.  Sanity check it by
-            // going no earlier than first op time written in the log.
+            // going no earlier than the create time written in the log.  We can't rely on the last
+            // op time field in the header because that is only accurate when the file was closed normally
+            // but in crash recovery we're not dealing with a normally closed log.
             long logLastModTime = redoLog.lastModified();
-            long firstOpTstamp = (new FileLogReader(redoLog)).getHeader().getLastOpTstamp();
-            long lastOpTstamp = Math.max(logLastModTime, firstOpTstamp);
+            long logCreateTime = (new FileLogReader(redoLog)).getHeader().getCreateTime();
+            long lastOpTstamp = Math.max(logLastModTime, logCreateTime);
             lookBackTstamp = lastOpTstamp - lookBackDuration;
         }
 

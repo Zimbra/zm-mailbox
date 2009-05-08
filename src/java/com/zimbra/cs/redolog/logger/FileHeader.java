@@ -26,7 +26,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -56,6 +58,7 @@ import com.zimbra.cs.redolog.Version;
  *   lastOpTstamp   4 bytes; time of last op in file
  *   version        4 bytes; serialization version number
  *                  (2-byte major, 2-byte minor)
+ *   createTime     4 bytes; time this log file was created
  *   padding        0-value bytes to bring total header size to 512
  */
 public class FileHeader {
@@ -71,6 +74,7 @@ public class FileHeader {
                                         // zimbraId attribute from LDAP
     private long mFirstOpTstamp;        // time of first op in log file
     private long mLastOpTstamp;         // time of last op in log file
+    private long mCreateTime;           // create time of log file
 
     private Version mVersion;			// redo log version
 
@@ -85,6 +89,7 @@ public class FileHeader {
         mServerId = serverId;
         mFirstOpTstamp = 0;
         mLastOpTstamp = 0;
+        mCreateTime = 0;
         mVersion = Version.latest();
     }
 
@@ -131,6 +136,10 @@ public class FileHeader {
     	mLastOpTstamp = t;
     }
 
+    void setCreateTime(long t) {
+        mCreateTime = t;
+    }
+
     public boolean getOpen() {
     	return mOpen != 0;
     }
@@ -153,6 +162,10 @@ public class FileHeader {
 
     public long getLastOpTstamp() {
     	return mLastOpTstamp;
+    }
+
+    public long getCreateTime() {
+        return mCreateTime;
     }
 
     /**
@@ -200,10 +213,6 @@ public class FileHeader {
         //                     up to SERVER_ID_FIELD_LEN bytes
         //   padding  (byte[]) optional; 0 bytes to make
         //                     length(serverId + padding) = SERVER_ID_FIELD_LEN
-        //
-        // Although unlikely, extremely long serverId might exceed
-        // SERVER_ID_FIELD_LEN and only partial data may be written.  Don't
-        // count on serverId being complete when reading the header.
         byte[] serverIdBuf =
             getStringBytes(mServerId, "UTF-8", SERVER_ID_FIELD_LEN);
         out.writeByte((byte) serverIdBuf.length);
@@ -217,6 +226,7 @@ public class FileHeader {
         out.writeLong(mFirstOpTstamp);
         out.writeLong(mLastOpTstamp);
         mVersion.serialize(out);
+        out.writeLong(mCreateTime);
 
         int currentLen = baos.size();
         if (currentLen < HEADER_LEN) {
@@ -269,20 +279,38 @@ public class FileHeader {
             // Assume version 1.0 for those files.
             if (!mVersion.atLeast(1, 0))
             	mVersion = new Version(1, 0);
+
+            mCreateTime = in.readLong();
         } finally {
             bais.close();
         }
     }
 
+    private static String DATE_FORMAT = "EEE, yyyy/MM/dd HH:mm:ss.SSS z";
+
     public String toString() {
-        StringBuffer sb = new StringBuffer(100);
+        SimpleDateFormat fmt = new SimpleDateFormat(DATE_FORMAT);
+        StringBuilder sb = new StringBuilder(100);
         sb.append("sequence: ").append(mSeq).append("\n");
-        sb.append("open: ").append(mOpen).append("\n");
+        sb.append("open:     ").append(mOpen).append("\n");
         sb.append("filesize: ").append(mFileSize).append("\n");
         sb.append("serverId: ").append(mServerId).append("\n");
-        sb.append("firstOpTstamp: ").append(mFirstOpTstamp).append("\n");
-        sb.append("lastOpTstamp:  ").append(mLastOpTstamp).append("\n");
-        sb.append("version: ").append(mVersion).append("\n");
+        sb.append("created:  ");
+        if (mCreateTime != 0)
+            sb.append(fmt.format(new Date(mCreateTime))).append(" (").append(mCreateTime).append(")");
+        sb.append("\n");
+        sb.append("first op: ");
+        if (mFirstOpTstamp != 0)
+            sb.append(fmt.format(new Date(mFirstOpTstamp))).append(" (").append(mFirstOpTstamp).append(")");
+        sb.append("\n");
+        sb.append("last op:  ");
+        if (mLastOpTstamp != 0) {
+            sb.append(fmt.format(new Date(mLastOpTstamp))).append(" (").append(mLastOpTstamp).append(")");
+            if (mOpen != 0)
+                sb.append(" (not up to date)");
+        }
+        sb.append("\n");
+        sb.append("version:  ").append(mVersion).append("\n");
     	return sb.toString();
     }
 }

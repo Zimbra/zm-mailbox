@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090505-2310 */
+    /* build: 5.0 jhahm 20090508-1224 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11080,7 +11080,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @return zimbraRedoLogRolloverFileSizeKB, or 1048576 if unset
      */
@@ -11090,7 +11091,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @param zimbraRedoLogRolloverFileSizeKB new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11103,7 +11105,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @param zimbraRedoLogRolloverFileSizeKB new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11117,7 +11120,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11129,7 +11133,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11138,6 +11143,160 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetRedoLogRolloverFileSizeKB(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRedoLogRolloverFileSizeKB, "");
+        return attrs;
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @return zimbraRedoLogRolloverHardMaxFileSizeKB, or 4194304 if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public int getRedoLogRolloverHardMaxFileSizeKB() {
+        return getIntAttr(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, 4194304);
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @param zimbraRedoLogRolloverHardMaxFileSizeKB new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public void setRedoLogRolloverHardMaxFileSizeKB(int zimbraRedoLogRolloverHardMaxFileSizeKB) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, Integer.toString(zimbraRedoLogRolloverHardMaxFileSizeKB));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @param zimbraRedoLogRolloverHardMaxFileSizeKB new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public Map<String,Object> setRedoLogRolloverHardMaxFileSizeKB(int zimbraRedoLogRolloverHardMaxFileSizeKB, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, Integer.toString(zimbraRedoLogRolloverHardMaxFileSizeKB));
+        return attrs;
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public void unsetRedoLogRolloverHardMaxFileSizeKB() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public Map<String,Object> unsetRedoLogRolloverHardMaxFileSizeKB(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverHardMaxFileSizeKB, "");
+        return attrs;
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @return zimbraRedoLogRolloverMinFileAge, or 60 if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public int getRedoLogRolloverMinFileAge() {
+        return getIntAttr(Provisioning.A_zimbraRedoLogRolloverMinFileAge, 60);
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @param zimbraRedoLogRolloverMinFileAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public void setRedoLogRolloverMinFileAge(int zimbraRedoLogRolloverMinFileAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, Integer.toString(zimbraRedoLogRolloverMinFileAge));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @param zimbraRedoLogRolloverMinFileAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public Map<String,Object> setRedoLogRolloverMinFileAge(int zimbraRedoLogRolloverMinFileAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, Integer.toString(zimbraRedoLogRolloverMinFileAge));
+        return attrs;
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public void unsetRedoLogRolloverMinFileAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public Map<String,Object> unsetRedoLogRolloverMinFileAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRedoLogRolloverMinFileAge, "");
         return attrs;
     }
 

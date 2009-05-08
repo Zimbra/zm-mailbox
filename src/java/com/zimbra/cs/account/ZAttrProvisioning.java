@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090505-2310 */
+    /* build: 5.0 jhahm 20090508-1224 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1106,7 +1106,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountCalendarUserType = "zimbraAccountCalendarUserType";
 
     /**
-     * additional account attrs that get returned to a client
+     * Deprecated since: 5.0. deprecated in favor of the accountInfo flag.
+     * Orig desc: additional account attrs that get returned to a client
      */
     @ZAttr(id=112)
     public static final String A_zimbraAccountClientAttr = "zimbraAccountClientAttr";
@@ -1895,7 +1896,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCOSId = "zimbraCOSId";
 
     /**
-     * zimbraCOS attrs that get inherited in a zimbraAccount
+     * Deprecated since: 5.0. deprecated in favor of the accountInherited
+     * flag. Orig desc: zimbraCOS attrs that get inherited in a zimbraAccount
      */
     @ZAttr(id=21)
     public static final String A_zimbraCOSInheritedAttr = "zimbraCOSInheritedAttr";
@@ -2181,7 +2183,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainAdminMaxMailQuota = "zimbraDomainAdminMaxMailQuota";
 
     /**
-     * account attributes that a domain administrator is allowed to modify
+     * Deprecated since: 5.0. deprecated in favor of the
+     * domainAdminAdminModifiable flag. Orig desc: account attributes that a
+     * domain administrator is allowed to modify
      */
     @ZAttr(id=300)
     public static final String A_zimbraDomainAdminModifiableAttr = "zimbraDomainAdminModifiableAttr";
@@ -2235,7 +2239,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainId = "zimbraDomainId";
 
     /**
-     * zimbraDomain attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the domainInherited
+     * flag. Orig desc: zimbraDomain attrs that get inherited from global
+     * config
      */
     @ZAttr(id=63)
     public static final String A_zimbraDomainInheritedAttr = "zimbraDomainInheritedAttr";
@@ -5902,10 +5908,29 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRedoLogProvider = "zimbraRedoLogProvider";
 
     /**
-     * redo.log file rolls over when it gets to this size
+     * redo.log file becomes eligible for rollover over when it goes over
+     * this size
      */
     @ZAttr(id=78)
     public static final String A_zimbraRedoLogRolloverFileSizeKB = "zimbraRedoLogRolloverFileSizeKB";
+
+    /**
+     * redo.log file rolls over when it goes over this size, even if it does
+     * not meet the minimum file age requirement
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1021)
+    public static final String A_zimbraRedoLogRolloverHardMaxFileSizeKB = "zimbraRedoLogRolloverHardMaxFileSizeKB";
+
+    /**
+     * minimum age in minutes for redo.log file before it becomes eligible
+     * for rollover based on size
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1020)
+    public static final String A_zimbraRedoLogRolloverMinFileAge = "zimbraRedoLogRolloverMinFileAge";
 
     /**
      * Path to remote management command to execute on this server
@@ -6414,7 +6439,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraServerId = "zimbraServerId";
 
     /**
-     * zimbraServer attrs that get inherited from global config
+     * Deprecated since: 5.0. deprecated in favor of the serverInherited
+     * flag. Orig desc: zimbraServer attrs that get inherited from global
+     * config
      */
     @ZAttr(id=62)
     public static final String A_zimbraServerInheritedAttr = "zimbraServerInheritedAttr";
