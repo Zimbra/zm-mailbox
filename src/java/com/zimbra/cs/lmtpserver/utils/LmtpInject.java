@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,44 +27,238 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.PoolableObjectFactory;
-import org.apache.commons.pool.impl.GenericObjectPool;
 
-import com.zimbra.cs.lmtpserver.LmtpProtocolException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient.Protocol;
-import com.zimbra.common.util.*;
 
+@SuppressWarnings("static-access")
 public class LmtpInject {
 
     private static Log mLog = LogFactory.getLog(LmtpInject.class);
 
     private static Options mOptions = new Options();
 
+    private String mSender;
+    private String[] mRecipients;
+    private File[] mFiles;
+    private String mHost;
+    private int mPort;
+    private Protocol mProto;
+    private int mCurrentFileIndex = 0;
+
+    private int mSucceeded;
+    private int mFailed;
+    private int mIgnored;
+
+    private long mStartTime;
+    private long mLastProgressTime;
+    private int mLastProgressCount;
+    private boolean mQuietMode = false;
+    private boolean mVerbose = false;
+
+    private volatile long mFileSizeTotal = 0;
+    private int mNumThreads;
+
+    private LmtpInject(int numThreads,
+                       String sender,
+                       String[] recipients,
+                       File[] files,
+                       String host,
+                       int port,
+                       Protocol proto,
+                       boolean quietMode,
+                       boolean tracingEnabled,
+                       boolean verbose)
+    throws Exception {
+        mNumThreads = numThreads;
+        mSender = sender;
+        mRecipients = recipients;
+        mFiles = files;
+        mHost = host;
+        mPort = port;
+        mProto = proto;
+        mSucceeded = mFailed = mIgnored = 0;
+        mStartTime = mLastProgressTime = 0;
+        mLastProgressCount = 0;
+        mQuietMode = quietMode;
+        mVerbose = verbose;
+    }
+
+    public synchronized void markStartTime() {
+        mStartTime = mLastProgressTime = System.currentTimeMillis();
+    }
+
+    private int mReportEvery = 100;
+    public synchronized void setReportEvery(int num) { mReportEvery = num; }
+    
+    public void incSuccess() {
+        int count;
+        int lastCount = 0;
+        long lastTime = 0;
+        long startTime = 0;
+        long now = 0;
+        boolean report = false;
+
+        synchronized (this) {
+            count = ++mSucceeded;
+            if (count % mReportEvery == 0) {
+                report = true;
+                startTime = mStartTime;
+                lastCount = mLastProgressCount;
+                lastTime = mLastProgressTime;
+                mLastProgressCount = count;
+                now = System.currentTimeMillis();
+                mLastProgressTime = now;
+            }
+        }
+        if (report && !mQuietMode) {
+            long elapsed = now - lastTime;
+            long howmany = count - lastCount;
+            double rate = 0.0;
+            if (elapsed > 0)
+                rate = howmany * 1000.0 / elapsed;
+
+            long elapsedTotal = now - startTime;
+            double rateAvg = 0.0;
+            if (elapsedTotal > 0)
+                rateAvg = count * 1000.0 / elapsedTotal;
+
+            System.out.printf(
+                    "[progress] " +
+                    "%d msgs in %dms @ %.2fmps; " +
+                    "last %d msgs in %dms @ %.2fmps\n",
+                    count, elapsedTotal, rateAvg,
+                    howmany, elapsed, rate);
+        }
+    }
+    public synchronized void incFailure() { mFailed++; }
+    public synchronized void incIgnored() { mIgnored++; }
+    public synchronized int getSuccessCount() { return mSucceeded; }
+    public synchronized int getFailureCount() { return mFailed; }
+    public String getSender() { return mSender; }
+
+    String getHost() { return mHost; }
+    int getPort() { return mPort; }
+    Protocol getProtocol() { return mProto; }
+    boolean isVerbose() { return mVerbose; }
+    boolean isQuiet() { return mQuietMode; }
+    
+    /**
+     * Returns the next file and increments the current file
+     * index.
+     */
+    synchronized File getNextFile() {
+        if (mCurrentFileIndex >= mFiles.length) {
+            return null;
+        }
+        return mFiles[mCurrentFileIndex++];
+    }
+    
+    public String[] getRecipients() {
+        return mRecipients;
+    }
+
+    public void addToFileSizeTotal(long size) {
+        mFileSizeTotal += size;
+    }
+    
+    private void run()
+    throws IOException {
+        Thread[] threads = new Thread[mNumThreads];
+
+        // Start threads.
+        for (int i = 0; i < mNumThreads; i++) {
+            threads[i] = new Thread(new LmtpInjectTask(this));
+            threads[i].start();
+        }
+        
+        // Wait for them to finish.
+        for (int i = 0; i < mNumThreads; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+
+    private static class LmtpInjectTask implements Runnable {
+        private LmtpInject mDriver;
+        private LmtpClient mClient;
+
+        public LmtpInjectTask(LmtpInject driver)
+        throws IOException {
+            mDriver = driver;
+            mClient = new LmtpClient(driver.getHost(), driver.getPort(), mDriver.getProtocol());
+            if (mDriver.isVerbose() && !mDriver.isQuiet()) {
+                mClient.quiet(false);
+            } else {
+                mClient.quiet(true);
+            }
+        }
+
+        public void run() {
+            File file = mDriver.getNextFile();
+            while (file != null) {
+                InputStream in = null;
+                try {
+                    boolean ok = false;
+                    long dataLength;
+
+                    if (FileUtil.isGzipped(file)) {
+                        dataLength = ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(file)));
+                        in = new GZIPInputStream(new FileInputStream(file));
+                    } else {
+                        dataLength = file.length();
+                        in = new FileInputStream(file);
+                    }
+
+                    ok = mClient.sendMessage(in, mDriver.getRecipients(), mDriver.getSender(), file.getName(), dataLength);
+                    if (ok) {
+                        mDriver.incSuccess();
+                        mDriver.addToFileSizeTotal(file.length());
+                    } else {
+                        mDriver.incFailure();
+                    }
+                } catch (Exception e) {
+                    mDriver.incFailure();
+                    mLog.warn("Delivery failed for " + file.getPath() + ": ", e);
+                } finally {
+                    ByteUtil.closeStream(in);
+                }
+                file = mDriver.getNextFile();
+            }
+        }
+    }
+
     static {
         mOptions.addOption("d", "directory", true,  "message file directory");
         mOptions.addOption("a", "address",   true,  "lmtp server (default localhost)");
         mOptions.addOption("p", "port",      true,  "lmtp server port (default 7025)");
-        mOptions.addOption("s", "sender",    true,  "envelope sender (mail from)");
+        mOptions.addOption(
+            OptionBuilder.withLongOpt("sender").hasArg(true).withDescription("envelope sender (mail from)").create("s"));
         Option ropt = new Option("r", "recipient", true,
             "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
             "if a list of input files is used.");
         ropt.setArgs(Option.UNLIMITED_VALUES);
-        mOptions.addOption(null, "sendToAll", false, "send each message to all recipients");
-        mOptions.addOption(ropt);
+        mOptions.addOption(
+            OptionBuilder.withLongOpt("recipient").hasArgs(Option.UNLIMITED_VALUES).withDescription(
+                "envelope recipients (rcpt to).  This option accepts multiple arguments, so it can't be last " +
+                "if a list of input files is used.").create("r"));
         mOptions.addOption("t", "threads",   true,  "number of worker threads (default 1)");
-        mOptions.addOption("q", "quiet",     false, "don't print per-message status");
+        mOptions.addOption("q", "quiet",     false, "don't print status");
         mOptions.addOption("T", "trace",     false, "trace server/client traffic");
         mOptions.addOption("N", "every",     true,  "report progress after every N messages (default 100)");
-        mOptions.addOption("w", "warmUpThreshold", true, "warm-up server with first N messages, then start measuring (default no warm-up)");
-        mOptions.addOption("S", "stopAfter", true,  "stop after sending this many messages after warm-up");
-        mOptions.addOption("u", "username",  true,  "username prefix (default \"user\")");
-        mOptions.addOption("D", "domain",    true,  "default per-connection recipient domain (default example.zimbra.com)");
-        mOptions.addOption("z", "repeat",    true,  "repeatedly inject these messages NUM times");
         mOptions.addOption(null, "smtp",     false, "use SMTP protocol instead of LMTP");
         mOptions.addOption("h", "help",      false, "display usage information");
+        mOptions.addOption("v", "verbose",   false, "print detailed delivery status");
         mOptions.addOption(null, "noValidation", false, "don't validate file content");
     }
 
@@ -106,6 +299,7 @@ public class LmtpInject {
         if (cl.hasOption("h")) {
             usage(null);
         }
+        boolean quietMode = cl.hasOption("q");
         int threads = 1;
         if (cl.hasOption("t")) {
             threads = Integer.valueOf(cl.getOptionValue("t")).intValue();
@@ -127,36 +321,9 @@ public class LmtpInject {
             port = 7025;
         if (cl.hasOption("p"))
             port = Integer.valueOf(cl.getOptionValue("p")).intValue();
-        
-        mLog.info("connections=" + threads + " host=" + host + " port=" + port);
 
-        String defaultUsernamePrefix = "user";
-        if (cl.hasOption("u")) {
-            defaultUsernamePrefix = cl.getOptionValue("u");
-        }
-        LmtpClientFactory.setUsernamePrefix(defaultUsernamePrefix);
-
-        String defaultRecipientDomain = "example.zimbra.com";
-        if (cl.hasOption("D")) {
-            defaultRecipientDomain = cl.getOptionValue("D");
-        }
-        LmtpClientFactory.setRecipientDomain(defaultRecipientDomain);
-
-        boolean sendToAll = cl.hasOption("sendToAll");
-        String[] recipients = null;
-        String sender = null;
-        if (cl.hasOption("r"))
-            recipients = cl.getOptionValues("r");
-        if (recipients == null)
-            mLog.info("Using default recipients " + defaultUsernamePrefix + 1 + "@" + defaultRecipientDomain +
-                    " through " + defaultUsernamePrefix + threads + "@" + defaultRecipientDomain);
-        if (cl.hasOption("s")) {
-            sender = cl.getOptionValue("s");
-        } else {
-            usage("sender not specified");
-        }
-
-        boolean quietMode = cl.hasOption("q");
+        String[] recipients = cl.getOptionValues("r");
+        String sender = cl.getOptionValue("s");
         boolean tracingEnabled = cl.hasOption("T");
 
         int everyN;
@@ -164,18 +331,6 @@ public class LmtpInject {
             everyN = Integer.valueOf(cl.getOptionValue("N")).intValue();
         } else {
             everyN = 100;
-        }
-
-        int warmUpThreshold = 0;
-        if (cl.hasOption("w")) {
-            warmUpThreshold = Integer.valueOf(cl.getOptionValue("w")).intValue();
-        }
-        if (warmUpThreshold < 0)
-            warmUpThreshold = 0;
-
-        int stopAfter = 0;
-        if (cl.hasOption("S")) {
-            stopAfter = Integer.valueOf(cl.getOptionValue("S")).intValue();
         }
 
         File[] files;
@@ -219,68 +374,39 @@ public class LmtpInject {
             }
         }
 
-        int numRuns = 1;
-        if (cl.hasOption("z")) {
-            numRuns = Integer.parseInt(cl.getOptionValue("z"));
-            mLog.info("-z option requests "+numRuns+" runs.");
+        if (!quietMode) {
+            System.out.format("Injecting %d messages to %d recipients.  Server %s, port %d, using %d thread(s).\n",
+                files.length, recipients.length, host, port, threads);
         }
 
         int totalFailed = 0;
         int totalSucceeded = 0;
+        long startTime = System.currentTimeMillis();
+        boolean verbose = cl.hasOption("v");
 
         LmtpInject injector = null;
         try {
             injector = new LmtpInject(threads,
-                    sender, sendToAll, recipients,
+                    sender, recipients, files,
                     host, port, proto,
-                    numRuns, quietMode, tracingEnabled);
+                    quietMode, tracingEnabled, verbose);
         } catch (Exception e) {
             mLog.error("Unable to initialize LmtpInject", e);
             System.exit(-1);
         }
 
         injector.setReportEvery(everyN);
-        int numFiles = files.length;
-        if (stopAfter > 0 && warmUpThreshold >= 0)
-            numFiles = Math.min(files.length, warmUpThreshold + stopAfter);
-        injector.setNumInputFiles(numFiles);
         injector.markStartTime();
-        if (warmUpThreshold > 0)
-            injector.enableWarmUp(warmUpThreshold);
-
-        for (int runCount = 0; runCount < numRuns; runCount++) {
-            for (int i = 0; i < numFiles; i++) {
-                if (files[i].isDirectory()) {
-                    mLog.info("Ignoring directory " + files[i].getPath());
-                    injector.incIgnored();
-                    continue;
-                }
-
-                boolean result = injector.processFile(files[i]);
-                if (!result)
-                    injector.incFailure();
-            }
-        }
-
-        synchronized (injector.mFinishCond) {
-            try {
-                if (!injector.mFinished)
-                    injector.mFinishCond.wait();
-            } catch (InterruptedException e) {
-                mLog.warn("InterruptedException while waiting for queue to clear", e);
-            }
-        }
-
-        // Wait until thread pool finishes processing all scheduled injections.
         try {
-            injector.cleanup();
-        } catch (Exception e) {
-            mLog.warn("Exception while shutting down LmtpInject", e);
+            injector.run();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
         }
 
         int succeeded = injector.getSuccessCount();
         int failedThisTime = injector.getFailureCount();
-        long elapsedMS = injector.getElapsedTime();
+        long elapsedMS = System.currentTimeMillis() - startTime;
         double elapsed = elapsedMS / 1000.0;
         double msPerMsg = 0.0;
         double msgSizeKB = 0.0;
@@ -291,412 +417,22 @@ public class LmtpInject {
             msgSizeKB /= succeeded;
         }
         double msgPerSec = ((double) succeeded / (double) elapsedMS) * 1000;
-        System.out.println();
-        System.out.printf(
+        if (!quietMode) {
+            System.out.println();
+            System.out.printf(
                 "LmtpInject Finished\n" +
                 "submitted=%d failed=%d\n" +
-                "maximum concurrent active connections: %d\n" +
-                "%.2fs, %.2fms/msg, %.2fmps\n" +
+                "%.2fs, %.2fms/msg, %.2fmsg/s\n" +
                 "average message size = %.2fKB\n",
                 succeeded, failedThisTime,
-                injector.mHwmActiveClients,
                 elapsed, msPerMsg, msgPerSec,
                 msgSizeKB);
+        }
 
         totalFailed+=failedThisTime;
         totalSucceeded+=succeeded;
 
-        if (numRuns > 1) {
-            System.out.println("\nLmtpInject Finished "+numRuns+" runs");
-            System.out.println("submitted=" + totalSucceeded + " failed=" + totalFailed);
-        }
-
         if (totalFailed!= 0)
             System.exit(1);
-    }
-
-
-    private String mSender;
-    private boolean mSendToAll;
-    private String[] mRecipients;
-    private String[][] mSingleRecipients;
-    private int mNextRecipientIndex = 0;
-    private final Object mNextRecipientGuard = new Object();
-
-    private ThreadPool mThreadPool;
-    private LmtpClientPool mLmtpClientPool;
-
-    // have to use a flag AND a conditional, just in case the conditional
-    // gets signalled before the mainthread gets to wait()
-    private boolean mFinished = false;
-    private final Object mFinishCond = new Object();
-
-    private int mNumInputFiles;
-    private int mNumRuns;
-    private int mSucceeded;
-    private int mFailed;
-    private int mIgnored;
-
-    private long mStartTime;
-    private long mEndTime;
-    private long mLastProgressTime;
-    private int mLastProgressCount;
-
-    private final Object mFileSizeTotalGuard = new Object();
-    private long mFileSizeTotal = 0;
-
-    private int mActiveClients;
-    private int mHwmActiveClients;
-
-    private LmtpInject(int threadPoolSize,
-                       String sender,
-                       boolean sendToAll,
-                       String[] recipients,
-                       String host,
-                       int port,
-                       Protocol proto,
-                       int numRuns,
-                       boolean quietMode,
-                       boolean tracingEnabled)
-    throws Exception {
-        mSender = sender;
-        mSendToAll = sendToAll;
-        if (recipients != null)
-            mRecipients = recipients;
-        if (!mSendToAll && recipients != null && recipients.length > 0) {
-            mSingleRecipients = new String[recipients.length][];
-            for (int i = 0; i < recipients.length; i++) {
-                mSingleRecipients[i] = new String[] { mRecipients[i] };
-            }
-        }
-
-        mNumInputFiles = mSucceeded = mFailed = mIgnored = 0;
-        mNumRuns = numRuns;
-        mStartTime = mEndTime = mLastProgressTime = 0;
-        mLastProgressCount = 0;
-
-        mActiveClients = 0;
-        mHwmActiveClients = 0;
-
-        if (threadPoolSize < 1)
-            threadPoolSize = 1;
-
-        mLmtpClientPool = new LmtpClientPool(
-                threadPoolSize, host, port, proto, quietMode, tracingEnabled);
-
-        // Force all LMTP connections in pool to connect to server.
-        LmtpClient clients[] = new LmtpClient[threadPoolSize];
-        for (int i = 0; i < threadPoolSize; i++) {
-            clients[i] = mLmtpClientPool.getClient();
-        }
-        for (int i = 0; i < threadPoolSize; i++) {
-            mLmtpClientPool.releaseClient(clients[i]);
-        }
-
-        mThreadPool = new ThreadPool("LmtpInject", threadPoolSize);
-    }
-
-    public void cleanup() throws Exception {
-        mThreadPool.shutdownNow();
-        mLmtpClientPool.close();
-    }
-
-    public boolean processFile(File file) {
-        boolean result = true;
-        LmtpInjectTask task = new LmtpInjectTask(this, file);
-        try {
-            mThreadPool.execute(task);
-        } catch (RejectedExecutionException e) {
-            mLog.error("InterruptedException while processing " + file.getName(), e);
-            result = false;
-        }
-        return result;
-    }
-
-    public LmtpClient getClient() throws Exception {
-        return mLmtpClientPool.getClient();
-    }
-
-    public void releaseClient(LmtpClient client) throws Exception {
-        mLmtpClientPool.releaseClient(client);
-    }
-
-    public synchronized long getElapsedTime() { return mEndTime - mStartTime; }
-    public synchronized void markStartTime() {
-        mStartTime = mLastProgressTime = System.currentTimeMillis();
-    }
-    private int mWarmUpThreshold = 0;
-    private boolean mWarmedUp = true;
-    public synchronized void enableWarmUp(int warmUpThreshold) {
-        mWarmedUp = false;
-        mWarmUpThreshold = warmUpThreshold;
-    }
-
-    private int mReportEvery = 100;
-    public synchronized void setReportEvery(int num) { mReportEvery = num; }
-    public void incSuccess() {
-        int count;
-        int lastCount = 0;
-        long lastTime = 0;
-        long startTime = 0;
-        long now = 0;
-        boolean report = false;
-        int activeClients = 0;
-        int activeClientsHWM = 0;
-
-        synchronized (this) {
-            count = ++mSucceeded;
-            checkDone();
-            if (count % mReportEvery == 0) {
-                report = true;
-                startTime = mStartTime;
-                lastCount = mLastProgressCount;
-                lastTime = mLastProgressTime;
-                mLastProgressCount = count;
-                now = System.currentTimeMillis();
-                mLastProgressTime = now;
-                activeClients = mActiveClients;
-                activeClientsHWM = mHwmActiveClients;
-            }
-            if (!mWarmedUp && count == mWarmUpThreshold) {
-                markStartTime();
-                mEndTime = 0;
-                mLastProgressCount = 0;
-                mSucceeded = 0;
-                mWarmedUp = true;
-                System.out.println("Server warmed up after " + mWarmUpThreshold + " messages.  Resetting stats.");
-                report = false;
-                synchronized (mFileSizeTotalGuard) {
-                    mFileSizeTotal = 0;
-                }
-            }
-        }
-        if (report) {
-            long elapsed = now - lastTime;
-            long howmany = count - lastCount;
-            double rate = 0.0;
-            if (elapsed > 0)
-                rate = howmany * 1000.0 / elapsed;
-
-            long elapsedTotal = now - startTime;
-            double rateAvg = 0.0;
-            if (elapsedTotal > 0)
-                rateAvg = count * 1000.0 / elapsedTotal;
-
-            String prefix = mWarmedUp ? "[progress]" : "[warm-up]";
-            System.out.printf(
-                    "%s " +
-                    "%d msgs in %dms @ %.2fmps; " +
-                    "last %d msgs in %dms @ %.2fmps " +
-                    "(active: %d/%d)\n",
-                    prefix,
-                    count, elapsedTotal, rateAvg,
-                    howmany, elapsed, rate,
-                    activeClients, activeClientsHWM);
-        }
-    }
-    public synchronized void incFailure() { mFailed++; checkDone(); }
-    public synchronized void incIgnored() { mIgnored++; checkDone(); }
-    public synchronized void setNumInputFiles(int n) { mNumInputFiles = n; }
-    public synchronized int getSuccessCount() { return mSucceeded; }
-    public synchronized int getFailureCount() { return mFailed; }
-    public String getSender() { return mSender; }
-
-    public String[] getRecipients() {
-        if (mSendToAll)
-            return mRecipients;
-        else {
-            int index;
-            synchronized (mNextRecipientGuard) {
-                index = mNextRecipientIndex;
-                mNextRecipientIndex++;
-                mNextRecipientIndex %= mRecipients.length;
-            }
-            return mSingleRecipients[index];
-        }
-    }
-
-    private void checkDone() {
-        if (mEndTime == 0 && mSucceeded + mFailed + mIgnored + mWarmUpThreshold == mNumInputFiles * mNumRuns) {
-            mEndTime = System.currentTimeMillis();
-            synchronized (mFinishCond) {
-                mFinished = true;
-                mFinishCond.notify();
-            }
-        }
-    }
-
-    public void addToFileSizeTotal(long size) {
-        synchronized (mFileSizeTotalGuard) {
-            mFileSizeTotal += size;
-        }
-    }
-
-    public synchronized void incActiveClients() {
-        mActiveClients++;
-        if (mActiveClients > mHwmActiveClients)
-            mHwmActiveClients = mActiveClients;
-    }
-
-    public synchronized void decActiveClients() {
-        mActiveClients--;
-    }
-
-    private static class LmtpInjectTask implements Runnable {
-        private LmtpInject mDriver;
-        private File mFile;
-
-        public LmtpInjectTask(LmtpInject driver, File file) {
-            mDriver = driver;
-            mFile = file;
-        }
-
-        public void run() {
-            mDriver.incActiveClients();
-            String filename = mFile.getName();
-            LmtpClient client = null;
-            InputStream in = null;
-            try {
-                //mLog.info("Processing " + filename);
-
-                client = mDriver.getClient();
-
-                boolean ok = false;
-                long dataLength;
-
-                if (FileUtil.isGzipped(mFile)) {
-                    dataLength = ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(mFile)));
-                    in = new GZIPInputStream(new FileInputStream(mFile));
-                } else {
-                    dataLength = mFile.length();
-                    in = new FileInputStream(mFile);
-                }
-                
-                ok = client.sendMessage(in, mDriver.getRecipients(), mDriver.getSender(), filename, dataLength);
-                if (ok) {
-                    mDriver.incSuccess();
-                    mDriver.addToFileSizeTotal(mFile.length());
-                } else {
-                    mDriver.incFailure();
-                }
-            } catch (Exception e) {
-                mDriver.incFailure();
-                mLog.warn("Delivery failed for " + filename + ": ", e);
-            } finally {
-                ByteUtil.closeStream(in);
-                if (client != null) {
-                    try {
-                        mDriver.releaseClient(client);
-                    } catch (Exception e) {
-                        mLog.warn("Unable to release LMTP client", e);
-                    }
-                }
-                mDriver.decActiveClients();
-            }
-        }
-    }
-
-
-    // LMTP connection pool
-
-    private static class LmtpClientFactory implements PoolableObjectFactory {
-
-        private static int sNextRecipientNum = 1;
-        private static String sUsernamePrefix;
-        private static String sRecipientDomain;
-
-        private static void setUsernamePrefix(String prefix) {
-            sUsernamePrefix = prefix;
-        }
-
-        private static void setRecipientDomain(String domain) {
-            sRecipientDomain = domain;
-        }
-
-        private static synchronized int getNextRecipientNum() {
-            return sNextRecipientNum++;
-        }
-
-        private static String getNextRecipientAddress() {
-            return sUsernamePrefix + getNextRecipientNum() + "@" + sRecipientDomain;
-        }
-
-        private String mHost;
-        private int mPort;
-        private Protocol mProtocol;
-        private boolean mQuietMode;
-        private boolean mTracingEnabled;
-
-        public LmtpClientFactory(
-                String host, int port, Protocol proto, boolean quietMode,
-                boolean tracingEnabled) {
-            mHost = host;
-            mPort = port;
-            mProtocol = proto;
-            mQuietMode = quietMode;
-            mTracingEnabled = tracingEnabled;
-        }
-
-        public Object makeObject() throws Exception {
-            LmtpClient client = null;
-            String rcpt = getNextRecipientAddress();
-            try {
-                client = new NamedLmtpClient(rcpt, mHost, mPort, mProtocol);
-            } catch (IOException e) {
-                mLog.error("Connection to LMTP server failed: ", e);
-                throw e;
-            }
-            client.quiet(mQuietMode);
-            client.trace(mTracingEnabled);
-            client.warnOnRejectedRecipients(false);
-            return client;
-        }
-
-        public void destroyObject(Object obj) throws Exception { ((LmtpClient) obj).close(); }
-        public boolean validateObject(Object obj) { return true; }
-        public void activateObject(Object obj) throws Exception {}
-        public void passivateObject(Object obj) throws Exception {}
-    }
-
-    private static class NamedLmtpClient extends LmtpClient {
-        private String[] mRecipients;
-
-        NamedLmtpClient(String recipient, String host, int port, Protocol proto) throws IOException {
-            super(host, port, proto);
-            mRecipients = new String[] { recipient };
-        }
-
-        @Override
-        public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel, Long size)
-            throws IOException, LmtpProtocolException
-        {
-            String[] rcpts = recipients != null ? recipients : mRecipients;
-            return super.sendMessage(msgStream, rcpts, sender, logLabel, size);
-        }
-    }
-
-    private static class LmtpClientPool {
-        private ObjectPool mPool;
-
-        public LmtpClientPool(
-                int poolSize, String host, int port, Protocol proto,
-                boolean quietMode, boolean tracingEnabled) {
-            LmtpClientFactory factory = new LmtpClientFactory(
-                    host, port, proto, quietMode, tracingEnabled);
-            mPool = new GenericObjectPool(factory, poolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, poolSize);
-        }
-
-        public void close() throws Exception {
-            mPool.close();
-        }
-
-        public LmtpClient getClient() throws Exception {
-            Object instance = mPool.borrowObject();
-            return (LmtpClient) instance;
-        }
-
-        public void releaseClient(LmtpClient client) throws Exception {
-            mPool.returnObject(client);
-        }
     }
 }
