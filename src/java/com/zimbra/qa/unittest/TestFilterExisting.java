@@ -252,7 +252,7 @@ extends TestCase {
             rulesEl.addElement(MailConstants.E_FILTER_RULE).addAttribute(MailConstants.A_NAME, ruleName);
         }
         if (idList != null) {
-            request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, idList);
+            request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_IDS, idList);
         }
         if (query != null) {
             request.addElement(MailConstants.E_QUERY).setText(query);
@@ -263,7 +263,7 @@ extends TestCase {
         Set<String> affectedIds = new TreeSet<String>();
         Element msgEl = response.getOptionalElement(MailConstants.E_MSG);
         if (msgEl != null) {
-            for (String id : msgEl.getAttribute(MailConstants.A_ID).split(",")) {
+            for (String id : msgEl.getAttribute(MailConstants.A_IDS).split(",")) {
                 affectedIds.add(id);
             }
         }

@@ -95,7 +95,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
         List<Integer> affectedIds = new ArrayList<Integer>();
         
         if (msgEl != null) {
-            String[] ids = msgEl.getAttribute(MailConstants.A_ID).split(",");
+            String[] ids = msgEl.getAttribute(MailConstants.A_IDS).split(",");
             for (String id : ids) {
                 messageIds.add(Integer.valueOf(id));
             }
@@ -135,7 +135,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.APPLY_FILTER_RULES_RESPONSE);
         if (affectedIds.size() > 0) {
             response.addElement(MailConstants.E_MSG)
-                .addAttribute(MailConstants.A_ID, StringUtil.join(",", affectedIds));
+                .addAttribute(MailConstants.A_IDS, StringUtil.join(",", affectedIds));
         }
         return response;
     }
