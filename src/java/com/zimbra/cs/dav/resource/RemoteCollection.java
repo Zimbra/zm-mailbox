@@ -17,9 +17,7 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,8 +25,6 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -38,7 +34,6 @@ import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
@@ -75,6 +70,8 @@ public class RemoteCollection extends Collection {
         if (mChildren != null)
             return mChildren;
         
+        mChildren = new ArrayList<DavResource>();
+        /*
         ZAuthToken authToken = null;
         try {
             authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
@@ -84,8 +81,6 @@ public class RemoteCollection extends Collection {
             return Collections.emptyList();
         }
 
-        mChildren = new ArrayList<DavResource>();
-        /*
         try {
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
@@ -124,6 +119,8 @@ public class RemoteCollection extends Collection {
         try {
             ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             ZMailbox zmbx = getRemoteMailbox(zat, mRemoteOwnerId);
+            if (zmbx == null)
+            	return;
             ZFolder folder = zmbx.getFolderById(new ItemId(mRemoteOwnerId, mRemoteId).toString(mOwnerId));
             if (folder == null)
             	return;
