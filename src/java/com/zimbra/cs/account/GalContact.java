@@ -60,7 +60,7 @@ public class GalContact implements Comparable {
         return sb.toString();
     }
 
-    private String getSingleAttr(String name) {
+    public String getSingleAttr(String name) {
         Object val = mAttrs.get(name);
         if (val instanceof String) return (String) val;
         else if (val instanceof String[]) return ((String[])val)[0];
