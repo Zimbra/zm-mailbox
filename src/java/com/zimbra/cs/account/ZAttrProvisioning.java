@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jhahm 20090508-1224 */
+    /* build: 5.0 pshao 20090511-0955 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4956,6 +4956,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=849)
     public static final String A_zimbraPrefCalendarSendInviteDeniedAutoReply = "zimbraPrefCalendarSendInviteDeniedAutoReply";
+
+    /**
+     * whether to pop-up reminder for past due appointments in the UI
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1022)
+    public static final String A_zimbraPrefCalendarShowPastDueReminders = "zimbraPrefCalendarShowPastDueReminders";
 
     /**
      * whether to enable toaster notification for new mail
