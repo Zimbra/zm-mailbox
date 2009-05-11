@@ -31,7 +31,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -206,16 +205,16 @@ public class ContactAutoComplete {
 		long t1 = System.currentTimeMillis();
 		
 		// search other folders
-		if (mIncludeGal)
-			queryGal(str, limit, result);
+		queryFolders(str, folders, limit, result);
 		if (result.entries.size() >= limit)
 			return result;
 		long t2 = System.currentTimeMillis();
 		
-		queryFolders(str, folders, limit, result);
+		if (mIncludeGal)
+			queryGal(str, limit, result);
 		long t3 = System.currentTimeMillis();
 		
-		ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, gal="+(t2-t1)+"ms, folder="+(t3-t2)+"ms");
+		ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, folder="+(t2-t1)+"ms, gal="+(t3-t2)+"ms");
 		return result;
 	}
 	
@@ -246,12 +245,6 @@ public class ContactAutoComplete {
     		ZimbraLog.gal.warn("can't gal search", e);
     		return;
 		}
-		SearchGalResult sgr = params.getResult();
-		
-        if (sgr.getHadMore() || sgr.getTokenizeKey() != null) {
-        	result.canBeCached = false;
-    		ZimbraLog.gal.debug("result can't be cached by client");
-        }
 	}
 	
 	private class AutoCompleteCallback extends GalSearchResultCallback {
@@ -286,6 +279,10 @@ public class ContactAutoComplete {
 	    public void setQueryOffset(int offset) {
 	    }
 	    public void setHasMoreResult(boolean more) {
+	    	if (more) {
+	    		ZimbraLog.gal.debug("result can't be cached by client");
+	    		result.canBeCached = false;
+	    	}
 	    }
 	}
 	private boolean matches(String query, String text) {

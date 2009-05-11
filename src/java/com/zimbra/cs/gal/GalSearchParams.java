@@ -174,7 +174,7 @@ public class GalSearchParams {
 	
 	public void createSearchParams(String searchQuery) {
 		mSearchParams = new SearchParams();
-		mSearchParams.setLimit(mLimit);
+		mSearchParams.setLimit(mLimit + 1);
 		mSearchParams.setSortBy(SortBy.NAME_ASCENDING);
 		mSearchParams.setQueryStr(searchQuery);
 	    mSearchParams.setTypes(new byte[] { MailItem.TYPE_CONTACT });

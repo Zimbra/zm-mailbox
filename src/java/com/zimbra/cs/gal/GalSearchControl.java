@@ -231,11 +231,8 @@ public class GalSearchControl {
 			zqr = mbox.search(SoapProtocol.Soap12, new OperationContext(mbox), searchParams);
             ResultsPager pager = ResultsPager.create(zqr, searchParams);
             GalSearchResultCallback callback = mParams.getResultCallback();
-            int limit  = mParams.getLimit();
             int num = 0;
 			while (pager.hasNext()) {
-				if (num == limit)
-					break;
                 ZimbraHit hit = pager.getNextHit();
                 if (hit instanceof ContactHit) {
                 	Element contactElem = callback.handleContact(((ContactHit)hit).getContact());
@@ -243,6 +240,8 @@ public class GalSearchControl {
                 		contactElem.addAttribute(MailConstants.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
                 }
                 num++;
+				if (num == mParams.getLimit())
+					break;
 			}
             callback.setSortBy(zqr.getSortBy().toString());
             callback.setQueryOffset(searchParams.getOffset());
@@ -370,6 +369,8 @@ public class GalSearchControl {
 
     	boolean hadMore = mParams.getResult().getHadMore();
     	String newToken = mParams.getResult().getToken();
+    	if (mParams.getResult().getTokenizeKey() != null)
+    		hadMore = true;
     	if (galMode == GalMode.both) {
         	// do the second query
         	mParams.createSearchConfig(op, GalType.ldap);
@@ -380,6 +381,8 @@ public class GalSearchControl {
         	}
         	hadMore |= mParams.getResult().getHadMore();
         	newToken = LdapUtil.getLaterTimestamp(newToken, mParams.getResult().getToken());
+        	if (mParams.getResult().getTokenizeKey() != null)
+        		hadMore = true;
     	}
 
     	if (op == GalOp.sync)
