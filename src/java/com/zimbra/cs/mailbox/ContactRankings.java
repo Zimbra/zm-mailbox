@@ -80,21 +80,31 @@ public class ContactRankings {
 			updateContactInfo(entry);
 			
 			if (mEntrySet.size() >= mTableSize) {
-				for (ContactEntry e : mEntrySet) {
-					int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
-					e.mRanking -= weeksOld;
-				}
 				ContactEntry firstEntry = mEntrySet.first();
 				if (firstEntry.mRanking <= 1)
 					remove(firstEntry);
 			}
-			if (mEntrySet.size() < mTableSize)
+			if (mEntrySet.size() < mTableSize) {
 				add(entry);
+			} else {
+				for (ContactEntry e : mEntrySet) {
+					int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
+					e.mRanking -= weeksOld;
+					if (e.mRanking < 0)
+						e.mRanking = 0;
+				}
+			}
 		} else {
+			long age = now - entry.mLastAccessed;
 			entry.mRanking++;
+			if (entry.mRanking <= 0)
+				entry.mRanking = 1;
 			entry.mLastAccessed = now;
-			if (entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
-					entry.mDisplayName.length() == 0)
+			// if the contact info in ranking table is incomplete check once a week
+			// to fill out the full name and folder info.
+			if (age > Constants.MILLIS_PER_WEEK && 
+					(entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
+					 entry.mDisplayName.length() == 0))
 				updateContactInfo(entry);
 		}
 	}
