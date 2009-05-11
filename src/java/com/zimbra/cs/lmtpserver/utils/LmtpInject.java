@@ -20,6 +20,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,6 +40,7 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient.Protocol;
 
 @SuppressWarnings("static-access")
@@ -48,7 +52,7 @@ public class LmtpInject {
 
     private String mSender;
     private String[] mRecipients;
-    private File[] mFiles;
+    private List<File> mFiles;
     private String mHost;
     private int mPort;
     private Protocol mProto;
@@ -70,7 +74,7 @@ public class LmtpInject {
     private LmtpInject(int numThreads,
                        String sender,
                        String[] recipients,
-                       File[] files,
+                       List<File> files,
                        String host,
                        int port,
                        Protocol proto,
@@ -156,10 +160,10 @@ public class LmtpInject {
      * index.
      */
     synchronized File getNextFile() {
-        if (mCurrentFileIndex >= mFiles.length) {
+        if (mCurrentFileIndex >= mFiles.size()) {
             return null;
         }
-        return mFiles[mCurrentFileIndex++];
+        return mFiles.get(mCurrentFileIndex++);
     }
     
     public String[] getRecipients() {
@@ -271,7 +275,7 @@ public class LmtpInject {
             "zmlmtpinject -r <recip1> [recip2 ...] -s <sender> [options]",
             "  <file1 [file2 ...] | -d <dir>>",
             mOptions,
-            "Specified paths contain rfc822 messages.  Files may be gzipped.  If -d is specified, file arguments are ignored.");
+            "Specified paths contain rfc822 messages.  Files may be gzipped.");
         System.exit((errmsg == null) ? 0 : 1);
     }
 
@@ -333,29 +337,28 @@ public class LmtpInject {
             everyN = 100;
         }
 
-        File[] files;
+        // Process files from the -d option.
+        List<File> files = new ArrayList<File>();
         if (cl.hasOption("d")) {
             File dir = new File(cl.getOptionValue("d"));
-            files = dir.listFiles();
-            if (files == null || files.length == 0) {
-                mLog.error("No files found in specified directory " + dir);
-                System.exit(-1);
+            File[] fileArray = dir.listFiles();
+            if (fileArray == null || fileArray.length == 0) {
+                System.err.println("No files found in directory " + dir);
             }
-        } else {
-            args = cl.getArgs();
-            if (args.length == 0) {
-                usage("no input files specified");
-            }
-            files = new File[args.length];
-            for (int i = 0; i < args.length; i++) {
-                files[i] = new File(args[i]);
-            }
+        }
+        
+        // Process files specified as arguments.
+        for (String arg : cl.getArgs()) {
+            files.add(new File(arg));
         }
         
         // Validate file content.
         if (!cl.hasOption("noValidation")) {
-            for (File file : files) {
+            Iterator<File> i = files.iterator();
+            while (i.hasNext()) {
                 InputStream in = null;
+                File file = i.next();
+                boolean valid = false;
                 try {
                     in = new FileInputStream(file);
                     if (FileUtil.isGzipped(file)) {
@@ -363,20 +366,29 @@ public class LmtpInject {
                     }
                     in = new BufferedInputStream(in); // Required for RFC 822 check
                     if (!EmailUtil.isRfc822Message(in)) {
-                        mLog.error("%s does not contain a valid RFC 822 message.", file.getPath());
-                        System.exit(-1);
+                        System.err.format("%s does not contain a valid RFC 822 message.\n", file.getPath());
+                    } else {
+                        valid = true;
                     }
                 } catch (IOException e) {
-                    mLog.error("An error occurred while validating file content.", e);
+                    System.err.format("Unable to validate %s: %s.\n", file.getPath(), e.toString());
                 } finally {
                     ByteUtil.closeStream(in);
+                }
+                if (!valid) {
+                    i.remove();
                 }
             }
         }
 
+        if (files.size() == 0) {
+            System.err.println("No files to inject.");
+            System.exit(1);
+        }
+
         if (!quietMode) {
-            System.out.format("Injecting %d messages to %d recipients.  Server %s, port %d, using %d thread(s).\n",
-                files.length, recipients.length, host, port, threads);
+            System.out.format("Injecting %d message(s) to %d recipient(s).  Server %s, port %d, using %d thread(s).\n",
+                files.size(), recipients.length, host, port, threads);
         }
 
         int totalFailed = 0;
@@ -392,7 +404,7 @@ public class LmtpInject {
                     quietMode, tracingEnabled, verbose);
         } catch (Exception e) {
             mLog.error("Unable to initialize LmtpInject", e);
-            System.exit(-1);
+            System.exit(1);
         }
 
         injector.setReportEvery(everyN);
