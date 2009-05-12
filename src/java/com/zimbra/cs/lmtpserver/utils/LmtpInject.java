@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -40,7 +41,6 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient.Protocol;
 
 @SuppressWarnings("static-access")
@@ -341,10 +341,15 @@ public class LmtpInject {
         List<File> files = new ArrayList<File>();
         if (cl.hasOption("d")) {
             File dir = new File(cl.getOptionValue("d"));
+            if (!dir.isDirectory()) {
+                System.err.format("%s is not a directory.\n", dir.getPath());
+                System.exit(1);
+            }
             File[] fileArray = dir.listFiles();
             if (fileArray == null || fileArray.length == 0) {
-                System.err.println("No files found in directory " + dir);
+                System.err.format("No files found in directory %s.\n", dir.getPath());
             }
+            Collections.addAll(files, fileArray);
         }
         
         // Process files specified as arguments.
