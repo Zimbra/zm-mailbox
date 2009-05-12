@@ -127,7 +127,6 @@ public class VolumeUtil extends SoapCLI {
             util.usage(e);
         } catch (Exception e) {
             System.err.println("Error occurred: " + e.getMessage());
-            util.usage(null);
         }
         System.exit(1);
     }

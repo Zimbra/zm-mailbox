@@ -43,7 +43,7 @@ public class MySQL extends Db {
         mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        1213);
         mErrorCodes.put(Db.Error.DUPLICATE_ROW,            1062);
         mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    1216);
-        mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, 1217);
+        mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, 1451);
         mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         1146);
         mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146);
     }
