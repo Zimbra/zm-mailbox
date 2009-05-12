@@ -42,6 +42,7 @@ public abstract class Entry implements ToZJSONObject {
     private Map<String, Set<String>> mMultiAttrSetCache;
     private Locale mLocale;
     private Provisioning mProvisioning;
+    private AttributeManager mAttrMgr;
     
     protected static String[] sEmptyMulti = new String[0];
 
@@ -60,15 +61,29 @@ public abstract class Entry implements ToZJSONObject {
     
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Provisioning provisioning) {
     	mProvisioning = provisioning;
-        mAttrs = attrs;
+    	mAttrs = attrs;
         mDefaults = defaults;
+        setAttributeManager();
     }
     
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, Map<String,Object> secondaryDefaults, Provisioning provisioning) {
     	mProvisioning = provisioning;
-        mAttrs = attrs;
+    	mAttrs = attrs;
         mDefaults = defaults;
         mSecondaryDefaults = secondaryDefaults;
+        setAttributeManager();
+    }
+    
+    private void setAttributeManager() {
+        try {
+            mAttrMgr = AttributeManager.getInstance();
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
+        }
+    }
+    
+    private AttributeManager getAttributeManager() {
+        return mAttrMgr;
     }
     
     public Provisioning getProvisioning() {
@@ -156,19 +171,7 @@ public abstract class Entry implements ToZJSONObject {
         
         return null;
     }
-    
-    /*
-     * utility function to mask ServiceException thrown by AttributeManager.getInstance()
-     */
-    private AttributeManager getAttributeManager() {
-        AttributeManager attrMgr = null;
-        try {
-            attrMgr = AttributeManager.getInstance();
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
-        }
-        return attrMgr;
-    }
+
     
     private Object getValueByRealAttrName(String attrName, Map<String,Object> map) {
         AttributeManager attrMgr = getAttributeManager();
