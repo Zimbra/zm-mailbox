@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -81,40 +83,6 @@ public class L10nUtil {
         // caldav messages
         caldavCalendarDescription,
         
-        // share notification
-        shareNotifSubject,
-
-        shareNotifBodyIntro,
-
-        shareNotifBodyAddedToGroup1,
-        shareNotifBodyAddedToGroup2,
-
-        shareNotifBodyGranteeRoleViewer,
-        shareNotifBodyGranteeRoleManager,
-        shareNotifBodyGranteeRoleAdmin,
-
-        shareNotifBodySharedItem,
-        shareNotifBodyFolderDesc,
-        shareNotifBodyOwner,
-        shareNotifBodyGrantee,
-        shareNotifBodyRole,
-        shareNotifBodyAllowedActions,
-        shareNotifBodyNotes,
-
-        shareNotifBodyActionRead,
-        shareNotifBodyActionWrite,
-        shareNotifBodyActionInsert,
-        shareNotifBodyActionDelete,
-        shareNotifBodyActionAction,
-        shareNotifBodyActionAdmin,
-        shareNotifBodyActionPrivate,
-        shareNotifBodyActionFreebusy,
-        shareNotifBodyActionSubfolder,
-        //////////////////////
-
-        // read-receipt notification body
-        readReceiptNotification,
-
         // ZimbraSync client invitation text
         zsApptNew,
         zsApptModified,
@@ -351,9 +319,6 @@ public class L10nUtil {
     }
     
     public static void flushLocaleCache() {
-    	if (ZimbraLog.misc.isDebugEnabled()) {
-    		ZimbraLog.misc.debug("L10nUtil: flushing locale cache");
-    	}
         LocalizedClientLocales.flushCache();
     }
     

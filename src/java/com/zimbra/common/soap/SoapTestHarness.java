@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -195,7 +197,6 @@ public class SoapTestHarness {
 	throws HarnessException, SoapFaultException, IOException, DocumentException {
 
         CliUtil.toolSetup();
-        SoapTransport.setDefaultUserAgent("SoapTestHarness", null);
 		
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
@@ -437,14 +438,17 @@ public class SoapTestHarness {
 	private void doRequest(Element request) throws SoapFaultException, IOException {
         mCurrent.mDocRequest = request.elementIterator().next();
         mCurrent.mDocRequest.detach();
-
-        ZAuthToken zat = mAuthToken == null ? null : new ZAuthToken(null, mAuthToken, null);
-        Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId, -1);
-        if (mTargetUser != null)
-            SoapUtil.addTargetAccountToCtxt(ctxt, null, mTargetUser);
-        if (mResponseProto == SoapProtocol.SoapJS)
-            SoapUtil.addResponseProtocolToCtxt(ctxt, mResponseProto);
-        mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
+		if (mAuthToken == null) {
+			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
+        } else {
+            ZAuthToken zat = new ZAuthToken(null, mAuthToken, null);
+            Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId);
+            if (mTargetUser != null)
+                ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_NAME).setText(mTargetUser);
+            if (mResponseProto == SoapProtocol.SoapJS)
+                ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, HeaderConstants.TYPE_JAVASCRIPT);
+            mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
+        }
 
 		long start = System.currentTimeMillis();
 		mCurrent.mSoapResponse = mTransport.invokeRaw(mCurrent.mSoapRequest);

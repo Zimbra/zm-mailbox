@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
@@ -168,10 +170,10 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return inherited;
     }
 
-    @Override MimePart readContent(ParseState pstate) throws IOException {
+    @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
         // first read the MIME preamble
-        MimePart preamble = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), this, getBodyOffset(), pstate.getPosition(), null).readContent(pstate);
-        ParseState.BoundaryTerminator bterm = pstate.getBoundaryTerminator();
+        MimePart preamble = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), this, getBodyOffset(), pais.getPosition(), null).readContent(pais);
+        PeekAheadInputStream.BoundaryTerminator bterm = pais.getBoundaryTerminator();
 
         // if the Content-Type didn't define the multipart boundary, pick it up from the preamble terminator
         if (mBoundary == UNSET_BOUNDARY && bterm != null && !bterm.mWasEndBoundary && !getActiveBoundaries().contains(bterm.mBoundary))
@@ -187,21 +189,21 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
             // read parts until we hit our end boundary, a parent's boundary, or EOF
             String defaultContentType = getContentType().getSubType().equals("digest") ? ContentType.MESSAGE_RFC822 : ContentType.TEXT_PLAIN;
             do {
-                MimePart subpart = MimePart.parse(pstate, this, defaultContentType);
+                MimePart subpart = MimePart.parse(pais, this, defaultContentType);
                 mChildren.add(subpart);
-                bterm = pstate.getBoundaryTerminator();
+                bterm = pais.getBoundaryTerminator();
             } while (bterm != null && !bterm.mWasEndBoundary && mBoundary.equals(bterm.mBoundary));
 
             // skip the epilogue if appropriate
             if (bterm != null && bterm.mWasEndBoundary && mBoundary.equals(bterm.mBoundary)) {
-                MimePart epilogue = new MimeBodyPart(new ContentType("text/plain"), this, pstate.getPosition(), pstate.getPosition(), null).readContent(pstate);
-                bterm = pstate.getBoundaryTerminator();
+                MimePart epilogue = new MimeBodyPart(new ContentType("text/plain"), this, pais.getPosition(), pais.getPosition(), null).readContent(pais);
+                bterm = pais.getBoundaryTerminator();
                 if (epilogue.getSize() > 0)
                     mEpilogue = epilogue;
             }
         }
 
-        recordEndpoint(bterm == null ? pstate.getPosition() : bterm.mBoundaryStart);
+        recordEndpoint(bterm == null ? pais.getPosition() : bterm.mBoundaryStart);
         return this;
     }
 }
