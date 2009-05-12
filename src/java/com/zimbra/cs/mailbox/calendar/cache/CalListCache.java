@@ -50,12 +50,12 @@ public class CalListCache {
 
     private static class CalListSerializer implements MemcachedSerializer<CalList> {
         
-        public String serialize(CalList value) {
+        public Object serialize(CalList value) {
             return value.encodeMetadata().toString();
         }
 
-        public CalList deserialize(String str) throws ServiceException {
-            Metadata meta = new Metadata(str);
+        public CalList deserialize(Object obj) throws ServiceException {
+            Metadata meta = new Metadata((String) obj);
             return new CalList(meta);
         }
     }
