@@ -146,10 +146,6 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_SIZE, mbox.getSize());
         return elem;
     }
-
-    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, boolean exposeAclAccessKey) {
-        return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS, exposeAclAccessKey);
-    }
     
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder) {
         return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS);
@@ -194,7 +190,7 @@ public class ToXML {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
                 if (fields != NOTIFY_FIELDS || folder.isTagged(Flag.ID_FLAG_NO_INHERIT))
-                    encodeACL(elem, folder.getEffectiveACL(), exposeAclAccessKey);
+                    encodeACL(octxt, elem, folder.getEffectiveACL(), exposeAclAccessKey);
             }
         }
         return elem;
@@ -224,17 +220,32 @@ public class ToXML {
     }
 
     // encode mailbox ACL
-    public static Element encodeACL(Element parent, ACL acl, boolean exposeAclAccessKey) {
+    public static Element encodeACL(OperationContext octxt, Element parent, ACL acl, boolean exposeAclAccessKey) {
         Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
         if (acl == null)
             return eACL;
 
         for (ACL.Grant grant : acl.getGrants()) {
+            //
+            // Get name of the grantee
+            //
+
+            // 1. try getting the name from the Grant, the name is set on the Grant 
+            //    if we are in the path of proxying sharing in ZD
             String name = grant.getGranteeName();
             if (name == null) {
-                NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
-                if (nentry != null)
-                    name = nentry.getName();
+                // 2. (for bug 35079), see if the name is already resolved in the in the OperationContextData
+                OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames(octxt);
+                if (granteeNames != null)
+                    name = granteeNames.getNameById(grant.getGranteeId());
+                
+                // 3. lookup the name using the Provisioning interface, 
+                //    this *may* lead to a LDAP search if the id is not in cache
+                if (name == null) {
+                    NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
+                    if (nentry != null)
+                        name = nentry.getName();
+                }
             }
             
             Element eGrant = eACL.addElement(MailConstants.E_GRANT);

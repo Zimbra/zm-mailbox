@@ -282,7 +282,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean idIsUUID() {
         return true;
     }
-
+    
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -1881,5 +1881,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
-    
+    public Map<String, String> getAccountNamesForIds(Set<String> ids) throws ServiceException {
+        return new HashMap<String, String>();  // return empty map
+    }
 }

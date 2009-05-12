@@ -50,6 +50,8 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContextData;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -907,7 +909,8 @@ public class SoapSession extends Session {
         }
 
         // first, get the user's folder hierarchy
-        GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mbox, null, false);
+        FolderNode root = mbox.getFolderTree(octxt, null, false);
+        OperationContextData.addGranteeNames(octxt, root);
         GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
 
         Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>();
@@ -921,7 +924,7 @@ public class SoapSession extends Session {
             transferMountpointContents(eRefresh.getOptionalElement(MailConstants.E_FOLDER), octxt, mountpoints);
     }
 
-    private void expandLocalMountpoints(OperationContext octxt, GetFolder.FolderNode node, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+    private void expandLocalMountpoints(OperationContext octxt, FolderNode node, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
         if (node.mFolder == null || mountpoints == null) {
             return;
         } else if (node.mFolder instanceof Mountpoint) {
@@ -944,7 +947,9 @@ public class SoapSession extends Session {
                 }
 
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
-                GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
+                FolderNode remote = mbox.getFolderTree(octxt, new ItemId(mbox, mpt.getRemoteId()), false);
+                OperationContextData.addGranteeNames(octxt, remote);
+                
                 if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                     ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
                     Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
@@ -956,7 +961,7 @@ public class SoapSession extends Session {
                 return;
             }
         } else {
-            for (GetFolder.FolderNode child : node.mSubfolders)
+            for (FolderNode child : node.mSubfolders)
                 expandLocalMountpoints(octxt, child, factory, mountpoints);
         }
     }

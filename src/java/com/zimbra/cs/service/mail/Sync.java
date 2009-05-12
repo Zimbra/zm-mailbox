@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.util.ItemId;
@@ -87,6 +88,8 @@ public class Sync extends MailDocumentHandler {
 
         Set<Folder> visible = octxt.isDelegatedRequest(mbox) ? mbox.getVisibleFolders(octxt) : null;
 
+        OperationContextData.setGranteeNames(octxt, mbox);
+        
         // actually perform the sync
         synchronized (mbox) {
             mbox.beginTrackingSync();

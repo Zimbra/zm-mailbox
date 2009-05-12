@@ -57,6 +57,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
@@ -64,8 +65,6 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.mail.GetFolder;
-import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -473,20 +472,20 @@ public class ShareInfo {
         // in this case get the entire folder tree
         
         if (folders == null) {
-            GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mbox, null, false);
+            FolderNode root = mbox.getFolderTree(octxt, null, false);
             // flatten it
             folders = flattenAndSortFolderTree(root);
         } 
         return folders;
     }
     
-    private static Set<Folder> flattenAndSortFolderTree(GetFolder.FolderNode root) {
+    private static Set<Folder> flattenAndSortFolderTree(FolderNode root) {
         Set<Folder> folders = new HashSet<Folder>();
         flattenAndSortFolderTree(root, folders);
         return folders;
     }
     
-    private static void flattenAndSortFolderTree(GetFolder.FolderNode node, Set<Folder> flattened) {
+    private static void flattenAndSortFolderTree(FolderNode node, Set<Folder> flattened) {
         if (node.mFolder != null)
             flattened.add(node.mFolder);
         for (FolderNode subNode : node.mSubfolders)

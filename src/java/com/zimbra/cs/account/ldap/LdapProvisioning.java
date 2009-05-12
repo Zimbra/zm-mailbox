@@ -5990,6 +5990,67 @@ public class LdapProvisioning extends Provisioning {
         return visitor.getResult();
     }
     
+    @Override
+    public Map<String, String> getAccountNamesForIds(Set<String> ids) throws ServiceException {
+        final Map<String, String> result = new HashMap<String, String>();
+
+        List<String> unresolvedIds = new ArrayList<String>();
+        
+        // try to get the name from cache 
+        for (String id : ids) {
+            Account acct = getFromCache(AccountBy.id, id);
+            if (acct != null) 
+                result.put(id, acct.getName());
+            else 
+                unresolvedIds.add(id);
+        }
+                
+        // we are done if all ids can be resolved in our cache
+        if (unresolvedIds.size() == 0)
+            return result;
+        
+        //
+        // search LDAP for unresolved ids
+        //
+        
+        String base = mDIT.mailBranchBaseDN();
+        String returnAttrs[] = new String[] {Provisioning.A_zimbraId,
+                                             Provisioning.A_zimbraMailDeliveryAddress};
+        
+        LdapUtil.SearchLdapVisitor visitor = new LdapUtil.SearchLdapVisitor() {
+            public void visit(String dn, Map<String, Object> attrs) {
+                String id = (String)attrs.get(Provisioning.A_zimbraId);
+                String name = (String)attrs.get(Provisioning.A_zimbraMailDeliveryAddress);
+                result.put(id, name);
+            }
+        };
+        
+        final int batchSize = 10;  // num ids per search
+        final String queryStart = "(&(objectClass=zimbraAccount)(";
+        final String queryEnd = "))";
+        
+        StringBuilder query = new StringBuilder();
+        query.append(queryStart);
+        
+        for (int i = 0; i < unresolvedIds.size(); i++) {
+            query.append("|(" + Provisioning.A_zimbraId + "=" + unresolvedIds.get(i) + ")");
+            if ((i+1) % batchSize == 0) {
+                query.append(queryEnd);
+                LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
+                query.setLength(0);
+                query.append(queryStart);
+            }
+        }
+        
+        // one more search if there are remainding
+        if (query.length() != queryStart.length()) {
+            query.append(queryEnd);
+            LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
+        }
+        
+        return result;
+    }
+    
     public static void testAuthDN(String args[]) {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", ""));

@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -36,6 +39,7 @@ public class OperationContext {
     private String     requestIP;
     private String     userAgent;
     private AuthToken  authToken;
+    private Map<String, OperationContextData> contextData;
     
     boolean changetype = CHECK_CREATED;
     int     change = -1;
@@ -144,5 +148,18 @@ public class OperationContext {
     
     public String getUserAgent() {
         return userAgent;
+    }
+    
+    void SetCtxtData(String key, OperationContextData data) {
+        if (contextData == null)
+            contextData = new HashMap<String, OperationContextData>();
+        contextData.put(key, data);
+    }
+    
+    OperationContextData getCtxtData(String key) {
+        if (contextData == null)
+            return null;
+        else
+            return contextData.get(key);
     }
 }
