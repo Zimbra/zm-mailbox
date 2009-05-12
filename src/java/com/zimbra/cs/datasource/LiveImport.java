@@ -97,12 +97,10 @@ public class LiveImport extends MailItemImport {
     public LiveImport(DataSource ds) throws ServiceException {
         super(ds);
         
-        boolean debug = Boolean.getBoolean("ZimbraJavamailDebug") ||
-            LC.javamail_imap_debug.booleanValue() || ds.isDebugTraceEnabled();
         Long timeout = LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
         Properties props = new Properties();
     
-        if (debug)
+        if (ds.isDebugTraceEnabled())
             props.setProperty("mail.debug", "true");
         props.setProperty("mail.davmail.deletetotrash", "false");
         if (timeout > 0) {
@@ -110,7 +108,7 @@ public class LiveImport extends MailItemImport {
             props.setProperty("mail.davmail.timeout", timeout.toString());
         }
         session = Session.getInstance(props);
-        if (debug)
+        if (ds.isDebugTraceEnabled())
             session.setDebug(true);
         store = new JDAVMailStore(session, null);
     }

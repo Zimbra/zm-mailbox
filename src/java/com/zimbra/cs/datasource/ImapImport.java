@@ -82,9 +82,6 @@ public class ImapImport extends MailItemImport {
     private static final int MAX_MESSAGE_MEMORY_SIZE =
         LC.data_source_max_message_memory_size.intValue();
 
-    private static final boolean DEBUG =
-        Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_imap_debug.booleanValue();
-
     private static final String ID_EXT = "(\"vendor\" \"Zimbra\" \"os\" \"" +
         System.getProperty("os.name") + "\" \"os-version\" \"" +
         System.getProperty("os.version") + "\" \"guid\" \"" + ZimbraApplication.getInstance().getId() + "\")";
@@ -527,7 +524,7 @@ public class ImapImport extends MailItemImport {
         return zimbraPath;
     }
 
-    private static IMAPStore getStore(DataSource ds) throws ServiceException {
+    private IMAPStore getStore(DataSource ds) throws ServiceException {
         DataSource.ConnectionType type = ds.getConnectionType();
         String provider = getProvider(type);
         if (provider == null) {
@@ -540,17 +537,17 @@ public class ImapImport extends MailItemImport {
         }
     }
 
-    private static Session getSession(DataSource ds) {
+    private Session getSession(DataSource ds) {
         Properties props = new Properties();
+        
         props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imaps.socketFactory.class", SSLSocketFactoryManager.getDefaultSSLSocketFactoryClassName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
-        if (DEBUG) {
+        if (ds.isDebugTraceEnabled())
             props.setProperty("mail.debug", "true");
-        }
         props.setProperty("mail.imap.idextension", ID_EXT);
         props.setProperty("mail.imaps.idextension", ID_EXT);
         if (LC.javamail_imap_enable_starttls.booleanValue()) {
@@ -558,9 +555,8 @@ public class ImapImport extends MailItemImport {
             props.setProperty("mail.imap.socketFactory.class", TlsSocketFactory.class.getName());
         }
         Session session = Session.getInstance(props);
-        if (DEBUG || ds.isDebugTraceEnabled()) {
+        if (ds.isDebugTraceEnabled())
             session.setDebug(true);
-        }
         return session;
     }
     

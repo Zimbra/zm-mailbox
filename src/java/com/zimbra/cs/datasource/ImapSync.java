@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -57,14 +56,7 @@ public class ImapSync extends MailItemImport {
     private Authenticator authenticator;
     private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|]");
 
-    private static final boolean DEBUG =
-        Boolean.getBoolean("ZimbraDataSourceImapDebug") ||
-        LC.javamail_imap_debug.booleanValue();
-    
     private static final Log LOG = ZimbraLog.datasource;
-    static {
-        if (DEBUG) LOG.setLevel(Log.Level.debug);
-    }
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
@@ -100,23 +92,18 @@ public class ImapSync extends MailItemImport {
         return syncedFolders.get(folderId);
     }
 
-    private static ImapConfig getImapConfig(DataSource ds) {
+    private ImapConfig getImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
+        
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
         config.setMaxLiteralMemSize(LC.data_source_max_message_memory_size.intValue());
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
-        config.setDebug(DEBUG);
-        if (DEBUG || ds.isDebugTraceEnabled()) {
+        if (ds.isDebugTraceEnabled()) {
+            config.setDebug(true);
             enableTrace(config);
-        }
-        int timeout = LC.javamail_imap_timeout.intValue();
-        if (timeout > 0) {
-            LOG.info("IMAP read timeout is %d seconds", timeout);
-        } else {
-            LOG.info("IMAP read timeout is disabled");
         }
         config.setReadTimeout(LC.javamail_imap_timeout.intValue());
         config.setConnectTimeout(config.getReadTimeout());
@@ -137,8 +124,7 @@ public class ImapSync extends MailItemImport {
 
     private static void enableTrace(ImapConfig config) {
         config.setTrace(true);
-        config.setTraceStream(
-            new PrintStream(new LogOutputStream(ZimbraLog.imap), true));
+        config.setTraceStream(new PrintStream(System.out, true));
     }
     
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)

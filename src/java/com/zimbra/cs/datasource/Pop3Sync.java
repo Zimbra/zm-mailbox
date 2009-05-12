@@ -15,7 +15,6 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
@@ -47,13 +46,8 @@ public class Pop3Sync extends MailItemImport {
     private final Pop3Connection connection;
     private final boolean indexAttachments;
 
-    private static final boolean DEBUG = LC.javamail_pop3_debug.booleanValue();
-
     private static final Log LOG = ZimbraLog.datasource;
-    static {
-        if (DEBUG) LOG.setLevel(Log.Level.debug);
-    }
-
+    
     // Zimbra UID format is: item_id "." blob_digest
     private static final Pattern PATTERN_ZIMBRA_UID =
         Pattern.compile("(\\d+)\\.([^\\.]+)");
@@ -64,15 +58,16 @@ public class Pop3Sync extends MailItemImport {
         indexAttachments = mbox.attachmentsIndexingEnabled();
     }
 
-    private static Pop3Config getPop3Config(DataSource ds) {
+    private Pop3Config getPop3Config(DataSource ds) throws ServiceException {
         Pop3Config config = new Pop3Config();
+
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
         config.setTlsEnabled(LC.javamail_pop3_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
-        config.setDebug(DEBUG);
-        if (DEBUG || ds.isDebugTraceEnabled()) {
+        if (ds.isDebugTraceEnabled()) {
+            config.setDebug(true);
             enableTrace(config);
         }
         config.setReadTimeout(LC.javamail_pop3_timeout.intValue());
@@ -94,8 +89,7 @@ public class Pop3Sync extends MailItemImport {
 
     private static void enableTrace(Pop3Config config) {
         config.setTrace(true);
-        config.setTraceStream(
-            new PrintStream(new LogOutputStream(ZimbraLog.pop), true));
+        config.setTraceStream(new PrintStream(System.out, true));
     }
 
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)

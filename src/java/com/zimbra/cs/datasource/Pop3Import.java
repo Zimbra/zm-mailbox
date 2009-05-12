@@ -56,15 +56,9 @@ public class Pop3Import extends MailItemImport {
 
     // (item id).(blob digest)
     private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
-
     private static final int MAX_MESSAGE_MEMORY_SIZE =
         LC.data_source_max_message_memory_size.intValue();
-
     private static final long TIMEOUT = LC.javamail_pop3_timeout.longValue() * Constants.MILLIS_PER_SECOND;
-
-    private static final boolean DEBUG =
-        Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_pop3_debug.booleanValue();
-
     private static final FetchProfile UID_PROFILE;
 
     static {
@@ -111,7 +105,7 @@ public class Pop3Import extends MailItemImport {
         }
     }
 
-    private static POP3Store getStore(DataSource ds) throws ServiceException {
+    private POP3Store getStore(DataSource ds) throws ServiceException {
         DataSource.ConnectionType type = ds.getConnectionType();
         String provider = getProvider(type);
         if (provider == null) {
@@ -135,8 +129,9 @@ public class Pop3Import extends MailItemImport {
         }
     }
     
-    private static Session getSession(DataSource ds) {
+    private Session getSession(DataSource ds) throws ServiceException{
         Properties props = new Properties();
+        
         props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
         props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
@@ -150,15 +145,13 @@ public class Pop3Import extends MailItemImport {
                           String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
         props.setProperty("mail.pop3s.max.message.memory.size",
                           String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
-        if (DEBUG) {
+        if (ds.isDebugTraceEnabled())
             props.setProperty("mail.debug", "true");
-        }
         
         Session session = Session.getInstance(props);
         
-        if (DEBUG || ds.isDebugTraceEnabled()) {
+        if (ds.isDebugTraceEnabled())
             session.setDebug(true);
-        }
         return session;
     }
     

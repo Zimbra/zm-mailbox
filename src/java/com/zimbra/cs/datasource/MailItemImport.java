@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class MailItemImport implements DataSource.DataImport {
     protected final DataSource dataSource;
     protected final Mailbox mbox;
-
+    
     protected MailItemImport(DataSource ds) throws ServiceException {
         dataSource = ds;
         mbox = ds.getMailbox();
