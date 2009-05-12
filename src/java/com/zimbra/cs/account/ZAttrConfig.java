@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090511-0955 */
+    /* build: 5.0 jylee 20090512-1412 */
 
     /**
      * RFC2256: descriptive information
@@ -4620,6 +4620,106 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetConstraint(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraConstraint, "");
+        return attrs;
+    }
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * <p>Use getContactRankingTableRefreshIntervalAsString to access value as a string.
+     *
+     * @see #getContactRankingTableRefreshIntervalAsString()
+     *
+     * @return zimbraContactRankingTableRefreshInterval in millseconds, or 604800000 (7d)  if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public long getContactRankingTableRefreshInterval() {
+        return getTimeInterval(Provisioning.A_zimbraContactRankingTableRefreshInterval, 604800000L);
+    }
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * @return zimbraContactRankingTableRefreshInterval, or "7d" if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public String getContactRankingTableRefreshIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraContactRankingTableRefreshInterval, "7d");
+    }
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * @param zimbraContactRankingTableRefreshInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public void setContactRankingTableRefreshInterval(String zimbraContactRankingTableRefreshInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingTableRefreshInterval, zimbraContactRankingTableRefreshInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * @param zimbraContactRankingTableRefreshInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public Map<String,Object> setContactRankingTableRefreshInterval(String zimbraContactRankingTableRefreshInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingTableRefreshInterval, zimbraContactRankingTableRefreshInterval);
+        return attrs;
+    }
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public void unsetContactRankingTableRefreshInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingTableRefreshInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public Map<String,Object> unsetContactRankingTableRefreshInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactRankingTableRefreshInterval, "");
         return attrs;
     }
 

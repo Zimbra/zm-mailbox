@@ -95,6 +95,14 @@ public class ContactRankings {
 				}
 			}
 		} else {
+			long refreshInterval = Constants.MILLIS_PER_WEEK;
+			try {
+				refreshInterval = Provisioning.getInstance().getConfig().getContactRankingTableRefreshInterval();
+			} catch (ServiceException se) {
+				ZimbraLog.gal.warn("can't get zimbraContactRankingTableRefreshInterval", se);
+			}
+			if (refreshInterval == 0)
+				return;
 			long age = now - entry.mLastAccessed;
 			entry.mRanking++;
 			if (entry.mRanking <= 0)
@@ -102,7 +110,8 @@ public class ContactRankings {
 			entry.mLastAccessed = now;
 			// if the contact info in ranking table is incomplete check once a week
 			// to fill out the full name and folder info.
-			if (age > Constants.MILLIS_PER_WEEK && 
+			
+			if (age > refreshInterval && 
 					(entry.mFolderId == ContactAutoComplete.FOLDER_ID_UNKNOWN ||
 					 entry.mDisplayName.length() == 0))
 				updateContactInfo(entry);

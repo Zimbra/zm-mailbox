@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090511-0955 */
+    /* build: 5.0 jylee 20090512-1412 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1861,6 +1861,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=107)
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
+
+    /**
+     * How often do we refresh contact ranking table from address book and
+     * GAL to get friendly name for the email address. Use 0 to disable the
+     * refresh.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1023)
+    public static final String A_zimbraContactRankingTableRefreshInterval = "zimbraContactRankingTableRefreshInterval";
 
     /**
      * Size of the contact ranking table. Ranking table is used to keep track
