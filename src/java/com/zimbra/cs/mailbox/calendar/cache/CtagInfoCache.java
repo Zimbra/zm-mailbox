@@ -61,18 +61,18 @@ public class CtagInfoCache {
 
     private static class CtagInfoSerializer implements MemcachedSerializer<CtagInfo> {
         
-        public String serialize(CtagInfo value) {
+        public Object serialize(CtagInfo value) {
             return value.encodeMetadata().toString();
         }
 
-        public CtagInfo deserialize(String str) throws ServiceException {
-            Metadata meta = new Metadata(str);
+        public CtagInfo deserialize(Object obj) throws ServiceException {
+            Metadata meta = new Metadata((String) obj);
             return new CtagInfo(meta);
         }
     }
 
     public boolean containsKey(CalendarKey key) throws ServiceException {
-        return mMemcachedLookup.containsKey(key);
+        return mMemcachedLookup.get(key) != null;
     }
 
     public CtagInfo get(CalendarKey key) throws ServiceException {

@@ -43,12 +43,12 @@ public class CtagResponseCache {
 
     private static class CtagResponseSerializer implements MemcachedSerializer<CtagResponseCacheValue> {
         
-        public String serialize(CtagResponseCacheValue value) throws ServiceException {
+        public Object serialize(CtagResponseCacheValue value) throws ServiceException {
             return value.encodeMetadata().toString();
         }
 
-        public CtagResponseCacheValue deserialize(String str) throws ServiceException {
-            Metadata meta = new Metadata(str);
+        public CtagResponseCacheValue deserialize(Object obj) throws ServiceException {
+            Metadata meta = new Metadata((String) obj);
             return new CtagResponseCacheValue(meta);
         }
     }
