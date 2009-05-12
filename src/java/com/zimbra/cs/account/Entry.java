@@ -113,7 +113,8 @@ public abstract class Entry implements ToZJSONObject {
 
     /**
      * looks up name in map, and if found, returns its value.
-     * if not found, iterate through key names and compare using equalsIgnoreCase
+     * if not found, get real attr name from AttributeManager and try getting from the map again
+     * 
      * @param name
      * @return
      */
@@ -121,11 +122,8 @@ public abstract class Entry implements ToZJSONObject {
         Object v = mAttrs.get(name);
         if (v != null) return v;
         
-        // get rid of this, TODO
-        for (String key: mAttrs.keySet()) {
-            if (key.equalsIgnoreCase(name))
-                return mAttrs.get(key);
-        }
+        v = getValueByRealAttrName(name, mAttrs);
+        if (v != null) return v;
         
         if (!applyDefaults)
             return null;
@@ -142,11 +140,8 @@ public abstract class Entry implements ToZJSONObject {
             v = mDefaults.get(name);
             if (v != null) return v;
             
-            // get rid of this, TODO
-            for (String key: mDefaults.keySet()) {
-                if (key.equalsIgnoreCase(name))
-                    return mDefaults.get(key);
-            }
+            v = getValueByRealAttrName(name, mDefaults);
+            if (v != null) return v;
         }
         
         // check secondary defaults
@@ -154,11 +149,9 @@ public abstract class Entry implements ToZJSONObject {
             v = mSecondaryDefaults.get(name);
             if (v != null) return v;
             
-            // get rid of this, TODO
-            for (String key: mSecondaryDefaults.keySet()) {
-                if (key.equalsIgnoreCase(name))
-                    return mSecondaryDefaults.get(key);
-            }
+            v = getValueByRealAttrName(name, mSecondaryDefaults);
+            if (v != null) return v;
+            
         }
         
         return null;
@@ -175,6 +168,16 @@ public abstract class Entry implements ToZJSONObject {
             ZimbraLog.account.warn("failed to get AttributeManager instance", se);
         }
         return attrMgr;
+    }
+    
+    private Object getValueByRealAttrName(String attrName, Map<String,Object> map) {
+        AttributeManager attrMgr = getAttributeManager();
+        if (attrMgr != null) {
+            AttributeInfo ai = attrMgr.getAttributeInfo(attrName);
+            if (ai != null)
+                return map.get(ai.getName());
+        }
+        return null;
     }
     
     /*
