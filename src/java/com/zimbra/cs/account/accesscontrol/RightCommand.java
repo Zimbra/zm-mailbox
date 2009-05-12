@@ -41,8 +41,8 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightChecker.SearchGrantResult;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 public class RightCommand {
     
@@ -956,9 +956,10 @@ public class RightCommand {
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+        RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
         AllEffectiveRights aer = new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
-        RightChecker.getAllEffectiveRights(granteeEntry, expandSetAttrs, expandGetAttrs, aer);
+        RightChecker.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
         return aer;
     }
     
@@ -977,11 +978,12 @@ public class RightCommand {
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         // granteeEntry right must be an Account
         Account granteeAcct = (Account)granteeEntry;
+        RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
         EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(Grantee.makeGrantee(granteeAcct), targetEntry, expandSetAttrs, expandGetAttrs, er);
+        RightChecker.getEffectiveRights(rightBearer, targetEntry, expandSetAttrs, expandGetAttrs, er);
         return er;
     }
     
@@ -1001,11 +1003,12 @@ public class RightCommand {
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         // granteeEntry right must be an Account
         Account granteeAcct = (Account)granteeEntry;
+        RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
         EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(Grantee.makeGrantee(granteeAcct), targetEntry, true, true, er);
+        RightChecker.getEffectiveRights(rightBearer, targetEntry, true, true, er);
         return er;
     }
     
@@ -1035,9 +1038,7 @@ public class RightCommand {
             gt = GranteeType.fromCode(granteeType);
             granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
             
-            Grantee theGrantee = Grantee.makeGrantee(granteeEntry);
-            if (theGrantee == null)
-                throw ServiceException.INVALID_REQUEST("entry not a valid grantee type", null);
+            Grantee theGrantee = new Grantee(granteeEntry);
             
             if (granteeIncludeGroupsGranteeBelongs)
                 granteeFilter = theGrantee.getIdAndGroupIds();

@@ -33,6 +33,7 @@ import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.ACL;
@@ -311,7 +312,7 @@ public class ACLAccessManager extends AccessManager {
         if (alwaysAllow(granteeAcct, asAdmin, target, null))
             return true;
         
-        Grantee grantee = Grantee.makeGrantee(granteeAcct);
+        Grantee grantee = new Grantee(granteeAcct);
         RightChecker.AllowedAttrs allowedAttrs = RightChecker.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
         return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
     }
@@ -480,21 +481,21 @@ public class ACLAccessManager extends AccessManager {
     private boolean checkAttrRight(Account granteeAcct, Entry target, 
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = 
-            RightChecker.accessibleAttrs(Grantee.makeGrantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
+            RightChecker.accessibleAttrs(new Grantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, rightNeeded.getAttrs(), target);
     }
     
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = 
-            RightChecker.accessibleAttrs(Grantee.makeGrantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
+            RightChecker.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded, target);
     }
     
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         RightChecker.AllowedAttrs allowedAttrs = 
-            RightChecker.accessibleAttrs(Grantee.makeGrantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
+            RightChecker.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
         return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded, target);
     }
 

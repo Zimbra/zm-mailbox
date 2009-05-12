@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,6 +54,8 @@ import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.RightBearer.GlobalAdmin;
+import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
@@ -981,18 +982,15 @@ public class RightChecker {
      * @throws ServiceException
      */
     static void getEffectiveRights(
-            Grantee grantee, Entry target,
+            RightBearer rightBearer, Entry target,
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
-
-        if (grantee == null)
-            return;
         
         Set<Right> presetRights;
         AllowedAttrs allowSetAttrs;
         AllowedAttrs allowGetAttrs;
         
-        if (grantee.isAccount() && isSystemAdmin(grantee.getAccount(), true)) {
+        if (rightBearer instanceof GlobalAdmin) {
             // all preset rights on the target type
             TargetType targetType = TargetType.getTargetType(target);
             presetRights = getAllExecutablePresetRights(targetType);
@@ -1003,7 +1001,9 @@ public class RightChecker {
             // all attrs on the target type
             allowGetAttrs = AllowedAttrs.ALLOW_ALL_ATTRS();
             
-        } else {    
+        } else {
+            Grantee grantee = (Grantee)rightBearer;
+            
             // get effective preset rights
             presetRights = getEffectivePresetRights(grantee, target);
             
@@ -1724,7 +1724,8 @@ public class RightChecker {
             return;
         
         // get the set of zimbraId of the grantees to search for
-        Set<String> granteeIdsToSearch = Grantee.makeGrantee(grantor).getIdAndGroupIds();
+        Grantee grantee = new Grantee(grantor);
+        Set<String> granteeIdsToSearch = grantee.getIdAndGroupIds();
         
         Map<String, SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
                 
@@ -2089,18 +2090,21 @@ public class RightChecker {
         return allMembers;
     }
     
+ 
     /**
      * 
      * @param grantee an Account or a group
      * @throws ServiceException
      */
-    static void getAllEffectiveRights(NamedEntry granteeEntry, 
+    static void getAllEffectiveRights(RightBearer rightBearer, 
             boolean expandSetAttrs, boolean expandGetAttrs,
             AllEffectiveRights aer) throws ServiceException {
         
-        Grantee grantee = Grantee.makeGrantee(granteeEntry);
-        if (grantee == null)
+        if (rightBearer instanceof GlobalAdmin)
+            // throw ServiceException.FAILURE("TODO", null); // todo
             return;
+        
+        Grantee grantee = (Grantee)rightBearer;
         
         Provisioning prov = Provisioning.getInstance();
         

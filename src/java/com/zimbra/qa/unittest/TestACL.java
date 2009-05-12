@@ -54,7 +54,7 @@ import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Grantee;
+import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightChecker;
@@ -722,8 +722,8 @@ public abstract class TestACL extends TestCase {
         try {
             // call RightChecker directly instead of mAM, we want to verify the interim result.
             AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
-                    RightChecker.accessibleAttrs(Grantee.makeGrantee(grantee), target, AdminRight.PR_GET_ATTRS, false):
-                    RightChecker.accessibleAttrs(Grantee.makeGrantee(grantee), target, AdminRight.PR_SET_ATTRS, false);
+                    RightChecker.accessibleAttrs(new Grantee(grantee), target, AdminRight.PR_GET_ATTRS, false):
+                    RightChecker.accessibleAttrs(new Grantee(grantee), target, AdminRight.PR_SET_ATTRS, false);
             // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
             assertEquals(expected, allowedAttrs);
         } catch (ServiceException e) {
