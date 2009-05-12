@@ -324,7 +324,7 @@ Depending on the context, there are three aspects of targets that need to be dea
       
     - getAttr/setAttr are checked in SOAP get{object}/modify{object} handlers.  As follows:
     
-          Definition of rights:
+          Naming convention of rights:
               (1) allow get{object}     : can READ ALL attributes on the entry
               (2) allow view***         : can READ SOME attributes on the entry
               (3) allow modify{object}  : can READ and WRITE ALL attributes on the entry
@@ -365,17 +365,17 @@ Depending on the context, there are three aspects of targets that need to be dea
             e.g. 
             1. Q: target allows modifyAccount right to the current admin, but does not have an ACE entry for configureQuota right 
                   - can the current admin modify zimbraMailQuota of the target?
-               A: Yes.  Because (2):(B)="allow write all" => result in (X)
+               A: Yes.  Because (3):(B)="allow write all" => result in (X)
             
             2. Q: target allows modifyAccount right to the current admin, but has an entry for "deny configureQuota" 
                   - can the current admin modify zimbraMailQuota of the target?
-               A: No.  Because (2):(B)="allow write all" and (6):(D)="deny write certain" => result in (Z)
+               A: No.  Because (3):(B)="allow write all" and (8):(D)="deny write some" => result in (Z)
             
             3. Q: target has ACE entry "deny getAccount" and an ACE entry "allow configureQuota" for the current admin 
                   - can the current admin see the value of zimbraMailQuota of the target?
-               A: No.   Because (4):(C)="deny read all" and (3):(A)="allow read certain" =>  => result in (Z)
+               A: No.   Because (5):(C)="deny read all" and (4):(A)="allow read some" =>  => result in (Z)
                   However, if the question is "can the current admin *modify* the value of zimbraMailQuota of the target?" the answer would be Yes.
-                  Because (4):(D)="not specified" and (3):(B)="allow write certain" => result in (X)
+                  Because (5):(D)="not specified" and (4):(B)="allow write some" => result in (X)
       
 
 3.4 Limit(constraints) for Modifying Attributes
