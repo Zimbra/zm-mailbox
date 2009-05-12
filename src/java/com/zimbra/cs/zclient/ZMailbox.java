@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2149,8 +2150,27 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public String addMessage(String folderId, String flags, String tags, long receivedDate, byte[] content, boolean noICal) throws ServiceException {
+        return addMessage(folderId, flags, tags, receivedDate, new ByteArrayInputStream(content), content.length, noICal);
+    }
+    
+    /**
+     * @param folderId (required) folderId of folder to add message to
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged",
+     *        or <tt>null</tt>
+     * @param tags comma-spearated list of tags, or null for no tags, or <tt>null</tt>
+     * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
+     *        or <tt>0</tt> for the current time
+     * @param in content stream
+     * @param contentLength number of bytes in the content stream
+     * @param noICal if TRUE, then don't process iCal attachments.
+     * @return ID of newly created message
+     * @throws ServiceException on error
+     */
+    public String addMessage(String folderId, String flags, String tags, long receivedDate,
+                             InputStream in, long contentLength, boolean noICal)
+    throws ServiceException {
         // first, upload the content via the FileUploadServlet
-        String aid = uploadAttachment("message", content, "message/rfc822", 5000);
+        String aid = uploadContentAsStream("message", in, "message/rfc822", contentLength, 5000);
 
         // now, use the returned upload ID to do the message send
         Element req = newRequestElement(MailConstants.ADD_MSG_REQUEST);
