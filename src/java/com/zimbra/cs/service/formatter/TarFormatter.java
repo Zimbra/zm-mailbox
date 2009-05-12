@@ -185,12 +185,14 @@ public class TarFormatter extends Formatter {
                 }
             } else {
                 ZimbraQueryResults results = null;
+                boolean saveTargetFolder = false;
 
                 if (context.target instanceof Folder) {
                     Folder f = (Folder)context.target;
                     
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
                         conversations = false;
+                        saveTargetFolder = true;
                         query = "under:\"" + f.getPath() + "\"" +
                             (query == null ? "" : " " + query);
                     }
@@ -219,9 +221,15 @@ public class TarFormatter extends Formatter {
                     throw ServiceException.PARSE_ERROR(e.getLocalizedMessage(), e);
                 }
                 try {
-                    while (results.hasNext())
+                    while (results.hasNext()) {
+                        if (saveTargetFolder) {
+                            saveTargetFolder = false;
+                            tos = saveItem(context, context.target,
+                                fldrs, cnts, names, false, tos);
+                        }
                         tos = saveItem(context, results.getNext().getMailItem(),
                             fldrs, cnts, names, false, tos);
+                    }
                     if (conversations) {
                         for (MailItem item : context.targetMailbox.getItemList(
                             context.opContext, MailItem.TYPE_CONVERSATION)) 
@@ -744,7 +752,10 @@ public class TarFormatter extends Formatter {
             fmap.put(fldr.getPath(), fldr);
         }
         if (view != Folder.TYPE_UNKNOWN && fldr.getDefaultView() !=
-            Folder.TYPE_UNKNOWN && fldr.getDefaultView() != view)
+            Folder.TYPE_UNKNOWN && fldr.getDefaultView() != view &&
+            !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
+            (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
+            fldr.getDefaultView() == Folder.TYPE_WIKI)))
             throw ServiceException.INVALID_REQUEST(
                 "folder cannot contain item type " +
                 Folder.getNameForType(view), null);
