@@ -23,7 +23,9 @@ import com.zimbra.common.service.ServiceException;
 
 /**
  * A key/value lookup map backed by memcached.  This class does not implement java.util.Map
- * because memcached doesn't allow iteration.
+ * because memcached doesn't allow iteration.  Use this class for values that can be serialized
+ * as String, Integer or Long.  See also the BigByteArrayMemcachedMap that supports byte array
+ * serialization and chunking of values larger than 1MB.
  * 
  * Example:
  * 
@@ -35,8 +37,8 @@ import com.zimbra.common.service.ServiceException;
  *     class MyValue { ... }
  * 
  *     class MySerializer implements Serializer<MyValue> {
- *         public String serialize(MyValue value) { return value.toString(); }
- *         public MyValue deserialize(String str) { return new MyValue(str); }
+ *         public Object serialize(MyValue value) { return the serialized object, e.g. String or Integer }
+ *         public MyValue deserialize(Object obj) { return new MyValue(obj); }
  *     }
  * 
  *     ZimbraMemcachedClient mcdClient = new ZimbraMemcachedClient(...);
@@ -48,7 +50,6 @@ import com.zimbra.common.service.ServiceException;
  *     mcdMap.put(foo, bar);
  *     MyValue bar2 = mcdMap.get(foo);
  *     mcdMap.remove(foo);
- *     boolean hasFoo = mcdMap.containsKey(foo);
  * 
  *     MyKey k1 = new MyKey("k1");
  *     MyKey k2 = new MyKey("k2");
@@ -76,16 +77,6 @@ public class MemcachedMap<K extends MemcachedKey, V> {
     }
 
     /**
-     * Returns true if key has a value in memcached.
-     * @param key
-     * @return
-     * @throws ServiceException
-     */
-    public boolean containsKey(K key) throws ServiceException {
-        return get(key) != null;
-    }
-
-    /**
      * Returns the value for a key.  Null is returned if key is not found in memcached.
      * @param key
      * @return
@@ -94,10 +85,10 @@ public class MemcachedMap<K extends MemcachedKey, V> {
     public V get(K key) throws ServiceException {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
-        String valstr = (String) mClient.get(kval);
+        Object valobj = mClient.get(kval);
         V value = null;
-        if (valstr != null)
-            value = mSerializer.deserialize(valstr);
+        if (valobj != null)
+            value = mSerializer.deserialize(valobj);
         return value;
     }
 
@@ -123,10 +114,10 @@ public class MemcachedMap<K extends MemcachedKey, V> {
         for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
             K key = keyMap.get(entry.getKey());
             if (key != null) {
-                String valstr = (String) entry.getValue();
+                Object valobj =  entry.getValue();
                 V value = null;
-                if (valstr != null)
-                    value = mSerializer.deserialize(valstr);
+                if (valobj != null)
+                    value = mSerializer.deserialize(valobj);
                 result.put(key, value);
             }
         }
@@ -142,8 +133,8 @@ public class MemcachedMap<K extends MemcachedKey, V> {
     public void put(K key, V value) throws ServiceException {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
-        String valstr = mSerializer.serialize(value);
-        mClient.put(kval, valstr);
+        Object valobj = mSerializer.serialize(value);
+        mClient.put(kval, valobj);
     }
 
     /**
