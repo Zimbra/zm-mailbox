@@ -483,7 +483,8 @@ class ImapFolderSync {
         if (newRemotePath != null) {
             // Folder renamed but still under data source root
             try {
-                remoteFolder = remoteFolder.renameTo(newRemotePath);
+                if (!newRemotePath.equals(remoteFolder.getPath()))
+                    remoteFolder = remoteFolder.renameTo(newRemotePath);
             } catch (CommandFailedException e) {
                 syncFolderFailed(itemId, localPath,
                     "Unable to rename remote folder to " + newRemotePath, e);
