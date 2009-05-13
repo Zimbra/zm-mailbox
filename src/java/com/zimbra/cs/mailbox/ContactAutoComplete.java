@@ -292,6 +292,9 @@ public class ContactAutoComplete {
 	}
 	
 	private void addMatchedContacts(String query, Map<String,? extends Object> attrs, int folderId, ItemId id, AutoCompleteResult result) {
+		String[] tokens = query.split(" ");
+		if (tokens.length == 2 && tokens[1].length() == 1)
+			query = tokens[0];
     	String firstName = (String)attrs.get(Contact.A_firstName);
     	String lastName = (String)attrs.get(Contact.A_lastName);
     	String fullName = (String)attrs.get(Contact.A_fullName);
@@ -338,6 +341,9 @@ public class ContactAutoComplete {
 	
 	private void queryFolders(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
 		str = str.toLowerCase();
+		String[] tokens = str.split(" ");
+		if (tokens.length == 2 && tokens[1].length() == 1)
+			str = tokens[0];
         ZimbraQueryResults qres = null;
         try {
     		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
@@ -428,15 +434,7 @@ public class ContactAutoComplete {
 			first = false;
 			buf.append("inid:").append(fid);
 		}
-		buf.append(")");
-		
-		buf.append("(#lastName:").append(query).append("*");
-		buf.append(" OR #fullName:").append(query).append("*");
-		buf.append(" OR #nickName:").append(query).append("*");
-		buf.append(" OR #firstName:").append(query).append("*");
-		for (String emailKey : mEmailKeys)
-			buf.append(" OR #").append(emailKey).append(":").append(query).append("*");
-		buf.append(")");
+		buf.append(") AND contact:(").append(query).append(")");
 		return buf.toString();
 	}
 }

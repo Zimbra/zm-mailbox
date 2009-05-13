@@ -61,8 +61,11 @@ public class GalSearchControl {
 	
 	public void autocomplete() throws ServiceException {
 		String query = mParams.getQuery();
-		if (!query.endsWith("*"))
-			mParams.setQuery(query+"*");
+		if (query == null)
+			query = "";
+		if (query.endsWith("*"))
+			query = query.substring(0, query.length()-1);
+		mParams.setQuery(query);
 		try {
 			Account galAcct = mParams.getGalSyncAccount();
 			if (galAcct != null) {
@@ -74,6 +77,7 @@ public class GalSearchControl {
 			}
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
+			mParams.setQuery(query+"*");
 			mParams.getResultCallback().reset(mParams);
 			mParams.setLimit(100);
 			ldapSearch(GalOp.autocomplete);
@@ -83,13 +87,7 @@ public class GalSearchControl {
 	public void search() throws ServiceException {
 		String query = mParams.getQuery();
 		if (query == null)
-			query = "*";
-		else {
-			if (!query.endsWith("*"))
-				query = query+"*";
-			if (!query.startsWith("*"))
-				query = "*"+query;
-		}
+			query = "";
 		mParams.setQuery(query);
 		try {
 			Account galAcct = mParams.getGalSyncAccount();
@@ -102,6 +100,11 @@ public class GalSearchControl {
 			}
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
+			if (!query.endsWith("*"))
+				query = query+"*";
+			if (!query.startsWith("*"))
+				query = "*"+query;
+			mParams.setQuery(query);
 			mParams.getResultCallback().reset(mParams);
 			mParams.setLimit(100);
 			ldapSearch(GalOp.search);
@@ -161,10 +164,13 @@ public class GalSearchControl {
 	
 	private void generateSearchQuery(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
 		String query = mParams.getQuery();
+		String[] tokens = query.split(" ");
+		if (tokens.length == 2 && tokens[1].length() == 1)
+			query = tokens[0];
 		Provisioning.GAL_SEARCH_TYPE type = mParams.getType();
 		StringBuilder searchQuery = new StringBuilder();
-        if (query != null)
-        	searchQuery.append("(#email:").append(query).append(" OR #fileasstr:").append(query).append(" OR #fullname:").append(query).append(") AND");
+        if (query.length() > 0)
+        	searchQuery.append("contact:(").append(query).append(") AND");
         GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
         boolean first = true;
 		for (DataSource ds : galAcct.getAllDataSources()) {
@@ -179,7 +185,8 @@ public class GalSearchControl {
 			first = false;
 			searchQuery.append(" inid:").append(ds.getFolderId());
 		}
-		searchQuery.append(")");
+		if (!first)
+			searchQuery.append(")");
 		switch (type) {
 		case CALENDAR_RESOURCE:
 			searchQuery.append(" AND #zimbraAccountCalendarUserType:RESOURCE");
