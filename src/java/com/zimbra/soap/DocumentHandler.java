@@ -449,6 +449,9 @@ public abstract class DocumentHandler {
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
         boolean isLocal = LOCAL_HOST_ID.equalsIgnoreCase(server.getId());
 
+        if (isLocal)
+            zsc.resetProxyAuthToken();
+            
         Element response = null;
         request.detach();
         if (isLocal && engine != null) {
@@ -484,6 +487,9 @@ public abstract class DocumentHandler {
         Server server = proxy.getServer();
         boolean isLocal = LOCAL_HOST_ID.equalsIgnoreCase(server.getId());
 
+        if (isLocal)
+            zscProxy.resetProxyAuthToken();
+        
         if (zscProxy.isNotificationEnabled()) {
             // if we've got a SOAP session, make sure to use the appropriate remote session ID
             if (localSession instanceof SoapSession.DelegateSession)

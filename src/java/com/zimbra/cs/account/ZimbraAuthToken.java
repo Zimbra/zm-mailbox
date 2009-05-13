@@ -426,6 +426,11 @@ public class ZimbraAuthToken extends AuthToken {
         return mProxyAuthToken;
     }
     
+    @Override
+    public void resetProxyAuthToken() {
+        mProxyAuthToken = null;
+    }
+    
     /*
     public void encodeAuthReq(Element authRequest)  throws ServiceException {
         String origAuthData = getOrigAuthData();

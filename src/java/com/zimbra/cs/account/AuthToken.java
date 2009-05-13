@@ -87,6 +87,8 @@ public abstract class AuthToken {
     public void setProxyAuthToken(String encoded) {}
     
     public String getProxyAuthToken() { return null; }
+    
+    public void resetProxyAuthToken() {}
 
     /**
      * Encode original auth info into an outgoing http request.
