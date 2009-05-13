@@ -513,7 +513,7 @@ public class LC {
         zimbra_db_directory.setDefault("${zimbra_home}" + FS + "db");
 
         zimbra_tmp_directory = new KnownKey("zimbra_tmp_directory");
-        zimbra_tmp_directory.setDefault(System.getProperty("java.io.tmpdir") + FS + "zimbra");
+        zimbra_tmp_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "tmp");
 
         zimbra_extensions_directory = new KnownKey("zimbra_extension_directory");
         zimbra_extensions_directory.setDefault("${zimbra_home}" + FS + "lib" + FS + "ext");
