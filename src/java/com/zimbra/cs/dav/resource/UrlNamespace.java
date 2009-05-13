@@ -46,7 +46,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -236,23 +235,34 @@ public class UrlNamespace {
 	public static String getPrincipalUrl(Account account) {
 		return getPrincipalUrl(account, account);
 	}
+	
+	private static boolean onSameServer(Account thisOne, Account thatOne) {
+		if (thisOne.getId().equals(thatOne.getId()))
+			return true;
+		try {
+			Provisioning prov = Provisioning.getInstance();
+	        Server mine = prov.getServer(thisOne);
+	        Server theirs = prov.getServer(thatOne);
+	        if (mine != null && theirs != null)
+	        	return mine.getId().equals(theirs.getId());
+		} catch (Exception e) {
+	        ZimbraLog.dav.warn("can't get domain or server for %s %s", thisOne.getId(), thatOne.getId(), e);
+		}
+		return true;
+	}
 	public static String getPrincipalUrl(Account authAccount, Account targetAccount) {
 		String target = targetAccount.getName();
-		boolean useAbsoluteUrl = false;
 		try {
 			Provisioning prov = Provisioning.getInstance();
 	        Config config = prov.getConfig();
 	        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
 	        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(targetAccount.getDomainName()))
 	        	target = target.substring(0, target.indexOf('@'));
-	        Server mine = prov.getServer(authAccount);
-	        Server theirs = prov.getServer(targetAccount);
-	        useAbsoluteUrl = !mine.getId().equals(theirs.getId());
 		} catch (ServiceException se) {
 	        ZimbraLog.dav.warn("can't get domain or server for "+target, se);
 		}
         String url = getPrincipalUrl(target);
-        if (useAbsoluteUrl) {
+        if (!onSameServer(authAccount, targetAccount)) {
         	try {
             	url = getAbsoluteUrl(targetAccount, url);
     		} catch (ServiceException se) {
