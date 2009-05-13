@@ -50,7 +50,7 @@ public class ZContactHit implements ZSearchHit {
         mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mFileAsStr = e.getAttribute(MailConstants.A_FILE_AS_STR, null);
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
-        mFolderId = e.getAttribute(MailConstants.A_FOLDER);
+        mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
         mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
         mEmail = e.getAttribute(Contact.A_email, null);
         mEmail2 = e.getAttribute(Contact.A_email2, null);

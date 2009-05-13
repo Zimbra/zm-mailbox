@@ -3046,10 +3046,20 @@ public class ZMailbox implements ToZJSONObject {
         } else if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL) ||
                    params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
         	name = VoiceConstants.SEARCH_VOICE_REQUEST;
+        } else if (params.getTypes().equals(ZSearchParams.TYPE_GAL)) {
+            name = AccountConstants.SEARCH_GAL_REQUEST;
         } else {
         	name = MailConstants.SEARCH_REQUEST;
         }
+        
         Element req = newRequestElement(name);
+
+        if (params.getTypes().equals(ZSearchParams.TYPE_GAL)) {
+            req.addAttribute(AccountConstants.A_TYPE, GalEntryType.account.name());
+            req.addElement(AccountConstants.E_NAME).setText(params.getQuery());
+            //req.addAttribute(MailConstants.A_SORTBY, SearchSortBy.nameAsc.name());
+
+        }
 
         req.addAttribute(MailConstants.A_CONV_ID, convId);
         if (nest) req.addAttribute(MailConstants.A_NEST_MESSAGES, true);
@@ -3082,8 +3092,22 @@ public class ZMailbox implements ToZJSONObject {
 			params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
 			setVoiceStorePrincipal(req);
 		}
+        Element resp = invoke(req);
+        if (params.getTypes().equals(ZSearchParams.TYPE_GAL)) {
+             try{
+                 resp.getAttribute(MailConstants.A_SORTBY);
 
-		return new ZSearchResult(invoke(req), nest, params.getTimeZone() != null ? params.getTimeZone() : getPrefs().getTimeZone());
+             }catch (Exception e){
+                    resp.addAttribute(MailConstants.A_SORTBY,params.getSortBy().name());
+             }
+             try{
+                 resp.getAttribute(MailConstants.A_QUERY_OFFSET);
+
+             }catch (Exception e){
+                    resp.addAttribute(MailConstants.A_QUERY_OFFSET,params.getOffset());
+             }
+        }
+		return new ZSearchResult(resp, nest, params.getTimeZone() != null ? params.getTimeZone() : getPrefs().getTimeZone());
     }
 
     /**

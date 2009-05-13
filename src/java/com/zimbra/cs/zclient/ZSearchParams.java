@@ -26,6 +26,8 @@ import java.util.TimeZone;
 public class ZSearchParams implements ToZJSONObject {
 
     public static final String TYPE_CONVERSATION = "conversation";
+
+    public static final String TYPE_GAL = "gal";
     
     public static final String TYPE_MESSAGE = "message";
     
@@ -67,6 +69,8 @@ public class ZSearchParams implements ToZJSONObject {
                 sb.append(TYPE_WIKI);
             else if (s.startsWith("t") && TYPE_TASK.startsWith(s))
                 sb.append(TYPE_TASK);
+            else if (s.startsWith("g") && TYPE_GAL.startsWith(s))
+                sb.append(TYPE_GAL);
             else
                 throw ZClientException.CLIENT_ERROR("invlaid search type: "+s, null);
         }
