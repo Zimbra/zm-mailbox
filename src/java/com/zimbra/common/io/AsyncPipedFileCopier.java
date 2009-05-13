@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -193,7 +191,7 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 reader.start();
         }
 
-        public void shutdown() throws IOException {
+        public void shutdown() {
             for (ReaderThread reader : mReaders) {
                 try {
                     reader.join();
@@ -208,12 +206,8 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
             buf.flip();
             buf.mark();
             for (int i = 0; i < mWriters.length; i++) {
-                try {
-                    buf.reset();
-                    sinkChannel.write(buf);
-                } catch (IOException e) {
-                    e.printStackTrace(System.err);
-                }
+                buf.reset();
+                sinkChannel.write(buf);
             }
             sinkChannel.close();
 
@@ -287,6 +281,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                             done = true;
                             break;
                         }
+                    } catch (OutOfMemoryError e) {
+                        try {
+                            ZimbraLog.system.fatal("out of memory", e);
+                        } finally {
+                            Runtime.getRuntime().halt(1);
+                        }
                     } catch (Throwable t) {
                         err = t;
                     } finally {
@@ -351,6 +351,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                     } finally {
                         ByteUtil.closeStream(fin);
                     }
+                } catch (OutOfMemoryError e) {
+                    try {
+                        ZimbraLog.system.fatal("out of memory", e);
+                    } finally {
+                        Runtime.getRuntime().halt(1);
+                    }
                 } catch (Throwable t) {
                     if (callbackId != -1)
                         mCallbackMap.remove(callbackId);
@@ -383,7 +389,7 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 oldPath.renameTo(newPath);
             }
 
-            private void delete(File file) throws IOException {
+            private void delete(File file) {
                 file.delete();
             }
         }
@@ -437,6 +443,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                                 Throwable err = null;
                                 try {
                                     receiveFile(readOnly);
+                                } catch (OutOfMemoryError e) {
+                                    try {
+                                        ZimbraLog.system.fatal("out of memory", e);
+                                    } finally {
+                                        Runtime.getRuntime().halt(1);
+                                    }
                                 } catch (Throwable t) {
                                     err = t;
                                 } finally {
@@ -453,6 +465,12 @@ class AsyncPipedFileCopier extends AbstractAsyncFileCopier implements FileCopier
                 } catch (IOException ioe) {
                     System.err.println("IOException in WriterThread: " + ioe.getMessage());
                     ioe.printStackTrace(System.err);
+                } catch (OutOfMemoryError e) {
+                    try {
+                        ZimbraLog.system.fatal("out of memory", e);
+                    } finally {
+                        Runtime.getRuntime().halt(1);
+                    }
                 }
             }
 

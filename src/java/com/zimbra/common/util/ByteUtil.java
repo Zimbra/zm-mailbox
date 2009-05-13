@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -89,15 +87,39 @@ public class ByteUtil {
 		}
 		return buffer;
 	}
-
+	
+	/**
+	 * Count the total number of bytes of the <code>InputStream</code>
+	 * @param is The stream to read from.
+	 * @return total number of bytes
+	 * @throws IOException
+	 */
+	public static int countBytes(InputStream is) throws IOException {
+		byte[] buf = new byte[8192];
+		int count = 0;
+		int num = 0;
+		while ((num = is.read(buf)) != -1)
+			count += num;
+		return count;
+	}
 
     /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
      *  array.  Closes the stream, regardless of whether an error occurs.
      * @param is        The stream to read from.
-     * @param sizeHint  A (no-binding) hint as to the size of the resulting
-     *                  <tt>byte[]</tt> array. */
+     * @param sizeHint  A (non-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint. */
     public static byte[] getContent(InputStream is, int sizeHint) throws IOException {
         return getContent(is, sizeHint, -1);
+    }
+
+    /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
+     *  array.
+     * @param is        The stream to read from.
+     * @param sizeHint  A (non-binding) hint as to the size of the resulting
+     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint.
+     * @param close     <tt>true</tt> to close the stream after reading. */
+    public static byte[] getContent(InputStream is, int sizeHint, boolean close) throws IOException {
+        return getContent(is, -1, sizeHint, -1, close);
     }
 
     /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
@@ -106,11 +128,12 @@ public class ByteUtil {
      *  larger than that limit, an <code>IOException</code> is thrown.
      * @param is        The stream to read from.
      * @param sizeHint  A (non-binding) hint as to the size of the resulting
-     *                  <tt>byte[]</tt> array.
+     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint.
      * @param sizeLimit The maximum number of bytes that can be copied from the
-     *                  stream before an <code>IOException</code> is thrown. */
+     *                  stream before an <code>IOException</code> is thrown,
+     *                  or <tt>-1</tt> for no limit. */
     public static byte[] getContent(InputStream is, int sizeHint, long sizeLimit) throws IOException {
-        return getContent(is, -1, sizeHint, sizeLimit);
+        return getContent(is, -1, sizeHint, sizeLimit, true);
     }
 
     /** Reads a certain quantity of data from the <code>InputStream</code> into
@@ -122,12 +145,12 @@ public class ByteUtil {
      * @param length    The maximum number of bytes that will be copied from
      *                  the stream.
      * @param sizeHint  A (non-binding) hint as to the size of the resulting
-     *                  <tt>byte[]</tt> array. */
+     *                  <tt>byte[]</tt> array, or <tt>-1</tt> for no hint. */
     public static byte[] getPartialContent(InputStream is, int length, int sizeHint) throws IOException {
-        return getContent(is, length, sizeHint, -1);
+        return getContent(is, length, sizeHint, -1, true);
     }
 
-    private static byte[] getContent(InputStream is, int length, int sizeHint, long sizeLimit) throws IOException {
+    private static byte[] getContent(InputStream is, int length, int sizeHint, long sizeLimit, boolean close) throws IOException {
         if (length == 0)
             return new byte[0];
 
@@ -151,7 +174,9 @@ public class ByteUtil {
             }
             return baos.toByteArray();
         } finally {
-            closeStream(is);
+            if (close) {
+                closeStream(is);
+            }
         }
     }
 
@@ -159,6 +184,10 @@ public class ByteUtil {
      * Reads a <tt>String</tt> from the given <tt>Reader</tt>.  Reads
      * until the either end of the stream is hit or until <tt>length</tt> characters
      * are read.
+     * 
+     * @param reader the content source
+     * @param length number of characters to read, or <tt>-1</tt> for no limit
+     * @param close <tt>true</tt> to close the <tt>Reader</tt> when done
      * @return the content or an empty <tt>String</tt> if no content is available
      */
     public static String getContent(Reader reader, int length, boolean close)
@@ -255,6 +284,21 @@ public class ByteUtil {
             os.close();
         } catch (Exception e) {
             ZimbraLog.misc.debug("ignoring exception while closing output stream", e);
+        }
+    }
+    
+    /**
+     * Closes the given reader and ignores any exceptions.
+     * @param r the <tt>Reader</tt>, may be <tt>null</tt>
+     */
+    public static void closeReader(Reader r) {
+        if (r == null) {
+            return;
+        }
+        try {
+            r.close();
+        } catch (IOException e) {
+            ZimbraLog.misc.debug("ignoring exception while closing reader", e);
         }
     }
 
@@ -371,6 +415,41 @@ public class ByteUtil {
 	    return (byte1 | (byte2 << 8)) == GZIPInputStream.GZIP_MAGIC;
 	}
 	
+	/**
+	 * Determines if the data in the given stream is gzipped.
+	 * Requires that the <tt>InputStream</tt> supports mark/reset.
+	 */
+	public static boolean isGzipped(InputStream in)
+	throws IOException {
+        in.mark(2);
+        int header = in.read() | (in.read() << 8);
+        in.reset();
+        if (header == GZIPInputStream.GZIP_MAGIC) {
+            return true;
+        }
+        return false;
+	}
+	
+	/**
+	 * Returns the length of the data returned by an <tt>InputStream</tt>
+	 * Reads the stream in its entirety and closes the stream when done reading.
+	 */
+	public static long getDataLength(InputStream in)
+	throws IOException {
+	    byte[] buf = new byte[8192];
+	    int dataLength = 0;
+	    int bytesRead = 0;
+	    try {
+	        while ((bytesRead = in.read(buf)) >= 0) {
+	            dataLength += bytesRead;
+	        }
+	    } finally {
+	        closeStream(in);
+	    }
+	    
+	    return dataLength;
+	}
+	
     public static String encodeFSSafeBase64(byte[] data) {
         byte[] encoded = Base64.encodeBase64(data);
         // Replace '/' with ',' to make the digest filesystem-safe.
@@ -431,7 +510,6 @@ public class ByteUtil {
 	            md.update(buffer, 0, numBytes);
 	        }
 	        byte[] digest = md.digest();
-	        in.close();
 	        if (base64)
 	            return encodeFSSafeBase64(digest);
 	        else
@@ -440,6 +518,8 @@ public class ByteUtil {
             // this should never happen unless the JDK is foobar
             //  e.printStackTrace();
             throw new RuntimeException(e);
+        } finally {
+            ByteUtil.closeStream(in);
         }
 	}
 
@@ -525,7 +605,7 @@ public class ByteUtil {
      * @return the number of bytes copied
      * @throws IOException
      */
-    public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut) throws IOException {
+    public static long copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut) throws IOException {
         return copy(in, closeIn, out, closeOut, -1L);
     }
 
@@ -541,17 +621,22 @@ public class ByteUtil {
      * @return the number of bytes copied
      * @throws IOException
      */
-    public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
+    public static long copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
         try {
-            byte buffer[] = new byte[8192];
-            int numRead;
-            int transferred = 0;
-            while ((numRead = in.read(buffer)) >= 0) {
-                out.write(buffer, 0, numRead);
-                transferred += numRead;
+            long transferred = 0;
+            if (maxLength != 0) {
+                byte buffer[] = new byte[8192];
+                int numRead;
+                do {
+                    int readMax = buffer.length;
+                    if (maxLength > 0 && maxLength - transferred < readMax)
+                        readMax = (int) (maxLength - transferred);
 
-                if (maxLength >= 0 && transferred > maxLength)
-                	return transferred;
+                    if ((numRead = in.read(buffer, 0, readMax)) < 0)
+                        break;
+                    out.write(buffer, 0, numRead);
+                    transferred += numRead;
+                } while (maxLength < 0 || transferred < maxLength);
             }
             return transferred;
         } finally {
@@ -561,7 +646,7 @@ public class ByteUtil {
                 closeStream(out);
         }
     }
-
+    
     /**
      * Reads up to <tt>limit</tt> bytes from the <tt>InputStream</tt>.
      * @param in the data stream
@@ -719,6 +804,11 @@ public class ByteUtil {
         }
     }
 
+    /**
+     * Calculates the number of bytes read from the wrapped stream.
+     * 
+     * @see PositionInputStream#getPosition()
+     */
     public static class PositionInputStream extends FilterInputStream {
         private long position = 0, mark = 0;
 
@@ -755,6 +845,9 @@ public class ByteUtil {
             return delta;
         }
 
+        /**
+         * Returns the number of bytes read from the wrapped stream.
+         */
         public long getPosition() {
             return position;
         }

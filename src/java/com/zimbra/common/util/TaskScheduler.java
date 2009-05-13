@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
@@ -97,9 +95,9 @@ public class TaskScheduler<V> {
                 ZimbraLog.scheduler.debug("Executing task %s", mId);
                 mLastResult = mTask.call();
                 ZimbraLog.scheduler.debug("Task returned result %s", mLastResult);
-                
+
                 if (mCallbacks != null) {
-                    for (ScheduledTaskCallback callback : mCallbacks) {
+                    for (ScheduledTaskCallback<V2> callback : mCallbacks) {
                         callback.afterTaskRun(mTask);
                     }
                 }
@@ -112,10 +110,18 @@ public class TaskScheduler<V> {
                 mLastResult = null;
             }
             
+            boolean cancelled = false;
+            if (mSchedule != null) {
+                // mSchedule may have not been set by schedule() if the task runs immediately 
+                cancelled = mSchedule.isCancelled();
+            }
+            
             // Reschedule if this is a recurring task
-            if (mRecurs && !mSchedule.isCancelled()) {
+            if (mRecurs && !cancelled) {
                 ZimbraLog.scheduler.debug("Rescheduling task %s", mId);
                 mSchedule = mThreadPool.schedule(this, mIntervalMillis, TimeUnit.MILLISECONDS);
+            } else {
+                ZimbraLog.scheduler.debug("Not rescheduling task %s.  mRecurs=%b", mId, mRecurs);
             }
             return mLastResult;
         }

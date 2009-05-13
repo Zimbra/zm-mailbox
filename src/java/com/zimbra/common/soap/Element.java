@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -30,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -42,9 +41,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 
-/**
- * @author dkarp
- */
 public abstract class Element implements Cloneable {
     protected String  mName;
     protected String  mPrefix = "";
@@ -52,14 +48,19 @@ public abstract class Element implements Cloneable {
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
     
-    /**
-     * indicating that the serialized data of this Element may be large.
-     * 
-     * can be set by SOAP handlers on the response body Element if it's got a 
-     * large result.  Callsites of the toUTF8 methods can check this flag and 
-     * use the toUTF8(Writer) method instead of uisng toUTF8() to serialize.
-     */
+    /** Indicates that the serialized data of this Element may be large.  This
+     *  can be set by SOAP handlers on the response body Element if it's got a 
+     *  large result.  Callsites of the toUTF8 methods can check this flag and 
+     *  use the toUTF8(Writer) method instead of using toUTF8() to serialize. */
     private boolean mIsLarge;
+
+    /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
+     *  them for every XML parse. */
+    private static ThreadLocal<org.dom4j.DocumentFactory> mDocumentFactory = new ThreadLocal<org.dom4j.DocumentFactory>() {
+        @Override protected synchronized org.dom4j.DocumentFactory initialValue() {
+            return new org.dom4j.DocumentFactory();
+        }
+    };
 
     /** These values are used to control how the <tt>Element</tt> serializes
      *  an attribute.  In our model, {@link Element#getAttribute(String)} will
@@ -79,7 +80,7 @@ public abstract class Element implements Cloneable {
     /** Creates a new <tt>Element</tt> with the given name.  This method should
      *  be used when generating a standalone <tt>Element</tt>.  If you want to
      *  add a child to an existing <tt>Element</tt>, please use
-     *  {@link #addElement(String) instead. */
+     *  {@link #addElement(String)} instead. */
     public static Element create(SoapProtocol proto, String name) throws ServiceException {
         if (proto == SoapProtocol.SoapJS)
             return new JSONElement(name);
@@ -104,7 +105,7 @@ public abstract class Element implements Cloneable {
     /** Returns the appropriate {@link ElementFactory} for generating
      *  <tt>Element</tt>s of this <tt>Element</tt>'s type. */
     public abstract ElementFactory getFactory();
-    
+
     /** Creates a new child <tt>Element</tt> with the given name and adds it
      *  to this <tt>Element</tt>. */
     public abstract Element addElement(String name) throws ContainerException;
@@ -164,7 +165,7 @@ public abstract class Element implements Cloneable {
     public String getQualifiedName()  { return (mPrefix != null && !mPrefix.equals("") ? mPrefix + ':' + mName : mName); }
     public QName getQName()           { String uri = getNamespaceURI(mPrefix);  return (uri == null ? QName.get(mName) : QName.get(getQualifiedName(), uri)); }
 
-    public QName getQName(String qualifiedName)  { String[] parts = qualifiedName.split("\\.");  return new QName(parts[parts.length - 1]); }
+    public static QName getQName(String qualifiedName)  { String[] parts = qualifiedName.split("\\.");  return new QName(parts[parts.length - 1]); }
 
     public Element getParent()        { return mParent; }
 
@@ -184,10 +185,11 @@ public abstract class Element implements Cloneable {
 
     /** Returns all an <tt>Element</tt>'s attributes. */
     public abstract Set<Attribute> listAttributes();
-    /** Returns all an <tt>Element</tt>'s sub-elements. */
+    /** Returns all an <tt>Element</tt>'s sub-elements, or an empty <tt>List</tt>. */
     public List<Element> listElements()  { return listElements(null); }
     /** Returns all the sub-elements with the given name.  If <tt>name></tt>
-     *  is <tt>null</tt>, returns <u>all</u> sub-elements. */
+     *  is <tt>null</tt>, returns <u>all</u> sub-elements.  If no elements
+     *  with the given name exist, returns an empty <tt>List</tt> */
     public abstract List<Element> listElements(String name);
 
     public List<KeyValuePair> listKeyValuePairs()  { return listKeyValuePairs(null, null); }
@@ -420,7 +422,7 @@ public abstract class Element implements Cloneable {
 
     public static Element parseXML(InputStream is) throws org.dom4j.DocumentException { return parseXML(is, XMLElement.mFactory); }
     public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(new org.dom4j.io.SAXReader().read(is).getRootElement(), factory);
+        return convertDOM(new org.dom4j.io.SAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);
     }
 
     public static Element parseXML(String xml) throws org.dom4j.DocumentException { return parseXML(xml, XMLElement.mFactory); }
@@ -438,7 +440,7 @@ public abstract class Element implements Cloneable {
         String content = null;
         for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
             org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
-            if (XHTML_NS_URI.equals(d4elt.getNamespaceURI()) && !d4elt.elements().isEmpty())
+            if (XHTML_NS_URI.equalsIgnoreCase(d4elt.getNamespaceURI()) && !d4elt.elements().isEmpty())
                 content = (content == null ? d4elt.asXML() : content + d4elt.asXML());
             else
                 elt.addElement(convertDOM(d4elt, factory));
@@ -491,10 +493,11 @@ public abstract class Element implements Cloneable {
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        public JSONElement(String name)  { mName = name;  mAttributes = new HashMap<String, Object>(); }
+        public JSONElement(String name)  { mName = name;  mAttributes = new LinkedHashMap<String, Object>(); }
         public JSONElement(QName qname)  { this(qname.getName());  setNamespace("", qname.getNamespaceURI()); }
 
         private static final class JSONFactory implements ElementFactory {
+            JSONFactory()  { }
             public Element createElement(String name)  { return new JSONElement(name); }
             public Element createElement(QName qname)  { return new JSONElement(qname); }
         }
@@ -1054,6 +1057,7 @@ public abstract class Element implements Cloneable {
         }
 
         private static final class XMLFactory implements ElementFactory {
+            XMLFactory()  { }
             public Element createElement(String name)  { return new XMLElement(name); }
             public Element createElement(QName qname)  { return new XMLElement(qname); }
         }
@@ -1363,8 +1367,8 @@ public abstract class Element implements Cloneable {
 
         SoapProtocol proto = SoapProtocol.SoapJS;
         Element ctxt = new JSONElement(proto.getHeaderQName()).addUniqueElement(HeaderConstants.E_CONTEXT);
-        ctxt.addElement(HeaderConstants.E_SESSION_ID).setText("3").addAttribute(HeaderConstants.A_ID, 3);
-        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION_ID, null));
+        ctxt.addElement(HeaderConstants.E_SESSION).setText("3").addAttribute(HeaderConstants.A_ID, 3);
+        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION, null));
 
         Element env = testMessage(new JSONElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env);

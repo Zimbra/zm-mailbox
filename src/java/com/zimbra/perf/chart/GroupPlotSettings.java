@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,16 +10,21 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.perf.chart;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class GroupPlotSettings extends PlotSettings {
 
     private final String mGroupBy;
-    public GroupPlotSettings(String groupBy, String infile,
+    private final String mIgnore;
+    private final Set<String> mIgnoreSet;
+    public GroupPlotSettings(String groupBy, String ignore, String infile,
             String dataCol, boolean showRaw,
             boolean showMovingAvg, int movingAvgPoints,
             double multiplier, double divisor,
@@ -31,10 +35,25 @@ public class GroupPlotSettings extends PlotSettings {
                 movingAvgPoints, multiplier, divisor, nonNegative,
                 percentTime, dataFunction, aggFunction, optional, null, null);
         mGroupBy = groupBy;
+        mIgnore = ignore;
+        mIgnoreSet = new HashSet<String>();
+        if (mIgnore != null) {
+            String[] ignores = mIgnore.split("\\s*,\\s*");
+            if (ignores.length > 0)
+                mIgnoreSet.addAll(Arrays.asList(ignores));
+        }
     }
 
     public String getGroupBy() {
         return mGroupBy;
+    }
+    
+    public String getIgnore() {
+        return mIgnore;
+    }
+    
+    public Set<String> getIgnoreSet() {
+        return mIgnoreSet;
     }
 
 
@@ -56,6 +75,7 @@ public class GroupPlotSettings extends PlotSettings {
         sb.append("  ").append("aggregateFunction=\"").append(getAggregateFunction()).append("\"\n");
         sb.append("  ").append("optional=\"").append(getOptional()).append("\"\n");
         sb.append("  ").append("groupBy=\"").append(mGroupBy).append("\"\n");
+        sb.append("  ").append("ignore=\"").append(mIgnore).append("\"\n");
         sb.append("/>\n");
         return sb.toString();
     }

@@ -1,25 +1,15 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
  * 
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 ("License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.zimbra.com/license
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
  * 
  * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
- * the License for the specific language governing rights and limitations
- * under the License.
- * 
- * The Original Code is: Zimbra Collaboration Suite Server.
- * 
- * The Initial Developer of the Original Code is Zimbra, Inc.
- * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
- * All Rights Reserved.
- * 
- * Contributor(s): 
- * 
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.stats;
@@ -29,11 +19,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.TaskScheduler;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Writes data to a file at a scheduled interval.  Data and headers are retrieved
@@ -43,9 +34,8 @@ public class StatsDumper
 implements Callable<Void> {
     
     private static final File STATS_DIR = new File(LC.zmstat_log_directory.value());
+    private static final ThreadGroup statsGroup = new ThreadGroup("ZimbraPerf Stats");
 
-    private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("StatsDumper", 1, 3);
-    
     private StatsDumperDataSource mDataSource;
     private Calendar mLastRollover = Calendar.getInstance();
     private StatsDumper(StatsDumperDataSource dataSource) {
@@ -76,9 +66,30 @@ implements Callable<Void> {
      * @param intervalMillis interval between writes.  The first write is delayed by
      * this interval.
      */
-    public static void schedule(StatsDumperDataSource dataSource, long intervalMillis) {
-        StatsDumper dumper = new StatsDumper(dataSource);
-        sTaskScheduler.schedule(dataSource.getFilename(), dumper, true, intervalMillis, intervalMillis);
+    public static void schedule(final StatsDumperDataSource dataSource, final long intervalMillis) {
+        // Stop using TaskScheduler (bug 22978)
+        final StatsDumper dumper = new StatsDumper(dataSource);
+        Runnable r = new Runnable() {
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(intervalMillis);
+                        try {
+                            dumper.call();
+                        }
+                        catch (Exception e) {
+                            ZimbraLog.perf.warn("Exception in stats thread: %s", dataSource.getFilename(), e);
+                        }
+                    }
+                    catch (InterruptedException e) {
+                        ZimbraLog.perf.info("Stats thread interrupted: %s", dataSource.getFilename(), e);
+                    }
+                    if (Thread.currentThread().isInterrupted())
+                        ZimbraLog.perf.info("Stats thread was interrupted: %s", dataSource.getFilename());
+                }
+            }
+        };
+        new Thread(statsGroup, r, dataSource.getFilename()).start();
     }
     
     private void rollover()
@@ -124,17 +135,39 @@ implements Callable<Void> {
             writeHeader = true;
         }
         FileWriter writer = new FileWriter(file, true);
+        String header = mDataSource.getHeader();
         if (writeHeader) {
             if (mDataSource.hasTimestampColumn()) {
                 writer.write("timestamp,");
             }
-            writer.write(mDataSource.getHeader());
+            writer.write(header);
             writer.write("\n");
         }
         
         // Write data and close
         writer.write(buf.toString());
         writer.close();
+        for (String line : lines) {
+            String logLine = mDataSource.getFilename() + ": " +
+                    (mDataSource.hasTimestampColumn() ? "timestamp," : "") +
+                    header + ":: " + timestamp + "," + line;
+            if (logLine.length() <= 900) {
+                ZimbraLog.slogger.info(logLine);
+            } else {
+                StringBuilder b = new StringBuilder(logLine);
+                String lastUuid = null;
+                do {
+                    String sub = b.substring(0, 900);
+                    b.delete(0, 900);
+                    if (lastUuid != null) {
+                        sub = ":::" + lastUuid + ":::" + sub;
+                    }
+                    lastUuid = UUID.randomUUID().toString();
+                    ZimbraLog.slogger.info(sub + ":::" + lastUuid + ":::");
+                } while (b.length() > 900);
+                ZimbraLog.slogger.info(":::" + lastUuid + ":::" + b.toString());
+            }
+        }
         return null;
     }
 }
