@@ -428,7 +428,7 @@ public class ItemActionHelper {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
         
         AuthToken at = getAuthToken();
-        String pxyAuthToken = at.getProxyAuthToken();
+        String pxyAuthToken = Provisioning.onLocalServer(target) ? null : at.getProxyAuthToken();
         ZAuthToken zat = pxyAuthToken == null ? at.toZAuthToken() : new ZAuthToken(pxyAuthToken);
         
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));

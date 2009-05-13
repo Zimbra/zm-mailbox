@@ -573,4 +573,9 @@ public class ZimbraSoapContext {
     public int getHopCount() {
         return mHopCount;
     }
+    
+    public void resetProxyAuthToken() {
+        mAuthToken.resetProxyAuthToken();
+        mRawAuthToken.resetProxyAuthToken();
+    }
 }
