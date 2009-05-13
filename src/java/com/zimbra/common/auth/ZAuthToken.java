@@ -295,6 +295,10 @@ public class ZAuthToken {
         return false;
     }
     
+    public void resetProxyAuthToken() {
+        mProxyAuthToken = null;
+    }
+    
     static class YahooAuthData {
         static final String YAHOO_Y_ATTR = "Y"; 
         static final String YAHOO_T_ATTR = "T";
