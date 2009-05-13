@@ -290,7 +290,7 @@ public abstract class Formatter {
             } else {
                 ZimbraLog.misc.warn(getType() + " formatter exception", exception);
                 s = exception.getLocalizedMessage();
-                s.substring(0, s.length() > 4096 ? 4096 : s.length());
+                s = s.substring(0, s.length() > 4096 ? 4096 : s.length());
                 s = s.replace("\\", "\\\\");
                 s = s.replace("'", "\\\'");
                 s = s.replace("\"", "\\\'");
@@ -304,7 +304,7 @@ public abstract class Formatter {
             }
             updateClient(context, false);
             context.resp.getWriter().print("<body onload=\"window.parent." +
-                callback + "(" + s + ");\">\n</body>\n</html>\n");
+                callback + "(this, " + s + ");\">\n</body>\n</html>\n");
         }
     }
 }
