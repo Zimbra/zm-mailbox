@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jylee 20090512-1412 */
+    /* build: 5.0 pshao 20090514-1206 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -13953,11 +13953,11 @@ public class ZAttrAccount  extends MailTarget {
      * maximum length of mail signature, 0 means unlimited. If not set,
      * default is 1024
      *
-     * @return zimbraMailSignatureMaxLength, or 1024 if unset
+     * @return zimbraMailSignatureMaxLength, or 10240 if unset
      */
     @ZAttr(id=454)
     public long getMailSignatureMaxLength() {
-        return getLongAttr(Provisioning.A_zimbraMailSignatureMaxLength, 1024L);
+        return getLongAttr(Provisioning.A_zimbraMailSignatureMaxLength, 10240L);
     }
 
     /**

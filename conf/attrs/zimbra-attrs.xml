@@ -2212,7 +2212,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="454" name="zimbraMailSignatureMaxLength" type="long" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
-  <defaultCOSValue>1024</defaultCOSValue>
+  <defaultCOSValue>10240</defaultCOSValue>
   <desc>maximum length of mail signature, 0 means unlimited. If not set, default is 1024</desc>
 </attr>
 

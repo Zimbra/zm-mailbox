@@ -76,7 +76,7 @@ public class MailSignature extends AttributeCallback {
             else
                 return;
                 
-            maxLen = account.getLongAttr(Provisioning.A_zimbraMailSignatureMaxLength, 1024);
+            maxLen = account.getMailSignatureMaxLength();
         }
 
         // 0 means unlimited
