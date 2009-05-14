@@ -394,7 +394,7 @@ public class ZimbraServlet extends HttpServlet {
         }
 
         // 6 comes from "Basic ".length();
-        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()));
+        String userPass = new String(Base64.decodeBase64(auth.substring(6).getBytes()), "UTF-8");
 
         int loc = userPass.indexOf(":"); 
         if (loc == -1) {
