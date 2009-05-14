@@ -210,17 +210,31 @@ public class CalDavProperty extends ResourceProperty {
 	}
 	
 	private static class ScheduleInboxURL extends CalDavProperty {
+		private String mUser;
 		public ScheduleInboxURL(String user) {
 			super(DavElements.E_SCHEDULE_INBOX_URL);
+			mUser = user;
+		}
+		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			Element inboxUrl = super.toElement(ctxt, parent, nameOnly);
+			String authUser = ctxt.getAuthAccount().getName();
+			try {
+				authUser = Principal.getOwner(ctxt.getAuthAccount(), "");
+			} catch (ServiceException se) {
+			}
+			String url = DavServlet.DAV_PATH + "/" + authUser + "/Inbox/";
+			if (!authUser.equals(mUser))
+				url += mUser + "/";
 			// iCal doesn't recognize properly encoded calendar-home-set
 			// see bug 37508
-			//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Inbox/"));
+			//inboxUrl.add(createHref(url));
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(DavServlet.DAV_PATH + "/" + user + "/Inbox/");
-			mChildren.add(e);
+			e.setText(url);
+			inboxUrl.add(e);
+			return inboxUrl;
 		}
 	}
-	
+
 	private static class ScheduleOutboxURL extends CalDavProperty {
 		public ScheduleOutboxURL(String user) {
 			super(DavElements.E_SCHEDULE_OUTBOX_URL);

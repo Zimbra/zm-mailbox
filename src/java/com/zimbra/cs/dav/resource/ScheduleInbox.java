@@ -25,6 +25,8 @@ import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -66,6 +68,10 @@ public class ScheduleInbox extends CalendarCollection {
 		ArrayList<DavResource> result = new ArrayList<DavResource>();
         if (!ctxt.isSchedulingEnabled())
         	return result;
+        Account target = null;
+        Provisioning prov = Provisioning.getInstance();
+        if (ctxt.getPathInfo() != null)
+        	target = prov.getAccountByName(ctxt.getPathInfo());
 		String query = "is:invite inid:" + getId();
 		Mailbox mbox = getMailbox(ctxt);
 		ZimbraQueryResults zqr = null;
@@ -75,8 +81,15 @@ public class ScheduleInbox extends CalendarCollection {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
                 	Message msg = ((MessageHit)hit).getMessage();
-                	if (msg.getCalendarIntendedFor() != null)
+                	if (target == null && msg.getCalendarIntendedFor() != null)
                 		continue;
+                	if (target != null) {
+                		if (msg.getCalendarIntendedFor() == null)
+                			continue;
+                		Account apptRcpt = prov.getAccountByName(msg.getCalendarIntendedFor());
+                		if (apptRcpt == null || !apptRcpt.getId().equals(target.getId()))
+                			continue;
+                	}
                 	DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
                 	if (rs != null) {
                     	String href = UrlNamespace.getRawResourceUrl(rs);

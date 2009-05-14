@@ -90,6 +90,7 @@ public class DavContext {
     private String mCollectionPath;
     private RequestProp mResponseProp;
     private String mDavCompliance;
+    private String mPathInfo;
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
@@ -274,6 +275,12 @@ public class DavContext {
 		return null;
 	}
 
+	public String getPathInfo() {
+		return mPathInfo;
+	}
+	public void setPathInfo(String pathInfo) {
+		mPathInfo = pathInfo;
+	}
 	public String getCollectionPath() {
 		return mCollectionPath;
 	}

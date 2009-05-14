@@ -42,7 +42,7 @@ public class Principal extends DavResource {
         addResourceType(DavElements.E_PRINCIPAL);
         mUri = mainUrl;
     }
-	protected static String getOwner(Account acct, String url) throws ServiceException {
+	public static String getOwner(Account acct, String url) throws ServiceException {
 		String owner = acct.getName();
 		Provisioning prov = Provisioning.getInstance();
         Config config = prov.getConfig();

@@ -362,6 +362,8 @@ public class UrlNamespace {
         }
         
         // look up the item from path
+        if (path.endsWith("/"))
+        	path = path.substring(0, path.length()-1);
         index = path.lastIndexOf('/');
         String folderPath = path.substring(0, index);
         Folder f = null;
@@ -371,29 +373,35 @@ public class UrlNamespace {
             } catch (MailServiceException.NoSuchItemException e) {
             }
         }
-        if (f != null && path.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
-            String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
-            index = uid.indexOf(',');
-            if (f.getType() == MailItem.TYPE_MOUNTPOINT) {
-                Mountpoint mp = (Mountpoint)f;
-                // if the folder is a mountpoint instantiate a remote object.
-                // the only information we have is the calendar UID and remote account folder id.
-                // we need the itemId for the calendar appt in order to query from the remote server.
-                // so we'll need to do getApptSummaries on the remote folder, then cache the result.
-                RemoteCalendarCollection col = getRemoteCalendarCollection(ctxt, mp);
-                DavResource res = col.getAppointment(ctxt, uid);
-                if (res == null)
-                    throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
-                return res;
-            } else if (index > 0) {
-            	id = uid.substring(index+1);
-            	item = mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
+        if (f != null) {
+        	if (path.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
+        		String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
+        		index = uid.indexOf(',');
+        		if (f.getType() == MailItem.TYPE_MOUNTPOINT) {
+        			Mountpoint mp = (Mountpoint)f;
+        			// if the folder is a mountpoint instantiate a remote object.
+        			// the only information we have is the calendar UID and remote account folder id.
+        			// we need the itemId for the calendar appt in order to query from the remote server.
+        			// so we'll need to do getApptSummaries on the remote folder, then cache the result.
+        			RemoteCalendarCollection col = getRemoteCalendarCollection(ctxt, mp);
+        			DavResource res = col.getAppointment(ctxt, uid);
+        			if (res == null)
+        				throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
+        			return res;
+        		} else if (index > 0) {
+        			id = uid.substring(index+1);
+        			item = mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
 
-            } else {
-                item = mbox.getCalendarItemByUid(octxt, uid);
-            }
+        		} else {
+        			item = mbox.getCalendarItemByUid(octxt, uid);
+        		}
+        	} else if (f.getId() == Mailbox.ID_FOLDER_INBOX) {
+        		ctxt.setPathInfo(path.substring(index+1));
+        		// delegated notification handling
+        		return getResourceFromMailItem(ctxt, f);
+        	}
         }
-        
+
         return getResourceFromMailItem(ctxt, item);
     }
     

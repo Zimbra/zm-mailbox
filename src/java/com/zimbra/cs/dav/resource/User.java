@@ -40,6 +40,7 @@ import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.VersioningProperty;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -58,9 +59,9 @@ public class User extends Principal {
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarHomeSet(user));
         addProperty(CalDavProperty.getCalendarUserType(this));
+        addProperty(CalDavProperty.getScheduleInboxURL(user));
+        addProperty(CalDavProperty.getScheduleOutboxURL(user));
         if (ctxt.getAuthAccount().equals(account)) {
-            addProperty(CalDavProperty.getScheduleInboxURL(user));
-            addProperty(CalDavProperty.getScheduleOutboxURL(user));
             addProperty(VersioningProperty.getSupportedReportSet());
             addProperty(new CalendarProxyReadFor(mAccount));
             addProperty(new CalendarProxyWriteFor(mAccount));
@@ -222,7 +223,13 @@ public class User extends Principal {
         		return group;
         	try {
             	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-            	for (Grant g : mbox.getFolderById(ctxt.getOperationContext(), Mailbox.ID_FOLDER_CALENDAR).getEffectiveACL().getGrants()) {
+            	Folder f = mbox.getFolderById(ctxt.getOperationContext(), Mailbox.ID_FOLDER_CALENDAR);
+            	if (f == null)
+            		return group;
+            	ACL acl = f.getEffectiveACL();
+            	if (acl == null)
+            		return group;
+            	for (Grant g : acl.getGrants()) {
             		if (g.getGranteeType() != ACL.GRANTEE_USER)
             			continue;
             		boolean match = mReadOnly ?
