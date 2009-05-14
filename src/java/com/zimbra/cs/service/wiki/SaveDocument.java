@@ -124,7 +124,19 @@ public class SaveDocument extends WikiDocumentHandler {
             }
     		if (itemId == 0) {
     			// create a new page
-    			docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), is, MailItem.TYPE_DOCUMENT);
+    			try {
+        			docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), is, MailItem.TYPE_DOCUMENT);
+    			} catch (ServiceException e) {
+    				if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+    					MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());
+    					if (item != null && item instanceof Document)
+                            throw MailServiceException.ALREADY_EXISTS("name "+doc.name+" in folder "+fid.getId(),
+                                    new Argument(MailConstants.A_NAME, doc.name, Argument.Type.STR),
+                                    new Argument(MailConstants.A_ID, item.getId(), Argument.Type.IID),
+                                    new Argument(MailConstants.A_VERSION, ((Document)item).getVersion(), Argument.Type.NUM));
+    				}
+    				throw e;
+    			}
     		} else {
     			// add a new revision
     			WikiPage oldPage = WikiPage.findPage(ctxt, zsc.getRequestedAccountId(), itemId);
