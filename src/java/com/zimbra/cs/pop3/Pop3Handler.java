@@ -414,7 +414,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             lineLength++;
             mOutputStream.write(c);
         }     
-        if (lineLength != 0) mOutputStream.write(LINE_SEPARATOR);
+        if (lineLength != 0 || maxNumBodyLines == 0) mOutputStream.write(LINE_SEPARATOR);
         mOutputStream.write(TERMINATOR_BYTE);
         mOutputStream.write(LINE_SEPARATOR);
         mOutputStream.flush();
