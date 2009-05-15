@@ -409,11 +409,11 @@ public class Volume {
      * Returns a new <code>List</code> of <code>Volume</code>s
      * that match the specified type.
      */
-    public static List /*<Volume>*/ getByType(short type) {
-        List volumes = getAll();
-        Iterator i = volumes.iterator();
+    public static List<Volume> getByType(short type) {
+        List<Volume> volumes = getAll();
+        Iterator<Volume> i = volumes.iterator();
         while (i.hasNext()) {
-            Volume v = (Volume) i.next();
+            Volume v = i.next();
             if (v.getType() != type) {
                 i.remove();
             }
