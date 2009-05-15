@@ -296,9 +296,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     In and prior to 5.0.*, zimbraHsmAge is special. We set parentOid to keep the same OID it had before: 1.3.6.1.4.1.19348.2.4.20
     Since 5.5, we use an oid in the normal range, see bug 8945.
  -->
-<attr id="8" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="8" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="6.0.0_BETA2">
   <globalConfigValue>30d</globalConfigValue>
   <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
+  <deprecateDesc>deprecated in favor for zimbraHsmPolicy</deprecateDesc>
 </attr>
 
 <attr id="9" name="zimbraNotes" type="string" max="1024" cardinality="single" optionalIn="account,distributionList,cos,domain,server" flags="domainAdminModifiable">
@@ -4490,5 +4491,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>7d</globalConfigValue>
   <desc>How often do we refresh contact ranking table from address book and GAL to get friendly name for the email address.  Use 0 to disable the refresh.</desc>
 </attr>
+
+<attr id="1024" name="zimbraHsmPolicy" type="duration" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+  <globalConfigValue>message,document:before:-30days</globalConfigValue>
+  <desc>
+    The policy that determines which mail items get moved to secondary storage during
+    HSM.  Each value specifies a comma-separated list of item types and the search
+    query used to select items to move.  See the spec for &lt;SearchRequest&gt; for the
+    complete list of item types and query.txt for the search query spec.</desc>
+</attr>
+
+
 
 </attrs>

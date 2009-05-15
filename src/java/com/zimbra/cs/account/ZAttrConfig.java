@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090514-1206 */
+    /* build: 5.0 pshao 20090515-1401 */
 
     /**
      * RFC2256: descriptive information
@@ -7649,8 +7649,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Minimum age of mail items whose filesystem data will be moved to
-     * secondary storage (nnnnn[hmsd]).
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor for
+     * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
+     * data will be moved to secondary storage (nnnnn[hmsd]).
      *
      * <p>Use getHsmAgeAsString to access value as a string.
      *
@@ -7664,8 +7665,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Minimum age of mail items whose filesystem data will be moved to
-     * secondary storage (nnnnn[hmsd]).
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor for
+     * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
+     * data will be moved to secondary storage (nnnnn[hmsd]).
      *
      * @return zimbraHsmAge, or "30d" if unset
      */
@@ -7675,8 +7677,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Minimum age of mail items whose filesystem data will be moved to
-     * secondary storage (nnnnn[hmsd]).
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor for
+     * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
+     * data will be moved to secondary storage (nnnnn[hmsd]).
      *
      * @param zimbraHsmAge new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7689,8 +7692,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Minimum age of mail items whose filesystem data will be moved to
-     * secondary storage (nnnnn[hmsd]).
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor for
+     * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
+     * data will be moved to secondary storage (nnnnn[hmsd]).
      *
      * @param zimbraHsmAge new value
      * @param attrs existing map to populate, or null to create a new map
@@ -7704,8 +7708,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Minimum age of mail items whose filesystem data will be moved to
-     * secondary storage (nnnnn[hmsd]).
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor for
+     * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
+     * data will be moved to secondary storage (nnnnn[hmsd]).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -7717,8 +7722,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Minimum age of mail items whose filesystem data will be moved to
-     * secondary storage (nnnnn[hmsd]).
+     * Deprecated since: 6.0.0_BETA2. deprecated in favor for
+     * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
+     * data will be moved to secondary storage (nnnnn[hmsd]).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -7727,6 +7733,118 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetHsmAge(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHsmAge, "");
+        return attrs;
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * <p>Use getHsmPolicyAsString to access value as a string.
+     *
+     * @see #getHsmPolicyAsString()
+     *
+     * @return zimbraHsmPolicy in millseconds, or -1 (new String[] {"message,document:before:-30days"})  if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public long getHsmPolicy() {
+        return getTimeInterval(Provisioning.A_zimbraHsmPolicy, -1L);
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @return zimbraHsmPolicy, or empty array if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public String[] getHsmPolicyAsString() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraHsmPolicy); return value.length > 0 ? value : new String[] {"message,document:before:-30days"};
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param zimbraHsmPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public void setHsmPolicy(String[] zimbraHsmPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param zimbraHsmPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public Map<String,Object> setHsmPolicy(String[] zimbraHsmPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
+        return attrs;
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public void unsetHsmPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public Map<String,Object> unsetHsmPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHsmPolicy, "");
         return attrs;
     }
 
