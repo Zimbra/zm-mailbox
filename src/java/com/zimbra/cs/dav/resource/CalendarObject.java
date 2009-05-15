@@ -125,7 +125,7 @@ public interface CalendarObject {
             buf.append("BEGIN:VCALENDAR\r\n");
             buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
             buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
-            buf.append("METHOD:REQUEST").append("\r\n");
+            buf.append("METHOD:").append(mInvite.getMethod()).append("\r\n");
             Account acct = ctxt.getAuthAccount();
             boolean allowPrivateAccess = false;
             try {
