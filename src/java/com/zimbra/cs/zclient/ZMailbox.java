@@ -4280,7 +4280,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public enum ZFreeBusySlotType {
-        FREE, BUSY, TENTATIVE, UNAVAILABLE, NO_DATA;
+        FREE, BUSY, TENTATIVE, UNAVAILABLE, NO_DATA, OUT_OF_OFFICE;
 
         public static ZFreeBusySlotType fromString(String s) throws ServiceException {
             try {
@@ -4330,6 +4330,8 @@ public class ZMailbox implements ToZJSONObject {
                     type = ZFreeBusySlotType.TENTATIVE;
                 } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE)) {
                     type = ZFreeBusySlotType.UNAVAILABLE;
+                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_OUFOFOFFICE)) {
+                    type = ZFreeBusySlotType.OUT_OF_OFFICE;
                 } else {
                     type = ZFreeBusySlotType.NO_DATA;
                 }
@@ -4350,6 +4352,7 @@ public class ZMailbox implements ToZJSONObject {
                 case BUSY:
                 case TENTATIVE:
                 case UNAVAILABLE:
+                case OUT_OF_OFFICE:    
                     result.add(new ZAppointmentHit(slot));
                     break;
             }
