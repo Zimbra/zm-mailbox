@@ -947,6 +947,7 @@ public class IndexHelper {
                             // backout!
                             mHighestSubmittedToIndex = old;
                             mNumIndexingInProgress--;
+                            throw e;
                         }
                     }
                 }

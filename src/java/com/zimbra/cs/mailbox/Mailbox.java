@@ -27,7 +27,6 @@ import java.lang.ref.SoftReference;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
@@ -976,6 +975,14 @@ public class Mailbox {
      * @see #commitCache(Mailbox.MailboxChange) */
     void queueForIndexing(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> data) throws ServiceException {
         assert(Thread.holdsLock(this));
+        
+        if (this.mIndexHelper.getNumNotSubmittedToIndex() > 0) {
+            // can't submit immediately -- index is behind..
+            if (ZimbraLog.index_add.isDebugEnabled()) {
+                ZimbraLog.index_add.debug("Deferring indexing for item "+item.getId()+" b/c index is not up-to-date");
+            }
+            return;
+        }
 
         if (item.getIndexId() <= 0) {
             // this item shouldn't be indexed
@@ -6050,7 +6057,7 @@ public class Mailbox {
             Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
             redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
 
-            queueForIndexing(doc, false, !indexImmediately() ? null : pd.getDocumentList());
+            queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
             success = true;
             return doc;
         } catch (IOException ioe) {
