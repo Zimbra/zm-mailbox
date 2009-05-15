@@ -231,17 +231,7 @@ public class SoapEngine {
                 mLog.warn("failed to set proxy auth token: " + e.getMessage());
             }
         }
-
-        String ip = (String) context.get(SOAP_REQUEST_IP);
-        String origip = (String) context.get(ORIG_REQUEST_IP);
-
-        // don't log ip if oip is present and ip is localhost
-        if (ip != null && (!TrustedNetwork.isLocalhost(ip) || origip == null))
-            ZimbraLog.addIpToContext(ip);
-
-        if (origip != null)
-            ZimbraLog.addOrigIpToContext(origip);
-
+        
         if (zsc.getUserAgent() != null)
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 

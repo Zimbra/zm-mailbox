@@ -258,18 +258,13 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SERVLET_CONTEXT, getServletContext());
         context.put(SERVLET_REQUEST, req);
         context.put(SERVLET_RESPONSE, resp);
-
-        // Set the requester IP.  If the request was made by the HTML client,
-        // set it to the value of the X-Originating-IP header.
-        String remoteAddr = req.getRemoteAddr();
-        context.put(SoapEngine.SOAP_REQUEST_IP, remoteAddr); 
         
-        String origIp = req.getHeader(X_ORIGINATING_IP_HEADER);
-        if (TrustedNetwork.isIpTrusted(remoteAddr)) {
-            context.put(SoapEngine.ORIG_REQUEST_IP, origIp);
-            remoteAddr = origIp;
-        } 
-        context.put(SoapEngine.REQUEST_IP, remoteAddr); 
+        // setup IPs in the context and add to logging context
+        RemoteIP remoteIp = new RemoteIP(req);
+        context.put(SoapEngine.SOAP_REQUEST_IP, remoteIp.getClientIP());
+        context.put(SoapEngine.ORIG_REQUEST_IP, remoteIp.getOrigIP());
+        context.put(SoapEngine.REQUEST_IP, remoteIp.getRequestIP()); 
+        remoteIp.addToLoggingContext();
         
         //checkAuthToken(req.getCookies(), context);
         if (isResumed) 
