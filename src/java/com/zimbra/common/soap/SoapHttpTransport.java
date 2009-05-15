@@ -44,6 +44,7 @@ import org.dom4j.ElementHandler;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 public class SoapHttpTransport extends SoapTransport {
@@ -59,7 +60,6 @@ public class SoapHttpTransport extends SoapTransport {
     private static boolean keepAlive = LC.httpclient_connmgr_keepalive_connections.booleanValue();
     private static int retryCount = LC.httpclient_connmgr_retry_count.intValue();
     private static int timeout = LC.httpclient_connmgr_so_timeout.intValue();
-    private static final String X_ORIGINATING_IP = "X-Originating-IP";
     
     public interface HttpDebugListener {
         public void sendSoapMessage(PostMethod postMethod, Element envelope);
@@ -241,7 +241,7 @@ public class SoapHttpTransport extends SoapTransport {
             method.setRequestHeader("Content-Type",
                 getRequestProtocol().getContentType());
             if (getClientIp() != null)
-                method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
+                method.setRequestHeader(TrustedNetwork.X_ORIGINATING_IP_HEADER, getClientIp());
 
             Element soapReq = generateSoapMessage(document, raw, noSession,
                 requestedAccountId, changeToken, tokenType);

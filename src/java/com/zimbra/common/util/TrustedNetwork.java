@@ -17,8 +17,12 @@ package com.zimbra.common.util;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.common.localconfig.LC;
+
 
 public class TrustedNetwork {
+    
+    public static final String X_ORIGINATING_IP_HEADER = LC.zimbra_http_originating_ip_header.value();
     
     private static final String IP_LOCALHOST = "127.0.0.1"; 
     
