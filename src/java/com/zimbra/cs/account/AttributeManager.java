@@ -1876,7 +1876,10 @@ public class AttributeManager {
     }
 
     public AttributeInfo getAttributeInfo(String name) {
-        return mAttrs.get(name.toLowerCase());
+        if (name == null)
+            return null;
+        else
+            return mAttrs.get(name.toLowerCase());
     }
 
     /**
