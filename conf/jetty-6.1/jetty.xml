@@ -280,6 +280,7 @@
           <Set name="append">true</Set>
           <Set name="extended">true</Set>
           <Set name="filenameDateFormat">yyyy-MM-dd</Set>
+          <Set name="preferProxiedForAddress">true</Set>
         </New>
       </Set>
     </Ref>
