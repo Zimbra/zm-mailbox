@@ -44,7 +44,7 @@ import org.dom4j.ElementHandler;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.TrustedNetwork;
+import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 public class SoapHttpTransport extends SoapTransport {
@@ -241,7 +241,7 @@ public class SoapHttpTransport extends SoapTransport {
             method.setRequestHeader("Content-Type",
                 getRequestProtocol().getContentType());
             if (getClientIp() != null)
-                method.setRequestHeader(TrustedNetwork.X_ORIGINATING_IP_HEADER, getClientIp());
+                method.setRequestHeader(RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
 
             Element soapReq = generateSoapMessage(document, raw, noSession,
                 requestedAccountId, changeToken, tokenType);
