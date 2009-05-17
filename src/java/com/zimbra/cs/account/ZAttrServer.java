@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090515-1401 */
+    /* build: 5.0 pshao 20090516-1348 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6328,6 +6328,154 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailSSLProxyPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLProxyPort, "");
+        return attrs;
+    }
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * <p>Use getMailTrustedIPAsString to access value as a string.
+     *
+     * @see #getMailTrustedIPAsString()
+     *
+     * @return zimbraMailTrustedIP in millseconds, or -1 if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public long getMailTrustedIP() {
+        return getTimeInterval(Provisioning.A_zimbraMailTrustedIP, -1L);
+    }
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * @return zimbraMailTrustedIP, or empty array if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public String[] getMailTrustedIPAsString() {
+        return getMultiAttr(Provisioning.A_zimbraMailTrustedIP);
+    }
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * @param zimbraMailTrustedIP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public void setMailTrustedIP(String[] zimbraMailTrustedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * @param zimbraMailTrustedIP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public Map<String,Object> setMailTrustedIP(String[] zimbraMailTrustedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
+        return attrs;
+    }
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public void unsetMailTrustedIP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedIP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public Map<String,Object> unsetMailTrustedIP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedIP, "");
         return attrs;
     }
 

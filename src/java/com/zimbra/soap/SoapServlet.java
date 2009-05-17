@@ -38,13 +38,11 @@ import org.apache.log4j.PropertyConfigurator;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -260,7 +258,7 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SERVLET_RESPONSE, resp);
         
         // setup IPs in the context and add to logging context
-        RemoteIP remoteIp = new RemoteIP(req);
+        RemoteIP remoteIp = new RemoteIP(req, ZimbraServlet.getTrustedIPs());
         context.put(SoapEngine.SOAP_REQUEST_IP, remoteIp.getClientIP());
         context.put(SoapEngine.ORIG_REQUEST_IP, remoteIp.getOrigIP());
         context.put(SoapEngine.REQUEST_IP, remoteIp.getRequestIP()); 

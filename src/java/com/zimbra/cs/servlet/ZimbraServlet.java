@@ -48,7 +48,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.TrustedNetwork;
+import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
@@ -476,96 +476,22 @@ public class ZimbraServlet extends HttpServlet {
     }
     
     public static String getOrigIp(HttpServletRequest req) {
-        RemoteIP remoteIp = new RemoteIP(req);
+        RemoteIP remoteIp = new RemoteIP(req, getTrustedIPs());
         return remoteIp.getOrigIP();
     }
     
     protected void addRemoteIpToLoggingContext(HttpServletRequest req) {
-        RemoteIP remoteIp = new RemoteIP(req);
+        RemoteIP remoteIp = new RemoteIP(req, getTrustedIPs());
         remoteIp.addToLoggingContext();
     }
-    
-    public static class RemoteIP {
-        
-        /**
-         * IP of the http client,
-         * Should be always present.
-         */
-        private String mClientIP;
-        
-        /**
-         * IP of the originating client.  
-         * It can be null.
-         */
-        private String mOrigIP;
-        
-        /** 
-         *  It can be the IP of the http client, or in the presence of a 
-         *  real origin IP address http header(header specified in the LC 
-         *  key zimbra_http_originating_ip_header) the IP of the real 
-         *  origin client if the http client is in a trusted network.
-         *  
-         *  Should be always present.
-         */
-        private String mRequestIP;
-        
-        public RemoteIP(HttpServletRequest req) {
-            mClientIP = req.getRemoteAddr();
-            
-            String origIp = null;
-            if (TrustedNetwork.isIpTrusted(mClientIP)) {
-                mOrigIP = req.getHeader(TrustedNetwork.X_ORIGINATING_IP_HEADER);
-            }
-            
-            if (mOrigIP != null)
-                mRequestIP = mOrigIP;
-            else
-                mRequestIP = mClientIP;
-        }
-        
-        public String getClientIP() { return mClientIP; }
 
-        public String getOrigIP() { return mOrigIP; }
-        
-        public String getRequestIP() { return mRequestIP; }
-        
-        public void addToLoggingContext() {
-            if (mOrigIP != null)
-                ZimbraLog.addOrigIpToContext(mOrigIP);
-            
-            // don't log ip if oip is present and ip is localhost
-            if (!TrustedNetwork.isLocalhost(mClientIP) || mOrigIP == null)
-                ZimbraLog.addIpToContext(mClientIP);
+    public static RemoteIP.TrustedIPs getTrustedIPs() {
+        try {
+            Server server = Provisioning.getInstance().getLocalServer();
+            return new RemoteIP.TrustedIPs(server.getMultiAttr(Provisioning.A_zimbraMailTrustedIP));
+        } catch (ServiceException e) {
+            ZimbraLog.misc.warn("failed to get trusted IPs, only localhost will be trusted", e);
         }
-        
-        /*
-         * http://docs.codehaus.org/display/JETTY/Configuring+Connectors#ConfiguringConnectors-forwarded
-         * 
-         * /opt/zimbra/jetty/etc/jetty.xml
-         * 
-         * forwarded               If true use hostHeader or else check the headers for retrieving information from the original request 
-         *                         to control what is returned by ServletRequest#getServerName() and ServletRequest#getServerPort() and 
-         *                         ServletRequest#getRemoteAddr() (see Configuring mod_proxy). Default is false.
-         *                         
-         * forwardedHostHeader     The forwarded Host header to use. Default is X-Forwarded-Host. This value is only used if forwarded is true.
-         * 
-         * forwardedServerHeader   The forwarded server name header to use. Default is X-Forwarded-Server. This value is only used if forwarded is true.
-         * 
-         * forwardedForHeader  The forwarded for header to use. Default is X-Forwarded-For. This value is only used if forwarded is true. 
-         */
-        /*
-        private static void test(HttpServletRequest req) {
-            String remoteAddr = req.getRemoteAddr();
-            String serverName = req.getServerName();
-            int serverPort = req.getServerPort();
-            
-            ZimbraLog.misc.info("========== remoteAddr=" + remoteAddr +
-                                "========== serverName=" + serverName +
-                                "========== serverPort=" + serverPort);
-            
-        }
-        */
+        return new RemoteIP.TrustedIPs(null);
     }
-    
-    
 }

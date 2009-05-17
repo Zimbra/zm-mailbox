@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090515-1401 */
+    /* build: 5.0 pshao 20090516-1348 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3905,6 +3905,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=104)
     public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
+
+    /**
+     * trusted client/proxy IPs In our web app (AJAX and std html client) we
+     * have support for adding the HTTP client s IP address as
+     * X-Originating-IP in an outbound message. We also use the HTTP
+     * client&#039;s IP address in our logging. In the case of standard
+     * client making connections to the SOAP layer, the JSP layer tells the
+     * SOAP layer(in a http header) what the remote HTTP client s address is.
+     * In the case where nginx or some other proxy layer is fronting our
+     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
+     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
+     * client/proxy only if the IP address of the cleint/proxy is one of the
+     * IPs listed in this attribute.
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public static final String A_zimbraMailTrustedIP = "zimbraMailTrustedIP";
 
     /**
      * max number of bytes stored in the uncompressed blob cache on disk
