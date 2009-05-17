@@ -198,6 +198,11 @@ public class Mailbox {
     }
     
     static final class IndexItemEntry {
+        final boolean mDeleteFirst;
+        final List<org.apache.lucene.document.Document> mDocuments;
+        final MailItem mMailItem;
+        int mModContent;   // where to set the Mailbox's mod_content when this item has completed.  Can be NO_CHANGE
+
         IndexItemEntry(boolean deleteFirst, MailItem mi, int modContent, List<org.apache.lucene.document.Document> docList) {
             mMailItem = mi;
             mDeleteFirst = deleteFirst;
@@ -205,14 +210,10 @@ public class Mailbox {
             mModContent = modContent;
         }
         
-        public String toString() {
-            return "IndexItemEntry("+(mDeleteFirst?"TRUE":"FALSE")
-                + ","+mMailItem.getId()+"-"+mModContent+")";
+        @Override public String toString() {
+            return "IndexItemEntry(" + (mDeleteFirst ? "TRUE" : "FALSE")
+                + "," + mMailItem.getId() + "-" + mModContent + ")";
         }
-        boolean mDeleteFirst;
-        int mModContent; // where to set the Mailbox's mod_content when this item has completed.  Can be NO_CHANGE
-        List<org.apache.lucene.document.Document> mDocuments;
-        MailItem mMailItem;
     }
 
     private final class MailboxChange {
@@ -552,7 +553,7 @@ public class Mailbox {
             throw MailServiceException.MAINTENANCE(mId);
         if (!mListeners.contains(session))
             mListeners.add(session);
-        
+
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("adding listener: " + session);
     }
@@ -973,7 +974,7 @@ public class Mailbox {
      * @param deleteFirst True if we need to delete this item from the index before indexing it again
      * @param data  The list of documents to be added.  If this is NULL then indexing will be deferred for this item.
      * @see #commitCache(Mailbox.MailboxChange) */
-    void queueForIndexing(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> data) throws ServiceException {
+    void queueForIndexing(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> data) {
         assert(Thread.holdsLock(this));
         
         if (this.mIndexHelper.getNumNotSubmittedToIndex() > 0) {
@@ -1588,12 +1589,12 @@ public class Mailbox {
         public int mNumFailed = 0;
         public boolean mCancel = false;
 
-        public String toString() {
+        @Override public String toString() {
             String status = "Completed " + mNumProcessed + " out of " + mNumToProcess + " (" + mNumFailed + " failures)";
             return (mCancel ? "--CANCELLING--  " : "") + status;
         }
 
-        public Object clone() {
+        @Override public Object clone() {
             BatchedIndexStatus toRet = new BatchedIndexStatus();
             toRet.mNumProcessed = mNumProcessed;
             toRet.mNumToProcess = mNumToProcess;
@@ -3081,8 +3082,8 @@ public class Mailbox {
 
             // iterate the tzmap and add all the VTimeZone's 
             // (TODO: should this code live in TimeZoneMap???) 
-            for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
-                ICalTimeZone cur = (ICalTimeZone) iter.next();
+            for (Iterator<ICalTimeZone> iter = tzmap.tzIterator(); iter.hasNext(); ) {
+                ICalTimeZone cur = iter.next();
                 cal.addComponent(cur.newToVTimeZone());
             }
         }
@@ -3600,8 +3601,7 @@ public class Mailbox {
      * @return
      * @throws ServiceException
      */
-    public int fixAllCalendarItemTZ(
-            OperationContext octxt, long after, TimeZoneFixupRules fixupRules)
+    public int fixAllCalendarItemTZ(OperationContext octxt, long after, TimeZoneFixupRules fixupRules)
     throws ServiceException {
         int numFixedCalItems = 0;
         int numFixedTZs = 0;
@@ -4640,17 +4640,15 @@ public class Mailbox {
     }
 
     public synchronized void setCustomData(OperationContext octxt, int itemId, byte type, CustomMetadata custom) throws ServiceException {
+        String key = custom.getSectionKey();
+        if (MetadataCallback.isSectionRegistered(key))
+            throw ServiceException.PERM_DENIED("custom metadata section '" + key + "' may only be calculated, not set");
+
         SetCustomData redoRecorder = new SetCustomData(mId, itemId, type, custom);
 
         boolean success = false;
         try {
             beginTransaction("setCustomData", octxt, redoRecorder);
-
-            String[] calculated = Provisioning.getInstance().getConfig().getMailCustomMetadataSectionCalculated();
-            for (String forbidden : calculated) {
-                if (forbidden.equals(custom.getSectionKey()))
-                    throw ServiceException.PERM_DENIED("custom metadata section '" + custom.getSectionKey() + "' may only be calculated, not set");
-            }
 
             MailItem item = checkAccess(getItemById(itemId, type));
             if (!checkItemChangeID(item))

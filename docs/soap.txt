@@ -2435,6 +2435,9 @@ zimbra_noop_max_timeout)
 
  <SetCustomMetadataResponse id="{item-id}"/>
 
+    -- setting a custom metadata section but providing no key/value pairs
+       will remove the sction from the item
+
 
  <GetCustomMetadataRequest id="{item-id}">
    <meta section="{metadata-section-key}"/>

@@ -31,16 +31,16 @@ public class MailServiceException extends ServiceException {
 
     public static final String MAINTENANCE     = "mail.MAINTENANCE";
     public static final String NO_SUCH_MBOX    = "mail.NO_SUCH_MBOX";
-	public static final String NO_SUCH_ITEM    = "mail.NO_SUCH_ITEM";
-	public static final String NO_SUCH_CONV    = "mail.NO_SUCH_CONV";
-	public static final String NO_SUCH_MSG     = "mail.NO_SUCH_MSG";
-	public static final String NO_SUCH_PART    = "mail.NO_SUCH_PART";
-	public static final String NO_SUCH_CONTACT = "mail.NO_SUCH_CONTACT";
-	public static final String NO_SUCH_FOLDER  = "mail.NO_SUCH_FOLDER";
-	public static final String NO_SUCH_MOUNTPOINT = "mail.NO_SUCH_MOUNTPOINT";
-	public static final String NO_SUCH_NOTE    = "mail.NO_SUCH_NOTE";
+    public static final String NO_SUCH_ITEM    = "mail.NO_SUCH_ITEM";
+    public static final String NO_SUCH_CONV    = "mail.NO_SUCH_CONV";
+    public static final String NO_SUCH_MSG     = "mail.NO_SUCH_MSG";
+    public static final String NO_SUCH_PART    = "mail.NO_SUCH_PART";
+    public static final String NO_SUCH_CONTACT = "mail.NO_SUCH_CONTACT";
+    public static final String NO_SUCH_FOLDER  = "mail.NO_SUCH_FOLDER";
+    public static final String NO_SUCH_MOUNTPOINT = "mail.NO_SUCH_MOUNTPOINT";
+    public static final String NO_SUCH_NOTE    = "mail.NO_SUCH_NOTE";
     public static final String NO_SUCH_CALITEM = "mail.NO_SUCH_CALITEM";
-	public static final String NO_SUCH_APPT    = "mail.NO_SUCH_APPT";
+    public static final String NO_SUCH_APPT    = "mail.NO_SUCH_APPT";
     public static final String NO_SUCH_TASK    = "mail.NO_SUCH_TASK";
     public static final String NO_SUCH_DOC     = "mail.NO_SUCH_DOC";
     public static final String NO_SUCH_REVISION = "mail.NO_SUCH_REVISION";
@@ -74,11 +74,12 @@ public class MailServiceException extends ServiceException {
     public static final String TOO_MANY_TAGS   = "mail.TOO_MANY_TAGS";
     public static final String TOO_MANY_UPLOADS  = "mail.TOO_MANY_UPLOADS";
     public static final String TOO_MANY_CONTACTS = "mail.TOO_MANY_CONTACTS";
+    public static final String TOO_MUCH_METADATA = "mail.TOO_MUCH_METADATA";
     public static final String UNABLE_TO_IMPORT_CONTACTS = "mail.UNABLE_TO_IMPORT_CONTACTS";
     public static final String UNABLE_TO_EXPORT_CONTACTS = "mail.UNABLE_TO_EXPORT_CONTACTS";
     public static final String UNABLE_TO_IMPORT_APPOINTMENTS = "mail.UNABLE_TO_IMPORT_APPOINTMENTS";    
     public static final String QUOTA_EXCEEDED  = "mail.QUOTA_EXCEEDED";
-	public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
+    public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
     public static final String MESSAGE_PARSE_ERROR = "mail.MESSAGE_PARSE_ERROR";
     public static final String ADDRESS_PARSE_ERROR = "mail.ADDRESS_PARSE_ERROR";
     public static final String ICALENDAR_PARSE_ERROR = "mail.ICALENDAR_PARSE_ERROR";
@@ -285,6 +286,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException TOO_MANY_CONTACTS(int limit) {
         return new MailServiceException("exceeded limit of " + limit + " contacts", TOO_MANY_CONTACTS, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
+    }
+
+    public static MailServiceException TOO_MUCH_METADATA(int limit) {
+        return new MailServiceException("exceeded limit of " + limit + " chars of custom metadata", TOO_MUCH_METADATA, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
     }
 
     public static MailServiceException UNABLE_TO_IMPORT_CONTACTS(String msg, Throwable t) {

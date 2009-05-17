@@ -15,27 +15,37 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public abstract class MetadataCallback {
+    private static Set<String> sCallbackKeys = new CopyOnWriteArraySet<String>();
     private static List<MetadataCallback> sCallbacks = new CopyOnWriteArrayList<MetadataCallback>();
 
     /** Adds an instance of an callback class that will be triggered when a
      *  message is added to a user mailbox and when an item is serialized.  */
-    public static void addCallback(MetadataCallback callback) {
+    public synchronized static void addCallback(MetadataCallback callback) {
         if (callback == null) {
             ZimbraLog.mailbox.error("", new IllegalStateException("MetadataCallback cannot be null"));
-            return;
+        } else if (sCallbackKeys.contains(callback.getMetadataSectionKey())) {
+            ZimbraLog.mailbox.error("", new IllegalStateException("second MetadataCallback for key " + callback.getMetadataSectionKey()));
+        } else {
+            ZimbraLog.mailbox.info("Adding metadata callback: %s", callback.getClass().getName());
+            sCallbacks.add(callback);
+            sCallbackKeys.add(callback.getMetadataSectionKey());
         }
-        ZimbraLog.mailbox.info("Adding metadata callback: %s", callback.getClass().getName());
-        sCallbacks.add(callback);
     }
+
+    public static boolean isSectionRegistered(String key) {
+        return sCallbackKeys.contains(key);
+    }
+
 
     private final String mSectionKey;
 
@@ -91,71 +101,39 @@ public abstract class MetadataCallback {
     protected abstract CustomMetadata analyzeMessage(ParsedMessage pm);
 
 
-    /** Invokes all <code>MetadataCallback</code>s to combine custom message
-     *  metadata into a set of conversation metadata.  This method starts with
-     *  the existing conversation metadata (<tt>null</tt> at first, augmented
-     *  subsequently via calls to this method) and incorporates data from a
-     *  single <code>Message</code>.
+    private static String CONVERSATION_METADATA;
+        static {
+            CustomMetadata meta = new CustomMetadata("ignored");
+            meta.put("_exists", "1");
+            CONVERSATION_METADATA = meta.getSerializedValue();
+        }
+
+    /** Combines all custom message metadata into a set of conversation
+     *  metadata.  This method starts with the existing conversation metadata
+     *  (<tt>null</tt> at first, augmented subsequently via calls to this
+     *  method) and incorporates data from a single <code>Message</code>.<p>
+     *  The resulting combined custom conversation metadata contains a
+     *  single entry for each unique <b>section</b> on either the message
+     *  or already on the conversation.  Those stubbed entries contain only
+     *  a single key (<tt>"_exists"</tt>), having the value <tt>"1"</tt>.  
      * @param extended  The custom metadata already associated with the
      *                  <code>Conversation</code>.
      * @param msg       The <code>Message</code> being added.
-     * @see #accumulatesOnConversation()
-     * @see #addToConversation(CustomMetadata, CustomMetadata)
-     * @return a <code>CustomMetadataList</code> containing all the metadata
-     *         generated from all registered callbacks, or <tt>null</tt> if
-     *         there is no metadata to combine. */
-    public static CustomMetadataList duringConversationAdd(CustomMetadataList extended, Message msg) {
-        if (msg == null || sCallbacks.isEmpty())
+     * @return a <code>CustomMetadataList</code> containing stubs for all
+     *         custom metadata sections on either the conversation or the
+     *         message, or <tt>null</tt> if there is no metadata to combine. */
+    public static CustomMetadataList duringConversationAdd(CustomMetadataList extended, final Message msg) {
+        if (msg == null)
             return extended;
 
-        for (MetadataCallback callback : sCallbacks) {
-            if (!callback.accumulatesOnConversation())
-                continue;
-
-            String key = callback.getMetadataSectionKey();
-            try {
-                CustomMetadata fromMsg = msg.getCustomData(key);
-                if (fromMsg == null)
-                    continue;
-                CustomMetadata fromConv = extended == null ? null : extended.getSection(key);
-
-                CustomMetadata custom = callback.addToConversation(fromConv, fromMsg);
-
-                if (custom == null || custom.isEmpty()) {
-                    if (extended != null)
-                        extended.removeSection(key);
-                } else if (extended == null) {
-                    extended = custom.asList();
-                } else {
-                    extended.addSection(custom);
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("error adding message to conversation metadata; skipping this callback", e);
+        List<String> msgSections = msg.getCustomDataSections();
+        if (msgSections != null && !msgSections.isEmpty()) {
+            for (String key : msgSections) {
+                if (extended == null)
+                    extended = new CustomMetadataList();
+                extended.addSection(key, CONVERSATION_METADATA);
             }
         }
         return extended;
     }
-
-    /** Returns whether this <code>MetadataCallback</code> aggregates data
-     *  from <code>Message</code>s onto their <code>Conversation</code>.
-     * @see #duringConversationAdd(CustomMetadataList, Message)
-     * @see #addToConversation(CustomMetadata, CustomMetadata) */
-    protected abstract boolean accumulatesOnConversation();
-
-    /** Callback invoked when a <code>Message</code>'s custom metadata needs
-     *  to be folded into its <code>Conversation</code>'s.  If the message has
-     *  no metadata matching the callback's section key, the callback is not
-     *  invoked.<p>
-     *  The invoker prefers that you modify and return <code>fromConv</code>
-     *  when it is not null.  This is solely a performance-related issue and
-     *  does not affect the resulting metadata.
-     * @param fromConv  The set of metadata already accumulated on the
-     *                  <code>Conversation</code>.
-     * @param fromMsg   The set of metadata from the <code>Message</code>
-     *                  in question (guaranteed non-<tt>null</tt>).
-     * @see #duringConversationAdd(CustomMetadataList, Message)
-     * @return metadata incorporating both the existing conversation state and
-     *         the just-added message.  Do <u>not</u> return <tt>null</tt> when
-     *         no change is necessary; return <code>fromConv</code> instead. */
-    protected abstract CustomMetadata addToConversation(CustomMetadata fromConv, CustomMetadata fromMsg);
 }

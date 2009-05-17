@@ -745,6 +745,13 @@ public class Message extends MailItem {
         }
     }
 
+    @Override void setCustomData(CustomMetadata custom) throws ServiceException {
+        // first update the message itself
+        super.setCustomData(custom);
+        // then update the message's conversation
+        ((Conversation) getParent()).inheritedCustomDataChanged(this, custom);
+    }
+
     /** Updates the in-memory unread counts for the item.  Also updates the
      *  item's folder, its tag, and its parent.  Note that the parent is not
      *  fetched from the database, so notifications may be off in the case of

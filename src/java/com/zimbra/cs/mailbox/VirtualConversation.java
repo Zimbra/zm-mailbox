@@ -27,9 +27,6 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 
-/**
- * @author dkarp
- */
 public class VirtualConversation extends Conversation {
 
     VirtualConversation(Mailbox mbox, Message msg) throws ServiceException {
@@ -107,6 +104,11 @@ public class VirtualConversation extends Conversation {
             return;
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         tagChanged(tag, add);
+    }
+
+    @Override protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) {
+        markItemModified(Change.MODIFIED_METADATA);
+        mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
     }
 
     @Override void addChild(MailItem child) throws ServiceException {

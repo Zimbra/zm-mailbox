@@ -324,7 +324,7 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA)) {
-            encodeAllCustomMetadata(elem, folder);
+            encodeAllCustomMetadata(elem, folder, fields);
         }
         return elem;
     }
@@ -384,33 +384,21 @@ public class ToXML {
         }
     }
 
-    public static void encodeAllCustomMetadata(Element elem, MailItem item) {
+    public static void encodeAllCustomMetadata(Element elem, MailItem item, int fields) {
         List<String> sections = item.getCustomDataSections();
-        if (sections == null || sections.isEmpty())
+        if (sections == null || sections.isEmpty()) {
+            // if we care specifically about custom metadata and there is none, let the caller know
+            if (fields != NOTIFY_FIELDS)
+                elem.addElement(MailConstants.E_METADATA);
             return;
-
-        String[] inlined = null;
-        try {
-            inlined = Provisioning.getInstance().getConfig().getMailCustomMetadataSectionInlined();
-        } catch (ServiceException e) {
-            ZimbraLog.soap.warn("could not determine list of inlined custom metadata; stubbing instead");
-            inlined = new String[0];
         }
 
-        outer: for (String section : sections) {
-            for (String inline : inlined) {
-                if (inline.equals(section)) {
-                    try {
-                        encodeCustomMetadata(elem, item.getCustomData(section));
-                    } catch (ServiceException e) {
-                        ZimbraLog.soap.warn("could not deserialize custom metadata; skipping (section '" + section + "', item " + new ItemId(item) + ")");
-                    }
-                    continue outer;
-                }
+        for (String section : sections) {
+            try {
+                encodeCustomMetadata(elem, item.getCustomData(section));
+            } catch (ServiceException e) {
+                ZimbraLog.soap.warn("could not deserialize custom metadata; skipping (section '" + section + "', item " + new ItemId(item) + ")");
             }
-
-            // not inlining this data, so just add a stub to show that it's there
-            elem.addElement(MailConstants.E_METADATA).addAttribute(MailConstants.A_SECTION, section);
         }
     }
 
@@ -425,13 +413,11 @@ public class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter)
-    throws ServiceException {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter) {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter, int fields)
-    throws ServiceException {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -447,7 +433,7 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(elem, contact);
+            encodeAllCustomMetadata(elem, contact, fields);
 
         if (!needToOutput(fields, Change.MODIFIED_CONTENT)) {
             if (summary) {
@@ -550,7 +536,7 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, note.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(elem, note);
+            encodeAllCustomMetadata(elem, note, fields);
         return elem;
     }
 
@@ -577,7 +563,7 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(elem, tag);
+            encodeAllCustomMetadata(elem, tag, fields);
         return elem;
     }
 
@@ -702,7 +688,7 @@ public class ToXML {
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
 
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(parent, conv);
+            encodeAllCustomMetadata(c, conv, fields);
 
         if (needToOutput(fields, Change.MODIFIED_CHILDREN | Change.MODIFIED_SIZE)) {
             int count = conv.getMessageCount(), nondeleted = count;
@@ -991,7 +977,7 @@ public class ToXML {
         setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
 
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(elem, calItem);
+            encodeAllCustomMetadata(elem, calItem, fields);
         return elem;
     }
 
@@ -1263,7 +1249,7 @@ public class ToXML {
         }
         recordItemTags(elem, item, fields);
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(parent, item);
+            encodeAllCustomMetadata(elem, item, fields);
 
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
@@ -1933,7 +1919,7 @@ public class ToXML {
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
         if (needToOutput(fields, Change.MODIFIED_NAME))
-        	m.addAttribute(MailConstants.A_NAME, doc.getName());
+            m.addAttribute(MailConstants.A_NAME, doc.getName());
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             m.addAttribute(MailConstants.A_SIZE, doc.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
@@ -1941,13 +1927,13 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             m.addAttribute(MailConstants.A_FOLDER, new ItemId(doc.getMailbox().getAccountId(), doc.getFolderId()).toString(ifmt));
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
-        	m.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, doc.getModifiedSequence());
-        	m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
+            m.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, doc.getModifiedSequence());
+            m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
             m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
         }
         recordItemTags(m, doc, fields);
         if (needToOutput(fields, Change.MODIFIED_METADATA))
-            encodeAllCustomMetadata(m, doc);
+            encodeAllCustomMetadata(m, doc, fields);
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             try {

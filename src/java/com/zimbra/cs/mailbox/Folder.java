@@ -532,7 +532,7 @@ public class Folder extends MailItem {
      *  the Mailbox's last assigned item ID. */
     void updateUIDNEXT() {
         int uidnext = mMailbox.getLastItemId() + 1;
-        if (mImapUIDNEXT < uidnext) {
+        if (trackImapStats() && mImapUIDNEXT < uidnext) {
             markItemModified(Change.MODIFIED_SIZE);
             mImapUIDNEXT = uidnext;
         }
@@ -542,7 +542,7 @@ public class Folder extends MailItem {
      *  current change ID. */
     void updateHighestMODSEQ() throws ServiceException {
         int modseq = mMailbox.getOperationChangeID();
-        if (mImapMODSEQ < modseq) {
+        if (trackImapStats() && mImapMODSEQ < modseq) {
             markItemModified(Change.MODIFIED_SIZE);
             mImapMODSEQ = modseq;
         }
@@ -583,6 +583,7 @@ public class Folder extends MailItem {
     @Override boolean isLeafNode()       { return false; }
     @Override boolean trackUnread()      { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
     boolean trackSize()                  { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
+    boolean trackImapStats()             { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
 
     @Override boolean canParent(MailItem child)  { return (child instanceof Folder); }
 

@@ -457,6 +457,15 @@ public abstract class MailItem implements Comparable<MailItem> {
                     }
                 }
             }
+
+            public long guessSize() {
+                long size = 0;
+                if (!isEmpty()) {
+                    for (Pair<String, String> entry : this)
+                        size += entry.getFirst().length() + entry.getSecond().length();
+                }
+                return size;
+            }
         }
     }
 
@@ -689,6 +698,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mExtendedData.getSection(section);
     }
 
+    private static final int TOTAL_METADATA_LIMIT = 10000;
+
     /** Updates the requested set of non-Zimbra-standard metadata values in
      *  the requested section.  If the provided set of <code>custom</code>
      *  metdata contains no metadata key/value pairs, the section is deleted.
@@ -705,6 +716,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             mExtendedData.addSection(custom);
         else if (!custom.isEmpty())
             mExtendedData = custom.asList();
+        // then check to make sure we're not overflowing our limit
+        if (mExtendedData != null && !custom.isEmpty() && mExtendedData.guessSize() > TOTAL_METADATA_LIMIT)
+            throw MailServiceException.TOO_MUCH_METADATA(TOTAL_METADATA_LIMIT);
         // and finally write the new data to the database
         saveMetadata();
     }
@@ -998,71 +1012,71 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static abstract class SortNameNaturalOrder implements Comparator<MailItem> {
-    	private static class Name {
-    		public char[] buf;
-    		public int    pos;
-    		public int    len;
-    		public Name(String n) {
-    			buf = n.toCharArray();
-    			pos = 0;
-    			len = buf.length;
-    		}
-    		public char getChar() {
-    			if (pos < len)
-    				return buf[pos];
-    			return 0;
-    		}
-    		public Name next() {
-    			if (pos < len)
-    				pos++;
-    			return this;
-    		}
-    	}
+        private static class Name {
+            public char[] buf;
+            public int    pos;
+            public int    len;
+            public Name(String n) {
+                buf = n.toCharArray();
+                pos = 0;
+                len = buf.length;
+            }
+            public char getChar() {
+                if (pos < len)
+                    return buf[pos];
+                return 0;
+            }
+            public Name next() {
+                if (pos < len)
+                    pos++;
+                return this;
+            }
+        }
         public int compare(MailItem m1, MailItem m2) {
-        	if (m1.getName() == null)
-        		return returnResult(1);
-        	else if (m2.getName() == null)
-        		return returnResult(-1);
-        	return compareString(new Name(m1.getName()), new Name(m2.getName()));
+            if (m1.getName() == null)
+                return returnResult(1);
+            else if (m2.getName() == null)
+                return returnResult(-1);
+            return compareString(new Name(m1.getName()), new Name(m2.getName()));
         }
         public int compareString(Name n1, Name n2) {
-        	char first = n1.getChar();
-        	char second = n2.getChar();
-        	
-        	if (isDigit(first) && isDigit(second))
-        		return compareNumeric(n1, n2);
-        	else if (first != second)
-        		return returnResult(first - second);
-        	else if (first == 0 && second == 0)
-        		return 0;
+            char first = n1.getChar();
+            char second = n2.getChar();
 
-        	return compareString(n1.next(), n2.next());
+            if (isDigit(first) && isDigit(second))
+                return compareNumeric(n1, n2);
+            else if (first != second)
+                return returnResult(first - second);
+            else if (first == 0 && second == 0)
+                return 0;
+
+            return compareString(n1.next(), n2.next());
         }
         public int compareNumeric(Name n1, Name n2) {
-        	int firstNum = readInt(n1);
-        	int secondNum = readInt(n2);
+            int firstNum = readInt(n1);
+            int secondNum = readInt(n2);
 
-        	if (firstNum != secondNum)
-        		return returnResult(firstNum - secondNum);
-        	
-        	return compareString(n1.next(), n2.next());
+            if (firstNum != secondNum)
+                return returnResult(firstNum - secondNum);
+
+            return compareString(n1.next(), n2.next());
         }
         public int readInt(Name n) {
-        	int start = n.pos;
-        	int end = 0;
-        	while (isDigit(n.getChar()))
-        		n.next();
-        	end = n.pos;
-        	if (end == start)
-        		return 0;
-        	try {
-        		return Integer.parseInt(new String(n.buf, start, end - start));
-        	} catch (NumberFormatException e) {
-        		return 0;
-        	}
+            int start = n.pos;
+            int end = 0;
+            while (isDigit(n.getChar()))
+                n.next();
+            end = n.pos;
+            if (end == start)
+                return 0;
+            try {
+                return Integer.parseInt(new String(n.buf, start, end - start));
+            } catch (NumberFormatException e) {
+                return 0;
+            }
         }
         public boolean isDigit(char c) {
-        	return Character.isDigit(c);
+            return Character.isDigit(c);
         }
         protected abstract int returnResult(int result);
     }
@@ -1769,7 +1783,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Adds <tt>delta</tt> to the unread count of each {@link Tag}
-     *  assigned to this <tt>MailItem</tt>.
+     *  assigned to this <code>MailItem</code>.
      * 
      * @param delta  The (signed) change in number unread.
      * @throws ServiceException  The following error codes are possible:<ul>

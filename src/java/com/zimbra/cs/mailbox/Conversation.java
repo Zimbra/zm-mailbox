@@ -398,6 +398,19 @@ public class Conversation extends MailItem {
             DbMailItem.completeConversation(mMailbox, mData);
     }
 
+    protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) throws ServiceException {
+        if (custom == null)
+            return;
+
+        markItemModified(Change.MODIFIED_METADATA);
+        if (!custom.isEmpty()) {
+            mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
+            saveMetadata();
+        } else {
+            recalculateMetadata();
+        }
+    }
+
     /** Moves all the conversation's {@link Message}s to a different
      *  {@link Folder}.  Persists the change to the database and the in-memory
      *  cache.  Updates all relevant unread counts, folder sizes, etc.<p>
