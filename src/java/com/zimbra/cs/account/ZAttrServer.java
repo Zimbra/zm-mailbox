@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090516-1348 */
+    /* build: 5.0 pshao 20090518-0842 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6332,17 +6332,16 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * <p>Use getMailTrustedIPAsString to access value as a string.
      *
@@ -6358,17 +6357,16 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @return zimbraMailTrustedIP, or empty array if unset
      *
@@ -6380,17 +6378,16 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @param zimbraMailTrustedIP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6405,17 +6402,16 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @param zimbraMailTrustedIP new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6431,17 +6427,16 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6455,17 +6450,16 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -4361,14 +4361,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               Please talk to phoebe if you have any question.
    ===============================================================================
  -->
- 
-<attr id="1000" name="zimbraMailCustomMetadataSectionInlined" type="string" cardinality="multi" optionalIn="globalConfig" since="6.0.0_BETA2">
-  <desc>containing a list of all custom metadata sections that get inlined in serialized items in notifications, GetMsgResponse, SearchResponse, etc.</desc>
-</attr>
-
-<attr id="1001" name="zimbraMailCustomMetadataSectionCalculated" type="string" cardinality="multi" optionalIn="globalConfig" since="6.0.0_BETA2">
-  <desc>containing a list of all custom metadata sections cannot be modified outside of a callback.</desc>
-</attr>
 
 <attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="6.0.0_BETA2">
   <globalConfigValue>FALSE</globalConfigValue>

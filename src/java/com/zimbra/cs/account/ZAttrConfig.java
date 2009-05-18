@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090516-1348 */
+    /* build: 5.0 pshao 20090518-0842 */
 
     /**
      * RFC2256: descriptive information
@@ -10351,301 +10351,6 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @return zimbraMailCustomMetadataSectionCalculated, or empty array if unset
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public String[] getMailCustomMetadataSectionCalculated() {
-        return getMultiAttr(Provisioning.A_zimbraMailCustomMetadataSectionCalculated);
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param zimbraMailCustomMetadataSectionCalculated new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public void setMailCustomMetadataSectionCalculated(String[] zimbraMailCustomMetadataSectionCalculated) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param zimbraMailCustomMetadataSectionCalculated new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public Map<String,Object> setMailCustomMetadataSectionCalculated(String[] zimbraMailCustomMetadataSectionCalculated, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param zimbraMailCustomMetadataSectionCalculated new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public void addMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param zimbraMailCustomMetadataSectionCalculated new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public Map<String,Object> addMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param zimbraMailCustomMetadataSectionCalculated existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public void removeMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param zimbraMailCustomMetadataSectionCalculated existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public Map<String,Object> removeMailCustomMetadataSectionCalculated(String zimbraMailCustomMetadataSectionCalculated, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionCalculated, zimbraMailCustomMetadataSectionCalculated);
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public void unsetMailCustomMetadataSectionCalculated() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public Map<String,Object> unsetMailCustomMetadataSectionCalculated(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionCalculated, "");
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @return zimbraMailCustomMetadataSectionInlined, or empty array if unset
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public String[] getMailCustomMetadataSectionInlined() {
-        return getMultiAttr(Provisioning.A_zimbraMailCustomMetadataSectionInlined);
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param zimbraMailCustomMetadataSectionInlined new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public void setMailCustomMetadataSectionInlined(String[] zimbraMailCustomMetadataSectionInlined) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param zimbraMailCustomMetadataSectionInlined new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public Map<String,Object> setMailCustomMetadataSectionInlined(String[] zimbraMailCustomMetadataSectionInlined, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param zimbraMailCustomMetadataSectionInlined new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public void addMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param zimbraMailCustomMetadataSectionInlined new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public Map<String,Object> addMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param zimbraMailCustomMetadataSectionInlined existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public void removeMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param zimbraMailCustomMetadataSectionInlined existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public Map<String,Object> removeMailCustomMetadataSectionInlined(String zimbraMailCustomMetadataSectionInlined, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailCustomMetadataSectionInlined, zimbraMailCustomMetadataSectionInlined);
-        return attrs;
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public void unsetMailCustomMetadataSectionInlined() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public Map<String,Object> unsetMailCustomMetadataSectionInlined(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMailCustomMetadataSectionInlined, "");
-        return attrs;
-    }
-
-    /**
      * Incoming messages larger than this number of bytes are streamed to
      * disk during LMTP delivery, instead of being read into memory. This
      * limits memory consumption at the expense of higher disk utilization.
@@ -11458,17 +11163,16 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * <p>Use getMailTrustedIPAsString to access value as a string.
      *
@@ -11484,17 +11188,16 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @return zimbraMailTrustedIP, or empty array if unset
      *
@@ -11506,17 +11209,16 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @param zimbraMailTrustedIP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11531,17 +11233,16 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @param zimbraMailTrustedIP new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11557,17 +11258,16 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11581,17 +11281,16 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

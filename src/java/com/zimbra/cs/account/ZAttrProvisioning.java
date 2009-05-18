@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090516-1348 */
+    /* build: 5.0 pshao 20090518-0842 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3703,25 +3703,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailContentMaxSize = "zimbraMailContentMaxSize";
 
     /**
-     * containing a list of all custom metadata sections cannot be modified
-     * outside of a callback.
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1001)
-    public static final String A_zimbraMailCustomMetadataSectionCalculated = "zimbraMailCustomMetadataSectionCalculated";
-
-    /**
-     * containing a list of all custom metadata sections that get inlined in
-     * serialized items in notifications, GetMsgResponse, SearchResponse,
-     * etc.
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1000)
-    public static final String A_zimbraMailCustomMetadataSectionInlined = "zimbraMailCustomMetadataSectionInlined";
-
-    /**
      * RFC822 email address of this recipient for local delivery
      */
     @ZAttr(id=13)
@@ -3907,17 +3888,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
 
     /**
-     * trusted client/proxy IPs In our web app (AJAX and std html client) we
-     * have support for adding the HTTP client s IP address as
-     * X-Originating-IP in an outbound message. We also use the HTTP
-     * client&#039;s IP address in our logging. In the case of standard
-     * client making connections to the SOAP layer, the JSP layer tells the
-     * SOAP layer(in a http header) what the remote HTTP client s address is.
-     * In the case where nginx or some other proxy layer is fronting our
-     * webapps, the proxy tells the SOAP/JSP layers(in a http header) what
-     * the real HTTP client s address is. Our SOAP/JSP layers will trust the
-     * client/proxy only if the IP address of the cleint/proxy is one of the
-     * IPs listed in this attribute.
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
      *
      * @since ZCS 6.0.0_BETA2
      */
