@@ -500,7 +500,8 @@ public final class ImapConnection extends MailConnection {
 
     // Called from ImapRequest
     void writeLiteral(Literal lit) throws IOException {
-        boolean lp = hasCapability(ImapCapabilities.LITERAL_PLUS);
+        boolean lp = getImapConfig().isUseLiteralPlus() &&
+                     hasCapability(ImapCapabilities.LITERAL_PLUS);
         ImapOutputStream out = (ImapOutputStream) mailOut;
         lit.writePrefix(out, lp);
         if (!lp) {

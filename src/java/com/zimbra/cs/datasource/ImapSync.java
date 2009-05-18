@@ -101,6 +101,11 @@ public class ImapSync extends MailItemImport {
         config.setMaxLiteralMemSize(LC.data_source_max_message_memory_size.intValue());
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
+        // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
+        // Avoiding LITERAL+ also gives servers a chance to reject uploaded
+        // messages that are too big, since the server must send a continuation
+        // response before the literal data can be sent.
+        config.setUseLiteralPlus(false);
         if (ds.isDebugTraceEnabled()) {
             config.setDebug(true);
             enableTrace(config);
