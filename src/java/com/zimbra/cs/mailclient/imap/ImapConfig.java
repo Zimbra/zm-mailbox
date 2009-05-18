@@ -20,7 +20,6 @@ import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.util.Config;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -31,6 +30,7 @@ public class ImapConfig extends MailConfig {
     private int maxLiteralMemSize = DEFAULT_MAX_LITERAL_MEM_SIZE;
     private int maxLiteralTraceSize = DEFAULT_MAX_LITERAL_TRACE_SIZE;
     private File literalDataDir = new File(System.getProperty("java.io.tmpdir"));
+    private boolean useLiteralPlus = DEFAULT_USE_LITERAL_PLUS;
 
     /** IMAP configuration protocol name */
     public static final String PROTOCOL = "imap";
@@ -46,6 +46,9 @@ public class ImapConfig extends MailConfig {
 
     /** Maximum literal size to include in trace output if enabled */
     public static final int DEFAULT_MAX_LITERAL_TRACE_SIZE = 80;
+    
+    /** Use LITERAL+ extension if supported by server */
+    public static final boolean DEFAULT_USE_LITERAL_PLUS = true;
 
     /**
      * Loads IMAP configuration properties from the specified file.
@@ -160,5 +163,13 @@ public class ImapConfig extends MailConfig {
      */
     public void setLiteralDataDir(File dir) {
         literalDataDir = dir;
+    }
+    
+    public void setUseLiteralPlus(boolean useLiteralPlus) {
+        this.useLiteralPlus = useLiteralPlus;
+    }
+
+    public boolean isUseLiteralPlus() {
+        return useLiteralPlus;
     }
 }
