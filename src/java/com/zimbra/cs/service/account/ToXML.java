@@ -236,6 +236,9 @@ public class ToXML {
         Element e = parent.addElement(AccountConstants.E_LOCALE);
 		String id = locale.toString();
 		String name = L10nUtil.getMessage(L10nUtil.L10N_MSG_FILE_BASENAME, id, Locale.getDefault());
+		if (name == null)
+		    name = locale.getDisplayName(inLocale);
+ 
 		e.addAttribute(AccountConstants.A_ID, id);
 		e.addAttribute(AccountConstants.A_NAME, name != null ? name : id);
         return e;
