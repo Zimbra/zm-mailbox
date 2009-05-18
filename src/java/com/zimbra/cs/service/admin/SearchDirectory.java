@@ -163,22 +163,22 @@ public class SearchDirectory extends AdminDocumentHandler {
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
         	if (entry instanceof CalendarResource) {
-        	    if (hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
+        	    if (hasRightsToList(this, zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource, reqAttrs))
         	        ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
         	} else if (entry instanceof Account) {
-        	    if (hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount))
+        	    if (hasRightsToList(this, zsc, entry, Admin.R_listAccount, Admin.R_getAccount, reqAttrs))
                     ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
             } else if (entry instanceof DistributionList) {
-                if (hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList))
+                if (hasRightsToList(this, zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList, reqAttrs))
                     doDistributionList(response, (DistributionList)entry);
             } else if (entry instanceof Alias) {
                 if (hasRightsToListAlias(this, prov, zsc, (Alias)entry))
                     doAlias(response, prov, (Alias)entry);
             } else if (entry instanceof Domain) {
-                if (hasRightsToList(zsc, entry, Admin.R_listDomain, Admin.R_getDomain))
+                if (hasRightsToList(this, zsc, entry, Admin.R_listDomain, Admin.R_getDomain, reqAttrs))
                     GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
             } else if (entry instanceof Cos) {
-                if (hasRightsToList(zsc, entry, Admin.R_listCos, Admin.R_getCos))
+                if (hasRightsToList(this, zsc, entry, Admin.R_listCos, Admin.R_getCos, reqAttrs))
                     GetCos.doCos(response, (Cos)entry);
             }
         }          
@@ -186,6 +186,15 @@ public class SearchDirectory extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
+    }
+    
+    static boolean hasRightsToList(AdminDocumentHandler handler, ZimbraSoapContext zsc, NamedEntry target, 
+            AdminRight listRight, Object getAllAttrsRight, Set<String> getAttrsRight) throws ServiceException {
+        
+        if (getAttrsRight == null || getAttrsRight.isEmpty())
+            return handler.hasRightsToList(zsc, target, listRight, getAllAttrsRight);
+        else
+            return handler.hasRightsToList(zsc, target, listRight, getAttrsRight);
     }
     
     private static boolean hasRightsToListDanglingAlias(AdminDocumentHandler handler, ZimbraSoapContext zsc, Alias alias) 
@@ -207,17 +216,19 @@ public class SearchDirectory extends AdminDocumentHandler {
             ZimbraSoapContext zsc, Alias alias) throws ServiceException {
         boolean hasRight;
         
-        // if an admin can list/get attrs on the account/cr/dl, he can do the same on their aliases
+        // if an admin can list the account/cr/dl, he can do the same on their aliases
+        // don't need any getAttrs rights on the account/cr/dl, because the returned alias
+        // entry contains only attrs on the alias, not the target entry.
         TargetType tt = alias.getTargetType(prov);
         
         if (tt == null) // can't check right, allows only system admin
             hasRight = hasRightsToListDanglingAlias(handler, zsc, alias);
         else if (tt == TargetType.dl)
-            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listDistributionList, Admin.R_getDistributionList);
+            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listDistributionList, null);
         else if (tt == TargetType.calresource)
-            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listCalendarResource, Admin.R_getCalendarResource);
+            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listCalendarResource, null);
         else
-            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listAccount, Admin.R_getAccount);
+            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listAccount, null);
         
         return hasRight;
     }

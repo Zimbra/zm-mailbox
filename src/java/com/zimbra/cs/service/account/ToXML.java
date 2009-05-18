@@ -65,7 +65,7 @@ public class ToXML {
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
         Map attrs = account.getUnicodeAttrs(applyCos);
-        addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
+        addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N, reqAttrs);
         return acctElem;
     }
 
@@ -91,7 +91,7 @@ public class ToXML {
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getUnicodeAttrs(applyCos);
-        addAccountAttrsOld(resElem, attrs, AccountConstants.A_N, applyCos?null:reqAttrs);
+        addAccountAttrsOld(resElem, attrs, AccountConstants.A_N, reqAttrs);
         return resElem;
     }
 

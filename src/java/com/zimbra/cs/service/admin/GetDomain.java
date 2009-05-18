@@ -89,7 +89,7 @@ public class GetDomain extends AdminDocumentHandler {
             String name = (String) entry.getKey();
             Object value = entry.getValue();
             
-            if (!applyConfig && (reqAttrs != null && !reqAttrs.contains(name)))
+            if (reqAttrs != null && !reqAttrs.contains(name))
                 continue;
             
             if (value instanceof String[]) {
