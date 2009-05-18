@@ -284,9 +284,8 @@ public class L10nUtil {
 			else
 				return fmt;
 		} catch (MissingResourceException e) {
-			ZimbraLog.misc.error("Resource bundle \"" + basename +
-								 "\" not found (locale=" + lc.toString() + ")",
-								 e);
+			ZimbraLog.misc.error("no resource bundle for base name " + basename + " can be found, " + 
+			                     "(locale=" + key + ")", e);
 			return null;
 		}
 	}
