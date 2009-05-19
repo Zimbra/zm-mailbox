@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 
@@ -63,8 +64,9 @@ public class AdminSession extends Session {
     @Override protected void cleanup() { }
 
     public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
-            boolean sortAscending, int flags, int offset, int maxResults) throws ServiceException {
-        AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags, maxResults);
+            boolean sortAscending, int flags, int offset, int maxResults,
+            NamedEntry.CheckRight rightChecker) throws ServiceException {
+        AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags, maxResults, rightChecker);
         boolean needToSearch =  (offset == 0) || (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
         if (needToSearch) {
@@ -79,12 +81,12 @@ public class AdminSession extends Session {
 
     public List searchCalendarResources(
             Domain d, EntrySearchFilter filter, String[] attrs, String sortBy,
-            boolean sortAscending, int offset)
+            boolean sortAscending, int offset, NamedEntry.CheckRight rightChecker)
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         return searchAccounts(
                 d, query, attrs, sortBy, sortAscending,
                 Provisioning.SA_CALENDAR_RESOURCE_FLAG,
-                offset, 0);
+                offset, 0, rightChecker);
     }
 }

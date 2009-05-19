@@ -19,9 +19,11 @@ package com.zimbra.cs.session;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -42,8 +44,10 @@ class AccountSearchParams {
     int mMaxResult;
     SearchOptions mOptions;
     List mResult;
+    NamedEntry.CheckRight mRightChecker;
     
-    AccountSearchParams(Domain d, String query, String[] attrs, String sortBy, boolean sortAscending, int flags, int maxResults) {
+    AccountSearchParams(Domain d, String query, String[] attrs, String sortBy, boolean sortAscending, int flags, int maxResults,
+            NamedEntry.CheckRight rightChecker) {
         mDomainId = (d == null) ? "" : d.getId();
         mQuery = (query == null) ? "" : query;
         mAttrs = new String[attrs == null ? 0 : attrs.length];
@@ -53,6 +57,7 @@ class AccountSearchParams {
         mSortAscending = sortAscending;
         mFlags = flags;
         mMaxResult = maxResults;
+        mRightChecker = rightChecker;
         mOptions = new SearchOptions();
         mOptions.setDomain(d);
         mOptions.setFlags(mFlags);
@@ -85,5 +90,15 @@ class AccountSearchParams {
     void doSearch() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         mResult = prov.searchDirectory(mOptions, false);
+        
+        if (mRightChecker != null) {
+            List allowed = new ArrayList<String>();
+            for (int i = 0; i < mResult.size(); i++) {
+                NamedEntry entry = (NamedEntry)mResult.get(i);
+                if (mRightChecker.allow(entry))
+                    allowed.add(entry);
+            }
+            mResult = allowed;
+        }
     }
 }

@@ -40,6 +40,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -107,22 +108,22 @@ public class SearchDirectory extends AdminDocumentHandler {
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
             if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG) {
-            	if(query != null && query.length()>0) {
-            		throw ServiceException.PERM_DENIED("cannot search for domains");
-            	} else {
-            		domain = getAuthTokenAccountDomain(zsc).getName();
-            		Domain d = null;
+                if(query != null && query.length()>0) {
+                    throw ServiceException.PERM_DENIED("cannot search for domains");
+                } else {
+                    domain = getAuthTokenAccountDomain(zsc).getName();
+                    Domain d = null;
                     if (domain != null) {
                         d = prov.get(DomainBy.name, domain);
                         if (d == null)
                             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
                     }
-            		GetDomain.doDomain(response, d, applyConfig, reqAttrs);
+                    GetDomain.doDomain(response, d, applyConfig, reqAttrs);
                     response.addAttribute(AdminConstants.A_MORE, false);
                     response.addAttribute(AdminConstants.A_SEARCH_TOTAL, 1);
                     return response;
-            	}
-            	
+                }
+
             }
             if ((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG)
                 throw ServiceException.PERM_DENIED("cannot search for coses");
@@ -141,10 +142,12 @@ public class SearchDirectory extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
+        SearchDirectoryRightChecker rightChecker = new SearchDirectoryRightChecker(zsc, this, prov, reqAttrs);
+        
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, maxResults);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, maxResults, rightChecker);
         } else {
             SearchOptions options = new SearchOptions();
             options.setDomain(d);
@@ -156,36 +159,73 @@ public class SearchDirectory extends AdminDocumentHandler {
             options.setSortAttr(sortBy);
             options.setConvertIDNToAscii(true);
             accounts = prov.searchDirectory(options, false);
+            accounts = rightChecker.getAllowed(accounts);
         }
 
 
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
-        	if (entry instanceof CalendarResource) {
-        	    if (hasRightsToList(this, zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource, reqAttrs))
-        	        ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
-        	} else if (entry instanceof Account) {
-        	    if (hasRightsToList(this, zsc, entry, Admin.R_listAccount, Admin.R_getAccount, reqAttrs))
-                    ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
+            if (entry instanceof CalendarResource) {
+                ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
+            } else if (entry instanceof Account) {
+                ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
             } else if (entry instanceof DistributionList) {
-                if (hasRightsToList(this, zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList, reqAttrs))
-                    doDistributionList(response, (DistributionList)entry);
+                doDistributionList(response, (DistributionList)entry);
             } else if (entry instanceof Alias) {
-                if (hasRightsToListAlias(this, prov, zsc, (Alias)entry))
-                    doAlias(response, prov, (Alias)entry);
+                doAlias(response, prov, (Alias)entry);
             } else if (entry instanceof Domain) {
-                if (hasRightsToList(this, zsc, entry, Admin.R_listDomain, Admin.R_getDomain, reqAttrs))
-                    GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
+                GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
             } else if (entry instanceof Cos) {
-                if (hasRightsToList(this, zsc, entry, Admin.R_listCos, Admin.R_getCos, reqAttrs))
-                    GetCos.doCos(response, (Cos)entry);
+                GetCos.doCos(response, (Cos)entry);
             }
         }          
 
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
+    }
+    
+    protected static class SearchDirectoryRightChecker implements NamedEntry.CheckRight {
+        protected ZimbraSoapContext mZsc;
+        protected AdminDocumentHandler mHandler;
+        protected Provisioning mProv;
+        
+        protected Set<String> mReqAttrs;
+        
+        protected SearchDirectoryRightChecker(ZimbraSoapContext zsc, AdminDocumentHandler handler, Provisioning prov, Set<String> reqAttrs) {
+            mZsc = zsc;
+            mHandler = handler;
+            mProv = prov;
+            mReqAttrs = reqAttrs;
+        }
+        
+        public boolean allow(NamedEntry entry) throws ServiceException {
+            if (entry instanceof CalendarResource) {
+                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource, mReqAttrs);
+            } else if (entry instanceof Account) {
+                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listAccount, Admin.R_getAccount, mReqAttrs);
+            } else if (entry instanceof DistributionList) {
+                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList, mReqAttrs);
+            } else if (entry instanceof Alias) {
+                return hasRightsToListAlias(mHandler, mProv, mZsc, (Alias)entry);
+            } else if (entry instanceof Domain) {
+                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listDomain, Admin.R_getDomain, mReqAttrs);
+            } else if (entry instanceof Cos) {
+                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listCos, Admin.R_getCos, mReqAttrs);
+            } else
+                return false;
+        }
+        
+        protected List getAllowed(List entries) throws ServiceException {
+            List allowedEntries = new ArrayList<String>();
+            for (int i = 0; i < entries.size(); i++) {
+                NamedEntry entry = (NamedEntry)entries.get(i);
+                if (allow(entry))
+                    allowedEntries.add(entry);
+            }
+            return allowedEntries;
+        }
     }
     
     static boolean hasRightsToList(AdminDocumentHandler handler, ZimbraSoapContext zsc, NamedEntry target, 

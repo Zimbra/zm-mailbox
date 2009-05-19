@@ -21,7 +21,6 @@ package com.zimbra.cs.service.admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
@@ -32,7 +31,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
@@ -98,37 +96,35 @@ public class SearchAccounts extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
+        SearchDirectory.SearchDirectoryRightChecker rightChecker = new SearchDirectory.SearchDirectoryRightChecker(zsc, this, prov, null);
+        
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, 0);
+            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, 0, rightChecker);
         } else {
             if (d != null) {
                 accounts = prov.searchAccounts(d, query, attrs, sortBy, sortAscending, flags);
             } else {
                 accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
             }
+            accounts = rightChecker.getAllowed(accounts);
         }
 
         Element response = zsc.createElement(AdminConstants.SEARCH_ACCOUNTS_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
-        	if (entry instanceof CalendarResource) {
-        	    if (hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
-        	        ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
-        	} else if (entry instanceof Account) {
-        	    if (hasRightsToList(zsc, entry, Admin.R_listAccount, Admin.R_getAccount))
-                    ToXML.encodeAccountOld(response, (Account) entry, applyCos);
+            if (entry instanceof CalendarResource) {
+                ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
+            } else if (entry instanceof Account) {
+                ToXML.encodeAccountOld(response, (Account) entry, applyCos);
             } else if (entry instanceof DistributionList) {
-                if (hasRightsToList(zsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList))
-                    doDistributionList(response, (DistributionList) entry);
+                doDistributionList(response, (DistributionList) entry);
             } else if (entry instanceof Alias) {
-                if (SearchDirectory.hasRightsToListAlias(this, prov, zsc, (Alias)entry))
-                    doAlias(response, (Alias)entry);
+                doAlias(response, (Alias)entry);
             } else if (entry instanceof Domain) {
-                if (hasRightsToList(zsc, entry, Admin.R_listDomain, Admin.R_getDomain))
-                    GetDomain.doDomain(response, (Domain) entry, applyCos);
+                GetDomain.doDomain(response, (Domain) entry, applyCos);
             }
         }          
 

@@ -32,6 +32,10 @@ public abstract class NamedEntry extends Entry implements Comparable {
     public interface Visitor  {
         public void visit(NamedEntry entry) throws ServiceException;
     }
+    
+    public interface CheckRight {
+        boolean allow(NamedEntry entry) throws ServiceException;
+    }
 
     protected NamedEntry(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(attrs, defaults, prov);

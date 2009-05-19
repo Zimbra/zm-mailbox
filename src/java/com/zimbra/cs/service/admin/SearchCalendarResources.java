@@ -86,32 +86,41 @@ public class SearchCalendarResources extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
+        SearchCalenderResourcesRightChecker rightChecker = new SearchCalenderResourcesRightChecker(zsc, this, prov);
+        
         List resources;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
-            resources = session.searchCalendarResources(d, filter, attrs, sortBy, sortAscending, offset);
+            resources = session.searchCalendarResources(d, filter, attrs, sortBy, sortAscending, offset, rightChecker);
         } else {
             if (d != null) {
                 resources = prov.searchCalendarResources(d, filter, attrs, sortBy, sortAscending);
             } else {
                 resources = prov.searchCalendarResources(filter, attrs, sortBy, sortAscending);
             }
+            resources = rightChecker.getAllowed(resources);
         }
 
         Element response = zsc.createElement(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < resources.size(); i++) {
             NamedEntry entry = (NamedEntry) resources.get(i);
-            
-            if (!hasRightsToList(zsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
-                continue;
-            
             ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
         }
 
         response.addAttribute(AdminConstants.A_MORE, i < resources.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, resources.size());
         return response;
+    }
+    
+    private static class SearchCalenderResourcesRightChecker extends SearchDirectory.SearchDirectoryRightChecker implements NamedEntry.CheckRight {
+        private SearchCalenderResourcesRightChecker(ZimbraSoapContext zsc, SearchCalendarResources handler, Provisioning prov) {
+            super(zsc, handler, prov, null);
+        }
+        
+        public boolean allow(NamedEntry entry) throws ServiceException {
+            return mHandler.hasRightsToList(mZsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource);
+        }
     }
     
     @Override
