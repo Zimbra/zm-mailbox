@@ -294,7 +294,7 @@ public class NativeFormatter extends Formatter {
             if (!(item instanceof Document))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
 
-            item = mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
+            item = mbox.addDocumentRevision(context.opContext, item.getId(), pd);
         } catch (NoSuchItemException nsie) {
             item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
         } finally {

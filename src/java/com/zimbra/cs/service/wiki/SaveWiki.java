@@ -83,7 +83,7 @@ public class SaveWiki extends WikiDocumentHandler {
 						new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
 						new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
 			}
-			wikiItem = mbox.addDocumentRevision(octxt, itemId, MailItem.TYPE_WIKI, is, getAuthor(zsc), subject);
+			wikiItem = mbox.addDocumentRevision(octxt, itemId, is, getAuthor(zsc), subject);
 		}
         
         Element response = zsc.createElement(MailConstants.SAVE_WIKI_RESPONSE);

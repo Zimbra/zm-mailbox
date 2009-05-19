@@ -148,7 +148,7 @@ public class SaveDocument extends WikiDocumentHandler {
     						new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
     						new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
     			}
-    			docItem = mbox.addDocumentRevision(octxt, itemId, MailItem.TYPE_DOCUMENT, is, getAuthor(zsc), doc.name);
+    			docItem = mbox.addDocumentRevision(octxt, itemId, is, getAuthor(zsc), doc.name);
     		}
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);

@@ -995,7 +995,7 @@ public class TarFormatter extends Formatter {
                         oldItem = oldDoc;
                         if (doc.getVersion() > oldDoc.getVersion())
                             newItem = mbox.addDocumentRevision(oc,
-                                oldDoc.getId(), doc.getType(), tis,
+                                oldDoc.getId(), tis,
                                 doc.getCreator(), doc.getName());
                         if (r != Resolve.Skip)
                             mbox.setDate(oc, newItem.getId(), doc.getType(),
@@ -1359,8 +1359,7 @@ public class TarFormatter extends Formatter {
                         mbox.delete(oc, oldItem.getId(), type);
                         throw MailServiceException.NO_SUCH_ITEM(oldItem.getId());
                     } else if (r != Resolve.Skip) {
-                        newItem = mbox.addDocumentRevision(oc, oldItem.getId(),
-                            type, tis, creator, oldItem.getName());
+                        newItem = mbox.addDocumentRevision(oc, oldItem.getId(), tis, creator, oldItem.getName());
                     }
                 } catch (NoSuchItemException e) {
                     if (type == MailItem.TYPE_WIKI) {

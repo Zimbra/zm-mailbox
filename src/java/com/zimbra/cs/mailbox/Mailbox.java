@@ -1960,16 +1960,20 @@ public class Mailbox {
      *  both current and past.  These revisions are returned in increasing
      *  order of their 1-based "version", with the current revision always
      *  present and listed last. */
-    public synchronized List<MailItem> getAllRevisions(OperationContext octxt, int id, byte type) throws ServiceException {
+    @SuppressWarnings("unchecked")
+    public synchronized <T extends MailItem> List<T> getAllRevisions(OperationContext octxt, int id, byte type) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getAllRevisions", octxt);
             MailItem item = checkAccess(getItemById(id, type));
-            List<MailItem> revisions = new ArrayList<MailItem>(item.loadRevisions());
-            revisions.add(item);
+            List<MailItem> revisions = item.loadRevisions();
+            List<T> result = new ArrayList<T>(revisions.size());
+            for (MailItem rev : revisions) {
+                result.add((T) rev);
+            }
 
             success = true;
-            return revisions;
+            return result;
         } finally {
             endTransaction(success);
         }
@@ -2070,16 +2074,16 @@ public class Mailbox {
     }
 
     /** Returns all the MailItems of a given type, optionally in a specified folder */
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
+    public synchronized <T extends MailItem> List<T> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);
     }
 
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
+    public synchronized <T extends MailItem> List<T> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
         return getItemList(octxt, type, folderId, SortBy.NONE);
     }
 
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, SortBy sort) throws ServiceException {
-        List<MailItem> result;
+    public synchronized <T extends MailItem> List<T> getItemList(OperationContext octxt, byte type, int folderId, SortBy sort) throws ServiceException {
+        List<T> result;
         boolean success = false;
         
         if (type == MailItem.TYPE_UNKNOWN)
@@ -2098,25 +2102,29 @@ public class Mailbox {
             }
 
             if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
-                result = new ArrayList<MailItem>(mFolderCache.size());
+                result = new ArrayList<T>(mFolderCache.size());
                 for (Folder subfolder : mFolderCache.values()) {
                     if (subfolder.getType() == type || type == MailItem.TYPE_FOLDER)
                         if (folder == null || subfolder.getFolderId() == folderId)
-                            result.add(subfolder);
+                            result.add((T) subfolder);
                 }
                 success = true;
             } else if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
-                result = new ArrayList<MailItem>(mTagCache.size() / 2);
+                result = new ArrayList<T>(mTagCache.size() / 2);
                 for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String)
-                        result.add(entry.getValue());
+                        result.add((T) entry.getValue());
                 success = true;
             } else if (type == MailItem.TYPE_FLAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
-                result = new ArrayList<MailItem>(Flag.getAllFlags(this));
+                List<Flag> allFlags = Flag.getAllFlags(this);
+                result = new ArrayList<T>(allFlags.size());
+                for (Flag flag : allFlags) {
+                    result.add((T) flag);
+                }
                 success = true;
             } else {
                 List<MailItem.UnderlyingData> dataList;
@@ -2127,10 +2135,10 @@ public class Mailbox {
                     dataList = DbMailItem.getByType(this, type, sort);
                 if (dataList == null)
                     return Collections.emptyList();
-                result = new ArrayList<MailItem>(dataList.size());
+                result = new ArrayList<T>(dataList.size());
                 for (MailItem.UnderlyingData data : dataList)
                     if (data != null)
-                        result.add(getItem(data));
+                        result.add((T) getItem(data));
                 // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
             	if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER)
             	    sort = SortBy.NONE;
@@ -6065,19 +6073,19 @@ public class Mailbox {
         }
     }
 
-    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author, String name)
+    public Document addDocumentRevision(OperationContext octxt, int docId, InputStream data, String author, String name)
     throws ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
         try {
             ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author);
-            return addDocumentRevision(octxt, docId, type, pd);
+            return addDocumentRevision(octxt, docId, pd);
         } catch (IOException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         }
     }
 
-    public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd)
+    public synchronized Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
     throws ServiceException {
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
         
@@ -6092,7 +6100,7 @@ public class Mailbox {
 
             redoRecorder.setDocument(pd);
             redoRecorder.setDocId(docId);
-            redoRecorder.setItemType(type);
+            redoRecorder.setItemType(doc.getType());
             // TODO: simplify the redoRecorder by not subclassing from CreateMessage
             redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
             
