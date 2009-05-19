@@ -109,7 +109,7 @@ extends TestCase {
         // Send the draft
         outgoing.setAttachmentUploadId(null);
         List<AttachedMessagePart> attachedParts = new ArrayList<AttachedMessagePart>();
-        attachedParts.add(new AttachedMessagePart(draft.getId(), "1"));
+        attachedParts.add(new AttachedMessagePart(draft.getId(), "1", null));
         outgoing.setMessagePartsToAttach(attachedParts);
         mbox.sendMessage(outgoing, null, false);
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
