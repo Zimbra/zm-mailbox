@@ -1093,9 +1093,12 @@ public class TarFormatter extends Formatter {
                         oldItem = oldMsg;
                 }
                 if (oldItem == null) {
-                    DeliveryOptions opt = new DeliveryOptions().setFolderId(fldr.getId()).setNoICal(true)
-                        .setFlags(msg.getFlagBitmask()).setTagString(msg.getTagString());
-                    newItem = mbox.addMessage(oc, tis, (int) te.getSize(), msg.getDate(), opt);
+                    DeliveryOptions opt = new DeliveryOptions().
+                        setFolderId(fldr.getId()).setNoICal(true).
+                        setFlags(msg.getFlagBitmask()).
+                        setTagString(msg.getTagString());
+                    newItem = mbox.addMessage(oc, tis, (int) te.getSize(),
+                        msg.getDate(), opt);
                 }
                 break;
             case MailItem.TYPE_MOUNTPOINT:
@@ -1376,9 +1379,12 @@ public class TarFormatter extends Formatter {
                 }
                 break;
             case MailItem.TYPE_MESSAGE:
-                int flags = (te.getMode() & 0200) == 0 ? 0 : Flag.ID_FLAG_UNREAD;
-                DeliveryOptions opt = new DeliveryOptions().setFolderId(fldr.getId()).setNoICal(true).setFlags(flags);
-                mbox.addMessage(oc, tis, (int) te.getSize(), te.getModTime().getTime(), opt);
+                int flags = (te.getMode() & 0200) == 0 ? 0 : Flag.BITMASK_UNREAD;
+                DeliveryOptions opt = new DeliveryOptions().
+                    setFolderId(fldr.getId()).setNoICal(true).setFlags(flags);
+
+                mbox.addMessage(oc, tis, (int) te.getSize(),
+                    te.getModTime().getTime(), opt);
                 break;
             }
         } catch (Exception e) {
