@@ -248,7 +248,7 @@ public class SoapHttpTransport extends SoapTransport {
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
             HttpMethodParams params = method.getParams();
             
-            method.setRequestEntity(new StringRequestEntity(soapMessage));
+            method.setRequestEntity(new StringRequestEntity(soapMessage, null, "UTF-8"));
     	
             if (getRequestProtocol().hasSOAPActionHeader())
                 method.setRequestHeader("SOAPAction", mUri);
