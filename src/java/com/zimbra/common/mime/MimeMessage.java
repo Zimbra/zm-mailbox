@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,11 +11,11 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,11 +47,11 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
         setContent(file, false);
-        InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
+        FileInputStream fis = new FileInputStream(file);
         try {
-            readContent(new ParseState(new PeekAheadInputStream(is)));
+            readContent(new PeekAheadInputStream(fis));
         } finally {
-            ByteUtil.closeStream(is);
+            ByteUtil.closeStream(fis);
         }
     }
 
@@ -69,7 +70,7 @@ public class MimeMessage extends MimePart {
         mProperties = props;
         setContent(body, false);
         try {
-            readContent(new ParseState(new PeekAheadInputStream(new ByteArrayInputStream(body))));
+            readContent(new PeekAheadInputStream(new ByteArrayInputStream(body)));
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
         }
@@ -103,9 +104,7 @@ public class MimeMessage extends MimePart {
     public static MimeMessage readStructure(InputStream is, Properties props) throws IOException {
         MimeMessage mm = new MimeMessage(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mm.mProperties = props;
-        if (!is.markSupported())
-            is = new BufferedInputStream(is, 8192);
-        mm.readContent(new ParseState(new PeekAheadInputStream(is)));
+        mm.readContent(new PeekAheadInputStream(is));
         return mm;
     }
 
@@ -229,15 +228,15 @@ public class MimeMessage extends MimePart {
     }
 
 
-    @Override MimePart readContent(ParseState pstate) throws IOException {
-        mBody = MimePart.parse(pstate, this, ContentType.TEXT_PLAIN);
+    @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
+        mBody = MimePart.parse(pais, this, ContentType.TEXT_PLAIN);
         recordEndpoint(mBody.getEndOffset());
         return this;
     }
 
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        MimeMessage mm = new MimeMessage(new File("C:\\Temp\\mail\\24250"));
+        MimeMessage mm = new MimeMessage(new File("C:\\Temp\\mail\\nested"));
 //        dumpParts(mm);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
 //        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);

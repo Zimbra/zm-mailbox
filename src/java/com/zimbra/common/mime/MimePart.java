@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,10 +11,12 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -57,24 +60,24 @@ public abstract class MimePart {
         mBodyOffset = body;
     }
 
-    static MimePart parse(ParseState pstate, MimePart parent, String defaultContentType) throws IOException {
-        long start = pstate.getPosition();
+    static MimePart parse(PeekAheadInputStream pais, MimePart parent, String defaultContentType) throws IOException {
+        long start = pais.getPosition();
 
-        MimeHeaderBlock headers = new MimeHeaderBlock(parent instanceof MimeMessage).parse(pstate, parent == null ? null : parent.getActiveBoundaries());
+        MimeHeaderBlock headers = new MimeHeaderBlock(parent instanceof MimeMessage).parse(pais, parent == null ? null : parent.getActiveBoundaries());
         String defaultCharset = parent == null ? null : parent.getDefaultCharset();
         ContentType ctype = new ContentType(headers.getHeader("Content-Type", defaultCharset), defaultContentType);
 
         MimePart mp;
         if (ctype.getValue().equals(ContentType.MESSAGE_RFC822))
-            mp = new MimeMessage(ctype, parent, start, pstate.getPosition(), headers);
+            mp = new MimeMessage(ctype, parent, start, pais.getPosition(), headers);
         else if (ctype.getPrimaryType().equals("multipart"))
-            mp = new MimeMultipart(ctype, parent, start, pstate.getPosition(), headers);
+            mp = new MimeMultipart(ctype, parent, start, pais.getPosition(), headers);
         else
-            mp = new MimeBodyPart(ctype, parent, start, pstate.getPosition(), headers);
+            mp = new MimeBodyPart(ctype, parent, start, pais.getPosition(), headers);
 
-        ParseState.BoundaryTerminator bterm = pstate.getBoundaryTerminator();
+        PeekAheadInputStream.BoundaryTerminator bterm = pais.getBoundaryTerminator();
         if (bterm == null)
-            mp.readContent(pstate);
+            mp.readContent(pais);
         else
             mp.recordEndpoint(bterm.mBoundaryStart);
         return mp;
@@ -315,7 +318,7 @@ public abstract class MimePart {
         return mDirty || getPartSource() == null;
     }
 
-    abstract MimePart readContent(ParseState pstate) throws IOException;
+    abstract MimePart readContent(PeekAheadInputStream pais) throws IOException;
 
     protected void recordEndpoint(long position) {
         mEndOffset = position;
@@ -448,27 +451,26 @@ public abstract class MimePart {
         }
     }
 
-    static class ParseState {
+    static class PeekAheadInputStream extends ByteUtil.PositionInputStream {
+        PeekAheadInputStream(BufferedInputStream bis)    { super(bis); }
+        PeekAheadInputStream(ByteArrayInputStream bais)  { super(bais); }
+        PeekAheadInputStream(InputStream is)             { super(new BufferedInputStream(is, 8192)); }
+
+        int peek() throws IOException {
+            super.mark(1);
+            int peekChar = super.read();
+            if (peekChar != -1)
+                super.reset();
+            return peekChar;
+        }
+
         static class BoundaryTerminator {
             String mBoundary;
             boolean mWasEndBoundary;
             long mBoundaryStart = -1;
         }
 
-        private final PeekAheadInputStream mInputStream;
         private BoundaryTerminator mLastBoundary;
-
-        ParseState(PeekAheadInputStream pais) {
-            mInputStream = pais;
-        }
-
-        PeekAheadInputStream getInputStream() {
-            return mInputStream;
-        }
-
-        long getPosition() {
-            return mInputStream.getPosition();
-        }
 
         void recordBoundary(String boundary, boolean isEndBoundary, long linestart) {
             mLastBoundary = new BoundaryTerminator();
@@ -483,18 +485,6 @@ public abstract class MimePart {
 
         BoundaryTerminator getBoundaryTerminator() {
             return mLastBoundary;
-        }
-    }
-
-    static class PeekAheadInputStream extends ByteUtil.PositionInputStream {
-        PeekAheadInputStream(InputStream is)  { super(is); }
-
-        int peek() throws IOException {
-            super.mark(1);
-            int peekChar = super.read();
-            if (peekChar != -1)
-                super.reset();
-            return peekChar;
         }
     }
 }
