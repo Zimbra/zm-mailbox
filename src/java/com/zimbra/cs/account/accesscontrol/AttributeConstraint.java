@@ -408,8 +408,7 @@ class AttributeConstraint {
     }
     
     private static boolean ignoreConstraint(String attrName) {
-        return (Provisioning.A_zimbraMailQuota.equals(attrName) ||
-                Provisioning.A_zimbraCOSId.equals(attrName) ||
+        return (Provisioning.A_zimbraCOSId.equals(attrName) ||
                 Provisioning.A_zimbraDomainDefaultCOSId.equals(attrName));
     }
 
@@ -435,7 +434,16 @@ class AttributeConstraint {
     }
     
     private static void test(Map<String, AttributeConstraint> constraints, String attrName, Object value, boolean expected) throws ServiceException {
-        boolean violated = violateConstraint(constraints, attrName, value);
+        boolean violated = false;
+        try {
+            violated = violateConstraint(constraints, attrName, value);
+        } catch (ServiceException e) {
+            if (ServiceException.PERM_DENIED.equals(e.getCode()))
+                violated = true;
+            else
+                throw e;
+        }
+        
         StringBuilder sb = new StringBuilder();
         if (value instanceof String[]) {
             for (String s : (String[])value)
@@ -462,6 +470,8 @@ class AttributeConstraint {
         
         Account acct = prov.get(Provisioning.AccountBy.name, "user1@phoebe.mac");
         Cos cos = prov.getCOS(acct);
+        cos.unsetConstraint();
+        
         Map<String, Object> cosConstraints = new HashMap<String,Object>();
         
         // integer
@@ -490,7 +500,7 @@ class AttributeConstraint {
         
         prov.modifyAttrs(cos, cosConstraints);
         
-        Map<String, AttributeConstraint> constraints = getConstraint(acct);
+        Map<String, AttributeConstraint> constraints = getConstraint(cos);
         // integer
         test(constraints, "zimbraPasswordMinLength", "5", true);
         test(constraints, "zimbraPasswordMinLength", "6", true);

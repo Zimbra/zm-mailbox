@@ -72,7 +72,12 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         // check to see if quota is being changed
         long curQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
-        checkQuota(zsc, account, attrs);
+        
+        // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
+        // checkQuota is called only for domain based access manager, remove when we
+        // can totally deprecate domain based access manager 
+        if (isDomainAdminOnly(zsc))
+            checkQuota(zsc, account, attrs);
 
         // check to see if cos is being changed, need right on new cos 
         checkCos(zsc, account, attrs);

@@ -137,21 +137,7 @@ public class ACLAccessManager extends AccessManager {
 
     @Override
     public boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException {
-        
-        Account authedAcct = getAccountFromAuthToken(at);
-        
-        if (alwaysAllow(authedAcct, true, targetAccount, null))
-            return true;
-        
-        // TODO: how do we handle the use case "only certain (non-system) admins can 
-        // set quota to unlimited" ?
-        // Use a setUnlimitedQuota preset right?
-        /*
-        if (canDo(authedAcct, targetAccount, Admin.R_setUnlimitedQuota, true, false, null))
-            return true;
-        */
-        
-        return canSetMailQuota(at, targetAccount, mailQuota);
+        throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
     
     @Override

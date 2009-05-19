@@ -155,7 +155,28 @@ public class DomainAccessManager extends AccessManager {
         return canSetMailQuota(at, targetAccount, mailQuota);
     }
     
-    
+    protected boolean canSetMailQuota(AuthToken at, Account targetAccount, long quota) throws ServiceException {
+        Account adminAccount = Provisioning.getInstance().get(Provisioning.AccountBy.id,  at.getAccountId(), at);
+        if (adminAccount == null) return false;
+
+        // 0 is unlimited
+        long maxQuota = adminAccount.getLongAttr(Provisioning.A_zimbraDomainAdminMaxMailQuota, -1);
+
+        // return true if they can set quotas to anything
+        if (maxQuota == 0)
+            return true;
+
+        if ((maxQuota == -1) ||    // they don't permsission to change any quotas
+            (quota == 0) ||        // they don't have permission to assign unlimited quota
+            (quota > maxQuota)     // the quota they are tying to assign is too big
+           ) {
+            ZimbraLog.account.warn(String.format("invalid attempt to change quota: admin(%s) account(%s) quota(%d) max(%d)",
+                    adminAccount.getName(), targetAccount.getName(), quota, maxQuota));
+            return false;
+        } else {
+            return true;    
+        }
+    }
     /* ===========================================================================================
      * ACL based access methods
      * 

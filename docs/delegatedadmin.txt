@@ -387,25 +387,29 @@ Depending on the context, there are three aspects of targets that need to be dea
     
     Each zimbraConstraint value is in the format of:
     
+        {attr-name}:{min-max} | {values}
+        {min-max} = [min={min-value}][:max={max-value}]  (min and max are inclusive)
+        {values} = {comma-separated allowed boolean values}
+    
         - for neumeric(integer, interval, port) attributes:
-              {attr-name}:[{min}],[{max}]
+              {attr-name}:{min-max}
               
-              e.g. zimbraPasswordMinLength:4:6 (can be set to value between 4 and 6)
-                   zimbraPrefOutOfOfficeCacheDuration:1m:7d (can be set to value between 1m and 7d)
-                   zimbraMailQuota:100000000: (min=100000000, no max limit)
-                   zimbraSignatureMaxNumEntries::10 (no min limit, max=10)
+              e.g. zimbraPasswordMinLength:min=4:max=6 (can be set to value between 4 and 6)
+                   zimbraPrefOutOfOfficeCacheDuration:min=1m:max=7d (can be set to value between 1m and 7d)
+                   zimbraMailQuota:min=100000000 (min=100000000, no max limit)
+                   zimbraSignatureMaxNumEntries:max=10 (no min limit, max=10)
               
         - for boolean attributes:
-              {attr-name}:{comma-separated allowed boolean values}
+              {attr-name}:{values}
               
-              e.g. zimbraFeatureMailEnabled:TRUE,FALSE (can be set to TRUE or FALSE)
-                   zimbraFeatureContactsEnabled:FALSE (can be set to FALSE)
+              e.g. zimbraFeatureMailEnabled:values=TRUE,FALSE (can be set to TRUE or FALSE)
+                   zimbraFeatureContactsEnabled:values=FALSE (can be set to FALSE)
                    
         - for enum attributes:
-             {attr-name}:{comma-separated allowed enum values}
+              {attr-name}:{values}
              
-              e.g. zimbraDomainStatus:active,maintenance,locked,closed
-                   zimbraGalMode:zimbra 
+              e.g. zimbraDomainStatus:values=active,maintenance,locked,closed
+                   zimbraGalMode:values=zimbra 
     
     For account and cos attributes, constraints are specified in the corresponding COS attribute zimbraConstraint.
     For domain and  server attributes, constraints are specified in the global config attribute zimbraConstraint.
@@ -414,8 +418,8 @@ Depending on the context, there are three aspects of targets that need to be dea
     attribute that defines the constraint for the object he is modifying.  
     
     For example, if zimbraConstraint on cos C has:
-          zimbraPasswordMinLength:6,8
-          zimbraSignatureMaxNumEntries:,10
+          zimbraPasswordMinLength:min=6:max=8
+          zimbraSignatureMaxNumEntries:max=10
           
     - if the authed admin has right to modify zimbraConstraint on cos C (and has right to modify the corresponding
       account/cos attributes), he can set:
@@ -426,9 +430,8 @@ Depending on the context, there are three aspects of targets that need to be dea
     - if the authed admin does not have right to modify zimbraConstraint on cos C (and has right to modify the 
       corresponding account/cos attributes), he can set:    
           zimbraPasswordMinLength to between 6 and 8
-          zimbraSignatureMaxNumEntries to a value less than 10
+          zimbraSignatureMaxNumEntries to a value less than or equal to 10
           all other attributes to any value on cos C and accounts assigned to cos C
-          
     
     
 
