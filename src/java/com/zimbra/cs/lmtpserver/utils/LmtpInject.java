@@ -239,6 +239,7 @@ public class LmtpInject {
                 }
                 file = mDriver.getNextFile();
             }
+            mClient.close();
         }
     }
 
