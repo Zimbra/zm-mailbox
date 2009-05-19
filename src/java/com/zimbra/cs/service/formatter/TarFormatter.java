@@ -20,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -88,7 +87,6 @@ import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServlet;
@@ -1364,6 +1362,7 @@ public class TarFormatter extends Formatter {
                 }
                 break;
             case MailItem.TYPE_MESSAGE:
+                int flags = (te.getMode() & 0200) == 0 ? 0 : Flag.BITMASK_UNREAD;
                 IncomingBlob ib = IncomingBlob.create(tis, (int)te.getSize(),
                     2 * 1024 * 1024);
                 
@@ -1371,8 +1370,7 @@ public class TarFormatter extends Formatter {
                     newItem = mbox.addMessage(oc, ib.createParsedMessage(
                         te.getModTime().getTime(),
                         mbox.attachmentsIndexingEnabled()),
-                        fldr.getId(), true, (te.getMode() & 0200) == 0 ? 0 :
-                        Flag.ID_FLAG_UNREAD, null);
+                        fldr.getId(), true, flags, null);
                 } finally {
                     ib.delete();
                 }
