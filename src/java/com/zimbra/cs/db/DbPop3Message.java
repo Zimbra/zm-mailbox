@@ -164,6 +164,8 @@ public class DbPop3Message {
 
                 while (rs.next())
                     matchingUids.add(rs.getString(1));
+                rs.close(); rs = null;
+                stmt.close(); stmt = null;
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get UID's", e);

@@ -483,7 +483,6 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        ResultSet rs = null;
         try {
             // commented out because at present messages cannot have names (and thus can't have naming conflicts)
 //            if (!Db.supports(Db.Capability.UNIQUE_NAME_INDEX) || Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
@@ -522,6 +521,8 @@ public class DbMailItem {
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, msgs.get(index).getId());
                 stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -530,7 +531,6 @@ public class DbMailItem {
 //            else
             throw ServiceException.FAILURE("writing new folder data for messages", e);
         } finally {
-            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
@@ -541,7 +541,6 @@ public class DbMailItem {
         
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        ResultSet rs = null;
         try {
             for (int i = 0; i < msgs.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
@@ -554,6 +553,8 @@ public class DbMailItem {
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, msgs.get(index).getId());
                 stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -562,7 +563,6 @@ public class DbMailItem {
 //            else
             throw ServiceException.FAILURE("writing new folder data for messages", e);
         } finally {
-            DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
     }
@@ -599,6 +599,8 @@ public class DbMailItem {
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, children[index].getId());
                 stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("adding children to parent " + (parent == null ? "NULL" : parent.getId() + ""), e);
@@ -1060,6 +1062,8 @@ public class DbMailItem {
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, itemIDs.get(index));
                 stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
             }
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
@@ -1172,6 +1176,8 @@ public class DbMailItem {
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, itemIDs.get(index));
                 stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating unread state for " +
@@ -1376,6 +1382,8 @@ public class DbMailItem {
 
                 while (rs.next())
                     purgedConvs.add(rs.getInt(1));
+                rs.close(); rs = null;
+                stmt.close(); stmt = null;
             }
 
             return purgedConvs;
@@ -2435,6 +2443,8 @@ public class DbMailItem {
                 rs = stmt.executeQuery();
                 while (rs.next())
                     info.sharedIndex.remove(rs.getInt(1));
+                rs.close(); rs = null;
+                stmt.close(); stmt = null;
             }
 
             info.indexIds.addAll(info.sharedIndex);
