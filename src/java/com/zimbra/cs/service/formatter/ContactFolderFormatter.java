@@ -67,13 +67,35 @@ public class ContactFolderFormatter extends Formatter {
 			MailItem item = contacts.next();
 			if (!(item instanceof Contact))
 				continue;
+			// send metadata of the Contact
+			// itemId
 			out.write(MailConstants.A_ID.getBytes("UTF-8"));
 			out.write(FIELD_DELIMITER);
 			out.write(ifmt.formatItemId(item).getBytes("UTF-8"));
 			out.write(FIELD_DELIMITER);
+			// folderId
 			out.write(MailConstants.A_FOLDER.getBytes("UTF-8"));
 			out.write(FIELD_DELIMITER);
 			out.write(ifmt.formatItemId(item.getFolderId()).getBytes("UTF-8"));
+			out.write(FIELD_DELIMITER);
+			// date
+			out.write(MailConstants.A_DATE.getBytes("UTF-8"));
+			out.write(FIELD_DELIMITER);
+			out.write(Long.toString(item.getDate()).getBytes("UTF-8"));
+			out.write(FIELD_DELIMITER);
+			// revision
+			out.write(MailConstants.A_REVISION.getBytes("UTF-8"));
+			out.write(FIELD_DELIMITER);
+			out.write(Integer.toString(item.getSavedSequence()).getBytes("UTF-8"));
+			out.write(FIELD_DELIMITER);
+			// fileAsStr
+			try {
+				String fileAsStr = ((Contact)item).getFileAsString();
+				out.write(MailConstants.A_FILE_AS_STR.getBytes("UTF-8"));
+				out.write(FIELD_DELIMITER);
+				out.write(fileAsStr.getBytes("UTF-8"));
+			} catch (ServiceException se) {
+			}
 			
 			Map<String,String> fields = ((Contact) item).getFields();
 			for (String k : fields.keySet()) {
