@@ -853,6 +853,7 @@ public class ParsedMessage {
         // bug 33461: add filenames to our CONTENT field
         for (String fn : mFilenames) {
             appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, fn));
+            appendToContent(contentPrepend, fn); // also add the non-tokenized form, so full-filename searches match
         }
 
         String text = contentPrepend.toString()+" "+fullContent.toString();
