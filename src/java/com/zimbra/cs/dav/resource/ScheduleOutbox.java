@@ -183,8 +183,9 @@ public class ScheduleOutbox extends Collection {
             ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
             if (organizerProp != null) {
                 String organizerStr = this.getAddressFromPrincipalURL(new ZOrganizer(organizerProp).getAddress());
-                if (!AccountUtil.addressMatchesAccount(getMailbox(ctxt).getAccount(), organizerStr))
-                    throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
+                if (!AccountUtil.addressMatchesAccount(getMailbox(ctxt).getAccount(), organizerStr)) {
+                	ZimbraLog.dav.debug("scheduling appointment on behalf of %s", organizerStr);
+                }
             }
             subject = "Meeting Request: ";
         } else if (method.equals("REPLY")) {

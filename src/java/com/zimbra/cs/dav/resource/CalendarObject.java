@@ -94,8 +94,12 @@ public interface CalendarObject {
     }
     public static class CalendarPath {
         public static String generate(DavContext ctxt, String itemPath, String uid, int extra) {
-        	if (ctxt != null && ctxt.getCollectionPath() != null)
-        		itemPath = ctxt.getCollectionPath();
+        	if (ctxt != null) {
+        		if (ctxt.getCollectionPath() != null)
+            		itemPath = ctxt.getCollectionPath();
+        		else if (ctxt.getPathInfo() != null)
+        			itemPath += ctxt.getPathInfo();
+        	}
             // escape uid
             StringBuilder path = new StringBuilder();
             path.append(itemPath);
