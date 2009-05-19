@@ -18,18 +18,14 @@ package com.zimbra.cs.account.ldap.upgrade;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
@@ -43,13 +39,14 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.InlineAttrRight;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.account.ldap.upgrade.DomainObjectClassAmavisAccount.AddDomainObjectClassAmavisAccountVisitor;
+
 
 public class MigrateDomainAdmins extends LdapUpgrade {
     
@@ -212,6 +209,16 @@ public class MigrateDomainAdmins extends LdapUpgrade {
         // admin UI components
         //
         setAdminUIComp(domainAdmin);
+        
+        //
+        // quota
+        //
+        long maxQuota = domainAdmin.getLongAttr(Provisioning.A_zimbraDomainAdminMaxMailQuota, -1);
+        if (maxQuota == -1)  // they don't have permission to change quota
+            mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
+                    GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
+                    InlineAttrRight.composeSetRight(TargetType.account, Provisioning.A_zimbraMailQuota), RightModifier.RM_DENY);
+            
     }
     
     private void grantCosRights(Domain domain, Account domainAdmin) throws ServiceException {

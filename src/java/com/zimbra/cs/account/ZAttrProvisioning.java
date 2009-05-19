@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090518-1055 */
+    /* build: 5.0 pshao 20090519-1051 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2188,6 +2188,7 @@ public class ZAttrProvisioning {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
+     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      */
     @ZAttr(id=398)
     public static final String A_zimbraDomainAdminMaxMailQuota = "zimbraDomainAdminMaxMailQuota";

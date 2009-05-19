@@ -18,12 +18,13 @@ import com.zimbra.common.service.ServiceException;
 
 public class InlineAttrRight extends AttrRight {
 
-    private static final String PARTS_SEPARATOR = "\\.";
+    private static final String PARTS_SEPARATOR = ".";
+    private static final String PARTS_SEPARATOR_ESC = "\\.";
     private static final String OP_GET = "get";
     private static final String OP_SET = "set";
     
     static InlineAttrRight newInlineAttrRight(String right) throws ServiceException {
-        String[] parts = right.split(PARTS_SEPARATOR);
+        String[] parts = right.split(PARTS_SEPARATOR_ESC);
         if (parts.length != 3)
             throw ServiceException.PARSE_ERROR("inline attr right might have 3 parts", null);
         
@@ -52,6 +53,18 @@ public class InlineAttrRight extends AttrRight {
         return iar;
     }
     
+    public static String composeGetRight(TargetType targetType, String attrName) {
+        return composeRight(OP_GET, targetType, attrName);
+    }
+    
+    public static String composeSetRight(TargetType targetType, String attrName) {
+        return composeRight(OP_SET, targetType, attrName);
+    }
+    
+    private static String composeRight(String op, TargetType targetType, String attrName) {
+        return op + PARTS_SEPARATOR + targetType.getCode() + PARTS_SEPARATOR + attrName;
+    }
+
     static boolean looksLikeOne(String right) {
         if (right.contains("."))
             return true;

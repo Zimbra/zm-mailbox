@@ -207,14 +207,6 @@ public class ModifyAccount extends AdminDocumentHandler {
         notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
                 Admin.R_modifyAccount.getName(), "account") + "\n");
         
-        notes.add("Notes on " + Provisioning.A_zimbraMailQuota + ": " +
-                "Prior to ACL based AccessManager, " + 
-                "We've been supporting \"per admin limit\" (zimbraDomainAdminMaxMailQuota), which cannot be " +
-                "achieved by our constraint model(i.e. cos limit).  Also, 0 means unlimited quota, which cannot " + 
-                "be enforced by our constraint model either.  For now, we ignore any constraints " + 
-                "(zimbraConstraints, if any) on zimbraMailQuota and continue to support the old model.  " + 
-                "And, only a system admin can set quota to unlimited(i.e. 0).");
-        
         notes.add("Notes on " + Provisioning.A_zimbraCOSId + ": " +
                 "If setting " + Provisioning.A_zimbraCOSId + ", needs the " + Admin.R_assignCos.getName() + 
                 " right on the cos." + 
