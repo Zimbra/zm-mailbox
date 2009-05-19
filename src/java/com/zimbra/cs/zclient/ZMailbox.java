@@ -3306,14 +3306,19 @@ public class ZMailbox implements ToZJSONObject {
         public static class AttachedMessagePart {
             private String mMessageId;
             private String mPartName;
+            private String mContentId;
 
-            public AttachedMessagePart(String messageId, String partName) {
+            public AttachedMessagePart(String messageId, String partName, String contentId) {
                 mMessageId = messageId;
                 mPartName = partName;
+                mContentId = contentId;
             }
 
             public String getMessageId()  {return mMessageId; }
             public void setMessageId(String messageId) { mMessageId = messageId; }
+
+            public String getContentId()  {return mContentId; }
+            public void setContentId(String contentId) { mContentId = contentId; }
 
             public String getPartName() { return mPartName; }
             public void setPartName(String partName) { mPartName = partName; }
@@ -3323,6 +3328,7 @@ public class ZMailbox implements ToZJSONObject {
             private String mContentType;
             private String mContent;
             private List<MessagePart> mSubParts;
+            private List<AttachedMessagePart> mAttachSubParts;
 
             /**
              * create a new message part with the given content type and content.
@@ -3334,7 +3340,11 @@ public class ZMailbox implements ToZJSONObject {
                 mContent = content;
                 mContentType = contentType;
             }
-
+            public MessagePart(String contentType, String content, List<AttachedMessagePart> attachSubParts) {
+                mContent = content;
+                mContentType = contentType;
+                mAttachSubParts = attachSubParts;
+            }
             public MessagePart(String contentType, MessagePart... parts) {
                 mContent = null;
                 mContentType = contentType;
@@ -3352,6 +3362,9 @@ public class ZMailbox implements ToZJSONObject {
             public List<MessagePart> getSubParts() { return mSubParts; }
             public void setSubParts(List<MessagePart> subParts) { mSubParts = subParts; }
 
+            public List<AttachedMessagePart> getAttachSubParts() { return mAttachSubParts; }
+            public void setAttachSubParts(List<AttachedMessagePart> attachSubParts) { mAttachSubParts = attachSubParts; }
+
             public Element toElement(Element parent) {
                 Element mpEl = parent.addElement(MailConstants.E_MIMEPART);
                 mpEl.addAttribute(MailConstants.A_CONTENT_TYPE, mContentType);
@@ -3360,6 +3373,19 @@ public class ZMailbox implements ToZJSONObject {
                 if (mSubParts != null) {
                     for (MessagePart subPart : mSubParts) {
                         subPart.toElement(mpEl);
+                    }
+                }
+
+                if (mAttachSubParts != null) {
+
+                    for (AttachedMessagePart subPart : mAttachSubParts) {
+                        Element e = parent.addElement(MailConstants.E_MIMEPART);
+                        e.addAttribute(MailConstants.A_CONTENT_ID, subPart.getContentId());
+                        Element attach = e.addElement(MailConstants.E_ATTACH);
+                        Element el = attach.addElement(MailConstants.E_MIMEPART);
+                        el.addAttribute(MailConstants.A_MESSAGE_ID,subPart.getMessageId());
+                        el.addAttribute(MailConstants.A_PART,subPart.getPartName());
+
                     }
                 }
                 return mpEl;
@@ -3410,6 +3436,17 @@ public class ZMailbox implements ToZJSONObject {
 
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
+
+        public List<AttachedMessagePart> getInlineMessagePartsToAttach() {
+            List<AttachedMessagePart> attachments = new ArrayList<AttachedMessagePart>();
+            if(mMessagePartsToAttach == null || mMessagePartsToAttach.size() <= 0) return attachments;
+            for (AttachedMessagePart part: mMessagePartsToAttach){
+                if(part.getContentId() != null && !part.getContentId().equals("")){
+                    attachments.add(part);
+                }
+            }
+            return attachments;
+        }
     }
 
     public Element getMessageElement(Element req, ZOutgoingMessage message, ZMountpoint mountpoint) throws ServiceException {
@@ -3480,6 +3517,7 @@ public class ZMailbox implements ToZJSONObject {
         if (message.getMessagePartsToAttach() != null) {
             if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
             for (AttachedMessagePart part: message.getMessagePartsToAttach()) {
+                if(part.getContentId() == null || part.getContentId().equals(""))
                 attach.addElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_MESSAGE_ID, part.getMessageId()).addAttribute(MailConstants.A_PART, part.getPartName());
             }
         }
