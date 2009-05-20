@@ -55,7 +55,7 @@ public class LdapFilter {
     }
     
     public static String adminAccountByAdminFlag() {
-        return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsSystemAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
+        return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsDelegatedAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
     }
     
     /*
