@@ -419,9 +419,27 @@ public final class SearchParams implements Cloneable {
             
             // bug 35039 - using cursors with conversation-coalescing leads to convs 
             //             appearing on multiple pages
-            for (byte b : params.getTypes()) 
-                if (b == MailItem.TYPE_CONVERSATION)
-                    useCursorToNarrowDbQuery = false; 
+            for (byte b : params.getTypes()) {
+                if (false) {
+                    if (b == MailItem.TYPE_MESSAGE) {
+                        switch (params.getSortBy()) {
+                            case SUBJ_ASCENDING:
+                            case SUBJ_DESCENDING:
+                                cursor = null;  // bug 37344 - cursor problems w/ normalization
+                        }
+                    } 
+                }
+                if (b == MailItem.TYPE_CONVERSATION) {
+                    useCursorToNarrowDbQuery = false;
+                    if (false) {
+                        switch (params.getSortBy()) {
+                            case SUBJ_ASCENDING:
+                            case SUBJ_DESCENDING:
+                                cursor = null;  // bug 37344 - cursor problems w/ normalization
+                        }
+                    }
+                }
+            }
         }
         
         if (cursor != null) {
@@ -556,7 +574,9 @@ public final class SearchParams implements Cloneable {
     }
     
     private static final String quote(String s1, String s2) {
-        return "\""+s1+s2+"\"";
+//        return "\""+s1+s2+"\"";
+        // HACK to work-around query parser not accepting escaped "'s
+        return "\"" + (s1+s2).replaceAll("\"", "[") + "\"";
     }
     
     private static int parseLimit(Element request) throws ServiceException {
