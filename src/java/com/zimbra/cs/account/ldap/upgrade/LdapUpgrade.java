@@ -178,6 +178,8 @@ abstract class LdapUpgrade {
             upgrade = new MigrateZimbraMessageCacheSize(bug, verbose);
         } else if ("32557".equalsIgnoreCase(bug)) {
             upgrade = new DomainObjectClassAmavisAccount(bug, verbose);
+        } else if ("32719".equalsIgnoreCase(bug)) {
+            upgrade = new HsmPolicy(bug, verbose);
         } else if ("33814".equalsIgnoreCase(bug)) {
             // note: has to be run *before* running -b 27075
             upgrade = new MigrateZimbraMtaAuthEnabled(bug, verbose);
