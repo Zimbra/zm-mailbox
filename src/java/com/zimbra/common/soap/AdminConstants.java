@@ -663,4 +663,5 @@ public class AdminConstants {
     
     public static final String A_FULLSYNC = "fullSync";
     public static final String A_RESET    = "reset";
+    public static final String A_HAS_KEYWORD = "hasKeyword";
 }
