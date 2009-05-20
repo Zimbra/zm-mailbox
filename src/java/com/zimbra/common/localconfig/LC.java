@@ -309,6 +309,7 @@ public class LC {
 
     public static final KnownKey calendar_outlook_compatible_allday_events;
     public static final KnownKey calendar_entourage_compatible_timezones;
+    public static final KnownKey calendar_apple_ical_compatible_canceled_instances;
     public static final KnownKey calendar_ics_import_full_parse_max_size;
     public static final KnownKey calendar_ics_export_buffer_size;
     public static final KnownKey calendar_max_desc_in_metadata;
@@ -480,6 +481,7 @@ public class LC {
     public static final KnownKey smtp_host_retry_millis;
     
     static {
+        @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
                 "You will have to, with abundant precaution, re-generate my.cnf and " +
@@ -1077,6 +1079,9 @@ public class LC {
 
         calendar_entourage_compatible_timezones = new KnownKey("calendar_entourage_compatible_timezones");
         calendar_entourage_compatible_timezones.setDefault("true");
+
+        calendar_apple_ical_compatible_canceled_instances = new KnownKey("calendar_apple_ical_compatible_canceled_instances");
+        calendar_apple_ical_compatible_canceled_instances.setDefault("true");
 
         calendar_ics_import_full_parse_max_size = new KnownKey("calendar_ics_import_full_parse_max_size");
         calendar_ics_import_full_parse_max_size.setDefault("131072");  // 128KB
