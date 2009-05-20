@@ -253,3 +253,28 @@ SECTION ldap
 	LDAP ldap_overlay_syncprov_sessionlog LOCAL ldap_overlay_syncprov_sessionlog
 	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
 
+section cbpolicyd
+	REWRITE conf/cbpolicyd.conf.in conf/cbpolicyd.conf
+	LOCAL cbpolicyd_pid_file
+	LOCAL cbpolicyd_log_file
+	LOCAL cbpolicyd_db_file
+	LOCAL cbpolicyd_log_level
+	LOCAL cbpolicyd_log_mail
+	LOCAL cbpolicyd_log_detail
+	LOCAL cbpolicyd_bind_host
+	LOCAL cbpolicyd_bind_port
+	LOCAL cbpolicyd_timeout
+	LOCAL cbpolicyd_bypass_mode
+	LOCAL cbpolicyd_bypass_timeout
+	LOCAL cbpolicyd_module_accesscontrol
+	LOCAL cbpolicyd_module_greylisting
+	LOCAL cbpolicyd_module_checkhelo
+	LOCAL cbpolicyd_module_checkspf
+	LOCAL cbpolicyd_module_quotas
+	if SERVICE cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
+	fi
+	if !SERVICE cbpolicyd
+		POSTCONF smtpd_end_of_data_restrictions
+	fi
+	
