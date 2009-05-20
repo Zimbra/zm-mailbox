@@ -1447,7 +1447,7 @@ Access: domain admin sufficient
 </GetZimletRequest>
 
 <GetZimletResponse>
-  <zimlet name="{name}" id="{id}">
+  <zimlet name="{name}" id="{id}" [hasKeyword="{keyword}"]>
     <a n="...">...</a>+
   </zimlet>
 </GetZimletResponse>
@@ -1457,7 +1457,7 @@ Access: domain admin sufficient
 <GetAllZimletsRequest exclude="{exclude}"/>
 
 <GetAllZimletsResponse>
-  <zimlet name="{name}" id="{id}">
+  <zimlet name="{name}" id="{id}" [hasKeyword="{keyword}"]>
     <a n="...">...</a>+
   </zimlet>+
 </GetAllZimletsResponse>

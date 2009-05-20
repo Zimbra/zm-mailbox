@@ -359,7 +359,8 @@ public class ZimletUtil {
 
 	private static Map<String,Object> descToMap(ZimletDescription zd) throws ZimletException {
 		Map<String,Object> attrs = new HashMap<String,Object>();
-		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getName());
+		if (zd.getServerExtensionHasKeyword())
+			attrs.put(Provisioning.A_zimbraZimletKeyword,     zd.getServerExtensionKeyword());
 		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion().toString());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
 		attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
