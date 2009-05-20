@@ -478,7 +478,7 @@ public class MailConstants {
     public static final String E_FREEBUSY_BUSY = "b";
     public static final String E_FREEBUSY_BUSY_TENTATIVE = "t";
     public static final String E_FREEBUSY_BUSY_UNAVAILABLE = "u";
-    public static final String E_FREEBUSY_BUSY_OUFOFOFFICE = "o";
+    public static final String E_FREEBUSY_BUSY_OUT_OF_OFFICE = "o";
     public static final String E_FREEBUSY_NO_DATA = "n";
     public static final String E_CAL_ORGANIZER = "or";
     public static final String E_CAL_ICAL = "ical";
