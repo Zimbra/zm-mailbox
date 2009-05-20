@@ -4487,7 +4487,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>How often do we refresh contact ranking table from address book and GAL to get friendly name for the email address.  Use 0 to disable the refresh.</desc>
 </attr>
 
-<attr id="1024" name="zimbraHsmPolicy" type="duration" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+<attr id="1024" name="zimbraHsmPolicy" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <globalConfigValue>message,document:before:-30days</globalConfigValue>
   <desc>
     The policy that determines which mail items get moved to secondary storage during
@@ -4496,7 +4496,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     complete list of item types and query.txt for the search query spec.</desc>
 </attr>
 
-<attr id="1025" name="zimbraMailTrustedIP" type="duration" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+<attr id="1025" name="zimbraMailTrustedIP" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
   <desc>
     In our web app, AJAX and std html client, we have support for adding the HTTP
     client s IP address as X-Originating-IP in an outbound message.  We also use

@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090519-1051 */
+    /* build: 5.0 pshao 20090519-1713 */
 
     /**
      * RFC2256: descriptive information
@@ -7743,32 +7743,12 @@ public class ZAttrConfig extends Entry {
      * spec for &lt;SearchRequest&gt; for the complete list of item types and
      * query.txt for the search query spec.
      *
-     * <p>Use getHsmPolicyAsString to access value as a string.
-     *
-     * @see #getHsmPolicyAsString()
-     *
-     * @return zimbraHsmPolicy in millseconds, or -1 (new String[] {"message,document:before:-30days"})  if unset
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1024)
-    public long getHsmPolicy() {
-        return getTimeInterval(Provisioning.A_zimbraHsmPolicy, -1L);
-    }
-
-    /**
-     * The policy that determines which mail items get moved to secondary
-     * storage during HSM. Each value specifies a comma-separated list of
-     * item types and the search query used to select items to move. See the
-     * spec for &lt;SearchRequest&gt; for the complete list of item types and
-     * query.txt for the search query spec.
-     *
      * @return zimbraHsmPolicy, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA2
      */
     @ZAttr(id=1024)
-    public String[] getHsmPolicyAsString() {
+    public String[] getHsmPolicy() {
         String[] value = getMultiAttr(Provisioning.A_zimbraHsmPolicy); return value.length > 0 ? value : new String[] {"message,document:before:-30days"};
     }
 
@@ -7808,6 +7788,84 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> setHsmPolicy(String[] zimbraHsmPolicy, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
+        return attrs;
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param zimbraHsmPolicy new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public void addHsmPolicy(String zimbraHsmPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param zimbraHsmPolicy new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public Map<String,Object> addHsmPolicy(String zimbraHsmPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
+        return attrs;
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param zimbraHsmPolicy existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public void removeHsmPolicy(String zimbraHsmPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The policy that determines which mail items get moved to secondary
+     * storage during HSM. Each value specifies a comma-separated list of
+     * item types and the search query used to select items to move. See the
+     * spec for &lt;SearchRequest&gt; for the complete list of item types and
+     * query.txt for the search query spec.
+     *
+     * @param zimbraHsmPolicy existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1024)
+    public Map<String,Object> removeHsmPolicy(String zimbraHsmPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraHsmPolicy, zimbraHsmPolicy);
         return attrs;
     }
 
@@ -11174,37 +11232,12 @@ public class ZAttrConfig extends Entry {
      * will trust the client/proxy only if the IP address of the client/proxy
      * is one of the IPs listed in this attribute.
      *
-     * <p>Use getMailTrustedIPAsString to access value as a string.
-     *
-     * @see #getMailTrustedIPAsString()
-     *
-     * @return zimbraMailTrustedIP in millseconds, or -1 if unset
-     *
-     * @since ZCS 6.0.0_BETA2
-     */
-    @ZAttr(id=1025)
-    public long getMailTrustedIP() {
-        return getTimeInterval(Provisioning.A_zimbraMailTrustedIP, -1L);
-    }
-
-    /**
-     * In our web app, AJAX and std html client, we have support for adding
-     * the HTTP client s IP address as X-Originating-IP in an outbound
-     * message. We also use the HTTP client s IP address in our logging. In
-     * the case of standard client making connections to the SOAP layer, the
-     * JSP layer tells the SOAP layer in a http header what the remote HTTP
-     * client s address is. In the case where nginx or some other proxy layer
-     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
-     * header what the real HTTP client s address is. Our SOAP/JSP layers
-     * will trust the client/proxy only if the IP address of the client/proxy
-     * is one of the IPs listed in this attribute.
-     *
      * @return zimbraMailTrustedIP, or empty array if unset
      *
      * @since ZCS 6.0.0_BETA2
      */
     @ZAttr(id=1025)
-    public String[] getMailTrustedIPAsString() {
+    public String[] getMailTrustedIP() {
         return getMultiAttr(Provisioning.A_zimbraMailTrustedIP);
     }
 
@@ -11254,6 +11287,104 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> setMailTrustedIP(String[] zimbraMailTrustedIP, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
+        return attrs;
+    }
+
+    /**
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
+     *
+     * @param zimbraMailTrustedIP new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public void addMailTrustedIP(String zimbraMailTrustedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
+     *
+     * @param zimbraMailTrustedIP new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public Map<String,Object> addMailTrustedIP(String zimbraMailTrustedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
+        return attrs;
+    }
+
+    /**
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
+     *
+     * @param zimbraMailTrustedIP existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public void removeMailTrustedIP(String zimbraMailTrustedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * In our web app, AJAX and std html client, we have support for adding
+     * the HTTP client s IP address as X-Originating-IP in an outbound
+     * message. We also use the HTTP client s IP address in our logging. In
+     * the case of standard client making connections to the SOAP layer, the
+     * JSP layer tells the SOAP layer in a http header what the remote HTTP
+     * client s address is. In the case where nginx or some other proxy layer
+     * is fronting our webapps, the proxy tells the SOAP/JSP layers in a http
+     * header what the real HTTP client s address is. Our SOAP/JSP layers
+     * will trust the client/proxy only if the IP address of the client/proxy
+     * is one of the IPs listed in this attribute.
+     *
+     * @param zimbraMailTrustedIP existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1025)
+    public Map<String,Object> removeMailTrustedIP(String zimbraMailTrustedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailTrustedIP, zimbraMailTrustedIP);
         return attrs;
     }
 
