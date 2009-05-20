@@ -789,7 +789,7 @@ are returned.  If the stat name is invalid, returns a SOAP fault.
 
 -----------------------------
 <GetLoggerStatsRequest>
-  <hostname>...</hostname>?
+  <hostname hn="..."/>?
   <stats name="..."/>?
   <stats name="...">1</stats>?
   <startTime time="ts"/>?

@@ -38,7 +38,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * <GetLoggerStatsRequest>
  *   <!-- when hostname and stats are specified, fetch stats -->
- *   <hostname>zmhostname</hostname> <!-- optional, will list hosts otherwise -->
+ *   <hostname hn="hostname"/> <!-- optional, will list hosts otherwise -->
  *   <stats name="stat_group"/><!-- optional, will list stat groups if host specified and stats unspecified,
  *                                 will fetch given group for all hosts if hostname not specified -->
  *   <stats name="stat_group">1</stats><!-- optional, used in conjunction with hostname, list counters for
@@ -141,7 +141,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
             } else if (stats != null && host != null) {
                 
                 String statsText = stats.getText();
-                if (statsText != null && statsText.trim().length() > 1) {
+                if (statsText != null && statsText.trim().length() > 0) {
                     // list counters
                     fetchColumnNames(response,
                             host.getAttribute(AdminConstants.A_HOSTNAME),
@@ -272,7 +272,6 @@ public class GetLoggerStats extends AdminDocumentHandler {
                 public boolean hasNext() {
                     try {
                         line = inbr.readLine();
-System.out.println("hasNext: " + line);
                     }
                     catch (IOException e) {
                         ZimbraLog.soap.error("GetLoggerStats IOE", e);
