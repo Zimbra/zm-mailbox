@@ -297,10 +297,14 @@ extends Assert {
      */
     public static List<Integer> search(Mailbox mbox, String query, byte type)
     throws Exception {
-        ZimbraLog.test.debug("Running search: '" + query + "', type=" + type);
-        byte[] types = new byte[1];
-        types[0] = type;
-
+        return search(mbox, query, new byte[] { type });
+    }
+    
+    /**
+     * Searches a mailbox and returns the id's of all matching items.
+     */
+    public static List<Integer> search(Mailbox mbox, String query, byte[] types)
+    throws Exception {
         List<Integer> ids = new ArrayList<Integer>();
         ZimbraQueryResults r = mbox.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
@@ -309,8 +313,8 @@ extends Assert {
         }
         r.doneWithSearchResults();
         return ids;
-
     }
+    
     
     public static List<ZMessage> search(ZMailbox mbox, String query)
     throws Exception {
