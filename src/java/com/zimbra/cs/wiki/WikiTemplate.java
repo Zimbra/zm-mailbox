@@ -632,8 +632,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				String bodyTemplate, 
 				String itemTemplate) throws ServiceException, IOException {
 			StringBuffer buf = new StringBuffer();
+			WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
+			// include the latest version in the history
+			buf.append(t.toString(ctxt.wctxt, ctxt.item, ctxt.item));
 			for (MailItem item : list) {
-				WikiTemplate t = WikiTemplate.findTemplate(ctxt, itemTemplate);
 				buf.append(t.toString(ctxt.wctxt, item, ctxt.item));
 			}
 			Context newCtxt = new Context(ctxt);

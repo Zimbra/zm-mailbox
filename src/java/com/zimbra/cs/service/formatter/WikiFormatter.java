@@ -92,7 +92,8 @@ public class WikiFormatter extends Formatter {
     private void handleWikiHistory(Context context, WikiItem wiki) throws IOException, ServiceException {
     	WikiPage.WikiContext ctxt = createWikiContext(context);
     	String template = null;
-       	WikiTemplate wt = getTemplate(context, wiki.getMailbox().getAccountId(), wiki.getFolderId(), VERSION);
+		WikiPage chromePage = WikiPage.findTemplate(ctxt, wiki.getMailbox().getAccountId(), VERSION);
+       	WikiTemplate wt = chromePage.getTemplate(ctxt);
        	template = wt.getComposedPage(ctxt, wiki, VERSION_CHROME);
     	String url = UserServlet.getRestUrl(wiki);
 		printWikiPage(context, template, wiki.getName(), url, neuterHtmlTags(wiki.getAccount()));
