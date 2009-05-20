@@ -86,13 +86,8 @@ public class Message extends MailItem {
         private int mComponentNo;
         private Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
 
-        CalendarItemInfo(int calItemId, int componentNo) {
+        CalendarItemInfo(int calItemId, int componentNo, Invite inv) {
             mCalendarItemId = calItemId;
-            mComponentNo = componentNo;
-        }
-
-        CalendarItemInfo(int componentNo, Invite inv) {
-            mCalendarItemId = CALITEM_ID_NONE;
             mComponentNo = componentNo;
             mInvite = inv;
         }
@@ -116,7 +111,7 @@ public class Message extends MailItem {
         }
 
         static CalendarItemInfo decodeMetadata(Metadata meta, Mailbox mbox) throws ServiceException {
-            int calItemId = (int) meta.getLong(FN_CALITEMID);
+            int calItemId = (int) meta.getLong(FN_CALITEMID, CalendarItemInfo.CALITEM_ID_NONE);
             int componentNo = (int) meta.getLong(FN_COMPNO);
             Invite inv = null;
             Metadata metaInv = meta.getMap(FN_INV, true);
@@ -124,10 +119,8 @@ public class Message extends MailItem {
                 int mboxId = mbox.getId();
                 ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(mbox.getAccount());
                 inv = Invite.decodeMetadata(mboxId, metaInv, null, accountTZ);
-                return new CalendarItemInfo(componentNo, inv);
-            } else {
-                return new CalendarItemInfo(calItemId, componentNo);
             }
+            return new CalendarItemInfo(calItemId, componentNo, inv);
         }
     }
 
@@ -575,7 +568,7 @@ public class Message extends MailItem {
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
             if (!allowOrganizerAlarm) {
                 cur.clearAlarms();
-                if (cur.isEvent() && isOrganizerMethod) {  // only for VEVENTs
+                if (cur.isEvent() && isOrganizerMethod && !cur.isCancel()) {  // only for non-cancel VEVENTs
                     int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
                             Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
                     int hoursBefore = 0;
@@ -621,10 +614,6 @@ public class Message extends MailItem {
                                     int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
                                     calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur, null);
                                     calItemIsNew = true;
-                                } else {
-                                    CalendarItemInfo info = new CalendarItemInfo(cur.getComponentNum(), cur);
-                                    mCalendarItemInfos.add(info);
-                                    updatedMetadata = true;
                                 }
                             } else {
                                 sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
@@ -677,26 +666,16 @@ public class Message extends MailItem {
                         }
                     }
 
-                    if (intendedForMe && !isOrganizerMethod && folderId != Mailbox.ID_FOLDER_SENT) {
-                        // If it's a reply, add the invite to metadata.  This way ZWC can display info
-                        // if top-level was text/calendar.
-                        CalendarItemInfo info = new CalendarItemInfo(cur.getComponentNum(), cur);
-                        mCalendarItemInfos.add(info);
-                        updatedMetadata = true;
-                    } else if (calItem != null) {
-                        // Just save a reference to the calendar item in metadata.
-                        CalendarItemInfo info = new CalendarItemInfo(calItem.getId(), cur.getComponentNum());
-                        mCalendarItemInfos.add(info);
-                        updatedMetadata = true;
-                        
-                        if (calItemIsNew || modifiedCalItem) {
-                            mMailbox.queueForIndexing(calItem, !calItemIsNew, null);
-                        }
-                        
-                    }
+                    int calItemId = calItem != null ? calItem.getId() : CalendarItemInfo.CALITEM_ID_NONE;
+                    CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur);
+                    mCalendarItemInfos.add(info);
+                    updatedMetadata = true;
+                    if (calItem != null && (calItemIsNew || modifiedCalItem))
+                        mMailbox.queueForIndexing(calItem, !calItemIsNew, null);
                 } else {
                     // Not intended for me.  Just save the invite detail in metadata.
-                    CalendarItemInfo info = new CalendarItemInfo(cur.getComponentNum(), cur);
+                    CalendarItemInfo info = new CalendarItemInfo(
+                            CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur);
                     mCalendarItemInfos.add(info);
                     updatedMetadata = true;
                 }
