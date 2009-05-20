@@ -15,6 +15,7 @@ SECTION amavis
 	LOCAL ldap_url
 	LOCAL zimbra_ldap_userdn
 	LOCAL zimbra_ldap_password
+	VAR zimbraMtaBlockedExtension
 	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
 	VAR zimbraSpamTagPercent
