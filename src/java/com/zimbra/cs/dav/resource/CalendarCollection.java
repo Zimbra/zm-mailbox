@@ -308,11 +308,16 @@ public class CalendarCollection extends Collection {
                 throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
             InputStream is = ctxt.getUpload().getInputStream();
-			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(is, "UTF-8"));
-			List<Invite> invites = Invite.createFromCalendar(account,
-					findSummary(vcalendar), 
-					vcalendar, 
-					true);
+			List<Invite> invites;
+			try {
+				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(is, "UTF-8"));
+				invites = Invite.createFromCalendar(account,
+						findSummary(vcalendar), 
+						vcalendar, 
+						true);
+			} catch (ServiceException se) {
+				throw new DavException("cannot parse ics", HttpServletResponse.SC_BAD_REQUEST, se);
+			}
 
 			String uid = findEventUid(invites);
 			if (!uid.equals(name)) {
