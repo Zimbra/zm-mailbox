@@ -305,7 +305,17 @@ public class ContactAutoComplete {
                 matches(query, lastName) ||
                 matches(query, fullName) ||
                 matches(query, nickname);
-        				
+        	
+        	// matching algorithm is slightly different between matching
+        	// personal Contacts in the addressbook vs GAL entry if there is
+        	// multiple email address associated to the entry.  multiple
+        	// email address in Contact typically means alternative email
+        	// address, such as work email, home email, etc.  however in GAL,
+        	// multiple email address indicates an alias to the same contact
+        	// object.  for Contacts we want to show all the email addresses
+        	// available for the Contact entry.  but for GAL we need to show
+        	// just one email address.
+        		
         	for (String emailKey : mEmailKeys) {
         		String email = (String)attrs.get(emailKey);
         		if (email != null && (nameMatches || matches(query, email))) {
@@ -325,6 +335,11 @@ public class ContactAutoComplete {
         			entry.mFolderId = folderId;
         			result.addEntry(entry);
         			ZimbraLog.gal.debug("adding "+entry.getEmail());
+        			if (folderId == FOLDER_ID_GAL) {
+        				// we've matched the first email address for this 
+        				// GAL contact.  move onto the next contact.
+        				return;
+        			}
         		}
         	}
         } else {
