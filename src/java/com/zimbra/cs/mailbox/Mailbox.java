@@ -3139,21 +3139,23 @@ public class Mailbox {
                 if (trimCalItemsList)
                     iter.remove();  // help keep memory consumption low
                 Invite[] invites = calItem.getInvites();
-                if (invites != null) {
-                    for (Invite inv : invites) {
-                        ZComponent comp = null;
-                        try {
-                            comp = inv.newToVComponent(useOutlookCompatMode, allowPrivateAccess);
-                        } catch (ServiceException e) {
-                            if (ignoreErrors) {
-                                ZimbraLog.calendar.warn(
-                                        "Error retrieving iCalendar data for item " +
-                                        inv.getMailItemId() + ": " + e.getMessage(), e);
-                            } else
-                                throw e;
-                        }
-                        if (comp != null)
+                if (invites != null && invites.length > 0) {
+                    boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+                    ZComponent[] comps = null;
+                    try {
+                        comps = Invite.toVComponents(invites, allowPrivateAccess,
+                                                     useOutlookCompatMode, appleICalExdateHack);
+                    } catch (ServiceException e) {
+                        if (ignoreErrors) {
+                            ZimbraLog.calendar.warn("Error retrieving iCalendar data for item " +
+                                                    calItem.getId() + ": " + e.getMessage(), e);
+                        } else
+                            throw e;
+                    }
+                    if (comps != null) {
+                        for (ZComponent comp : comps) {
                             comp.toICalendar(writer, needAppleICalHacks);
+                        }
                     }
                 }
             }

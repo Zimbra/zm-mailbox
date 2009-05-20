@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
@@ -48,6 +49,8 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
@@ -390,20 +393,19 @@ public class CalDavDataImport extends MailItemImport {
             buf.append(wr.toCharArray());
             wr.close();
         }
-        for (Invite inv : calItem.getInvites()) {
+        boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+        ZComponent[] vcomps = Invite.toVComponents(calItem.getInvites(), true, false, appleICalExdateHack);
+        if (vcomps != null) {
             CharArrayWriter wr = new CharArrayWriter();
-            ZCalendar.ZComponent vcomp = inv.newToVComponent(false, true);
-            ZCalendar.ZProperty organizer = vcomp.getProperty(ZCalendar.ICalTok.ORGANIZER);
-            if (organizer != null)
-            	organizer.setValue(getUsername());
-                //organizer.setValue("mailto:" + getUsername());
-            // XXX
-            //vcomp.addProperty(new ZCalendar.ZProperty(ZCalendar.ICalTok.ATTENDEE, "urn:resource:resource01"));
-            vcomp.toICalendar(wr, true);
+            for (ZComponent vcomp : vcomps) {
+                ZProperty organizer = vcomp.getProperty(ZCalendar.ICalTok.ORGANIZER);
+                if (organizer != null)
+                    organizer.setValue(getUsername());
+                vcomp.toICalendar(wr, true);
+            }
             wr.flush();
             buf.append(wr.toCharArray());
             wr.close();
-            
         }
         buf.append("END:VCALENDAR\r\n");
     	String etag = dsItem.md.get(METADATA_KEY_ETAG, null);

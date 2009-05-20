@@ -25,6 +25,7 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -46,6 +47,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
@@ -68,30 +70,76 @@ public interface CalendarObject {
     public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;
 
     public static class Vcalendar {
-    	public static String toString(Account acct, Invite inv, Filter filter, boolean allowPrivateAccess) throws IOException {
+
+    	private static Invite getFixedUpCopy(Invite inv, Account acct) throws ServiceException {
+            ZAttendee attendee = inv.getMatchingAttendee(acct);
+            if (attendee != null && attendee.hasRsvp() && attendee.getRsvp() && IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(attendee.getPartStat())) {
+                Invite copy = inv.newCopy();
+                ZCalendar.ZProperty prop = new ZCalendar.ZProperty("X-APPLE-NEEDS-REPLY");
+                prop.setValue("TRUE");
+                copy.addXProp(prop);
+                return copy;
+            } else {
+                return inv;
+            }
+    	}
+
+        public static String toString(Account acct, Invite inv, Filter filter, boolean allowPrivateAccess) throws IOException {
             CharArrayWriter wr = null;
             try {
                 wr = new CharArrayWriter();
-                ZAttendee attendee = inv.getMatchingAttendee(acct);
-                if (attendee != null && attendee.hasRsvp() && attendee.getRsvp() && IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(attendee.getPartStat())) {
-                	ZCalendar.ZProperty prop = new ZCalendar.ZProperty("X-APPLE-NEEDS-REPLY");
-                	prop.setValue("TRUE");
-                	inv.addXProp(prop);
-                }
-                ZCalendar.ZComponent vcomp = inv.newToVComponent(false, allowPrivateAccess);
-                if (filter != null && !filter.match(vcomp))
-                    return "";
-                vcomp.toICalendar(wr, true);
+                Invite fixedInv = getFixedUpCopy(inv, acct);
+                ZComponent comp = fixedInv.newToVComponent(false, allowPrivateAccess);
+                if (filter == null || filter.match(comp))
+                    comp.toICalendar(wr, true);
                 wr.flush();
                 return wr.toString();
             } catch (ServiceException se) {
-                ZimbraLog.dav.warn("cannot convert to ICalendar", se);
+                ZimbraLog.dav.warn("cannot convert to iCalendar", se);
                 return "";
             } finally {
-                wr.close();
+                if (wr != null)
+                    wr.close();
             }
-    	}
+        }
+
+        public static String toString(Account acct, Invite[] invites, Filter filter, boolean allowPrivateAccess) throws IOException {
+            CharArrayWriter wr = null;
+            try {
+                wr = new CharArrayWriter();
+                if (!LC.calendar_apple_ical_compatible_canceled_instances.booleanValue()) {
+                    for (Invite inv : invites) {
+                        Invite fixedInv = getFixedUpCopy(inv, acct);
+                        ZComponent comp = fixedInv.newToVComponent(false, allowPrivateAccess);
+                        if (filter == null || filter.match(comp))
+                            comp.toICalendar(wr, true);
+                    }
+                } else {
+                    Invite[] fixedInvs = new Invite[invites.length];
+                    for (int i = 0; i < invites.length; ++i) {
+                        fixedInvs[i] = getFixedUpCopy(invites[i], acct);
+                    }
+                    boolean appleICalExdateHack = LC.calendar_apple_ical_compatible_canceled_instances.booleanValue();
+                    ZComponent[] vcomps = Invite.toVComponents(fixedInvs, allowPrivateAccess, false, appleICalExdateHack);
+                    if (vcomps != null) {
+                        for (ZComponent vcomp : vcomps) {
+                            if (filter == null || filter.match(vcomp))
+                                vcomp.toICalendar(wr, true);
+                        }
+                    }
+                }
+                wr.flush();
+                return wr.toString();
+            } catch (ServiceException se) {
+                ZimbraLog.dav.warn("cannot convert to iCalendar", se);
+                return "";
+            } finally {
+                if (wr != null)
+                    wr.close();
+            }
+        }
     }
+
     public static class CalendarPath {
         public static String generate(DavContext ctxt, String itemPath, String uid, int extra) {
         	if (ctxt != null) {
@@ -312,8 +360,7 @@ public interface CalendarObject {
             } catch (ServiceException se) {
                 ZimbraLog.dav.warn("cannot determine private access status", se);
             }
-            for (Invite inv : mInvites)
-                buf.append(Vcalendar.toString(acct, inv, filter, allowPrivateAccess));
+            buf.append(Vcalendar.toString(acct, mInvites, filter, allowPrivateAccess));
             buf.append("END:VCALENDAR\r\n");
             return buf.toString();
         }
