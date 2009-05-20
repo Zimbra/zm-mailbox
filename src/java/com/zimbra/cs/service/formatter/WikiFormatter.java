@@ -79,7 +79,7 @@ public class WikiFormatter extends Formatter {
             if (template == null) {
                 WikiTemplate wt = getTemplate(context, wiki);
                 template = wt.getComposedPage(ctxt, wiki, CHROME);
-                sCache.addPage(key, template);
+                //sCache.addPage(key, template);
             }
         } else {
             WikiTemplate wt = getTemplate(context, wiki);
