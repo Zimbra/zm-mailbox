@@ -819,9 +819,9 @@ public class DbSearch {
         if (!ListUtil.isEmpty(c)) {
             for (StringRange r: c) { 
                 if (r.lowest != null) 
-                    stmt.setString(param++, r.lowest);
+                    stmt.setString(param++, r.lowest.replace("\\\"", "\""));
                 if (r.highest != null)
-                    stmt.setString(param++, r.highest);
+                    stmt.setString(param++, r.highest.replace("\\\"", "\""));
             }
         }
         return param;

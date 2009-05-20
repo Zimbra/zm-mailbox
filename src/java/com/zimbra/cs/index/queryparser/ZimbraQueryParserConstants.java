@@ -4,88 +4,86 @@ package com.zimbra.cs.index.queryparser;
 public interface ZimbraQueryParserConstants {
 
   int EOF = 0;
-  int AND_TOKEN = 5;
-  int OR_TOKEN = 6;
-  int NOT_TOKEN = 7;
-  int LPAREN = 8;
-  int RPAREN = 9;
-  int PLUS = 10;
-  int MINUS = 11;
-  int TEXT_TOK = 12;
-  int INITIAL_TERM_CHAR = 13;
-  int SUBSEQUENT_TERM_CHAR = 14;
-  int CONTENT = 15;
-  int SUBJECT = 16;
-  int MSGID = 17;
-  int ENVTO = 18;
-  int ENVFROM = 19;
-  int CONTACT = 20;
-  int TO = 21;
-  int FROM = 22;
-  int CC = 23;
-  int TOFROM = 24;
-  int TOCC = 25;
-  int FROMCC = 26;
-  int TOFROMCC = 27;
-  int IN = 28;
-  int UNDER = 29;
-  int INID = 30;
-  int UNDERID = 31;
-  int HAS = 32;
-  int FILENAME = 33;
-  int TYPE = 34;
-  int ATTACHMENT = 35;
-  int IS = 36;
-  int DATE = 37;
-  int DAY = 38;
-  int WEEK = 39;
-  int MONTH = 40;
-  int YEAR = 41;
-  int AFTER = 42;
-  int BEFORE = 43;
-  int SIZE = 44;
-  int BIGGER = 45;
-  int BIGGER_STR = 46;
-  int LARGER = 47;
-  int SMALLER = 48;
-  int TAG = 49;
-  int MESSAGE = 50;
-  int MY = 51;
-  int MODSEQ = 52;
-  int CONV = 53;
-  int CONV_COUNT = 54;
-  int CONV_MINM = 55;
-  int CONV_MAXM = 56;
-  int CONV_START = 57;
-  int CONV_END = 58;
-  int APPT_START = 59;
-  int APPT_END = 60;
-  int AUTHOR = 61;
-  int TITLE = 62;
-  int KEYWORDS = 63;
-  int COMPANY = 64;
-  int METADATA = 65;
-  int ITEM = 66;
-  int SORTBY = 67;
-  int SORT = 68;
-  int FIELD = 69;
-  int FIELD1 = 70;
-  int FIELD2 = 71;
-  int ERROR_BRACES_WITH_NEWLINE = 73;
-  int BRACES_TOK = 74;
-  int ERROR_QUOTE_WITH_NEWLINE = 76;
-  int QUOTED_TOK = 77;
+  int AND_TOKEN = 4;
+  int OR_TOKEN = 5;
+  int NOT_TOKEN = 6;
+  int LPAREN = 7;
+  int RPAREN = 8;
+  int PLUS = 9;
+  int MINUS = 10;
+  int ESCAPED_QUOTE = 11;
+  int QUOTED_TOK = 12;
+  int TEXT_TOK = 13;
+  int INITIAL_TERM_CHAR = 14;
+  int SUBSEQUENT_TERM_CHAR = 15;
+  int CONTENT = 16;
+  int SUBJECT = 17;
+  int MSGID = 18;
+  int ENVTO = 19;
+  int ENVFROM = 20;
+  int CONTACT = 21;
+  int TO = 22;
+  int FROM = 23;
+  int CC = 24;
+  int TOFROM = 25;
+  int TOCC = 26;
+  int FROMCC = 27;
+  int TOFROMCC = 28;
+  int IN = 29;
+  int UNDER = 30;
+  int INID = 31;
+  int UNDERID = 32;
+  int HAS = 33;
+  int FILENAME = 34;
+  int TYPE = 35;
+  int ATTACHMENT = 36;
+  int IS = 37;
+  int DATE = 38;
+  int DAY = 39;
+  int WEEK = 40;
+  int MONTH = 41;
+  int YEAR = 42;
+  int AFTER = 43;
+  int BEFORE = 44;
+  int SIZE = 45;
+  int BIGGER = 46;
+  int BIGGER_STR = 47;
+  int LARGER = 48;
+  int SMALLER = 49;
+  int TAG = 50;
+  int MESSAGE = 51;
+  int MY = 52;
+  int MODSEQ = 53;
+  int CONV = 54;
+  int CONV_COUNT = 55;
+  int CONV_MINM = 56;
+  int CONV_MAXM = 57;
+  int CONV_START = 58;
+  int CONV_END = 59;
+  int APPT_START = 60;
+  int APPT_END = 61;
+  int AUTHOR = 62;
+  int TITLE = 63;
+  int KEYWORDS = 64;
+  int COMPANY = 65;
+  int METADATA = 66;
+  int ITEM = 67;
+  int SORTBY = 68;
+  int SORT = 69;
+  int FIELD = 70;
+  int FIELD1 = 71;
+  int FIELD2 = 72;
+  int ERROR_BRACES_WITH_NEWLINE = 74;
+  int BRACES_TOK = 75;
 
   int DEFAULT = 0;
   int BRACES_STATE = 1;
-  int QUOTED_STATE = 2;
 
   String[] tokenImage = {
     "<EOF>",
     "\" \"",
     "\"\\t\"",
     "\"{\"",
-    "\"\\\"\"",
     "<AND_TOKEN>",
     "<OR_TOKEN>",
     "<NOT_TOKEN>",
@@ -93,6 +91,8 @@ public interface ZimbraQueryParserConstants {
     "\")\"",
     "\"+\"",
     "\"-\"",
+    "\"\\\\\\\"\"",
+    "<QUOTED_TOK>",
     "<TEXT_TOK>",
     "<INITIAL_TERM_CHAR>",
     "<SUBSEQUENT_TERM_CHAR>",
@@ -156,9 +156,6 @@ public interface ZimbraQueryParserConstants {
     "\"}\"",
     "<ERROR_BRACES_WITH_NEWLINE>",
     "<BRACES_TOK>",
-    "\"\\\"\"",
-    "<ERROR_QUOTE_WITH_NEWLINE>",
-    "<QUOTED_TOK>",
     "\"\\r\"",
   };
 

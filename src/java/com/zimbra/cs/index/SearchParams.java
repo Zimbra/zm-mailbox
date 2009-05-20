@@ -574,9 +574,10 @@ public final class SearchParams implements Cloneable {
     }
     
     private static final String quote(String s1, String s2) {
-//        return "\""+s1+s2+"\"";
-        // HACK to work-around query parser not accepting escaped "'s
-        return "\"" + (s1+s2).replaceAll("\"", "[") + "\"";
+        // escape quotation marks and quote the whole string
+        String in = s1+s2;
+        in = in.replace("\"", "\\\"");
+        return "\"" + in + "\"";
     }
     
     private static int parseLimit(Element request) throws ServiceException {

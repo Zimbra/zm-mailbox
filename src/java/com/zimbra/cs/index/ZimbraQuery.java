@@ -1933,7 +1933,7 @@ public final class ZimbraQuery {
         }
     }
     
-    private static int lookupQueryTypeFromString(String str) throws ServiceException {
+    public static int lookupQueryTypeFromString(String str) throws ServiceException {
         Integer toRet = sTokenImageMap.get(str);
         if (toRet == null)
             throw MailServiceException.QUERY_PARSE_ERROR(str, null, str, -1, "UNKNOWN_QUERY_TYPE");

@@ -371,7 +371,7 @@ PARSER_END(ZimbraQueryParser)
 <DEFAULT>SKIP:
 {
     "{" { SwitchTo(BRACES_STATE); }
-    | "\"" { SwitchTo(QUOTED_STATE); }
+//    | "\"" { SwitchTo(QUOTED_STATE); }
 }
 
 <DEFAULT>TOKEN :
@@ -391,8 +391,10 @@ PARSER_END(ZimbraQueryParser)
 {
     <PLUS: "+">
  |  <MINUS: "-">
+ |  <#ESCAPED_QUOTE: "\\\"">
+ |  <QUOTED_TOK: "\"" (<ESCAPED_QUOTE> | ~["\n", "\""])* "\""> { if (matchedToken.image.length() > 0) matchedToken.image = matchedToken.image.substring(1, matchedToken.image.length()-1); }
  |  <TEXT_TOK:  <INITIAL_TERM_CHAR> (<SUBSEQUENT_TERM_CHAR>)*>
- |  <#INITIAL_TERM_CHAR: ~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"]>
+ |  <#INITIAL_TERM_CHAR: <ESCAPED_QUOTE> | ~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"]>
  |  <#SUBSEQUENT_TERM_CHAR:  <INITIAL_TERM_CHAR> | "-" | "+" | "@" >
 }
 
@@ -472,16 +474,16 @@ PARSER_END(ZimbraQueryParser)
 }
 
 
-<QUOTED_STATE>SKIP:
-{
-    "\""  { SwitchTo(DEFAULT); } 
-}
+//<QUOTED_STATE>SKIP:
+//{
+//    "\""  { SwitchTo(DEFAULT); } 
+//}
 
-<QUOTED_STATE>TOKEN :
-{
-    <ERROR_QUOTE_WITH_NEWLINE: (["\n", "\r"])>  { SwitchTo(DEFAULT); }
-    |    <QUOTED_TOK: (~["\"","\n","\r"])+>
-}
+//<QUOTED_STATE>TOKEN :
+//{
+//    <ERROR_QUOTE_WITH_NEWLINE: (["\n", "\r"])>  { SwitchTo(DEFAULT); }
+//    |    <QUOTED_TOK: (~["\"","\n","\r"])+>
+//}
 
 //////////////////////////////////////////////////////////////////////
 ///
