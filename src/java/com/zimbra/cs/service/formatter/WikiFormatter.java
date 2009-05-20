@@ -238,6 +238,9 @@ public class WikiFormatter extends Formatter {
     @Override
 	public void saveCallback(Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
+    	if (filename == null)
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "filename cannot be empty");
+    		
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
         InputStream is = context.getRequestInputStream();
         Mailbox mbox = folder.getMailbox();
