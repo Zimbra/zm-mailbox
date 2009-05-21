@@ -476,6 +476,7 @@ public class LC {
     // zmailbox
     public static final KnownKey zmailbox_message_cachesize;
     
+    public static final KnownKey freebusy_queue_directory;
     public static final KnownKey contact_ranking_enabled;
     
     public static final KnownKey smtp_host_retry_millis;
@@ -1393,6 +1394,8 @@ public class LC {
         
         zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
               
+        freebusy_queue_directory = new KnownKey("freebusy_queue_directory");
+        freebusy_queue_directory.setDefault("${zimbra_home}" + FS + "fbqueue" + FS);
         contact_ranking_enabled = new KnownKey("contact_ranking_enabled", "true", "Enable contact ranking table");
         
         smtp_host_retry_millis = new KnownKey("smtp_host_retry_millis", "60000");
