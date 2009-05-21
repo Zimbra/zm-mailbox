@@ -444,6 +444,8 @@ public class LC {
     // zmailbox
     public static final KnownKey zmailbox_message_cachesize;
     
+    public static final KnownKey freebusy_queue_directory;
+    
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1256,6 +1258,8 @@ public class LC {
         
         zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
               
+        freebusy_queue_directory = new KnownKey("freebusy_queue_directory");
+        freebusy_queue_directory.setDefault("${zimbra_home}" + FS + "fbqueue" + FS);
         
         
 		// NOTE: When adding a new KnownKey, you do not need to call
