@@ -1558,6 +1558,7 @@ public abstract class Provisioning {
     public static final String A_zimbraFreebusyExchangeCachedIntervalStart = "zimbraFreebusyExchangeCachedIntervalStart";
     public static final String A_zimbraFreebusyExchangeCachedInterval      = "zimbraFreebusyExchangeCachedInterval";
     public static final String A_zimbraFreebusyLocalMailboxNotActive       = "zimbraFreebusyLocalMailboxNotActive";
+    public static final String A_zimbraFreebusyPropagationRetryInterval    = "zimbraFreebusyPropagationRetryInterval";
     
     // Lawful intercept
     public static final String A_zimbraInterceptAddress             = "zimbraInterceptAddress";

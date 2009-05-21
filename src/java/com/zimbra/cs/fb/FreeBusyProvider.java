@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
@@ -192,8 +193,6 @@ public abstract class FreeBusyProvider {
 	private static HashSet<FreeBusyProvider> sPROVIDERS;
 	private static HashMap<String,FreeBusySyncQueue> sPUSHQUEUES;
 	
-	public static final String QUEUE_DIR = "/opt/zimbra/fbqueue";
-	
 	static {
 		sPROVIDERS = new HashSet<FreeBusyProvider>();
 		sPUSHQUEUES = new HashMap<String,FreeBusySyncQueue>();
@@ -204,7 +203,7 @@ public abstract class FreeBusyProvider {
 		if (!registerForMailboxChanges()) {
 			return "(none)";
 		}
-		return QUEUE_DIR + "/" + "queue-" + getName();
+		return LC.freebusy_queue_directory.value() + "queue-" + getName();
 	}
 	
 	@SuppressWarnings("serial")
@@ -235,8 +234,13 @@ public abstract class FreeBusyProvider {
 							// wait for some interval when we detect a failure
 							// such that we don't spin loop and keep hammering a down server.
 							long now = System.currentTimeMillis();
-							if (now < mLastFailed + RETRY_INTERVAL) {
-								wait(RETRY_INTERVAL);
+							long retryInterval = DEFAULT_RETRY_INTERVAL;
+							try {
+								retryInterval = Provisioning.getInstance().getLocalServer().getTimeInterval(Provisioning.A_zimbraAccountCalendarUserType, DEFAULT_RETRY_INTERVAL);
+							} catch (Exception e) {
+							}
+							if (now < mLastFailed + retryInterval) {
+								wait(retryInterval);
 								continue;
 							}
 							acctId = getFirst();
@@ -272,7 +276,7 @@ public abstract class FreeBusyProvider {
 		
 		private boolean mShutdown;
 		private long mLastFailed;
-		private static final int RETRY_INTERVAL = 10 * 1000; // 10 sec
+		private static final int DEFAULT_RETRY_INTERVAL = 60 * 1000; // 1m
 		private static final int MAX_FILE_SIZE = 10240;  // for sanity check
 		private String mFilename;
 		private FreeBusyProvider mProvider;
