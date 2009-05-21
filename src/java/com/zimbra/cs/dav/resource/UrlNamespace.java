@@ -455,13 +455,13 @@ public class UrlNamespace {
     	if (msg.isInvite() && msg.hasCalendarItemInfos()) {
     		Message.CalendarItemInfo calItemInfo = msg.getCalendarItemInfo(0);
     		try {
-    			Invite invite = null;
-    			if (calItemInfo.getCalendarItemId() != Message.CalendarItemInfo.CALITEM_ID_NONE) {
+    			Invite invite = calItemInfo.getInvite();
+    			if (invite == null && calItemInfo.getCalendarItemId() != Message.CalendarItemInfo.CALITEM_ID_NONE) {
+    			    // Pre-6.0 data
         			CalendarItem item = mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
-        			int compNum = calItemInfo.getComponentNo();
-        			invite = item.getInvite(msg.getId(), compNum);
-    			} else {
-    				invite = calItemInfo.getInvite();
+        			invite = calItemInfo.getInvite();
+                    int compNum = calItemInfo.getComponentNo();
+                    invite = item.getInvite(msg.getId(), compNum);        			    
     			}
     			if (invite != null) {
     				String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), invite.getUid(), msg.getId());
