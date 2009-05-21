@@ -359,8 +359,7 @@ public class ZimletUtil {
 
 	private static Map<String,Object> descToMap(ZimletDescription zd) throws ZimletException {
 		Map<String,Object> attrs = new HashMap<String,Object>();
-		if (zd.getServerExtensionHasKeyword())
-			attrs.put(Provisioning.A_zimbraZimletKeyword,     zd.getServerExtensionKeyword());
+		attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getServerExtensionKeyword());
 		attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion().toString());
 		attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
 		attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
@@ -446,14 +445,14 @@ public class ZimletUtil {
 		ZimletDescription zd = zf.getZimletDescription();
 		Zimlet z;
 		Action action = Action.INSTALL;
+		String priority = null;
+		String configString = null;
+
 		
 		// check if the zimlet already exists in LDAP.
 		z = prov.getZimlet(zimletName);
 		
-		if (z == null) {
-			// zimlet was not found in LDAP.
-			z = ldapDeploy(zf);
-		} else {
+		if (z != null) {
 			// see if this zimlet needs an upgrade.
 			if (!z.isEnabled()) {
 				// leave it alone.
@@ -470,21 +469,13 @@ public class ZimletUtil {
 			} else {
 				action = Action.UPGRADE;
 			}
-		}
-		
-		String priority = null;
-		String configString = null;
-
-		// upgrade
-		if (action == Action.UPGRADE) {
-			ZimbraLog.zimlet.info("Upgrading Zimlet " + zimletName + " to " +zd.getVersion().toString());
 			// save priority and config
 			priority = z.getPriority();
 			configString = z.getAttr(Provisioning.A_zimbraZimletHandlerConfig);
-			
-			prov.deleteZimlet(z.getName());
-			z = ldapDeploy(zf);
 		}
+		
+		// update LDAP
+		z = ldapDeploy(zf);
 
 		// install files
 		installZimlet(zf);
@@ -493,10 +484,11 @@ public class ZimletUtil {
 			return;
 		}
 		
+		// upgrade
+		ZimbraLog.zimlet.info("Upgrading Zimlet " + zimletName + " to " +zd.getVersion().toString());
+
 		// set the priority
-		if (priority != null) {
-			setPriority(z, priority);
-		} else {
+		if (priority == null) {
 			setPriority(zimletName, P_MAX);
 		}
 		
@@ -588,16 +580,18 @@ public class ZimletUtil {
 		if(disableZimletUndeploy != null && disableZimletUndeploy.equalsIgnoreCase("true"))
 			attrs.put(Provisioning.A_zimbraAdminExtDisableUIUndeploy, Provisioning.TRUE);
 		
+		if (zd.isExtension())
+			attrs.put(Provisioning.A_zimbraZimletIsExtension, Provisioning.TRUE);
+		
 		ZimbraLog.zimlet.info("Deploying Zimlet " + zimletName + " in LDAP.");
 
 		// add zimlet entry to ldap
 		Provisioning prov = Provisioning.getInstance();
-		Zimlet zim = prov.createZimlet(zimletName, attrs);
-		if (zd.isExtension()) {
-			Map<String,String> attr = new HashMap<String,String>();
-			attr.put(Provisioning.A_zimbraZimletIsExtension, Provisioning.TRUE);
-			prov.modifyAttrs(zim, attr);
-		}
+		Zimlet zim = prov.getZimlet(zimletName);
+		if (zim == null)
+			zim = prov.createZimlet(zimletName, attrs);
+		else
+			prov.modifyAttrs(zim, attrs);
 		return zim;
 	}
 	
