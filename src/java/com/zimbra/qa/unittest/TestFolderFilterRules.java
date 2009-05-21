@@ -250,6 +250,7 @@ extends TestCase {
     protected void tearDown() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.saveFilterRules(mOriginalRules);
+        cleanUp();
     }
 
     private static final String FILTER_RULES = StringUtil.join("\n", new String[] {
