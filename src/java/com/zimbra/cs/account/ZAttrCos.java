@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jylee 20090521-1330 */
+    /* build: 5.0 jylee 20090521-1643 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -7909,6 +7909,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFreebusyLocalMailboxNotActive(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyLocalMailboxNotActive, "");
+        return attrs;
+    }
+
+    /**
+     * whether to use gal sync account for autocomplete
+     *
+     * @return zimbraGalSyncAccountBasedAutoCompleteEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1027)
+    public boolean isGalSyncAccountBasedAutoCompleteEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, false);
+    }
+
+    /**
+     * whether to use gal sync account for autocomplete
+     *
+     * @param zimbraGalSyncAccountBasedAutoCompleteEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1027)
+    public void setGalSyncAccountBasedAutoCompleteEnabled(boolean zimbraGalSyncAccountBasedAutoCompleteEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, zimbraGalSyncAccountBasedAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to use gal sync account for autocomplete
+     *
+     * @param zimbraGalSyncAccountBasedAutoCompleteEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1027)
+    public Map<String,Object> setGalSyncAccountBasedAutoCompleteEnabled(boolean zimbraGalSyncAccountBasedAutoCompleteEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, zimbraGalSyncAccountBasedAutoCompleteEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to use gal sync account for autocomplete
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1027)
+    public void unsetGalSyncAccountBasedAutoCompleteEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to use gal sync account for autocomplete
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1027)
+    public Map<String,Object> unsetGalSyncAccountBasedAutoCompleteEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, "");
         return attrs;
     }
 

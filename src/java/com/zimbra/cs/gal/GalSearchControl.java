@@ -66,22 +66,25 @@ public class GalSearchControl {
 		if (query.endsWith("*"))
 			query = query.substring(0, query.length()-1);
 		mParams.setQuery(query);
-		try {
-			Account galAcct = mParams.getGalSyncAccount();
-			if (galAcct != null) {
-				accountSearch(galAcct);
-			} else {
-				for (Account galAccount : getGalSyncAccounts()) {
-					accountSearch(galAccount);
+		if (mParams.getAccount().isGalSyncAccountBasedAutoCompleteEnabled()) {
+			try {
+				Account galAcct = mParams.getGalSyncAccount();
+				if (galAcct != null) {
+					accountSearch(galAcct);
+				} else {
+					for (Account galAccount : getGalSyncAccounts()) {
+						accountSearch(galAccount);
+					}
 				}
+				return;
+			} catch (GalAccountNotConfiguredException e) {
 			}
-		} catch (GalAccountNotConfiguredException e) {
-			// fallback to ldap search
-			mParams.setQuery(query+"*");
-			mParams.getResultCallback().reset(mParams);
-			mParams.setLimit(100);
-			ldapSearch(GalOp.autocomplete);
 		}
+		// fallback to ldap search
+		mParams.setQuery(query+"*");
+		mParams.getResultCallback().reset(mParams);
+		mParams.setLimit(100);
+		ldapSearch(GalOp.autocomplete);
 	}
 	
 	public void search() throws ServiceException {

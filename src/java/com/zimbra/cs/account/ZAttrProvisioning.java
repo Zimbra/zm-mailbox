@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jylee 20090521-1330 */
+    /* build: 5.0 jylee 20090521-1643 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3020,6 +3020,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=830)
     public static final String A_zimbraGalStatus = "zimbraGalStatus";
+
+    /**
+     * whether to use gal sync account for autocomplete
+     *
+     * @since ZCS 6.0.0_BETA2
+     */
+    @ZAttr(id=1027)
+    public static final String A_zimbraGalSyncAccountBasedAutoCompleteEnabled = "zimbraGalSyncAccountBasedAutoCompleteEnabled";
 
     /**
      * LDAP search base for internal GAL sync (special values:
