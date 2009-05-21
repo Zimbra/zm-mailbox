@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090519-1713 */
+    /* build: 5.0 jylee 20090521-1330 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2860,6 +2860,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=752)
     public static final String A_zimbraFreebusyLocalMailboxNotActive = "zimbraFreebusyLocalMailboxNotActive";
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public static final String A_zimbraFreebusyPropagationRetryInterval = "zimbraFreebusyPropagationRetryInterval";
 
     /**
      * zimbraId of GAL sync accounts

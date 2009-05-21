@@ -4512,5 +4512,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1026" name="zimbraFreebusyPropagationRetryInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
+  <globalConfigValue>1m</globalConfigValue>
+  <desc>
+      The interval to wait when the server encounters problems while 
+      propagating Zimbra users free/busy information to external
+      provider such as Exchange.
+  </desc>
+</attr>
 
 </attrs>

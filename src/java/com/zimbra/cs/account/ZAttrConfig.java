@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090519-1713 */
+    /* build: 5.0 jylee 20090521-1330 */
 
     /**
      * RFC2256: descriptive information
@@ -6601,6 +6601,106 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetFreebusyExchangeUserOrg(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeUserOrg, "");
+        return attrs;
+    }
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * <p>Use getFreebusyPropagationRetryIntervalAsString to access value as a string.
+     *
+     * @see #getFreebusyPropagationRetryIntervalAsString()
+     *
+     * @return zimbraFreebusyPropagationRetryInterval in millseconds, or 60000 (1m)  if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public long getFreebusyPropagationRetryInterval() {
+        return getTimeInterval(Provisioning.A_zimbraFreebusyPropagationRetryInterval, 60000L);
+    }
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * @return zimbraFreebusyPropagationRetryInterval, or "1m" if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public String getFreebusyPropagationRetryIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraFreebusyPropagationRetryInterval, "1m");
+    }
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * @param zimbraFreebusyPropagationRetryInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public void setFreebusyPropagationRetryInterval(String zimbraFreebusyPropagationRetryInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyPropagationRetryInterval, zimbraFreebusyPropagationRetryInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * @param zimbraFreebusyPropagationRetryInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public Map<String,Object> setFreebusyPropagationRetryInterval(String zimbraFreebusyPropagationRetryInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyPropagationRetryInterval, zimbraFreebusyPropagationRetryInterval);
+        return attrs;
+    }
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public void unsetFreebusyPropagationRetryInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyPropagationRetryInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The interval to wait when the server encounters problems while
+     * propagating Zimbra users free/busy information to external provider
+     * such as Exchange.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1026)
+    public Map<String,Object> unsetFreebusyPropagationRetryInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyPropagationRetryInterval, "");
         return attrs;
     }
 
