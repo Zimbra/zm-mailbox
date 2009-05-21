@@ -119,8 +119,9 @@ extends TestCase {
         // Add a message and confirm it gets filed into the correct folder
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " a \" b y z";
+        String searchSubject = NAME_PREFIX + " a b y z"; // Search barfs on unmatched quote 
         TestUtil.addMessageLmtp(subject, address, address);
-        TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
+        TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + searchSubject + "\"");
     }
     
     public void testBackslashEscape()
