@@ -276,7 +276,6 @@ public class LC {
     public static final KnownKey postfix_smtpd_tls_loglevel;
     public static final KnownKey postfix_queue_run_delay;
     public static final KnownKey postfix_transport_maps;
-    public static final KnownKey postfix_version;
     public static final KnownKey postfix_virtual_alias_domains;
     public static final KnownKey postfix_virtual_alias_maps;
     public static final KnownKey postfix_virtual_mailbox_domains;
@@ -994,9 +993,6 @@ public class LC {
 
         postfix_transport_maps  = new KnownKey("postfix_transport_maps");
         postfix_transport_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
-
-        postfix_version  = new KnownKey("postfix_version");
-        postfix_version.setDefault("2.4.7.5z");
 
         postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
         postfix_virtual_alias_domains.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vad.cf");
