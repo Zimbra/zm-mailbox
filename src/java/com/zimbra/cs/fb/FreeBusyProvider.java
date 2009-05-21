@@ -236,7 +236,7 @@ public abstract class FreeBusyProvider {
 							long now = System.currentTimeMillis();
 							long retryInterval = DEFAULT_RETRY_INTERVAL;
 							try {
-								retryInterval = Provisioning.getInstance().getLocalServer().getTimeInterval(Provisioning.A_zimbraAccountCalendarUserType, DEFAULT_RETRY_INTERVAL);
+								retryInterval = Provisioning.getInstance().getLocalServer().getTimeInterval(Provisioning.A_zimbraFreebusyPropagationRetryInterval, DEFAULT_RETRY_INTERVAL);
 							} catch (Exception e) {
 							}
 							if (now < mLastFailed + retryInterval) {
