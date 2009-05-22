@@ -410,6 +410,7 @@ public class LC {
     public static final KnownKey yauth_baseuri;
     
     public static final KnownKey purge_initial_sleep_time;
+    public static final KnownKey conversation_max_age_ms;
     
     public static final KnownKey httpclient_connmgr_max_host_connections;
     public static final KnownKey httpclient_connmgr_max_total_connections;
@@ -1273,6 +1274,8 @@ public class LC {
         purge_initial_sleep_time = new KnownKey(
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
             "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
+        
+        conversation_max_age_ms = new KnownKey("conversation_max_age_ms", Long.toString(31 * Constants.MILLIS_PER_DAY));
         
         httpclient_connmgr_max_host_connections = new KnownKey(
                 "httpclient_connmgr_max_host_connections", 
