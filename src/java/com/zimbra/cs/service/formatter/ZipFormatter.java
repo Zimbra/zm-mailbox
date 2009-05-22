@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -47,10 +46,7 @@ import com.zimbra.common.util.zip.ZipEntry;
 import com.zimbra.common.util.zip.ZipOutputStream;
 import com.zimbra.common.util.zip.ZipShort;
 
-public class ZipFormatter extends Formatter {
-    
-    private Pattern ILLEGAL_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
-
+public class ZipFormatter extends TarFormatter {
     @Override
     public String getType() {
         return "zip";
@@ -64,11 +60,6 @@ public class ZipFormatter extends Formatter {
     @Override
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_MESSAGES + ',' + MailboxIndex.SEARCH_FOR_CONTACTS;
-    }
-
-    @Override
-    public boolean canBeBlocked() {
-        return true;
     }
 
     @Override
@@ -115,10 +106,17 @@ public class ZipFormatter extends Formatter {
 
             while (iterator.hasNext()) {
                 MailItem item = iterator.next();
+                Folder folder = item.getMailbox().getFolderById(context.opContext,
+                    item.getFolderId());
+                String folderName = folder.getPath();
+                
+                if (folderName.startsWith("/"))
+                    folderName = folderName.substring(1);
                 if (item instanceof Message) {
                     if (!context.hasPart()) {
                         // add ZIP entry to output stream
-                    	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames));
+                    	ZipEntry entry = new ZipEntry(getEntryName(item, folderName,
+                    	    item.getSubject(), ".eml", usedNames));
                     	entry.setExtra(getXZimbraHeadersBytes(item));
                         out.putNextEntry(entry);
                         try {
@@ -132,13 +130,14 @@ public class ZipFormatter extends Formatter {
                     } else {
                         MimeMessage mm = ((Message) item).getMimeMessage();
                         for (String part : context.getPart().split(","))
-                            addPartToZip(mm, part, out, context, usedNames);
+                            addPartToZip(mm, part, folderName, out, context, usedNames);
                     }
                 } else if (item instanceof Contact) {
                     VCard vcf = VCard.formatContact((Contact) item);
 
                     // add ZIP entry to output stream
-                    ZipEntry entry = new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames));
+                    ZipEntry entry = new ZipEntry(getEntryName(item, folderName,
+                        vcf.fn, ".vcf", usedNames));
                     entry.setExtra(getXZimbraHeadersBytes(item));
                     out.putNextEntry(entry);
                     out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
@@ -157,7 +156,8 @@ public class ZipFormatter extends Formatter {
                 	String ext = "";
                 	if (item.getType() == MailItem.TYPE_WIKI)
                 		ext = ".wiki";
-                	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getName(), ext, context, usedNames));
+                	ZipEntry entry = new ZipEntry(getEntryName(item, folderName,
+                	    item.getName(), ext, usedNames));
                 	entry.setExtra(getXZimbraHeadersBytes(item));
                     out.putNextEntry(entry);
                     ByteUtil.copy(item.getContentStream(), true, out, false);
@@ -172,38 +172,8 @@ public class ZipFormatter extends Formatter {
         }
     }
 
-    private String getZipEntryName(MailItem item, String title, String suffix, Context context, Set<String> used)
-    throws ServiceException {
-        String path = "";
-        if (item != null) {
-            Folder folder = item.getMailbox().getFolderById(context.opContext, item.getFolderId());
-            path = folder.getPath();
-            if (path.startsWith("/"))
-                path = path.substring(1);
-            path = ILLEGAL_CHARS.matcher(path).replaceAll("_") + (path.equals("") ? "" : "/");
-        }
-
-        // TODO: more bullet proofing on path lengths and illegal chars        
-        if (title == null)
-            title = "";
-        if (title.length() > 115)
-            title = title.substring(0, 114);
-        title = ILLEGAL_CHARS.matcher(title).replaceAll("_").trim();
-
-        String filename;
-        int counter = 0;
-        do {
-            filename = path + title;
-            if (counter > 0)
-                filename += "-" + counter;
-            filename += suffix;
-            counter++;
-        } while (used != null && used.contains(filename.toLowerCase()));
-        used.add(filename.toLowerCase());
-        return filename;
-    }
-
-    private void addPartToZip(MimeMessage mm, String part, ZipOutputStream out, Context context, Set<String> usedNames) throws ServiceException, IOException {
+    private void addPartToZip(MimeMessage mm, String part, String folderName,
+        ZipOutputStream out, Context context, Set<String> usedNames) throws ServiceException, IOException {
         try {
             MimePart mp = Mime.getMimePart(mm, part);
             if (mp == null)
@@ -220,7 +190,8 @@ public class ZipFormatter extends Formatter {
             }
 
             // add ZIP entry to output stream
-            out.putNextEntry(new ZipEntry(getZipEntryName(null, partname, extension, context, usedNames)));
+            out.putNextEntry(new ZipEntry(getEntryName(null, folderName, partname,
+                extension, usedNames)));
             try {
                 ByteUtil.copy(mp.getInputStream(), true, out, false);
             } finally {

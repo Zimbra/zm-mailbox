@@ -294,7 +294,7 @@ public class TarFormatter extends Formatter {
         int dot;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
         String emptyname = context.params.get("emptyname");
-        String ext = ".tgz";
+        String ext = "." + getType();
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         MailboxLock ml = null;
@@ -722,7 +722,7 @@ public class TarFormatter extends Formatter {
         return aos;
     }
     
-    private String getEntryName(MailItem mi, String fldr, String name,
+    protected String getEntryName(MailItem mi, String fldr, String name,
         String ext, Set<String> names) {
         int counter = 0;
         String lpath, path;
