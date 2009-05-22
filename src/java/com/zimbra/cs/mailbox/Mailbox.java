@@ -977,14 +977,6 @@ public class Mailbox {
     void queueForIndexing(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> data) {
         assert(Thread.holdsLock(this));
         
-        if (this.mIndexHelper.getNumNotSubmittedToIndex() > 0) {
-            // can't submit immediately -- index is behind..
-            if (ZimbraLog.index_add.isDebugEnabled()) {
-                ZimbraLog.index_add.debug("Deferring indexing for item "+item.getId()+" b/c index is not up-to-date");
-            }
-            return;
-        }
-
         if (item.getIndexId() <= 0) {
             // this item shouldn't be indexed
             return;
@@ -994,6 +986,15 @@ public class Mailbox {
         if (deleteFirst)
             mCurrentChange.addIndexDelete(item.getId());
         
+        if (data != null && this.mIndexHelper.getNumNotSubmittedToIndex() > 0) {
+            // can't submit immediately -- index is behind..
+            if (ZimbraLog.index_add.isDebugEnabled()) {
+                ZimbraLog.index_add.debug("Deferring indexing for item "+item.getId()+" b/c index is " +
+                        "not up-to-date (not-submitted = "+this.mIndexHelper.getNumNotSubmittedToIndex()+")");
+            }
+            data = null; // continue down below so that we update the index deferred count
+        }
+
         // if no data is provided then we ALWAYS batch
         if (data != null && indexImmediately()) {
             if (item.getIndexId() > 0)
