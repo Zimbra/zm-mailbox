@@ -79,6 +79,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -185,6 +186,10 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_COUNTRY = "country"; // all three
 
     public static final String QP_VARIANT = "variant"; // all three
+
+    public static final String UPLOAD_NAME = "uploadName"; // upload filename
+
+    public static final String UPLOAD_TYPE = "uploadType"; // upload content type
 
     /**
      * Used by {@link #TarFormatter} to specify whether the <tt>.meta</tt>
@@ -1121,6 +1126,8 @@ public class UserServlet extends ZimbraServlet {
         
         public InputStream getRequestInputStream(long limit) 
             throws IOException, ServiceException, UserServletException {
+            String contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            String filename = null;
             InputStream is = null;
             final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
             
@@ -1146,8 +1153,8 @@ public class UserServlet extends ZimbraServlet {
                             is.close();
                             is = null;
                         } else {
-                            ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
-                                fis.getName() == null ? "unknown" : fis.getName(), req.getContentLength());
+                            contentType = fis.getContentType();
+                            filename = fis.getName();
                             is = new UploadInputStream(fis.openStream(), limit);
                             break;
                         }
@@ -1158,25 +1165,25 @@ public class UserServlet extends ZimbraServlet {
                 if (is == null)
                     throw new UserServletException(HttpServletResponse.SC_NO_CONTENT, "No file content");
             } else {
-                String filename = null;
-                String hdr = req.getHeader("content-disposition");
+                ContentType ctype = new ContentType(req.getContentType());
+                String contentEncoding = req.getHeader("Content-Encoding");
                 
-                if (hdr != null)
-                    filename = new ContentDisposition(hdr).getParameter("filename");
-                if (filename == null || filename.equals("")) {
-                    hdr = req.getHeader("content-disposition");
-                    if (hdr != null)
-                        filename = new ContentType(hdr).getParameter("name");
-                }
-                if (filename == null || filename.equals(""))
-                    filename = "unknown";
-                ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
-                    filename, req.getContentLength());
-                hdr = req.getHeader("content-encoding");
-                is = new UploadInputStream(hdr != null && hdr.indexOf("gzip") != -1 ?
+                contentType = ctype.getValue();
+                filename = ctype.getParameter("name");
+                if (filename == null || filename.trim().equals(""))
+                    filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
+                is = new UploadInputStream(contentEncoding != null &&
+                    contentEncoding.indexOf("gzip") != -1 ?
                     new GZIPInputStream(req.getInputStream()) :
                         req.getInputStream(), limit);
             }
+            if (filename == null || filename.trim().equals(""))
+                filename = "unknown";
+            else
+                params.put(UPLOAD_NAME, filename);
+            params.put(UPLOAD_TYPE, contentType);
+            ZimbraLog.mailbox.info("UserServlet received file %s - %d request bytes",
+                filename, req.getContentLength());
             return is;
         }
         

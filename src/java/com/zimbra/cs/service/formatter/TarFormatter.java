@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -36,6 +37,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -52,6 +55,7 @@ import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.util.tar.TarOutputStream;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.zip.ZipOutputStream;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -84,7 +88,7 @@ public class TarFormatter extends Formatter {
     private static enum Resolve { Modify, Replace, Reset, Skip }
 
     private static final class SortPath implements Comparator<MailItem> {
-        SortPath()  { }
+        SortPath()  {}
         public int compare(MailItem m1, MailItem m2) {
             try {
                 int ret = m1.getPath().compareTo(m2.getPath());
@@ -94,9 +98,183 @@ public class TarFormatter extends Formatter {
             }
         }
     }
+
+    public abstract interface ArchiveInputEntry {
+        public long getModTime();
+        public String getName();
+        public long getSize();
+        public int getType();
+        public boolean isUnread();
+    }
     
+    public abstract interface ArchiveOutputEntry {
+        public void setUnread();
+        public void setSize(long size);
+    }
+    
+    public abstract interface ArchiveInputStream {
+        public void close() throws IOException;
+        public InputStream getInputStream();
+        public ArchiveInputEntry getNextEntry() throws IOException;
+        public int read(byte[] buf, int offset, int len) throws IOException;
+    }
+    
+    public abstract interface ArchiveOutputStream {
+        public void close() throws IOException;
+        public void closeEntry() throws IOException;
+        public int getRecordSize();
+        public ArchiveOutputEntry newOutputEntry(String path, String name,
+            int type, long date);
+        public void putNextEntry(ArchiveOutputEntry entry) throws IOException;
+        public void write(byte[] buf) throws IOException;
+        public void write(byte[] buf, int offset, int len) throws IOException;
+    }
+    
+    public class TarArchiveInputStream implements ArchiveInputStream {
+        public class TarArchiveInputEntry implements ArchiveInputEntry {
+            private TarEntry entry;
+
+            public TarArchiveInputEntry(TarInputStream is) throws IOException {
+                entry = is.getNextEntry();
+            }
+            public long getModTime() { return entry.getModTime().getTime(); }
+            public String getName() { return entry.getName(); }
+            public long getSize() { return entry.getSize(); }
+            public int getType() { return entry.getMajorDeviceId(); }
+            public boolean isUnread() { return (entry.getMode() & 0200) == 0; }
+        }
+        
+        private TarInputStream is;
+        
+        public TarArchiveInputStream(InputStream is, String cset) {
+            this.is = new TarInputStream(is, cset);
+        }
+        
+        public void close() throws IOException { is.close(); }
+        public InputStream getInputStream() { return is; }
+        public ArchiveInputEntry getNextEntry() throws IOException {
+            return new TarArchiveInputEntry(is);
+        }
+        public int read(byte[] buf, int offset, int len) throws IOException {
+            return is.read(buf, offset, len);
+        }
+    }
+    
+    public class TarArchiveOutputStream implements ArchiveOutputStream {
+        public class TarArchiveOutputEntry implements ArchiveOutputEntry {
+            private TarEntry entry;
+
+            public TarArchiveOutputEntry(String path, String name, int type, long
+                date) {
+                entry = new TarEntry(path);
+                entry.setGroupName(name);
+                entry.setMajorDeviceId(type);
+                entry.setModTime(date);
+            }
+            
+            public void setUnread() { entry.setMode(entry.getMode() & ~0200); }
+            public void setSize(long size) { entry.setSize(size); }
+        }
+        
+        private TarOutputStream os;
+        
+        public TarArchiveOutputStream(OutputStream os, String cset) throws
+            IOException {
+            this.os = new TarOutputStream(os, cset);
+            this.os.setLongFileMode(TarOutputStream.LONGFILE_GNU);
+        }
+        public void close() throws IOException { os.close(); }
+        public void closeEntry() throws IOException { os.closeEntry(); }
+        public int getRecordSize() { return os.getRecordSize(); }
+        public ArchiveOutputEntry newOutputEntry(String path, String name,
+            int type, long date) {
+            return new TarArchiveOutputEntry(path, name, type, date);
+        }
+        public void putNextEntry(ArchiveOutputEntry entry) throws IOException {
+            os.putNextEntry(((TarArchiveOutputEntry)entry).entry);
+        }
+        public void write(byte[] buf) throws IOException { os.write(buf); }
+        public void write(byte[] buf, int offset, int len) throws IOException {
+            os.write(buf, offset, len);
+        }
+    }
+
+    public class ZipArchiveInputStream implements ArchiveInputStream {
+        public class ZipArchiveInputEntry implements ArchiveInputEntry {
+            private ZipEntry entry;
+
+            public ZipArchiveInputEntry(ZipInputStream is) throws IOException {
+                entry = is.getNextEntry();
+            }
+            public long getModTime() { return entry.getTime(); }
+            public String getName() { return entry.getName(); }
+            public long getSize() { return entry.getSize(); }
+            public int getType() { return 0; }
+            public boolean isUnread() {
+                return entry.getComment() != null &&
+                    entry.getComment().endsWith("-unread");
+            }
+        }
+        
+        private ZipInputStream is;
+        
+        public ZipArchiveInputStream(InputStream is, String cset) {
+            this.is = new ZipInputStream(is);
+        }
+        
+        public void close() throws IOException { is.close(); }
+        public InputStream getInputStream() { return is; }
+        public ArchiveInputEntry getNextEntry() throws IOException {
+            return new ZipArchiveInputEntry(is);
+        }
+        public int read(byte[] buf, int offset, int len) throws IOException {
+            return is.read(buf, offset, len);
+        }
+    }
+    
+    public class ZipArchiveOutputStream implements ArchiveOutputStream {
+        public class ZipArchiveOutputEntry implements ArchiveOutputEntry {
+            private com.zimbra.common.util.zip.ZipEntry entry;
+
+            public ZipArchiveOutputEntry(String path, String name, int type, long
+                date) {
+                entry = new com.zimbra.common.util.zip.ZipEntry(path);
+                entry.setComment(name);
+                entry.setTime(date);
+                entry.setUnixMode(0660);
+            }
+            public void setUnread() {
+                entry.setUnixMode(0640);
+                entry.setComment(entry.getComment() + "-unread");
+            }
+            public void setSize(long size) { entry.setSize(size); }
+        }
+        
+        private ZipOutputStream os;
+        
+        public ZipArchiveOutputStream(OutputStream os, String cset)
+            throws IOException {
+            this.os = new ZipOutputStream(os);
+            this.os.setEncoding(cset);
+        }
+        public void close() throws IOException { os.close(); }
+        public void closeEntry() throws IOException { os.closeEntry(); }
+        public int getRecordSize() { return 2048; }
+        public ArchiveOutputEntry newOutputEntry(String path, String name,
+            int type, long date) {
+            return new ZipArchiveOutputEntry(path, name, type, date);
+        }
+        public void putNextEntry(ArchiveOutputEntry entry) throws IOException {
+            os.putNextEntry(((ZipArchiveOutputEntry)entry).entry);
+        }
+        public void write(byte[] buf) throws IOException { os.write(buf); }
+        public void write(byte[] buf, int offset, int len) throws IOException {
+            os.write(buf, offset, len);
+        }
+    }
+
     @Override public String[] getDefaultMimeTypes() {
-        return new String[] { "application/x-tar-compressed" };
+        return new String[] { "application/x-compressed-tar" };
     }
 
     @Override public String getDefaultSearchTypes() {
@@ -106,14 +284,17 @@ public class TarFormatter extends Formatter {
     @Override public String getType() { return "tgz"; }
 
     @Override public boolean canBeBlocked() { return true; }
+    
     @Override public boolean supportsSave() { return true; }
 
     @Override public void formatCallback(Context context) throws IOException,
         ServiceException, UserServletException {
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
+        int dot;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
         String emptyname = context.params.get("emptyname");
+        String ext = ".tgz";
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         MailboxLock ml = null;
@@ -129,13 +310,10 @@ public class TarFormatter extends Formatter {
             MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK, MailItem.TYPE_CHAT,
             MailItem.TYPE_NOTE
         };
-        TarOutputStream tos = null;
+        ArchiveOutputStream aos = null;
         String types = context.getTypesString();
 
         try {
-            if (emptyname != null && !emptyname.equals("") &&
-                !emptyname.endsWith(".tgz"))
-                emptyname += ".tgz";
             if (filename == null || filename.equals("")) {
                 Date date = new Date();
                 DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
@@ -143,12 +321,22 @@ public class TarFormatter extends Formatter {
 
                 filename = context.targetMailbox.getAccountId() + '.' +
                     df.format(date).replace('/', '-') + sdf.format(date);
+            } else if ((dot = filename.lastIndexOf('.')) != -1) {
+                ext = filename.substring(dot);
             }
-            if (!filename.endsWith(".tgz"))
-                filename += ".tgz";
+            if (!filename.endsWith(ext))
+                filename += ext;
+            if (emptyname != null && !emptyname.equals("") &&
+                !emptyname.endsWith(ext))
+                emptyname += ext;
             context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
                 "; filename=" + HttpUtil.encodeFilename(context.req, filename));
-            context.resp.setContentType("application/x-tar-compressed");
+            if (ext.equals(".tar"))
+                context.resp.setContentType("application/x-tar");
+            else if (ext.equals(".tgz"))
+                context.resp.setContentType("application/x-compressed-tar");
+            else if (ext.equals(".zip"))
+                context.resp.setContentType("application/zip");
             if (types != null && !types.equals("")) {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
                 sysTypes = new byte[0];
@@ -171,15 +359,16 @@ public class TarFormatter extends Formatter {
             if (context.respListItems != null) {
                 try {
                     for (MailItem mi : context.respListItems)
-                        tos = saveItem(context, mi, fldrs, cnts, names, false, tos);
+                        aos = saveItem(context, mi, fldrs, cnts, names, false,
+                            aos);
                 } catch (Exception e) {
                     warn(e);
                 }
             } else if (context.target != null && !(context.target instanceof
                 Folder)) {
                 try {
-                    tos = saveItem(context, context.target, fldrs, cnts, names,
-                        false, tos);
+                    aos = saveItem(context, context.target, fldrs, cnts, names,
+                        false, aos);
                 } catch (Exception e) {
                     warn(e);
                 }
@@ -207,8 +396,8 @@ public class TarFormatter extends Formatter {
                         
                         Collections.sort(items, sp);
                         for (MailItem item : items)
-                            tos = saveItem(context, item, fldrs, cnts, names,
-                                false, tos);
+                            aos = saveItem(context, item, fldrs, cnts, names,
+                                false, aos);
                     }
                     if (types == null || types.equals(""))
                         conversations = true;
@@ -224,17 +413,17 @@ public class TarFormatter extends Formatter {
                     while (results.hasNext()) {
                         if (saveTargetFolder) {
                             saveTargetFolder = false;
-                            tos = saveItem(context, context.target,
-                                fldrs, cnts, names, false, tos);
+                            aos = saveItem(context, context.target,
+                                fldrs, cnts, names, false, aos);
                         }
-                        tos = saveItem(context, results.getNext().getMailItem(),
-                            fldrs, cnts, names, false, tos);
+                        aos = saveItem(context, results.getNext().getMailItem(),
+                            fldrs, cnts, names, false, aos);
                     }
                     if (conversations) {
                         for (MailItem item : context.targetMailbox.getItemList(
                             context.opContext, MailItem.TYPE_CONVERSATION)) 
-                            tos = saveItem(context, item, fldrs, cnts, names,
-                                false, tos);
+                            aos = saveItem(context, item, fldrs, cnts, names,
+                                false, aos);
                     }
                 } catch (Exception e) {
                     warn(e);
@@ -242,32 +431,44 @@ public class TarFormatter extends Formatter {
                     if (results != null)
                         results.doneWithSearchResults();
                 }
-                if (tos == null) {
+                if (aos == null) {
                     if (emptyname == null)
                         throw new UserServletException(HttpServletResponse.
                             SC_NO_CONTENT, "No data found");
                     context.resp.setHeader("Content-Disposition", Part.ATTACHMENT +
                         "; filename=" + HttpUtil.encodeFilename(context.req,
                         emptyname));
-                    tos = new TarOutputStream(new GZIPOutputStream(
-                        context.resp.getOutputStream()));
+                    aos = getOutputStream(context, UTF8);
                 }
             }
         } finally {
             if (ml != null)
                 MailboxManager.getInstance().endMaintenance(ml, true, true);
-            if (tos != null) {
+            if (aos != null) {
                 try {
-                    tos.close();
+                    aos.close();
                 } catch (Exception e) {
                 }
             }
         }
     }
     
-    private TarOutputStream saveItem(Context context, MailItem mi, 
+    private ArchiveOutputStream getOutputStream(Context context, String
+        charset) throws IOException {
+        OutputStream os = context.resp.getOutputStream();
+        
+        if (context.resp.getContentType().equals("application/x-tar"))
+            return new TarArchiveOutputStream(os, charset);
+        else if (context.resp.getContentType().equals("application/zip"))
+            return new ZipArchiveOutputStream(os, charset);
+        else
+            return new TarArchiveOutputStream(new GZIPOutputStream(os),
+                charset);
+    }
+    
+    private ArchiveOutputStream saveItem(Context context, MailItem mi, 
         HashMap<Integer, String> fldrs, HashMap<Integer, Integer> cnts,
-        Set<String> names, boolean version, TarOutputStream tos) throws
+        Set<String> names, boolean version, ArchiveOutputStream aos) throws
         ServiceException {
         String charset = context.params.get("charset");
         String ext = null, name = null;
@@ -284,7 +485,7 @@ public class TarFormatter extends Formatter {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
                 context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion())
-                    tos = saveItem(context, rev, fldrs, cnts, names, true, tos);
+                    aos = saveItem(context, rev, fldrs, cnts, names, true, aos);
             }
         }
         switch (mi.getType()) {
@@ -293,7 +494,7 @@ public class TarFormatter extends Formatter {
             
             if (!appt.isPublic() && !appt.allowPrivateAccess(context.authAccount,
                 context.isUsingAdminPrivileges()))
-                return tos;
+                return aos;
             if (meta) {
                 name = appt.getSubject();
                 ext = "appt";
@@ -312,7 +513,7 @@ public class TarFormatter extends Formatter {
                 ext = "vcf";
             break;
         case MailItem.TYPE_FLAG:
-            return tos;
+            return aos;
         case MailItem.TYPE_FOLDER:
         case MailItem.TYPE_MOUNTPOINT:
         case MailItem.TYPE_SEARCHFOLDER:
@@ -349,11 +550,11 @@ public class TarFormatter extends Formatter {
             
             if (!task.isPublic() && !task.allowPrivateAccess(context.authAccount,
                 context.isUsingAdminPrivileges()))
-                return tos;
+                return aos;
             ext = "task";
             break;
         case MailItem.TYPE_VIRTUAL_CONVERSATION:
-            return tos;
+            return aos;
         case MailItem.TYPE_WIKI:
             ext = "wiki";
             break;
@@ -378,39 +579,36 @@ public class TarFormatter extends Formatter {
                 fldr = fldr + '!' + cnt; 
         }
         try {
+            ArchiveOutputEntry aoe;
             byte data[] = null;
             String path = getEntryName(mi, fldr, name, ext, names);
-            TarEntry entry = new TarEntry(path + ".meta");
             long miSize = mi.getSize();
 
             if (miSize == 0 && mi.getDigest() != null) {
                 ZimbraLog.misc.error("blob db size 0 for item %d", mi.getId());
-                return tos;
+                return aos;
             }
             try {
                 is = mi.getContentStream();
             } catch (Exception e) {
                 ZimbraLog.misc.error("missing blob for item %d: expected %d",
                     mi.getId(), miSize);
-                return tos;
+                return aos;
             }
-            entry.setGroupName(MailItem.getNameForType(mi));
-            entry.setMajorDeviceId(mi.getType());
-            entry.setModTime(mi.getDate());
+            if (aos == null)
+                aos = getOutputStream(context, charset);
+            aoe = aos.newOutputEntry(path + ".meta",
+                MailItem.getNameForType(mi), mi.getType(), mi.getDate());
             if (mi instanceof Message && (mi.getFlagBitmask() &
                 Flag.ID_FLAG_UNREAD) != 0)
-                entry.setMode(entry.getMode() & ~0200);
-            if (tos == null)
-                tos = new TarOutputStream(new GZIPOutputStream(
-                    context.resp.getOutputStream()), charset);
-            tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
+                aoe.setUnread();
             if (meta) {
                 byte[] metaData = new ItemData(mi, extra).encode();
                 
-                entry.setSize(metaData.length);
-                tos.putNextEntry(entry);
-                tos.write(metaData);
-                tos.closeEntry();
+                aoe.setSize(metaData.length);
+                aos.putNextEntry(aoe);
+                aos.write(metaData);
+                aos.closeEntry();
             } else if (mi instanceof CalendarItem) {
                 Browser browser = HttpUtil.guessBrowser(context.req);
                 CalendarItem ci = (CalendarItem)mi;
@@ -458,32 +656,35 @@ public class TarFormatter extends Formatter {
                                 name = name.substring(0, dot);
                             }
                         }
-                        entry.setName(getEntryName(mi, fldr, name, ext, names));
+                        aoe = aos.newOutputEntry(getEntryName(mi, fldr, name,
+                            ext, names), MailItem.getNameForType(mi),
+                            mi.getType(), mi.getDate());
                         data = ByteUtil.readInput(mp.getInputStream(), sz, -1);
-                        entry.setSize(data.length);
-                        tos.putNextEntry(entry);
-                        tos.write(data);
-                        tos.closeEntry();
+                        aoe.setSize(data.length);
+                        aos.putNextEntry(aoe);
+                        aos.write(data);
+                        aos.closeEntry();
                     }
-                    return tos;
+                    return aos;
                 }
             }
-            entry.setName(path);
+            aoe = aos.newOutputEntry(path, MailItem.getNameForType(mi),
+                mi.getType(), mi.getDate());
             if (data != null) {
-                entry.setSize(data.length);
-                tos.putNextEntry(entry);
-                tos.write(data);
-                tos.closeEntry();
+                aoe.setSize(data.length);
+                aos.putNextEntry(aoe);
+                aos.write(data);
+                aos.closeEntry();
             } else if (is != null) {
                 if (context.shouldReturnBody()) {
-                    byte buf[] = new byte[tos.getRecordSize() * 20];
+                    byte buf[] = new byte[aos.getRecordSize() * 20];
                     int in;
                     long remain = miSize;
 
-                    entry.setSize(miSize);
-                    tos.putNextEntry(entry);
+                    aoe.setSize(miSize);
+                    aos.putNextEntry(aoe);
                     while (remain > 0 && (in = is.read(buf)) >= 0) {
-                        tos.write(buf, 0, remain < in ? (int)remain : in);
+                        aos.write(buf, 0, remain < in ? (int)remain : in);
                         remain -= in;
                     }
                     if (remain != 0) {
@@ -492,32 +693,33 @@ public class TarFormatter extends Formatter {
                         if (remain > 0) {
                             Arrays.fill(buf, (byte)' ');
                             while (remain > 0) {
-                                tos.write(buf, 0, remain < buf.length ?
+                                aos.write(buf, 0, remain < buf.length ?
                                     (int)remain : buf.length);
                                 remain -= buf.length;
                             }
                         }
-                        tos.closeEntry();
-                        entry.setName(path + ".err");
-                        entry.setSize(0);
-                        tos.putNextEntry(entry);
+                        aos.closeEntry();
+                        aoe = aos.newOutputEntry(path + ".err",
+                            MailItem.getNameForType(mi), mi.getType(), mi.getDate());
+                        aoe.setSize(0);
+                        aos.putNextEntry(aoe);
                     }
                 } else {
                     // Read headers into memory, since we need to write the size first.
                     byte headerData[] = HeadersOnlyInputStream.getHeaders(is);
                     
-                    entry.setSize(headerData.length);
-                    tos.putNextEntry(entry);
-                    tos.write(headerData);
+                    aoe.setSize(headerData.length);
+                    aos.putNextEntry(aoe);
+                    aos.write(headerData);
                 }
-                tos.closeEntry();
+                aos.closeEntry();
             }
         } catch (Exception e) {
             throw ServiceException.FAILURE("archive error", e);
         } finally {
             ByteUtil.closeStream(is);
         }
-        return tos;
+        return aos;
     }
     
     private String getEntryName(MailItem mi, String fldr, String name,
@@ -549,8 +751,8 @@ public class TarFormatter extends Formatter {
         return path;
     }
 
-    @Override public void saveCallback(Context context, String contentType, Folder fldr, String file)
-    throws IOException, ServiceException {
+    @Override public void saveCallback(Context context, String contentType,
+        Folder fldr, String file) throws IOException, ServiceException {
         ItemData id = null;
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
         StringBuffer errs = new StringBuffer();
@@ -563,12 +765,15 @@ public class TarFormatter extends Formatter {
         String subfolder = context.params.get("subfolder");
         String timeout = context.params.get("timeout");
  
+        if (charset == null)
+            charset = UTF8;
         try {
+            ArchiveInputStream ais;
             int ids[] = null;
+            long interval = 45 * 1000;
             Resolve r = resolve == null ? Resolve.Skip : Resolve.valueOf(
                 resolve.substring(0,1).toUpperCase() +
                 resolve.substring(1).toLowerCase());
-            long interval = 45 * 1000;
             if (timeout != null)
                 interval = Long.parseLong(timeout);
             byte searchTypes[] = null;
@@ -593,16 +798,26 @@ public class TarFormatter extends Formatter {
                 }
             }
 
-            TarInputStream tis = new TarInputStream(new GZIPInputStream(
-                context.getRequestInputStream(-1)), charset == null ? UTF8 :
-                charset);
-            List<Folder> flist = fldr.getSubfolderHierarchy();
+            List<Folder> flist;
+            InputStream is = context.getRequestInputStream(-1);
+            String filename = context.params.get(UserServlet.UPLOAD_NAME);
             
-            if (subfolder != null && !subfolder.equals("")) {
+            contentType = context.params.get(UserServlet.UPLOAD_TYPE);
+            if (filename == null)
+                filename = "";
+            if (contentType.equals("application/x-tar") ||
+                filename.endsWith(".tar"))
+                ais = new TarArchiveInputStream(is, charset);
+            else if (contentType.equals("application/zip") ||
+                filename.endsWith(".zip"))
+                ais = new ZipArchiveInputStream(is, charset);
+            else
+                ais = new TarArchiveInputStream(new GZIPInputStream(is),
+                    charset);
+            if (subfolder != null && !subfolder.equals(""))
                 fldr = createPath(context, fmap, fldr.getPath() + subfolder,
                     Folder.TYPE_UNKNOWN);
-                flist = fldr.getSubfolderHierarchy();
-            }
+            flist = fldr.getSubfolderHierarchy();
             if (r == Resolve.Reset) {
                 for (Folder f : flist) {
                     try {
@@ -661,60 +876,60 @@ public class TarFormatter extends Formatter {
                 fmap.put(f.getPath(), f);
             }
             try {
-                TarEntry te;
+                ArchiveInputEntry aie;
                 Boolean meta = false;
                 
-                while ((te = tis.getNextEntry()) != null) {
+                while ((aie = ais.getNextEntry()) != null) {
                     if (System.currentTimeMillis() - last > interval) {
                         updateClient(context, true);
                         last = System.currentTimeMillis();
                     }
-                    if (te.getName().endsWith(".meta")) {
+                    if (aie.getName().endsWith(".meta")) {
                         meta = true;
                         if (id != null)
                             addItem(context, fldr, fmap, digestMap, idMap,
-                                ids, searchTypes, r, id, tis, null, errs);
-                        id = new ItemData(readTarEntry(tis, te));
+                                ids, searchTypes, r, id, ais, null, errs);
+                        id = new ItemData(readArchiveEntry(ais, aie));
                         continue;
                     }
-                    if (te.getName().endsWith(".err")) {
-                        addError(errs, te.getName(),
+                    if (aie.getName().endsWith(".err")) {
+                        addError(errs, aie.getName(),
                             "ignored item data size mismatch");
                     } else if (id == null) {
                         if (meta)
-                            addError(errs, te.getName(),
+                            addError(errs, aie.getName(),
                                 "item content missing meta information");
                         else
-                            addData(context, fldr, fmap, searchTypes, r, tis,
-                                te, errs);
-                    } else if (id.ud.type != te.getMajorDeviceId() ||
+                            addData(context, fldr, fmap, searchTypes, r, ais,
+                                aie, errs);
+                    } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) ||
                         (id.ud.getBlobDigest() != null && id.ud.size !=
-                        te.getSize())) {
-                        addError(errs, te.getName(),
+                        aie.getSize())) {
+                        addError(errs, aie.getName(),
                             "mismatched item content and meta");
                     } else {
                         addItem(context, fldr, fmap, digestMap, idMap, ids,
-                            searchTypes, r, id, tis, te, errs);
+                            searchTypes, r, id, ais, aie, errs);
                     }
                     id = null;
                 }
                 if (id != null)
                     addItem(context, fldr, fmap, digestMap, idMap, ids,
-                        searchTypes, r, id, tis, null, errs);
+                        searchTypes, r, id, ais, null, errs);
             } catch (Exception e) {
                 addError(errs, id == null ? null : id.path,
                     e.getLocalizedMessage());
                 id = null;
             } finally {
-                if (tis != null)
-                    tis.close();
+                if (ais != null)
+                    ais.close();
             }
         } catch (Exception e) {
             if (errs.length() > 0) {
                 addError(errs, null, e.getLocalizedMessage());
                 throw new IOException(errs.toString());
             }
-            throw ServiceException.FAILURE("Tar formatter failure", e);
+            throw ServiceException.FAILURE("Archive formatter failure", e);
         }
     }
 
@@ -762,18 +977,18 @@ public class TarFormatter extends Formatter {
         return fldr;
     }
 
-    public static byte[] readTarEntry(TarInputStream tis, TarEntry te) throws
-        IOException {
-        if (te == null)
+    private static byte[] readArchiveEntry(ArchiveInputStream ais,
+        ArchiveInputEntry aie) throws IOException {
+        if (aie == null)
             return null;
         
-        int dsz = (int)te.getSize();
+        int dsz = (int)aie.getSize();
         byte[] data;
         
         if (dsz == 0)
             return null;
         data = new byte[dsz];
-        if (tis.read(data, 0, dsz) != dsz)
+        if (ais.read(data, 0, dsz) != dsz)
             throw new IOException("archive read err");
         return data;
     }
@@ -782,16 +997,17 @@ public class TarFormatter extends Formatter {
 
     private void warn(Exception e) {
         if (e.getCause() == null)
-            ZimbraLog.misc.warn("TarFormatter warning: %s", e);
+            ZimbraLog.misc.warn("Archive Formatter warning: %s", e);
         else
-            ZimbraLog.misc.warn("TarFormatter warning: %s: %s", e, e.getCause().toString());
+            ZimbraLog.misc.warn("Archive Formatter warning: %s: %s", e,
+                e.getCause().toString());
     }
 
     private void addItem(Context context, Folder fldr,
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
         Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
-        ItemData id, TarInputStream tis, TarEntry te, StringBuffer errs) throws
-        MessagingException, ServiceException {
+        ItemData id, ArchiveInputStream ais, ArchiveInputEntry aie,
+        StringBuffer errs) throws MessagingException, ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -807,7 +1023,7 @@ public class TarFormatter extends Formatter {
                 (searchTypes != null && Arrays.binarySearch(searchTypes,
                 id.ud.type) < 0))
                 return;
-            if (id.ud.getBlobDigest() != null && te == null) {
+            if (id.ud.getBlobDigest() != null && aie == null) {
                 addError(errs, id.path, "missing item blob for meta");
                 return;
             }
@@ -839,7 +1055,7 @@ public class TarFormatter extends Formatter {
                 }
                 if (oldItem == null || r != Resolve.Skip) {
                     CalendarItem.AlarmData ad = ci.getAlarmData();
-                    byte[] data = readTarEntry(tis, te);
+                    byte[] data = readArchiveEntry(ais, aie);
                     Map<Integer, MimeMessage> blobMimeMsgMap = data == null ?
                         null : CalendarItem.decomposeBlob(data);
                     SetCalendarItemData defScid = new SetCalendarItemData();
@@ -871,16 +1087,18 @@ public class TarFormatter extends Formatter {
                             r == Resolve.Modify ? oldItem.getFolderId() :
                             fldr.getId(), ci.getFlagBitmask(),
                             ci.getTagBitmask(), defScid, exceptionScids,
-                            ci.getAllReplies(),
-                            ad == null ? CalendarItem.NEXT_ALARM_KEEP_CURRENT : ad.getNextAt());
+                            ci.getAllReplies(), ad == null ?
+                            CalendarItem.NEXT_ALARM_KEEP_CURRENT : ad.getNextAt());
                     }
                 }
                 break;
             case MailItem.TYPE_CHAT:
                 Chat chat = (Chat)mi;
                 
-                byte[] content = ByteUtil.getContent(tis, (int) te.getSize(), false);
-                pm = new ParsedMessage(content, mi.getDate(), mbox.attachmentsIndexingEnabled());
+                byte[] content = ByteUtil.getContent(ais.getInputStream(),
+                    (int)aie.getSize(), false);
+                pm = new ParsedMessage(content, mi.getDate(),
+                    mbox.attachmentsIndexingEnabled());
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
                 if (root && r != Resolve.Reset) {
                     Chat oldChat = null;
@@ -952,14 +1170,14 @@ public class TarFormatter extends Formatter {
                                 if (r == Resolve.Modify)
                                     mbox.modifyContact(oc, oldItem.getId(),
                                         new ParsedContact(ct.getFields(),
-                                        readTarEntry(tis, te)));
+                                        readArchiveEntry(ais, aie)));
                             }
                         }
                     }
                 }
                 if (oldItem == null)
                     newItem = mbox.createContact(oc, new ParsedContact(
-                        ct.getFields(), readTarEntry(tis, te)), fldr.getId(),
+                        ct.getFields(), readArchiveEntry(ais, aie)), fldr.getId(),
                         ct.getTagString());
                 break;
             case MailItem.TYPE_DOCUMENT:
@@ -995,8 +1213,8 @@ public class TarFormatter extends Formatter {
                         oldItem = oldDoc;
                         if (doc.getVersion() > oldDoc.getVersion())
                             newItem = mbox.addDocumentRevision(oc,
-                                oldDoc.getId(), tis,
-                                doc.getCreator(), doc.getName());
+                                oldDoc.getId(), ais.getInputStream(),
+				doc.getCreator(), doc.getName());
                         if (r != Resolve.Skip)
                             mbox.setDate(oc, newItem.getId(), doc.getType(),
                                 doc.getDate());
@@ -1006,12 +1224,13 @@ public class TarFormatter extends Formatter {
                     if (mi.getType() == MailItem.TYPE_DOCUMENT) {
                         newItem = mbox.createDocument(oc, fldr.getId(),
                             doc.getName(), doc.getContentType(),
-                            doc.getCreator(), tis);
+                            doc.getCreator(), ais.getInputStream());
                     } else {
                         WikiItem wi = (WikiItem)mi;
                         
                         newItem = mbox.createWiki(oc, fldr.getId(),
-                            wi.getWikiWord(), wi.getCreator(), tis);
+                            wi.getWikiWord(), wi.getCreator(),
+                            ais.getInputStream());
                     }
                     mbox.setDate(oc, newItem.getId(), doc.getType(),
                         doc.getDate());
@@ -1097,8 +1316,8 @@ public class TarFormatter extends Formatter {
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
                         setTagString(msg.getTagString());
-                    newItem = mbox.addMessage(oc, tis, (int) te.getSize(),
-                        msg.getDate(), opt);
+                    newItem = mbox.addMessage(oc, ais.getInputStream(),
+                        (int)aie.getSize(), msg.getDate(), opt);
                 }
                 break;
             case MailItem.TYPE_MOUNTPOINT:
@@ -1146,13 +1365,13 @@ public class TarFormatter extends Formatter {
                         oldItem = oldNote;
                         if (r == Resolve.Modify)
                             mbox.editNote(oc, oldItem.getId(), new
-                                String(readTarEntry(tis, te), UTF8));
+                                String(readArchiveEntry(ais, aie), UTF8));
                     }
                     break;
                 }
                 if (oldItem == null) {
-                    newItem = mbox.createNote(oc, new String(readTarEntry(tis, te),
-                        UTF8), note.getBounds(), note.getColor(),
+                    newItem = mbox.createNote(oc, new String(readArchiveEntry(ais,
+                        aie), UTF8), note.getBounds(), note.getColor(),
                         fldr.getId());
                 }
                 break;
@@ -1228,13 +1447,13 @@ public class TarFormatter extends Formatter {
 
     private void addData(Context context, Folder fldr,
         Map<Object, Folder> fmap, byte[] searchTypes, Resolve r,
-        TarInputStream tis, TarEntry te, StringBuffer errs) throws
+        ArchiveInputStream ais, ArchiveInputEntry aie, StringBuffer errs) throws
         MessagingException, ServiceException {
         try {
             int defaultFldr;
             Mailbox mbox = fldr.getMailbox();
             String dir, file;
-            String name = te.getName();
+            String name = aie.getName();
             int idx = name.lastIndexOf('/');
             MailItem newItem = null, oldItem;
             OperationContext oc = context.opContext;
@@ -1285,7 +1504,10 @@ public class TarFormatter extends Formatter {
                 if (fldr.getPath().equals("/"))
                     fldr = mbox.getFolderById(oc, defaultFldr);
                 if (fldr.getDefaultView() != Folder.TYPE_UNKNOWN &&
-                    fldr.getDefaultView() != view)
+                    fldr.getDefaultView() != view &&
+                    !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
+                    (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
+                    fldr.getDefaultView() == Folder.TYPE_WIKI)))
                     throw ServiceException.INVALID_REQUEST(
                         "folder cannot contain item type " +
                         Folder.getNameForType(view), null);
@@ -1304,9 +1526,10 @@ public class TarFormatter extends Formatter {
                 boolean continueOnError = context.ignoreAndContinueOnError();
                 boolean preserveExistingAlarms = context.preserveAlarms();
                 
-                reader = new BufferedReader(new InputStreamReader(tis, UTF8));
+                reader = new BufferedReader(new InputStreamReader(
+                    ais.getInputStream(), UTF8));
                 try {
-                    if (te.getSize() <=
+                    if (aie.getSize() <=
                         LC.calendar_ics_import_full_parse_max_size.intValue()) {
                         List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
                         ImportInviteVisitor visitor = new ImportInviteVisitor(oc,
@@ -1326,12 +1549,13 @@ public class TarFormatter extends Formatter {
                 break;
             case MailItem.TYPE_CONTACT:
                 if (file.endsWith(".csv")) {
-                    reader = new BufferedReader(new InputStreamReader(tis, UTF8));
+                    reader = new BufferedReader(new InputStreamReader(
+                        ais.getInputStream(), UTF8));
                     ImportContacts.ImportCsvContacts(oc, context.targetMailbox,
                         new ItemId(fldr), ContactCSV.getContacts(reader, null));
                 } else {
                     List<VCard> cards = VCard.parseVCard(new String(
-                        readTarEntry(tis, te), UTF8));
+                        readArchiveEntry(ais, aie), UTF8));
                     
                     if (cards == null || cards.size() == 0 ||
                         (cards.size() == 1 && cards.get(0).fields.isEmpty())) {
@@ -1359,35 +1583,37 @@ public class TarFormatter extends Formatter {
                         mbox.delete(oc, oldItem.getId(), type);
                         throw MailServiceException.NO_SUCH_ITEM(oldItem.getId());
                     } else if (r != Resolve.Skip) {
-                        newItem = mbox.addDocumentRevision(oc, oldItem.getId(), tis, creator, oldItem.getName());
+                        newItem = mbox.addDocumentRevision(oc, oldItem.getId(),
+                            ais.getInputStream(), creator,
+                            oldItem.getName());
                     }
                 } catch (NoSuchItemException e) {
                     if (type == MailItem.TYPE_WIKI) {
                         newItem = mbox.createWiki(oc, fldr.getId(), file,
-                            creator, tis);
+                            creator, ais.getInputStream());
                     } else {
                         newItem = mbox.createDocument(oc, fldr.getId(),
-                            file, null, creator, tis);
+                            file, null, creator, ais.getInputStream());
                     }
                 }
                 if (newItem != null) {
                     mbox.setDate(oc, newItem.getId(), type,
-                        te.getModTime().getTime());
+                        aie.getModTime());
                     if (type == MailItem.TYPE_WIKI)
                         WikiFormatter.expireCacheItem(fldr);
                 }
                 break;
             case MailItem.TYPE_MESSAGE:
-                int flags = (te.getMode() & 0200) == 0 ? 0 : Flag.BITMASK_UNREAD;
+                int flags = aie.isUnread() ? Flag.BITMASK_UNREAD : 0;
                 DeliveryOptions opt = new DeliveryOptions().
                     setFolderId(fldr.getId()).setNoICal(true).setFlags(flags);
 
-                mbox.addMessage(oc, tis, (int) te.getSize(),
-                    te.getModTime().getTime(), opt);
+                mbox.addMessage(oc, ais.getInputStream(), (int)aie.getSize(),
+                    aie.getModTime(), opt);
                 break;
             }
         } catch (Exception e) {
-            addError(errs, te.getName(), e.getMessage());
+            addError(errs, aie.getName(), e.getMessage());
         }
     }
 }
