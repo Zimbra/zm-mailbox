@@ -17,6 +17,8 @@ package com.zimbra.common.soap;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,7 +92,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private boolean mUseJson = false;
     private String mFilePath;
     private ElementFactory mFactory;
-    
+    private PrintStream mOut;
+
+    SoapCommandUtil() {
+        try {
+            mOut = new PrintStream(System.out, true, "utf-8");
+        } catch (UnsupportedEncodingException e) {}
+    }
+
     @SuppressWarnings("unchecked")
     private void parseCommandLine(String[] args) {
         
@@ -262,13 +271,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     
     public void sendSoapMessage(Element envelope) {
         if (mVerbose > 1) {
-            System.out.println(DomUtil.toString(envelope.toXML(), true));
+            mOut.println(DomUtil.toString(envelope.toXML(), true));
         }
     }
     
     public void receiveSoapMessage(Element envelope) {
         if (mVerbose > 1) {
-            System.out.println(DomUtil.toString(envelope.toXML(), true));
+            mOut.println(DomUtil.toString(envelope.toXML(), true));
         }
     }
     
@@ -302,7 +311,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         Element response = null;
         
         if (mVerbose > 0) {
-            System.out.println("Sending admin auth request to " + mUrl);
+            mOut.println("Sending admin auth request to " + mUrl);
         }
         
         try {
@@ -346,7 +355,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private void mailboxAuth()
     throws Exception {
         if (mVerbose > 0) {
-            System.out.println("Sending auth request to " + mUrl);
+            mOut.println("Sending auth request to " + mUrl);
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
@@ -363,7 +372,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         try {
             response = transport.invoke(auth, false, !mUseSession, null);
-            System.out.println(response.prettyPrint());
+            mOut.println(response.prettyPrint());
         } catch (SoapFaultException e) {
             System.err.println("Authentication error: " + e.getMessage());
             System.exit(1);
@@ -421,7 +430,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
         
         if (mVerbose == 1 || mNoOp) {
-            System.out.println(request.prettyPrint());
+            mOut.println(request.prettyPrint());
         }
         if (mNoOp) {
             return;
@@ -493,7 +502,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             if (resultString == null) {
                 resultString = "";
             }
-            System.out.println(resultString);
+            mOut.println(resultString);
         }
     }
 
