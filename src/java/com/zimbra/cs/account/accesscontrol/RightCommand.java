@@ -42,7 +42,8 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
-import com.zimbra.cs.account.accesscontrol.RightChecker.SearchGrantResult;
+import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
+import com.zimbra.cs.account.accesscontrol.SearchGrants.SearchGrantsResults;
 
 public class RightCommand {
     
@@ -1068,13 +1069,12 @@ public class RightCommand {
             // we want all target types
             Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
             
-            Map<String, SearchGrantResult> sgr = 
-                RightChecker.searchGrants(prov, targetTypesToSearch, granteeFilter);
-
-            for (SearchGrantResult grant : sgr.values()) {
-                Pair<Entry, ZimbraACL> grantsOnTarget = RightChecker.getGrants(prov, grant);
-                Entry grantedOnEntry = grantsOnTarget.getFirst();
-                ZimbraACL acl = grantsOnTarget.getSecond();
+            SearchGrants searchGrants = new SearchGrants(prov, targetTypesToSearch, granteeFilter);
+            Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();
+            
+            for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
+                Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
+                ZimbraACL acl = grantsOnTarget.getAcl();
                 TargetType grantedOnTargetType = TargetType.getTargetType(grantedOnEntry);
                 grants.addGrants(grantedOnTargetType, grantedOnEntry, acl, granteeFilter);
             }
@@ -1223,6 +1223,47 @@ public class RightCommand {
         List<ZimbraACE> revoked = RightUtil.revokeRight(prov, targetEntry, aces);
         if (revoked.isEmpty())
             throw AccountServiceException.NO_SUCH_GRANT(ace.dump());
+    }
+    
+    /**
+     * revoke all grants granted to the secified grantee, invoked from 
+     * LdapProvisioning.deleteAccount.
+     * 
+     * note: no verification (things done in verifyGrant) is done in this method
+     *       if the authed user can delete the account, it can delete all grants
+     *       granted to the account.
+     * 
+     */
+    public static void revokeAllRights(Provisioning prov,
+            GranteeType granteeType, String granteeId) throws ServiceException {
+
+        verifyAccessManager();
+        
+        //
+        // search grants
+        //
+        
+        // we want all target types
+        Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
+
+        // search for grants granted to this grantee
+        Set<String> granteeIdsToSearch = new HashSet<String>();
+        granteeIdsToSearch.add(granteeId);
+        
+        SearchGrants searchGrants = new SearchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();
+        
+        for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
+            Entry targetEntry = grantsOnTarget.getTargetEntry();
+            
+            Set<ZimbraACE> acesToRevoke = new HashSet<ZimbraACE>();
+            for (ZimbraACE ace : grantsOnTarget.getAcl().getAllACEs()) {
+                if (granteeId.equals(ace.getGrantee())) {
+                    acesToRevoke.add(ace);
+                }
+            }
+            List<ZimbraACE> revoked = RightUtil.revokeRight(prov, targetEntry, acesToRevoke);
+        }
     }
 
     public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts) throws ServiceException {

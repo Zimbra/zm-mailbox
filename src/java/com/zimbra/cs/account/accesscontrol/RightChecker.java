@@ -46,21 +46,15 @@ import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
-import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.RightBearer.GlobalAdmin;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
-import com.zimbra.cs.account.accesscontrol.RightCommand.RightAggregation;
-import com.zimbra.cs.account.ldap.LdapDIT;
+import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -1410,166 +1404,7 @@ public class RightChecker {
     static boolean isDelegatedAdmin(Account acct, boolean asAdmin) {
         return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false));
     }
-    
-    static class SearchGrantResult {
-        String cn;
-        String zimbraId;
-        Set<String> objectClass;
-        String[] zimbraACE;
-        
-        String dump() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("SearchGrantResult: ");
-            sb.append("cn=" + cn);
-            sb.append("zimbraId=" + zimbraId);
-            sb.append(", objectClass=[");
-            for (String oc : objectClass)
-                sb.append(oc + ", ");
-            sb.append("]");
-            sb.append(", zimbraACE=[");
-            for (String ace : zimbraACE)
-                sb.append(ace + ", ");
-            
-            return sb.toString();
-        }
-        
-        private String[] getMultiAttrString(Map<String, Object> attrs, String attrName) {
-            Object obj = attrs.get(attrName);
-            if (obj instanceof String) {
-                String[] values = new String[1];
-                values[0] = (String)obj;
-                return values;
-            } else
-                return (String[])obj;
-            
-        }
-        
-        private SearchGrantResult(Map<String, Object> attrs) {
-            cn = (String)attrs.get(Provisioning.A_cn);
-            zimbraId = (String)attrs.get(Provisioning.A_zimbraId);
-            objectClass = new HashSet<String>(Arrays.asList(getMultiAttrString(attrs, Provisioning.A_objectClass)));
-            zimbraACE = getMultiAttrString(attrs, Provisioning.A_zimbraACE);
-        }
-        
-        private String getTargetId() {
-            // urg! zimlet does not have an id, use cn.
-            // need to return something for the map key for SearchGrantVisitor.visit
-            // id is only used for grants granted on group-ed entries (account, cr, dl)
-            // in computeRightsOnGroupShape
-            return zimbraId!=null?zimbraId:cn;
-        }
-    }
-    
-    private static class SearchGrantVisitor implements LdapUtil.SearchLdapVisitor {
-        Map<String, SearchGrantResult> mResult; 
-        
-        SearchGrantVisitor(Map<String, SearchGrantResult> result) {
-            mResult = result;
-        }
 
-        public void visit(String dn, Map<String, Object> attrs) {
-            SearchGrantResult sgr = new SearchGrantResult(attrs);
-            mResult.put(sgr.getTargetId(), sgr);
-        }
-    }
-      
-    /**
-     *
-     * search grants granted to any of the grantees specified in granteeIds 
-     * granted on any of the target types specified in targetTypes.
-     *
-     * @param prov
-     * @param granteeIds
-     * @return
-     * @throws ServiceException
-     */
-    static Map<String, SearchGrantResult> searchGrants(Provisioning prov, 
-            Set<TargetType> targetTypes, Set<String> granteeIds) throws ServiceException {
-        
-        Pair<String, Set<String>> baseAndOcs = TargetType.getSearchBaseAndOCs(prov, targetTypes);
-
-        // base
-        String base = baseAndOcs.getFirst();
-        
-        // query
-        StringBuilder ocQuery = new StringBuilder();
-        ocQuery.append("(|");
-        for (String oc : baseAndOcs.getSecond())
-            ocQuery.append("(" + Provisioning.A_objectClass + "=" + oc + ")");
-        ocQuery.append(")");
-        
-        StringBuilder granteeQuery = new StringBuilder();
-        granteeQuery.append("(|");
-        for (String granteeId : granteeIds)
-            granteeQuery.append("(" + Provisioning.A_zimbraACE + "=" + granteeId + "*)");
-        granteeQuery.append(")");
-        
-        String query = "(&" + granteeQuery + ocQuery + ")";
-        
-        String returnAttrs[] = new String[] {Provisioning.A_cn,
-                                             Provisioning.A_zimbraId,
-                                             Provisioning.A_objectClass,
-                                             Provisioning.A_zimbraACE};
-        
-        
-        Map<String, SearchGrantResult> result = new HashMap<String, SearchGrantResult>();
-        SearchGrantVisitor visitor = new SearchGrantVisitor(result);
-        LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
-        
-        return result;
-    }
-    
-    /**
-     * converts a SearchGrantResult to <Entry, ZimbraACL> pair.
-     * 
-     * @param prov
-     * @param sgr
-     * @return
-     */
-    static Pair<Entry, ZimbraACL> getGrants(Provisioning prov, SearchGrantResult sgr) 
-    throws ServiceException {
-        
-        TargetType tt;
-        if (sgr.objectClass.contains(AttributeClass.calendarResource.getOCName()))
-            tt = TargetType.calresource;
-        else if (sgr.objectClass.contains(AttributeClass.account.getOCName()))
-            tt = TargetType.account;
-        else if (sgr.objectClass.contains(AttributeClass.cos.getOCName()))
-            tt = TargetType.cos;
-        else if (sgr.objectClass.contains(AttributeClass.distributionList.getOCName()))
-            tt = TargetType.dl;
-        else if (sgr.objectClass.contains(AttributeClass.domain.getOCName()))
-            tt = TargetType.domain;
-        else if (sgr.objectClass.contains(AttributeClass.server.getOCName()))
-            tt = TargetType.server;
-        else if (sgr.objectClass.contains(AttributeClass.xmppComponent.getOCName()))
-            tt = TargetType.xmppcomponent;
-        else if (sgr.objectClass.contains(AttributeClass.zimletEntry.getOCName()))
-            tt = TargetType.zimlet;
-        else if (sgr.objectClass.contains(AttributeClass.globalConfig.getOCName()))
-            tt = TargetType.config;
-        else if (sgr.objectClass.contains(AttributeClass.aclTarget.getOCName()))
-            tt = TargetType.global;
-        else 
-            throw ServiceException.FAILURE("cannot determine target type from SearchGrantResult. " + sgr.dump(), null);
-        
-        Entry entry = null;
-        try {
-            if (tt == TargetType.zimlet)
-                entry = TargetType.lookupTarget(prov, tt, TargetBy.name, sgr.cn);
-            else
-                entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
-            if (entry == null) {
-                ZimbraLog.acl.warn("canot find target by id " + sgr.zimbraId);
-                throw ServiceException.FAILURE("canot find target by id " + sgr.zimbraId + ". " + sgr.dump(), null);
-            }
-            ZimbraACL acl = new ZimbraACL(sgr.zimbraACE, tt, entry.getLabel());
-            return new Pair<Entry, ZimbraACL>(entry, acl);
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("canot find target by id " + sgr.zimbraId + ". " + sgr.dump(), null);
-        }
-    }
-           
     private static boolean isSubTarget(Provisioning prov, Entry targetSup, Entry targetSub) throws ServiceException {
        
         if (targetSup instanceof Domain) {
@@ -1640,15 +1475,14 @@ public class RightChecker {
      * @throws ServiceException
      */
     static void checkDenied(Provisioning prov, Entry targetToGrant, Right rightToGrant,
-            Map<String, SearchGrantResult> sgr, 
+            Set<GrantsOnTarget> grantsOnTargets, 
             String granteeId, Set<String> granteeGroups) throws ServiceException {
         
-        for (SearchGrantResult grant : sgr.values()) {
-            Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
-            Entry grantedOnEntry = grantsOnTarget.getFirst();
+        for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
+            Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
             
             if (isSubTarget(prov, targetToGrant, grantedOnEntry)) {
-                ZimbraACL grants = grantsOnTarget.getSecond();
+                ZimbraACL grants = grantsOnTarget.getAcl();
                 
                 // check denied grants
                 for (ZimbraACE ace : grants.getDeniedACEs()) {
@@ -1727,13 +1561,14 @@ public class RightChecker {
         Grantee grantee = new Grantee(grantor);
         Set<String> granteeIdsToSearch = grantee.getIdAndGroupIds();
         
-        Map<String, SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
-                
+        SearchGrants searchGrants = new SearchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();
+        
         // check grants granted to the grantor
-        checkDenied(prov, targetToGrant, rightToGrant, sgr, grantor.getId(), null);
+        checkDenied(prov, targetToGrant, rightToGrant, grantsOnTargets, grantor.getId(), null);
         
         // check grants granted to any groups of the grantor
-        checkDenied(prov, targetToGrant, rightToGrant, sgr, null, granteeIdsToSearch);
+        checkDenied(prov, targetToGrant, rightToGrant, grantsOnTargets, null, granteeIdsToSearch);
         
         // all is well, or else PERM_DENIED would've been thrown in one of the checkDenied calls
         // yes, you can grant the rightToGrant on targetToGrant.
@@ -1817,7 +1652,7 @@ public class RightChecker {
     private static void computeRightsOnGroupShape(Provisioning prov, Grantee grantee, 
             TargetType targetType, Set<GroupShape> groupShapes,
             boolean expandSetAttrs, boolean expandGetAttrs, AllEffectiveRights aer,
-            Set<String> entriesHasGrants) throws ServiceException {
+            Set<String> entryIdsHasGrants) throws ServiceException {
         
         for (GroupShape shape : groupShapes) {
             // get any one member in the shape and use that as a pilot target to get 
@@ -1838,7 +1673,7 @@ public class RightChecker {
                 target = TargetType.lookupTarget(prov, targetType, TargetBy.name, memberName, false);
                 if (target != null) {
                     String targetId = TargetType.getId(target);
-                    if (!entriesHasGrants.contains(targetId)) {
+                    if (!entryIdsHasGrants.contains(targetId)) {
                         er = new EffectiveRights(
                                 targetType.getCode(), targetId, target.getLabel(), grantee.getId(), grantee.getName());
                         RightChecker.getEffectiveRights(grantee, target, expandSetAttrs, expandGetAttrs, er);
@@ -2114,7 +1949,8 @@ public class RightChecker {
         // get the set of zimbraId of the grantees to search for
         Set<String> granteeIdsToSearch = grantee.getIdAndGroupIds();
         
-        Map<String, SearchGrantResult> sgr = searchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        SearchGrants searchGrants = new SearchGrants(prov, targetTypesToSearch, granteeIdsToSearch);
+        Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();
         
         // staging for group grants
         Set<DistributionList> groupsWithGrants = new HashSet<DistributionList>();
@@ -2127,10 +1963,9 @@ public class RightChecker {
         //     domains     - populate the "all entries in this domain" field in AllEffectiveRights
         //     groups      - remember the groups and process them in stage 2.
         //
-        for (SearchGrantResult grant : sgr.values()) {
-            Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
-            Entry grantedOnEntry = grantsOnTarget.getFirst();
-            ZimbraACL acl = grantsOnTarget.getSecond();
+        for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
+            Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
+            ZimbraACL acl = grantsOnTarget.getAcl();
             TargetType targetType = TargetType.getTargetType(grantedOnEntry);
             
             if (targetType == TargetType.global)
@@ -2166,19 +2001,26 @@ public class RightChecker {
         // if any of the entries in a shape also have grants as an individual, the effective rigths for 
         // those entries will be replaced in stage 3.
         //
-        computeRightsOnGroupShape(prov, grantee, TargetType.account, accountShapes, expandSetAttrs, expandGetAttrs, aer, sgr.keySet());
-        computeRightsOnGroupShape(prov, grantee, TargetType.calresource, calendarResourceShapes, expandSetAttrs, expandGetAttrs, aer, sgr.keySet());
-        computeRightsOnGroupShape(prov, grantee, TargetType.dl, distributionListShapes, expandSetAttrs, expandGetAttrs, aer, sgr.keySet());
+        Set entryIdsHasGrants = new HashSet<String>();
+        for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
+            Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
+            if (grantedOnEntry instanceof NamedEntry) {
+                entryIdsHasGrants.add(((NamedEntry)grantedOnEntry).getId());
+            }
+        }
+        
+        computeRightsOnGroupShape(prov, grantee, TargetType.account, accountShapes, expandSetAttrs, expandGetAttrs, aer, entryIdsHasGrants);
+        computeRightsOnGroupShape(prov, grantee, TargetType.calresource, calendarResourceShapes, expandSetAttrs, expandGetAttrs, aer, entryIdsHasGrants);
+        computeRightsOnGroupShape(prov, grantee, TargetType.dl, distributionListShapes, expandSetAttrs, expandGetAttrs, aer, entryIdsHasGrants);
         
         //
         // Stage 3
         //
         // process grants on the granted entry
         //
-        for (SearchGrantResult grant : sgr.values()) {
-            Pair<Entry, ZimbraACL> grantsOnTarget = getGrants(prov, grant);
-            Entry grantedOnEntry = grantsOnTarget.getFirst();
-            ZimbraACL acl = grantsOnTarget.getSecond();
+        for (GrantsOnTarget grantsOnTarget : grantsOnTargets) {
+            Entry grantedOnEntry = grantsOnTarget.getTargetEntry();
+            ZimbraACL acl = grantsOnTarget.getAcl();
             TargetType targetType = TargetType.getTargetType(grantedOnEntry);
             
             if (targetType != TargetType.global)
@@ -2261,7 +2103,7 @@ public class RightChecker {
     }
     
     private static void shapeTest() throws ServiceException {
-        // setupShapeTest();
+        setupShapeTest();
         
         Provisioning prov = Provisioning.getInstance();
         

@@ -59,6 +59,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -2073,13 +2074,23 @@ public class LdapProvisioning extends Provisioning {
         if (acc == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
 
+        // remove the account from all DLs
         removeAddressFromAllDistributionLists(acc.getName()); // this doesn't throw any exceptions
 
+        // delete all aliases of the account
         String aliases[] = acc.getMailAlias();
         if (aliases != null)
             for (int i=0; i < aliases.length; i++)
                 removeAlias(acc, aliases[i]); // this also removes each alias from any DLs
-
+        
+        // delete all grants granted to the account
+        try {
+            RightCommand.revokeAllRights(this, GranteeType.GT_USER, zimbraId);
+        } catch (ServiceException e) {
+            // eat the exception and continue
+            ZimbraLog.account.warn("cannot revoke grants", e);
+        }
+        
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
@@ -2815,8 +2826,10 @@ public class LdapProvisioning extends Provisioning {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
+        // remove the DL from all DLs
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
 
+        // delete all aliases of the DL
         String aliases[] = dl.getAliases();
         if (aliases != null) {
             String dlName = dl.getName();
@@ -2826,6 +2839,14 @@ public class LdapProvisioning extends Provisioning {
                 if (!dlName.equalsIgnoreCase(aliases[i]))
                 removeAlias(dl, aliases[i]); // this also removes each alias from any DLs
             }
+        }
+        
+        // delete all grants granted to the DL
+        try {
+             RightCommand.revokeAllRights(this, GranteeType.GT_GROUP, zimbraId);
+        } catch (ServiceException e) {
+            // eat the exception and continue
+            ZimbraLog.account.warn("cannot revoke grants", e);
         }
 
         ZimbraLdapContext zlc = null;
