@@ -279,6 +279,8 @@ public class MetadataDump {
             int mboxId = 0;
             int itemId = 0;
     
+            PrintStream out = new PrintStream(System.out, true, "utf-8");
+
             CommandLine cl = parseArgs(args);
             if (cl.hasOption(OPT_HELP)) {
                 usage(null);
@@ -293,7 +295,7 @@ public class MetadataDump {
                     String encoded = loadFromFile(file);
                     Metadata md = new Metadata(encoded);
                     String pretty = md.prettyPrint();
-                    System.out.println(pretty);
+                    out.println(pretty);
                     return;
                 } else {
                     System.err.println("File " + infileName + " does not exist");
@@ -340,19 +342,19 @@ public class MetadataDump {
     
                 // main item
                 if (!revs.isEmpty())
-                    printBanner(System.out, "Current Revision");
-                item.print(System.out);
+                    printBanner(out, "Current Revision");
+                item.print(out);
                 first = false;
     
                 // revisions
                 for (Row rev : revs) {
                     String version = rev.get("version");
                     if (!first) {
-                        System.out.println();
-                        System.out.println();
+                        out.println();
+                        out.println();
                     }
-                    printBanner(System.out, "Revision " + version);
-                    rev.print(System.out);
+                    printBanner(out, "Revision " + version);
+                    rev.print(out);
                     first = false;
                 }
             } finally {
