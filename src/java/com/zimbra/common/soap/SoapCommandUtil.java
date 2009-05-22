@@ -24,8 +24,8 @@
  */
 package com.zimbra.common.soap;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,9 +50,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 
 public class SoapCommandUtil {
@@ -84,8 +82,8 @@ public class SoapCommandUtil {
     private String mAdminAccountName;
     private String mTargetAccountName;
     private String mPassword;
-    private String mPasswordFile;
     private String mRootElement;
+    @SuppressWarnings("unchecked")
     private List mPaths;
     private String mAuthToken;
     private boolean mVerbose = false;
@@ -343,6 +341,8 @@ public class SoapCommandUtil {
     
     private void run()
     throws Exception {
+        PrintStream out = new PrintStream(System.out, true, "utf-8");
+
         if (mAdminAccountName != null) {
             adminAuth();
         } else {
@@ -374,7 +374,7 @@ public class SoapCommandUtil {
         
         // Send request and print response
         if (mVerbose) {
-            System.out.println(DomUtil.toString(request, true));
+            out.println(DomUtil.toString(request, true));
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
@@ -391,7 +391,7 @@ public class SoapCommandUtil {
             System.exit(1);
         }
         
-        System.out.println(DomUtil.toString(response.toXML(), true));
+        out.println(DomUtil.toString(response.toXML(), true));
     }
 
     /**
