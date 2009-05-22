@@ -5988,6 +5988,7 @@ public class Mailbox {
             if (tombstones != null && !tombstones.isEmpty())
                 DbMailItem.writeTombstones(this, tombstones);
 
+            DbMailItem.closeOldConversations(this, LC.conversation_max_age_ms.longValue());
             success = true;
         } finally {
             endTransaction(success);

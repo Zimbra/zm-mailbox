@@ -48,7 +48,19 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.VirtualConversation;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.util.TypedIdList;
@@ -893,12 +905,45 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("writing open conversation association for hash " + hash, e);
+            throw ServiceException.FAILURE("closing open conversation association for hash " + hash, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
     }
 
+    /**
+     * Deletes rows from <tt>open_conversation</tt> whose items are older than
+     * the specified number of of milliseconds.
+     */
+    public static void closeOldConversations(Mailbox mbox, long timeoutMillis) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        long cutoff = (System.currentTimeMillis() - timeoutMillis) / 1000;
+        try {
+            String mailboxJoin = (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = open_conversation.mailbox_id");
+            stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(mbox) +
+                " WHERE " + IN_THIS_MAILBOX_AND + "conv_id IN (" +
+                "  SELECT id FROM " + getMailItemTableName(mbox, "mi") +
+                "  WHERE mi.id = open_conversation.conv_id" +
+                   mailboxJoin +
+                "  AND date < ?)");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setInt(pos++, mbox.getId());
+            }
+            ZimbraLog.purge.debug("Closing conversations dated before %d.", cutoff);
+            stmt.setLong(pos++, cutoff); 
+            int numRows = stmt.executeUpdate();
+            if (numRows > 0) {
+                ZimbraLog.purge.info("Closed %d conversations dated before %d.", numRows, cutoff);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("closing open conversations dated before " + cutoff, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
     public static void changeOpenTarget(String hash, MailItem oldTarget, int newTargetId) throws ServiceException {
         Mailbox mbox = oldTarget.getMailbox();
 
