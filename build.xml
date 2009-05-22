@@ -316,7 +316,7 @@
 
     <target name="set-buildinfo-vars">
         <tstamp/>
-        <condition property="zimbra.buildinfo.version" value="5.0">
+        <condition property="zimbra.buildinfo.version" value="6.0.0">
             <not><isset property="${zimbra.buildinfo.version}"/></not>
         </condition>
         <condition property="zimbra.buildinfo.type" value="">
