@@ -22,18 +22,7 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -753,9 +742,10 @@ public class TarFormatter extends Formatter {
 
     @Override public void saveCallback(Context context, String contentType,
         Folder fldr, String file) throws IOException, ServiceException {
+	    Exception ex = null;
         ItemData id = null;
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
-        StringBuffer errs = new StringBuffer();
+        List<ServiceException> errs = new LinkedList<ServiceException>();
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         long last = System.currentTimeMillis();
@@ -805,15 +795,19 @@ public class TarFormatter extends Formatter {
             contentType = context.params.get(UserServlet.UPLOAD_TYPE);
             if (filename == null)
                 filename = "";
-            if (contentType.equals("application/x-tar") ||
-                filename.endsWith(".tar"))
-                ais = new TarArchiveInputStream(is, charset);
-            else if (contentType.equals("application/zip") ||
-                filename.endsWith(".zip"))
-                ais = new ZipArchiveInputStream(is, charset);
-            else
-                ais = new TarArchiveInputStream(new GZIPInputStream(is),
-                    charset);
+	        try {
+				if (contentType.equals("application/x-tar") ||
+					filename.endsWith(".tar"))
+					ais = new TarArchiveInputStream(is, charset);
+				else if (contentType.equals("application/zip") ||
+					filename.endsWith(".zip"))
+					ais = new ZipArchiveInputStream(is, charset);
+				else
+					ais = new TarArchiveInputStream(new GZIPInputStream(is),
+						charset);
+	        } catch (IOException e) {
+		        throw FormatterServiceException.INVALID_FORMAT(filename);
+	        }
             if (subfolder != null && !subfolder.equals(""))
                 fldr = createPath(context, fmap, fldr.getPath() + subfolder,
                     Folder.TYPE_UNKNOWN);
@@ -858,14 +852,15 @@ public class TarFormatter extends Formatter {
                             delIdsArray[i++] = Mailbox.ID_AUTO_INCREMENT;
                         context.targetMailbox.delete(context.opContext,
                             delIdsArray, MailItem.TYPE_UNKNOWN, null);
-                    } catch (Exception e) {
-                        if (!(e instanceof MailServiceException) ||
-                            ((MailServiceException)e).getCode() !=
-                            MailServiceException.NO_SUCH_FOLDER) {
-                            r = Resolve.Replace;
-                            addError(errs, f.getName(),
-                                "unable to reset folder: " + e);
-                        }
+                    } catch (MailServiceException e) {
+						if (e.getCode() != MailServiceException.NO_SUCH_FOLDER) {
+							r = Resolve.Replace;
+							addError(errs, e);
+						}
+						// TODO: Why are we ignoring other mail service exceptions?
+					} catch (Exception e) {
+						r = Resolve.Replace;
+						addError(errs, FormatterServiceException.UNKNOWN_ERROR(f.getName(), e));
                     }
                 }
                 context.targetMailbox.purge(MailItem.TYPE_UNKNOWN);
@@ -893,20 +888,17 @@ public class TarFormatter extends Formatter {
                         continue;
                     }
                     if (aie.getName().endsWith(".err")) {
-                        addError(errs, aie.getName(),
-                            "ignored item data size mismatch");
+                        addError(errs, FormatterServiceException.MISMATCHED_SIZE(aie.getName()));
                     } else if (id == null) {
                         if (meta)
-                            addError(errs, aie.getName(),
-                                "item content missing meta information");
+                            addError(errs, FormatterServiceException.MISSING_META(aie.getName()));
                         else
                             addData(context, fldr, fmap, searchTypes, r, ais,
                                 aie, errs);
                     } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) ||
                         (id.ud.getBlobDigest() != null && id.ud.size !=
                         aie.getSize())) {
-                        addError(errs, aie.getName(),
-                            "mismatched item content and meta");
+                        addError(errs, FormatterServiceException.MISMATCHED_META(aie.getName()));
                     } else {
                         addItem(context, fldr, fmap, digestMap, idMap, ids,
                             searchTypes, r, id, ais, aie, errs);
@@ -917,31 +909,38 @@ public class TarFormatter extends Formatter {
                     addItem(context, fldr, fmap, digestMap, idMap, ids,
                         searchTypes, r, id, ais, null, errs);
             } catch (Exception e) {
-                addError(errs, id == null ? null : id.path,
-                    e.getLocalizedMessage());
+				if (id == null) {
+					addError(errs, FormatterServiceException.UNKNOWN_ERROR(e));
+				} else {
+					addError(errs, FormatterServiceException.UNKNOWN_ERROR(id.path, e));
+				}
                 id = null;
             } finally {
                 if (ais != null)
                     ais.close();
             }
         } catch (Exception e) {
-            if (errs.length() > 0) {
-                addError(errs, null, e.getLocalizedMessage());
-                throw new IOException(errs.toString());
-            }
-            throw ServiceException.FAILURE("Archive formatter failure", e);
-        }
+			ex = e;
+		}
+
+	    try {
+	        updateClient(context, ex, errs);
+	    } catch (ServiceException e) {
+		    throw e;
+	    } catch (Exception e) {
+		    throw ServiceException.FAILURE("Archive formatter failure", e);
+	    }
     }
 
-    private void addError(StringBuffer errs, String path, String err) {
-        if (errs.length() != 0)
-            errs.append('\n');
-        if (path != null)
-            errs.append(path + ": ");
-        errs.append(err);
-        ZimbraLog.misc.info(err);
-    }
-    
+	private void addError(List<ServiceException> errs, Throwable cause) {
+		addError(errs, FormatterServiceException.UNKNOWN_ERROR(cause));
+	}
+	private void addError(List<ServiceException> errs, ServiceException ex) {
+		errs.add(ex);
+		// TODO: What exactly should we put into into the log?
+		ZimbraLog.misc.info(ex.getMessage());
+	}
+
     private Folder createParent(Context context, Map<Object, Folder> fmap,
         String path, byte view) throws ServiceException {
         String parent = path.substring(0, path.lastIndexOf('/'));
@@ -971,9 +970,7 @@ public class TarFormatter extends Formatter {
             !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
             (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
             fldr.getDefaultView() == Folder.TYPE_WIKI)))
-            throw ServiceException.INVALID_REQUEST(
-                "folder cannot contain item type " +
-                Folder.getNameForType(view), null);
+            throw FormatterServiceException.INVALID_TYPE(Folder.getNameForType(view), path);
         return fldr;
     }
 
@@ -1007,7 +1004,7 @@ public class TarFormatter extends Formatter {
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
         Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
         ItemData id, ArchiveInputStream ais, ArchiveInputEntry aie,
-        StringBuffer errs) throws MessagingException, ServiceException {
+        List<ServiceException> errs) throws MessagingException, ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -1024,7 +1021,7 @@ public class TarFormatter extends Formatter {
                 id.ud.type) < 0))
                 return;
             if (id.ud.getBlobDigest() != null && aie == null) {
-                addError(errs, id.path, "missing item blob for meta");
+                addError(errs, FormatterServiceException.MISSING_BLOB(id.path));
                 return;
             }
             if (root)
@@ -1438,16 +1435,16 @@ public class TarFormatter extends Formatter {
         } catch (MailServiceException e) {
             if (r != Resolve.Skip ||
                 e.getCode() != MailServiceException.ALREADY_EXISTS) {
-                addError(errs, id.path, e.getMessage());
+                addError(errs, e);
             }
         } catch (Exception e) {
-            addError(errs, id.path, e.getMessage());
+            addError(errs, FormatterServiceException.UNKNOWN_ERROR(id.path, e));
         }
     }
 
     private void addData(Context context, Folder fldr,
         Map<Object, Folder> fmap, byte[] searchTypes, Resolve r,
-        ArchiveInputStream ais, ArchiveInputEntry aie, StringBuffer errs) throws
+        ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs) throws
         MessagingException, ServiceException {
         try {
             int defaultFldr;
@@ -1508,9 +1505,7 @@ public class TarFormatter extends Formatter {
                     !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
                     (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
                     fldr.getDefaultView() == Folder.TYPE_WIKI)))
-                    throw ServiceException.INVALID_REQUEST(
-                        "folder cannot contain item type " +
-                        Folder.getNameForType(view), null);
+	                throw FormatterServiceException.INVALID_TYPE(Folder.getNameForType(view), fldr.getPath());
             } else {
                 String s = fldr.getPath();
                 
@@ -1559,7 +1554,7 @@ public class TarFormatter extends Formatter {
                     
                     if (cards == null || cards.size() == 0 ||
                         (cards.size() == 1 && cards.get(0).fields.isEmpty())) {
-                        addError(errs, name, "no contact fields found in vcard");
+                        addError(errs, FormatterServiceException.MISSING_VCARD_FIELDS(name));
                         return;
                     }
                     for (VCard vcf : cards) {
@@ -1578,7 +1573,7 @@ public class TarFormatter extends Formatter {
                 try {
                     oldItem = mbox.getItemByPath(oc, file, fldr.getId());
                     if (oldItem.getType() != type) {
-                        addError(errs, name, "cannot overwrite non matching data");
+                        addError(errs, FormatterServiceException.MISMATCHED_TYPE(name));
                     } else if (r == Resolve.Replace) {
                         mbox.delete(oc, oldItem.getId(), type);
                         throw MailServiceException.NO_SUCH_ITEM(oldItem.getId());
@@ -1613,7 +1608,7 @@ public class TarFormatter extends Formatter {
                 break;
             }
         } catch (Exception e) {
-            addError(errs, aie.getName(), e.getMessage());
+            addError(errs, FormatterServiceException.UNKNOWN_ERROR(aie.getName(), e));
         }
     }
 }
