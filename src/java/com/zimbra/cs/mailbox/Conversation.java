@@ -776,7 +776,12 @@ public class Conversation extends MailItem {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
-
+    
+    @Override public String getSortSubject() {
+        // not actually used since Conversations aren't indexed...but here for correctness/completeness
+        String subject = getNormalizedSubject();
+        return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
+    }
 
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();

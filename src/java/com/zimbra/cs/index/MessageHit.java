@@ -184,11 +184,7 @@ public class MessageHit extends ZimbraHit {
 
     public String getSubject() throws ServiceException {
         if (mCachedSubj == null) {
-            if (mConversationHit != null) { 
-                mCachedSubj = getConversationResult().getSubject();
-            } else {
-                mCachedSubj = getMessage().getNormalizedSubject();
-            }
+            mCachedSubj = getMessage().getSortSubject();
         }
         return mCachedSubj;
     }

@@ -420,24 +420,8 @@ public final class SearchParams implements Cloneable {
             // bug 35039 - using cursors with conversation-coalescing leads to convs 
             //             appearing on multiple pages
             for (byte b : params.getTypes()) {
-                if (false) {
-                    if (b == MailItem.TYPE_MESSAGE) {
-                        switch (params.getSortBy()) {
-                            case SUBJ_ASCENDING:
-                            case SUBJ_DESCENDING:
-                                cursor = null;  // bug 37344 - cursor problems w/ normalization
-                        }
-                    } 
-                }
                 if (b == MailItem.TYPE_CONVERSATION) {
                     useCursorToNarrowDbQuery = false;
-                    if (false) {
-                        switch (params.getSortBy()) {
-                            case SUBJ_ASCENDING:
-                            case SUBJ_DESCENDING:
-                                cursor = null;  // bug 37344 - cursor problems w/ normalization
-                        }
-                    }
                 }
             }
         }

@@ -44,6 +44,7 @@ public final class ConversationHit extends ZimbraHit {
     
     private Conversation mConversation = null;
     private Map<Long, MessageHit> mMessageHits = new LinkedHashMap<Long, MessageHit>();
+    private MessageHit mLastMessageHitAdded = null;
     private int mConversationId = 0;
 
     protected ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, int conversationId, float score) {
@@ -56,6 +57,7 @@ public final class ConversationHit extends ZimbraHit {
     }
 
     public void addMessageHit(MessageHit mh) {
+        mLastMessageHitAdded = mh;
         mMessageHits.put(new Long(mh.getItemId()), mh);
     }
 
@@ -107,7 +109,10 @@ public final class ConversationHit extends ZimbraHit {
 
     public String getSubject() throws ServiceException {
         if (mCachedSubj == null) {
-            mCachedSubj = getConversation().getNormalizedSubject();
+            // the subject returned here must be the SORTING subject, which is the subject
+            // of the most recent hit we found. (as we iterate through results in order, the most 
+            // recently added message is the order we want to track for sorting purposes)  
+            mCachedSubj = mLastMessageHitAdded.getSubject();
         } 
         return mCachedSubj;
     }
