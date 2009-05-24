@@ -30,7 +30,6 @@ import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.mailbox.ACL;
 
 /**
  * This class serves as:
@@ -152,7 +151,7 @@ public abstract class AdminAccessControl {
     /*
      * for non-SOAP callsites
      */
-    private static AdminAccessControl newAdminAccessControl(AuthToken authToken) throws ServiceException {
+    public static AdminAccessControl newAdminAccessControl(AuthToken authToken) throws ServiceException {
         String acctId = authToken.getAccountId();
         Account authedAcct = Provisioning.getInstance().get(AccountBy.id, acctId);
         if (authedAcct == null)
@@ -549,7 +548,7 @@ public abstract class AdminAccessControl {
         private Provisioning mProv;
         private Set<String> mReqAttrs;
         
-        protected SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) {
+        public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
             mReqAttrs = reqAttrs;
