@@ -96,7 +96,9 @@ public class SearchAccounts extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        SearchDirectory.SearchDirectoryRightChecker rightChecker = new SearchDirectory.SearchDirectoryRightChecker(zsc, this, prov, null);
+        AdminAccessControl aac = AdminAccessControl.newAdminAccessControl(zsc);
+        AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
+            new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
         
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);

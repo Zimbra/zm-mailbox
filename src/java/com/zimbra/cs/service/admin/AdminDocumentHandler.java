@@ -224,24 +224,17 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         return AccessManager.getInstance().canModifyMailQuota(zsc.getAuthToken(), target, mailQuota);
     }
 
-    private String getDomainFromEmail(String email) throws ServiceException {
-        String parts[] = EmailUtil.getLocalPartAndDomain(email);
-        if (parts == null)
-            throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
-        return parts[1];
-    }
+
     
     /*
      * TODO:  can't be private yet, still called from ZimbraAdminExt and ZimbraCustomerServices/hosted
-     * 
-     * Need to fix those callsite to call one of the check*** methods.
+     *        Need to fix those callsite to call one of the check*** methods.
+     *        
+     *        after that, move this method and related methods to AdminAccessControl and 
+     *        only call this method from there. 
      */
-    protected boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
-        return canAccessDomain(zsc, getDomainFromEmail(email));
-    }
-    
-    private boolean canAccessCos(ZimbraSoapContext zsc, Cos cos) throws ServiceException {
-        return AccessManager.getInstance().canAccessCos(zsc.getAuthToken(), cos);
+    public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
+        return canAccessDomain(zsc, AdminAccessControl.getDomainFromEmail(email));
     }
     
 
@@ -250,43 +243,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * ======================================================================
      *     Connector methods between domain based access manager and 
      *     pure ACL based access manager.
-     *     
-     *     It is cleaner this way instead of wrap all the diff in 
-     *     AccessManager API.
      * ======================================================================
      */
-    
-    private static boolean isDomainBasedAccessManager(AccessManager am) {
-        return (!(am instanceof ACLAccessManager));
-    }
-    
-    /**
-     * check domain status for domain-ed targets: account, cr, dl
-     * 
-     * We can't put this check in ACLAccessManager because some rights, like 
-     * listAccount, listCalendarResource, listDistributionList that takes 
-     * a account/cr/dl target object, but should be allowed even when 
-     * domain status is suspended/shutdown.
-     * 
-     * Note: if target *is* a domain, domain status is *not* checked here.
-     *       - if domain status is "shutdown":
-     *             Modify/DeleteDomain would've been already blocked in the SOAP handlers
-     *       - if domain status is "suspended":
-     *             Modify/DeleteDomain are allowed/denied by our regular ACL checking:
-     *             (i.e. system admin or whoever has the right)
-     *       - for both "shutdown" and "suspended" status:      
-     *             List/Get domain are allowed/denied by our regular ACL checking.
-     * 
-     * @param target
-     */
-    private void checkDomainStatus(AccessManager am, Entry target) throws ServiceException {
-        Domain domain;
-        if (target instanceof Domain)
-            domain = (Domain)target;
-        else
-            domain = TargetType.getTargetDomain(Provisioning.getInstance(), target);
-        am.checkDomainStatus(domain); // will throw if domain is not in an accessible state
-    }
 
     /**
      * only called for domain based access manager
@@ -295,160 +253,27 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * @param attrs
      * @throws ServiceException
      */
-    public void checkModifyAttrs(AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException {
-        for (String attrName : attrs.keySet()) {
-            if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
-                attrName = attrName.substring(1);
-
-            if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, attrClass))
-                throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
-        }
-    }
-    
-    /**
-     * Only called for pure ACL based access manager.
-     * 
-     * @param am
-     * @param zsc
-     * @param target
-     * @param needed if instanceof AttrRight : a preset or attr AdminRight    
-     *                             Set<String> : attrs to get
-     *                             Map<String, Object> : attrs to set
-     * @return
-     * @throws ServiceException
-     */
-    private static boolean doCheckRight(AccessManager am, ZimbraSoapContext zsc, Entry target, Object needed) 
-    throws ServiceException {
-        
-        Account authedAcct = getAuthenticatedAccount(zsc);
-        
-        if (needed instanceof AdminRight) {
-            AdminRight adminRight = (AdminRight)needed;
-            if (adminRight.isPresetRight())
-                return am.canDo(authedAcct, target, (AdminRight)needed, true, false, null);
-            else if (adminRight.isAttrRight() && 
-                     adminRight.getRightType() == Right.RightType.getAttrs)
-                return am.canGetAttrs(authedAcct, target, ((AttrRight)needed).getAttrs(), true);
-            else
-                throw ServiceException.FAILURE("internal error", null);
-        } else if (needed instanceof Set)
-            return am.canGetAttrs(authedAcct, target, (Set<String>)needed, true);
-        else if (needed instanceof Map)
-            return am.canSetAttrs(authedAcct, target, (Map<String, Object>)needed, true);
-        else
-            throw ServiceException.FAILURE("internal error", null);
+    public void checkModifyAttrs(ZimbraSoapContext zsc, AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException {
+        AdminAccessControl.newAdminAccessControl(zsc).checkModifyAttrs(attrClass, attrs);
     }
 
-    private static String printNeededRight(Entry target, Object needed) throws ServiceException {
-        String targetInfo;
-        if (target instanceof Alias) // see comments in SearchDirectory.hasRightsToListDanglingAlias
-            targetInfo = "alias " + target.getLabel();
-        else
-            targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
-        
-        if (needed instanceof AdminRight)
-            return "need right: " + ((AdminRight)needed).getName() + " for " + targetInfo;
-        else if (needed instanceof Set)
-            return "cannot get attrs on " + targetInfo;
-        else if (needed instanceof Map)
-            return "cannot set attrs on " + targetInfo;
-        else
-            throw ServiceException.FAILURE("internal error", null);
-    }
-    
     /**
      * This has to be called *after* the *can create* check.
      * For domain based AccessManager, all attrs are allowed if the admin can create.
-     * 
-     * @param zsc
-     * @param targetType
-     * @param entryName
-     * @param attrs
-     * @throws ServiceException
      */
     protected void checkSetAttrsOnCreate(ZimbraSoapContext zsc, TargetType targetType, String entryName, Map<String, Object> attrs) 
         throws ServiceException {
-        
-        AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
-        
-        if (isDomainBasedAccessManager(am)) {
-            hasRight = true;
-        } else {
-            hasRight = am.canSetAttrsOnCreate(zsc.getAuthToken(), targetType, entryName, attrs, true);
-        }
- 
-        if (!hasRight)
-            throw ServiceException.PERM_DENIED("cannot set attrs");
+        AdminAccessControl.newAdminAccessControl(zsc).checkSetAttrsOnCreate(targetType, entryName, attrs);
     }
     
-    /**
-     * for an entry to be listed in the Search*** and GetAll*** response,
-     * the authed admin needs to have both the "list" right and "get all attrs"
-     * right.
-     * 
-     * Note: if the AccessManager is a domain based AccessManager, it always 
-     *       returns true.  Callsites of the this method must have either 
-     *       already checked the domain right (passing a pseudo "always allow"
-     *       AdminRight to the checker), or the handler is not for domain 
-     *       admins anyway so domain admins would have been blocked at SoapEngine
-     *       and won't even get into the soap handler.
-     * 
-     * @param zsc
-     * @param target
-     * @param listRight
-     * @param getAttrRight
-     * @return
-     */
     protected boolean hasRightsToList(ZimbraSoapContext zsc, NamedEntry target, 
             AdminRight listRight, Object getAttrRight) throws ServiceException {
-        
-        try {
-            checkRight(zsc, target, listRight);
-        } catch (ServiceException e) {
-            // if PERM_DENIED, log and return false, do not throw, so we 
-            // can continue with the next entry
-            if (ServiceException.PERM_DENIED.equals(e.getCode())) {
-                ZimbraLog.acl.warn(getClass().getName() + ": skipping entry " + target.getName() + ": " + e.getMessage());
-                return false;
-            } else
-                throw e;
-        }
-        
-        // check only the list right, do not check the get attrs right
-        if (getAttrRight == null)
-            return true;
-        
-        try {
-            checkRight(zsc, target, getAttrRight);
-        } catch (ServiceException e) {
-            // if PERM_DENIED, log and return false, do not throw, so we 
-            // can continue with the next entry
-            if (ServiceException.PERM_DENIED.equals(e.getCode())) {
-                ZimbraLog.acl.warn(getClass().getName() + ": skipping entry " + target.getName() + ": " + e.getMessage());
-                return false;
-            } else
-                throw e;
-        }
-        
-        return true;
+        return AdminAccessControl.newAdminAccessControl(zsc).hasRightsToList(target, listRight, getAttrRight);
     }
     
     protected boolean hasRightsToListCos(ZimbraSoapContext zsc, Cos target, 
             AdminRight listRight, Object getAttrRight) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        boolean hasRight;
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (isDomainAdminOnly(zsc))  
-                hasRight = canAccessCos(zsc, target);
-            else
-                hasRight = true;
-        } else {
-            hasRight = hasRightsToList(zsc, target, listRight,  getAttrRight);
-        }
-        
-        return hasRight;
+        return AdminAccessControl.newAdminAccessControl(zsc).hasRightsToListCos(target, listRight, getAttrRight);
     }
 
     /**
@@ -460,17 +285,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * it should have been rejected in SoapEngine.  So it should just return true 
      * here.  But we sanity check again, just in case.
      * -------------------
-     *
-     * @param zsc
-     * @param context
-     * @param target
-     * @param needed
-     * @throws ServiceException
      */
     protected void checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
+        if (AdminAccessControl.isDomainBasedAccessManager(am)) {
             // sanity check, this path is really for global admins 
             if (isDomainAdminOnly(zsc)) {
                 if (!domainAuthSufficient(context))
@@ -478,10 +296,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             }
             
         } else {
-            if (target == null)
-                target = Provisioning.getInstance().getGlobalGrant();
-            if (!doCheckRight(am, zsc, target, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(target, needed));
+            checkRight(zsc, target, needed);
         }
     }
     
@@ -497,10 +312,13 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      *     This method is static just because of that.  Ideally it should call 
      *     the other checkRight API, which does sanity checking for domain admins 
      *     if the active AccessManager is a domain based access manager.  But that 
-     *     AI has other dependency on AdminDocumentHanlder/DocumentHandler instance 
+     *     API has other dependency on AdminDocumentHanlder/DocumentHandler instance 
      *     methods, also, the sanity is really not necessary, we should remove it 
      *     at some point when we can completely retire the domain based access 
      *     manager.
+     *     
+     *     TODO: find callsites of non AdminDocumentHanlder and call AdminAccessControl 
+     *           directly, after this method can be protected and non-static
      * 
      * @param zsc
      * @param target
@@ -508,32 +326,17 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * @throws ServiceException
      */
     public static void checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            return;
-        } else {
-            if (target == null)
-                target = Provisioning.getInstance().getGlobalGrant();
-            if (!doCheckRight(am, zsc, target, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(target, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkRight(target, needed);
     }
-    
-    
-    /*
-     * ------------------------------------------------------------
-     * domain-ed rights
-     * (i.e. account, calendar resource, distribution list, domain)
-     * 
-     * methods for backward compatibility with domain based 
-     * AccessManager.  so we can:
-     * 1. switch back to domain based AccessManager if needed.
-     * 2. callsites in Admin soap handlers looks cleaner.
-     * 
-     * ------------------------------------------------------------
-     */
    
+    /* 
+     * -------------
+     * cos right
+     * -------------
+     */
+    protected void checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
+        AdminAccessControl.newAdminAccessControl(zsc).checkCosRight(cos, needed);
+    }
     
     /* 
      * -------------
@@ -541,27 +344,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * -------------
      */
     protected void checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (!canAccessAccount(zsc, account))
-                throw ServiceException.PERM_DENIED("can not access account");
-            
-            if (isDomainAdminOnly(zsc) && (needed instanceof Map))
-                checkModifyAttrs(AttributeClass.account, (Map<String, Object>)needed);
-            
-        } else {
-            checkDomainStatus(am, account);
-            
-            Boolean canAccess = canAccessAccountCommon(zsc, account);
-            boolean hasRight;
-            if (canAccess == null)
-                hasRight = doCheckRight(am, zsc, account, needed);
-            else
-                hasRight = canAccess.booleanValue();
-            if (!hasRight)
-                throw ServiceException.PERM_DENIED(printNeededRight(account, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkAccountRight(this, account, needed);
     }
 
     /*
@@ -570,27 +353,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * -----------------------
      */
     protected void checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (!canAccessAccount(zsc, cr))
-                throw ServiceException.PERM_DENIED("can not access calendar resource");
-
-            if (isDomainAdminOnly(zsc) && (needed instanceof Map))
-                checkModifyAttrs(AttributeClass.calendarResource, (Map<String, Object>)needed);
-            
-        } else {
-            checkDomainStatus(am, cr);
-            
-            Boolean canAccess = canAccessAccountCommon(zsc, cr);
-            boolean hasRight;
-            if (canAccess == null)
-                hasRight = doCheckRight(am, zsc, cr, needed);
-            else
-                hasRight = canAccess.booleanValue();
-            if (!hasRight)
-                throw ServiceException.PERM_DENIED(printNeededRight(cr, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkCalendarResourceRight(this, cr, needed);
     }
         
     /* 
@@ -599,17 +362,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * --------
      */
     protected void checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (!canAccessEmail(zsc, dl.getName()))
-                throw ServiceException.PERM_DENIED("can not access dl");
-        } else {
-            checkDomainStatus(am, dl);
-            
-            if (!doCheckRight(am, zsc, dl, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(dl, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkDistributionListRight(this, dl, needed);
     }
     
     /*
@@ -624,82 +377,22 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * Note: this method *do* check domain status.  
      */
     protected void checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (!canAccessEmail(zsc, email))
-                throw ServiceException.PERM_DENIED("can not access email:" + email);
-        } else {
-            String domainName = getDomainFromEmail(email);
-            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
-            if (domain == null)
-                throw ServiceException.PERM_DENIED("no such domain: " + domainName);
-            
-            checkDomainStatus(am, domain);
-            
-            if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkDomainRightByEmail(this, email, needed);
     }
     
     /**
      * Note: this method do *not* check domain status.  
      */
     protected void checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (isDomainAdminOnly(zsc)) {
-                if (!canAccessDomain(zsc, domainName))
-                    throw ServiceException.PERM_DENIED("can not access domain");
-                
-                if (needed instanceof Map)
-                    checkModifyAttrs(AttributeClass.domain, (Map<String, Object>)needed);
-            }
-        } else {
-            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
-            if (domain == null)
-                throw ServiceException.PERM_DENIED("no such domain: " + domainName);
-            
-            if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkDomainRight(this, domainName, needed);
     }
     
     /**
      * Note: this method do *not* check domain status.  
      */
     protected void checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            // delegate to the String version of checkDomainRight instead of duplicating
-            // the code here, since domain based access manager resolve domain rights 
-            // by comparing the domain name anyway.
-            checkDomainRight(zsc, domain.getName(), needed);
-            
-        } else {
-            if (!doCheckRight(am, zsc, domain, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
-        }
+        AdminAccessControl.newAdminAccessControl(zsc).checkDomainRight(this, domain, needed);
     }
-    
-    protected void checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
-        AccessManager am = AccessManager.getInstance();
-        
-        if (isDomainBasedAccessManager(am)) {
-            if (isDomainAdminOnly(zsc)) {
-                if (!canAccessCos(zsc, cos))
-                    throw ServiceException.PERM_DENIED("can not access cos");
-            }
-            
-        } else {
-            if (!doCheckRight(am, zsc, cos, needed))
-                throw ServiceException.PERM_DENIED(printNeededRight(cos, needed));
-        }
-    }
-    
-    
 
     // ==========================================
     //    bookkeeping and documenting gadgets

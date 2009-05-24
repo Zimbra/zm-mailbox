@@ -191,7 +191,7 @@ public abstract class DocumentHandler {
         return false;
     }
 
-    protected Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target) throws ServiceException {
+    public Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target) throws ServiceException {
         if (zsc.getAuthtokenAccountId() == null || target == null)
             return Boolean.FALSE;
         if (target.getId().equals(zsc.getAuthtokenAccountId()))

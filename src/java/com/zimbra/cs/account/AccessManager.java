@@ -231,7 +231,7 @@ public abstract class AccessManager {
     public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
     public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
     
-    public boolean canSetAttrsOnCreate(AuthToken grantee, TargetType targetType, String entryName, 
+    public boolean canSetAttrsOnCreate(Account grantee, TargetType targetType, String entryName, 
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }

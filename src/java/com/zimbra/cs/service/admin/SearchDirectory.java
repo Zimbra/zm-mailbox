@@ -142,7 +142,9 @@ public class SearchDirectory extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        SearchDirectoryRightChecker rightChecker = new SearchDirectoryRightChecker(zsc, this, prov, reqAttrs);
+        AdminAccessControl aac = AdminAccessControl.newAdminAccessControl(zsc);
+        AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
+            new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, reqAttrs);
         
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
@@ -184,93 +186,6 @@ public class SearchDirectory extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
-    }
-    
-    protected static class SearchDirectoryRightChecker implements NamedEntry.CheckRight {
-        protected ZimbraSoapContext mZsc;
-        protected AdminDocumentHandler mHandler;
-        protected Provisioning mProv;
-        
-        protected Set<String> mReqAttrs;
-        
-        protected SearchDirectoryRightChecker(ZimbraSoapContext zsc, AdminDocumentHandler handler, Provisioning prov, Set<String> reqAttrs) {
-            mZsc = zsc;
-            mHandler = handler;
-            mProv = prov;
-            mReqAttrs = reqAttrs;
-        }
-        
-        public boolean allow(NamedEntry entry) throws ServiceException {
-            if (entry instanceof CalendarResource) {
-                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource, mReqAttrs);
-            } else if (entry instanceof Account) {
-                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listAccount, Admin.R_getAccount, mReqAttrs);
-            } else if (entry instanceof DistributionList) {
-                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listDistributionList, Admin.R_getDistributionList, mReqAttrs);
-            } else if (entry instanceof Alias) {
-                return hasRightsToListAlias(mHandler, mProv, mZsc, (Alias)entry);
-            } else if (entry instanceof Domain) {
-                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listDomain, Admin.R_getDomain, mReqAttrs);
-            } else if (entry instanceof Cos) {
-                return hasRightsToList(mHandler, mZsc, entry, Admin.R_listCos, Admin.R_getCos, mReqAttrs);
-            } else
-                return false;
-        }
-        
-        protected List getAllowed(List entries) throws ServiceException {
-            List allowedEntries = new ArrayList<String>();
-            for (int i = 0; i < entries.size(); i++) {
-                NamedEntry entry = (NamedEntry)entries.get(i);
-                if (allow(entry))
-                    allowedEntries.add(entry);
-            }
-            return allowedEntries;
-        }
-    }
-    
-    static boolean hasRightsToList(AdminDocumentHandler handler, ZimbraSoapContext zsc, NamedEntry target, 
-            AdminRight listRight, Object getAllAttrsRight, Set<String> getAttrsRight) throws ServiceException {
-        
-        if (getAttrsRight == null || getAttrsRight.isEmpty())
-            return handler.hasRightsToList(zsc, target, listRight, getAllAttrsRight);
-        else
-            return handler.hasRightsToList(zsc, target, listRight, getAttrsRight);
-    }
-    
-    private static boolean hasRightsToListDanglingAlias(AdminDocumentHandler handler, ZimbraSoapContext zsc, Alias alias) 
-    throws ServiceException {
-        /*
-         * gross, this is the only case we would ever pass an Alias object for ACL checking.
-         * 
-         * We want to pass alias instead of null so if PERM_DENIED the skipping WARN can be 
-         * nicely logged just like whenever we skip listing any object.
-         * 
-         * Alias is *not* a valid TargetTytpe for ACL checking.  Luckily(and hackily), the pseudo 
-         * right PR_SYSTEM_ADMIN_ONLY would never lead to a path that needs to refer to the 
-         * target. 
-         */
-        return handler.hasRightsToList(zsc, alias, AdminRight.PR_SYSTEM_ADMIN_ONLY, null);
-    }
-    
-    static boolean hasRightsToListAlias(AdminDocumentHandler handler, Provisioning prov,
-            ZimbraSoapContext zsc, Alias alias) throws ServiceException {
-        boolean hasRight;
-        
-        // if an admin can list the account/cr/dl, he can do the same on their aliases
-        // don't need any getAttrs rights on the account/cr/dl, because the returned alias
-        // entry contains only attrs on the alias, not the target entry.
-        TargetType tt = alias.getTargetType(prov);
-        
-        if (tt == null) // can't check right, allows only system admin
-            hasRight = hasRightsToListDanglingAlias(handler, zsc, alias);
-        else if (tt == TargetType.dl)
-            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listDistributionList, null);
-        else if (tt == TargetType.calresource)
-            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listCalendarResource, null);
-        else
-            hasRight = handler.hasRightsToList(zsc, alias.getTarget(prov), Admin.R_listAccount, null);
-        
-        return hasRight;
     }
 
     static void doDistributionList(Element e, DistributionList list) {

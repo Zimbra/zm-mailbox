@@ -86,7 +86,9 @@ public class SearchCalendarResources extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        SearchCalenderResourcesRightChecker rightChecker = new SearchCalenderResourcesRightChecker(zsc, this, prov);
+        AdminAccessControl aac = AdminAccessControl.newAdminAccessControl(zsc);
+        AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
+            new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
         
         List resources;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
@@ -111,16 +113,6 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, i < resources.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, resources.size());
         return response;
-    }
-    
-    private static class SearchCalenderResourcesRightChecker extends SearchDirectory.SearchDirectoryRightChecker implements NamedEntry.CheckRight {
-        private SearchCalenderResourcesRightChecker(ZimbraSoapContext zsc, SearchCalendarResources handler, Provisioning prov) {
-            super(zsc, handler, prov, null);
-        }
-        
-        public boolean allow(NamedEntry entry) throws ServiceException {
-            return mHandler.hasRightsToList(mZsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource);
-        }
     }
     
     @Override

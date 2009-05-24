@@ -70,7 +70,7 @@ public class CreateDataSource extends AdminDocumentHandler {
             // yuck, can't really integrate into AdminDocumentHandler methods cleanly
             // have to check separately here
             AttributeClass klass = ModifyDataSource.getAttributeClassFromType(type);
-            checkModifyAttrs(klass, attrs);
+            checkModifyAttrs(zsc, klass, attrs);
         }
 
         String name = dsEl.getAttribute(AccountConstants.A_NAME);

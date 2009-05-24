@@ -76,7 +76,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
             // yuck, can't really integrate into AdminDocumentHandler methods
             // have to check separately here
             AttributeClass klass = ModifyDataSource.getAttributeClassFromType(type);
-            checkModifyAttrs(klass, attrs);
+            checkModifyAttrs(zsc, klass, attrs);
         }
         
         ZimbraLog.addDataSourceNameToContext(ds.getName());

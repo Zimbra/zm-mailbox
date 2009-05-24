@@ -309,7 +309,7 @@ public class ACLAccessManager extends AccessManager {
         return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
     }
     
-    public boolean canSetAttrsOnCreate(AuthToken grantee, TargetType targetType, String entryName, 
+    public boolean canSetAttrsOnCreate(Account grantee, TargetType targetType, String entryName, 
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         DomainBy domainBy = null;
         String domainStr = null;
