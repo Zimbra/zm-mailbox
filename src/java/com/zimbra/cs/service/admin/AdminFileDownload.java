@@ -87,7 +87,7 @@ public class AdminFileDownload  extends ZimbraServlet {
                 return ;
             } else if (action.equalsIgnoreCase(ACTION_GETSR) )  {
 
-                //TODO: 1. need to consider the permission of the admin user
+
                 //TODO: 2. need to consider the type of search results
                 filename = "search_result.csv" ;
                 String query = req.getParameter("q") ;
@@ -99,7 +99,7 @@ public class AdminFileDownload  extends ZimbraServlet {
                 resp.setStatus(resp.SC_OK);
                 resp.setContentType("application/x-download");
                 resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
-                writeSearchResults (resp.getOutputStream(), query, domain, types);
+                writeSearchResults (resp.getOutputStream(), query, domain, types, authToken);
             }
 
 
@@ -138,23 +138,26 @@ public class AdminFileDownload  extends ZimbraServlet {
         }
     }
 
-    private static void writeSearchResults (OutputStream out, String query, String domain, String types) 
+    private static void writeSearchResults (
+            OutputStream out, String query, String domain, String types, AuthToken authToken)
         throws IOException {
         InputStream in = null;
         StringBuffer sb = new StringBuffer();
         try {
             Class c = ExtensionUtil.findClass("com.zimbra.bp.SearchResults") ;
-            Class [] params = new Class [4] ;
+            Class [] params = new Class [5] ;
             params[0] = Class.forName("java.io.OutputStream") ;
             params[1] = Class.forName("java.lang.String") ;
             params[2] = Class.forName("java.lang.String") ;
             params[3] = Class.forName("java.lang.String") ;
+            params[4] = Class.forName("com.zimbra.cs.account.AuthToken")  ;
             Method m = c.getMethod("writeSearchResultOutputStream", params) ;
-            Object [] paramValue = new Object [4] ;
+            Object [] paramValue = new Object [5] ;
             paramValue[0] = out ;
             paramValue[1] = query ;
             paramValue[2] = domain ;
             paramValue[3] = types ;
+            paramValue[4] = authToken ;
             m.invoke(c, paramValue) ;
         } catch (Exception e) {
              ZimbraLog.webclient.error(e) ;
