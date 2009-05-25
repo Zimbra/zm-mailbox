@@ -59,6 +59,30 @@ public abstract class AdminAccessControl {
      */
     
     /**
+     * instantiate an AdminAccessControl
+     * 
+     * for SOAP callsites
+     */
+    public static AdminAccessControl getAdminAccessControl(ZimbraSoapContext zsc) throws ServiceException {
+        Account authedAcct = DocumentHandler.getAuthenticatedAccount(zsc);
+        AuthToken authToken = zsc.getAuthToken();
+        return newAdminAccessControl(zsc, authToken, authedAcct);
+    }
+    
+    /**
+     * instantiate an AdminAccessControl
+     * 
+     * for non-SOAP callsites
+     */
+    public static AdminAccessControl getAdminAccessControl(AuthToken authToken) throws ServiceException {
+        String acctId = authToken.getAccountId();
+        Account authedAcct = Provisioning.getInstance().get(AccountBy.id, acctId);
+        if (authedAcct == null)
+            throw ServiceException.AUTH_REQUIRED();
+        return newAdminAccessControl(null, authToken, authedAcct);
+    }
+    
+    /**
      *  only called for domain based access manager
      */
     public abstract void checkModifyAttrs(AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException;
@@ -138,25 +162,16 @@ public abstract class AdminAccessControl {
      */
     public abstract void checkDomainRight(AdminDocumentHandler handler, Domain domain, Object needed) throws ServiceException;
 
-        
-    /*
-     * for SOAP callsites
-     */
-    public static AdminAccessControl getAdminAccessControl(ZimbraSoapContext zsc) throws ServiceException {
-        Account authedAcct = DocumentHandler.getAuthenticatedAccount(zsc);
-        AuthToken authToken = zsc.getAuthToken();
-        return newAdminAccessControl(zsc, authToken, authedAcct);
-    }
     
-    /*
-     * for non-SOAP callsites
+    /* ================
+     * internal methods
+     * ================
      */
-    public static AdminAccessControl getAdminAccessControl(AuthToken authToken) throws ServiceException {
-        String acctId = authToken.getAccountId();
-        Account authedAcct = Provisioning.getInstance().get(AccountBy.id, acctId);
-        if (authedAcct == null)
-            throw ServiceException.AUTH_REQUIRED();
-        return newAdminAccessControl(null, authToken, authedAcct);
+    private AdminAccessControl(AccessManager accessMgr, ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
+        mAccessMgr = accessMgr;
+        mZsc = zsc;
+        mAuthToken = authToken;
+        mAuthedAcct = authedAcct;
     }
     
     private static AdminAccessControl newAdminAccessControl(ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
@@ -166,10 +181,7 @@ public abstract class AdminAccessControl {
         else
             return new ACLAccessControl(accessMgr, zsc, authToken, authedAcct);
     }
-    
-    /*
-     * internal supporting methods
-     */
+
     public boolean isDomainAdminOnly() {
         return mAccessMgr.isDomainAdminOnly(mAuthToken);
     }
@@ -216,20 +228,15 @@ public abstract class AdminAccessControl {
         return parts[1];
     }
     
-    //
-    //
-    //
-    
-    private AdminAccessControl(AccessManager accessMgr, ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
-        mAccessMgr = accessMgr;
-        mZsc = zsc;
-        mAuthToken = authToken;
-        mAuthedAcct = authedAcct;
+    protected void soapOnly() throws ServiceException {
+        if (mZsc == null)
+            throw ServiceException.FAILURE("internal error, called from non-SOAP servlet", null);
     }
+
     
     /**
      * 
-     * DomainAccessControl
+     * Class DomainAccessControl
      *
      */
     private static class DomainAccessControl extends AdminAccessControl {
@@ -290,6 +297,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkAccountRight(AdminDocumentHandler handler, Account account, Object needed) throws ServiceException {
+            soapOnly();
+            
             if (!handler.canAccessAccount(mZsc, account))
                 throw ServiceException.PERM_DENIED("can not access account");
             
@@ -299,6 +308,8 @@ public abstract class AdminAccessControl {
 
         @Override
         public void checkCalendarResourceRight(AdminDocumentHandler handler, CalendarResource cr, Object needed) throws ServiceException {
+            soapOnly();
+            
             if (!handler.canAccessAccount(mZsc, cr))
                 throw ServiceException.PERM_DENIED("can not access calendar resource");
 
@@ -308,18 +319,24 @@ public abstract class AdminAccessControl {
 
         @Override
         public void checkDistributionListRight(AdminDocumentHandler handler, DistributionList dl, Object needed) throws ServiceException {
+            soapOnly();
+            
             if (!handler.canAccessEmail(mZsc, dl.getName()))
                 throw ServiceException.PERM_DENIED("can not access dl");
         }
 
         @Override
         public void checkDomainRightByEmail(AdminDocumentHandler handler, String email, AdminRight needed) throws ServiceException {
+            soapOnly();
+            
             if (!handler.canAccessEmail(mZsc, email))
                 throw ServiceException.PERM_DENIED("can not access email:" + email);
         }
         
         @Override
         public void checkDomainRight(AdminDocumentHandler handler, String domainName, Object needed) throws ServiceException {
+            soapOnly();
+            
             if (isDomainAdminOnly()) {
                 if (!handler.canAccessDomain(mZsc, domainName))
                     throw ServiceException.PERM_DENIED("can not access domain");
@@ -331,6 +348,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkDomainRight(AdminDocumentHandler handler, Domain domain, Object needed) throws ServiceException {
+            soapOnly();
+            
             // delegate to the String version of checkDomainRight instead of duplicating
             // the code here, since domain based access manager resolve domain rights 
             // by comparing the domain name anyway.
@@ -342,7 +361,7 @@ public abstract class AdminAccessControl {
     
     /**
      * 
-     * ACLAccessControl
+     * Class ACLAccessControl
      *
      */
     private static class ACLAccessControl extends AdminAccessControl {
@@ -429,6 +448,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkAccountRight(AdminDocumentHandler handler, Account account, Object needed) throws ServiceException {
+            soapOnly();
+            
             checkDomainStatus(account);
             
             Boolean canAccess = handler.canAccessAccountCommon(mZsc, account);
@@ -443,6 +464,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkCalendarResourceRight(AdminDocumentHandler handler, CalendarResource cr, Object needed) throws ServiceException {
+            soapOnly();
+            
             checkDomainStatus(cr);
             
             Boolean canAccess = handler.canAccessAccountCommon(mZsc, cr);
@@ -457,6 +480,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkDistributionListRight(AdminDocumentHandler handler, DistributionList dl, Object needed) throws ServiceException {
+            soapOnly();
+            
             checkDomainStatus(dl);
             
             if (!doCheckRight(dl, needed))
@@ -465,6 +490,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkDomainRightByEmail(AdminDocumentHandler handler, String email, AdminRight needed) throws ServiceException {
+            soapOnly();
+            
             String domainName = getDomainFromEmail(email);
             Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
             if (domain == null)
@@ -478,6 +505,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkDomainRight(AdminDocumentHandler handler, String domainName, Object needed) throws ServiceException {
+            soapOnly();
+            
             Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
             if (domain == null)
                 throw ServiceException.PERM_DENIED("no such domain: " + domainName);
@@ -488,6 +517,8 @@ public abstract class AdminAccessControl {
         
         @Override
         public void checkDomainRight(AdminDocumentHandler handler, Domain domain, Object needed) throws ServiceException {
+            soapOnly();
+            
             if (!doCheckRight(domain, needed))
                 throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
         }

@@ -60,12 +60,10 @@ public class ACLAccessManager extends AccessManager {
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
          
-        if (isParentOf(at, target)) {
-            // check domain status because we are not going into canDo 
-            // where domain status is checked for all ACL checking paths.
-            checkDomainStatus(target);
+        checkDomainStatus(target);
+        
+        if (isParentOf(at, target))
             return true;
-        }
         
         if (asAdmin)
             return canDo(at, target, Admin.R_adminLoginAs, asAdmin, false);
@@ -83,12 +81,10 @@ public class ACLAccessManager extends AccessManager {
     public boolean canAccessAccount(Account credentials, Account target,
             boolean asAdmin) throws ServiceException {
         
-        if (isParentOf(credentials, target)) {
-            // check domain status because we are not going into canDo 
-            // where domain status is checked for all ACL checking paths.
-            checkDomainStatus(target);
+        checkDomainStatus(target);
+        
+        if (isParentOf(credentials, target))
             return true;
-        }
         
         if (asAdmin)
             return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin, false);
@@ -186,9 +182,10 @@ public class ACLAccessManager extends AccessManager {
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, 
             boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
         
-        // always allow system admin access
-        if (alwaysAllow(grantee, asAdmin, target, rightNeeded))
-            return true;
+        // check hard rules
+        Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, rightNeeded);
+        if (hardRulesResult != null)
+            return hardRulesResult.booleanValue();
         
         // check pseudo rights
         if (asAdmin) {
@@ -262,8 +259,11 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (alwaysAllow(grantee, asAdmin, target, null))
-            return true;
+        
+        // check hard rules
+        Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, null);
+        if (hardRulesResult != null)
+            return hardRulesResult.booleanValue();
         
         return canGetAttrsInternal(grantee, target, attrsNeeded, false);
     }
@@ -279,8 +279,11 @@ public class ACLAccessManager extends AccessManager {
     // this API does not check constraints
     public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (alwaysAllow(grantee, asAdmin, target, null))
-            return true;
+        
+        // check hard rules
+        Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, null);
+        if (hardRulesResult != null)
+            return hardRulesResult.booleanValue();
         
         return canSetAttrsInternal(grantee, target, attrsNeeded, false);
     }
@@ -295,8 +298,11 @@ public class ACLAccessManager extends AccessManager {
     // this API does check constraints
     public boolean canSetAttrs(Account granteeAcct, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) 
     throws ServiceException {
-        if (alwaysAllow(granteeAcct, asAdmin, target, null))
-            return true;
+        
+        // check hard rules
+        Boolean hardRulesResult = checkHardRules(granteeAcct, asAdmin, target, null);
+        if (hardRulesResult != null)
+            return hardRulesResult.booleanValue();
         
         Grantee grantee = new Grantee(granteeAcct);
         RightChecker.AllowedAttrs allowedAttrs = RightChecker.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
@@ -351,8 +357,10 @@ public class ACLAccessManager extends AccessManager {
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) 
     throws ServiceException {
         
-        if (alwaysAllow(grantee, asAdmin, target, rightNeeded))
-            return true;
+        // check hard rules
+        Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, rightNeeded);
+        if (hardRulesResult != null)
+            return hardRulesResult.booleanValue();
         
         boolean allowed = false;
         if (rightNeeded.isPresetRight()) {
@@ -501,7 +509,7 @@ public class ACLAccessManager extends AccessManager {
         return acct;
     }
     
-
+   
     /**
      * entry point for each and every ACL checking calls.
      * 
@@ -512,16 +520,32 @@ public class ACLAccessManager extends AccessManager {
      * @return
      * @throws ServiceException
      */
-    private boolean alwaysAllow(Account authedAcct, boolean asAdmin, Entry target, Right right) throws ServiceException {
+    private Boolean checkHardRules(Account authedAcct, boolean asAdmin, Entry target, Right right) throws ServiceException {
         if (RightChecker.isSystemAdmin(authedAcct, asAdmin)) {
-            return true;
-        } else if (right == null || !right.isUserRight()) {
-            // ensure the authed account must be a delegated admin if not checking a user right
-            if (!RightChecker.isDelegatedAdmin(authedAcct, asAdmin))
-                throw ServiceException.PERM_DENIED("not an eligible admin account");
+            return Boolean.TRUE;
+        } else {
+            boolean isAdminRight = (right == null || !right.isUserRight());
+            
+            // We are checking an admin right
+            if (isAdminRight) {
+                // 1. ensure the authed account must be a delegated admin
+                if (!RightChecker.isDelegatedAdmin(authedAcct, asAdmin))
+                    throw ServiceException.PERM_DENIED("not an eligible admin account");
+                
+                // 2. don't allow a delegated-only admin to access a global admin's account,
+                //    no matter how much rights it has
+                if (target instanceof Account) {
+                    if (RightChecker.isSystemAdmin((Account)target, true))
+                        // return Boolean.FALSE;
+                        throw ServiceException.PERM_DENIED("delegated admin is not allowed to access a global admin's account");
+                }
+            }
         }
-        return false;
+        
+        // hard rules are not applicable
+        return null;
     }
+
     
     // ================
     // end util methods
