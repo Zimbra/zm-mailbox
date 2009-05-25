@@ -254,7 +254,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * @throws ServiceException
      */
     public void checkModifyAttrs(ZimbraSoapContext zsc, AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkModifyAttrs(attrClass, attrs);
+        AdminAccessControl.getAdminAccessControl(zsc).checkModifyAttrs(attrClass, attrs);
     }
 
     /**
@@ -263,17 +263,17 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      */
     protected void checkSetAttrsOnCreate(ZimbraSoapContext zsc, TargetType targetType, String entryName, Map<String, Object> attrs) 
         throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkSetAttrsOnCreate(targetType, entryName, attrs);
+        AdminAccessControl.getAdminAccessControl(zsc).checkSetAttrsOnCreate(targetType, entryName, attrs);
     }
     
     protected boolean hasRightsToList(ZimbraSoapContext zsc, NamedEntry target, 
             AdminRight listRight, Object getAttrRight) throws ServiceException {
-        return AdminAccessControl.newAdminAccessControl(zsc).hasRightsToList(target, listRight, getAttrRight);
+        return AdminAccessControl.getAdminAccessControl(zsc).hasRightsToList(target, listRight, getAttrRight);
     }
     
     protected boolean hasRightsToListCos(ZimbraSoapContext zsc, Cos target, 
             AdminRight listRight, Object getAttrRight) throws ServiceException {
-        return AdminAccessControl.newAdminAccessControl(zsc).hasRightsToListCos(target, listRight, getAttrRight);
+        return AdminAccessControl.getAdminAccessControl(zsc).hasRightsToListCos(target, listRight, getAttrRight);
     }
 
     /**
@@ -326,7 +326,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * @throws ServiceException
      */
     public static void checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkRight(target, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkRight(target, needed);
     }
    
     /* 
@@ -335,7 +335,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * -------------
      */
     protected void checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkCosRight(cos, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkCosRight(cos, needed);
     }
     
     /* 
@@ -344,7 +344,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * -------------
      */
     protected void checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkAccountRight(this, account, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkAccountRight(this, account, needed);
     }
 
     /*
@@ -353,7 +353,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * -----------------------
      */
     protected void checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkCalendarResourceRight(this, cr, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkCalendarResourceRight(this, cr, needed);
     }
         
     /* 
@@ -362,7 +362,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * --------
      */
     protected void checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkDistributionListRight(this, dl, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkDistributionListRight(this, dl, needed);
     }
     
     /*
@@ -377,21 +377,21 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * Note: this method *do* check domain status.  
      */
     protected void checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkDomainRightByEmail(this, email, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkDomainRightByEmail(this, email, needed);
     }
     
     /**
      * Note: this method do *not* check domain status.  
      */
     protected void checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkDomainRight(this, domainName, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkDomainRight(this, domainName, needed);
     }
     
     /**
      * Note: this method do *not* check domain status.  
      */
     protected void checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
-        AdminAccessControl.newAdminAccessControl(zsc).checkDomainRight(this, domain, needed);
+        AdminAccessControl.getAdminAccessControl(zsc).checkDomainRight(this, domain, needed);
     }
 
     // ==========================================

@@ -142,7 +142,7 @@ public class SearchDirectory extends AdminDocumentHandler {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         }
 
-        AdminAccessControl aac = AdminAccessControl.newAdminAccessControl(zsc);
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, reqAttrs);
         

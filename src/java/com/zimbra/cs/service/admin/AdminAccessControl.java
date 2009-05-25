@@ -142,7 +142,7 @@ public abstract class AdminAccessControl {
     /*
      * for SOAP callsites
      */
-    public static AdminAccessControl newAdminAccessControl(ZimbraSoapContext zsc) throws ServiceException {
+    public static AdminAccessControl getAdminAccessControl(ZimbraSoapContext zsc) throws ServiceException {
         Account authedAcct = DocumentHandler.getAuthenticatedAccount(zsc);
         AuthToken authToken = zsc.getAuthToken();
         return newAdminAccessControl(zsc, authToken, authedAcct);
@@ -151,7 +151,7 @@ public abstract class AdminAccessControl {
     /*
      * for non-SOAP callsites
      */
-    public static AdminAccessControl newAdminAccessControl(AuthToken authToken) throws ServiceException {
+    public static AdminAccessControl getAdminAccessControl(AuthToken authToken) throws ServiceException {
         String acctId = authToken.getAccountId();
         Account authedAcct = Provisioning.getInstance().get(AccountBy.id, acctId);
         if (authedAcct == null)
