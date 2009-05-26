@@ -40,6 +40,7 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
+import com.zimbra.cs.mailclient.pop3.ContentInputStream;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class Pop3Sync extends MailItemImport {
@@ -87,9 +88,14 @@ public class Pop3Sync extends MailItemImport {
         }
     }
 
-    private static void enableTrace(Pop3Config config) {
+    private void enableTrace(Pop3Config config) {
         config.setTrace(true);
-        config.setTraceStream(new PrintStream(System.out, true));
+        if (dataSource.isOffline()) {
+            config.setTraceStream(
+                new PrintStream(new LogOutputStream(ZimbraLog.pop), true));
+        } else {
+            config.setTraceStream(System.out);
+        }
     }
 
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
@@ -176,9 +182,11 @@ public class Pop3Sync extends MailItemImport {
 
     private void fetchAndAddMessage(int msgno, int size, String uid)
         throws ServiceException, MessagingException, IOException {
+        ContentInputStream cis = null;
         MessageContent mc = null;
         try {
-            mc = MessageContent.read(connection.getMessage(msgno), size);
+            cis = connection.getMessage(msgno);
+            mc = MessageContent.read(cis, size);
             ParsedMessage pm = mc.getParsedMessage(null, indexAttachments);
             Message msg = null;
 
@@ -200,6 +208,9 @@ public class Pop3Sync extends MailItemImport {
         } catch (CommandFailedException e) {
             LOG.warn("Error fetching message number %d: %s", msgno, e.getMessage());
         } finally {
+            if (cis != null) {
+                cis.close();
+            }
             if (mc != null) {
                 mc.cleanup();
             }

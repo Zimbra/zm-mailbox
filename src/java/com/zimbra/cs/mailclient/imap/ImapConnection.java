@@ -485,6 +485,9 @@ public final class ImapConnection extends MailConnection {
                 throw req.failed("Timeout waiting for response", e);
             } catch (MailException e) {
                 throw req.failed("Error in response", e);
+            } finally {
+                // Make sure that any partial trace data is logged
+                flushTraceStreams();
             }
             if (res.isTagged()) {
                 request = null;
@@ -498,6 +501,15 @@ public final class ImapConnection extends MailConnection {
         }
     }
 
+    private void flushTraceStreams() throws IOException {
+        if (traceOut != null) {
+            traceOut.flush();
+        }
+        if (traceIn != null) {
+            traceIn.flush();
+        }
+    }
+    
     // Called from ImapRequest
     void writeLiteral(Literal lit) throws IOException {
         boolean lp = getImapConfig().isUseLiteralPlus() &&
@@ -569,6 +581,7 @@ public final class ImapConnection extends MailConnection {
             close();
             throw e;
         } finally {
+            traceOut.flush();
             response = null;
         }
     }

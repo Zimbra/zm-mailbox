@@ -96,6 +96,12 @@ public class TraceInputStream extends InputStream {
         return off - start;
     }
 
+    public void flush() throws IOException {
+        if (enabled) {
+            traceOut.flush();
+        }
+    }
+    
     private void printByte(byte b) {
         switch (b) {
         case '\r':

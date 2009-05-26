@@ -22,6 +22,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -127,9 +128,14 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private static void enableTrace(ImapConfig config) {
+    private void enableTrace(ImapConfig config) {
         config.setTrace(true);
-        config.setTraceStream(new PrintStream(System.out, true));
+        if (dataSource.isOffline()) {
+            config.setTraceStream(
+                new PrintStream(new LogOutputStream(ZimbraLog.imap), true));
+        } else {
+            config.setTraceStream(System.out);
+        }
     }
     
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)

@@ -37,6 +37,12 @@ class LogOutputStream extends OutputStream {
         }
     }
 
+    public void flush() throws IOException {
+        if (baos.size() > 0) {
+            flushLine();
+        }
+    }
+    
     private void flushLine() {
         String line = baos.toString();
         if (line.endsWith("\r")) {

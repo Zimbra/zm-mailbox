@@ -88,6 +88,9 @@ public class TraceOutputStream extends OutputStream {
     @Override
     public void flush() throws IOException {
         out.flush();
+        if (enabled) {
+            traceOut.flush();
+        }
     }
     
     private void printByte(byte b) {
