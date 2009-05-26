@@ -124,19 +124,28 @@ public class GetLoggerStats extends AdminDocumentHandler {
             if (host == null && stats == null) {
                 // list hosts
                 fetchHostnames(response);
-                
-                if (start != null || end != null)
-                    throw ServiceException.FAILURE("Cannot specify start/end without stats", null);
-                
             } else if (host != null && stats == null) {
                 // list groups for host
                 fetchGroupNames(response, host.getAttribute(AdminConstants.A_HOSTNAME));
-                
-                if (start != null || end != null)
-                    throw ServiceException.FAILURE("Cannot specify start/end without stats", null);
             } else if (stats != null && host == null) {
                 // fetch stats for all hosts
-                // TODO implement fetch for all hosts, not really necessary in current logger
+                String startTime = null;
+                String endTime   = null;
+                // TODO implement fetch for all hosts
+                if (start != null || end != null) {
+                    if (start == null || end == null)
+                        throw ServiceException.FAILURE("both start and end must be specified", null);
+                    
+                    startTime = start.getAttribute(AdminConstants.A_TIME);
+                    endTime   = end.getAttribute(AdminConstants.A_TIME);
+                    fetchColumnData(response,
+                            stats.getAttribute(AdminConstants.A_NAME),
+                            startTime, endTime);
+                } else {
+                    fetchColumnData(response,
+                            host.getAttribute(AdminConstants.A_HOSTNAME),
+                            stats.getAttribute(AdminConstants.A_NAME));
+                }
                 throw ServiceException.FAILURE("Unsupported Operation, listings all stats for all hosts", null);
             } else if (stats != null && host != null) {
                 
@@ -206,6 +215,12 @@ public class GetLoggerStats extends AdminDocumentHandler {
             stat.addAttribute(AdminConstants.A_NAME, results.next());
         }
     }
+    static void fetchColumnData(Element response, String group,
+            String start, String end)
+    throws ServiceException {
+        Iterator<String> results = execfetch("-f", group, "-s", start, "-e", end);
+        populateResponseData(response, group, results);
+    }
     static void fetchColumnData(Element response, String hostname, String group,
             String start, String end)
     throws ServiceException {
@@ -223,7 +238,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
             String hostname, String group, Iterator<String> results)
     throws ServiceException {
         if (!results.hasNext())
-            throw ServiceException.FAILURE("Stats fetched do not contain column names", null);
+            return;
         
         String line = results.next();
         String[] columns = SPLIT_PATTERN.split(line);
@@ -234,6 +249,54 @@ public class GetLoggerStats extends AdminDocumentHandler {
         stats.addAttribute(AdminConstants.A_NAME, group);
         while (results.hasNext()) {
             line = results.next();
+            String[] data = SPLIT_PATTERN.split(line);
+            
+            boolean rowHasData = false;
+            for (int i = 1, j = data.length; i < j; i++)
+                rowHasData = rowHasData || (data[i] != null && !data[i].trim().equals(""));
+            if (rowHasData) {
+                Element values = stats.addElement(AdminConstants.E_VALUES);
+                values.addAttribute(AdminConstants.A_T, data[0]);
+                for (int i = 1, j = data.length; i < j; i++) {
+                    Element stat = values.addElement(AdminConstants.E_STAT);
+                    stat.addAttribute(AdminConstants.A_NAME, columns[i]);
+                    if (data[i] != null)
+                        stat.addAttribute(AdminConstants.A_VALUE, data[i]);
+                }
+            }
+        }
+        
+    }
+    static void populateResponseData(Element response, String group, Iterator<String> results)
+    throws ServiceException {
+        Element host = null;
+        Element stats = null;
+        String[] columns = null;
+        String line;
+        
+        boolean needColumns = false;
+        while (results.hasNext()) {
+            line = results.next();
+            if ("".equals(line.trim())) continue;
+            if (line.startsWith("Host: ")) {
+                String hostname = line.substring(line.indexOf(" ") + 1);
+                
+                host = response.addElement(AdminConstants.E_HOSTNAME);
+                host.addAttribute(AdminConstants.A_HOSTNAME, hostname);
+                
+                stats = host.addElement(AdminConstants.E_STATS);
+                stats.addAttribute(AdminConstants.A_NAME, group);
+                
+                needColumns = true;
+                continue;
+            }
+            
+            if (needColumns) {
+                columns = SPLIT_PATTERN.split(line);
+                needColumns = false;
+                continue;
+            }
+            
             String[] data = SPLIT_PATTERN.split(line);
             
             boolean rowHasData = false;
