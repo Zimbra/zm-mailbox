@@ -20,6 +20,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.ldap.Check;
@@ -32,16 +35,12 @@ public class CheckExchangeAuth extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        // R_checkExchangeAuthConfig is a domain right.
-        //
-        // This SOAP does not take a domain, pass null to checkRight,
-        // it'll check right on global grant.  If this SOAP supports a 
-        // domain parameter and the admin has a R_checkExchangeAuthConfig 
-        // grant on the domain, the domain grant will be effective.
-        checkRight(zsc, context, null, Admin.R_checkExchangeAuthConfig);
-
+        Account authedAcct = getAuthenticatedAccount(zsc);
+        Domain domain = Provisioning.getInstance().getDomain(authedAcct);
         
-        Check.Result r = Check.checkExchangeAuth(getAuthenticatedAccount(zsc));
+        checkRight(zsc, context, domain, Admin.R_checkExchangeAuthConfig);
+        
+        Check.Result r = Check.checkExchangeAuth(authedAcct);
 
 	    Element response = zsc.createElement(AdminConstants.CHECK_EXCHANGE_AUTH_RESPONSE);
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
@@ -54,9 +53,5 @@ public class CheckExchangeAuth extends AdminDocumentHandler {
 	@Override
 	public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_checkExchangeAuthConfig);
-        notes.add(Admin.R_checkExchangeAuthConfig.getName() + 
-                " is a domain right.  However CheckExchangeAuth does not take a " + 
-                "domain, thus the right has to be granted on the global grant " +
-                "to be effective.");
     }
 }
