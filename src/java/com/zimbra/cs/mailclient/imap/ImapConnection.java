@@ -581,7 +581,6 @@ public final class ImapConnection extends MailConnection {
             close();
             throw e;
         } finally {
-            traceOut.flush();
             response = null;
         }
     }

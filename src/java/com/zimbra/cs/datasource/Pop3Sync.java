@@ -71,15 +71,13 @@ public class Pop3Sync extends MailItemImport {
             config.setDebug(true);
             enableTrace(config);
         }
-        config.setReadTimeout(LC.javamail_pop3_timeout.intValue());
-        config.setConnectTimeout(config.getReadTimeout());
-        // config.setRawMode(true);
         config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;
     }
     
     public synchronized void test() throws ServiceException {
         validateDataSource();
+        setTimeout(LC.javamail_pop3_test_timeout.intValue());
         enableTrace(connection.getPop3Config());
         try {
             connect();
@@ -88,6 +86,12 @@ public class Pop3Sync extends MailItemImport {
         }
     }
 
+    private void setTimeout(int timeout) {
+        Pop3Config config = connection.getPop3Config();
+        config.setReadTimeout(timeout);
+        config.setConnectTimeout(timeout);
+    }
+    
     private void enableTrace(Pop3Config config) {
         config.setTrace(true);
         if (dataSource.isOffline()) {
@@ -101,6 +105,7 @@ public class Pop3Sync extends MailItemImport {
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         validateDataSource();
+        setTimeout(LC.javamail_pop3_timeout.intValue());
         connect();
         try {
             if (dataSource.leaveOnServer()) {

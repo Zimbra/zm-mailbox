@@ -111,15 +111,13 @@ public class ImapSync extends MailItemImport {
             config.setDebug(true);
             enableTrace(config);
         }
-        config.setReadTimeout(LC.javamail_imap_timeout.intValue());
-        config.setConnectTimeout(config.getReadTimeout());
-        // config.setRawMode(true);
         config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;
     }
 
     public synchronized void test() throws ServiceException {
         validateDataSource();
+        setTimeout(LC.javamail_imap_test_timeout.intValue());
         enableTrace(connection.getImapConfig());
         try {
             connect();
@@ -128,6 +126,12 @@ public class ImapSync extends MailItemImport {
         }
     }
 
+    private void setTimeout(int timeout) {
+        ImapConfig config = connection.getImapConfig();
+        config.setReadTimeout(timeout);
+        config.setConnectTimeout(timeout);
+    }
+    
     private void enableTrace(ImapConfig config) {
         config.setTrace(true);
         if (dataSource.isOffline()) {
@@ -137,10 +141,11 @@ public class ImapSync extends MailItemImport {
             config.setTraceStream(System.out);
         }
     }
-    
+
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         validateDataSource();
+        setTimeout(LC.javamail_imap_timeout.intValue());
         connect();
         int folderId = dataSource.getFolderId();
         localRootFolder = getMailbox().getFolderById(null, folderId);
