@@ -143,7 +143,6 @@ public class GetLoggerStats extends AdminDocumentHandler {
                             startTime, endTime);
                 } else {
                     fetchColumnData(response,
-                            host.getAttribute(AdminConstants.A_HOSTNAME),
                             stats.getAttribute(AdminConstants.A_NAME));
                 }
             } else if (stats != null && host != null) {
@@ -226,6 +225,11 @@ public class GetLoggerStats extends AdminDocumentHandler {
         Iterator<String> results = execfetch("-h", hostname, "-f", group,
                 "-s", start, "-e", end);
         populateResponseData(response, hostname, group, results);
+    }
+    static void fetchColumnData(Element response, String group)
+    throws ServiceException {
+        Iterator<String> results = execfetch("-f", group);
+        populateResponseData(response, group, results);
     }
     static void fetchColumnData(Element response, String hostname, String group)
     throws ServiceException {
