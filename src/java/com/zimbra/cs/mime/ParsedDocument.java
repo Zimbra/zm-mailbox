@@ -33,6 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
@@ -94,9 +95,16 @@ public class ParsedDocument {
             try {
             	mDocument = handler.getDocument();
             	mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
-            	mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
+            
+            	StringBuilder content = new StringBuilder();
+            	appendToContent(content, filename);
+            	appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, filename));
+            	appendToContent(content, textContent);
+            	
+            	mDocument.add(new Field(LuceneFields.L_CONTENT, content.toString(),  Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
+            	
             } catch (MimeHandlerException e) {
                 if (ConversionException.isTemporaryCauseOf(e)) {
                     ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
@@ -111,6 +119,13 @@ public class ParsedDocument {
             throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
         }
     }
+    
+    private static final void appendToContent(StringBuilder sb, String s) {
+        if (sb.length() > 0)
+            sb.append(' ');
+        sb.append(s);
+    }
+    
 
     public void setVersion(int v) {
         // should be indexed so we can add search constraints on the index version
