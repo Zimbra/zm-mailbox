@@ -146,7 +146,6 @@ public class GetLoggerStats extends AdminDocumentHandler {
                             host.getAttribute(AdminConstants.A_HOSTNAME),
                             stats.getAttribute(AdminConstants.A_NAME));
                 }
-                throw ServiceException.FAILURE("Unsupported Operation, listings all stats for all hosts", null);
             } else if (stats != null && host != null) {
                 
                 String statsText = stats.getText();
