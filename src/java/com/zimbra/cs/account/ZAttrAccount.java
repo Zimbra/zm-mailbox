@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jylee 20090521-1643 */
+    /* build: 6.0.0 pshao 20090526-1524 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -11088,13 +11088,13 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * whether to use gal sync account for autocomplete
      *
-     * @return zimbraGalSyncAccountBasedAutoCompleteEnabled, or false if unset
+     * @return zimbraGalSyncAccountBasedAutoCompleteEnabled, or true if unset
      *
      * @since ZCS 6.0.0_BETA2
      */
     @ZAttr(id=1027)
     public boolean isGalSyncAccountBasedAutoCompleteEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraGalSyncAccountBasedAutoCompleteEnabled, true);
     }
 
     /**

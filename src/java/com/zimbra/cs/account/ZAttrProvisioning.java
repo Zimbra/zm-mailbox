@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jylee 20090521-1643 */
+    /* build: 6.0.0 pshao 20090526-1524 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3918,7 +3918,7 @@ public class ZAttrProvisioning {
      * will trust the client/proxy only if the IP address of the client/proxy
      * is one of the IPs listed in this attribute.
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public static final String A_zimbraMailTrustedIP = "zimbraMailTrustedIP";

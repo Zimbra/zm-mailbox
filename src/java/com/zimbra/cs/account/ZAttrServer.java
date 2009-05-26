@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 jylee 20090521-1643 */
+    /* build: 6.0.0 pshao 20090526-1524 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6503,7 +6503,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMailTrustedIP, or empty array if unset
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public String[] getMailTrustedIP() {
@@ -6525,7 +6525,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraMailTrustedIP new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public void setMailTrustedIP(String[] zimbraMailTrustedIP) throws com.zimbra.common.service.ServiceException {
@@ -6550,7 +6550,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public Map<String,Object> setMailTrustedIP(String[] zimbraMailTrustedIP, Map<String,Object> attrs) {
@@ -6574,7 +6574,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraMailTrustedIP new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public void addMailTrustedIP(String zimbraMailTrustedIP) throws com.zimbra.common.service.ServiceException {
@@ -6599,7 +6599,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public Map<String,Object> addMailTrustedIP(String zimbraMailTrustedIP, Map<String,Object> attrs) {
@@ -6623,7 +6623,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraMailTrustedIP existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public void removeMailTrustedIP(String zimbraMailTrustedIP) throws com.zimbra.common.service.ServiceException {
@@ -6648,7 +6648,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public Map<String,Object> removeMailTrustedIP(String zimbraMailTrustedIP, Map<String,Object> attrs) {
@@ -6671,7 +6671,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public void unsetMailTrustedIP() throws com.zimbra.common.service.ServiceException {
@@ -6695,7 +6695,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=1025)
     public Map<String,Object> unsetMailTrustedIP(Map<String,Object> attrs) {
