@@ -402,6 +402,9 @@ public class LC {
     public static final KnownKey javamail_pop3_timeout;
     public static final KnownKey javamail_imap_timeout;
     public static final KnownKey javamail_smtp_timeout;
+
+    public static final KnownKey javamail_pop3_test_timeout;
+    public static final KnownKey javamail_imap_test_timeout;
     
     public static final KnownKey javamail_pop3_enable_starttls;
     public static final KnownKey javamail_imap_enable_starttls;
@@ -1249,11 +1252,11 @@ public class LC {
         javamail_smtp_debug = new KnownKey("javamail_smtp_debug");
         javamail_smtp_debug.setDefault("false");
 
-        javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout");
-        javamail_pop3_timeout.setDefault("20");
-                                                 
-        javamail_imap_timeout = new KnownKey("javamail_imap_timeout");
-        javamail_imap_timeout.setDefault("20");
+        javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout", "60");
+        javamail_imap_timeout = new KnownKey("javamail_imap_timeout", "60");
+
+        javamail_pop3_test_timeout = new KnownKey("javamail_pop3_test_timeout", "20");
+        javamail_imap_test_timeout = new KnownKey("javamail_imap_test_timeout", "20");
         
         javamail_smtp_timeout = new KnownKey("javamail_smtp_timeout");
         javamail_smtp_timeout.setDefault("60");
