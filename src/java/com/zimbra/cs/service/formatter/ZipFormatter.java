@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -16,236 +16,118 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.io.OutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-import javax.mail.MessagingException;
-import javax.mail.Part;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimePart;
-
-import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.zip.ZipEntry;
 import com.zimbra.common.util.zip.ZipOutputStream;
-import com.zimbra.common.util.zip.ZipShort;
+import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletException;
+import com.zimbra.cs.service.UserServlet.Context;
 
-public class ZipFormatter extends TarFormatter {
-    @Override
-    public String getType() {
-        return "zip";
-    }
+public class ZipFormatter extends ArchiveFormatter {
+    public class ZipArchiveInputStream implements ArchiveInputStream {
+        public class ZipArchiveInputEntry implements ArchiveInputEntry {
+            private ZipEntry entry;
 
-    @Override
-    public String[] getDefaultMimeTypes() {
-        return new String[] { "application/x-zip-compressed" };
-    }
-
-    @Override
-    public String getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_MESSAGES + ',' + MailboxIndex.SEARCH_FOR_CONTACTS;
-    }
-
-    @Override
-    public void formatCallback(Context context) throws IOException, ServiceException {
-        Iterator<? extends MailItem> iterator = null;
-        ZipOutputStream out = null;
-
-        try {
-            String filename = context.params.get("filename");
-            
-            if (filename == null || filename.equals("")) {
-                filename = context.hasPart() ? "attachments.zip" : "items.zip";
-            } else {
-                Date date = new Date();
-                DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-                SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
-
-                filename += '.' + df.format(date).replace('/', '-') +
-                    sdf.format(date) + ".zip";
+            public ZipArchiveInputEntry(ZipInputStream is) throws IOException {
+                entry = is.getNextEntry();
             }
-
-            String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename);
-            context.resp.addHeader("Content-Disposition", cd.toString());
-            context.resp.setContentType("application/x-zip-compressed");
-
-            iterator = getMailItems(context, getDefaultStartTime(), getDefaultEndTime(), 500);
-            if (!iterator.hasNext())
-            	return;
-
-            // create the ZIP file
-            out = new ZipOutputStream(context.resp.getOutputStream());
-            out.setEncoding(Mime.P_CHARSET_UTF8);
-            String zlv = context.params.get(UserServlet.QP_ZLV);
-            if (zlv != null && zlv.length() > 0) {
-            	try {
-            		int level = Integer.parseInt(zlv);
-            		if (level >= 0 && level <=9) {
-            			out.setLevel(level);
-            		}
-            	} catch (NumberFormatException x) {}
+            public long getModTime() { return entry.getTime(); }
+            public String getName() { return entry.getName(); }
+            public long getSize() { return entry.getSize(); }
+            public int getType() { return 0; }
+            public boolean isUnread() {
+                return entry.getComment() != null &&
+                    entry.getComment().endsWith("-unread");
             }
-            
-            Set<String> usedNames = new HashSet<String>();
+        }
+        
+        private ZipInputStream is;
+        
+        public ZipArchiveInputStream(InputStream is, String cset) {
+            this.is = new ZipInputStream(is);
+        }
+        
+        public void close() throws IOException { is.close(); }
+        public InputStream getInputStream() { return is; }
+        public ArchiveInputEntry getNextEntry() throws IOException {
+            return new ZipArchiveInputEntry(is);
+        }
+        public int read(byte[] buf, int offset, int len) throws IOException {
+            return is.read(buf, offset, len);
+        }
+    }
+    
+    public class ZipArchiveOutputStream implements ArchiveOutputStream {
+        public class ZipArchiveOutputEntry implements ArchiveOutputEntry {
+            private com.zimbra.common.util.zip.ZipEntry entry;
 
-            while (iterator.hasNext()) {
-                MailItem item = iterator.next();
-                Folder folder = item.getMailbox().getFolderById(context.opContext,
-                    item.getFolderId());
-                String folderName = folder.getPath();
-                
-                if (folderName.startsWith("/"))
-                    folderName = folderName.substring(1);
-                if (item instanceof Message) {
-                    if (!context.hasPart()) {
-                        // add ZIP entry to output stream
-                    	ZipEntry entry = new ZipEntry(getEntryName(item, folderName,
-                    	    item.getSubject(), ".eml", usedNames));
-                    	entry.setExtra(getXZimbraHeadersBytes(item));
-                        out.putNextEntry(entry);
-                        try {
-                            InputStream is = ((Message) item).getContentStream();
-                            if (!context.shouldReturnBody())
-                                is = new HeadersOnlyInputStream(is);
-                            ByteUtil.copy(is, true, out, false);
-                        } finally {
-                            out.closeEntry();
-                        }
-                    } else {
-                        MimeMessage mm = ((Message) item).getMimeMessage();
-                        for (String part : context.getPart().split(","))
-                            addPartToZip(mm, part, folderName, out, context, usedNames);
-                    }
-                } else if (item instanceof Contact) {
-                    VCard vcf = VCard.formatContact((Contact) item);
-
-                    // add ZIP entry to output stream
-                    ZipEntry entry = new ZipEntry(getEntryName(item, folderName,
-                        vcf.fn, ".vcf", usedNames));
-                    entry.setExtra(getXZimbraHeadersBytes(item));
-                    out.putNextEntry(entry);
-                    out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
-                    out.closeEntry();
-                } else if (item instanceof CalendarItem) {
-                    // We aren't currently adding calendar items to the zip stream, but this block
-                    // of code is added to highlight the need to hide private calendar items
-                    // when/if we included calendar items to the zip later.
-
-                    // Don't return private appointments/tasks if the requester is not the mailbox owner.
-                    CalendarItem calItem = (CalendarItem) item;
-                    if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges())) {
-                        // do nothing for now
-                    }
-                } else if (item instanceof Document) {
-                	String ext = "";
-                	if (item.getType() == MailItem.TYPE_WIKI)
-                		ext = ".wiki";
-                	ZipEntry entry = new ZipEntry(getEntryName(item, folderName,
-                	    item.getName(), ext, usedNames));
-                	entry.setExtra(getXZimbraHeadersBytes(item));
-                    out.putNextEntry(entry);
-                    ByteUtil.copy(item.getContentStream(), true, out, false);
-                }
+            public ZipArchiveOutputEntry(String path, String name, int type, long
+                date) {
+                entry = new com.zimbra.common.util.zip.ZipEntry(path);
+                entry.setComment(name);
+                entry.setTime(date);
+                entry.setUnixMode(0660);
             }
-        } finally {
-            if (iterator instanceof QueryResultIterator)
-                ((QueryResultIterator) iterator).finished();
-            // complete the ZIP file
-            if (out != null)
-                out.close();
+            public void setUnread() {
+                entry.setUnixMode(0640);
+                entry.setComment(entry.getComment() + "-unread");
+            }
+            public void setSize(long size) { entry.setSize(size); }
+        }
+        
+        private ZipOutputStream os;
+        
+        public ZipArchiveOutputStream(OutputStream os, String cset, int lvl)
+            throws IOException {
+            this.os = new ZipOutputStream(os);
+            this.os.setEncoding(cset);
+            if (lvl >= 0 && lvl <= 9)
+                this.os.setLevel(lvl);
+        }
+        public void close() throws IOException { os.close(); }
+        public void closeEntry() throws IOException { os.closeEntry(); }
+        public int getRecordSize() { return 2048; }
+        public ArchiveOutputEntry newOutputEntry(String path, String name,
+            int type, long date) {
+            return new ZipArchiveOutputEntry(path, name, type, date);
+        }
+        public void putNextEntry(ArchiveOutputEntry entry) throws IOException {
+            os.putNextEntry(((ZipArchiveOutputEntry)entry).entry);
+        }
+        public void write(byte[] buf) throws IOException { os.write(buf); }
+        public void write(byte[] buf, int offset, int len) throws IOException {
+            os.write(buf, offset, len);
         }
     }
 
-    private void addPartToZip(MimeMessage mm, String part, String folderName,
-        ZipOutputStream out, Context context, Set<String> usedNames) throws ServiceException, IOException {
-        try {
-            MimePart mp = Mime.getMimePart(mm, part);
-            if (mp == null)
-                throw MailServiceException.NO_SUCH_PART(part);
-            String extension = "", partname = Mime.getFilename(mp);
-            if (partname == null) {
-                partname = "attachment";
-            } else {
-                int dot = partname.lastIndexOf('.');
-                if (dot != -1 && dot < partname.length() - 1) {
-                    extension = partname.substring(dot);
-                    partname = partname.substring(0, dot);
-                }
-            }
+    @Override public String[] getDefaultMimeTypes() {
+        return new String[] { "application/zip", "application/x-zip-compressed" };
+    }
 
-            // add ZIP entry to output stream
-            out.putNextEntry(new ZipEntry(getEntryName(null, folderName, partname,
-                extension, usedNames)));
+    @Override public String getType() { return "zip"; }
+
+    @Override protected boolean getDefaultMeta() { return false; }
+    
+    protected ArchiveInputStream getInputStream(Context context,
+        String charset) throws IOException, ServiceException, UserServletException {
+        return new ZipArchiveInputStream(context.getRequestInputStream(-1),
+            charset);
+    }
+
+    protected ArchiveOutputStream getOutputStream(Context context, String
+        charset) throws IOException {
+        OutputStream os = context.resp.getOutputStream();
+        String zlv = context.params.get(UserServlet.QP_ZLV);
+        int lvl = -1;
+        
+        if (zlv != null && zlv.length() > 0) {
             try {
-                ByteUtil.copy(mp.getInputStream(), true, out, false);
-            } finally {
-                out.closeEntry();
-            }
-        } catch (MessagingException e) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+                lvl = Integer.parseInt(zlv);
+            } catch (NumberFormatException x) {}
         }
-    }
-
-    private static final byte[] ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS = { (byte) 0xFF, (byte) 0xFF };
-    private static final byte[] BACKWARD_COMPAT_LINE = "x: y\r\n".getBytes();
-
-    private static byte[] getXZimbraHeadersBytes(MailItem item) {
-        byte[] extra = null;
-        byte[] data = SyncFormatter.getXZimbraHeadersBytes(item);
-        if (data != null && data.length > 0) {
-            extra = new byte[4 + BACKWARD_COMPAT_LINE.length + data.length];
-
-            // Zip Header ID = 0xFFFF
-            extra[0] = ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[0];
-            extra[1] = ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[1];
-
-            // Data Size (in little endian)
-            byte[] dataSize = ZipShort.getBytes(BACKWARD_COMPAT_LINE.length + data.length);
-            extra[2] = dataSize[0];
-            extra[3] = dataSize[1];
-
-            // HACK: To keep ZCO happy...
-            // Insert a dummy line so the Header ID and Data Size bytes aren't treated as an X- header name.
-            System.arraycopy(BACKWARD_COMPAT_LINE, 0, extra, 4, BACKWARD_COMPAT_LINE.length);
-
-            // Finally the actual data.
-            System.arraycopy(data, 0, extra, 4 + BACKWARD_COMPAT_LINE.length, data.length);
-        } else {
-            extra = new byte[0];
-        }
-        return extra;
-    }
-
-    public static byte[] parseXZimbraHeadersBytes(byte[] extra) {
-        // If it starts with 0xFFFF [len] it is the new-style data.  If it doesn't, it must be
-        // old-style data from when we weren't doing zip extra field correctly.
-        byte[] data = extra;
-        if (extra != null && extra.length >= 4) {
-            if (extra[0] == ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[0] &&
-                extra[1] == ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[1]) {
-                int len = ZipShort.getValue(extra, 2);
-                if (len == extra.length - 4) {
-                    data = new byte[len];
-                    System.arraycopy(extra, 4, data, 0, len);
-                }
-            }
-        }
-        return data;
+        return new ZipArchiveOutputStream(os, charset, lvl);
     }
 }

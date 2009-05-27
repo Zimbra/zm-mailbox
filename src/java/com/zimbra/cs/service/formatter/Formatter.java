@@ -43,7 +43,6 @@ import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.Element;
 
 public abstract class Formatter {
     public abstract String getType();
@@ -250,23 +249,31 @@ public abstract class Formatter {
         return pw;
     }
 
-	protected void updateClient(UserServlet.Context context, Exception e)
-	    throws UserServletException, IOException, ServletException, ServiceException {
-		updateClient(context, e, null);
-	}
+    protected void updateClient(UserServlet.Context context, Exception e)
+        throws UserServletException, IOException, ServletException,
+        ServiceException {
+        updateClient(context, e, null);
+    }
 
-    protected void updateClient(UserServlet.Context context, Exception e, List<ServiceException> w)
-        throws UserServletException, IOException, ServletException, ServiceException {
+    protected void updateClient(UserServlet.Context context, Exception e,
+        List<ServiceException> w) throws UserServletException, IOException,
+        ServletException, ServiceException {
         String callback = context.params.get("callback");
         Throwable exception = null;
+        PrintWriter out = updateClient(context, false);
+        ServiceException se = null;
 
         if (e != null) {
             Throwable cause = e.getCause();
-            
+
             exception = cause instanceof UserServletException ||
                 cause instanceof ServletException ||
                 cause instanceof IOException ? cause : e;
         }
+        if (exception != null)
+            se = exception instanceof ServiceException ?
+                (ServiceException) exception :
+                FormatterServiceException.UNKNOWN_ERROR(exception);
         if (callback == null || callback.equals("")) {
             if (context.params.get(PROGRESS) == null) {
                 if (exception == null)
@@ -277,56 +284,49 @@ public abstract class Formatter {
                     throw (ServletException)exception;
                 else if (exception instanceof IOException)
                     throw (IOException)exception;
-                throw ServiceException.FAILURE(getType() + " formatter failure",
-                    exception);
+                throw ServiceException.FAILURE(
+                    getType() + " formatter failure", exception);
             }
-            if (exception == null) {
-                context.resp.getWriter().print("<body></body>\n</html>\n");
+            if (exception == null && w == null) {
+                out.println("<body></body>\n</html>");
             } else {
-                String s = exception.getLocalizedMessage();
-
-                ZimbraLog.misc.warn(getType() + " formatter exception", exception);
-                s = s.replace("\n", "<br>");
-                context.resp.getWriter().print("<body>\n<pre>\n" + s +
-                    "\n</pre>\n</body>\n</html>\n");
+                ZimbraLog.misc.warn(getType() + " formatter exception",
+                    exception);
+                out.println("<body>\n<pre>");
+                if (exception != null)
+                    out.print(exception.getLocalizedMessage());
+                for (ServiceException warning : w) {
+                    out.println("<br>");
+                    out.println(warning.toString().replace("\n", "<br>"));
+                }
+                out.println("</pre>\n</body>\n</html>");
             }
-        } else if (!"2".equals(context.params.get(PROGRESS))){
-	        // mark done no matter what happens next
-	        context.params.put(PROGRESS, "2");
-
-			PrintWriter out = updateClient(context, false);
-			out.println("<body onload='onLoad()'>");
-			out.println("<script>");
-			out.println("function onLoad() {");
-			if (exception == null && (w == null || w.size() == 0)) {
-				out.print("    window.parent."+callback+"('success');");
-			} else {
-				String result = exception != null ? "fail" : "warn";
-				out.print("    window.parent."+callback+"('"+result+"'");
-
-				// print primary fault
-				SoapProtocol protocol = SoapProtocol.SoapJS;
-				if (exception != null) {
-					out.print(",\n\t");
-					ServiceException se = exception instanceof ServiceException
-										? (ServiceException)exception
-										: FormatterServiceException.UNKNOWN_ERROR(exception);
-					out.print(protocol.soapFault(se));
-				}
-
-				// print warnings
-				for (ServiceException warning : w) {
-					out.print(",\n\t");
-					out.print(protocol.soapFault(warning));
-				}
-	
-				// finish up
-				out.println(");");
-			}
-			out.println("}");
-			out.println("</script>");
-			out.println("</body>");
-			out.println("</html>");
+        } else if (!"2".equals(context.params.get(PROGRESS))) {
+            // mark done no matter what happens next
+            context.params.put(PROGRESS, "2");
+            out.println("<body onload='onLoad()'>");
+            out.println("<script>");
+            out.println("function onLoad() {");
+            if (exception == null && w == null) {
+                out.print("    window.parent." + callback + "('success');");
+            } else {
+                String result = exception != null ? "fail" : "warn";
+                
+                out.print("    window.parent." + callback + "('" + result + "'");
+                if (exception != null) {
+                    out.print(",\n\t");
+                    out.print(SoapProtocol.SoapJS.soapFault(se));
+                }
+                for (ServiceException warning : w) {
+                    out.print(",\n\t");
+                    out.print(SoapProtocol.SoapJS.soapFault(warning));
+                }
+                out.println(");");
+            }
+            out.println("}");
+            out.println("</script>");
+            out.println("</body>");
+            out.println("</html>");
         }
     }
 }
