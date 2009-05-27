@@ -172,7 +172,9 @@ public class LdapProvisioning extends Provisioning {
     private static DomainCache sDomainCache =
         new DomainCache(
                 LC.ldap_cache_domain_maxsize.intValue(),
-                LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);         
+                LC.ldap_cache_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE,
+                LC.ldap_cache_external_domain_maxsize.intValue(),
+                LC.ldap_cache_external_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);         
 
     private static NamedEntryCache<Server> sServerCache =
         new NamedEntryCache<Server>(
