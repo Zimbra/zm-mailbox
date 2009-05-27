@@ -1255,7 +1255,9 @@ public abstract class ArchiveFormatter extends Formatter {
                         id.flags, id.tags, null);
             }
         } catch (MailServiceException e) {
-            if (r != Resolve.Skip ||
+            if (e.getCode() == MailServiceException.QUOTA_EXCEEDED) {
+                throw e;
+            } else if (r != Resolve.Skip ||
                 e.getCode() != MailServiceException.ALREADY_EXISTS) {
                 addError(errs, e);
             }
@@ -1431,8 +1433,12 @@ public abstract class ArchiveFormatter extends Formatter {
                 break;
             }
         } catch (Exception e) {
-            addError(errs, FormatterServiceException.UNKNOWN_ERROR(aie.getName(),
-                e));
+            if (e instanceof MailServiceException &&
+                ((MailServiceException)e).getCode() == MailServiceException.QUOTA_EXCEEDED)
+                throw (MailServiceException)e;
+            else
+                addError(errs, FormatterServiceException.UNKNOWN_ERROR(
+                    aie.getName(), e));
         }
     }
 }
