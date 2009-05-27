@@ -171,14 +171,14 @@ public class DomainCache {
  * @param maxItems
  * @param refreshTTL
  */
-    public DomainCache(int maxItems, long refreshTTL) {
+    public DomainCache(int maxItems, long refreshTTL, int maxItemsNonExisting, long refreshTTLNonExisting) {
         mNameCache = new LRUMap(maxItems);
         mIdCache = new LRUMap(maxItems);
         mVirtualHostnameCache = new LRUMap(maxItems);  
         mKrb5RealmCache = new LRUMap(maxItems);   
         mRefreshTTL = refreshTTL;
         
-        mNonExistingCache = new NonExistingCache(maxItems, refreshTTL);
+        mNonExistingCache = new NonExistingCache(maxItemsNonExisting, refreshTTLNonExisting);
     }
 
     public synchronized void clear() {
