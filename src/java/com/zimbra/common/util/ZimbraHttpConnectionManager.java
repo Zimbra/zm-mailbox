@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.util.IdleConnectionTimeoutThread;
 
 import com.zimbra.common.localconfig.LC;
@@ -48,16 +49,27 @@ import com.zimbra.common.util.LogFactory;
  */
 public class ZimbraHttpConnectionManager {
     
-    private static HttpConnectionManagerParams sConnParams;
-    // private static MultiThreadedHttpConnectionManager sHttpConnMgr;
-    private static HttpConnectionManager sHttpConnMgr;
-    private static IdleConnectionTimeoutThread sReaperThread;
-    private static HttpClient sHttpClient;
+    // one instance of connection manager params for all our connection managers for now
+    private static HttpConnectionManagerParams sConnMgrParams; 
     
+    // the idle reaper thread instance
+    private static IdleConnectionTimeoutThread sReaperThread;
+    
+    // connection manager for Zimbra internal connections
+    private static ZimbraHttpConnectionManager sInternalConnMgr;
+    
+    // connection manager for all external connections
+    private static ZimbraHttpConnectionManager sExternalConnMgr;
+    
+    // our logger
     private static final Log sLog = LogFactory.getLog(ZimbraHttpConnectionManager.class);
     
+    
+    private HttpConnectionManager mHttpConnMgr;
+    private HttpClient mDefaultHttpClient;
+    
     static {
-        sConnParams = new HttpConnectionManagerParams();
+        sConnMgrParams = new HttpConnectionManagerParams();
 
         /* ------------------------------------------------------------------------
          * HttpConnectionManagerParams(subclass of HttpConnectionParams) params
@@ -69,14 +81,14 @@ public class ZimbraHttpConnectionManager {
          * 
          * HttpConnectionManagerParams.MAX_HOST_CONNECTIONS 
          */
-        sConnParams.setDefaultMaxConnectionsPerHost(LC.httpclient_connmgr_max_host_connections.intValue());
+        sConnMgrParams.setDefaultMaxConnectionsPerHost(LC.httpclient_connmgr_max_host_connections.intValue());
         
         /*
          * Defines the maximum number of connections allowed overall.
          *
          * HttpConnectionManagerParams.MAX_TOTAL_CONNECTIONS 
          */
-        sConnParams.setMaxTotalConnections(LC.httpclient_connmgr_max_total_connections.intValue());
+        sConnMgrParams.setMaxTotalConnections(LC.httpclient_connmgr_max_total_connections.intValue());
         
         
         /* -------------------------------
@@ -89,7 +101,7 @@ public class ZimbraHttpConnectionManager {
          *
          * HttpConnectionParams.CONNECTION_TIMEOUT
          */
-         sConnParams.setConnectionTimeout(LC.httpclient_connmgr_connection_timeout.intValue());
+         sConnMgrParams.setConnectionTimeout(LC.httpclient_connmgr_connection_timeout.intValue());
 
         
         //
@@ -123,38 +135,103 @@ public class ZimbraHttpConnectionManager {
          * 
          * HttpConnectionParams.SO_TIMEOUT
          */
-         sConnParams.setSoTimeout(LC.httpclient_connmgr_so_timeout.intValue());
+         sConnMgrParams.setSoTimeout(LC.httpclient_connmgr_so_timeout.intValue());
          
         //
         // Determines whether stale connection check is to be used.
         //
         // HttpConnectionParams.STALE_CONNECTION_CHECK
         //
-         sConnParams.setStaleCheckingEnabled(LC.httpclient_connmgr_keepalive_connections.booleanValue());
+         sConnMgrParams.setStaleCheckingEnabled(LC.httpclient_connmgr_keepalive_connections.booleanValue());
         
         //
         // Determines whether Nagle's algorithm is to be used.
         //
         // HttpConnectionParams.TCP_NODELAY
         //
-         sConnParams.setTcpNoDelay(LC.httpclient_connmgr_tcp_nodelay.booleanValue());
+        sConnMgrParams.setTcpNoDelay(LC.httpclient_connmgr_tcp_nodelay.booleanValue());
 
          
-        sHttpConnMgr = new MultiThreadedHttpConnectionManager();
-        sHttpConnMgr.setParams(sConnParams);
-        sHttpClient = new HttpClient(sHttpConnMgr);
+        sInternalConnMgr = new ZimbraHttpConnectionManager();
+        sExternalConnMgr = new ZimbraHttpConnectionManager();
         
 //        sLog.info("initailized with parameters:\n" + 
 //                  dumpParams(sConnParams));
     }
     
-    public static HttpConnectionManager getDefaultHttpConnectinMangager() {
-        return sHttpConnMgr;
+    public static ZimbraHttpConnectionManager getInternalHttpConnMgr() {
+        return sInternalConnMgr;
+    }
+    
+    public static ZimbraHttpConnectionManager getExternalHttpConnMgr() {
+        return sExternalConnMgr;
+    }
+    
+    // ================
+    // instance methods
+    // ================
+    
+    private ZimbraHttpConnectionManager() {
+        mHttpConnMgr = new MultiThreadedHttpConnectionManager();
+        mHttpConnMgr.setParams(sConnMgrParams);
+        mDefaultHttpClient = new HttpClient(mHttpConnMgr);
+    }
+    
+    private HttpConnectionManager getConnMgr() {
+        return mHttpConnMgr;
     }
     
     /**
-     * Create a HttpClient using our connection manager
+     * ==========================================================
+     * Important notes on using HttpClient returned by 
+     * ZimbraHttpConnectionManager.getDefaultHttpClient() and 
+     * ZimbraHttpConnectionManager.newHttpClient()
+     * ========================================================== 
      * 
+     * 1. Callsites should never call HttpClient.setConnectionTimeout(...)
+     *    on the HttpClient object.
+     *        setConnectionTimeout actually sets the connection timeout parameter 
+     *        on the HttpConnectionManager instance of the HttpClient object.  
+     *        It will affect all HttpClient instances created or going to be created 
+     *        that are associated with the connection manager instance.  
+     *             
+     *        Connection timeout should only be altered by the LC key 
+     *        httpclient_connmgr_connection_timeout.  We use a reasonable default 
+     *        and it should not have to be changed.  If a connection cannot be 
+     *        established with our default connection timeout, it's an indication 
+     *        of problems on the http server and the problem should be fixed on the 
+     *        http server side, instead of tweaking the connection timeout on the 
+     *        http client side.
+     *        
+     *        Callsites might need to change the "read timeout", which is the 
+     *        timeout (after the connection is established) while reading data on 
+     *        the connection/socket, socket read timeout should be set on the HttpMethod,
+     *        as follows:
+     *        HttpMethod method = new Post/GetMethod(...);
+     *        method.getParams().setSoTimeout(milliseconds);
+     *
+     * 2. Callsites should not call HttpClient.setHttpConnectionManager(...) 
+     *        No point associating the HttpClient with another connection 
+     *        manager if it uses ZimbraHttpConnectionManager to obtain the 
+     *        HttpClient.  
+     *       
+     * 3. About calling HttpClient.getHttpConnectionManager()     
+     *        It is OK to call getHttpConnectionManager, which return the connection
+     *        manager instance wrapped in the ZimbraHttpConnectionManager.
+     *        However, no one should be altering any states on the connection 
+     *        manager instance, as that is shared by all threads/callsites on the 
+     *        system.
+     * 
+     * 4. Callsite must call HttpMethod.releaseConnection() in the finally 
+     *    block after httpClient.executeMethod(...) is done.
+     *    This will release the connection used by the HttpMethod back to 
+     *    the available connection pool managed by the connection manager.
+     */
+    
+    /**
+     * Returns the default HttpClient instance associated with this connection manager.
+     * 
+     * *** See "Important notes on using HttpClient returned by ..." above. ***
      * 
      * http://hc.apache.org/httpclient-3.x/performance.html says:
      *     HttpClient is fully thread-safe when used with a thread-safe connection manager such as 
@@ -164,13 +241,35 @@ public class ZimbraHttpConnectionManager {
      *     At the same time the HttpClient instance and connection manager should be shared among 
      *     all threads for maximum efficiency. 
      *
-     * That's best if used with the executeMethod API:
+     * For callsites obtaining the HttpClient instance from this API, if HostConfiguration and/or 
+     * HttpState need to be changed on an invocation of HttpClient.executeMethod(), they should
+     * use the executeMethod API:
      *     executeMethod(HostConfiguration hostconfig,
      *                   HttpMethod method,
      *                   HttpState state)
      * where all components for the executeMethod invocation is passed in as parameters.
      * 
-     * But for the following use pattern, which many of our callsites use, e.g. :
+     * Instead of calling HttpClient.setHostConfiguration(...), HttpClient.setState(...).
+     * 
+     * Also, callsites should *not* alter any state on the returned HttpClient instance by calling 
+     * any of the HttpClient.set***() methods because this singleton instance is shared by 
+     * all threads/callsites on the system.
+     * 
+     * @return the default HttpClient instance associated with this connection manager
+     */
+    public HttpClient getDefaultHttpClient() {
+        return mDefaultHttpClient;
+    }
+
+    /**
+     * Create a new HttpClient instance associated with this connection manager.
+     * 
+     * *** See "Important notes on using HttpClient returned by ..." above. ***
+     * 
+     * Callsites of this API are free to alter states of the returned HttpClient 
+     * instance, because an new instance is created each time this API is called.
+     * 
+     * e.g. many of our callsites use the pattern:
      *     HttpState state = new HttpState();
      *     Cookie cookie = new Cookie(...);
      *     state.addCookie(cookie);
@@ -178,31 +277,14 @@ public class ZimbraHttpConnectionManager {
      *     client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
      *     executeMethod(method);
      *     
-     * Although it is still "thread-safe", but the behavior is not desired.
-     * Because if one thread set any property on the client, e.g. a HttpState, 
-     * a HostConfiguration, or any HttpClient parameters, while all that are 
-     * thread-safe, the properties of the HttpClient instance will be changes, 
-     * and will be used by all callsites of ZimbraHttpConnectionManager.  
+     * The above is fine with the HttpClient object returned by this API.
      * 
-     * Sharing a HttpClient instance might be desired (for exactly the reasons
-     * described above) by some callsites.  And if so, managing a shared instance 
-     * of ZimbraHttpClient (returned by ZimbraHttpConnectionManager.getHttpClient()) 
-     * should be done at the callsites - at least for now.  If it makes more sense 
-     * to manage that by ZimbraHttpConnectionManager, we can do that later.
-     * 
-     * @return
+     * @return a new HttpClient instance associated with this connection manager.
      */
-    public static ZimbraHttpClient getHttpClient() {
-        return new ZimbraHttpClient();
+    public HttpClient newHttpClient() {
+        return new HttpClient(mHttpConnMgr);
     }
     
-    public static ZimbraHttpClient getHttpClient(HttpClientParams httpClientParams) {
-        return new ZimbraHttpClient(httpClientParams);
-    }
-
-    public static HttpClient getDefaultHttpClient() {
-        return sHttpClient;
-    }
     
     /*
      * HttpMethod.releaseConnection() doesn't actually close the socket unless 
@@ -215,7 +297,7 @@ public class ZimbraHttpConnectionManager {
      * http requests are sent via httpclient.
      * 
      * To get around that, we run a reaper thread to close idle connections 
-     * owned by our connection manager..
+     * owned by our connection manager.
      */
     
     /*
@@ -245,7 +327,10 @@ public class ZimbraHttpConnectionManager {
     
             // Start thread
             sReaperThread = new IdleConnectionTimeoutThread();
-            sReaperThread.addConnectionManager(sHttpConnMgr);
+            
+            sReaperThread.addConnectionManager(sInternalConnMgr.getConnMgr());
+            sReaperThread.addConnectionManager(sExternalConnMgr.getConnMgr());
+            
             sReaperThread.setConnectionTimeout(getReaperConnectionTimeout());
             sReaperThread.setTimeoutInterval(getReaperSleepInterval());
             sReaperThread.start();
@@ -280,199 +365,6 @@ public class ZimbraHttpConnectionManager {
         }
     }
     
-    /**
-     * 
-     * A wrapper of HttpClient to disable methods that could change
-     * connection manager parameters
-     * 
-     * All instances of HttpClient wrapped in ZimbraHttpClient are created/managed 
-     * by the same instance of HttpConnectionManager, which get it's parameters 
-     * from LC keys.  We do not want any of the HttpConnectionManager parameters 
-     * changed via any ZimbraHttpClient instances, because it will affect all 
-     * subsequent connections (e.g. connection timeout) fabricated by the connection 
-     * manager.
-     * 
-     * e.g. if we didn't have this wrapper and just return the HttpClient instance 
-     *      directly to callers, a callsite can do:
-     *      httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
-     *      and the connection timeout change will affect all connections managed by 
-     *      the connection manager when new sockets are being opened.
-     *      
-     *      or it can change connection manager parameter like http.connection-manager.max-per-host,
-     *      http.connection-manager.max-total, which defeats the whole purpose of having 
-     *      a common connection manager.
-     *       
-     *       
-     * To get around the limitation, there are 2 options when you need to change connection 
-     * parameters:
-     * 
-     * 1. If a HttpConnectionManager or HttpConnection parameter is also configurable on 
-     *    HttpClient or HttpMethod or HostConfiguration, it should be set on the HttpClient 
-     *    or HttpMethod/HostConfiguration instance that are passed to
-     *    HttpClient.executeMethod(HttpMethod method) or
-     *    HttpClient.executeMethod(HostConfiguration hostConfiguration, HttpMethod method) 
-     * 
-     *    e.g. The connection parameter HttpConnectionParams.SO_TIMEOUT ("http.socket.timeout") 
-     *         can also be set on a HttpClient or HttpMethod instance. 
-     *      
-     *         See http://hc.apache.org/httpclient-3.x/preference-api.html for the 
-     *         Global -> HttpClient -> HostConfiguration -> HttpMethod preference hierarchy.
-     *      
-     *         To do that using a ZimbraHttpClient, instead of doing:
-     *      
-     *             zimbraHttpClient.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
-     *      
-     *         which is disabled anyway in ZimbraHttpClient, do this:
-     *      
-     *             GetMethod httpGet = new GetMethod(uri);
-     *             httpGet.getParams().setLongParameter(HttpConnectionParams.SO_TIMEOUT, soTimeout);
-     *             try {
-     *                 zimbraHttpClient.executeMethod(httpGet);
-     *                 ...
-     *             } finally {
-     *                 httpGet.releaseConnection();
-     *             }
-     *      
-     * 2. If 1 is still restricting you from doing things you need, do not use 
-     *    ZimbraHttpConnectionManager.getHttpClient().  Use the native "new HttpClient()" 
-     *    or "new HttpClient(HttpConnectionManager)" instead.
-     *    This of course defeats the purpose of having ZimBraHttpConnectionManager, but is 
-     *    a way out if really necessary.  This route should be avoided if possible.
-     *
-     */
-
-    public static class ZimbraHttpClient {
-
-        private HttpClient mHttpClient;
-        
-        private ZimbraHttpClient() {
-            mHttpClient = new HttpClient(sHttpConnMgr);
-        }
-        
-        private ZimbraHttpClient(HttpClientParams httpClientParams) {
-            mHttpClient = new HttpClient(httpClientParams, sHttpConnMgr);
-        }
-        
-        /*
-         * For disabled HttpClient methods, throw a ServiceException.
-         * For other methods, delegate to the wrapped HttpClient instance.
-         * 
-         * This is kind of ugly because if HttpClient API changes we will have to 
-         * change accordingly.  
-         * 
-         * Another way to do this is subclassing HttpClient instead of wrapping it.
-         * 
-         * It is not done that way because:
-         * 1. HttpClient.getHttpConnectionManager() is also invoked from within http client 
-         *    package internallly, we can't mess up with it in the subclass.
-         *    
-         * and   
-         * 2. We won't be able to throw ServiceException for the methods that are disabled, 
-         *    because it does not conform to the HttpClient API.   
-         */
-        
-        /* ===========================
-         * 
-         *     disabled methods
-         *     
-         * ===========================    
-         */
-        
-        // after getting the HttpConnectionManager, one can change it's parameters, disallow it
-        public HttpConnectionManager getHttpConnectionManager() throws ServiceException {
-            throw ServiceException.FAILURE("method disabled", null);
-        }
-
-        // HttpClient.setConnectionTimeout actually sets the connection timeout parameter on the 
-        // HttpConnectionManager instance of the HttpClient, disallow it.
-        public void setConnectionTimeout(int newTimeoutInMilliseconds) throws ServiceException {
-            throw ServiceException.FAILURE("method disabled", null);
-        }
-
-        // no no, can't change the connection manager
-        public void setHttpConnectionManager(HttpConnectionManager httpConnectionManager) throws ServiceException {
-            throw ServiceException.FAILURE("method disabled", null);
-        }
-        
-        
-        /* ===========================
-         * 
-         *     not disabled methods
-         *     
-         * ===========================    
-         */
-        
-        public int executeMethod(HostConfiguration hostConfiguration, HttpMethod method) throws IOException, HttpException {
-            return mHttpClient.executeMethod(hostConfiguration, method);
-        }
-        
-        public int executeMethod(HostConfiguration hostconfig, HttpMethod method, HttpState state) throws IOException, HttpException {
-            return mHttpClient.executeMethod(hostconfig, method, state);
-        }
-        
-        public int executeMethod(HttpMethod method) throws IOException, HttpException {
-            return mHttpClient.executeMethod(method);
-        }
-        
-        public String getHost() {
-            return mHttpClient.getHost();
-        }
-        
-        public HostConfiguration getHostConfiguration() {
-            return mHttpClient.getHostConfiguration();
-        }
-        
-        public HttpClientParams getParams() {
-            return mHttpClient.getParams();
-        }
-        
-        public int getPort() {
-            return mHttpClient.getPort();
-        }
-        
-        public HttpState getState() {
-            return mHttpClient.getState();
-        }
-        
-        public boolean isStrictMode() {
-            return mHttpClient.isStrictMode();
-        }
-        
-        public void setHostConfiguration(HostConfiguration hostConfiguration) {
-            mHttpClient.setHostConfiguration(hostConfiguration);
-        }
-        
-        public void setHttpConnectionFactoryTimeout(long timeout) {
-            mHttpClient.setHttpConnectionFactoryTimeout(timeout);
-        }
-        
-        public void setParams(HttpClientParams params) {
-            mHttpClient.setParams(params);
-        }
-        
-        public void setState(HttpState state) {
-            mHttpClient.setState(state);
-        }
-        
-        public void setStrictMode(boolean strictMode) {
-            mHttpClient.setStrictMode(strictMode);
-        }
-        
-        public void setTimeout(int newTimeoutInMilliseconds) {
-            mHttpClient.setTimeout(newTimeoutInMilliseconds);
-        }
-    }
-    
-    
-    
-    
-    /*
-     * methods for unittest only, do not call it in the server!
-     */
-    public static int getConnectionsInPool() {
-        // return sHttpConnMgr.getConnectionsInPool();
-        return 0;
-    }
     
     private static String dumpParams(HttpConnectionManagerParams params) {
         // dump httpclient package defaults if params is null
@@ -497,7 +389,7 @@ public class ZimbraHttpConnectionManager {
     public static void main(String[] args) {
         System.out.println(dumpParams(null));
     }
-    
+
 }
 
 
