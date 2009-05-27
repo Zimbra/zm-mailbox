@@ -37,6 +37,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 /**
  * Sends a request over HTTP to a remote server and parses the multipart
@@ -105,15 +106,21 @@ public class RemoteServerRequest {
         post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
         
         // Post data and handle errors
-        HttpClient http = new HttpClient();
-        int code = http.executeMethod(post);
-        if (code != 200) {
-            throw new HttpException(
-                "Remote server at '" + url + "' returned response " + code);
+        HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        try {
+            int code = http.executeMethod(post);
+            if (code != 200) {
+                throw new HttpException(
+                    "Remote server at '" + url + "' returned response " + code);
+            }
+            
+            mMulti = new MultipartStream(post.getResponseBodyAsStream(), BOUNDARY);
+            mHasMoreParts = mMulti.skipPreamble();
+            
+        } finally {
+            post.releaseConnection();
         }
         
-        mMulti = new MultipartStream(post.getResponseBodyAsStream(), BOUNDARY);
-        mHasMoreParts = mMulti.skipPreamble();
     }
 
     /**

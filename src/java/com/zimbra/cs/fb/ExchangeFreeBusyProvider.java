@@ -41,6 +41,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
@@ -303,7 +304,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private int sendRequest(HttpMethod method, ServerInfo info) throws IOException {
 		method.setDoAuthentication(true);
 		method.setRequestHeader(HEADER_USER_AGENT, USER_AGENT);
-		HttpClient client = new HttpClient();
+		HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
 		NetUtil.configureProxy(client);
 		switch (info.scheme) {
 		case basic:
@@ -469,8 +470,13 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 				prov.cachedFreeBusyEndTime(),
 				FreeBusyQuery.CALENDAR_FOLDER_ALL));
 		String url = prov.constructGetUrl(info, req);
+		
 		HttpMethod method = new GetMethod(url);
-		return prov.sendRequest(method, info);
+		try {
+		    return prov.sendRequest(method, info);
+		} finally {
+		    method.releaseConnection();
+		}
 	}
 	
 	private static String getAttr(String name) throws ServiceException {

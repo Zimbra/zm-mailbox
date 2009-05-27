@@ -49,6 +49,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
@@ -314,7 +315,7 @@ public class ZimbraServlet extends HttpServlet {
         		state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
         	}
         }
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         if (state != null)
         	client.setState(state);
 

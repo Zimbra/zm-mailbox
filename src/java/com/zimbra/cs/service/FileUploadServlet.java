@@ -57,6 +57,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -205,7 +206,7 @@ public class FileUploadServlet extends ZimbraServlet {
                ContentServlet.PARAM_EXPUNGE + "=true";
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(url);
         authtoken.encode(client, get, false, hostname);
         try {

@@ -42,6 +42,7 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -59,7 +60,7 @@ public class WebDavClient {
 	
 	public WebDavClient(String baseUrl, String app) {
 		mBaseUrl = baseUrl;
-		mClient = new HttpClient();
+		mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
 		NetUtil.configureProxy(mClient);
 		setAppName(app);
 	}

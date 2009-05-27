@@ -23,18 +23,22 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.SimpleHttpConnectionManager;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpConnectionParams;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.common.util.ZimbraHttpConnectionManager.ZimbraHttpClient;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -45,10 +49,8 @@ public class TestZimbraHttpConnectionManager extends TestCase {
     
     // hack before I figure out how to run only the selected tests in the unit test framework
     enum Test {
-        testBasic(false),
-        testReaperOld(false),
-        testReaper(true),
-        testDisabledMethods(false),
+        testReaper(false),
+        testHttpState(true),
         testSoTimeoutViaHttpMethod(false),
         testSoapProv(false);
         
@@ -104,41 +106,53 @@ public class TestZimbraHttpConnectionManager extends TestCase {
      */
     private static class TestGetThread extends Thread {
         
-        private ZimbraHttpClient httpClient;
-        private GetMethod method;
-        private int id;
+        private HttpClient mHttpClient;
+        private GetMethod mMethod;
+        private int mId;
         
-        public TestGetThread(ZimbraHttpClient httpClient, GetMethod method, int id) {
-            this.httpClient = httpClient;
-            this.method = method;
-            this.id = id;
+        public TestGetThread(HttpClient httpClient, GetMethod method, int id) {
+            mHttpClient = httpClient;
+            mMethod = method;
+            mId = id;
         }
         
         /**
-         * Executes the GetMethod and prints some satus information.
+         * Executes the GetMethod and prints some status information.
          */
         public void run() {
             try {
-                System.out.println(id + " - about to get something from " + method.getURI());
+                System.out.println(mId + " - about to get something from " + mMethod.getURI());
                 // execute the method
-                int respCode = httpClient.executeMethod(method);
+                int respCode = mHttpClient.executeMethod(mMethod);
                 
-                System.out.println(id + " - get executed");
+                System.out.println(mId + " - get executed");
                 // get the response body as an array of bytes
                 // byte[] bytes = method.getResponseBody();
-                dumpResponse(respCode, method, Integer.valueOf(id).toString());
+                // dumpResponse(respCode, mMethod, Integer.valueOf(mId).toString());
                 
             } catch (Exception e) {
-                System.out.println(id + " - error: " + e);
+                System.out.println(mId + " - error: " + e);
             } finally {
                 // always release the connection after we're done 
-                method.releaseConnection();
-                System.out.println(id + " - connection released");
+                mMethod.releaseConnection();
+                System.out.println(mId + " - connection released");
             }
         }
     }
     
-    public void testBasic() {
+    /*    
+     * set in localconfig.xml before running this test
+
+      <key name="httpclient_connmgr_idle_reaper_sleep_interval">
+        <value>5000</value>
+      </key>
+      
+        <key name="httpclient_connmgr_idle_reaper_connection_timeout">
+        <value>2000</value>
+      </key>
+      
+    */  
+    public void testReaper() throws Exception {
         if (!runIt())
             return;
         
@@ -150,127 +164,47 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             "http://svn.apache.org/viewvc/httpcomponents/oac.hc3x/"
         };
         
+        ZimbraHttpConnectionManager connMgr = ZimbraHttpConnectionManager.getExternalHttpConnMgr();
+        
         // create a thread for each URI
         TestGetThread[] threads = new TestGetThread[urisToGet.length];
         for (int i = 0; i < threads.length; i++) {
             GetMethod get = new GetMethod(urisToGet[i]);
             get.setFollowRedirects(true);
-            threads[i] = new TestGetThread(ZimbraHttpConnectionManager.getHttpClient(), get, i + 1);
+            threads[i] = new TestGetThread(connMgr.newHttpClient(), get, i + 1);
         }
+        
+        ZimbraHttpConnectionManager.startReaperThread(); // comment out to reproduce the CLOSE_WAIT
         
         // start the threads
         for (int j = 0; j < threads.length; j++) {
             threads[j].start();
         }
-    }
-    
-/*    
- * set in localconfig.xml before running this test
 
-  <key name="httpclient_connmgr_idle_connection_reaper_initial_sleep_time">
-    <value>3000</value>
-  </key>
+        /*
+         * not sure how to automate this:
+         * 
+         * if ZimbraHttpConnectionManager.startReaperThread() was run:
+         * after httpclient_connmgr_idle_reaper_sleep_interval,
+         * netstat | grep CLOSE_WAIT | grep apache
+         * should print nothing
+         * 
+         * if ZimbraHttpConnectionManager.startReaperThread() is *not* running:
+         * netstat | grep CLOSE_WAIT | grep apache
+         * will show:
+         * tcp4       0      0  goodbyewhen-lm.c.62910 eos.apache.org.http    CLOSE_WAIT
+         * tcp4       0      0  goodbyewhen-lm.c.62909 eos.apache.org.http    CLOSE_WAIT
+         * tcp4       0      0  goodbyewhen-lm.c.62908 eris.apache.org.http   CLOSE_WAIT
+         * tcp4       0      0  goodbyewhen-lm.c.62907 eos.apache.org.http    CLOSE_WAIT
+         * 
+         * for very long time.
+         */
+    }
+    
 
-  <key name="httpclient_connmgr_idle_connection_reaper_sleep_interval">
-    <value>5000</value>
-  </key>
-  
-*/  
-    public void testReaperOld() throws Exception {
+    public void testHttpState() throws Exception {
         if (!runIt())
             return;
-        
-        // ZimbraHttpConnectionManager.startReaperThread();
-        
-        ZimbraHttpClient httpClient = ZimbraHttpConnectionManager.getHttpClient();
-        GetMethod method = new GetMethod("http://hc.apache.org:80/");
-        int numConnInPool;
-        try {
-            numConnInPool = ZimbraHttpConnectionManager.getConnectionsInPool();
-            assertEquals(0, numConnInPool);
-            httpClient.executeMethod(method);
-            numConnInPool = ZimbraHttpConnectionManager.getConnectionsInPool();
-            assertEquals(1, numConnInPool);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            method.releaseConnection();
-            numConnInPool = ZimbraHttpConnectionManager.getConnectionsInPool();
-            assertEquals(1, numConnInPool);
-        }
-        
-        // wait for the reaper to close the idle connection
-        Thread.sleep(5000);
-        numConnInPool = ZimbraHttpConnectionManager.getConnectionsInPool();
-        assertEquals(0, numConnInPool);
-        
-        // ZimbraHttpConnectionManager.shutdownReaperThread();
-    }
-    
-    public void doTestReaper(String msg) throws Exception {
-       String url = "http://localhost:7070/service/preauth?account=bogus@phoebe.mac&by=name";
-        ZimbraHttpClient httpClient = ZimbraHttpConnectionManager.getHttpClient();
-        GetMethod method = new GetMethod(url);
-        int numConnInPool;
-        try {
-            int respCode = httpClient.executeMethod(method);
-            dumpResponse(respCode, method, msg);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            method.releaseConnection();
-        }
-    }
-    
-    
-    public void testReaper() throws Exception {
-        if (!runIt())
-            return;
-        
-        int num = 1;
-        
-        ZimbraHttpConnectionManager.startReaperThread();
-        for (int i = 0; i < num; i++) {
-            doTestReaper(Integer.valueOf(i).toString());
-        }
-        
-        // wait for the reaper to close the idle connection
-        // Thread.sleep(60000);
-        
-        // ZimbraHttpConnectionManager.shutdownReaperThread();
-    }
-    
-    public void testDisabledMethods() throws Exception {
-        if (!runIt())
-            return;
-        
-        ZimbraHttpClient httpClient = ZimbraHttpConnectionManager.getHttpClient();
-        
-        boolean good = false;
-        try {
-            httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
-        } catch (ServiceException e) {
-            good = true;
-        }
-        assertTrue(good);
-        
-        good = false;
-        try {
-            httpClient.setConnectionTimeout(5000);
-        } catch (ServiceException e) {
-            good = true;
-        }
-        assertTrue(good);
-        
-        good = false;
-        try {
-            httpClient.setHttpConnectionManager(new SimpleHttpConnectionManager());
-        } catch (ServiceException e) {
-            good = true;
-        }
-        assertTrue(good);
     }
     
     
@@ -453,7 +387,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
                         output.write(entityBody.getBytes());
                     }
                     
-                    // our thread only process ine request  :)
+                    // our thread only process one request  :)
                     break;
                 }
             }
@@ -473,6 +407,10 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             // Copy requested file into the socket's output stream.
             while ((bytes = fis.read(buffer)) != -1 ) {
                 os.write(buffer, 0, bytes);
+                
+                // wait a little so the client will timeout
+                System.out.println("Server is hanging for 60 seconds...");
+                Thread.sleep(60000);
             }
         }
     }
@@ -488,13 +426,20 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         // start a server for testing
         SimpleHttpServer.start(serverPort);
         
-        ZimbraHttpClient httpClient = ZimbraHttpConnectionManager.getHttpClient();
+        HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
 
         GetMethod method = new GetMethod("http://localhost:" + serverPort + path);
+        method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
+        long startTime = System.currentTimeMillis();
+        long endTime;
         try {
-            method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
             int respCode = httpClient.executeMethod(method);
             dumpResponse(respCode, method, "");
+        } catch (java.net.SocketTimeoutException e) {
+            // just what we want
+            endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            System.out.println("Timed out after " + elapsedTime + " msecs");
         } catch (Exception e) {
             e.printStackTrace();
             fail();
@@ -566,7 +511,9 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         // TestUtil.cliSetup();  uncomment will default to SoapProvisioning
         CliUtil.toolSetup("INFO");
         TestUtil.runTest(TestZimbraHttpConnectionManager.class);
-        
-        System.out.println("hold");
+
+        // sleep for a long time
+        System.out.println("Waiting...");
+        Thread.sleep(Constants.MILLIS_PER_DAY);
     }
 }

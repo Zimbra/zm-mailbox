@@ -1311,7 +1311,11 @@ public class ZimletUtil {
 	    private String postAttachment(String uploadURL, String name, byte[] data, String domain) throws IOException, ZimletException {
 	    	String aid = null;
 
-	    	HttpClient client = new HttpClient();
+	    	// no need/point to use ZimbraHttpConnectionManager because all callsites
+	    	// of this methods are from command line, our idle connection reaper is 
+	    	// only started in the server anyway.  After the CLI exits all connections 
+	    	// will be released.
+	    	HttpClient client = new HttpClient(); 
 	        Map<String, String> cookieMap = mAuth.cookieMap(true);
 	        if (cookieMap != null) {
 	            HttpState state = new HttpState();

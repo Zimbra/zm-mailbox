@@ -33,6 +33,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
@@ -113,7 +114,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                         targetUrl.append(URLEncoder.encode(authToken, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {}
                 }
-                HttpClient client = new HttpClient();
+                HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
                 NetUtil.configureProxy(client);
                 method = new GetMethod(targetUrl.toString());
                 String fbMsg;

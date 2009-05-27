@@ -33,6 +33,7 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.client.*;
 
 public class LmcSendMsgRequest extends LmcSoapRequest {
@@ -92,7 +93,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
         
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         PostMethod post = new PostMethod(uploadURL);
         ZAuthToken zat = session.getAuthToken();
         Map<String, String> cookieMap = zat.cookieMap(false);
@@ -105,7 +106,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
             client.setState(initialState);
             client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         }
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
+        post.getParams().setSoTimeout(msTimeout);
         int statusCode = -1;
         try {
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());

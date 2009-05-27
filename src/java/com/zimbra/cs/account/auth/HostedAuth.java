@@ -25,6 +25,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -52,7 +53,7 @@ public class HostedAuth extends ZimbraCustomAuth {
 	 **/
 	public void authenticate(Account acct, String password,
 			Map<String, Object> context, List<String> args) throws Exception {
-		HttpClient client = new HttpClient();
+		HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
 		HttpMethod method = null;
 		
 		String targetURL = args.get(0);
@@ -93,7 +94,11 @@ public class HostedAuth extends ZimbraCustomAuth {
         	throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),acct.getName(), "HTTP request to remote authentication server failed",ex); 
         } catch (IOException ex) {
         	throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), acct.getName(), "HTTP request to remote authentication server failed",ex); 
+        } finally {
+            if (method != null)
+                method.releaseConnection();    
         }
+        
         int status = method.getStatusCode(); 
         if(status != HttpStatus.SC_OK) {
         	throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "HTTP request to remote authentication server failed. Remote response code: " + Integer.toString(status));

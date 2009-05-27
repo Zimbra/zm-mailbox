@@ -32,6 +32,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 
 import com.zimbra.cs.account.AuthToken;
@@ -102,7 +103,7 @@ public class StatsImageServlet extends ZimbraServlet {
 		        } catch (AuthTokenException ate) {
 		            throw ServiceException.PROXY_ERROR(ate, url.toString());
 		        }
-		        HttpClient client = new HttpClient();
+		        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
 		        client.setState(state);
 		        GetMethod get = new GetMethod(url.toString());
 		        try {

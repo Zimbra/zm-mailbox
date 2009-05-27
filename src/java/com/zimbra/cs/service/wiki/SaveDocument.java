@@ -51,6 +51,7 @@ import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -180,7 +181,7 @@ public class SaveDocument extends WikiDocumentHandler {
     	}
     	
         String url = UserServlet.getRestUrl(acct) + "?auth=co&id=" + itemId + "&part=" + partId;
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(url);
         authtoken.encode(client, get, false, acct.getAttr(Provisioning.A_zimbraMailHost));
         try {
@@ -196,6 +197,8 @@ public class SaveDocument extends WikiDocumentHandler {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote mime part", e, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
+        } finally {
+            get.releaseConnection();
         }
     }
     

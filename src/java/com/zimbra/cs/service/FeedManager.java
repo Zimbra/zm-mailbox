@@ -53,6 +53,7 @@ import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -92,14 +93,17 @@ public class FeedManager {
     public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
 
     public static SubscriptionData retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd) throws ServiceException {
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         NetUtil.configureProxy(client);
-        client.setConnectionTimeout(10000);
-        client.setTimeout(60000);
+        
+        // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.
+        // see comments in ZimbraHttpConnectionManager
+        // client.setConnectionTimeout(10000); 
 
         HttpMethodParams params = new HttpMethodParams();
         params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, Mime.P_CHARSET_UTF8);
-
+        params.setSoTimeout(60000);
+        
         GetMethod get = null;
         BufferedInputStream content = null;
         try {

@@ -57,6 +57,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -1428,7 +1429,7 @@ public class UserServlet extends ZimbraServlet {
             ZimbraLog.mailbox.warn("can't parse target URI", e);
         }
         
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         Map<String, String> cookieMap = authToken.cookieMap(false);
         if (cookieMap != null) {
             HttpState state = new HttpState();
@@ -1452,8 +1453,13 @@ public class UserServlet extends ZimbraServlet {
     		long contentLength = ((PutMethod)method).getRequestEntity().getContentLength();
     		if (contentLength > 0) {
     			int timeEstimate = Math.max(10000, (int)(contentLength / 100));  // 100kbps in millis
-    			client.getHttpConnectionManager().getParams().setConnectionTimeout(timeEstimate);
-    			client.getHttpConnectionManager().getParams().setSoTimeout(timeEstimate);
+    			// cannot set connection time using our ZimbrahttpConnectionManager,
+    			// see comments in ZimbrahttpConnectionManager.
+    			// actually, length of the content to Put should not be a factor for 
+    			// establishing a connection, only read time out matter, which we set
+    			// client.getHttpConnectionManager().getParams().setConnectionTimeout(timeEstimate);
+    			
+    			method.getParams().setSoTimeout(timeEstimate);
     		}
     	}
     	
@@ -1475,6 +1481,9 @@ public class UserServlet extends ZimbraServlet {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
+        } finally {
+            if (method != null)
+                method.releaseConnection();
         }
     }
 }

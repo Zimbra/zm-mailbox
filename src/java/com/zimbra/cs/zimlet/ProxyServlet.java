@@ -41,6 +41,7 @@ import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -176,7 +177,7 @@ public class ProxyServlet extends ZimbraServlet {
 
         HttpMethod method = null;
         try {
-            HttpClient client = new HttpClient();
+            HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
             NetUtil.configureProxy(client);
             String reqMethod = req.getMethod();
             if (reqMethod.equalsIgnoreCase("GET"))
