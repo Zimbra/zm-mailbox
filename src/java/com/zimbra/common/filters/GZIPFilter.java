@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.filters;
@@ -54,7 +52,7 @@ public class GZIPFilter implements Filter {
     private List<Pattern> mNoCompressionUserAgents;
     private LRUMap mUAMap;
 
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
         mNoCompressionUserAgents = new ArrayList<Pattern>();
 
         String mimeTypes = filterConfig.getInitParameter(P_COMPRESSABLE_MIME_TYPES);

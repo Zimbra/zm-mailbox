@@ -1,8 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -11,7 +10,6 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -67,6 +65,7 @@ public class XMLChartConfig {
     public static final String A_PLOT_RATIO_TOP = "ratioTop";
     public static final String A_PLOT_RATIO_BOTTOM = "ratioBottom";
     public static final String A_PLOT_GROUP_BY = "groupBy";
+    public static final String A_PLOT_IGNORE = "ignore";
 
     private static String getAttr(Element elem, String name)
             throws DocumentException {
@@ -297,13 +296,14 @@ public class XMLChartConfig {
                 String aggFunction = getAttr(plotElem, A_PLOT_AGGREGATE_FUNCTION,
                         PlotSettings.DEFAULT_PLOT_AGGREGATE_FUNCTION);
                 String groupBy = getAttr(plotElem, A_PLOT_GROUP_BY);
+                String ignore = getAttr(plotElem, A_PLOT_IGNORE, null);
 
                 boolean optional = getInheritedAttrBoolean(plotElem,
                         A_PLOT_OPTIONAL,
                         PlotSettings.DEFAULT_PLOT_OPTIONAL);
 
                 GroupPlotSettings plot = new GroupPlotSettings(
-                        groupBy, infile, dataCol, showRaw, showMovingAvg,
+                        groupBy, ignore, infile, dataCol, showRaw, showMovingAvg,
                         movingAvgPoints, multiplier, divisor,
                         nonNegative, percentTime,
                         dataFunction, aggFunction, optional);
