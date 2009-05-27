@@ -145,6 +145,9 @@ public class TestPurge extends TestCase {
      */
     public void testTrashUser()
     throws Exception {
+        // Use the item date for purge.
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtil.LDAP_FALSE);
+        
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -172,6 +175,9 @@ public class TestPurge extends TestCase {
      */
     public void testTrashSystem()
     throws Exception {
+        // Use the item date for purge.
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtil.LDAP_FALSE);
+
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -303,7 +309,7 @@ public class TestPurge extends TestCase {
      * Confirms that messages are purged from trash based on the value of
      * <tt>zimbraMailPurgeUseChangeDateForTrash<tt>.  See bug 19702 for more details.
      */
-    public void testChangeDate()
+    public void testTrashChangeDate()
     throws Exception {
         // Set retention policy
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefTrashLifetime, "24h");
