@@ -31,7 +31,6 @@ import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.LockMgr.LockScope;
 import com.zimbra.cs.dav.LockMgr.LockType;
 import com.zimbra.cs.dav.property.LockDiscovery;
-import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Lock extends DavMethod {
@@ -47,7 +46,7 @@ public class Lock extends DavMethod {
 		DavContext.Depth depth = ctxt.getDepth();
 		if (depth == Depth.one)
 			throw new DavException("invalid depth", HttpServletResponse.SC_BAD_REQUEST, null);
-		int d = (depth == Depth.zero) ? 0 : 1;
+		String d = (depth == Depth.zero) ? "0" : depth.toString();
 		
 		LockMgr.LockScope scope = LockScope.shared;
 		LockMgr.LockType type = LockType.write;
@@ -77,12 +76,18 @@ public class Lock extends DavMethod {
 			else
 				throw new DavException("unrecognized type element "+v.toString(), HttpServletResponse.SC_BAD_REQUEST, null);
 		}
+		String owner;
+		e = top.element(DavElements.E_OWNER);
+		if (e == null)
+			owner = ctxt.getAuthAccount().getName();
+		else
+			owner = (e.getText() != null) ? e.getText() : e.elementIterator().next().toString();
 		
-		DavResource rs = ctxt.getRequestedResource();
 		LockMgr lockmgr = LockMgr.getInstance();
-		LockMgr.Lock lock = lockmgr.createLock(ctxt, rs, type, scope, d);
+		LockMgr.Lock lock = lockmgr.createLock(ctxt, owner, ctxt.getUri(), type, scope, d);
 		
 		ctxt.getDavResponse().addProperty(ctxt, new LockDiscovery(lock));
+		ctxt.setStatus(HttpServletResponse.SC_OK);
 		sendResponse(ctxt);
 	}
 }

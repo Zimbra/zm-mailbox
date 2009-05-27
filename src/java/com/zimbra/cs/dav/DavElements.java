@@ -304,6 +304,7 @@ public class DavElements {
 	public static final QName E_LAST_NAME = QName.get(P_LAST_NAME, CS_NS);
 	public static final QName E_LOCKDISCOVERY = QName.get(P_LOCKDISCOVERY, WEBDAV_NS);
 	public static final QName E_LOCKSCOPE = QName.get(P_LOCKSCOPE, WEBDAV_NS);
+	public static final QName E_LOCKTOKEN = QName.get(P_LOCKTOKEN, WEBDAV_NS);
 	public static final QName E_LOCKTYPE = QName.get(P_LOCKTYPE, WEBDAV_NS);
 	
 	public static final QName E_MATCH = QName.get(P_MATCH, WEBDAV_NS);

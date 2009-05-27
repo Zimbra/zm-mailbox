@@ -21,8 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import com.zimbra.cs.dav.resource.DavResource;
-
 /**
  * RFC 2518bis section 6.
  * 
@@ -46,14 +44,14 @@ public class LockMgr {
 		return sInstance;
 	}
 	
-	// map of resource to list of tokens
-	private HashMap<DavResource,List<String>> mLockedResources;
+	// map of resource path to list of tokens
+	private HashMap<String,List<String>> mLockedResources;
 	
 	// map of token to lock
 	private LRUMap mLocks;
 	
 	private LockMgr() {
-		mLockedResources = new HashMap<DavResource,List<String>>();
+		mLockedResources = new HashMap<String,List<String>>();
 		mLocks = new LRUMap(100);
 	}
 	
@@ -69,13 +67,13 @@ public class LockMgr {
 	private static final String sTIMEOUTSEC = "Second-";
 	
 	public static class Lock {
-		public Lock(LockType t, LockScope s, int d, String o) {
+		public Lock(LockType t, LockScope s, String d, String o) {
 			type = t; scope = s; depth = d; owner = o;
 			expiration = System.currentTimeMillis() + sDEFAULTTIMEOUT;
 		}
 		public LockType type;
 		public LockScope scope;
-		public int depth;    // 0 -> 0, 1 -> infinity
+		public String depth;
 		public String owner;
 		public long expiration;
 		public String token;
@@ -83,19 +81,18 @@ public class LockMgr {
 			return expiration < System.currentTimeMillis();
 		}
 		public String getTimeoutStr() {
-			long timeoutInSec = expiration - System.currentTimeMillis();
+			long timeoutInSec = (expiration - System.currentTimeMillis()) / 1000;
 			if (timeoutInSec < 0)
 				return sTIMEOUTINFINITE;
 			return sTIMEOUTSEC + timeoutInSec;
 		}
 	}
 	
-	public synchronized List<Lock> getLocks(DavResource rs) {
+	public synchronized List<Lock> getLocks(String path) {
 		List<Lock> locks = new ArrayList<Lock>();
-		List<String> lockTokens = mLockedResources.get(rs);
+		List<String> lockTokens = mLockedResources.get(path);
 		if (lockTokens != null) {
 			for (String token : lockTokens) {
-				@SuppressWarnings("unchecked")
 				Lock l = (Lock)mLocks.get(token);
 				if (l == null)
 					continue;
@@ -110,40 +107,39 @@ public class LockMgr {
 	
 	private static final String sTOKEN_PREFIX = "urn:uuid:";
 	
-	private synchronized boolean canLock(DavResource rs, LockType type, LockScope scope) {
-		List<String> locks = mLockedResources.get(rs);
-		if (locks != null) {
-			for (String token : locks) {
-				Lock l = (Lock)mLocks.get(token);
-				if (l == null)
-					continue;
-				else if (scope == LockScope.exclusive)
-					return false;
-				else if (scope == LockScope.shared && l.scope == LockScope.exclusive)
-					return false;
-			}
+	private synchronized Lock hasLock(String owner, String path, LockType type, LockScope scope) throws DavException {
+		for (Lock l : getLocks(path)) {
+			if (l == null)
+				continue;
+			else if (l.owner.compareTo(owner) == 0)
+				return l;
+			else if (scope == LockScope.exclusive)
+				throw new DavException("already locked "+path, DavProtocol.STATUS_LOCKED);
+			else if (scope == LockScope.shared && l.scope == LockScope.exclusive)
+				throw new DavException("shared lock exists "+path, DavProtocol.STATUS_LOCKED);
 		}
-		return true;
+		return null;
 	}
 	
-	public synchronized Lock createLock(DavContext ctxt, DavResource rs, LockType type, LockScope scope, int depth) throws DavException {
-		if (!canLock(rs, type, scope))
-			throw new DavException("can't lock the resource "+rs.getUri(), DavProtocol.STATUS_LOCKED);
-		Lock l = new Lock(type, scope, depth, ctxt.getAuthAccount().getName());
+	public synchronized Lock createLock(DavContext ctxt, String owner, String path, LockType type, LockScope scope, String depth) throws DavException {
+		Lock l = hasLock(owner, path, type, scope);
+		if (l != null)
+			return l;
+		l = new Lock(type, scope, depth, owner);
 		l.token = sTOKEN_PREFIX + UUID.randomUUID().toString();
 		
-		List<String> locks = mLockedResources.get(rs);
+		List<String> locks = mLockedResources.get(path);
 		if (locks == null) {
 			locks = new ArrayList<String>();
-			mLockedResources.put(rs, locks);
+			mLockedResources.put(path, locks);
 		}
 		locks.add(l.token);
 		mLocks.put(l.token, l);
 		return l;
 	}
 	
-	public synchronized void deleteLock(DavContext ctxt, DavResource rs, String token) {
-		List<String> locks = mLockedResources.get(rs);
+	public synchronized void deleteLock(DavContext ctxt, String path, String token) {
+		List<String> locks = mLockedResources.get(path);
 		if (locks == null)
 			return;
 		if (!locks.contains(token))
