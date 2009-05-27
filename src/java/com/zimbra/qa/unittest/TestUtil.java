@@ -577,6 +577,15 @@ extends Assert {
         prov.modifyAttrs(server, attrs);
     }
     
+    public static void setServerAttr(String attrName, String[] attrValue)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(attrName, attrValue);
+        prov.modifyAttrs(server, attrs);
+    }
+    
     public static String getAccountAttr(String userName, String attrName)
     throws ServiceException {
         String accountName = getAddress(userName);

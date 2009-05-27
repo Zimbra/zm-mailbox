@@ -1591,6 +1591,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
     
+    public static final String A_zimbraMailTrustedIP = "zimbraMailTrustedIP";
+    
     /**
      * DNS/MX Records checks
      */

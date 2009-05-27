@@ -20,8 +20,8 @@
  */
 package com.zimbra.cs.servlet;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -43,6 +43,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
@@ -50,13 +51,10 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -66,7 +64,6 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.ZimbraAuthProvider;
 import com.zimbra.cs.util.Zimbra;
 
 /**

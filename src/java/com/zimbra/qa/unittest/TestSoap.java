@@ -28,6 +28,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.servlet.TrustedNetwork;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class TestSoap
@@ -37,12 +38,14 @@ extends TestCase {
     
     private String mOriginalSoapRequestMaxSize;
     private String mOriginalSoapExposeVersion;
+    private String[] mOriginalTrustedIP;
     
     public void setUp()
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
         mOriginalSoapRequestMaxSize = server.getAttr(Provisioning.A_zimbraSoapRequestMaxSize, "");
         mOriginalSoapExposeVersion = server.getAttr(Provisioning.A_zimbraSoapExposeVersion, "");
+        mOriginalTrustedIP = server.getMultiAttr(Provisioning.A_zimbraMailTrustedIP);
         cleanUp();
     }
     
@@ -112,10 +115,20 @@ extends TestCase {
         assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_VERSION));
     }
     
+    public void testTrustedIP()
+    throws Exception {
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailTrustedIP, new String[] { "192.168.1.1", "192.168.1.2" });
+        assertTrue(TrustedNetwork.isIpTrusted("127.0.0.1"));
+        assertTrue(TrustedNetwork.isIpTrusted("192.168.1.1"));
+        assertTrue(TrustedNetwork.isIpTrusted("192.168.1.2"));
+        assertFalse(TrustedNetwork.isIpTrusted("192.168.1.3"));
+    }
+    
     public void tearDown()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraSoapRequestMaxSize, mOriginalSoapRequestMaxSize);
         TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, mOriginalSoapExposeVersion);
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailTrustedIP, mOriginalTrustedIP);
         cleanUp();
     }
     
