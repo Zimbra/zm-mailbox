@@ -193,7 +193,7 @@ public class SpamExtract {
         String soapURL = getSoapURL(server, false);
 
         URL restURL = getServerURL(server, false);
-        HttpClient hc = new HttpClient();
+        HttpClient hc = new HttpClient();   // CLI only, don't need conn mgr
         HttpState state = new HttpState();
         GetMethod gm = new GetMethod();
         gm.setFollowRedirects(true);
@@ -201,8 +201,7 @@ public class SpamExtract {
         state.addCookie(authCookie);
         hc.setState(state);
         hc.getHostConfiguration().setHost(restURL.getHost(), restURL.getPort(), Protocol.getProtocol(restURL.getProtocol()));
-        hc.getHttpConnectionManager().getParams().setConnectionTimeout(60000);
-        hc.setTimeout(60000);
+        gm.getParams().setSoTimeout(60000);
 
         if (mVerbose) mLog.info("Mailbox requests to: " + restURL);
 

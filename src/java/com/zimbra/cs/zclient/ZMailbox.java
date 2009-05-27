@@ -78,6 +78,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -1997,8 +1998,6 @@ public class ZMailbox implements ToZJSONObject {
 
         URI uri = getUploadURI();
         HttpClient client = getHttpClient(uri);
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
-        client.getHttpConnectionManager().getParams().setSoTimeout(msTimeout);
         
         // make the post
         PostMethod post = new PostMethod(uri.toString());
@@ -2033,8 +2032,6 @@ public class ZMailbox implements ToZJSONObject {
 
         URI uri = getUploadURI();
         HttpClient client = getHttpClient(uri);
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
-        client.getHttpConnectionManager().getParams().setSoTimeout(msTimeout);
 
         // make the post
         PostMethod post = new PostMethod(uri.toString());
@@ -2091,7 +2088,7 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-    HttpClient getHttpClient(URI uri) {
+    private HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
         HttpState initialState = new HttpState();
         
@@ -2104,7 +2101,7 @@ public class ZMailbox implements ToZJSONObject {
         cookieMap = getAuthToken().cookieMap(false);
         addAuthCookie(cookieMap, uri, initialState);
         
-        HttpClient client = new HttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         return client;
@@ -2541,10 +2538,10 @@ public class ZMailbox implements ToZJSONObject {
             uri = getRestURI(relativePath, alternateUrl);
             HttpClient client = getHttpClient(uri);
 
-            if (msecTimeout > 0)
-                client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
-
             get = new GetMethod(uri.toString());
+            
+            if (msecTimeout > 0)
+                get.getParams().setSoTimeout(msecTimeout);
 
             statusCode = client.executeMethod(get);
             // parse the response
@@ -2561,6 +2558,9 @@ public class ZMailbox implements ToZJSONObject {
             }
             String msg = String.format("Unable to get REST resource%s: %s", fromUri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
+        } finally {
+            if (get != null)
+                get.releaseConnection();
         }
     }
     
@@ -2608,10 +2608,11 @@ public class ZMailbox implements ToZJSONObject {
             URI uri = getRestURI(relativePath, alternateUrl);
             HttpClient client = getHttpClient(uri);
 
-            if (msecTimeout > 0)
-                client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
-
             post = new PostMethod(uri.toString());
+            
+            if (msecTimeout > 0)
+                post.getParams().setSoTimeout(msecTimeout);
+            
             RequestEntity entity = (length > 0) ?
                     new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
                     new InputStreamRequestEntity(is, contentType);

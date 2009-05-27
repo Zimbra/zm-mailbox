@@ -1315,7 +1315,7 @@ public class ZimletUtil {
 	    	// of this methods are from command line, our idle connection reaper is 
 	    	// only started in the server anyway.  After the CLI exits all connections 
 	    	// will be released.
-	    	HttpClient client = new HttpClient(); 
+	    	HttpClient client = new HttpClient(); // CLI only, don't need conn mgr
 	        Map<String, String> cookieMap = mAuth.cookieMap(true);
 	        if (cookieMap != null) {
 	            HttpState state = new HttpState();
@@ -1327,7 +1327,7 @@ public class ZimletUtil {
 	        }
 
 	    	PostMethod post = new PostMethod(uploadURL);
-	    	client.getHttpConnectionManager().getParams().setConnectionTimeout(10000);
+	    	post.getParams().setSoTimeout(10000);
 	    	int statusCode = -1;
 	    	try {
 	    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
