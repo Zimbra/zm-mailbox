@@ -65,6 +65,7 @@ public class User extends Principal {
             addProperty(VersioningProperty.getSupportedReportSet());
             addProperty(new CalendarProxyReadFor(mAccount));
             addProperty(new CalendarProxyWriteFor(mAccount));
+            addProperty(new ProxyGroupMembership());
         }
 		addProperty(Acl.getPrincipalUrl(this));
         ArrayList<String> addrs = new ArrayList<String>();
@@ -209,6 +210,36 @@ public class User extends Principal {
     	}
     }
     
+    private class ProxyGroupMembership extends ProxyProperty {
+    	public ProxyGroupMembership() {
+    		super(DavElements.E_GROUP_MEMBERSHIP);
+    		setProtected(true);
+    	}
+        @Override
+    	public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+			Element group = super.toElement(ctxt, parent, true);
+			if (nameOnly)
+				return group;
+        	ArrayList<Pair<Mountpoint,ZFolder>> mps = getMountpoints(ctxt);
+        	for (Pair<Mountpoint,ZFolder> folder : mps) {
+        		try {
+        			short rights = ACL.stringToRights(folder.getSecond().getEffectivePerms());
+        			if ((rights & ACL.RIGHT_WRITE) > 0) {
+        				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
+        				if (owner != null)
+        					group.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner)+"calendar-proxy-write");
+        			} else if ((rights & ACL.RIGHT_READ) > 0) {
+        				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
+        				if (owner != null)
+        					group.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner)+"calendar-proxy-read");
+        			}
+        		} catch (ServiceException se) {
+            		ZimbraLog.dav.warn("can't convert rights", se);
+        		}
+        	}
+    		return group;
+        }
+    }
     private class ProxyGroupMemberSet extends ResourceProperty {
     	public ProxyGroupMemberSet(boolean readOnly) {
     		super(DavElements.E_GROUP_MEMBER_SET);
