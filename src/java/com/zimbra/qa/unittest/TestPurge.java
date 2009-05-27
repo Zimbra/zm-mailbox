@@ -16,6 +16,7 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -47,6 +49,8 @@ public class TestPurge extends TestCase {
     private String mOriginalUserTrashLifetime;
     private String mOriginalUserJunkLifetime;
     
+    private String mOriginalUseChangeDateForTrash;
+    
     long mPurgedTimestamp = System.currentTimeMillis() - (2 * Constants.MILLIS_PER_MONTH);
     long mLaterCutoff = mPurgedTimestamp + Constants.MILLIS_PER_HOUR;
     long mMiddleTimestamp = mLaterCutoff + Constants.MILLIS_PER_HOUR;
@@ -67,6 +71,9 @@ public class TestPurge extends TestCase {
         mOriginalUserSentLifetime = account.getAttr(Provisioning.A_zimbraPrefSentLifetime);
         mOriginalUserTrashLifetime = account.getAttr(Provisioning.A_zimbraPrefTrashLifetime);
         mOriginalUserJunkLifetime = account.getAttr(Provisioning.A_zimbraPrefJunkLifetime);
+        
+        mOriginalUseChangeDateForTrash =
+            account.getAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash);
     }
     
     /**
@@ -292,6 +299,35 @@ public class TestPurge extends TestCase {
         assertTrue("kept was purged", messageExists(kept.getId()));
     }
     
+    /**
+     * Confirms that messages are purged from trash based on the value of
+     * <tt>zimbraMailPurgeUseChangeDateForTrash<tt>.  See bug 19702 for more details.
+     */
+    public void testChangeDate()
+    throws Exception {
+        // Set retention policy
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefTrashLifetime, "24h");
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtil.LDAP_TRUE);
+        
+        // Insert message
+        String subject = NAME_PREFIX + " testChangeDate";
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject,
+            System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
+        mbox.move(null, kept.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+        
+        // Validate dates
+        long cutoff = System.currentTimeMillis() - Constants.MILLIS_PER_DAY;
+        assertTrue("Unexpected message date: " + kept.getDate(),
+            kept.getDate() < cutoff);
+        assertTrue("Unexpected change date: " + kept.getChangeDate(),
+            kept.getChangeDate() > cutoff);
+        
+        // Run purge and verify results
+        mbox.purgeMessages(null);
+        assertTrue("kept was purged", messageExists(kept.getId()));
+    }
+    
     private Message alterUnread(Message msg, boolean unread)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
@@ -325,6 +361,7 @@ public class TestPurge extends TestCase {
         attrs.put(Provisioning.A_zimbraPrefSentLifetime, mOriginalUserSentLifetime);
         attrs.put(Provisioning.A_zimbraPrefTrashLifetime, mOriginalUserTrashLifetime);
         attrs.put(Provisioning.A_zimbraPrefJunkLifetime, mOriginalUserJunkLifetime);
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, mOriginalUseChangeDateForTrash);
         Provisioning.getInstance().modifyAttrs(account, attrs);
     }
     
