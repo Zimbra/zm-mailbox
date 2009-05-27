@@ -308,11 +308,16 @@ public class SoapHttpTransport extends SoapTransport {
             	throw x;
             }
         } finally {
-            // Release the connection.
+            // Release the connection to the connection manager
             if (method != null)
-                method.releaseConnection();    
+                method.releaseConnection();  
+            
+            // really not necessary if running in the server because the reaper thread 
+            // of our connection manager will take care it.  
+            // if called from CLI, all connections will be closed when the CLI
+            // exits.  Leave it here anyway.
             if (!mKeepAlive)
-                mClient.getHttpConnectionManager().closeIdleConnections(0);
+                mClient.getHttpConnectionManager().closeIdleConnections(0); 
         }
     }
     
