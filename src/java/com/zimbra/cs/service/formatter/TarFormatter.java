@@ -1200,7 +1200,9 @@ public class TarFormatter extends Formatter {
                         id.flags, id.tags, null);
             }
         } catch (MailServiceException e) {
-            if (r != Resolve.Skip ||
+            if (e.getCode() == MailServiceException.QUOTA_EXCEEDED) {
+                throw e;
+            } else if (r != Resolve.Skip ||
                 e.getCode() != MailServiceException.ALREADY_EXISTS) {
                 addError(errs, id.path, e.getMessage());
             }
@@ -1377,7 +1379,11 @@ public class TarFormatter extends Formatter {
                 break;
             }
         } catch (Exception e) {
-            addError(errs, te.getName(), e.getMessage());
+            if (e instanceof MailServiceException &&
+                ((MailServiceException)e).getCode() == MailServiceException.QUOTA_EXCEEDED)
+                throw (MailServiceException)e;
+            else
+                addError(errs, te.getName(), e.getMessage());
         }
     }
 }
