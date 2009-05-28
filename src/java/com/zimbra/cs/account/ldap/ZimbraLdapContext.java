@@ -146,7 +146,7 @@ public class ZimbraLdapContext {
          * Maybe this is why it is not set in FirstServlet.
          */
         /*
-        if (sLdapRequireStartTLS || sLdapMasterRequireStartTLS)
+        if (ConnType.isSTARTTLS(true) || ConnType.isSTARTTLS(false))
             System.setProperty("javax.net.ssl.trustStore", LC.mailboxd_truststore.value());
         */    
         
@@ -167,7 +167,7 @@ public class ZimbraLdapContext {
      */
     public static synchronized void forceMasterURL() {
         sLdapURL = sLdapMasterURL;
-        sLdapRequireStartTLS = sLdapMasterRequireStartTLS;
+        sConnType = sMasterConnType;
     }
     
     public static String getLdapURL() {
