@@ -1534,7 +1534,7 @@ public final class ZimbraQuery {
         private List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>(); 
         private Mailbox mMailbox;
 
-        private static final int MAX_WILDCARD_TERMS = 2000;
+        private static final int MAX_WILDCARD_TERMS = 20000;
 
         /**
          * @param mbox

@@ -719,7 +719,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
      */
     private RefCountedIndexReader getCountedIndexReader() throws IOException
     {
-        BooleanQuery.setMaxClauseCount(10000); 
+        BooleanQuery.setMaxClauseCount(50000); 
 
         synchronized(getLock()) {
             if (isIndexWriterOpen()) 

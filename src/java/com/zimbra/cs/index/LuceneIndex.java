@@ -610,7 +610,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
      */
     private RefCountedIndexReader getCountedIndexReader() throws IOException
     {
-        BooleanQuery.setMaxClauseCount(10000); 
+        BooleanQuery.setMaxClauseCount(50000); 
 
         synchronized(getLock()) {
         	sIndexWritersCache.flush(this); // flush writer if writing
