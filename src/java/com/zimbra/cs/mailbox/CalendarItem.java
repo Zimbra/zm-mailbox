@@ -423,12 +423,8 @@ public abstract class CalendarItem extends MailItem {
         } else {
             ParsedDateTime dtStart = firstInvite.getStartTime();
             startTime = dtStart != null ? dtStart.getUtcTime() : 0;
-            if (firstInvite.getEndTime() != null)
-                endTime = firstInvite.getEndTime().getUtcTime();
-            else if (firstInvite.getDuration() != null)
-                endTime = firstInvite.getDuration().addToTime(startTime);
-            else
-                endTime = startTime;
+            ParsedDateTime dtEnd = firstInvite.getEffectiveEndTime();
+            endTime = dtEnd != null ? dtEnd.getUtcTime() : startTime;
         }
 
         Account account = mbox.getAccount();
