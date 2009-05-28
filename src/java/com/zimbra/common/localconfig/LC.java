@@ -125,6 +125,8 @@ public class LC {
     public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs;
     public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb;
     public static final KnownKey zimbra_index_lucene_batch_autocommit;
+    public static final KnownKey zimbra_index_lucene_max_terms_per_query;
+    public static final KnownKey zimbra_index_wildcard_max_terms_expanded;
     
     public static final KnownKey zimbra_index_lucene_nobatch_use_doc_scheduler;
     public static final KnownKey zimbra_index_lucene_nobatch_min_merge;
@@ -642,6 +644,9 @@ public class LC {
         zimbra_index_lucene_batch_max_buffered_docs = new KnownKey("zimbra_index_lucene_batch_max_buffered_docs", "200");
         zimbra_index_lucene_batch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_batch_ram_buffer_size_kb", "10240");
         zimbra_index_lucene_batch_autocommit = new KnownKey("zimbra_index_lucene_batch_autocommit", "false");
+        zimbra_index_lucene_max_terms_per_query = new KnownKey("zimbra_index_lucene_max_terms_per_query", "50000");
+        zimbra_index_wildcard_max_terms_expanded = new KnownKey("zimbra_index_wildcard_max_terms_expanded", "20000");
+        
             
         zimbra_index_lucene_nobatch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_doc_scheduler", "true");
         zimbra_index_lucene_nobatch_min_merge = new KnownKey("zimbra_index_lucene_nobatch_min_merge", "10");
