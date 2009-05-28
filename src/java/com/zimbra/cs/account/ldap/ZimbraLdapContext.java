@@ -73,8 +73,8 @@ public class ZimbraLdapContext {
 
     private static String sLdapURL;
     private static String sLdapMasterURL;    
-    private static boolean sLdapRequireStartTLS;
-    private static boolean sLdapMasterRequireStartTLS;
+    private static ConnType sConnType;
+    private static ConnType sMasterConnType;
     private static String sStartTLSDebugText;
     
     private static Hashtable<String, String> sEnvMasterAuth;
@@ -85,7 +85,39 @@ public class ZimbraLdapContext {
     private LdapContext mDirContext;
     private StartTlsResponse mTlsResp;
     
-
+    private static enum ConnType {
+        PLAIN,
+        LDAPS,
+        STARTTLS;
+        
+        private static ConnType getConnType(String urls) {
+            if (urls.toLowerCase().contains("ldaps://"))
+                return LDAPS;
+            
+            boolean ldap_starttls_supported = "1".equals(LC.ldap_starttls_supported.value());
+            boolean zimbra_require_interprocess_security = "1".equals(LC.zimbra_require_interprocess_security.value());
+            
+            if (ldap_starttls_supported && zimbra_require_interprocess_security)
+                return STARTTLS;
+            
+            return PLAIN;
+        }
+        
+        private static boolean isLDAPS(boolean master) {
+            if (master)
+                return (sMasterConnType == ConnType.LDAPS);
+            else
+                return (sConnType == ConnType.LDAPS);
+        }
+        
+        private static boolean isSTARTTLS(boolean master) {
+            if (master)
+                return (sMasterConnType == ConnType.STARTTLS);
+            else
+                return (sConnType == ConnType.STARTTLS);
+        }
+    }
+    
     static {
         
         sLdapURL = LC.ldap_url.value().trim();
@@ -105,8 +137,8 @@ public class ZimbraLdapContext {
         System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", LC.ldap_connect_pool_timeout.value());
         System.setProperty("com.sun.jndi.ldap.connect.pool.protocol", "plain ssl");
         
-        sLdapRequireStartTLS = requireStartTLS(sLdapURL);
-        sLdapMasterRequireStartTLS = requireStartTLS(sLdapMasterURL);
+        sConnType = ConnType.getConnType(sLdapURL);
+        sMasterConnType = ConnType.getConnType(sLdapMasterURL);
         
         /* crt should be imported to the default truststore JSSE looks for at 
          * {java.home}/lib/security/cacerts  (${zimbra_java_home}/lib/security/cacerts)
@@ -140,22 +172,6 @@ public class ZimbraLdapContext {
     
     public static String getLdapURL() {
         return sLdapURL;
-    }
-    
-    private static boolean requireStartTLS(String urls) {
-        boolean ldap_starttls_supported = "1".equals(LC.ldap_starttls_supported.value());
-        boolean zimbra_require_interprocess_security = "1".equals(LC.zimbra_require_interprocess_security.value());
-        
-        return ldap_starttls_supported && 
-               zimbra_require_interprocess_security &&
-               !urls.toLowerCase().contains("ldaps://");
-    }
-    
-    private static boolean requireStartTLS(boolean master) {
-        if (master)
-            return sLdapMasterRequireStartTLS;
-        else
-            return sLdapRequireStartTLS;
     }
     
     /*
@@ -192,16 +208,16 @@ public class ZimbraLdapContext {
         // env.put("java.naming.ldap.derefAliases", "never");
         // default: env.put("java.naming.ldap.version", "3");
         
-        /*
-         * if startTLS is required:
-         *     1. cannot use connection pooling.
-         *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
-         * 
-         *     2. do not send credentials over before TLS negotiation
-         *        also note that after TLS negotiation, the credentials in env would be wiped, 
-         *        so we'll have to add the credentials to the env again after TLS negotiation anyway.
-         */
-        if (requireStartTLS(master)) {
+        if (ConnType.isSTARTTLS(master)) {
+            /*
+             * if startTLS is required:
+             *     1. cannot use connection pooling.
+             *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
+             * 
+             *     2. do not send credentials over before TLS negotiation
+             *        also note that after TLS negotiation, the credentials in env would be wiped, 
+             *        so we'll have to add the credentials to the env again after TLS negotiation anyway.
+             */
             sEnv.put("com.sun.jndi.ldap.connect.pool", "false");
 
         } else {
@@ -213,6 +229,12 @@ public class ZimbraLdapContext {
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
             sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
             sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+            
+            if (ConnType.isLDAPS(master)) {
+                if (LC.ssl_allow_untrusted_certs.booleanValue())
+                    sEnv.put("java.naming.ldap.factory.socket", "com.zimbra.common.util.EasySSLSocketFactory");
+            }
+            
         }
         
         return sEnv;
@@ -230,7 +252,7 @@ public class ZimbraLdapContext {
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
-        if (requireStartTLS(master)) {
+        if (ConnType.isSTARTTLS(master)) {
             env.put("com.sun.jndi.ldap.connect.pool", "false");
         } else {
             if (master)
@@ -305,7 +327,7 @@ public class ZimbraLdapContext {
     public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
         try {
             Hashtable env = useConnPool? getDefaultEnv(master) : getNonPooledEnv(master);
-            boolean startTLS = requireStartTLS(master);
+            boolean startTLS = ConnType.isSTARTTLS(master);
             
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             
@@ -425,7 +447,7 @@ public class ZimbraLdapContext {
      */
     public static void ldapAuthenticate(String principal, String password) throws NamingException, IOException {
         String[] urls = new String[] { getLdapURL() };
-        ldapAuthenticate(urls, requireStartTLS(false), principal, password, "Zimbra LDAP auth, password not SSHA");
+        ldapAuthenticate(urls, ConnType.isSTARTTLS(false), principal, password, "Zimbra LDAP auth, password not SSHA");
     }
     
     /**
