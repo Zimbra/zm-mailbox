@@ -488,7 +488,8 @@ public class UrlNamespace {
             case MailItem.TYPE_MOUNTPOINT :
 				Mountpoint mp = (Mountpoint) item;
             	viewType = mp.getDefaultView();
-            	if (viewType == MailItem.TYPE_APPOINTMENT)
+            	// don't expose mounted calendars when using iCal style delegation model.
+            	if (!ctxt.useIcalDelegation() && viewType == MailItem.TYPE_APPOINTMENT)
             		resource = getRemoteCalendarCollection(ctxt, mp);
             	else
             		resource = new RemoteCollection(ctxt, mp);

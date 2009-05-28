@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090526-1524 */
+    /* build: 6.0.0 jylee 20090528-1417 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -12801,6 +12801,83 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefAdvancedClientEnforceMinDisplay(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefAdvancedClientEnforceMinDisplay, "");
+        return attrs;
+    }
+
+    /**
+     * Use the iCal style delegation model for shared calendars for CalDAV
+     * interface when set to TRUE.
+     *
+     * @return zimbraPrefAppleIcalDelegationEnabled, or false if unset
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1028)
+    public boolean isPrefAppleIcalDelegationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled, false);
+    }
+
+    /**
+     * Use the iCal style delegation model for shared calendars for CalDAV
+     * interface when set to TRUE.
+     *
+     * @param zimbraPrefAppleIcalDelegationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1028)
+    public void setPrefAppleIcalDelegationEnabled(boolean zimbraPrefAppleIcalDelegationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled, zimbraPrefAppleIcalDelegationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Use the iCal style delegation model for shared calendars for CalDAV
+     * interface when set to TRUE.
+     *
+     * @param zimbraPrefAppleIcalDelegationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1028)
+    public Map<String,Object> setPrefAppleIcalDelegationEnabled(boolean zimbraPrefAppleIcalDelegationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled, zimbraPrefAppleIcalDelegationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Use the iCal style delegation model for shared calendars for CalDAV
+     * interface when set to TRUE.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1028)
+    public void unsetPrefAppleIcalDelegationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Use the iCal style delegation model for shared calendars for CalDAV
+     * interface when set to TRUE.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1028)
+    public Map<String,Object> unsetPrefAppleIcalDelegationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled, "");
         return attrs;
     }
 
