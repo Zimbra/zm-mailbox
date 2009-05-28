@@ -717,6 +717,7 @@ public abstract class Provisioning {
 
     public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";   
     
+    public static final String A_zimbraPrefAppleIcalDelegationEnabled = "zimbraPrefAppleIcalDelegationEnabled";   
 
 
     /**

@@ -64,9 +64,11 @@ public class User extends Principal {
             addProperty(CalDavProperty.getScheduleInboxURL(user));
             addProperty(CalDavProperty.getScheduleOutboxURL(user));
             addProperty(VersioningProperty.getSupportedReportSet());
-            addProperty(new CalendarProxyReadFor(mAccount));
-            addProperty(new CalendarProxyWriteFor(mAccount));
-            addProperty(new ProxyGroupMembership());
+            if (ctxt.useIcalDelegation()) {
+                addProperty(new CalendarProxyReadFor(mAccount));
+                addProperty(new CalendarProxyWriteFor(mAccount));
+                addProperty(new ProxyGroupMembership());
+            }
         }
 		addProperty(Acl.getPrincipalUrl(this));
         ArrayList<String> addrs = new ArrayList<String>();
@@ -87,10 +89,12 @@ public class User extends Principal {
     @Override
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		ArrayList<DavResource> proxies = new ArrayList<DavResource>();
-		try {
-			proxies.add(new CalendarProxyRead(getOwner(), mUri));
-			proxies.add(new CalendarProxyWrite(getOwner(), mUri));
-		} catch (ServiceException e) {
+		if (ctxt.useIcalDelegation()) {
+			try {
+				proxies.add(new CalendarProxyRead(getOwner(), mUri));
+				proxies.add(new CalendarProxyWrite(getOwner(), mUri));
+			} catch (ServiceException e) {
+			}
 		}
 		return proxies;
 	}

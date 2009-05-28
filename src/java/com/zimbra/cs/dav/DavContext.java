@@ -494,4 +494,10 @@ public class DavContext {
     public String getDavCompliance() {
     	return mDavCompliance;
     }
+    
+    public boolean useIcalDelegation() {
+    	if (mAuthAccount != null)
+    		return mAuthAccount.getBooleanAttr(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled, false);
+    	return false;
+    }
 }
