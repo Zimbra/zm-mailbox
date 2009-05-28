@@ -197,8 +197,6 @@ public class SaveDocument extends WikiDocumentHandler {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote mime part", e, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
-        } finally {
-            get.releaseConnection();
         }
     }
     
