@@ -1119,21 +1119,24 @@ public class Invite {
     
     /**
      * Calculate the "Effective End" of this event: that is, the value of DtEnd if set,
-     * or the value of DtStart+Duration if that is set...or alternatively just return
-     * the starting time...
+     * or the value of DtStart+Duration if that is set.  If neither is set, add 1 day to DtStart
+     * if all-day event.  If not all-day, return DtStart. (0 duration)
      * 
      * @return 
      */
     public ParsedDateTime getEffectiveEndTime() {
-        if (mEnd != null) {
+        if (mEnd != null)
             return mEnd;
-        } else {
-            if (mDuration != null) {
-                return mStart.add(mDuration);
-            } else {
-                return mStart;
-            }
+        if (mStart == null)
+            return null;
+        ParsedDuration dur = mDuration;
+        if (dur == null) {
+            if (!mStart.hasTime())
+                dur = ParsedDuration.ONE_DAY;
+            else
+                dur = ParsedDuration.ONE_SECOND;
         }
+        return mStart.add(dur);
     }
     
     /**
@@ -1145,16 +1148,17 @@ public class Invite {
      * @return
      */
     public ParsedDuration getEffectiveDuration() throws ServiceException {
-        if (mDuration != null) {
+        if (mDuration != null)
             return mDuration;
-        } else {
-            if (mEnd != null && mStart != null) {
-                ParsedDuration dur = mEnd.difference(mStart); 
-                return dur;  
-            } else {
-                return null;
-            }
-        }
+        if (mStart == null)
+            return null;
+        if (mEnd != null)
+            return mEnd.difference(mStart);
+        // DTSTART is there, but neither DTEND nor DURATION is set.
+        if (!mStart.hasTime())
+            return ParsedDuration.ONE_DAY;
+        else
+            return ParsedDuration.ONE_SECOND;
     }
 
     public String getEffectivePartStat() throws ServiceException {

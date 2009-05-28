@@ -119,9 +119,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             // events and 1 second for non all-day.  (bug 28615)
             if (defDuration == null) {
                 if (defaultInvite.isAllDayEvent())
-                    defDuration = ParsedDuration.parse(false, 0, 1, 0, 0, 0);
+                    defDuration = ParsedDuration.ONE_DAY;
                 else
-                    defDuration = ParsedDuration.parse(false, 0, 0, 0, 0, 1);
+                    defDuration = ParsedDuration.ONE_SECOND;
             }
             long defDurationMsecs = 0;
             if (defaultInvite.getStartTime() != null) {
@@ -168,9 +168,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         // events and 1 second for non all-day.  (bug 28615)
                         if (invDuration == null) {
                             if (inv.isAllDayEvent())
-                                invDuration = ParsedDuration.parse(false, 0, 1, 0, 0, 0);
+                                invDuration = ParsedDuration.ONE_DAY;
                             else
-                                invDuration = ParsedDuration.parse(false, 0, 0, 0, 0, 1);
+                                invDuration = ParsedDuration.ONE_SECOND;
                         }
                         if (inst.isTimeless() ||
                             (startOrAlarm < rangeEnd && invDuration.addToTime(instStart) > rangeStart)) {

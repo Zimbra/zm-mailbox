@@ -48,7 +48,8 @@ public final class ParsedDuration
     public static final ParsedDuration ONE_DAY = new ParsedDuration(false, 0, 1, 0, 0, 0);
     public static final ParsedDuration NEGATIVE_ONE_DAY = new ParsedDuration(false, 0, -1, 0, 0, 0);
     public static final ParsedDuration ONE_WEEK = new ParsedDuration(false, 1, 0, 0, 0, 0);
-    
+    public static final ParsedDuration ONE_SECOND = new ParsedDuration(false, 0, 0, 0, 0, 1);
+
     private ParsedDuration(boolean negative, int weeks, int days, int hours, int mins, int secs) {
         mNegative = negative;
         mWeeks = weeks;
