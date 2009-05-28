@@ -1482,9 +1482,6 @@ public class UserServlet extends ZimbraServlet {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
-        } finally {
-            if (method != null)
-                method.releaseConnection();
         }
     }
 }
