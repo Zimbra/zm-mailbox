@@ -58,6 +58,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
@@ -1534,7 +1535,7 @@ public final class ZimbraQuery {
         private List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>(); 
         private Mailbox mMailbox;
 
-        private static final int MAX_WILDCARD_TERMS = 20000;
+        private static final int MAX_WILDCARD_TERMS = LC.zimbra_index_wildcard_max_terms_expanded.intValue(); 
 
         /**
          * @param mbox

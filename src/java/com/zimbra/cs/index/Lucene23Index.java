@@ -710,6 +710,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         return d[n][m];
     }
     
+    private static final int MAX_TERMS_PER_QUERY = LC.zimbra_index_lucene_max_terms_per_query.intValue();
+    
     /**
      * @return A refcounted IndexReader for this index.  Caller is responsible for 
      *            calling IndexReader.release() on the index before allowing it to go
@@ -719,7 +721,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
      */
     private RefCountedIndexReader getCountedIndexReader() throws IOException
     {
-        BooleanQuery.setMaxClauseCount(50000); 
+        BooleanQuery.setMaxClauseCount(MAX_TERMS_PER_QUERY); 
 
         synchronized(getLock()) {
             if (isIndexWriterOpen()) 

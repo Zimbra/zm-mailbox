@@ -601,6 +601,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         return d[n][m];
     }
     
+    private static final int MAX_TERMS_PER_QUERY = LC.zimbra_index_lucene_max_terms_per_query.intValue();
+    
     /**
      * @return A refcounted IndexReader for this index.  Caller is responsible for 
      *            calling IndexReader.release() on the index before allowing it to go
@@ -610,7 +612,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
      */
     private RefCountedIndexReader getCountedIndexReader() throws IOException
     {
-        BooleanQuery.setMaxClauseCount(50000); 
+        BooleanQuery.setMaxClauseCount(MAX_TERMS_PER_QUERY);
 
         synchronized(getLock()) {
         	sIndexWritersCache.flush(this); // flush writer if writing
