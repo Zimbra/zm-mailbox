@@ -59,7 +59,7 @@ SECTION mta
 	POSTCONF recipient_delimiter	VAR zimbraMtaRecipientDelimiter
 	POSTCONF smtpd_sasl_auth_enable VAR zimbraMtaAuthEnabled
 	POSTCONF smtpd_tls_auth_only	VAR zimbraMtaTlsAuthOnly
-	POSTCONF smtpd_tls_security_level			encrypt
+	POSTCONF smtpd_use_tls			yes
 	POSTCONF disable_dns_lookups	VAR !zimbraMtaDnsLookupsEnabled	
 	POSTCONF message_size_limit		VAR zimbraMtaMaxMessageSize
 	POSTCONF mailbox_size_limit		0
@@ -75,7 +75,6 @@ SECTION mta
 	POSTCONF manpage_directory					LOCAL postfix_manpage_directory
 	POSTCONF newaliases_path					LOCAL postfix_newaliases_path
 	POSTCONF queue_directory					LOCAL postfix_queue_directory
-	POSTCONF smtpd_sasl_authenticated_header		LOCAL postfix_smtpd_sasl_authenticated_header
 	POSTCONF sender_canonical_maps				LOCAL postfix_sender_canonical_maps
 	POSTCONF sendmail_path						LOCAL postfix_sendmail_path
 	POSTCONF smtpd_client_restrictions			LOCAL postfix_smtpd_client_restrictions
@@ -86,6 +85,7 @@ SECTION mta
 	POSTCONF smtpd_tls_key_file					LOCAL postfix_smtpd_tls_key_file
 	POSTCONF smtpd_tls_loglevel					LOCAL postfix_smtpd_tls_loglevel
 	POSTCONF transport_maps						LOCAL postfix_transport_maps
+	POSTCONF version							LOCAL postfix_version
 	POSTCONF virtual_alias_domains				LOCAL postfix_virtual_alias_domains
 	POSTCONF virtual_alias_maps					LOCAL postfix_virtual_alias_maps
 	POSTCONF virtual_mailbox_domains			LOCAL postfix_virtual_mailbox_domains
@@ -95,7 +95,7 @@ SECTION mta
 RESTART mta
 SECTION sasl
 	VAR zimbraMtaAuthURL
-REWRITE cyrus-sasl-2.1.23.3z/etc/saslauthd.conf.in cyrus-sasl-2.1.23.3z/etc/saslauthd.conf
+REWRITE cyrus-sasl-2.1.22.3z/etc/saslauthd.conf.in cyrus-sasl-2.1.22.3z/etc/saslauthd.conf
 RESTART mta sasl
 
 SECTION webxml
