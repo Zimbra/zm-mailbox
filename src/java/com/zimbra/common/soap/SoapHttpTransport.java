@@ -185,8 +185,8 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * Get the mTimeout value in milliseconds.  The default is <tt>60000</tt>,
-     * specified by the <tt>httpclient_connmgr_so_timeout</tt> localconfig variable.
+     * Get the mTimeout value in milliseconds.  The default is <tt>0</tt>,
+     * which means no timeout.
      */
     public int getTimeout() {
         return mTimeout;
