@@ -2558,9 +2558,6 @@ public class ZMailbox implements ToZJSONObject {
             }
             String msg = String.format("Unable to get REST resource%s: %s", fromUri, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
-        } finally {
-            if (get != null)
-                get.releaseConnection();
         }
     }
     
