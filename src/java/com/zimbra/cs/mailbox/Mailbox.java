@@ -1126,7 +1126,8 @@ public class Mailbox {
 
         // we can only start a redoable operation as the transaction's base change
         if (recorder != null && needRedo && mCurrentChange.depth > 1)
-            throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction", null);
+            throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction " +
+            		"(current recorder="+mCurrentChange.recorder+")", null);
 
         // we'll need folders and tags loaded in order to handle ACLs
         loadFoldersAndTags();
