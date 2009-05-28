@@ -260,7 +260,7 @@ public abstract class Formatter {
         ServletException, ServiceException {
         String callback = context.params.get("callback");
         Throwable exception = null;
-        PrintWriter out = updateClient(context, false);
+        PrintWriter out;
         ServiceException se = null;
 
         if (e != null) {
@@ -287,6 +287,7 @@ public abstract class Formatter {
                 throw ServiceException.FAILURE(
                     getType() + " formatter failure", exception);
             }
+            out = updateClient(context, false);
             if (exception == null && w == null) {
                 out.println("<body></body>\n</html>");
             } else {
@@ -302,6 +303,7 @@ public abstract class Formatter {
                 out.println("</pre>\n</body>\n</html>");
             }
         } else if (!"2".equals(context.params.get(PROGRESS))) {
+            out = updateClient(context, false);
             // mark done no matter what happens next
             context.params.put(PROGRESS, "2");
             out.println("<body onload='onLoad()'>");
