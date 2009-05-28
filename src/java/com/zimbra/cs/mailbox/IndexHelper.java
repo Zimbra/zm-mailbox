@@ -123,15 +123,68 @@ public class IndexHelper {
         }
     }
     
+    private Object mIndexImmediatelyModeLock = new Object();
+    private int mInIndexImmediatelyMode = 0;
+    
+    /**
+     * Put this mailbox into a temporary (until cleared, or until mailbox reload) 
+     * "index immediately" mode.  This is useful for message import performance where we are
+     * adding a large number of items sequentially to a mailbox.
+     * 
+     * This setting is intentionally stored only in memory -- if the server restarts or the mailbox
+     * is somehow reloaded, we revert to the LDAP-set batch index value
+     */
+    void setIndexImmediatelyMode() {
+        if (Thread.holdsLock(getMailbox())) {
+            Thread t = new Thread() {
+                public void run() {
+                    try {
+                        setIndexImmediatelyMode();
+                    } catch (OutOfMemoryError e) {
+                        Zimbra.halt("Out of memory in AsyncSetIndexImmediatelyMode call to "
+                                    +getMailbox(), e);
+                    }
+                }
+            };
+            t.start();
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+            }
+        } else {
+            synchronized(mIndexImmediatelyModeLock) {
+                mInIndexImmediatelyMode++;
+                if (mInIndexImmediatelyMode > 1)
+                    return;
+                indexDeferredItems();
+            }
+        }
+    }
+    
+    /**
+     * Clear the "index immediately" mode setting, return to LDAP-set batched index settings
+     */
+    void clearIndexImmediatelyMode() {
+        synchronized(mIndexImmediatelyModeLock) {
+            mInIndexImmediatelyMode--;
+        }
+    }        
+    
+    
     /** Returns the maximum number of items to be batched in a single indexing
      *  pass.  (If a search comes in that requires use of the index, all
      *  pending unindexed items are immediately indexed regardless of batch
      *  size.)  If this number is <tt>0</tt>, all items are indexed immediately
      *  when they are added. */
     int getBatchedIndexingCount() {
-        if (getMailboxIndex() != null)
-            return getMailboxIndex().getBatchedIndexingCount();
-        return 0;
+        synchronized(mIndexImmediatelyModeLock) {
+            if (mInIndexImmediatelyMode>0)
+                return 0;
+            
+            if (getMailboxIndex() != null)
+                return getMailboxIndex().getBatchedIndexingCount();
+            return 0;
+        }
     }
     
     void flush() {

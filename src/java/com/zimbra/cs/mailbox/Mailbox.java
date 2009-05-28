@@ -1007,6 +1007,21 @@ public class Mailbox {
     }
     
     /**
+     * Put this mailbox into a temporary (until cleared, or until mailbox reload) 
+     * "index immediately" mode.  This is useful for message import performance where we are
+     * adding a large number of items sequentially to a mailbox.
+     * 
+     * This setting is intentionally stored only in memory -- if the server restarts or the mailbox
+     * is somehow reloaded, we revert to the LDAP-set batch index value
+     */
+    public void setIndexImmediatelyMode() {
+        mIndexHelper.setIndexImmediatelyMode();
+    }
+    public void clearIndexImmediatelyMode() {
+        mIndexHelper.clearIndexImmediatelyMode();
+    }
+    
+    /**
      * @return TRUE if we are indexing items immediately, FALSE otherwise
      */
     private boolean indexImmediately() {

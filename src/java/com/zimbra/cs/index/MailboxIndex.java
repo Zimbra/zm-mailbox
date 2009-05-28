@@ -200,6 +200,9 @@ public final class MailboxIndex
             return 0;
     }
     
+    /**
+     * This API should **ONLY** be used by the IndexHelper API.  Don't call this API directly
+     */
     public int getBatchedIndexingCount() {
         try {
             return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);

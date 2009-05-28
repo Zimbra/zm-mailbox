@@ -95,12 +95,15 @@ public abstract class Formatter {
     throws UserServletException, IOException, ServletException, ServiceException {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(SAVE)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
 
+        Mailbox mbox = context.targetMailbox;
         try {
+            mbox.setIndexImmediatelyMode();
             saveCallback(context, contentType, folder, filename);
             updateClient(context, null);
         } catch (Exception e) {
             updateClient(context, e);
         } finally {
+            mbox.clearIndexImmediatelyMode();
             op.finish();
         }
     }
