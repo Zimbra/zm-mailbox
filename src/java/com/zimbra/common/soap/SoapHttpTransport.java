@@ -54,12 +54,12 @@ public class SoapHttpTransport extends SoapTransport {
     private HttpDebugListener mHttpDebugListener;
     private boolean mKeepAlive = keepAlive;
     private int mRetryCount = retryCount;
-    private int mTimeout = timeout;
+    private int mTimeout = defaultTimeout;
     private String mUri;
     private URI mURI;
     private static boolean keepAlive = LC.httpclient_connmgr_keepalive_connections.booleanValue();
     private static int retryCount = LC.httpclient_connmgr_retry_count.intValue();
-    private static int timeout = LC.httpclient_connmgr_so_timeout.intValue();
+    private static int defaultTimeout = 0; // default is no timeout
     
     public interface HttpDebugListener {
         public void sendSoapMessage(PostMethod postMethod, Element envelope);
@@ -181,7 +181,7 @@ public class SoapHttpTransport extends SoapTransport {
      * during a invoke call. 
      */
     public void setTimeout(int newTimeout) {
-        mTimeout = newTimeout < 0 ? timeout : newTimeout;
+        mTimeout = newTimeout < 0 ? defaultTimeout : newTimeout;
     }
 
     /**

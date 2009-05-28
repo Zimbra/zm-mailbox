@@ -1324,7 +1324,7 @@ public class LC {
         
         httpclient_connmgr_so_timeout = new KnownKey(
                 "httpclient_connmgr_so_timeout", 
-                Long.toString(60 * Constants.MILLIS_PER_SECOND),
+                Long.toString(0 * Constants.MILLIS_PER_SECOND),
                 "httpclient connection manager: " +
                 "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
 
