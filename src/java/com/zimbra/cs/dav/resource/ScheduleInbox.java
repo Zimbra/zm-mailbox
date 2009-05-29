@@ -31,6 +31,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.db.DbSearch;
@@ -46,7 +47,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 
-public class ScheduleInbox extends Collection {
+public class ScheduleInbox extends CalendarCollection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
@@ -57,6 +58,9 @@ public class ScheduleInbox extends Collection {
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return getChildren(ctxt, null);
+	}
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
+		return getChildren(ctxt, hrefs);
 	}
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs) throws DavException {
 		try {
@@ -86,8 +90,10 @@ public class ScheduleInbox extends Collection {
                 	DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
                 	if (rs != null) {
                     	String href = UrlNamespace.getResourceUrl(rs);
-                    	if (hrefs != null && hrefs.contains(href))
+                    	if (hrefs == null || hrefs.contains(href))
                     		result.add(rs);
+                    	else if (hrefs != null)
+                    		result.add(new DavResource.InvalidResource(href, getOwner()));
                 	}
                 }
 			}
