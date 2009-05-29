@@ -262,7 +262,7 @@ public class ProxyPurgeUtil
         System.err.println (" Available Memcached servers are discovered by the 'zmprov gamcs' function, others can be specified");
         System.err.println (" If necessary, please specify additional memcached servers in the form of server:port at the end of the command line");
         System.err.println (" ");
-        System.err.println (" Usage: ProxyPurgeUtil [-v] [-i] -a account [-L accountlist] [cache1 [cache2 ... ]]");
+        System.err.println (" Usage: zmproxypurge [-v] [-i] -a account [-L accountlist] [cache1 [cache2 ... ]]");
         System.err.println ("  -h, --help     Display help");
         System.err.println ("  -v, --verbose  Be verbose");
         System.err.println ("  -i, --info     Just display account routing information, don't purge (dry run)");
@@ -273,7 +273,6 @@ public class ProxyPurgeUtil
         System.err.println ("                 Three fields are displayed by default:");
         System.err.println ("                 . the cache server");
         System.err.println ("                 . the account name");
-        System.err.println ("                 . the route information");
         System.err.println ("                 . the route information");
         System.err.println ("                 Default format is `[%1$s] %2$s -- %3$s'");
         System.err.println ("  cacheN         (Optional) Additional memcache server, of the form server:port");
