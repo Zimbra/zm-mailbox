@@ -123,7 +123,8 @@ abstract class LdapUpgrade {
                             null);
         
         pw.flush();
-        ldapUpgrade.usage(formatter);
+        if (ldapUpgrade != null)
+            ldapUpgrade.usage(formatter);
     }
     
     /**
