@@ -59,7 +59,7 @@ public class SoapHttpTransport extends SoapTransport {
     private URI mURI;
     private static boolean keepAlive = LC.httpclient_connmgr_keepalive_connections.booleanValue();
     private static int retryCount = LC.httpclient_connmgr_retry_count.intValue();
-    private static int defaultTimeout = 0; // default is no timeout
+    private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
     
     public interface HttpDebugListener {
         public void sendSoapMessage(PostMethod postMethod, Element envelope);
@@ -177,7 +177,7 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * Sets the number of milliseconds to wait when connecting or reading
+     * Sets the number of milliseconds to wait when reading data 
      * during a invoke call. 
      */
     public void setTimeout(int newTimeout) {
@@ -185,8 +185,8 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * Get the mTimeout value in milliseconds.  The default is <tt>0</tt>,
-     * which means no timeout.
+     * Get the mTimeout value in milliseconds.  The default is specified by 
+     * the <tt>httpclient_soaphttptransport_so_timeout</tt> localconfig variable.
      */
     public int getTimeout() {
         return mTimeout;

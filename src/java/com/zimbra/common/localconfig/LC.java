@@ -430,6 +430,9 @@ public class LC {
     public static final KnownKey httpclient_connmgr_idle_reaper_sleep_interval;
     public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
     
+    // http client read timeouts
+    public static final KnownKey httpclient_soaphttptransport_so_timeout;
+    
     public static final KnownKey shared_mime_info_globs;
     public static final KnownKey shared_mime_info_magic;
 
@@ -1329,7 +1332,7 @@ public class LC {
         
         httpclient_connmgr_so_timeout = new KnownKey(
                 "httpclient_connmgr_so_timeout", 
-                Long.toString(0 * Constants.MILLIS_PER_SECOND),
+                Long.toString(60 * Constants.MILLIS_PER_SECOND),
                 "httpclient connection manager: " +
                 "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
 
@@ -1345,6 +1348,12 @@ public class LC {
                 Long.toString(5 * Constants.MILLIS_PER_MINUTE),
                 "httpclient connection manager idle reaper: " +
                 "the timeout value to use when testing for idle connections.");
+        
+        // http client socket read timeouts
+        httpclient_soaphttptransport_so_timeout = new KnownKey(
+                "httpclient_soap_so_timeout", 
+                Long.toString(300 * Constants.MILLIS_PER_SECOND),
+                "socket timeout in milliseconds for SOAP clients using the SoapHttpTransport class");
         
         shared_mime_info_globs = new KnownKey("shared_mime_info_globs",
             "${zimbra_home}" + FS + "conf" + FS + "globs2",

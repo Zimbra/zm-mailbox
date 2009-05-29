@@ -363,6 +363,15 @@ public abstract class SoapTransport {
      */
     public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
     	throws SoapFaultException, IOException;
+    
+    /**
+     * Sets the number of milliseconds to wait when reading data 
+     * during a invoke call. 
+     */
+    public void setTimeout(int newTimeout) {
+        // do nothing by default
+    }
+
 }
 
 /*
