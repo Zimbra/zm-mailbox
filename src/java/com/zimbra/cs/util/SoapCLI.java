@@ -193,19 +193,17 @@ public abstract class SoapCLI {
     protected LmcSession auth() throws SoapFaultException, IOException, ServiceException {
         URL url = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
         mServerUrl = url.toExternalForm();
-        SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
-        trans.setRetryCount(1);
-        mTrans = trans;
+        SoapTransport trans = getTransport();
         mAuth = false;
         
         Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
         authReq.addAttribute(AdminConstants.E_NAME, mUser, Element.Disposition.CONTENT);
         authReq.addAttribute(AdminConstants.E_PASSWORD, mPassword, Element.Disposition.CONTENT);
         try {
-            Element authResp = mTrans.invokeWithoutSession(authReq);
+            Element authResp = trans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             ZAuthToken zat = new ZAuthToken(null, authToken, null);
-            mTrans.setAuthToken(authToken);
+            trans.setAuthToken(authToken);
             mAuth = true;
             return new LmcSession(zat, null);
         } catch (UnknownHostException e) {
@@ -226,17 +224,15 @@ public abstract class SoapCLI {
             
         URL url = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
         mServerUrl = url.toExternalForm();
-        SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
-        trans.setRetryCount(1);
-        mTrans = trans;
+        SoapTransport trans = getTransport();
         mAuth = false;
         
         Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
         zAuthToken.encodeAuthReq(authReq, true);
         try {
-            Element authResp = mTrans.invokeWithoutSession(authReq);
+            Element authResp = trans.invokeWithoutSession(authReq);
             ZAuthToken zat = new ZAuthToken(authResp.getElement(AdminConstants.E_AUTH_TOKEN), true);
-            mTrans.setAuthToken(zat);
+            trans.setAuthToken(zat);
             mAuth = true;
             return new LmcSession(zat, null);
         } catch (UnknownHostException e) {
@@ -344,7 +340,23 @@ public abstract class SoapCLI {
      * @return null if the SOAP client has not been authenticated.
      */
     protected SoapTransport getTransport() {
+        if (mTrans == null)
+            initTransport();
         return mTrans;
+    }
+    
+    private void initTransport() {
+        SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
+        trans.setRetryCount(1);
+        mTrans = trans;
+    }
+    
+    /**
+     * Set the SOAP transport read timeout
+     * @return null if the SOAP client has not been authenticated.
+     */
+    public void setTransportTimeout(int newTimeout) {
+        getTransport().setTimeout(newTimeout);
     }
     
     protected String getServerUrl() {
