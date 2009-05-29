@@ -449,7 +449,7 @@ public class UrlNamespace {
     			int compNum = calItemInfo.getComponentNo();
     			Invite invite = item.getInvite(msg.getId(), compNum);
     			if (item != null && invite != null) {
-    				String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), item.getUid(), msg.getId());
+    				String path = CalendarObject.CalendarPath.generate(ctxt, msg.getPath(), ""+msg.getId(), -1);
     				return new CalendarObject.LocalCalendarObject(ctxt, path, item, compNum, msg.getId());
     			}
             } catch (MailServiceException.NoSuchItemException e) {
