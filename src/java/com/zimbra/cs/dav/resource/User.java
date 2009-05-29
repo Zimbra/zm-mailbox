@@ -60,9 +60,9 @@ public class User extends Principal {
         String user = getOwner();
         addProperty(CalDavProperty.getCalendarHomeSet(user));
         addProperty(CalDavProperty.getCalendarUserType(this));
+        addProperty(CalDavProperty.getScheduleOutboxURL(user));
         if (ctxt.getAuthAccount().equals(account)) {
             addProperty(CalDavProperty.getScheduleInboxURL(user));
-            addProperty(CalDavProperty.getScheduleOutboxURL(user));
             addProperty(VersioningProperty.getSupportedReportSet());
             if (ctxt.useIcalDelegation()) {
                 addProperty(new CalendarProxyReadFor(mAccount));
