@@ -95,7 +95,7 @@ public abstract class AttributeCallback {
         }
         
         Mod mMod;
-        List<String> mValues;
+        List<String> mValues = new ArrayList<String>();
         
         public boolean adding() { return mMod==Mod.ADDING; }
         public boolean removing() { return mMod==Mod.REMOVING; }
