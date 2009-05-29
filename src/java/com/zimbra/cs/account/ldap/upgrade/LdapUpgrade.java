@@ -129,7 +129,7 @@ abstract class LdapUpgrade {
         
         if (cl.hasOption(O_HELP)) {
             usage(null);
-            System.exit(1);
+            System.exit(0);
         }
 
         if (!cl.hasOption(O_BUG)) {
