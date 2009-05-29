@@ -298,8 +298,8 @@ public class IndexHelper {
         synchronized(getMailbox()) {
             try {
                 boolean success = false;
-                getMailbox().beginTransaction("IndexDeferredItems_Select", null);
                 try {
+                    getMailbox().beginTransaction("IndexDeferredItems_Select", null);
                     DbSearchConstraints c = new DbSearchConstraints();
 
                     if (mNumIndexingInProgress > 0)
@@ -455,10 +455,10 @@ public class IndexHelper {
                     start = System.currentTimeMillis();
                 try {
                     synchronized(getMailbox()) {
-                        getMailbox().beginTransaction("reIndex_all", octxt, null);
-                        mFullReindexInProgress = true;
                         boolean success = false;
                         try {
+                            getMailbox().beginTransaction("reIndex_all", octxt, null);
+                            mFullReindexInProgress = true;
                             // reindexing everything, just delete the index
                             if (getMailboxIndex() != null)
                                 getMailboxIndex().deleteIndex();
@@ -518,12 +518,12 @@ public class IndexHelper {
                 //
                 synchronized(getMailbox()) {
                     boolean success = false;
-                    // Don't pass redoRecorder to beginTransaction.  We have already
-                    // manually called log() on redoRecorder because this is a long-
-                    // running transaction, and we don't want endTransaction to log it
-                    // again, resulting in two entries for the same operation in redolog.
-                    getMailbox().beginTransaction("reIndex", octxt, null);
                     try {
+                        // Don't pass redoRecorder to beginTransaction.  We have already
+                        // manually called log() on redoRecorder because this is a long-
+                        // running transaction, and we don't want endTransaction to log it
+                        // again, resulting in two entries for the same operation in redolog.
+                        getMailbox().beginTransaction("reIndex", octxt, null);
                         DbSearchConstraints c = new DbSearchConstraints();
                         if (itemIdsOrNull != null)
                             c.itemIds = itemIdsOrNull; 
@@ -580,9 +580,9 @@ public class IndexHelper {
     void indexAllDeferredFlagItems() throws ServiceException {
         Set<Integer> itemSet = new HashSet<Integer>();
         synchronized(getMailbox()) {
-            getMailbox().beginTransaction("indexAllDeferredFlagItems", null);
             boolean success = false;
             try {
+                getMailbox().beginTransaction("indexAllDeferredFlagItems", null);
                 List<SearchResult> items = new ArrayList<SearchResult>();
                 DbSearchConstraints c = new DbSearchConstraints();
                 c.tags = new HashSet<Tag>();
@@ -605,8 +605,8 @@ public class IndexHelper {
                 try {
                     synchronized(getMailbox()) {
                         boolean success = false;
-                        getMailbox().beginTransaction("indexAllDeferredFlagItems", null);
                         try {
+                            getMailbox().beginTransaction("indexAllDeferredFlagItems", null);
                             List<SearchResult> items = new ArrayList<SearchResult>();
                             DbSearchConstraints c = new DbSearchConstraints();
                             c.tags = new HashSet<Tag>();
@@ -676,12 +676,12 @@ public class IndexHelper {
 
             synchronized(getMailbox()) {
                 try {
-                    getMailbox().beginTransaction("indexingCompleted", null);
                     boolean success = false;
-                    ZimbraLog.index_add.debug("IndexingCompletedTask("+count+","+newHighestModContent+","+succeeded+")"
-                                              +" numInProgress="+mNumIndexingInProgress
-                                              +" curIdxDeferred="+getMailbox().getIndexDeferredCount());
                     try {
+                        getMailbox().beginTransaction("indexingCompleted", null);
+                        ZimbraLog.index_add.debug("IndexingCompletedTask("+count+","+newHighestModContent+","+succeeded+")"
+                                                  +" numInProgress="+mNumIndexingInProgress
+                                                  +" curIdxDeferred="+getMailbox().getIndexDeferredCount());
                         if (count > mNumIndexingInProgress) {
                             ZimbraLog.mailbox.warn("IndexingCompleted called with "+count+" but only "+
                                                    mNumIndexingInProgress+"in progress.");
@@ -871,8 +871,8 @@ public class IndexHelper {
                         }
                         try {
                             boolean success = false;
-                            getMailbox().beginTransaction("IndexItemList_Chunk", null);
                             try {
+                                getMailbox().beginTransaction("IndexItemList_Chunk", null);
                                 for (Mailbox.IndexItemEntry ie : chunk) {
                                     if (dontTrackIndexing)
                                         ie.mModContent = NO_CHANGE;
