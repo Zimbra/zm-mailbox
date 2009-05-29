@@ -13,6 +13,7 @@
   <doc>e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G.
             (2) Conf room Y can only be booked by users A, B, C and group G.
   </doc>
+  <default>allow</default>
 </right>
 
 <right name="loginAs" userRight="1">
@@ -28,6 +29,7 @@
 <right name="viewFreeBusy" userRight="1">
   <desc>view free/busy</desc>
   <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
+  <default>allow</default>
 </right>
 
 
