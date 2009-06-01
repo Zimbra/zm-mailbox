@@ -35,6 +35,8 @@ import java.io.IOException;
 class MinaCodecFactory implements ProtocolCodecFactory {
     private MinaServer mServer;
 
+    private static final String MINA_REQUEST = "MinaRequest";
+    
     MinaCodecFactory(MinaServer server) {
         mServer = server;
     }
@@ -55,27 +57,27 @@ class MinaCodecFactory implements ProtocolCodecFactory {
     }
 
     private class Decoder extends ProtocolDecoderAdapter {
-        MinaRequest req;  // Request currently being decoded
-
         public void decode(IoSession session,
                            org.apache.mina.common.ByteBuffer in,
                            ProtocolDecoderOutput out) throws IOException {
             java.nio.ByteBuffer bb = in.buf();
             while (bb.hasRemaining()) {
+                MinaRequest req = (MinaRequest) session.getAttribute(MINA_REQUEST);
                 if (req == null) {
                     req = mServer.createRequest(MinaIoHandler.getHandler(session));
+                    session.setAttribute(MINA_REQUEST, req);
                 }
                 try {
                     req.parse(bb);
                 } catch (IllegalArgumentException e) {
                     // Drop bad request
                     ZimbraLog.imap.debug("Dropping bad request", e.getCause());
-                    req = null;
+                    session.setAttribute(MINA_REQUEST, null);
                     break;
                 }
                 if (!req.isComplete()) break;
                 out.write(req);
-                req = null;
+                session.setAttribute(MINA_REQUEST, null);
             }
         }
     }
