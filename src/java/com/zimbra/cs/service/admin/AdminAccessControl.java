@@ -1,6 +1,8 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +11,7 @@ import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -578,11 +581,35 @@ public abstract class AdminAccessControl {
         private AdminAccessControl mAC;
         private Provisioning mProv;
         private Set<String> mReqAttrs;
+        private Map<AttributeClass, Set<String>> mInvalidReqAttrsByAttrClass;
         
-        public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) {
+        public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
             mReqAttrs = reqAttrs;
+            
+            if (mReqAttrs != null) {
+                AttributeManager attrMgr = AttributeManager.getInstance();
+                mInvalidReqAttrsByAttrClass = new HashMap<AttributeClass, Set<String>>();
+                
+                getInvalidReqAttrs(attrMgr, AttributeClass.account);
+                getInvalidReqAttrs(attrMgr, AttributeClass.calendarResource);
+                getInvalidReqAttrs(attrMgr, AttributeClass.cos);
+                getInvalidReqAttrs(attrMgr, AttributeClass.distributionList);
+                getInvalidReqAttrs(attrMgr, AttributeClass.domain);
+            }
+        }
+        
+        private void getInvalidReqAttrs(AttributeManager attrMgr, AttributeClass klass) {
+            
+            Set<String> invalidAttrs = new HashSet<String>();
+            mInvalidReqAttrsByAttrClass.put(klass, invalidAttrs);
+            
+            Set<String> validAttrs = attrMgr.getAllAttrsInClass(klass);
+            for (String attr : mReqAttrs) {
+                if (!validAttrs.contains(attr))
+                    invalidAttrs.add(attr);
+            }
         }
         
         private boolean hasRightsToList(NamedEntry target, 
@@ -628,21 +655,42 @@ public abstract class AdminAccessControl {
             return hasRight;
         }
         
+        private void checkIfReqAttrsAreValid(AttributeClass klass) throws ServiceException {
+            if (mReqAttrs != null) {
+                Set<String> invalidReqAttrs = mInvalidReqAttrsByAttrClass.get(klass);
+                
+                if (invalidReqAttrs == null)  // really an internal error, why would unexpected entry type found?
+                    throw ServiceException.INVALID_REQUEST("unsupported search type: " + klass.name(), null);
+                
+                if (!invalidReqAttrs.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String invalidAttr : invalidReqAttrs)
+                        sb.append(invalidAttr + ", ");
+                    throw ServiceException.INVALID_REQUEST("invalid req attrbute for " + klass.name() + ": " + sb.toString(), null);
+                }
+            }
+        }
+        
         /**
          * returns if entry is allowed.
          */
         public boolean allow(NamedEntry entry) throws ServiceException {
             if (entry instanceof CalendarResource) {
+                checkIfReqAttrsAreValid(AttributeClass.calendarResource);
                 return hasRightsToList(entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource, mReqAttrs);
             } else if (entry instanceof Account) {
+                checkIfReqAttrsAreValid(AttributeClass.account);
                 return hasRightsToList(entry, Admin.R_listAccount, Admin.R_getAccount, mReqAttrs);
             } else if (entry instanceof DistributionList) {
+                checkIfReqAttrsAreValid(AttributeClass.distributionList);
                 return hasRightsToList(entry, Admin.R_listDistributionList, Admin.R_getDistributionList, mReqAttrs);
             } else if (entry instanceof Alias) {
                 return hasRightsToListAlias((Alias)entry);
             } else if (entry instanceof Domain) {
+                checkIfReqAttrsAreValid(AttributeClass.domain);
                 return hasRightsToList(entry, Admin.R_listDomain, Admin.R_getDomain, mReqAttrs);
             } else if (entry instanceof Cos) {
+                checkIfReqAttrsAreValid(AttributeClass.cos);
                 return hasRightsToList(entry, Admin.R_listCos, Admin.R_getCos, mReqAttrs);
             } else
                 return false;
