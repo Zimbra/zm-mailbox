@@ -182,11 +182,11 @@
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
       <Get name="errorHandler">
         <Call name="addErrorPage">
-          <Arg type="int">500</Arg>
+          <Arg type="int">400</Arg>
           <Arg type="int">599</Arg>
-          <Arg type="String">/public/5xx.html</Arg>
+          <Arg type="String">/public/error.jsp</Arg>
         </Call>
-      </Get>
+      </Get>  
     </New>
 
 
