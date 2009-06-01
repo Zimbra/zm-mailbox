@@ -27,6 +27,7 @@ import java.net.Socket;
 
 public class TcpPop3Handler extends Pop3Handler {
     private TcpServerInputStream mInputStream;
+    private String mRemoteAddress;
 
     TcpPop3Handler(Pop3Server server) {
         super(server);
@@ -34,6 +35,7 @@ public class TcpPop3Handler extends Pop3Handler {
     
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
+        mRemoteAddress = connection.getInetAddress().getHostAddress();
         connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
         mInputStream = new TcpServerInputStream(connection.getInputStream());
         mOutputStream = new BufferedOutputStream(connection.getOutputStream());
@@ -51,6 +53,7 @@ public class TcpPop3Handler extends Pop3Handler {
 
     @Override
     protected void dropConnection() {
+        ZimbraLog.addIpToContext(mRemoteAddress);
         try {
             if (mInputStream != null) {
                 mInputStream.close();
@@ -61,7 +64,13 @@ public class TcpPop3Handler extends Pop3Handler {
                 mOutputStream = null;
             }
         } catch (IOException e) {
-            ZimbraLog.pop.info("exception while closing connection", e);
+            if (ZimbraLog.imap.isDebugEnabled()) {
+                ZimbraLog.pop.info("I/O error while closing connection", e);
+            } else {
+                ZimbraLog.pop.info("I/O error while closing connection: " + e);
+            }
+        } finally {
+            ZimbraLog.clearContext();
         }
     }
 

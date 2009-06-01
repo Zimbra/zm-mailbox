@@ -19,7 +19,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
@@ -72,16 +71,10 @@ public abstract class MinaServer implements Server {
     
     // TODO Disable for production
     public static final String NIO_ENABLED_PROP = "ZimbraNioEnabled";
-    public static final String NIO_DEBUG_ENABLED_PROP = "ZimbraNioDebugEnabled";
 
     public static boolean isEnabled() {
         return LC.nio_enabled.booleanValue() ||
               Boolean.getBoolean(NIO_ENABLED_PROP);
-    }
-
-    public static boolean isDebugEnabled() {
-        return LC.nio_debug_enabled.booleanValue() ||
-            Boolean.getBoolean(NIO_DEBUG_ENABLED_PROP);
     }
 
     private static synchronized SSLContext getSSLContext() {
@@ -130,8 +123,8 @@ public abstract class MinaServer implements Server {
      * The above is only done once and we keep a singleton of this cipher list.  We then can pass it to 
      * SSLFilter.setEnabledCipherSuites() for SSL and StartTLS session.
      * 
-     * @param sslCtxt
-     * @param serverConfig
+     * @param sslCtxt ssl context
+     * @param serverConfig mina server config
      * @return array of enabled ciphers, or empty array (note, not null) if all default ciphers should be enabled.
      *         (i.e. we do not need to alter the default ciphers)
      */
@@ -163,12 +156,6 @@ public abstract class MinaServer implements Server {
         return mSslEnabledCipherSuites;
     }
     
-    /**
-     * Create a SSLFilter and set enabled ciphers on the filter
-     * 
-     * @param serverConfig
-     * @return
-     */
     private static SSLFilter getSSLFilter(ServerConfig serverConfig) {
         SSLContext sslCtxt = getSSLContext();
         SSLFilter sslFilter = new SSLFilter(sslCtxt);
@@ -195,9 +182,6 @@ public abstract class MinaServer implements Server {
         mAcceptorConfig.setReuseAddress(true);
         mAcceptorConfig.setThreadModel(ThreadModel.MANUAL);
         mSocketAcceptor = new SocketAcceptor(NUM_IO_PROCESSORS, IO_THREAD_POOL);
-        if (isDebugEnabled()) {
-            ZimbraLog.nio.setLevel(Log.Level.debug);
-        }
     }
 
     protected MinaServer(ServerConfig config) throws IOException, ServiceException {
@@ -228,7 +212,7 @@ public abstract class MinaServer implements Server {
         }
         fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
         fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
-        if (isDebugEnabled()) fc.addLast("logger", new MinaLoggingFilter(this, false));
+        fc.addLast("logger", new MinaLoggingFilter(this, false));
         IoHandler handler = new MinaIoHandler(this);
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
         getLog().info("Starting listener on %s%s",
@@ -298,6 +282,7 @@ public abstract class MinaServer implements Server {
      * handshake.
      *
      * @param session the IoSession on which to start the TLS handshake
+     * @param serverConfig server configuration
      */
     public static void startTLS(IoSession session, ServerConfig serverConfig) {
         SSLFilter filter = getSSLFilter(serverConfig);

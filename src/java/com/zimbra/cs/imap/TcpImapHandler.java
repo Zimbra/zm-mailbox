@@ -184,6 +184,7 @@ class TcpImapHandler extends ImapHandler {
             }
         }.start();
 
+        ZimbraLog.addIpToContext(mRemoteAddress);
         try {
             OutputStream os = mOutputStream;
             if (os != null) {
@@ -207,7 +208,13 @@ class TcpImapHandler extends ImapHandler {
                 mAuthenticator = null;
             }
         } catch (IOException e) {
-            INFO("exception while closing connection", e);
+            if (ZimbraLog.imap.isDebugEnabled()) {
+                ZimbraLog.imap.info("I/O error while closing connection", e);
+            } else {
+                ZimbraLog.imap.info("I/O error while closing connection: " + e);
+            }
+        } finally {
+            ZimbraLog.clearContext();
         }
     }
 

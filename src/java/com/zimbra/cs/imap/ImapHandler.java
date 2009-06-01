@@ -14,19 +14,6 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.URLEncoder;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -56,16 +43,21 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.security.sasl.*;
+import com.zimbra.cs.security.sasl.Authenticator;
+import com.zimbra.cs.security.sasl.AuthenticatorUser;
+import com.zimbra.cs.security.sasl.AuthenticatorUtil;
+import com.zimbra.cs.security.sasl.GssAuthenticator;
+import com.zimbra.cs.security.sasl.PlainAuthenticator;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
@@ -76,6 +68,33 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
@@ -3783,9 +3802,9 @@ abstract class ImapHandler extends ProtocolHandler {
     void sendResponse(String tag, String msg, boolean flush) throws IOException {
         String response = (tag == null ? "" : tag + ' ') + (msg == null ? "" : msg);
         if (ZimbraLog.imap.isDebugEnabled())
-            ZimbraLog.imap.debug("  S: " + response);
+            ZimbraLog.imap.debug("S: " + response);
         else if (msg != null && msg.startsWith("BAD"))
-            ZimbraLog.imap.info("  S: " + response);
+            ZimbraLog.imap.info("S: " + response);
         sendLine(response, flush);
     }
 

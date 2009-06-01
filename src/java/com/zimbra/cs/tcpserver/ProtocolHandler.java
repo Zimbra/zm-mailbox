@@ -20,6 +20,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
 
+import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
@@ -116,11 +117,13 @@ public abstract class ProtocolHandler implements Runnable {
         // This asserts any reuse of a ProtocolHandler object.  Once we close a connection
         // we also set it to null, and since there is no setConnection, you can't meaningfully
         // reuse an ProtocolHandler object and if you do we give you this ISE.
-        if (mConnection == null) throw new IllegalStateException("Connection can not be null when running ProtocolHandler");
+        if (mConnection == null)
+            throw new IllegalStateException("Connection can not be null when running ProtocolHandler");
         String remoteAddress = mConnection.getInetAddress().getHostAddress();
 
         mHandlerThread = Thread.currentThread();
         mServer.addActiveHandler(this);
+
         ZimbraLog.clearContext();
         
         try {
@@ -133,6 +136,7 @@ public abstract class ProtocolHandler implements Runnable {
                 mLog.info("Connection refused for client " + remoteAddress);
             }
         } catch (SocketTimeoutException e) {
+            ZimbraLog.addIpToContext(remoteAddress);
             mLog.debug("Idle timeout: " + e);
             notifyIdleConnection();
         } catch (OutOfMemoryError e) {
@@ -140,13 +144,21 @@ public abstract class ProtocolHandler implements Runnable {
         } catch (Error e) {
             Zimbra.halt("Fatal error occurred while handling connection", e);
         } catch (Throwable e) {
+            ZimbraLog.addIpToContext(remoteAddress);
             mLog.info("Exception occurred while handling connection", e);
         } finally {
             dropConnection();
+            ZimbraLog.addIpToContext(remoteAddress);
             try {
                 mConnection.close();
             } catch (IOException ioe) {
-                mLog.info("Exception while closing connection", ioe);
+                if (mLog.isDebugEnabled()) {
+                    mLog.info("I/O error while closing connection", ioe);
+                } else {
+                    mLog.info("I/O error while closing connection: " + ioe);
+                }
+            } finally {
+                ZimbraLog.clearContext();
             }
         }
         
@@ -158,31 +170,35 @@ public abstract class ProtocolHandler implements Runnable {
 
     private void processConnection() throws Exception {
         boolean cont = true;
-        while (cont) {
-            if (getShuttingDown())
-                break;
+        while (cont && !getShuttingDown()) {
             try {
                 cont = processCommand();
                 setIdle(true);
             } catch (IOException e) {
-                if (e instanceof SocketException || e instanceof AsynchronousCloseException ) {
-                    // If we get a network exception on a connection that was closed
-                    // by watchdog due to idleness, treat it as if we got a QUIT
-                    // command and closed the connection normally.
+                ZimbraLog.addIpToContext(mConnection.getInetAddress().getHostAddress());
+                if (isSocketError(e)) {
                     cont = false;
                     if (getShuttingDown()) {
-                        // Don't print stack trace with info/error level if socket
-                        // was closed due to shutdown.
+                        // Unless debug level enabled, don't log connection
+                        // error if error occurs while socket is being closed
                         mLog.debug("Shutdown in progress", e);
+                    } else if (mLog.isDebugEnabled()) {
+                        // For other connection errors, only include full stack
+                        // trace if debug level enabled.
+                        mLog.info("I/O error while processing connection", e);
                     } else {
-                        throw e;
+                        mLog.info("I/O error while processing connection: " + e);
                     }
                 } else {
-                    // propagate other types of I/O exceptions
                     throw e;
                 }
             }
         }
+    }
+
+    private static boolean isSocketError(IOException e) {
+        return e instanceof SocketException || e instanceof SSLException ||
+               e instanceof AsynchronousCloseException;
     }
 
     void gracefulShutdown(String reason) {
