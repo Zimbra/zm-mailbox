@@ -40,6 +40,7 @@ public class TcpLmtpHandler extends LmtpHandler {
 
     @Override
     protected synchronized void dropConnection() {
+        ZimbraLog.addIpToContext(mRemoteAddress);
         try {
             if (mInputStream != null) {
                 mInputStream.close();
@@ -50,7 +51,13 @@ public class TcpLmtpHandler extends LmtpHandler {
                 mWriter = null;
             }
         } catch (IOException e) {
-            ZimbraLog.lmtp.info("exception while closing connection", e);
+            if (ZimbraLog.lmtp.isDebugEnabled()) {
+                ZimbraLog.lmtp.info("I/O error while closing connection", e);
+            } else {
+                ZimbraLog.lmtp.info("I/O error while closing connection: " + e);
+            }
+        } finally {
+            ZimbraLog.clearContext();
         }
     }
 

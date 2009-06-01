@@ -64,7 +64,7 @@ public class TcpPop3Handler extends Pop3Handler {
                 mOutputStream = null;
             }
         } catch (IOException e) {
-            if (ZimbraLog.imap.isDebugEnabled()) {
+            if (ZimbraLog.pop.isDebugEnabled()) {
                 ZimbraLog.pop.info("I/O error while closing connection", e);
             } else {
                 ZimbraLog.pop.info("I/O error while closing connection: " + e);
