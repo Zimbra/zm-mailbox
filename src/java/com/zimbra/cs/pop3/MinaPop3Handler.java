@@ -37,11 +37,11 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     public MinaPop3Handler(MinaPop3Server server, IoSession session) {
         super(server);
         this.mSession = session;
+        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
     }
 
     public void connectionOpened() throws IOException {
-        mOutputStream = new MinaIoSessionOutputStream(mSession);
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
         startConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
     }
 

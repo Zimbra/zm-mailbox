@@ -38,13 +38,11 @@ class MinaIoHandler implements IoHandler {
     }
 
     public void sessionCreated(IoSession session) throws IOException {
-        MinaHandler handler = mServer.createHandler(session);
-        handler.connectionOpened();
-        session.setAttribute(PROTOCOL_HANDLER, handler);
+        session.setAttribute(PROTOCOL_HANDLER, mServer.createHandler(session));
     }
 
-    public void sessionOpened(IoSession session) {
-        // Nothing to do here...
+    public void sessionOpened(IoSession session) throws IOException {
+        getHandler(session).connectionOpened();
     }
 
     public void sessionClosed(IoSession session) throws IOException {

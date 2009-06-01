@@ -40,6 +40,9 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     MinaImapHandler(MinaImapServer server, IoSession session) {
         super(server);
         this.mSession = session;
+        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        mStartedTLS = mConfig.isSSLEnabled();
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getUnauthMaxIdleSeconds());
     }
 
     @Override boolean doSTARTTLS(String tag) throws IOException {
@@ -63,10 +66,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             dropConnection();
             return;
         }
-        mOutputStream = new MinaIoSessionOutputStream(mSession);
         sendUntagged(mConfig.getBanner(), true);
-        mStartedTLS = mConfig.isSSLEnabled();
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getUnauthMaxIdleSeconds());
     }
 
     @Override protected boolean processCommand() {

@@ -1005,7 +1005,7 @@ abstract class ImapHandler extends ProtocolHandler {
             }
             
             if (!ignore)
-                ZimbraLog.imap.info("IMAP client identified as: " + attrs);
+                ZimbraLog.imap.debug("IMAP client identified as: " + attrs);
         }
 
         sendNotifications(true, false);

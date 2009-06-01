@@ -39,6 +39,10 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     public MinaLmtpHandler(MinaLmtpServer server, IoSession session) {
         super(server);
         mSession = session;
+        mEnvelope = new LmtpEnvelope();
+        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        mWriter = new LmtpWriter(mOutputStream);
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
     }
     
     public void requestReceived(MinaRequest req) throws IOException {
@@ -62,10 +66,6 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     }
     
     public void connectionOpened() {
-        reset();
-        mOutputStream = new MinaIoSessionOutputStream(mSession);
-        mWriter = new LmtpWriter(mOutputStream);
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
         setupConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
     }
 
