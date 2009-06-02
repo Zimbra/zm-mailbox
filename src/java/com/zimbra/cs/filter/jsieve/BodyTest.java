@@ -19,10 +19,10 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ListIterator;
@@ -128,7 +128,7 @@ public class BodyTest extends AbstractTest {
                     try {
                         in = mpi.getMimePart().getInputStream();
                         Reader reader = (charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset));
-                        if (contains(new BufferedReader(reader), substring)) {
+                        if (contains(reader, substring)) {
                             return true;
                         }
                     } catch (Exception e) {
@@ -144,7 +144,7 @@ public class BodyTest extends AbstractTest {
                         in = mpi.getMimePart().getInputStream();
                         Reader reader = Mime.getTextReader(in, cType, charset);
                         String text = HtmlTextExtractor.extract(reader, 1024 * 1024);
-                        if (contains(new BufferedReader(new StringReader(text)), substring)) {
+                        if (contains(new StringReader(text), substring)) {
                             return true;
                         }
                     } catch (Exception e) {
@@ -158,26 +158,42 @@ public class BodyTest extends AbstractTest {
         return false;
     }
     
-    private boolean contains(BufferedReader reader, String substring)
+    private boolean contains(Reader reader, String substring)
     throws IOException {
-        String line = null;
         int matchIndex = 0;
         substring = substring.toLowerCase(); // Do case-insensitive matching, like we do with headers.
-        while ((line = reader.readLine()) != null) {
-            line = line.toLowerCase();
-            for (int i = 0; i < line.length(); i++) {
-                if (matchIndex == substring.length()) {
-                    return true;
-                }
-                // Check one character at a time, in case the substring
-                // spans multiple lines.
-                if (line.charAt(i) == substring.charAt(matchIndex)) {
-                    matchIndex++;
-                } else {
-                    matchIndex = 0;
-                }
+        PushbackReader pb = new PushbackReader(reader);
+        int c = -1;
+        while ((c = getNextChar(pb)) > 0) {
+            if (substring.charAt(matchIndex) == Character.toLowerCase(c)) {
+                matchIndex++;
+            } else {
+                matchIndex = 0;
+            }
+            if (matchIndex == substring.length()) {
+                return true;
             }
         }
         return false;
+    }
+    
+    private int getNextChar(PushbackReader reader)
+    throws IOException {
+        int c = reader.read();
+        if (c != '\r' && c != '\n') {
+            // The end, or not a newline character.
+            return c;
+        }
+        
+        // Replace multiple newline characters with a single space.
+        do {
+            c = reader.read();
+        } while (c == '\r' || c == '\n');
+            
+        if (c >= 0) {
+            // Push the last character back, so that it's read next time.
+            reader.unread(c);
+        }
+        return ' ';
     }
 }

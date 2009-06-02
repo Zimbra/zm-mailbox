@@ -486,6 +486,12 @@ extends TestCase {
         // Make sure test is case-insensitive (bug 36905).
         doBodyContainsTest("TeXt VeRsIoN", true);
         doBodyContainsTest("hTmL vErSiOn", true);
+        
+        // Check the case where the entire line matches (bug 33793).
+        doBodyContainsTest("This is the text version of the main body of the message.", true);
+        
+        // Check the case where the substring spans multiple lines.
+        doBodyContainsTest("This is the text version of the main body of the message. This is the second line.", true);
     }
     
     private void doBodyContainsTest(String substring, boolean contains)

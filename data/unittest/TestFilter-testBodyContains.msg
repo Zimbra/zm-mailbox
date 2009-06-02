@@ -18,7 +18,8 @@ Content-Type: multipart/alternative;
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
-This is the text version of the main body of the message. 
+This is the text version of the main body of the message.
+This is the second line.
 
 ------=_Part_6_21859329.1224114735321
 Content-Type: text/html; charset=utf-8
