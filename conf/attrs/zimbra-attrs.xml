@@ -4531,4 +4531,18 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Use the iCal style delegation model for shared calendars for CalDAV interface when set to TRUE.</desc>
 </attr>
 
+<attr id="1029" name="zimbraDataSourceLastError" type="string" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="5.0.17">
+  <desc>
+    If the last data source sync failed, contains the error message.
+    If the last data source sync succeeded, this attribute is unset.
+  </desc>
+</attr>
+
+<attr id="1030" name="zimbraDataSourceFailingSince" type="gentime" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="5.0.17">
+  <desc>
+    Timestamp of the first sync error for a data source.  
+    This value is unset after a successful sync.
+  </desc>
+</attr>
+
 </attrs>

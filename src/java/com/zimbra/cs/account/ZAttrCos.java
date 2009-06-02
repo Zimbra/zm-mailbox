@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jylee 20090528-1417 */
+    /* build: 6.0.0 pshao 20090602-1105 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jylee 20090528-1417 */
+    /* build: 6.0.0 pshao 20090602-1105 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1983,6 +1983,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceEnableTrace = "zimbraDataSourceEnableTrace";
 
     /**
+     * Timestamp of the first sync error for a data source. This value is
+     * unset after a successful sync.
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1030)
+    public static final String A_zimbraDataSourceFailingSince = "zimbraDataSourceFailingSince";
+
+    /**
      * Local folder id to store retreived data in
      */
     @ZAttr(id=424)
@@ -2027,6 +2036,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=717)
     public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
+
+    /**
+     * If the last data source sync failed, contains the error message. If
+     * the last data source sync succeeded, this attribute is unset.
+     *
+     * @since ZCS 5.0.17
+     */
+    @ZAttr(id=1029)
+    public static final String A_zimbraDataSourceLastError = "zimbraDataSourceLastError";
 
     /**
      * Specifies whether imported POP3 messages should be left on the server
