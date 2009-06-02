@@ -35,6 +35,7 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.BuildInfo.Version;
@@ -156,7 +157,7 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
                     return;
                 }
                         
-                if (values == null || values.size() ==0) {
+                if (values == null || values.size() == 0) {
                     if (mVerbose)
                         System.out.println("    skipping - does not have a default value");
                     continue;
@@ -186,6 +187,27 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
         }
     }
     
+    private void doBug38425(Entry entry, String entryName) {
+        String theAttr = Provisioning.A_zimbraPrefMailDefaultCharset;
+        String sinceVer = mSince.toString();
+        String thisVer = BuildInfo.VERSION;
+        
+        if (sinceVer.startsWith("6.0.0_BETA1") && thisVer.startsWith("6.0.0_BETA2")) {
+            String curVal = entry.getAttr(theAttr);
+            if ("UTF-8".equalsIgnoreCase(curVal)) {
+                HashMap<String,Object> attrs = new HashMap<String,Object>();
+                attrs.put(theAttr, "");
+                try {
+                    System.out.println("Unsetting " + theAttr + " on " +  entryName);
+                    mProv.modifyAttrs(entry, attrs);
+                } catch (ServiceException e) {
+                    System.out.println("Caught ServiceException while unsetting " + theAttr + " on " +  entryName);
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    
     private void doGlobalConfig(ZimbraLdapContext zlc) throws ServiceException {
         Config config = mProv.getConfig();
         doEntry(zlc, config, "global config", AttributeClass.globalConfig);
@@ -194,7 +216,10 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
     private void doAllCos(ZimbraLdapContext zlc) throws ServiceException {
         List<Cos> coses = mProv.getAllCos();
         
-        for (Cos cos : coses)
-            doEntry(zlc, cos, "cos " + cos.getName(), AttributeClass.cos);
+        for (Cos cos : coses) {
+            String name = "cos " + cos.getName();
+            doEntry(zlc, cos, name, AttributeClass.cos);
+            doBug38425(cos, name);
+        }
     }
 }

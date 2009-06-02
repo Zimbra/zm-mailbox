@@ -57,6 +57,7 @@ public class BuildInfo {
         HOST = host;
         
         if (TYPE != null && TYPE.length() > 0) {
+            // e.g. 6.0.0_BETA2_1542.RHEL4_64 20090529191053 20090529-1912 NETWORK
         	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE + " " + TYPE;
         } else {
         	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
