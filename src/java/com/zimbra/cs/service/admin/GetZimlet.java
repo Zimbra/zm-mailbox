@@ -16,9 +16,11 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -34,34 +36,44 @@ public class GetZimlet extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
+        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.zimletEntry);
+        
         Element z = request.getElement(AdminConstants.E_ZIMLET);
-	    String n = z.getAttribute(AdminConstants.A_NAME);
+        String n = z.getAttribute(AdminConstants.A_NAME);
 
-	    Zimlet zimlet = prov.getZimlet(n);
+        Zimlet zimlet = prov.getZimlet(n);
 
         if (zimlet == null)
             throw AccountServiceException.NO_SUCH_ZIMLET(n);
         
-        checkRight(zsc, context, zimlet, Admin.R_getZimlet);
+        checkRight(zsc, context, zimlet, reqAttrs == null ? Admin.R_getZimlet : reqAttrs);
 
-	    Element response = zsc.createElement(AdminConstants.GET_ZIMLET_RESPONSE);
-	    doZimlet(response, zimlet);
-	    
-	    return response;
-	}
-	
-	static Element doZimlet(Element response, Zimlet zimlet) throws ServiceException {
-	    Map<String,Object> attrs = zimlet.getUnicodeAttrs();
-	    
+        Element response = zsc.createElement(AdminConstants.GET_ZIMLET_RESPONSE);
+        doZimlet(response, zimlet, reqAttrs);
+        
+        return response;
+    }
+
+    static Element doZimlet(Element response, Zimlet zimlet) throws ServiceException {
+        return doZimlet(response, zimlet, null);
+    }
+
+    static Element doZimlet(Element response, Zimlet zimlet, Set<String> reqAttrs) throws ServiceException {
+        Map<String,Object> attrs = zimlet.getUnicodeAttrs();
+        
         Element zim = response.addElement(AdminConstants.E_ZIMLET);
-    	zim.addAttribute(AdminConstants.A_NAME, zimlet.getName());
-    	zim.addAttribute(AdminConstants.A_ID, zimlet.getId());
-    	String keyword = zimlet.getAttr(Provisioning.A_zimbraZimletKeyword);
-    	if (keyword != null)
-        	zim.addAttribute(AdminConstants.A_HAS_KEYWORD, keyword);
+        zim.addAttribute(AdminConstants.A_NAME, zimlet.getName());
+        zim.addAttribute(AdminConstants.A_ID, zimlet.getId());
+        String keyword = zimlet.getAttr(Provisioning.A_zimbraZimletKeyword);
+        if (keyword != null)
+            zim.addAttribute(AdminConstants.A_HAS_KEYWORD, keyword);
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
             Object value = entry.getValue();
+            
+            if (reqAttrs != null && !reqAttrs.contains(name))
+                continue;
+            
             if (value instanceof String[]) {
                 String zv[] = (String[]) value;
                 for (int i = 0; i < zv.length; i++)
@@ -70,10 +82,11 @@ public class GetZimlet extends AdminDocumentHandler {
                 zim.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
         return zim;
-	}
-	
+    }
+    
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getZimlet);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getZimlet.getName()));
     }
 }

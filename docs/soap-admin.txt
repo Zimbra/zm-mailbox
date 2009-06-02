@@ -71,7 +71,7 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<GetAccountRequest [applyCos="{apply-cos}"]>
+<GetAccountRequest [applyCos="{apply-cos}"] [attrs="{req-attrs}"]>
   <account by="id|name|foreignPrincipal">...</account>
 </GetAccountRequest>
 
@@ -86,6 +86,8 @@ Access: domain admin sufficient
  if {apply-cos} is 1, then COS rules apply and unset attrs on an account will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the account will be returned
+ 
+{req-attrs} = comma-seperated list of attrs to return
 
 Access: domain admin sufficient
 
@@ -489,7 +491,7 @@ Notes:
 
 -----------------------------
 
-<GetDomainRequest [applyConfig="{apply-config}"]>
+<GetDomainRequest [applyConfig="{apply-config}"] [attrs="{req-attrs}"]>
   <domain by="id|name|virtualHostname">...</domain> 
 </GetDomainRequest>
 
@@ -504,6 +506,8 @@ Notes:
  if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the domain will be returned
+ 
+ {req-attrs} = comma-seperated list of attrs to return
 
 -----------------------------
 
@@ -599,7 +603,7 @@ Notes:
 </CopyCosResponse>
 
 -----------------------------
-<GetCosRequest>
+<GetCosRequest [attrs="{req-attrs}"]>
   <cos by="id|name">...</cos>
 </GetCosRequest>
 
@@ -608,6 +612,8 @@ Notes:
     <a [c="{cos-attr}"] n="...">...</a>+    
   </cos>
 </GetCosResponse>
+
+{req-attrs} = comma-seperated list of attrs to return
 
 {cos-attr} = 0 (default) means the attrs applies to any account's that belong to the cos
              1 means the attr applies only to the cos object itself
@@ -685,7 +691,7 @@ Notes:
 
 -----------------------------
 
-<GetServerRequest [applyConfig="{apply-config}]">
+<GetServerRequest [applyConfig="{apply-config}"] [attrs="{req-attrs}"]>
   <server by="id|name|serviceHostname">...</server>
 </GetServerRequest>
 
@@ -702,6 +708,8 @@ by "serviceHostname" will return the server that has zimbraServiceHostname set t
  if {apply-config} is 1, then certain unset attrs on a server will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the server will be returned
+ 
+ {req-attrs} = comma-seperated list of attrs to return
 
 -----------------------------
 
@@ -1177,7 +1185,7 @@ Access: domain admin sufficient
 -----------------------------
 
 <GetDistributionListRequest [limit="{limit}"] [offset="{offset}"]
-                            [sortAscending="{sort-ascending}"]>
+                            [sortAscending="{sort-ascending}"] [attrs="{req-attrs}"]>
   <dl by="id|name">...</dl>
 </GetDistributionListRequest>
 
@@ -1198,6 +1206,8 @@ Notes:
 
     more-flag = true if more accounts left to return
     total = total number of distribution lists (not affected by limit/offset)
+    
+    req-attrs = comma-seperated list of attrs to return
 
 Access: domain admin sufficient
 
@@ -1391,7 +1401,7 @@ Access: domain admin sufficient
 # Zimlets priorities are.  the same Zimlet will show priority 0 if all by itself,
 # or priority 3 if there are three other Zimlets with higher priority.
 
-<GetZimletStatusRequest/>
+<GetZimletStatusRequest [attrs="{req-attrs}"]/>
 
 <GetZimletStatusResponse>
   <zimlets>
@@ -1404,6 +1414,8 @@ Access: domain admin sufficient
   </cos>
   ...
 </GetZimletStatusResponse>
+
+{req-attrs} = comma-seperated list of attrs to return
 
 -----------------------------
 
@@ -1620,7 +1632,7 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<GetCalendarResourceRequest [applyCos="{apply-cos}"]>
+<GetCalendarResourceRequest [applyCos="{apply-cos}"] [attrs="{req-attrs}"]>
   <calresource by="id|name|foreignPrincipal">...</calresource>
 </GetCalendarResourceRequest>
 
@@ -1635,6 +1647,8 @@ Access: domain admin sufficient
  if {apply-cos} is 1, then COS rules apply and unset attrs on the calendar resource will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the calendar resource will be returned
+ 
+{req-attrs} = comma-seperated list of attrs to return 
 
 Access: domain admin sufficient
 

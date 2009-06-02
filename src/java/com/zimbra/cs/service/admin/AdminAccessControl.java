@@ -599,15 +599,15 @@ public abstract class AdminAccessControl {
                 AttributeManager attrMgr = AttributeManager.getInstance();
                 mValidReqAttrsByAttrClass = new HashMap<AttributeClass, Set<String>>();
                 
-                getValidReqAttrs(attrMgr, AttributeClass.account);
-                getValidReqAttrs(attrMgr, AttributeClass.calendarResource);
-                getValidReqAttrs(attrMgr, AttributeClass.cos);
-                getValidReqAttrs(attrMgr, AttributeClass.distributionList);
-                getValidReqAttrs(attrMgr, AttributeClass.domain);
+                setValidReqAttrs(attrMgr, AttributeClass.account);
+                setValidReqAttrs(attrMgr, AttributeClass.calendarResource);
+                setValidReqAttrs(attrMgr, AttributeClass.cos);
+                setValidReqAttrs(attrMgr, AttributeClass.distributionList);
+                setValidReqAttrs(attrMgr, AttributeClass.domain);
             }
         }
         
-        private void getValidReqAttrs(AttributeManager attrMgr, AttributeClass klass) {
+        private void setValidReqAttrs(AttributeManager attrMgr, AttributeClass klass) {
             Set<String> attrsOnEntry = attrMgr.getAllAttrsInClass(klass);
             Set<String> validAttrs = SetUtil.intersect(mReqAttrs, attrsOnEntry);
             mValidReqAttrsByAttrClass.put(klass, validAttrs);

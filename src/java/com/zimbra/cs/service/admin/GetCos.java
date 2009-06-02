@@ -21,6 +21,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.zimbra.common.calendar.TZIDMapper;
@@ -28,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -46,29 +48,35 @@ public class GetCos extends AdminDocumentHandler {
         return true;
     }
     
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-	    
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
+        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.cos);
+        
         Element d = request.getElement(AdminConstants.E_COS);
-	    String key = d.getAttribute(AdminConstants.A_BY);
+        String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
 
-	    Cos cos = prov.get(CosBy.fromString(key), value);
-	    
-	    if (cos == null)
+        Cos cos = prov.get(CosBy.fromString(key), value);
+
+        if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);
         
-        checkCosRight(zsc, cos, Admin.R_getCos);
+        checkCosRight(zsc, cos, reqAttrs == null ? Admin.R_getCos : reqAttrs);
 
-	    Element response = zsc.createElement(AdminConstants.GET_COS_RESPONSE);
-        doCos(response, cos);
+        Element response = zsc.createElement(AdminConstants.GET_COS_RESPONSE);
+        doCos(response, cos, reqAttrs);
 
-	    return response;
-	}
+        return response;
+    }
 
-	public static void doCos(Element e, Cos c) throws ServiceException {
+    public static void doCos(Element e, Cos c) throws ServiceException {
+        doCos(e, c, null);
+    }
+
+    public static void doCos(Element e, Cos c, Set<String> reqAttrs) throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
         Element cos = e.addElement(AdminConstants.E_COS);
         cos.addAttribute(AdminConstants.A_NAME, c.getName());
@@ -79,6 +87,10 @@ public class GetCos extends AdminDocumentHandler {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
             Object value = entry.getValue();
+            
+            if (reqAttrs != null && !reqAttrs.contains(name))
+                continue;
+            
             boolean isCosAttr = !attrMgr.isAccountInherited(name);
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
@@ -101,9 +113,10 @@ public class GetCos extends AdminDocumentHandler {
             }
         }
     }
-	
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getCos);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getCos.getName()));
     }
 }

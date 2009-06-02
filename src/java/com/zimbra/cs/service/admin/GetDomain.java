@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -49,27 +50,29 @@ public class GetDomain extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-	    
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
-	    
+        Provisioning prov = Provisioning.getInstance();
+
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
+        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.domain);
+        
         Element d = request.getElement(AdminConstants.E_DOMAIN);
-	    String key = d.getAttribute(AdminConstants.A_BY);
+        String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
-	    
-	    Domain domain = prov.get(DomainBy.fromString(key), value);
+
+        Domain domain = prov.get(DomainBy.fromString(key), value);
 
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-        checkDomainRight(zsc, domain, Admin.R_getDomain);
+        checkDomainRight(zsc, domain, reqAttrs == null ? Admin.R_getDomain : reqAttrs);
 
         Element response = zsc.createElement(AdminConstants.GET_DOMAIN_RESPONSE);
-        doDomain(response, domain, applyConfig);
+        doDomain(response, domain, applyConfig, reqAttrs);
 
-	    return response;
-	}
+        return response;
+    }
 
     public static void doDomain(Element e, Domain d) throws ServiceException {
         doDomain(e, d, true);
@@ -108,5 +111,6 @@ public class GetDomain extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getDomain);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getDomain.getName()));
     }
 }

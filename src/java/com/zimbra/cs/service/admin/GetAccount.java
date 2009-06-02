@@ -20,6 +20,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -27,6 +28,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -53,25 +55,28 @@ public class GetAccount extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.account);
+        
         Element a = request.getElement(AdminConstants.E_ACCOUNT);
-	    String key = a.getAttribute(AdminConstants.A_BY);
+        String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
-	    Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
+        Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        checkAccountRight(zsc, account, Admin.R_getAccount);
+        checkAccountRight(zsc, account, reqAttrs == null ? Admin.R_getAccount : reqAttrs);
 
-	    Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
-        ToXML.encodeAccountOld(response, account, applyCos);
+        Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
+        ToXML.encodeAccountOld(response, account, applyCos, reqAttrs);
 
-	    return response;
-	}
-	
+        return response;
+    }
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccount);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getAccount.getName()));
     }
 }

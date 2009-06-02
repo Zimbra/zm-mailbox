@@ -20,12 +20,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -56,7 +58,8 @@ public class GetDistributionList extends AdminDocumentHandler {
         	throw ServiceException.INVALID_REQUEST("offset" + offset + " is negative", null);
         }
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
-
+        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.distributionList);
+        
         Element d = request.getElement(AdminConstants.E_DL);
         String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
@@ -66,10 +69,10 @@ public class GetDistributionList extends AdminDocumentHandler {
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
 
-        checkDistributionListRight(zsc, distributionList, Admin.R_getDistributionList);
+        checkDistributionListRight(zsc, distributionList, reqAttrs == null ? Admin.R_getDistributionList : reqAttrs);
             
         Element response = zsc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
-        Element dlElement = doDistributionList(response, distributionList);
+        Element dlElement = doDistributionList(response, distributionList, reqAttrs);
         
         String[] members = distributionList.getAllMembers();
         if (offset > 0 && offset >= members.length) {
@@ -98,14 +101,18 @@ public class GetDistributionList extends AdminDocumentHandler {
     }
 
     public static Element doDistributionList(Element e, DistributionList d) throws ServiceException {
+        return doDistributionList(e, d, null);
+    }
+    
+    public static Element doDistributionList(Element e, DistributionList d, Set<String> reqAttrs) throws ServiceException {
         Element distributionList = e.addElement(AdminConstants.E_DL);
         distributionList.addAttribute(AdminConstants.A_NAME, d.getName());
         distributionList.addAttribute(AdminConstants.A_ID,d.getId());
-        doAttrs(distributionList, d.getUnicodeAttrs());
+        doAttrs(distributionList, d.getUnicodeAttrs(), reqAttrs);
         return distributionList;
     }
 
-    static void doAttrs(Element e, Map attrs) {
+    static void doAttrs(Element e, Map attrs, Set<String> reqAttrs) {
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
@@ -115,6 +122,10 @@ public class GetDistributionList extends AdminDocumentHandler {
             if (name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
                 continue;
             }
+            
+            // only return requested attrs
+            if (reqAttrs != null && !reqAttrs.contains(name))
+                continue;
            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
@@ -129,5 +140,6 @@ public class GetDistributionList extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getDistributionList);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getDistributionList.getName()));
     }
 }

@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +26,6 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -40,10 +40,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.AttrRight;
-import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -54,8 +51,6 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /** @author schemers */
@@ -202,6 +197,42 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
     @Override
     public Session.Type getDefaultSessionType() {
         return Session.Type.ADMIN;
+    }
+    
+    /*
+     * if specific attrs are requested on Get{ldap-object}:
+     * - INVALID_REQUEST is thrown if any of the requested attrs is not a valid attribute on the entry
+     * - PERM_DENIED is thrown if the authed account does not have get attr right for all the requested attrs.
+     * 
+     * Because for the get{Object} calls, we want to be strict, as opposed to misleading the client that 
+     * a requested attribute is not set on the entry.
+     * 
+     * Note: the behavior is different than the behavior of SearchDirectory, in that:
+     *    - if any of the requested attrs is not a valid attribute on the entry: ignored
+     *    - if the authed account does not have get attr right for all the requested attrs: the entry is not included in the response
+     *    
+     */
+    protected Set<String> getReqAttrs(Element request, AttributeClass klass) throws ServiceException {
+        String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
+        if (attrsStr == null)
+            return null;
+        
+        String[] attrs = attrsStr.split(",");
+        
+        Set<String> attrsOnEntry = AttributeManager.getInstance().getAllAttrsInClass(klass);
+        Set<String> validAttrs = new HashSet<String>();
+        
+        for (String attr : attrs) {
+            if (attrsOnEntry.contains(attr))
+                validAttrs.add(attr);
+            else 
+                throw ServiceException.INVALID_REQUEST("requested attribute " + attr + " is not on " + klass.name(), null);
+        }
+        
+        // check and throw if validAttrs is empty?  
+        // probably not, to be compatible with SearchDirectory
+        
+        return validAttrs;
     }
 
     public boolean isDomainAdminOnly(ZimbraSoapContext zsc) {

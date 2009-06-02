@@ -18,6 +18,10 @@ public interface AdminRightCheckPoint {
    
         // in the end no one should refer to this string
         protected static final String TODO = "TDB";
+                
+        protected static final String GET_ENTRY =
+            "If specific attrs are requested, needs rights to get the specific attrs. " + 
+            "If no specific attrs are requested, needs rights (%s) to get all attributes on the entry.";
         
         protected static final String MODIFY_ENTRY = 
             "All attrs provided in the attribute list have to settable by. " + 
@@ -30,6 +34,8 @@ public interface AdminRightCheckPoint {
             "or get{Entry} right for an entry that fulfill the list/search criteria, " +
             "the entry is skipped in the getAllXXX/searchXXX/searchDirectoryResponse,  " +
             "no PERM_DENIED exception will be thrown.";
+
+        
     }
     
     public void docRights(List<AdminRight> relatedRights, List<String> notes);

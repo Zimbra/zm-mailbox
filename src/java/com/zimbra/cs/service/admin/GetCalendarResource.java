@@ -17,12 +17,14 @@ package com.zimbra.cs.service.admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
@@ -52,6 +54,8 @@ public class GetCalendarResource extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
+        Set<String> reqAttrs = getReqAttrs(request, AttributeClass.calendarResource);
+        
         Element cr = request.getElement(AdminConstants.E_CALENDAR_RESOURCE);
         String key = cr.getAttribute(AdminConstants.A_BY);
         String value = cr.getText();
@@ -61,10 +65,10 @@ public class GetCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(value);
 
-        checkCalendarResourceRight(zsc, resource, Admin.R_getCalendarResource);
+        checkCalendarResourceRight(zsc, resource, reqAttrs == null ? Admin.R_getCalendarResource : reqAttrs);
 
         Element response = zsc.createElement(AdminConstants.GET_CALENDAR_RESOURCE_RESPONSE);
-        ToXML.encodeCalendarResourceOld(response, resource, applyCos);
+        ToXML.encodeCalendarResourceOld(response, resource, applyCos, reqAttrs);
 
         return response;
     }
@@ -72,5 +76,6 @@ public class GetCalendarResource extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getCalendarResource);
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getCalendarResource.getName()));
     }
 }
