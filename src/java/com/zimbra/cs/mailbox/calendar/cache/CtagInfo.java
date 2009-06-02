@@ -93,7 +93,10 @@ public class CtagInfo {
             mRemoteAccount = remoteAccountId;
             mRemoteId = remoteId;
         }
-        mPath = path;
+        if (path != null && !path.endsWith("/"))
+            mPath = path + "/";
+        else
+            mPath = path;
     }
 
     void setCtag(String ctag) { mCtag = ctag; }

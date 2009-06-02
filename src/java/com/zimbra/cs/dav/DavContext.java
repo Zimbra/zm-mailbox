@@ -420,8 +420,8 @@ public class DavContext {
 	}
 	
 	private static final String EVOLUTION = "Evolution";
-	private static final String ICAL = "DAVKit";
-	private static final String IPHONE = "iPhone";
+	private static final String ICAL = "iCal/";
+	private static final String IPHONE = "iPhone/";
 	
 	private boolean userAgentHeaderContains(String str) {
 		String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
@@ -443,10 +443,10 @@ public class DavContext {
 
         static KnownUserAgent lookup(String userAgent) {
             if (userAgent != null) {
-                if (userAgent.indexOf(ICAL) >= 0)
-                    return iCal;
-                else if (userAgent.indexOf(IPHONE) >= 0)
+                if (userAgent.indexOf(IPHONE) >= 0)
                     return iPhone;
+                else if (userAgent.indexOf(ICAL) >= 0)
+                    return iCal;
                 else if (userAgent.indexOf(EVOLUTION) >= 0)
                     return Evolution;
             }
