@@ -219,7 +219,7 @@ public class CalDavProperty extends ResourceProperty {
 			Element inboxUrl = super.toElement(ctxt, parent, nameOnly);
 			String authUser = ctxt.getAuthAccount().getName();
 			try {
-				authUser = Principal.getOwner(ctxt.getAuthAccount(), "");
+				authUser = Principal.getOwner(ctxt.getAuthAccount(), ctxt.getUri());
 			} catch (ServiceException se) {
 			}
 			String url = DavServlet.DAV_PATH + "/" + authUser + "/Inbox/";
@@ -245,7 +245,7 @@ public class CalDavProperty extends ResourceProperty {
 			Element outboxUrl = super.toElement(ctxt, parent, nameOnly);
 			String authUser = ctxt.getAuthAccount().getName();
 			try {
-				authUser = Principal.getOwner(ctxt.getAuthAccount(), "");
+				authUser = Principal.getOwner(ctxt.getAuthAccount(), ctxt.getUri());
 			} catch (ServiceException se) {
 			}
 			// always use authenticated user's outbox.

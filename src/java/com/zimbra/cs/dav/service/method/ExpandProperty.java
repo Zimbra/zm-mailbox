@@ -18,6 +18,8 @@ package com.zimbra.cs.dav.service.method;
 
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Iterator;
 
 import org.dom4j.DocumentHelper;
@@ -101,6 +103,11 @@ public class ExpandProperty extends Report {
 						String url = href.getText();
 						if (url == null)
 							continue;
+						try {
+							url = URLDecoder.decode(url, "UTF-8");
+						} catch (UnsupportedEncodingException e) {
+					        ZimbraLog.dav.warn("can't decode url %s", url, e);
+						}
 						try {
 							DavResource target = UrlNamespace.getResourceAtUrl(ctxt, url);
 							href.detach();

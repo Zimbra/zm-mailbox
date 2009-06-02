@@ -27,7 +27,6 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -251,22 +250,12 @@ public class UrlNamespace {
 		return true;
 	}
 	public static String getPrincipalUrl(Account authAccount, Account targetAccount) {
-		String target = targetAccount.getName();
-		try {
-			Provisioning prov = Provisioning.getInstance();
-	        Config config = prov.getConfig();
-	        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-	        if (defaultDomain != null && defaultDomain.equalsIgnoreCase(targetAccount.getDomainName()))
-	        	target = target.substring(0, target.indexOf('@'));
-		} catch (ServiceException se) {
-	        ZimbraLog.dav.warn("can't get domain or server for "+target, se);
-		}
-        String url = getPrincipalUrl(target);
+        String url = getPrincipalUrl(targetAccount.getName());
         if (!onSameServer(authAccount, targetAccount)) {
         	try {
             	url = getAbsoluteUrl(targetAccount, url);
     		} catch (ServiceException se) {
-    	        ZimbraLog.dav.warn("can't generate absolute url for "+target, se);
+    	        ZimbraLog.dav.warn("can't generate absolute url for "+targetAccount.getName(), se);
     		}
         }
         return url;
