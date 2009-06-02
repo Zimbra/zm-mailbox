@@ -1358,24 +1358,24 @@ public class Mailbox {
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
         byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
-        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT",     hidden, MailItem.TYPE_UNKNOWN,      0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG,          0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT",     hidden, MailItem.TYPE_UNKNOWN,      0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG,          0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
-        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR, null, null);
-        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.TYPE_DOCUMENT, 0, MailItem.DEFAULT_COLOR, null, null);
+        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.TYPE_DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
         
 
         mCurrentChange.itemId = getInitialItemId();
@@ -5268,7 +5268,7 @@ public class Mailbox {
                     throw MailServiceException.TOO_MANY_TAGS();
             }
 
-            Tag tag = Tag.create(this, tagId, name, color);
+            Tag tag = Tag.create(this, tagId, name, new MailItem.Color(color));
             redoRecorder.setTagId(tagId);
             success = true;
             return tag;
@@ -5299,7 +5299,7 @@ public class Mailbox {
                 noteId = getNextItemId(redoPlayer.getNoteId());
                 volumeId = redoPlayer.getVolumeId();
             }
-            Note note = Note.create(noteId, getFolderById(folderId), volumeId, content, location, color, null);
+            Note note = Note.create(noteId, getFolderById(folderId), volumeId, content, location, new MailItem.Color(color), null);
 
             redoRecorder.setNoteId(note.getId());
             redoRecorder.setVolumeId(note.getVolumeId());
@@ -5506,7 +5506,7 @@ public class Mailbox {
             CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
 
             int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
-            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url, null);
+            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, new MailItem.Color(color), url, null);
             redoRecorder.setFolderId(folder.getId());
             success = true;
             updateRssDataSource(folder);
@@ -5571,7 +5571,7 @@ public class Mailbox {
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null)
                     subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0,
-                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, color, last ? url : null, null);
+                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, new MailItem.Color(color), last ? url : null, null);
                 else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (last)
@@ -5912,7 +5912,7 @@ public class Mailbox {
             CreateMountpoint redoPlayer = (CreateMountpoint) mCurrentChange.getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, color, null);
+            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, new MailItem.Color(color), null);
             redoRecorder.setId(mpt.getId());
             success = true;
             return mpt;

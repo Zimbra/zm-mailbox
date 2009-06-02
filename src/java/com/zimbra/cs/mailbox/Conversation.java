@@ -234,7 +234,7 @@ public class Conversation extends MailItem {
         data.unreadCount = unread;
         data.flags       = flags;
         data.tags        = tags;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msgs));
+        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msgs));
         data.contentChanged(mbox);
         DbMailItem.create(mbox, data, null);
 
@@ -765,14 +765,14 @@ public class Conversation extends MailItem {
         String encoded = mEncodedSenders;
         if (encoded == null && mSenderList != null)
             encoded = mSenderList.toString();
-    	return encodeMetadata(meta, mColor, mVersion, mExtendedData, encoded);
+    	return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, encoded);
     }
 
-    static String encodeMetadata(byte color, int version, CustomMetadataList extended, SenderList senders) {
+    static String encodeMetadata(Color color, int version, CustomMetadataList extended, SenderList senders) {
         return encodeMetadata(new Metadata(), color, version, extended, senders.toString()).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String encodedSenders) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String encodedSenders) {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }

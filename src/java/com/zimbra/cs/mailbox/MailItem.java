@@ -180,6 +180,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final int MAX_TAG_COUNT  = 63;
 
     public static final byte DEFAULT_COLOR = 0;
+    public static final Color DEFAULT_COLOR_RGB = new Color(DEFAULT_COLOR);
 
     public static final class UnderlyingData implements Cloneable {
         public int    id;
@@ -475,7 +476,9 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected MailboxBlob    mBlob;
     protected int            mVersion;
     protected List<MailItem> mRevisions;
-    protected byte           mColor;
+    protected Color          mRGBColor;          // 8 bits each for red, green, and blue.
+                                                 // if highest byte is zero it's old style
+                                                 // color map with 9 fixed colors.
     protected CustomMetadataList mExtendedData;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -521,7 +524,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  {@link #DEFAULT_COLOR}.  No "color inheritance" (e.g. from the
      *  item's folder or tags) is performed. */
     public byte getColor() {
-        return mColor;
+        return mRGBColor.getMappedColor();
     }
 
     /** Returns the item's name.  If the item doesn't have a name (e.g.
@@ -1369,10 +1372,30 @@ public abstract class MailItem implements Comparable<MailItem> {
         updateTagUnread(mData.unreadCount);
     }
 
+    /** Changes the item's color.  Color is specified in RGB, with
+     *  one byte each for red, blue, and green.  The highest byte
+     *  is unused.
+     * 
+     * @param color  The item's new color.
+     * @perms {@link ACL#RIGHT_WRITE} on the item
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
+    void setColor(long color) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
+        if (color == mRGBColor.getRgb())
+            return;
+        markItemModified(Change.MODIFIED_COLOR);
+        mRGBColor.setRgb(color);
+        saveMetadata();
+    }
+    
     /** Changes the item's color.  The server does no value-to-color mapping;
      *  the supplied color is treated as an opaque byte.  Note than even
      *  "immutable" items can have their color changed.
      * 
+     * @deprecated
      * @param color  The item's new color.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
@@ -1381,10 +1404,10 @@ public abstract class MailItem implements Comparable<MailItem> {
     void setColor(byte color) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
-        if (color == mColor)
+        if (color == mRGBColor.getMappedColor())
             return;
         markItemModified(Change.MODIFIED_COLOR);
-        mColor = color;
+        mRGBColor.setColor(color);
         saveMetadata();
     }
 
@@ -2634,9 +2657,9 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     abstract Metadata encodeMetadata(Metadata meta);
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended) {
-        if (color != DEFAULT_COLOR)
-            meta.put(Metadata.FN_COLOR, color);
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended) {
+        if (color.getMappedColor() != DEFAULT_COLOR)
+            meta.put(Metadata.FN_COLOR, color.toMetadata());
         if (version > 1)
             meta.put(Metadata.FN_VERSION, version);
         if (extended != null)
@@ -2649,12 +2672,69 @@ public abstract class MailItem implements Comparable<MailItem> {
         decodeMetadata(new Metadata(metadata, this));
     }
 
+    public static class Color {
+    	private static final int  ORANGE = 9;
+    	private static final long RGB_INDICATOR      = 0x01000000;
+    	private static final long RGB_INDICATOR_MASK = 0xff000000;
+    	private static final long RGB_MASK           = 0x00ffffff;
+        private static final long[] COLORS = {
+            // blue,  cyan,     green,    purple
+        	0x0000ff, 0x008284, 0x008200, 0x840084, 
+            // red,   yellow,   pink,     gray
+        	0xff0000, 0x848200, 0xff0084, 0x848284, 
+            // orange
+        	0xff8000
+        };
+        public Color(long rgb) {
+        	if ((rgb & RGB_INDICATOR_MASK) > 0)
+        		setRgb((rgb & RGB_MASK));
+        	else
+        		setColor((byte)rgb);
+        }
+        public Color(byte c) {
+        	setColor(c);
+        }
+        public long getRed() {
+        	return (mRgb >> 16) & 0xff;
+        }
+        public long getGreen() {
+        	return (mRgb >> 8) & 0xff;
+        }
+        public long getBlue() {
+        	return mRgb & 0xff;
+        }
+        public long getRgb() {
+        	return mRgb;
+        }
+        public byte getMappedColor() {
+        	byte c = 1;
+        	for (long color : COLORS) {
+        		if (mRgb == color)
+        			return c;
+        		c++;
+        	}
+        	return ORANGE;
+        }
+        public void setRgb(long rgb) {
+        	mRgb = rgb;
+        }
+        public void setColor(byte color) {
+        	if (color > ORANGE || color < 1)
+        		color = ORANGE;
+        	mRgb = COLORS[color-1];
+        }
+        long toMetadata() {
+        	return (mRgb | RGB_INDICATOR);
+        }
+        private long mRgb;
+    }
+    
     @SuppressWarnings("unchecked")
     void decodeMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
             return;
 
-        mColor = (byte) meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR);
+        mRGBColor = new Color(meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR));
         mVersion = (int) meta.getLong(Metadata.FN_VERSION, 1);
 
         mExtendedData = null;
@@ -2734,7 +2814,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             sb.append(CN_VERSION).append(": ").append(mVersion).append(", ");
         if (mData.parentId > 0)
             sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
-        sb.append(CN_COLOR).append(": ").append(mColor).append(", ");
+        sb.append(CN_COLOR).append(": ").append(mRGBColor.getMappedColor()).append(", ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
         if (getDigest() != null)

@@ -408,7 +408,7 @@ public class Message extends MailItem {
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, pm, flags, dinfo, null, null);
+        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, flags, dinfo, null, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
 
@@ -872,7 +872,7 @@ public class Message extends MailItem {
             mData.size = size;
         }
 
-        String metadata = encodeMetadata(mColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
+        String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
 
         // rewrite the DB row to reflect our new view
         saveData(pm.getParsedSender().getSortString(), metadata);
@@ -939,11 +939,11 @@ public class Message extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mSender, mRecipients, mFragment,
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mSender, mRecipients, mFragment,
                               mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);
     }
 
-    private static String encodeMetadata(byte color, int version, CustomMetadataList extended, ParsedMessage pm,
+    private static String encodeMetadata(Color color, int version, CustomMetadataList extended, ParsedMessage pm,
                                          int flags, DraftInfo dinfo,
                                          List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // cache the "To" header only for messages sent by the user
@@ -954,7 +954,7 @@ public class Message extends MailItem {
     }
 
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String sender, String recipients,
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String sender, String recipients,
                                    String fragment, String subject, String rawSubject, DraftInfo dinfo,
                                    List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // try to figure out a simple way to make the raw subject from the normalized one

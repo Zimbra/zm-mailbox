@@ -701,7 +701,7 @@ public class Contact extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
         data.tags        = Tag.tagsToBitmask(tags);
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, custom, pc.getFields(), pc.getAttachments());
+        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
         
         if (ZimbraLog.mailop.isInfoEnabled()) {
@@ -815,15 +815,15 @@ public class Contact extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mFields, mAttachments);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mFields, mAttachments);
     }
 
-    private static String encodeMetadata(byte color, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments) {
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, fields, attachments).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended,
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
                                    Map<String, String> fields, List<Attachment> attachments) {
         meta.put(Metadata.FN_FIELDS, new Metadata(fields));
         if (attachments != null && !attachments.isEmpty()) {

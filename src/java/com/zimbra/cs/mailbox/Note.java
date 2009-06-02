@@ -118,7 +118,7 @@ public class Note extends MailItem {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see Folder#canContain(byte) */
-    static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, byte color, CustomMetadata custom)
+    static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, Color color, CustomMetadata custom)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_NOTE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -212,15 +212,15 @@ public class Note extends MailItem {
     }
 
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mBounds);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mBounds);
     }
 
-    private static String encodeMetadata(byte color, int version, CustomMetadata custom, Rectangle bounds) {
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, Rectangle bounds) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, bounds).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, Rectangle bounds) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, Rectangle bounds) {
         meta.put(Metadata.FN_BOUNDS, bounds);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }

@@ -153,7 +153,7 @@ public class Document extends MailItem {
         data.name        = name;
         data.subject     = name;
         data.setBlobDigest(pd.getDigest());
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR, 1, extended, mimeType, pd.getCreator(), pd.getFragment()).toString();
+        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment()).toString();
         return data;
     }
 
@@ -198,10 +198,10 @@ public class Document extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mContentType, mCreator, mFragment);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment);
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment) {
         if (meta == null)
             meta = new Metadata();
         meta.put(Metadata.FN_MIME_TYPE, mimeType);

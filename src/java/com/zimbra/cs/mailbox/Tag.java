@@ -129,7 +129,7 @@ public class Tag extends MailItem {
     @Override boolean canHaveChildren() { return false; }
 
 
-    static Tag create(Mailbox mbox, int id, String name, byte color)
+    static Tag create(Mailbox mbox, int id, String name, Color color)
     throws ServiceException {
         if (!validateId(id))
             throw MailServiceException.INVALID_ID(id);
@@ -249,14 +249,14 @@ public class Tag extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion);
+        return encodeMetadata(meta, mRGBColor, mVersion);
     }
 
-    private static String encodeMetadata(byte color, int version) {
+    private static String encodeMetadata(Color color, int version) {
         return encodeMetadata(new Metadata(), color, version).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version) {
         return MailItem.encodeMetadata(meta, color, version, null);
     }
 

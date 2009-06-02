@@ -442,7 +442,7 @@ public abstract class CalendarItem extends MailItem {
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
         data.subject  = subject;
-        data.metadata = encodeMetadata(DEFAULT_COLOR, 1, custom, uid, startTime, endTime, recur,
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding CalendarItem: id=%d, Message-ID=%s, folderId=%d, folderName=%s, invite=%s.",
@@ -671,11 +671,11 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
                               mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
     }
 
-    private static String encodeMetadata(byte color, int version, CustomMetadata custom, String uid, long startTime, long endTime,
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, String uid, long startTime, long endTime,
                                          Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
                                          ReplyList replyList, AlarmData alarmData) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
@@ -683,7 +683,7 @@ public abstract class CalendarItem extends MailItem {
                               invs, tzmap, replyList, alarmData).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended,
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
                                    String uid, long startTime, long endTime, Recurrence.IRecurrence recur,
                                    List<Invite> invs, TimeZoneMap tzmap, ReplyList replyList, AlarmData alarmData) {
         meta.put(Metadata.FN_TZMAP, tzmap.encodeAsMetadata());

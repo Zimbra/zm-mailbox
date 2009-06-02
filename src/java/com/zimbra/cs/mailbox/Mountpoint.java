@@ -104,7 +104,7 @@ public class Mountpoint extends Folder {
      *        sufficient permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte) */
-    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, byte color, CustomMetadata custom)
+    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, Color color, CustomMetadata custom)
     throws ServiceException {
         if (parent == null || ownerId == null || remoteId <= 0)
             throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
@@ -153,15 +153,15 @@ public class Mountpoint extends Folder {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mAttributes, mDefaultView, mOwnerId, mRemoteId);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, mDefaultView, mOwnerId, mRemoteId);
     }
 
-    private static String encodeMetadata(byte color, int version, CustomMetadata custom, byte view, String owner, int remoteId) {
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte view, String owner, int remoteId) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, (byte) 0, view, owner, remoteId).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, byte attrs, byte view, String owner, int remoteId) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attrs, byte view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0);

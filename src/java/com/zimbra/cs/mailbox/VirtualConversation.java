@@ -83,7 +83,7 @@ public class VirtualConversation extends Conversation {
         data.unreadCount = msg.getUnreadCount();
         data.flags       = msg.getInternalFlagBitmask();
         data.tags        = msg.getTagBitmask();
-        data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, extended, new SenderList(msg));
+        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msg));
         return data;
     }
 

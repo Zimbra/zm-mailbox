@@ -642,7 +642,7 @@ public class Folder extends MailItem {
      * @see #validateItemName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR, null, null);
+        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR_RGB, null, null);
     }
 
     /** Creates a new Folder with optional attributes and persists it
@@ -674,7 +674,7 @@ public class Folder extends MailItem {
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
     public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes,
-                                byte view, int flags, byte color, String url, CustomMetadata custom)
+                                byte view, int flags, Color color, String url, CustomMetadata custom)
     throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
@@ -1142,18 +1142,18 @@ public class Folder extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mColor, mVersion, mExtendedData, mAttributes, mDefaultView, mRights,
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, mDefaultView, mRights,
                               mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff);
     }
 
-    private static String encodeMetadata(byte color, int version, CustomMetadata custom, byte attributes, byte hint, ACL rights,
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, byte hint, ACL rights,
                                          SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, attributes, hint, rights,
                               fsd, uidnext, totalSize, modseq, imapRecent, imapRecentCutoff).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, byte color, int version, CustomMetadataList extended, byte attributes, byte hint, ACL rights,
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attributes, byte hint, ACL rights,
                                    SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
         if (hint != TYPE_UNKNOWN)
             meta.put(Metadata.FN_VIEW, hint);
