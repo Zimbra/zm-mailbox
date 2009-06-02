@@ -259,6 +259,7 @@ public class DavServlet extends ZimbraServlet {
                                         }
                                     }
                     		        if (cacheHit) {
+                                        ZimbraLog.dav.debug("CTAG REQUEST CACHE HIT");
                     		            // All good.  Send cached response.
                                         ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
                     		            HttpServletResponse response = ctxt.getResponse();
@@ -267,6 +268,25 @@ public class DavServlet extends ZimbraServlet {
                                         byte[] respData = ctagResponse.getResponseBody();
                     		            response.setContentLength(ctagResponse.getRawLength());
 
+                    		            byte[] unzipped = null;
+                    		            if (ZimbraLog.dav.isDebugEnabled() || (ctagResponse.isGzipped() && !gzipAccepted)) {
+                    		                if (ctagResponse.isGzipped()) {
+                                                ByteArrayInputStream bais = new ByteArrayInputStream(respData);
+                                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                                GZIPInputStream gzis = null;
+                                                try {
+                                                    gzis = new GZIPInputStream(bais, respData.length);
+                                                    ByteUtil.copy(gzis, false, baos, true);
+                                                } finally {
+                                                    ByteUtil.closeStream(gzis);
+                                                }
+                                                unzipped = baos.toByteArray();
+                    		                } else {
+                    		                    unzipped = respData;
+                    		                }
+                    		                if (ZimbraLog.dav.isDebugEnabled())
+                                                ZimbraLog.dav.debug("RESPONSE:\n" + new String(unzipped, "UTF-8"));
+                    		            }
                     		            if (!ctagResponse.isGzipped()) {
                                             response.getOutputStream().write(respData);
                     		            } else {
@@ -274,22 +294,13 @@ public class DavServlet extends ZimbraServlet {
                                                 response.addHeader(DavProtocol.HEADER_CONTENT_ENCODING, DavProtocol.ENCODING_GZIP);
                                                 response.getOutputStream().write(respData);
                     		                } else {
-                                                // Unzip, then send.
-                                                ByteArrayInputStream bais = new ByteArrayInputStream(respData);
-                                                GZIPInputStream gzis = null;
-                                                try {
-                                                    gzis = new GZIPInputStream(bais, respData.length);
-                                                    ByteUtil.copy(gzis, false, response.getOutputStream(), false);
-                                                } finally {
-                                                    ByteUtil.closeStream(gzis);
-                                                }
+                    		                    assert(unzipped != null);
+                                                response.getOutputStream().write(unzipped);
                     		                }
                     		            }
 
                     		            // Tell the context the response has been sent.
                     		            ctxt.responseSent();
-
-                                        ZimbraLog.dav.debug("CTAG REQUEST CACHE HIT");
                     		        }
                                 }
                             }
@@ -302,6 +313,11 @@ public class DavServlet extends ZimbraServlet {
                                 acctVerSnapshot = allCtagsData.getVersion();
                                 ctagsSnapshot = new HashMap<Integer, String>();
                                 Collection<CtagInfo> childCals = allCtagsData.getChildren(rootFolderId);
+                                if (rootFolderId != Mailbox.ID_FOLDER_USER_ROOT) {
+                                    CtagInfo ctagRoot = allCtagsData.getById(rootFolderId);
+                                    if (ctagRoot != null)
+                                        ctagsSnapshot.put(rootFolderId, ctagRoot.getCtag());
+                                }
                                 for (CtagInfo calInfo : childCals) {
                                     ctagsSnapshot.put(calInfo.getId(), calInfo.getCtag());
                                 }
