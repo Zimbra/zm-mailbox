@@ -1373,6 +1373,9 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceEnableTrace = "zimbraDataSourceEnableTrace";
     public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
     public static final String A_zimbraDataSourceAttribute = "zimbraDataSourceAttribute";
+    public static final String A_zimbraDataSourceLastError = "zimbraDataSourceLastError";
+    public static final String A_zimbraDataSourceFailingSince = "zimbraDataSourceFailingSince";
+    
     
     // Quota warning
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";

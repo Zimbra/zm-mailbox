@@ -458,8 +458,7 @@ effect if called in a <nosession> context.
      </signature>*
    </signatures>
    <dataSources>
-     <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-        username="mylogin" l="{folder-id}" [pollingInterval="10m"]/>
+     {data-source}
      ...
    </dataSources>*
    <childAccounts>
@@ -503,6 +502,8 @@ effect if called in a <nosession> context.
   attrs under <childAccount>: including the following attrs of the child account:
         - displayName
 
+  {data-source}: see GetDataSourcesRequest for details
+  
 ----------------------------
 
 <GetAccountInfoRequest>
@@ -2478,7 +2479,10 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [fromDisplay="{from-display}"]
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]
+    [failingSince="{timestamp}">
+    [<lastError>{error message}</lastError>]
+   </pop3>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]
     [emailAddress="{email-address}"] 
@@ -2487,12 +2491,21 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [fromDisplay="{from-display}"]
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]>
+    [failingSince="{timestamp}">
+    [<lastError>{error message}</lastError>]
+   </imap>]
   ...
 </GetDataSourcesResponse>
 
 Returns all data sources defined for the given mailbox.  For each data source,
 every attribute value is returned except password.
+
+lastError: the error message from the most recent sync for this data source.
+  This element is not returned if the last sync was successful.
+failingSince: if the most recent sync(s) failed, this attribute specifies
+  the timestamp of the first failure.  This attribute is not returned
+  if the last sync was successful.
 
 ---------------------------
 

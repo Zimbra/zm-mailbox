@@ -713,14 +713,44 @@ extends Assert {
     }
     
     /**
+     * Returns the data source with the given name.
+     */
+    public static ZDataSource getDataSource(ZMailbox mbox, String name)
+    throws ServiceException {
+        for (ZDataSource ds : mbox.getAllDataSources()) {
+            if (ds.getName().equals(name)) {
+                return ds;
+            }
+        }
+        return null;
+    }
+    
+    /**
      * Imports data from the given data source and updates state on both the local
      * and remote mailboxes.
      */
     public static void importDataSource(ZDataSource dataSource, ZMailbox localMbox, ZMailbox remoteMbox)
     throws Exception {
+        importDataSource(dataSource, localMbox, remoteMbox, true);
+    }
+    
+    /**
+     * Imports data from the given data source and updates state on both the local
+     * and remote mailboxes.
+     */
+    public static void importDataSource(ZDataSource dataSource, ZMailbox localMbox, ZMailbox remoteMbox, boolean expectedSuccess)
+    throws Exception {
         List<ZDataSource> dataSources = new ArrayList<ZDataSource>();
         dataSources.add(dataSource);
-        localMbox.importData(dataSources);
+        try {
+            localMbox.importData(dataSources);
+            assertTrue(expectedSuccess);
+        } catch (SoapFaultException e) {
+            if (expectedSuccess) {
+                throw e;
+            }
+            return;
+        }
         String type = dataSource.getType().toString();
         
         // Wait for import to complete
@@ -743,7 +773,7 @@ extends Assert {
             remoteMbox.noOp();
         }
     }
-
+    
     /**
      * Returns an authenticated transport for the <tt>admin</tt> account.
      */
