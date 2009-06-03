@@ -21,6 +21,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 
 /**
@@ -43,7 +44,7 @@ extends MimeVisitor {
         if (visitKind != VisitPhase.VISIT_BEGIN) {
             return false;
         }
-        String subject = mm.getSubject();
+        String subject = Mime.getSubject(mm);
         if (subject.contains("oldsubject")) {
             if (mCallback != null && mCallback.onModification() == false) {
                 return false;

@@ -56,6 +56,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.Zimbra;
 
@@ -714,7 +715,7 @@ class ImapFolderSync {
 
         AppendInfo(Message msg, MimeMessage mm) throws MessagingException {
             itemId = msg.getId();
-            subject = mm.getSubject();
+            subject = Mime.getSubject(mm);
             messageId = mm.getMessageID();
             sentDate = mm.getSentDate();
             zflags = msg.getFlagBitmask();

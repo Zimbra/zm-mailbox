@@ -426,7 +426,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         InternetAddress[] from = Mime.parseAddressHeader(mm, "From", false);
         InternetAddress[] sender = Mime.parseAddressHeader(mm, "Sender", false), replyTo = Mime.parseAddressHeader(mm, "Reply-To", false);
         ps.write('(');  nstring(ps, mm.getHeader("Date", ","));
-        ps.write(' ');  nstring2047(ps, mm.getSubject());
+        ps.write(' ');  nstring2047(ps, Mime.getSubject(mm));
         ps.write(' ');  naddresses(ps, from);
         ps.write(' ');  naddresses(ps, sender.length == 0 ? from : sender);
         ps.write(' ');  naddresses(ps, replyTo.length == 0 ? from : replyTo);

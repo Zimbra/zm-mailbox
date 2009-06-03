@@ -62,6 +62,7 @@ import org.apache.commons.codec.net.QCodec;
 
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
+import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -637,32 +638,32 @@ public class Mime {
         return true;
      }
 
-	 /**
-	  * Given a list of <code>MPartInfo</code>s (as returned from {@link #getParts}),
-	  * returns a <code>Set</code> of unique content-type strings, or an
-	  * empty set if there are no attachments.
-	  */
-	 public static Set<String> getAttachmentList(List<MPartInfo> parts) {
-	     // get a set of all the content types 
-	     HashSet<String> set = new HashSet<String>();
+     /**
+      * Given a list of <code>MPartInfo</code>s (as returned from {@link #getParts}),
+      * returns a <code>Set</code> of unique content-type strings, or an
+      * empty set if there are no attachments.
+      */
+     public static Set<String> getAttachmentList(List<MPartInfo> parts) {
+         // get a set of all the content types 
+         HashSet<String> set = new HashSet<String>();
          for (MPartInfo mpi : parts) {
-	         if (mpi.isFilterableAttachment())
-	             set.add(mpi.getContentType());
+             if (mpi.isFilterableAttachment())
+                 set.add(mpi.getContentType());
          }
-	     return set;
-	 }
-	 
-	/** Returns true if any of the given message parts qualify as top-level
-     *  "attachments" for the purpose of displaying the little paperclip icon
-     *  in the web UI.  Note that Zimbra folder sharing notifications are
-     *  expressly *not* considered attachments for this purpose. */
-	public static boolean hasAttachment(List<MPartInfo> parts) {
-        for (MPartInfo mpi : parts) {
-	        if (mpi.mIsToplevelAttachment)
-	            return true;
-        }
-	    return false;
-	}
+         return set;
+     }
+ 
+     /** Returns true if any of the given message parts qualify as top-level
+      *  "attachments" for the purpose of displaying the little paperclip icon
+      *  in the web UI.  Note that Zimbra folder sharing notifications are
+      *  expressly *not* considered attachments for this purpose. */
+     public static boolean hasAttachment(List<MPartInfo> parts) {
+         for (MPartInfo mpi : parts) {
+             if (mpi.mIsToplevelAttachment)
+                 return true;
+         }
+         return false;
+     }
 	
     /** Returns true if any of the given message parts has a content-type
      *  of text/calendar */
@@ -815,20 +816,20 @@ public class Mime {
         return new ContentType(cthdr).getValue().trim();
     }
 
-	/** Reads the specified <code>InputStream</code> into a <code>String</code>.
-	 *  <code>contentType</code> must of type "text/*". If a valid charset
+    /** Reads the specified <code>InputStream</code> into a <code>String</code>.
+     *  <code>contentType</code> must of type "text/*". If a valid charset
      *  parameter is present in the Content-Type string, it is used as the
      *  charset for decoding the text.  If not, we fall back to the user's
      *  default charset preference.  If both of those options fail, the
      *  platform default is used.
-	 * 
+     * 
      * @param input  The InputStream to decode.
      * @param contentType  The Content-Type of the stream, which must be "text/*".
      * @parame defaultCharset  The user's default charset preference */
-	public static String decodeText(InputStream input, String contentType, String defaultCharset) throws IOException {
+    public static String decodeText(InputStream input, String contentType, String defaultCharset) throws IOException {
         StringBuilder buffer = new StringBuilder();
         try {
-        	Reader reader = getTextReader(input, contentType, defaultCharset);
+            Reader reader = getTextReader(input, contentType, defaultCharset);
             char[] cbuff = new char[MAX_DECODE_BUFFER];
             int num;
             while ( (num = reader.read(cbuff, 0, cbuff.length)) != -1)
@@ -837,7 +838,7 @@ public class Mime {
             ByteUtil.closeStream(input);
         }
         return buffer.toString();
-	}
+    }
 
     private static boolean SUPPORTS_CP1252 = Charset.isSupported(P_CHARSET_CP1252);
     private static boolean SUPPORTS_GBK = Charset.isSupported(P_CHARSET_GBK);
@@ -1060,7 +1061,7 @@ public class Mime {
             if (values == null || values.length == 0)
                 return NO_HEADERS;
 
-            for (int i=0; i<values.length; i++) {
+            for (int i = 0; i < values.length; i++) {
                 try {
                     values[i] = MimeUtility.decodeText(values[i]);
                 } catch (UnsupportedEncodingException e) {
@@ -1075,18 +1076,27 @@ public class Mime {
             return NO_HEADERS;
         }
     }
-    
+
     /**
      * Returns the value of the <tt>Message-ID</tt> header, or <tt>null</tt>
      * if the header does not exist or has an empty value.
      */
-    public static String getMessageID(MimeMessage msg) {
+    public static String getMessageID(MimeMessage mm) {
         try {
-            String msgid = msg.getMessageID();
+            String msgid = mm.getMessageID();
             return ("".equals(msgid) ? null : msgid);
         } catch (MessagingException e) {
             return null;
         }
+    }
+
+    /**
+     * Returns the decoded value of the <tt>Subject</tt> header, or
+     * <tt>null</tt> if the header does not exist.
+     */
+    public static String getSubject(MimeMessage mm) throws MessagingException {
+        String subject = mm.getHeader("Subject", null);
+        return subject == null ? null : MimeHeader.decode(subject);
     }
 
     /**

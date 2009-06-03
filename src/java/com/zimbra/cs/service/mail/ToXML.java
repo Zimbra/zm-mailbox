@@ -786,7 +786,7 @@ public class ToXML {
             String calIntendedFor = msg.getCalendarIntendedFor();
             m.addAttribute(MailConstants.A_CAL_INTENDED_FOR, calIntendedFor);
 
-            String subject = mm.getSubject();
+            String subject = Mime.getSubject(mm);
             if (subject != null)
                 m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
 
@@ -1085,7 +1085,7 @@ public class ToXML {
                     addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
                     addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
         
-                    String subject = mm.getSubject();
+                    String subject = Mime.getSubject(mm);
                     if (subject != null)
                         m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
                     String messageID = mm.getMessageID();
@@ -1699,7 +1699,7 @@ public class ToXML {
                 // "filename" for attached messages is the Subject
                 Object content = Mime.getMessageContent(mp);
                 if (content instanceof MimeMessage)
-                    fname = ((MimeMessage) content).getSubject();
+                    fname = Mime.getSubject((MimeMessage) content);
             }
             if (fname != null && !fname.equals(""))
                 elem.addAttribute(MailConstants.A_CONTENT_FILENAME, StringUtil.stripControlCharacters(fname));

@@ -97,6 +97,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -3916,7 +3917,7 @@ public class Mailbox {
         try {
             // file into same conversation as parent message as long as subject hasn't really changed
             Message parentMsg = getMessageById(null, parentID);
-            if (parentMsg.getNormalizedSubject().equals(ParsedMessage.normalize(newMsg.getSubject())))
+            if (parentMsg.getNormalizedSubject().equals(ParsedMessage.normalize(Mime.getSubject(newMsg))))
                 return parentMsg.getConversationId();
         } catch (Exception e) {
             if (!(e instanceof MailServiceException.NoSuchItemException))

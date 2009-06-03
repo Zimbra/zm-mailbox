@@ -34,11 +34,11 @@ extends MimeVisitor {
     private int mIndentLevel = 0;
     private StringBuilder mBuf = new StringBuilder(); 
     
-    public boolean visitMessage(MimeMessage msg, VisitPhase visitPhase)
+    @Override public boolean visitMessage(MimeMessage mm, VisitPhase visitPhase)
     throws MessagingException {
         if (visitPhase == VisitPhase.VISIT_BEGIN) {
             indent();
-            mBuf.append("Message: " + msg.getSubject() + "\n");
+            mBuf.append("Message: " + Mime.getSubject(mm) + "\n");
             mIndentLevel++;
         } else {
             mIndentLevel--;
@@ -46,7 +46,7 @@ extends MimeVisitor {
         return false;
     }
 
-    public boolean visitMultipart(MimeMultipart mp, VisitPhase visitPhase) {
+    @Override public boolean visitMultipart(MimeMultipart mp, VisitPhase visitPhase) {
         if (visitPhase == VisitPhase.VISIT_BEGIN) {
             indent();
             mBuf.append("Multipart:\n");
@@ -57,7 +57,7 @@ extends MimeVisitor {
         return false;
     }
 
-    public boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
+    @Override public boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
         indent();
         mBuf.append("Part: type=" + bp.getContentType() + ", filename=" + bp.getFileName() + "\n");
         if (bp.getContentType().startsWith("text")) {
@@ -77,8 +77,8 @@ extends MimeVisitor {
             mBuf.append("  ");
         }
     }
-    
-    public String toString() {
+
+    @Override public String toString() {
         return mBuf.toString();
     }
 }

@@ -1196,7 +1196,7 @@ public class ParsedMessage {
             return;
 
         try {
-            mNormalizedSubject = mSubject = getMimeMessage().getSubject();
+            mNormalizedSubject = mSubject = Mime.getSubject(getMimeMessage());
         } catch (MessagingException e) { }
 
         if (mSubject == null) {

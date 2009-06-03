@@ -136,7 +136,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
     }
 
     private String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {
-        String subject = mm.getSubject();
+        String subject = Mime.getSubject(mm);
         Date date = mm.getSentDate();
         String dateStr = date == null ? "???" : DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, lc).format(date);
 

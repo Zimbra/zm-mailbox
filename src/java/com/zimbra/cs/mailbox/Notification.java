@@ -486,7 +486,7 @@ implements LmtpCallback {
                     Map<String, String> vars = new HashMap<String, String>();
                     vars.put("ACCOUNT_DOMAIN", getDomain(account.getName()));
                     vars.put("ACCOUNT_ADDRESS", account.getName());
-                    vars.put("MESSAGE_SUBJECT", msg.getSubject());
+                    vars.put("MESSAGE_SUBJECT", Mime.getSubject(msg));
                     vars.put("OPERATION", operation);
                     vars.put("FOLDER_NAME", folderName);
                     vars.put("FOLDER_ID", folderId);
