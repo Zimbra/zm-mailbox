@@ -92,6 +92,9 @@ public class Mime {
     public static final String CT_MULTIPART_DIGEST = "multipart/digest";
     public static final String CT_MULTIPART_MIXED = "multipart/mixed";
     public static final String CT_MULTIPART_REPORT = "multipart/report";
+    public static final String CT_MULTIPART_RELATED = "multipart/related";
+    public static final String CT_MULTIPART_SIGNED = "multipart/signed";
+    public static final String CT_MULTIPART_ENCRYPTED = "multipart/encrypted";
     public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
 
     public static final String CT_MULTIPART_PREFIX = "multipart/";
@@ -107,7 +110,7 @@ public class Mime {
 
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
 
-	// encodings
+    // encodings
     public static final String ET_7BIT = "7bit";
     public static final String ET_8BIT = "8bit";
     public static final String ET_BINARY = "binary";
@@ -540,10 +543,10 @@ public class Mime {
         }
 
         public String getContentType() { return type; }
-		public String getName()        { return null; }
+        public String getName()        { return null; }
 
-		public InputStream getInputStream()   { return is; }
-		public OutputStream getOutputStream() { return null; }
+        public InputStream getInputStream()   { return is; }
+        public OutputStream getOutputStream() { return null; }
     }
 
     public static MimePart getMimePart(MimePart mp, String part) throws IOException, MessagingException {
@@ -1125,8 +1128,13 @@ public class Mime {
         return decoded;
     }
     
-    private static Set<String> TEXT_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_HTML } ));
-    private static Set<String> HTML_ALTERNATES = new HashSet<String>(Arrays.asList(new String[] { CT_TEXT_ENRICHED, CT_TEXT_PLAIN } ));
+    private static Set<String> TEXT_ALTERNATES = new HashSet<String>(Arrays.asList(CT_TEXT_ENRICHED, CT_TEXT_HTML));
+    private static Set<String> HTML_ALTERNATES = new HashSet<String>(Arrays.asList(CT_TEXT_ENRICHED, CT_TEXT_PLAIN));
+
+    private static Set<String> KNOWN_MULTIPART_TYPES = new HashSet<String>(Arrays.asList(
+            CT_MULTIPART_ALTERNATIVE, CT_MULTIPART_DIGEST, CT_MULTIPART_MIXED, CT_MULTIPART_REPORT,
+            CT_MULTIPART_RELATED, CT_MULTIPART_SIGNED, CT_MULTIPART_ENCRYPTED
+    ));
 
     private static Set<MPartInfo> getBodySubparts(MPartInfo base, boolean preferHtml) {
         // short-circuit malformed messages and message subparts
@@ -1137,10 +1145,10 @@ public class Mime {
         List<MPartInfo> children;
         if (ctype.equals(CT_MULTIPART_ALTERNATIVE))
             return getAlternativeBodySubpart(base.getChildren(), preferHtml);
-        else if (ctype.equals(CT_MULTIPART_MIXED))
+        else if (ctype.equals(CT_MULTIPART_MIXED) || !KNOWN_MULTIPART_TYPES.contains(ctype))
             children = base.getChildren();
         else
-            (children = new ArrayList<MPartInfo>(1)).add(base.getChildren().get(0));
+            children = Arrays.asList(base.getChildren().get(0));
 
         Set<MPartInfo> bodies = null;
         for (MPartInfo mpi : children) {
