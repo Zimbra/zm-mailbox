@@ -168,6 +168,7 @@ public class AccountConstants {
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_UTF8 = "utf8";
     public static final String A_VISIBLE = "visible";
+    public static final String A_PERM_DENIED = "pd";
     
     // share info
     public static final String A_FOLDER_ID = "folderId";
