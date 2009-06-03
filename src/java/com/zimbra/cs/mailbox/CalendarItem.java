@@ -435,7 +435,7 @@ public abstract class CalendarItem extends MailItem {
         data.type     = type;
         data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId  = id;
+            data.indexId  = mbox.generateIndexId(id);
         data.imapId   = id;
         data.volumeId = volumeId;
         data.date     = mbox.getOperationTimestamp();

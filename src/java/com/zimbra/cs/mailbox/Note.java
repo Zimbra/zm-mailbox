@@ -136,7 +136,7 @@ public class Note extends MailItem {
         data.type        = TYPE_NOTE;
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId     = id;
+            data.indexId     = mbox.generateIndexId(id);
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;

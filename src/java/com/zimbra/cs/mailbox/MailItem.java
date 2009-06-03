@@ -187,7 +187,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public byte   type;
         public int    parentId = -1;
         public int    folderId = -1;
-        public int    indexId  = -1;
+        public String indexId  = null;
         public int    imapId   = -1;
         public short  volumeId = -1;
         private String blobDigest;
@@ -557,12 +557,12 @@ public abstract class MailItem implements Comparable<MailItem> {
             return null;
         return path + (path.endsWith("/") ? "" : "/") + name;
     }
-    
+
     /** Returns the ID the item is referenced by in the index.  Returns -1
      *  for non-indexed items.  For indexed items, the "index ID" will be the
      *  same as the item ID unless the item is a copy of another item; in that
      *  case, the "index ID" is the same as the original item's "index ID". */
-    public int getIndexId() {
+    public String getIndexId() {
         return mData.indexId;
     }
 
@@ -1922,13 +1922,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         // we'll share the index entry if this item can't change out from under us
-        int indexId = mData.indexId;
+        String indexId = mData.indexId;
         if (isIndexed()) {
             // reindex the copy if existing item (a) wasn't indexed or (b) is mutable
-            if (indexId <= 0 || isMutable())
-                indexId = folder.inSpam() ? -1 : id;
+            if (indexId == null || isMutable())
+                indexId = folder.inSpam() ? null : Integer.toString(id);
         }
-        boolean shared = indexId > 0 && indexId == mData.indexId;
+        boolean shared = indexId != null && indexId.equals(mData.indexId);
 
         // if the copy or original is in Spam, put the copy in its own conversation
         boolean detach = parentId <= 0 || isTagged(Flag.ID_FLAG_DRAFT) || inSpam() != folder.inSpam();
@@ -1948,7 +1948,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
         
-        if (indexId > 0 && indexId != mData.indexId) {
+        if (indexId != null && !indexId.equals(mData.indexId)) {
             // if the copy needs to be reindexed, just set the deferred flag now and index it later
 //            mMailbox.incrementIndexDeferredCount(1);
 //            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
@@ -2033,11 +2033,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         // we'll share the index entry if this item can't change out from under us
         if (isIndexed()) {
             // reindex the copy if existing item (a) wasn't indexed or (b) is mutable
-            if (data.indexId <= 0 || isMutable())
-                data.indexId = target.inSpam() ? -1 : copyId;
+            if (data.indexId == null || isMutable())
+                data.indexId = target.inSpam() ? null : Integer.toString(copyId);
         }
-        boolean shared = data.indexId > 0 && data.indexId == mData.indexId;
-        if (data.indexId > 0 && data.indexId != mData.indexId) {
+        boolean shared = data.indexId != null && data.indexId.equals(mData.indexId);
+        if (data.indexId != null && !data.indexId.equals(mData.indexId)) {
             // if the copy needs to be reindexed, just set the deferred flag now and index it later
             mMailbox.queueForIndexing(this, false, null);
 //            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
@@ -2277,8 +2277,8 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // item moved out of spam, so update the index id
         //   (will be written to DB in DbMailItem.setFolder());
-        if (inSpam() && !target.inSpam() && isIndexed() && mData.indexId <= 0) {
-            mData.indexId = mData.id;
+        if (inSpam() && !target.inSpam() && isIndexed() && mData.indexId != null) {
+            mData.indexId = Integer.toString(mData.id);
             getMailbox().queueForIndexing(this, false, null);
         }
 
@@ -2291,7 +2291,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Records all relevant changes to the in-memory object for when an item's
      *  index_id is changed.  Does <u>not</u> persist those
      *  changes to the database. */
-    void indexIdChanged(int indexId) {
+    void indexIdChanged(String indexId) {
         mData.indexId = indexId;        
     }
 
@@ -2366,13 +2366,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         public Set<Integer> modifiedIds = new HashSet<Integer>(2);
 
         /** The document ids that need to be removed from the index. */
-        public List<Integer> indexIds = new ArrayList<Integer>(1);
+        public List<String> indexIds = new ArrayList<String>(1);
 
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <tt>sharedIndex</tt> whose last copies are
          *  being removed are added to {@link #indexIds} via a call to
          *  {@link DbMailItem#resolveSharedIndex}. */
-        public Set<Integer> sharedIndex;
+        public Set<String> sharedIndex;
 
         /** The {@link com.zimbra.cs.store.Blob}s for all items being deleted that have content
          *  persisted in the store. */
@@ -2407,7 +2407,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 if (other.cascadeIds != null)
                     (cascadeIds == null ? cascadeIds = new ArrayList<Integer>(other.cascadeIds.size()) : cascadeIds).addAll(other.cascadeIds);
                 if (other.sharedIndex != null)
-                    (sharedIndex == null ? sharedIndex = new HashSet<Integer>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
+                    (sharedIndex == null ? sharedIndex = new HashSet<String>(other.sharedIndex.size()) : sharedIndex).addAll(other.sharedIndex);
                 for (Map.Entry<Integer, DbMailItem.LocationCount> entry : other.messages.entrySet()) {
                     DbMailItem.LocationCount lcount = messages.get(entry.getKey());
                     if (lcount == null)
@@ -2589,11 +2589,11 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(1, getTotalSize()));
 
-        if (mData.indexId > 0) {
+        if (mData.indexId != null) {
             if (!isTagged(Flag.ID_FLAG_COPIED))
-                info.indexIds.add(new Integer(mData.indexId));
+                info.indexIds.add(mData.indexId);
             else
-                (info.sharedIndex = new HashSet<Integer>()).add(mData.indexId);
+                (info.sharedIndex = new HashSet<String>()).add(mData.indexId);
         }
 
         List<MailItem> items = new ArrayList<MailItem>(3);

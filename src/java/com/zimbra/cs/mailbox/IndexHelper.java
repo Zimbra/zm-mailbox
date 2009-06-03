@@ -170,6 +170,9 @@ public class IndexHelper {
         }
     }        
 
+    String generateIndexId(int itemId) {
+        return getMailboxIndex().generateIndexId(itemId);
+    }
 
     /** Returns the maximum number of items to be batched in a single indexing
      *  pass.  (If a search comes in that requires use of the index, all
@@ -197,11 +200,11 @@ public class IndexHelper {
             mMailboxIndex.deleteIndex();
     }
 
-    List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
+    List<String> deleteDocuments(List<String> indexIds) throws IOException {
         if (getMailboxIndex() != null) 
-            return getMailboxIndex().deleteDocuments(itemIds);
+            return getMailboxIndex().deleteDocuments(indexIds);
         else
-            return itemIds; // pretend like we have an index, and deleted everything
+            return indexIds; // pretend like we have an index, and deleted everything
     }
 
     /**
@@ -536,10 +539,10 @@ public class IndexHelper {
                         if (!skipDelete) {
                             // if (!wholeMailbox) {
                             // NOT reindexing everything: delete manually
-                            List<Integer> toDelete = new ArrayList<Integer>(msgs.size());
+                            List<String> toDelete = new ArrayList<String>(msgs.size());
                             for (SearchResult s : msgs)
                                 toDelete.add(s.indexId);
-
+                            
                             if (getMailboxIndex() != null)
                                 getMailboxIndex().deleteDocuments(toDelete);
                         }
@@ -948,7 +951,7 @@ public class IndexHelper {
         }
     }
 
-    void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<Integer> itemsToDelete) {
+    void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<String> itemsToDelete) {
         try {
             if (getMailboxIndex() != null && (itemsToDelete != null && !itemsToDelete.isEmpty()))
                 getMailboxIndex().deleteDocuments(itemsToDelete);

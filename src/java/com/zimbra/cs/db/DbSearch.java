@@ -53,7 +53,7 @@ public class DbSearch {
 
     public static final class SearchResult {
         public int    id;
-        public int    indexId;
+        public String indexId;
         public byte   type;
         public Object sortkey;
         public Object extraData;
@@ -74,7 +74,7 @@ public class DbSearch {
         public static SearchResult createResult(ResultSet rs, SortBy sort, ExtraData extra) throws SQLException {
             SearchResult result = new SearchResult();
             result.id      = rs.getInt(COLUMN_ID);
-            result.indexId = rs.getInt(COLUMN_INDEXID);
+            result.indexId = rs.getString(COLUMN_INDEXID);
             result.type    = rs.getByte(COLUMN_TYPE);
             switch (sort.getCriterion()) {
                 case SUBJECT:
@@ -766,6 +766,14 @@ public class DbSearch {
         }
         return param;
     }
+    
+    private static final int setStrings(PreparedStatement stmt, int param, Collection<String> c) throws SQLException {
+        if (!ListUtil.isEmpty(c)) {
+            for (String s: c)
+                stmt.setString(param++, s);
+        }
+        return param;
+    }
 
     private static final int setDateRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
@@ -1131,7 +1139,7 @@ public class DbSearch {
             param = setIntegers(stmt, param, c.prohibitedConvIds);
         param = setIntegers(stmt, param, c.itemIds);
         param = setIntegers(stmt, param, c.prohibitedItemIds);
-        param = setIntegers(stmt, param, c.indexIds);
+        param = setStrings(stmt, param, c.indexIds);
         param = setDateRange(stmt, param, c.dates);
         param = setLongRangeWithMinimum(stmt, param, c.modified, 1);
         param = setLongRangeWithMinimum(stmt, param, c.modifiedContent, 1);

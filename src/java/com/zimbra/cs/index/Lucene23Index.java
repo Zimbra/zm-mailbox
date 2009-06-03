@@ -141,6 +141,9 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         return mIdxDirectory.getBytesRead();
     }        
     
+    public String generateIndexId(int itemId) {
+        return Integer.toString(itemId);
+    }
     
     Lucene23Index(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
         mMbidx = mbidx;
@@ -201,7 +204,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     public void endBatchOperation() {
     }
 
-    public void addDocument(Document[] docs, int indexId, int modContent, long receivedDate, 
+    public void addDocument(Document[] docs, int itemId, String indexId, int modContent, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
@@ -224,7 +227,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                         doc.add(new Field(LuceneFields.L_SORT_NAME,    sortSender, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         
                         doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-                        doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
+                        doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, indexId, Field.Store.YES, Field.Index.UN_TOKENIZED));
 
                         // If this doc is shared by mult threads, then the date might just be wrong,
                         // so remove and re-add the date here to make sure the right one gets written!
@@ -240,7 +243,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                         }
                         
                         if (deleteFirst) {
-                            String itemIdStr = Integer.toString(indexId);
+                            String itemIdStr = indexId;
                             Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
                             mIndexWriter.updateDocument(toDelete, doc);
                         } else {
@@ -251,7 +254,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                 } // foreach Document
 
                 if (modContent > 0) {
-                    SyncToken token = new SyncToken(modContent, indexId); 
+                    SyncToken token = new SyncToken(modContent, itemId); 
                     mNumUncommittedItems++;
                     if (token.after(mHighestUncomittedModContent)) {
                     mHighestUncomittedModContent = token;
@@ -274,13 +277,13 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         }
     }
     
-    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
+    public List<String> deleteDocuments(List<String> itemIds) throws IOException {
         synchronized(getLock()) {
             beginWriting();
             try {
-                for (int i = 0; i < itemIds.size(); i++) {
+                int i = 0;
+                for (String itemIdStr : itemIds) {
                     try {
-                        String itemIdStr = Integer.toString(itemIds.get(i));
                         Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
                         mIndexWriter.deleteDocuments(toDelete);
                         // NOTE!  The numDeleted may be < you expect here, the document may
@@ -292,11 +295,12 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
                         }
                     } catch (IOException ioe) {
                         ZimbraLog.index_add.debug("deleteDocuments exception on index "+i+" out of "+itemIds.size()+" (id="+itemIds.get(i)+")");
-                        List<Integer> toRet = new ArrayList<Integer>(i);
+                        List<String> toRet = new ArrayList<String>(i);
                         for (int j = 0; j < i; j++)
                             toRet.add(itemIds.get(j));
                         return toRet;
                     }
+                    i++;
                 }
             } finally {
                 doneWriting();

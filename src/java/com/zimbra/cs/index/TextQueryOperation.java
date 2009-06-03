@@ -385,22 +385,18 @@ abstract class TextQueryOperation extends QueryOperation {
             public float mScore; // highest score in list
         }
 
-        Set<Integer> getIndexIds() { 
-            Set<Integer>toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
-            for (Iterator<Integer> iter = mHits.keySet().iterator(); iter.hasNext();) {
-                Integer curInt = (Integer)iter.next();
-                toRet.add(curInt);
+        Set<String> getIndexIds() { 
+            Set<String>toRet = new LinkedHashSet<String>(mHits.keySet().size());
+            for (Iterator<String> iter = mHits.keySet().iterator(); iter.hasNext();) {
+                String curId= iter.next();
+                toRet.add(curId);
             }
             return toRet;
         }
 
         protected int size() { return mHits.size(); }
 
-        protected void addHit(int indexId, Document doc, float score) {
-            addHit(new Integer(indexId), doc, score);
-        }
-
-        private void addHit(Integer indexId, Document doc, float score) {
+        void addHit(String indexId, Document doc, float score) {
             ScoredLuceneHit sh = mHits.get(indexId);
             if (sh == null) {
                 sh = new ScoredLuceneHit(score);
@@ -410,10 +406,10 @@ abstract class TextQueryOperation extends QueryOperation {
             sh.mDocs.add(doc);
         }
 
-        ScoredLuceneHit getScoredHit(Integer indexId) { 
+        ScoredLuceneHit getScoredHit(String indexId) { 
             return mHits.get(indexId);
         }
 
-        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new LinkedHashMap<Integer, ScoredLuceneHit>();
+        private HashMap <String/*indexId*/, ScoredLuceneHit> mHits = new LinkedHashMap<String, ScoredLuceneHit>();
     }
 }

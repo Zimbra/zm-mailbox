@@ -693,7 +693,7 @@ public class Contact extends MailItem {
         data.type        = TYPE_CONTACT;
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId = id;
+            data.indexId = mbox.generateIndexId(id);
         data.imapId      = id;
         data.volumeId    = volumeId;
         data.setBlobDigest(pc.getDigest());

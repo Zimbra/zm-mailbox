@@ -196,7 +196,7 @@ class LuceneQueryOperation extends TextQueryOperation
                 try {
                     if (mbid != null) {
                         start = System.currentTimeMillis();
-                        toRet.addHit(Integer.parseInt(mbid), d, score);
+                        toRet.addHit(mbid, d, score);
                         long end = System.currentTimeMillis();
                         timeUsed += (end-start);
                     }

@@ -910,7 +910,7 @@ class DBQueryOperation extends QueryOperation {
                     //    -- remember the indexId in a hash, so we can find the SearchResult later
                     //    -- add that indexId to our new booleanquery 
                     //
-                    HashMap<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap<Integer, List<SearchResult>>();
+                    HashMap<String, List<SearchResult>> mailItemToResultsMap = new HashMap<String, List<SearchResult>>();
                     
                     for (SearchResult res : dbRes) {
                         List<SearchResult> l = mailItemToResultsMap.get(res.indexId);
@@ -921,7 +921,7 @@ class DBQueryOperation extends QueryOperation {
                         l.add(res);
                         
                         // add the new query to the mLuceneOp's query
-                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId)));
+                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID, res.indexId));
                     }
                     
                     boolean hasMore = true;
@@ -933,11 +933,11 @@ class DBQueryOperation extends QueryOperation {
                     while(hasMore) {
                         mLuceneChunk = mLuceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK);
                         
-                        Collection<Integer> indexIds = mLuceneChunk.getIndexIds();
+                        Collection<String> indexIds = mLuceneChunk.getIndexIds();
                         if (indexIds.size() < MAX_HITS_PER_CHUNK) {
                             hasMore = false;
                         } 
-                        for (int indexId : indexIds) {
+                        for (String indexId : indexIds) {
                             List<SearchResult> l = mailItemToResultsMap.get(indexId);
                             
                             if (l == null) {
@@ -995,7 +995,7 @@ class DBQueryOperation extends QueryOperation {
             
             if (mParams.getEstimateSize() && mSizeEstimate==-1) {
                 // FIXME TODO should probably be a %age, this is worst-case
-                sc.indexIds = new HashSet<Integer>();
+                sc.indexIds = new HashSet<String>();
                 int dbResultCount;
 
                 dbResultCount = DbSearch.countResults(conn, mConstraints, mbox);

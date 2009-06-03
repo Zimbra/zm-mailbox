@@ -216,6 +216,10 @@ public final class MailboxIndex
         return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
     }
     
+    public String generateIndexId(int itemId) {
+        return mTextIndex.generateIndexId(itemId);
+    }
+    
     /**
      * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
@@ -274,7 +278,7 @@ public final class MailboxIndex
      * 
      * @throws IOException on index open failure, nothing processed.
      */
-    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
+    public List<String> deleteDocuments(List<String> itemIds) throws IOException {
         return mTextIndex.deleteDocuments(itemIds);
     }
 
@@ -490,12 +494,12 @@ public final class MailboxIndex
     throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {
-            int indexId = mi.getIndexId();
+            String indexId = mi.getIndexId();
             try {
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    mTextIndex.addDocument(docs, indexId, modContent, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
+                    mTextIndex.addDocument(docs, mi.getId(), indexId, modContent, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMailItem caught IOException", e);

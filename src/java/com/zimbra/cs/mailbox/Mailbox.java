@@ -226,7 +226,7 @@ public class Mailbox {
         Connection conn      = null;
         RedoableOp recorder  = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        List<Integer> indexItemsToDelete = new ArrayList<Integer>();
+        List<String> indexItemsToDelete = new ArrayList<String>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -302,7 +302,7 @@ public class Mailbox {
         /**
          * Add an item to the list of things to be deleted at the end of the current transaction
          */
-        void addIndexDelete(Integer id) {
+        void addIndexDelete(String id) {
             indexItemsToDelete.add(id);
         }
 
@@ -966,6 +966,17 @@ public class Mailbox {
         else
             mCurrentChange.mOtherDirtyStuff.add(obj);
     }
+    
+    /**
+     * IndexIDs are generated differently based on the particular type of index you have instantiated,
+     * this call makes that happen.
+     * 
+     * @param itemId
+     * @return
+     */
+    String generateIndexId(int itemId) {
+        return mIndexHelper.generateIndexId(itemId);
+    }
 
     /** Adds the MailItem to the current change's list of things that need
      *  to be added to the Lucene index once the current transaction has
@@ -978,14 +989,14 @@ public class Mailbox {
     void queueForIndexing(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> data) {
         assert(Thread.holdsLock(this));
         
-        if (item.getIndexId() <= 0) {
+        if (item.getIndexId() == null) {
             // this item shouldn't be indexed
             return;
         }
 
         // currently we cannot defer index deletion
         if (deleteFirst)
-            mCurrentChange.addIndexDelete(item.getId());
+            mCurrentChange.addIndexDelete(item.getIndexId());
         
         if (data != null && this.mIndexHelper.getNumNotSubmittedToIndex() > 0) {
             // can't submit immediately -- index is behind..
@@ -998,7 +1009,7 @@ public class Mailbox {
 
         // if no data is provided then we ALWAYS batch
         if (data != null && indexImmediately()) {
-            if (item.getIndexId() > 0)
+            if (item.getIndexId() != null)
                 mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, item.getModifiedContentSequence(), data));
         } else {
             // increment index deferred count
@@ -6444,9 +6455,6 @@ public class Mailbox {
         List<IndexItemEntry> itemsToIndex = mCurrentChange.indexItems;
         boolean allGood = false;
         try {
-//            boolean indexingNeeded = (!itemsToIndex.isEmpty() || mCurrentChange.indexItemsToDelete.size()>0) && !DebugConfig.disableIndexing;
-//            if (indexingNeeded) {
-            
             if ((!itemsToIndex.isEmpty() || mCurrentChange.indexItemsToDelete.size()>0)
                             && !DebugConfig.disableIndexing) {
                 
@@ -6644,7 +6652,7 @@ public class Mailbox {
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty()) {
                 try {
-                    List<Integer> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
+                    List<String> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
                     if (idxDeleted.size() != deletes.indexIds.size()) {
                         if (ZimbraLog.index_add.isInfoEnabled()) 
                             ZimbraLog.index_add.info("could not delete all index entries for items: " + deletes.itemIds.getAll());
