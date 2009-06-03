@@ -33,6 +33,7 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -179,6 +180,10 @@ public class WebDavClient {
 	protected HttpMethod executeMethod(HttpMethod m, Depth d) throws IOException {
 		ZimbraLog.dav.debug("WebDAV request (depth="+d+"): "+m.getPath());
 
+		HttpMethodParams p = m.getParams();
+		if ( p != null )
+			p.setCredentialCharset("UTF-8");
+		
 		m.setDoAuthentication(true);
 		m.setRequestHeader("User-Agent", mUserAgent);
 		String depth = "0";
