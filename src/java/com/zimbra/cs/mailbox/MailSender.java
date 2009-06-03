@@ -283,7 +283,6 @@ public class MailSender {
 
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, ignoreFailedAddresses, rollback);
-        	Collection<InternetAddress> newContacts = null;
 
             if (!sentAddresses.isEmpty() && octxt != null) {
             	try {
@@ -291,9 +290,10 @@ public class MailSender {
             	} catch (Exception e) {
             		ZimbraLog.smtp.error("unable to update contact rankings", e);
             	}
-            	newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
-            	if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false))
+            	if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
+                	Collection<InternetAddress> newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
             		saveNewContacts(newContacts, octxt, authMailbox);
+            	}
             }
             
             // Send intercept if save-to-sent didn't do it already.
