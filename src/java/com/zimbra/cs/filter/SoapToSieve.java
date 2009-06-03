@@ -154,7 +154,7 @@ public class SoapToSieve {
             snippet = String.format("addressbook :in \"%s\" \"%s\"",
                 FilterUtil.escape(header), FilterUtil.escape(folderPath));
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
-            return "attachment";
+            snippet = "attachment";
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
         }

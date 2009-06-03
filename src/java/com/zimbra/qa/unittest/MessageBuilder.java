@@ -14,13 +14,23 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+
+import javax.activation.DataHandler;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeMessage.RecipientType;
+import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.JMSession;
 
 public class MessageBuilder {
 
@@ -30,21 +40,28 @@ public class MessageBuilder {
     private String mBody;
     private Date mDate;
     private String mContentType;
+    private Object mAttachment;
+    private String mAttachmentFilename;
+    private String mAttachmentContentType;
     
     static String DEFAULT_MESSAGE_BODY =
         "Dude,\r\n\r\nAll I need are some tasty waves, a cool buzz, and I'm fine.\r\n\r\nJeff";
 
-    static String[] MESSAGE_TEMPLATE_LINES = {
-        "From: Jeff Spiccoli <${SENDER}>",
-        "To: Test User 1 <${RECIPIENT}>",
-        "Subject: ${SUBJECT}",
-        "Date: ${DATE}",
-        "Content-Type: ${CONTENT_TYPE}",
-        "",
-        "${MESSAGE_BODY}"
-    };
+    /**
+     * Used to generate a message with no <tt>Message-ID</tt> header.  This
+     * allows us to inject the same message multiple times without being deduped. 
+     */
+    private class MimeMessageWithNoId
+    extends MimeMessage {
+        private MimeMessageWithNoId() throws MessagingException {
+            super(JMSession.getSession());
+        }
 
-    static String MESSAGE_TEMPLATE = StringUtil.join("\r\n", MESSAGE_TEMPLATE_LINES);
+        @Override
+        protected void updateMessageID() throws MessagingException {
+            removeHeader("Message-ID");
+        }
+    }
     
     public MessageBuilder withSubject(String subject) {
         mSubject = subject;
@@ -76,8 +93,24 @@ public class MessageBuilder {
         return this;
     }
     
+    public MessageBuilder withAttachment(Object content, String filename, String contentType) {
+        if (content == null ) {
+            throw new IllegalArgumentException("content cannot be null");
+        }
+        if (StringUtil.isNullOrEmpty(contentType)) {
+            throw new IllegalArgumentException("contentType cannot be null or empty");
+        }
+        if (StringUtil.isNullOrEmpty(filename)) {
+            throw new IllegalArgumentException("filename cannot be null or empty");
+        }
+        mAttachment = content;
+        mAttachmentFilename = filename;
+        mAttachmentContentType = contentType;
+        return this;
+    }
+    
     public String create()
-    throws ServiceException {
+    throws MessagingException, ServiceException, IOException {
         if (mRecipient == null) {
             mRecipient = "user1";
         }
@@ -96,30 +129,39 @@ public class MessageBuilder {
         mSender = TestUtil.addDomainIfNecessary(mSender);
         mRecipient = TestUtil.addDomainIfNecessary(mRecipient);
         
-        Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("SUBJECT", mSubject);
-        vars.put("SENDER", mSender);
-        vars.put("RECIPIENT", mRecipient);
-        vars.put("DATE", getDateHeaderValue(mDate));
-        vars.put("CONTENT_TYPE", mContentType);
-        vars.put("MESSAGE_BODY", mBody);
+        MimeMessage msg = new MimeMessageWithNoId();
+        msg.setRecipient(RecipientType.TO, new InternetAddress(mRecipient));
+        msg.setFrom(new InternetAddress(mSender));
+        msg.setSentDate(mDate);
+        msg.setSubject(mSubject);
         
-        String rawMessage = StringUtil.fillTemplate(MessageBuilder.MESSAGE_TEMPLATE, vars);
-        reset();
-        return rawMessage;
+        if (mAttachment == null) {
+            // Need to specify the data handler explicitly because JavaMail
+            // doesn't know what to do with text/enriched.
+            msg.setDataHandler(new DataHandler(new ByteArrayDataSource(mBody.getBytes(), mContentType)));
+        } else {
+            MimeMultipart multi = new MimeMultipart("mixed");
+            MimeBodyPart body = new MimeBodyPart();
+            body.setDataHandler(new DataHandler(new ByteArrayDataSource(mBody.getBytes(), mContentType)));
+            multi.addBodyPart(body);
+
+            MimeBodyPart attachment = new MimeBodyPart();
+            attachment.setContent(mAttachment, mAttachmentContentType);
+            attachment.setDisposition("attachment; filename=" + mAttachmentFilename);
+            multi.addBodyPart(attachment);
+            
+            msg.setContent(multi);
+        }
+        msg.removeHeader("Message-ID");
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        msg.writeTo(out);
+        return new String(out.toByteArray());
     }
     
-    private void reset() {
-        mSubject = null;
-        mSender = null;
-        mRecipient = null;
-        mContentType = null;
-        mDate = null;
-        mBody = null;
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        System.out.println(new MessageBuilder().withSubject("attachment test").withAttachment("attachment", "test.txt", "text/plain").create());
     }
-
-    private static String getDateHeaderValue(Date date) {
-        return String.format("%1$ta, %1$td %1$tb %1$tY %1$tH:%1$tM:%1$tS %1$tz (%1$tZ)", date);
-    }
-
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
@@ -204,12 +205,12 @@ extends Assert {
     }
     
     private static String getTestMessage(String subject)
-    throws ServiceException {
+    throws ServiceException, MessagingException, IOException {
         return new MessageBuilder().withSubject(subject).create();
     }
 
     public static String getTestMessage(String subject, String recipient, String sender, Date date)
-    throws ServiceException {
+    throws ServiceException, MessagingException, IOException {
         return new MessageBuilder().withSubject(subject).withRecipient(recipient)
             .withSender(sender).withDate(date).create();
     }
@@ -247,18 +248,18 @@ extends Assert {
     }
     
     public static String addMessage(ZMailbox mbox, String subject)
-    throws ServiceException {
+    throws ServiceException, IOException, MessagingException {
         return addMessage(mbox, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
     }
     
     public static String addMessage(ZMailbox mbox, String subject, String folderId)
-    throws ServiceException {
+    throws ServiceException, IOException, MessagingException {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, null, null, 0, message, true);
     }
 
     public static String addMessage(ZMailbox mbox, String subject, String folderId, String flags)
-    throws ServiceException {
+    throws ServiceException, IOException, MessagingException {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, flags, null, 0, message, true);
     }

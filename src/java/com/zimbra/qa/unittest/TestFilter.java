@@ -18,7 +18,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -55,6 +57,7 @@ import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
+import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.cs.zclient.ZMessage.Flag;
@@ -581,6 +584,61 @@ extends TestCase {
         MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
         Account user1 = TestUtil.getAccount(USER_NAME);
         assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
+    }
+    
+    public void testAttachment()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        
+        // If attachment exists, set tag1.  If attachment doesn't exist, set tag2.
+        ZTag tag1 = mMbox.createTag(NAME_PREFIX + " testAttachment1", null);
+        ZTag tag2 = mMbox.createTag(NAME_PREFIX + " testAttachment2", null);
+        
+        conditions.add(new ZAttachmentExistsCondition(true));
+        actions.add(new ZTagAction(tag1.getName()));
+        rules.add(new ZFilterRule("testAttachment1", true, false, conditions, actions));
+        
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZAttachmentExistsCondition(false));
+        actions.add(new ZTagAction(tag2.getName()));
+        rules.add(new ZFilterRule("testAttachment2", true, false, conditions, actions));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Add a message with an attachment.
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " testAttachment1";
+        String msgContent =  new MessageBuilder().withSubject(subject).withAttachment("attach this", "attach.txt", "text/plain").create();
+        TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        
+        // Check the tag states.
+        Set<String> tagIds = getTagIds(msg);
+        assertEquals(1, tagIds.size());
+        assertTrue(tagIds.contains(tag1.getId()));
+
+        // Add a message with no attachment.
+        subject = NAME_PREFIX + " testAttachment2";
+        msgContent =  new MessageBuilder().withSubject(subject).create();
+        TestUtil.addMessageLmtp(new String[] { address }, address, msgContent);
+        msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        
+        // Check the tag states.
+        tagIds = getTagIds(msg);
+        assertEquals(1, tagIds.size());
+        assertTrue(tagIds.contains(tag2.getId()));
+    }
+    
+    private Set<String> getTagIds(ZMessage msg) {
+        Set<String> ids = new HashSet<String>();
+        for (String id : msg.getTagIds().split(",")) {
+            ids.add(id);
+        }
+        return ids;
     }
     
     /**
