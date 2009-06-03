@@ -58,7 +58,7 @@ import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightChecker;
-import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
+import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;

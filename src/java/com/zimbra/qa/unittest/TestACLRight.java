@@ -33,11 +33,11 @@ import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.Rights;
-import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -356,7 +356,7 @@ public class TestACLRight extends TestACL {
         expectedAttrs.add(Provisioning.A_zimbraQuotaWarnMessage);
         expectedAttrs.add(Provisioning.A_displayName);
         expectedAttrs.add(Provisioning.A_description);
-        expected = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(expectedAttrs);
+        expected = AllowedAttrs.ALLOW_SOME_ATTRS(expectedAttrs);
         verify(GA, TA, SET, expected);
         
         // 2. domain attrs
@@ -364,7 +364,7 @@ public class TestACLRight extends TestACL {
         expectedAttrs.add(Provisioning.A_description);
         expectedAttrs.add(Provisioning.A_zimbraMailStatus);
         expectedAttrs.add(Provisioning.A_zimbraGalMode);
-        expected = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(expectedAttrs);
+        expected = AllowedAttrs.ALLOW_SOME_ATTRS(expectedAttrs);
         verify(GA, TD, SET, expected);
     }
     

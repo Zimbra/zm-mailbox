@@ -662,7 +662,7 @@ public abstract class AdminAccessControl {
             else {
                 Set<String> validReqAttrs = mValidReqAttrsByAttrClass.get(klass);
                 
-                if (validReqAttrs == null)  // really an internal error, why would unexpected entry type found?
+                if (validReqAttrs == null)  // really an internal error, why would an unexpected entry type found?
                     throw ServiceException.INVALID_REQUEST("unsupported search type: " + klass.name(), null);
                 
                 return validReqAttrs;

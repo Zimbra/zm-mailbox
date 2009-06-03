@@ -213,36 +213,69 @@ public abstract class AccessManager {
         return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    /*
-     * returns if grantee can get attrs on target
+
+    /**
+     * 
+     * returns if the specified account's credentials can get the specified attrs on target
+     *
+     * @param credentials The authenticated account performing the action. 
+     * @param target      The target entry.
+     * @param attrs       Attrs to get.
+     * @param asAdmin     If the authenticated account is acting as an admin account.
+     * @return
+     * @throws ServiceException
      */
-    public abstract boolean canGetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canGetAttrs(Account credentials,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canGetAttrs(AuthToken credentials, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
     /*
-     * returns if grantee can set attrs on target, constraints are NOT checked
-     */
-    public abstract boolean canSetAttrs(Account grantee,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract AllowedAttrs canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException;
+    public abstract AllowedAttrs canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException;
+    */
     
-    /*
-     * returns if grantee can set attrs to desired values on target, constraints DOES get checked.
+    /**
+     * 
+     * returns if the specified account's credentials can set the specified attrs on target
+     * constraints are not checked
+     *
+     * @param credentials The authenticated account performing the action. 
+     * @param target      The target entry.
+     * @param attrs       Attrs to set.
+     * @param asAdmin     If the authenticated account is acting as an admin account.
+     * @return
+     * @throws ServiceException
      */
-    public abstract boolean canSetAttrs(Account grantee,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(Account credentials,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken credentials, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
-    public boolean canSetAttrsOnCreate(Account grantee, TargetType targetType, String entryName, 
+
+    /**
+     * returns if the specified account's credentials can set the specified attrs to the specified values on target.
+     * constraints are checked.
+     *
+     * @param credentials The authenticated account performing the action.
+     * @param target      The target entry.
+     * @param attrs       Attrs/values to set.
+     * @param asAdmin     If the authenticated account is acting as an admin account.
+     * @return
+     * @throws ServiceException
+     */
+    public abstract boolean canSetAttrs(Account credentials,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken credentials, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    
+    public boolean canSetAttrsOnCreate(Account credentials, TargetType targetType, String entryName, 
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     
     // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
-    public boolean canPerform(Account grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+    public boolean canPerform(Account credentials, Entry target, Right rightNeeded, boolean canDelegate, 
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
+    // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
+    public boolean canPerform(AuthToken credentials, Entry target, Right rightNeeded, boolean canDelegate, 
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }

@@ -33,11 +33,11 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.accesscontrol.RightChecker.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 
@@ -87,9 +87,9 @@ public class TestACLAttrRight extends TestACL {
         }
         Set<String> ALL_ACCOUNT_ATTRS_MINUS_SOME = SetUtil.subtract(ALL_ACCOUNT_ATTRS, ATTRS_SOME.keySet());
         
-        EXPECTED_SOME = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
-        EXPECTED_SOME_EMPTY = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(EMPTY_SET);
-        EXPECTED_ALL_MINUS_SOME = RightChecker.AllowedAttrs.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME);
+        EXPECTED_SOME = AllowedAttrs.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
+        EXPECTED_SOME_EMPTY = AllowedAttrs.ALLOW_SOME_ATTRS(EMPTY_SET);
+        EXPECTED_ALL_MINUS_SOME = AllowedAttrs.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME);
     }
     
     
@@ -268,45 +268,45 @@ public class TestACLAttrRight extends TestACL {
     }
     
     public void testOneGrantAll() throws Exception {
-        oneGrantAll(ALLOW, SET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
-        oneGrantAll(DENY,  SET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
-        oneGrantAll(ALLOW, GET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
-        oneGrantAll(DENY,  GET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        oneGrantAll(ALLOW, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
+        oneGrantAll(DENY,  SET, AllowedAttrs.DENY_ALL_ATTRS());
+        oneGrantAll(ALLOW, GET, AllowedAttrs.ALLOW_ALL_ATTRS());
+        oneGrantAll(DENY,  GET, AllowedAttrs.DENY_ALL_ATTRS());
     }
     
     public void testTwoGrantsSameLevel() throws Exception {
-        someAllSameLevel(ALLOW, ALLOW, SET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllSameLevel(ALLOW, ALLOW, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, SET, EXPECTED_ALL_MINUS_SOME);
-        someAllSameLevel(ALLOW, DENY,  SET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  SET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        someAllSameLevel(ALLOW, DENY,  SET, AllowedAttrs.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  SET, AllowedAttrs.DENY_ALL_ATTRS());
 
-        someAllSameLevel(ALLOW, ALLOW, GET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllSameLevel(ALLOW, ALLOW, GET, AllowedAttrs.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, GET, EXPECTED_ALL_MINUS_SOME);
-        someAllSameLevel(ALLOW, DENY,  GET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
-        someAllSameLevel(DENY,  DENY,  GET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        someAllSameLevel(ALLOW, DENY,  GET, AllowedAttrs.DENY_ALL_ATTRS());
+        someAllSameLevel(DENY,  DENY,  GET, AllowedAttrs.DENY_ALL_ATTRS());
     }
 
     public void testTwoGrantsDiffLevel() throws Exception {
         //               some   all    some-is-closer
-        someAllDiffLevel(ALLOW, ALLOW, true, SET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, true, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
         someAllDiffLevel(DENY,  ALLOW, true, SET, EXPECTED_ALL_MINUS_SOME);
         someAllDiffLevel(ALLOW, DENY,  true, SET, EXPECTED_SOME);
-        someAllDiffLevel(DENY,  DENY,  true, SET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  true, SET, AllowedAttrs.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, false, SET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, false, SET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  false, SET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  false, SET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, false, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, false, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  false, SET, AllowedAttrs.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  false, SET, AllowedAttrs.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, true, GET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, true, GET, AllowedAttrs.ALLOW_ALL_ATTRS());
         someAllDiffLevel(DENY,  ALLOW, true, GET, EXPECTED_ALL_MINUS_SOME);
         someAllDiffLevel(ALLOW, DENY,  true, GET, EXPECTED_SOME);
-        someAllDiffLevel(DENY,  DENY,  true, GET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  true, GET, AllowedAttrs.DENY_ALL_ATTRS());
         
-        someAllDiffLevel(ALLOW, ALLOW, false, GET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(DENY,  ALLOW, false, GET, RightChecker.AllowedAttrs.ALLOW_ALL_ATTRS());
-        someAllDiffLevel(ALLOW, DENY,  false, GET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
-        someAllDiffLevel(DENY,  DENY,  false, GET, RightChecker.AllowedAttrs.DENY_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, ALLOW, false, GET, AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(DENY,  ALLOW, false, GET, AllowedAttrs.ALLOW_ALL_ATTRS());
+        someAllDiffLevel(ALLOW, DENY,  false, GET, AllowedAttrs.DENY_ALL_ATTRS());
+        someAllDiffLevel(DENY,  DENY,  false, GET, AllowedAttrs.DENY_ALL_ATTRS());
     }
     
     // TODO: add test for adding/substracting attrs between two allow/deny SOME rights 

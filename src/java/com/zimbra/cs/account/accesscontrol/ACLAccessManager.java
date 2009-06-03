@@ -305,8 +305,8 @@ public class ACLAccessManager extends AccessManager {
             return hardRulesResult.booleanValue();
         
         Grantee grantee = new Grantee(granteeAcct);
-        RightChecker.AllowedAttrs allowedAttrs = RightChecker.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
-        return RightChecker.canSetAttrs(allowedAttrs, grantee, target, attrsNeeded);
+        AllowedAttrs allowedAttrs = RightChecker.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
+        return allowedAttrs.canSetAttrs(grantee, target, attrsNeeded);
     }
     
     @Override
@@ -474,23 +474,23 @@ public class ACLAccessManager extends AccessManager {
     
     private boolean checkAttrRight(Account granteeAcct, Entry target, 
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = 
+        AllowedAttrs allowedAttrs = 
             RightChecker.accessibleAttrs(new Grantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
-        return RightChecker.canAccessAttrs(allowedAttrs, rightNeeded.getAttrs(), target);
+        return allowedAttrs.canAccessAttrs(rightNeeded.getAttrs(), target);
     }
     
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = 
+        AllowedAttrs allowedAttrs = 
             RightChecker.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
-        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded, target);
+        return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
     
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
-        RightChecker.AllowedAttrs allowedAttrs = 
+        AllowedAttrs allowedAttrs = 
             RightChecker.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
-        return RightChecker.canAccessAttrs(allowedAttrs, attrsNeeded, target);
+        return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
 
     // ============
