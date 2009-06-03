@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -165,6 +166,12 @@ public abstract class AdminAccessControl {
      */
     public abstract void checkDomainRight(AdminDocumentHandler handler, Domain domain, Object needed) throws ServiceException;
 
+    
+    /**
+     * returns an AttrRightChecker for the target
+     */
+    public abstract AccessManager.AttrRightChecker getAttrRightChecker(Entry target) throws ServiceException;
+    
     
     /* ================
      * internal methods
@@ -358,6 +365,11 @@ public abstract class AdminAccessControl {
             // by comparing the domain name anyway.
             checkDomainRight(handler, domain.getName(), needed);
         }
+        
+        @Override
+        public AccessManager.AttrRightChecker getAttrRightChecker(Entry target) throws ServiceException {
+            return null;
+        }
 
     }
     
@@ -533,6 +545,12 @@ public abstract class AdminAccessControl {
                 throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
         }
         
+        
+        @Override
+        public AccessManager.AttrRightChecker getAttrRightChecker(Entry target) throws ServiceException {
+            return new AttributeRightChecker(this, target);
+        }
+        
         /*
          * =================================
          * ACLAccessControl internal methods
@@ -584,6 +602,11 @@ public abstract class AdminAccessControl {
         }
     }
     
+    /**
+     * 
+     * class SearchDirectoryRightChecker
+     *
+     */
     public static class SearchDirectoryRightChecker implements NamedEntry.CheckRight {
         private AdminAccessControl mAC;
         private Provisioning mProv;
@@ -701,6 +724,30 @@ public abstract class AdminAccessControl {
                     allowedEntries.add(entry);
             }
             return allowedEntries;
+        }
+    }
+    
+    /*
+     * wraps a AccessManager.AttrRightChecker impl
+     * so in case we need to change the impl, we only need to change this class.
+     * 
+     * This is used by:
+     *     SearchDirectory
+     *     GetAll{ldap-object}
+     *     get{ldap-object}
+     *     
+     * to determine if an attribute should be returned or hidden.    
+     *     
+     */
+    static class AttributeRightChecker implements AccessManager.AttrRightChecker {
+        private AccessManager.AttrRightChecker mRightChecker;
+        
+        private AttributeRightChecker(AdminAccessControl accessControl, Entry target) throws ServiceException {
+            mRightChecker = accessControl.mAccessMgr.canGetAttrs(accessControl.mAuthedAcct, target, true);
+        }
+            
+        public boolean allowAttr(String attrName) {
+            return mRightChecker.allowAttr(attrName);
         }
     }
 }

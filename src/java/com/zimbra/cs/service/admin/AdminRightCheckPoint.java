@@ -20,8 +20,9 @@ public interface AdminRightCheckPoint {
         protected static final String TODO = "TDB";
                 
         protected static final String GET_ENTRY =
-            "If specific attrs are requested, needs rights to get the specific attrs. " + 
-            "If no specific attrs are requested, needs rights (%s) to get all attributes on the entry.";
+            "Attributes that are not allowed to be get by the authenticated admin will be returned " +
+            "as <a n=\"{attr-name}\" pd=\"1\"/>." +
+            "To allow an admin to get all attributes, grant the %s right";
         
         protected static final String MODIFY_ENTRY = 
             "All attrs provided in the attribute list have to settable by. " + 

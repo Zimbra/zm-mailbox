@@ -215,7 +215,6 @@ public abstract class AccessManager {
     
 
     /**
-     * 
      * returns if the specified account's credentials can get the specified attrs on target
      *
      * @param credentials The authenticated account performing the action. 
@@ -228,10 +227,35 @@ public abstract class AccessManager {
     public abstract boolean canGetAttrs(Account credentials,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     public abstract boolean canGetAttrs(AuthToken credentials, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
-    /*
-    public abstract AllowedAttrs canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException;
-    public abstract AllowedAttrs canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException;
-    */
+
+    public interface AttrRightChecker {
+        /**
+         * returns if the specified attr is allowed
+         * 
+         * @param attrName
+         * @return
+         * @throws ServiceException
+         */
+        public boolean allowAttr(String attrName);
+    }
+    
+    /**
+     * returns an AttrRightChecker for the specified target
+     * 
+     * @param credentials
+     * @param target
+     * @param asAdmin
+     * @return
+     * @throws ServiceException
+     */
+    public AttrRightChecker canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
+    
+    public AttrRightChecker canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+        throw ServiceException.FAILURE("not supported", null);
+    }
+
     
     /**
      * 

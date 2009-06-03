@@ -6,11 +6,12 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 
-public class AllowedAttrs {
+public class AllowedAttrs implements AccessManager.AttrRightChecker {
     
     private static final Log sLog = LogFactory.getLog(AllowedAttrs.class);
     
@@ -48,6 +49,17 @@ public class AllowedAttrs {
         return mAllowSome;
     }
     
+    public boolean allowAttr(String attrName) {
+        if (mResult == AllowedAttrs.Result.ALLOW_ALL)
+            return true;
+        else if (mResult == AllowedAttrs.Result.DENY_ALL)
+            return false;
+        else {
+            String actualAttrName = getActualAttrName(attrName);
+            return getAllowed().contains(actualAttrName);
+        }
+    }
+    
     boolean canAccessAttrs(Set<String> attrsNeeded, Entry target) throws ServiceException {
         
         if (sLog.isDebugEnabled()) {
@@ -63,7 +75,6 @@ public class AllowedAttrs {
             sLog.debug("canAccessAttrs attrsNeeded: " + sb.toString());
         }
         
-        // regardless what attrs say, allow all attrs
         if (mResult == AllowedAttrs.Result.ALLOW_ALL)
             return true;
         else if (mResult == AllowedAttrs.Result.DENY_ALL)
@@ -158,8 +169,7 @@ public class AllowedAttrs {
         return true;
     }
     
-    
-    String getActualAttrName(String attr) {
+    private String getActualAttrName(String attr) {
         if (attr.charAt(0) == '+' || attr.charAt(0) == '-')
             return attr.substring(1);
         else

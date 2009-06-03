@@ -29,6 +29,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -272,6 +273,23 @@ public class ACLAccessManager extends AccessManager {
     public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) 
     throws ServiceException {
         return canGetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
+    }
+
+    @Override
+    public AttrRightChecker canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
+        Boolean hardRulesResult = checkHardRules(credentials, asAdmin, target, null);
+        
+        if (hardRulesResult == Boolean.TRUE)
+            return AllowedAttrs.ALLOW_ALL_ATTRS();
+        else if (hardRulesResult == Boolean.FALSE)
+            return AllowedAttrs.DENY_ALL_ATTRS();
+        else
+            return RightChecker.accessibleAttrs(new Grantee(credentials), target, AdminRight.PR_GET_ATTRS, false);
+    }
+    
+    @Override
+    public AttrRightChecker canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+        return canGetAttrs(getAccountFromAuthToken(credentials), target, asAdmin);
     }
     
     

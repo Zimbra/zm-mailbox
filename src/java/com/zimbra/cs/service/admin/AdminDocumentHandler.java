@@ -25,6 +25,7 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -374,8 +375,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * account right
      * -------------
      */
-    protected void checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkAccountRight(this, account, needed);
+    protected AdminAccessControl checkAccountRight(ZimbraSoapContext zsc, Account account, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkAccountRight(this, account, needed);
+        return aac;
     }
 
     /*
