@@ -18,8 +18,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 
 public class HeaderUtils {
+
     static String decodeWord(byte[] word) {
         int length = word.length;
         if (length <= 8 || word[0] != '=' || word[1] != '?' || word[length-2] != '?' || word[length-1] != '=')
@@ -54,10 +56,31 @@ public class HeaderUtils {
         try {
             byte[] dbuffer = new byte[word.length];
             int dsize = decoder.read(dbuffer);
-            return new String(dbuffer, 0, dsize, charset);
+            return new String(dbuffer, 0, dsize, normalizeCharset(charset));
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static final String P_CHARSET_CP1252 = "windows-1252";
+    private static final String P_CHARSET_EUC_CN = "euc_cn";
+    private static final String P_CHARSET_GB2312 = "gb2312";
+    private static final String P_CHARSET_GBK = "gbk";
+    private static final String P_CHARSET_LATIN1 = "iso-8859-1";
+
+    private static final boolean SUPPORTS_CP1252 = Charset.isSupported(P_CHARSET_CP1252);
+    private static final boolean SUPPORTS_GBK = Charset.isSupported(P_CHARSET_GBK);
+
+    static String normalizeCharset(String charset) {
+        if (charset == null || charset.equals(""))
+            return charset;
+        charset = charset.trim();
+        String lccharset = charset.toLowerCase();
+        if (SUPPORTS_CP1252 && lccharset.equals(P_CHARSET_LATIN1))
+            return P_CHARSET_CP1252;
+        if (SUPPORTS_GBK && (lccharset.equals(P_CHARSET_GB2312) || lccharset.equals(P_CHARSET_EUC_CN)))
+            return P_CHARSET_GBK;
+        return charset;
     }
 
     private static class QP2047Decoder extends ContentTransferEncoding.QuotedPrintableDecoderStream {

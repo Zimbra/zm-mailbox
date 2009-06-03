@@ -112,7 +112,7 @@ public class MimeBodyPart extends MimePart {
         String charset = getContentType().getParameter("charset");
         if (charset != null) {
             try {
-                return new InputStreamReader(is, charset);
+                return new InputStreamReader(is, HeaderUtils.normalizeCharset(charset));
             } catch (UnsupportedEncodingException e) { }
         }
 
@@ -120,7 +120,7 @@ public class MimeBodyPart extends MimePart {
         String defaultCharset = getDefaultCharset();
         if (defaultCharset != null && !defaultCharset.trim().equals("")) {
             try {
-                return new InputStreamReader(is, defaultCharset);
+                return new InputStreamReader(is, HeaderUtils.normalizeCharset(defaultCharset));
             } catch (UnsupportedEncodingException e) { }
         }
 

@@ -119,25 +119,31 @@ public class MimeHeader {
     }
 
 
+    private static final String DEFAULT_CHARSET = Charset.defaultCharset().name();
+
+    public static String decode(final String content) {
+        return decode(content.getBytes(), DEFAULT_CHARSET);
+    }
+
     static String decode(final byte[] content, final String charset) {
         return decode(content, 0, content.length, charset);
     }
+
     static String decode(final byte[] content, final int start, final int length, final String charset) {
         // short-circuit if there are only ASCII characters and no "=?"
         final int end = start + length;
         boolean complicated = false;
         for (int pos = start; pos < end && !complicated; pos++) {
             byte c = content[pos];
-            if (c < 0 || c > 0xFF || (c == '=' && pos < end - 1 && content[pos + 1] == '?'))
+            if (c < 0 || c > 0x7E || (c == '=' && pos < end - 1 && content[pos + 1] == '?'))
                 complicated = true;
         }
         if (!complicated) {
             try {
                 if (charset != null && !charset.trim().equals(""))
-                    return new String(content, start, length, charset);
-            } catch (Exception e) {
-                return new String(content, start, length);
-            }
+                    return unfold(new String(content, start, length, charset));
+            } catch (Exception e) { }
+            return unfold(new String(content, start, length));
         }
 
         HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, charset);
@@ -150,13 +156,13 @@ public class MimeHeader {
             byte c = content[pos];
             if (c == '\r' || c == '\n') {
                 // ignore folding
-            } else if (c == '=' && pos != end - 1 && content[pos + 1] == '?') {
+            } else if (c == '=' && pos < end - 2 && content[pos + 1] == '?' && (!encoded || content[pos + 2] != '=')) {
                 // "=?" marks the beginning of an encoded-word
                 if (!builder.isEmpty())
                     value = builder.appendTo(value);
                 builder.reset();  builder.write('=');
                 encoded = true;  questions = 0;
-            } else if (c == '?' && encoded && ++questions > 3 && pos != end - 1 && content[pos + 1] == '=') {
+            } else if (c == '?' && encoded && ++questions > 3 && pos < end - 1 && content[pos + 1] == '=') {
                 // "?=" may mean the end of an encoded-word, so see if it decodes correctly
                 builder.write('?');  builder.write('=');
                 String decoded = HeaderUtils.decodeWord(builder.toByteArray());
@@ -187,17 +193,27 @@ public class MimeHeader {
         return value == null ? "" : value;
     }
 
-
     private static String unfold(final String folded) {
-        int length = folded.length();
+        int length = folded.length(), i;
+        for (i = 0; i < length; i++) {
+            char c = folded.charAt(i);
+            if (c == '\r' || c == '\n')
+                break;
+        }
+        if (i == length)
+            return folded;
+
         StringBuilder unfolded = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
+        if (i > 0)
+            unfolded.append(folded, 0, i);
+        while (++i < length) {
             char c = folded.charAt(i);
             if (c != '\r' && c != '\n')
                 unfolded.append(c);
         }
         return unfolded.toString();
     }
+
 
     static class EncodedWord {
         static String encode(String value, String charset) {
@@ -221,9 +237,10 @@ public class MimeHeader {
             sb.append("=?").append(charset);
 
             int invalidQ = 0;
-            for (int i = 0; i < content.length; i++)
+            for (int i = 0; i < content.length; i++) {
                 if (content[i] < 0 || Q2047Encoder.FORCE_ENCODE[content[i]])
                     invalidQ++;
+            }
 
             InputStream encoder;
             if (invalidQ > content.length / 3) {
@@ -424,6 +441,7 @@ public class MimeHeader {
     private static void dumpContent(String name, String value) {
         dumpContent(name, value, null);
     }
+
     private static void dumpContent(String name, String value, String charset) {
         System.out.println('"' + value + "\"\t=> " + escape(value, charset, false));
         System.out.println('"' + value + "\"\t=> " + escape(value, charset, true));
@@ -451,16 +469,24 @@ public class MimeHeader {
         dumpContent("Subject", "\u00eb\u00ec\u00ed\u00ee", "iso-8859-1");
 
         String encoded = "RE: [Bug 30944]=?UTF-8?Q?=20Meeting=20invitation=20that=E2=80=99s=20created=20within=20exchange=20containing=20=C3=A5=C3=A4=C3=B6=20will=20show=20within=20the=20calendar=20and=20acceptance=20notification=20as=20?=?????";
-        System.out.println(decode(encoded.getBytes(), null));
+        System.out.println(decode(encoded));
         try {
             System.setProperty("mail.mime.decodetext.strict", "false");
             System.out.println(javax.mail.internet.MimeUtility.decodeText(encoded));
         } catch (UnsupportedEncodingException uee) { }
 
-        System.out.println(decode("=?utf-8??Broken?=".getBytes(), null));
-        System.out.println(decode("=?utf-8?Q?Ha?==?utf-8?Q?mbone?= x".getBytes(), null));
-        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8?Q?mbone?=".getBytes(), null));
-        System.out.println(decode("=?utf-8?Q?Ha?=  m =?utf-8?Q?bone?=".getBytes(), null));
-        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8??mbone?=".getBytes(), null));
+        System.out.println(decode("=?utf-8?Q?Hambone_x?="));
+        System.out.println(decode("=?utf-8?Q?Ha?==?utf-8?Q?mbone?= x"));
+        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8?Q?mbone x?="));
+        System.out.println(decode("=?utf-8?Q?Ha?=  m =?utf-8?Q?bone?="));
+        System.out.println(decode("=?utf-8?Q?Ha?= \r\n m =?utf-8?Q?bone?="));
+        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8??mbone?="));
+        System.out.println(decode("=?utf-8??Broken?="));
+        System.out.println(decode("test\r\n one"));
+
+        System.out.println(unfold("dog"));
+        System.out.println(unfold("dog\n"));
+        System.out.println(unfold("\ndog"));
+        System.out.println(unfold("dog\n cat"));
     }
 }

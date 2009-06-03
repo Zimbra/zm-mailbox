@@ -115,7 +115,7 @@ public class InternetAddress {
                     if (dliteral && c == ']')
                         dliteral = false;
                 }
-            } else if (c == '=' && (!angle || clevel > 0) && pos != end - 1 && content[pos + 1] == '?') {
+            } else if (c == '=' && (!angle || clevel > 0) && pos < end - 2 && content[pos + 1] == '?' && (!encoded || content[pos + 2] != '=')) {
                 // "=?" marks the beginning of an encoded-word
                 if (!builder.isEmpty()) {
                     if (clevel > 0)  comment = builder.appendTo(comment);
@@ -123,7 +123,7 @@ public class InternetAddress {
                 }
                 builder.reset();  builder.write('=');
                 encoded = true;  questions = 0;
-            } else if (c == '?' && encoded && ++questions > 3 && pos != end - 1 && content[pos + 1] == '=') {
+            } else if (c == '?' && encoded && ++questions > 3 && pos < end - 1 && content[pos + 1] == '=') {
                 // "?=" may mean the end of an encoded-word, so see if it decodes correctly
                 builder.write('?');  builder.write('=');
                 String decoded = HeaderUtils.decodeWord(builder.toByteArray());
