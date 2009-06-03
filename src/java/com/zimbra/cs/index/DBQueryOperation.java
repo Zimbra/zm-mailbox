@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 import org.apache.lucene.document.Document;
@@ -855,12 +853,10 @@ class DBQueryOperation extends QueryOperation {
     }
 
     private void noLuceneGetNextChunk(Connection conn, Mailbox mbox, SortBy sort) throws ServiceException {
-        synchronized (getSearchSynchronizer(mbox)) {
-            if (mParams.getEstimateSize() && mSizeEstimate == -1)
-                mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
+        if (mParams.getEstimateSize() && mSizeEstimate == -1)
+            mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
 
-            DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
-        }
+        DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, mCurHitsOffset, mHitsPerChunk, mExtra);
 
         if (mDBHits.size() < mHitsPerChunk) {
             mEndOfHits = true;
@@ -885,14 +881,11 @@ class DBQueryOperation extends QueryOperation {
             //
             List<SearchResult> dbRes = new ArrayList<SearchResult>();
 
-            synchronized (getSearchSynchronizer(mbox)) {
-                // FIXME TODO could do a better job here
-                if (mParams.getEstimateSize() && mSizeEstimate == -1) {
-                    mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
-                }
-
-                DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_HITS_PER_CHUNK, mExtra);
+            if (mParams.getEstimateSize() && mSizeEstimate == -1) {
+                mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
             }
+
+            DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_HITS_PER_CHUNK, mExtra);
 
             if (dbRes.size() < MAX_HITS_PER_CHUNK) {
                 mEndOfHits = true;
@@ -1005,9 +998,7 @@ class DBQueryOperation extends QueryOperation {
                 sc.indexIds = new HashSet<Integer>();
                 int dbResultCount;
 
-                synchronized (getSearchSynchronizer(mbox)) {
-                    dbResultCount = DbSearch.countResults(conn, mConstraints, mbox);
-                }
+                dbResultCount = DbSearch.countResults(conn, mConstraints, mbox);
 
                 int numTextHits = mLuceneOp.countHits();
 
@@ -1037,9 +1028,7 @@ class DBQueryOperation extends QueryOperation {
                 long dbStart = System.currentTimeMillis();
 
                 // must not ask for offset,limit here b/c of indexId constraints!,  
-                synchronized (getSearchSynchronizer(mbox)) {
-                    DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
-                }
+                DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
 
                 if (ZimbraLog.index_search.isDebugEnabled()) {
                     long dbTime = System.currentTimeMillis() - dbStart;
@@ -1106,27 +1095,29 @@ class DBQueryOperation extends QueryOperation {
         } else {
             Mailbox mbox = getMailbox();
             SortBy sort = getSortOrder();
-            Connection conn = DbPool.getConnection(mbox);
             mDBHits = new ArrayList<SearchResult>();
-            
-            try {
-                switch (mExecuteMode) {
-                    case NO_RESULTS:
-                        assert(false); // notreached
-                        break;
-                    case NO_LUCENE:
-                        noLuceneGetNextChunk(conn, mbox, sort);
-                        break;
-                    case DB_FIRST:
-                        dbFirstGetNextChunk(conn, mbox, sort);
-                        break;
-                    case LUCENE_FIRST:
-                        luceneFirstGetNextChunk(conn, mbox, sort);
-                        break;
+
+            synchronized (getSearchSynchronizer(mbox)) {
+                Connection conn = null;
+                try {
+                    conn = DbPool.getConnection(mbox);
+                    switch (mExecuteMode) {
+                        case NO_RESULTS:
+                            assert(false); // notreached
+                            break;
+                        case NO_LUCENE:
+                            noLuceneGetNextChunk(conn, mbox, sort);
+                            break;
+                        case DB_FIRST:
+                            dbFirstGetNextChunk(conn, mbox, sort);
+                            break;
+                        case LUCENE_FIRST:
+                            luceneFirstGetNextChunk(conn, mbox, sort);
+                            break;
+                    }
+                } finally {
+                    DbPool.quietClose(conn);
                 }
-                
-            } finally {
-                DbPool.quietClose(conn);
             }
             
             if (mDBHits.size() == 0) {
@@ -1373,11 +1364,8 @@ class DBQueryOperation extends QueryOperation {
     }
     
     protected int getDbHitCount(Connection conn, Mailbox mbox) throws ServiceException {
-        if (mCountDbResults == -1) {
-            synchronized (getSearchSynchronizer(mbox)) {
-                mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox);
-            }
-        }
+        if (mCountDbResults == -1)
+            mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox);
         return mCountDbResults;
     }
         
@@ -1385,11 +1373,14 @@ class DBQueryOperation extends QueryOperation {
         if (mCountDbResults == -1) {
             Mailbox mbox = getMailbox();
 
-            Connection conn = DbPool.getConnection();
-            try {
-                mCountDbResults = getDbHitCount(conn, mbox);
-            } finally {
-                DbPool.quietClose(conn);
+            synchronized (getSearchSynchronizer(mbox)) {
+                Connection conn = null;
+                try {
+                    conn = DbPool.getConnection(mbox);
+                    mCountDbResults = getDbHitCount(conn, mbox);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
             }
         }
         return mCountDbResults;
