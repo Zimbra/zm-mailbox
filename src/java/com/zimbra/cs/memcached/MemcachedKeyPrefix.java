@@ -23,4 +23,5 @@ public class MemcachedKeyPrefix {
     public static final String CALENDAR_LIST        = "zmCalsList" + DELIMITER;
     public static final String CTAGINFO             = "zmCtagInfo" + DELIMITER;
     public static final String CALDAV_CTAG_RESPONSE = "zmCtagResp" + DELIMITER;
+    public static final String CAL_SUMMARY          = "zmCalSumry" + DELIMITER;
 }

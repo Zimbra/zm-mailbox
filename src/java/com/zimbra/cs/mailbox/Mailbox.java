@@ -3406,7 +3406,8 @@ public class Mailbox {
         Folder folder = getFolderById(folderId);
         if (!folder.canAccess(ACL.RIGHT_READ))
             throw MailServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
-        return CalendarCacheManager.getInstance().getSummaryCache().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
+        return CalendarCacheManager.getInstance().getSummaryCache().
+            getCalendarSummary(octxt, getAccountId(), folderId, itemType, start, end, true);
     }
 
     public synchronized List<CalendarData> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
@@ -3427,7 +3428,8 @@ public class Mailbox {
                     continue;
                 if (!folder.canAccess(ACL.RIGHT_READ))
                     continue;
-                CalendarData calData = CalendarCacheManager.getInstance().getSummaryCache().getCalendarSummary(octxt, this, folder.getId(), itemType, start, end, true);
+                CalendarData calData = CalendarCacheManager.getInstance().getSummaryCache().
+                    getCalendarSummary(octxt, getAccountId(), folder.getId(), itemType, start, end, true);
                 if (calData != null)
                     list.add(calData);
             }
