@@ -41,6 +41,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
@@ -91,7 +93,54 @@ public class GetMiniCal extends CalendarRequest {
         Map<Server, Map<String /* account id */, List<Integer> /* folder ids */>> groupedByServer =
             Search.groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
 
-        // for each server
+        // Look up in calendar cache first.
+        CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
+        Calendar cal = new GregorianCalendar(tz);
+        for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
+             serverIter.hasNext(); ) {
+            Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
+            Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
+            // for each account
+            for (Iterator<Map.Entry<String, List<Integer>>> acctIter = accountFolders.entrySet().iterator();
+                 acctIter.hasNext(); ) {
+                Map.Entry<String, List<Integer>> acctEntry = acctIter.next();
+                String acctId = acctEntry.getKey();
+                List<Integer> folderIds = acctEntry.getValue();
+                // for each folder
+                for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
+                    int folderId = iterFolderId.next();
+                    try {
+                        CalendarData calData = calCache.getCalendarSummary(octxt, acctId, folderId, MailItem.TYPE_APPOINTMENT, rangeStart, rangeEnd, true);
+                        if (calData != null) {
+                            // Found data in cache.
+                            iterFolderId.remove();
+                            addBusyDates(cal, calData, rangeStart, rangeEnd, busyDates);
+                        }
+                    } catch (ServiceException e) {
+                        String ecode = e.getCode();
+                        if (ecode.equals(ServiceException.PERM_DENIED)) {
+                            // share permission was revoked
+                            ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+                            ZimbraLog.calendar.warn(
+                                    "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                        } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
+                            // shared calendar folder was deleted by the owner
+                            ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+                            ZimbraLog.calendar.warn(
+                                    "Ignoring deleted calendar folder " + ifmt.formatItemId(folderId));
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+                if (folderIds.isEmpty())
+                    acctIter.remove();
+            }
+            if (accountFolders.isEmpty())
+                serverIter.remove();
+        }
+
+        // For any remaining calendars, we have to get the data the hard way.
         for (Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry : groupedByServer.entrySet()) {
             Server server = serverMapEntry.getKey();
             Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
@@ -152,31 +201,35 @@ public class GetMiniCal extends CalendarRequest {
         return response;
 	}
 
+	private static void addBusyDates(Calendar cal, CalendarData calData, long rangeStart, long rangeEnd, Set<String> busyDates)
+	throws ServiceException {
+        for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+            CalendarItemData item = itemIter.next();
+            for (Iterator<InstanceData> instIter = item.instanceIterator(); instIter.hasNext(); ) {
+                InstanceData inst = instIter.next();
+                Long start = inst.getDtStart();
+                if (start != null) {
+                    String datestampStart = getDatestamp(cal, start);
+                    busyDates.add(datestampStart);
+                    Long duration = inst.getDuration();
+                    if (duration != null) {
+                        long end = start + duration;
+                        String datestampEnd = getDatestamp(cal, end);
+                        busyDates.add(datestampEnd);
+                    }
+                }
+            }
+        }
+	}
+
 	private static void doLocalFolder(OperationContext octxt, ICalTimeZone tz, Mailbox mbox, int folderId,
 									  long rangeStart, long rangeEnd, Set<String> busyDates)
 	throws ServiceException {
 		Calendar cal = new GregorianCalendar(tz);
         CalendarData calData = mbox.getCalendarSummaryForRange(
                 octxt, folderId, MailItem.TYPE_APPOINTMENT, rangeStart, rangeEnd);
-        if (calData != null) {
-        	for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
-        		CalendarItemData item = itemIter.next();
-        		for (Iterator<InstanceData> instIter = item.instanceIterator(); instIter.hasNext(); ) {
-        			InstanceData inst = instIter.next();
-        			Long start = inst.getDtStart();
-        			if (start != null) {
-        				String datestampStart = getDatestamp(cal, start);
-        				busyDates.add(datestampStart);
-        				Long duration = inst.getDuration();
-        				if (duration != null) {
-        					long end = start + duration;
-        					String datestampEnd = getDatestamp(cal, end);
-        					busyDates.add(datestampEnd);
-        				}
-        			}
-        		}
-        	}
-        }
+        if (calData != null)
+            addBusyDates(cal, calData, rangeStart, rangeEnd, busyDates);
 	}
 
     private static void doRemoteFolders(AuthToken authToken, String remoteAccountId, ICalTimeZone tz, List<String> remoteFolders,

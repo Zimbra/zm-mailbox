@@ -18,13 +18,12 @@ package com.zimbra.cs.mailbox.calendar.cache;
 import com.zimbra.common.util.memcached.MemcachedKey;
 import com.zimbra.cs.memcached.MemcachedKeyPrefix;
 
-// cache key for a calendar folder in an account
-public class CalendarKey implements MemcachedKey {
+public class CalSummaryKey implements MemcachedKey {
     private String mAccountId;
     private int mFolderId;
     private String mKeyVal;
 
-    public CalendarKey(String accountId, int folderId) {
+    public CalSummaryKey(String accountId, int folderId) {
         mAccountId = accountId;
         mFolderId = folderId;
         mKeyVal = mAccountId + ":" + folderId;
@@ -34,8 +33,8 @@ public class CalendarKey implements MemcachedKey {
     public int getFolderId() { return mFolderId; }
 
     public boolean equals(Object other) {
-        if (other instanceof CalendarKey) {
-            CalendarKey otherKey = (CalendarKey) other;
+        if (other instanceof CalSummaryKey) {
+            CalSummaryKey otherKey = (CalSummaryKey) other;
             return mKeyVal.equals(otherKey.mKeyVal);
         }
         return false;
@@ -45,6 +44,6 @@ public class CalendarKey implements MemcachedKey {
     public String toString() { return mKeyVal; }
 
     // MemcachedKey interface
-    public String getKeyPrefix() { return MemcachedKeyPrefix.CTAGINFO; }
+    public String getKeyPrefix() { return MemcachedKeyPrefix.CAL_SUMMARY; }
     public String getKeyValue() { return mKeyVal; }
 }
