@@ -1,13 +1,33 @@
 
-URL for requesting content:
+REST URL for requesting content:
 
-/service/content/get?id={message-id}[&fmt={fmt-type}][&part={part-name}][&subId={subId}]
-
-{fmt-type}  if set to outlook return message in outlook format
-
-{part-name} ignored if specifying fmt=outlook
-
-{subId} optional: used to reference a Message stored within an Appointment object
+http://server/service/home/[&tilde;][{username}]/[{folder}]?[{query-params}]
+       fmt={ics, csv, etc}
+       id={item-id}
+       imap_id={item-imap-id}
+       part={mime-part}
+       query={search-query}
+       types={types} // when searching
+       auth={auth-types}
+       start={time}
+       end={time}
+       sync="1"
+       
+          {types}   = comma-separated list.  Legal values are:
+                      appointment|chat|contact|conversation|document|
+                      message|note|tag|task|wiki
+                      (default is &quot;conversation&quot;)
+                       
+          {auth-types} = comma-separated list. Legal values are:
+                         co     cookie
+                         ba     basic auth
+                         nsc    do not set a cookie when using basic auth
+                         (default is &quot;co,ba&quot;, i.e. check both)
+                         
+         {time} = (time in milliseconds) |
+                  YYYY/dd/mm |
+                  mm/dd/YYYY |
+                  [-]nnnn{minute,hour,day,week,month,year}  // relative
 
 ----------------------
 
@@ -520,8 +540,7 @@ effect if called in a <nosession> context.
      </signature>*
    </signatures>
    <dataSources>
-     <pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-        username="mylogin" l="{folder-id}" [pollingInterval="10m"]/>
+     {data-source}
      ...
    </dataSources>*
    <childAccounts>
@@ -565,6 +584,8 @@ effect if called in a <nosession> context.
   attrs under <childAccount>: including the following attrs of the child account:
         - displayName
 
+  {data-source}: see GetDataSourcesRequest for details
+  
 ----------------------------
 
 <GetAccountInfoRequest>
@@ -1065,7 +1086,7 @@ Messages:
   </m>
 
   {content} = complete rfc822 message. only present during certain operations that deal with the raw content
-              of a messasage.  There is at most 1 content element.
+              of a message.  There is at most 1 content element.
   {conv-id}  = converstation id. only present if <m> is not enclosed within a <c> element
   {size}     = size in bytes
   {flags}    = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite,
@@ -2686,7 +2707,10 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [fromDisplay="{from-display}"]
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]
+    [failingSince="{timestamp}">
+    [<lastError>{error message}</lastError>]
+   </pop3>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]
     [emailAddress="{email-address}"] 
@@ -2695,12 +2719,21 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [fromDisplay="{from-display}"]
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
-    [replyToDisplay="{replyto-display}"]/>
+    [replyToDisplay="{replyto-display}"]>
+    [failingSince="{timestamp}">
+    [<lastError>{error message}</lastError>]
+   </imap>]
   ...
 </GetDataSourcesResponse>
 
 Returns all data sources defined for the given mailbox.  For each data source,
 every attribute value is returned except password.
+
+lastError: the error message from the most recent sync for this data source.
+  This element is not returned if the last sync was successful.
+failingSince: if the most recent sync(s) failed, this attribute specifies
+  the timestamp of the first failure.  This attribute is not returned
+  if the last sync was successful.
 
 ---------------------------
 
