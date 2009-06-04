@@ -670,6 +670,7 @@ public class MailConstants {
     public static final String E_DS_GAL = "gal";
     public static final String E_DS_CAL = "cal";
     public static final String E_DS_UNKNOWN = "unknown";
+    public static final String E_DS_LAST_ERROR = "lastError"; 
     public static final String A_DS_IS_ENABLED = "isEnabled";
     public static final String A_DS_HOST = "host";
     public static final String A_DS_PORT = "port";
@@ -690,7 +691,7 @@ public class MailConstants {
     public static final String A_DS_REPLYTO_ADDRESS = "replyToAddress";
     public static final String A_DS_REPLYTO_DISPLAY = "replyToDisplay";
     public static final String A_DS_IMPORT_CLASS = "importClass";
-    
+    public static final String A_DS_FAILING_SINCE = "failingSince";
 
     // TODO: move to a different service.
     // wiki
