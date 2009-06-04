@@ -15,6 +15,8 @@
 
 package com.zimbra.common.util.memcached;
 
+import java.util.Collection;
+
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -102,5 +104,18 @@ public class BigByteArrayMemcachedMap<K extends MemcachedKey, V> {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
         mClient.remove(kval);
+    }
+
+    /**
+     * Remove multiple keys from memcached.  This operation is done serially in a loop.
+     * @param keys
+     * @throws ServiceException
+     */
+    public void removeMulti(Collection<K> keys) throws ServiceException {
+        for (K key : keys) {
+            String prefix = key.getKeyPrefix();
+            String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
+            mClient.remove(kval);
+        }
     }
 }
