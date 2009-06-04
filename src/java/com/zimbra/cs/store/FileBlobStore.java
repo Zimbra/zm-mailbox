@@ -151,37 +151,40 @@ public class FileBlobStore extends StoreManager {
         } catch (NoSuchAlgorithmException e) {
             throw ServiceException.FAILURE("", e);
         }
+        
         DigestInputStream digestStream = new DigestInputStream(in, digest);
-        FileOutputStream fos = new FileOutputStream(file);
-        OutputStream out = fos;
-
+        FileOutputStream fos = null;
+        OutputStream out = null;
         boolean compress =
             !storeAsIs && volume.getCompressBlobs() &&
             (sizeHint > volume.getCompressionThreshold() || sizeHint <= 0);
-        
-        if (compress) {
-            out = new GZIPOutputStream(fos);
-            blob.setCompressed(true);
-        }
-
-        // Write to the file.
-        byte[] buffer = new byte[BUFLEN];
         int numRead = -1;
         int totalRead = 0;
-        while ((numRead = digestStream.read(buffer)) >= 0) {
-            out.write(buffer, 0, numRead);
-            if (callback != null) {
-                callback.wrote(blob, buffer, numRead);
+
+        try {
+            fos = new FileOutputStream(file);
+            out = fos;
+
+            if (compress) {
+                out = new GZIPOutputStream(fos);
+                blob.setCompressed(true);
             }
-            totalRead += numRead;
-        }
-        if (!DebugConfig.disableMessageStoreFsync) {
-            out.flush();
-            fos.getChannel().force(true);
-        }
-        out.close();
-        if (fos != out) {
-            fos.close();
+
+            // Write to the file.
+            byte[] buffer = new byte[BUFLEN];
+            while ((numRead = digestStream.read(buffer)) >= 0) {
+                out.write(buffer, 0, numRead);
+                if (callback != null) {
+                    callback.wrote(blob, buffer, numRead);
+                }
+                totalRead += numRead;
+            }
+            if (!DebugConfig.disableMessageStoreFsync) {
+                out.flush();
+                fos.getChannel().force(true);
+            }
+        } finally {
+            ByteUtil.closeStream(out);
         }
         
         // Set the blob's digest and size.
