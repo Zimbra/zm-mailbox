@@ -15,11 +15,13 @@
 package com.zimbra.cs.datasource;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -91,7 +93,7 @@ public class DataSourceManager {
         return allStatus;
     }
     
-    private static ImportStatus getImportStatus(Account account, DataSource ds) {
+    public static ImportStatus getImportStatus(Account account, DataSource ds) {
         ImportStatus importStatus;
         
         synchronized (sImportStatus) {
@@ -150,11 +152,10 @@ public class DataSourceManager {
             ZimbraLog.datasource.info("Importing data for data source '%s'", ds.getName());
             newDataImport(ds).importData(folderIds, fullSync);
             success = true;
+            resetErrorStatusIfNecessary(ds);
         } catch (ServiceException x) {
-            error = x.getMessage();
-            if (error == null) {
-                error = x.toString();
-            }
+            error = generateErrorMessage(x);
+            setErrorStatus(ds, error);
             throw x;
         } finally {
             ZimbraLog.datasource.info("Import completed for data source '%s'", ds.getName());
@@ -164,6 +165,54 @@ public class DataSourceManager {
                 importStatus.mIsRunning = false;
             }
         }
+        
+        return;
+    }
+    
+    private static void resetErrorStatusIfNecessary(DataSource ds) {
+        if (ds.getAttr(Provisioning.A_zimbraDataSourceFailingSince) != null ||
+            ds.getAttr(Provisioning.A_zimbraDataSourceLastError) != null) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraDataSourceFailingSince, null);
+            attrs.put(Provisioning.A_zimbraDataSourceLastError, null);
+            try {
+                Provisioning.getInstance().modifyAttrs(ds, attrs);
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.warn("Unable to reset error status for data source %s.", ds.getName());
+            }
+        }
+    }
+    
+    private static void setErrorStatus(DataSource ds, String error) {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceLastError, error);
+        if (ds.getAttr(Provisioning.A_zimbraDataSourceFailingSince) == null) {
+            attrs.put(Provisioning.A_zimbraDataSourceFailingSince, DateUtil.toGeneralizedTime(new Date()));
+        }
+        try {
+            Provisioning.getInstance().modifyAttrs(ds, attrs);
+        } catch (ServiceException e) {
+            ZimbraLog.datasource.warn("Unable to set error status for data source %s.", ds.getName());
+        }
+    }
+    
+    private static String generateErrorMessage(Throwable t) {
+        StringBuilder buf = new StringBuilder();
+        boolean isFirst = true;
+        while (t != null) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(", ");
+            }
+            String msg = t.getMessage();
+            if (msg == null) {
+                msg = t.toString(); 
+            }
+            buf.append(msg);
+            t = t.getCause();
+        }
+        return buf.toString();
     }
 
     static void cancelTask(Mailbox mbox, String dsId)

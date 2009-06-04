@@ -81,6 +81,7 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
 import java.io.*;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1992,7 +1993,16 @@ public class ToXML {
         m.addAttribute(MailConstants.A_DS_FROM_ADDRESS, ds.getFromAddress());
         m.addAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, ds.getReplyToAddress());
         m.addAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, ds.getReplyToDisplay());
-
+        
+        Date date = ds.getGeneralizedTimeAttr(Provisioning.A_zimbraDataSourceFailingSince, null);
+        if (date != null) {
+            m.addAttribute(MailConstants.A_DS_FAILING_SINCE, date.getTime() / 1000);
+        }
+        
+        String lastError = ds.getAttr(Provisioning.A_zimbraDataSourceLastError); 
+        if (lastError != null) {
+            m.addElement(MailConstants.E_DS_LAST_ERROR).setText(lastError);
+        }
         return m;
     }
 
