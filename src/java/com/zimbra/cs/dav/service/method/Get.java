@@ -36,6 +36,9 @@ public class Get extends DavMethod {
 	public String getName() {
 		return GET;
 	}
+	protected boolean returnContent() {
+		return true;
+	}
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		DavResource resource = ctxt.getRequestedResource();
 		HttpServletResponse resp = ctxt.getResponse();
@@ -57,7 +60,7 @@ public class Get extends DavMethod {
 		// setting content-length header on its own.
 		
 		//resp.setContentLength(resource.getContentLength());
-		if (!resource.hasContent(ctxt))
+		if (!returnContent() || !resource.hasContent(ctxt))
 			return;
 		if (ZimbraLog.dav.isDebugEnabled()) {
 			ZimbraLog.dav.debug("GET "+ctxt.getUri());
