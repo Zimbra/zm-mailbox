@@ -15,7 +15,7 @@
 package com.zimbra.qa.unittest;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -27,16 +27,15 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import junit.framework.TestCase;
+
 import org.testng.TestNG;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import junit.framework.TestCase;
-
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -159,7 +158,7 @@ extends TestCase {
         assertEquals("New mail notification body not found", 1, messages.size());
     }
     
-    // @Test
+    @Test
     public void testIntercept()
     throws Exception {
         // Turn on legal intercept for recipient account
@@ -221,7 +220,6 @@ extends TestCase {
         verifyInterceptMessage(interceptMsg, "send message", "none", "none");
         
         // Check intercepting headers only.
-        ZimbraLog.test.info("testIntercept - headers only");
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-headers-only";
         TestUtil.sendMessage(interceptorMbox, TAPPED_NAME, subject);
@@ -294,10 +292,9 @@ extends TestCase {
      */
     private void compareContent(ZMailbox tappedMbox, ZMessage tappedMsg, ZMailbox interceptorMbox, ZMessage interceptMsg)
     throws Exception {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
         String relativeUrl = String.format("?id=%s&part=2", interceptMsg.getId());
-        interceptorMbox.getRESTResource(relativeUrl, buf, true, null, null, 10, null);
-        String interceptedMsgContent = new String(buf.toByteArray()).trim();
+        InputStream in = interceptorMbox.getRESTResource(relativeUrl);
+        String interceptedMsgContent = new String(ByteUtil.getContent(in, -1)).trim();
         String tappedMsgContent = TestUtil.getContent(tappedMbox, tappedMsg.getId()).trim();
         
         Account account = TestUtil.getAccount(TAPPED_NAME);
