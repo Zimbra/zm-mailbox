@@ -24,15 +24,20 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
+import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AdminDocumentHandler {
@@ -69,50 +74,65 @@ public class GetDistributionList extends AdminDocumentHandler {
         if (distributionList == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
 
-        checkDistributionListRight(zsc, distributionList, reqAttrs == null ? Admin.R_getDistributionList : reqAttrs);
+        AdminAccessControl aac = checkDistributionListRight(zsc, distributionList, AdminRight.PR_ALWAYS_ALLOW);
+        AttrRightChecker arc = aac.getAttrRightChecker(distributionList);
             
         Element response = zsc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
-        Element dlElement = doDistributionList(response, distributionList, reqAttrs);
+        Element dlElement = encodeDistributionList(response, distributionList, reqAttrs, arc);
         
+        // return member info only if the authed has right to see zimbraMailForwardingAddress
+        boolean allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_zimbraMailForwardingAddress);
+           
+        if (allowMembers)
+            encodeMembers(response, dlElement, distributionList, offset, limit, sortAscending);
+
+        return response;
+    }
+    
+    private void encodeMembers(Element response, Element dlElement, DistributionList distributionList, 
+            int offset, int limit, boolean sortAscending) throws ServiceException {
         String[] members = distributionList.getAllMembers();
         if (offset > 0 && offset >= members.length) {
-        	throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + members.length, null);
+            throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + members.length, null);
         }
         int stop = offset + limit;
         if (limit == 0) {
-        	stop = members.length;
+            stop = members.length;
         }
         if (stop > members.length) {
-        	stop = members.length;
+            stop = members.length;
         }
         
         if (sortAscending) {
-        	Arrays.sort(members);
+            Arrays.sort(members);
         } else {
-        	Arrays.sort(members, Collections.reverseOrder());
+            Arrays.sort(members, Collections.reverseOrder());
         }
         for (int i = offset; i < stop; i++) {
-        	dlElement.addElement(AdminConstants.E_DLM).setText(members[i]);
+            dlElement.addElement(AdminConstants.E_DLM).setText(members[i]);
         }
         
         response.addAttribute(AdminConstants.A_MORE, stop < members.length);
         response.addAttribute(AdminConstants.A_TOTAL, members.length);
-        return response;
     }
 
-    public static Element doDistributionList(Element e, DistributionList d) throws ServiceException {
-        return doDistributionList(e, d, null);
+    public static Element encodeDistributionList(Element e, DistributionList d) throws ServiceException {
+        return encodeDistributionList(e, d, null, null);
     }
     
-    public static Element doDistributionList(Element e, DistributionList d, Set<String> reqAttrs) throws ServiceException {
+    public static Element encodeDistributionList(Element e, DistributionList d, Set<String> reqAttrs, 
+            AttrRightChecker attrRightChecker) throws ServiceException {
         Element distributionList = e.addElement(AdminConstants.E_DL);
         distributionList.addAttribute(AdminConstants.A_NAME, d.getName());
         distributionList.addAttribute(AdminConstants.A_ID,d.getId());
-        doAttrs(distributionList, d.getUnicodeAttrs(), reqAttrs);
+        encodeDistributionListAttrs(distributionList, d.getUnicodeAttrs(), reqAttrs, attrRightChecker);
         return distributionList;
     }
 
-    static void doAttrs(Element e, Map attrs, Set<String> reqAttrs) {
+    static void encodeDistributionListAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
+    throws ServiceException {
+        AttributeManager attrMgr = AttributeManager.getInstance();
+        
         for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry entry = (Entry) mit.next();
             String name = (String) entry.getKey();
@@ -126,13 +146,17 @@ public class GetDistributionList extends AdminDocumentHandler {
             // only return requested attrs
             if (reqAttrs != null && !reqAttrs.contains(name))
                 continue;
-           
+            
+            boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
+            
+            IDNType idnType = AttributeManager.idnType(attrMgr, name);
+            
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
+                    ToXML.encodeAttr(e, name, sv[i], AccountConstants.E_A, AccountConstants.A_N, idnType, allowed);
             } else if (value instanceof String) {
-                e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
+                ToXML.encodeAttr(e, name, (String)value, AccountConstants.E_A, AccountConstants.A_N, idnType, allowed);
             } 
         }
     }

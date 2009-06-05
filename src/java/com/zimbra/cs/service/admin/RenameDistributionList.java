@@ -73,7 +73,7 @@ public class RenameDistributionList extends AdminDocumentHandler {
         if (dl == null)
             throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
 	    Element response = zsc.createElement(AdminConstants.RENAME_DISTRIBUTION_LIST_RESPONSE);
-	    GetDistributionList.doDistributionList(response, dl);
+	    GetDistributionList.encodeDistributionList(response, dl);
 	    return response;
 
     }

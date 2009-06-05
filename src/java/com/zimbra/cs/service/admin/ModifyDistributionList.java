@@ -60,7 +60,7 @@ public class ModifyDistributionList extends AdminDocumentHandler {
                   new String[] {"cmd", "ModifyDistributionList","name", distributionList.getName()}, attrs));	    
 
         Element response = zsc.createElement(AdminConstants.MODIFY_DISTRIBUTION_LIST_RESPONSE);
-        GetDistributionList.doDistributionList(response, distributionList);
+        GetDistributionList.encodeDistributionList(response, distributionList);
         return response;
     }
     

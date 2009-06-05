@@ -47,14 +47,14 @@ public class GetAllDomains extends AdminDocumentHandler {
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
         List domains = prov.getAllDomains();
         
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        
         Element response = zsc.createElement(AdminConstants.GET_ALL_DOMAINS_RESPONSE);
         for (Iterator it = domains.iterator(); it.hasNext(); ) {
             Domain domain = (Domain) it.next();
             
-            if (!hasRightsToList(zsc, domain, Admin.R_listDomain, Admin.R_getDomain))
-                continue;
-            
-            GetDomain.encodeDomain(response, domain, applyConfig);
+            if (aac.hasRightsToList(domain, Admin.R_listDomain, null))
+                GetDomain.encodeDomain(response, domain, applyConfig, null, aac.getAttrRightChecker(domain));
         }
 
 	    return response;

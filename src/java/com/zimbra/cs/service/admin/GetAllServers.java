@@ -48,14 +48,13 @@ public class GetAllServers extends AdminDocumentHandler {
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
         List servers = prov.getAllServers(service);
         
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        
         Element response = zsc.createElement(AdminConstants.GET_ALL_SERVERS_RESPONSE);
         for (Iterator it = servers.iterator(); it.hasNext(); ) {
             Server server = (Server) it.next();
-            
-            if (!hasRightsToList(zsc, server, Admin.R_listServer, Admin.R_getServer))
-                continue;
-            
-            GetServer.encodeServer(response, server, applyConfig, null, null);
+            if (aac.hasRightsToList(server, Admin.R_listServer, null))
+                GetServer.encodeServer(response, server, applyConfig, null, aac.getAttrRightChecker(server));
         }
 
 	    return response;

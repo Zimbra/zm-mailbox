@@ -126,16 +126,19 @@ public class GetAllAccounts extends AdminDocumentHandler {
         ZimbraSoapContext mZsc;
         AdminDocumentHandler mHandler;
         Element mParent;
+        AdminAccessControl mAAC;
         
-        AccountVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler, Element parent) {
+        AccountVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler, Element parent) throws ServiceException {
             mZsc = zsc;
             mHandler = handler;
             mParent = parent;
+            mAAC = AdminAccessControl.getAdminAccessControl(zsc);
         }
         
         public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
-            if (mHandler.hasRightsToList(mZsc, entry, Admin.R_listAccount, Admin.R_getAccount))
-                ToXML.encodeAccountOld(mParent, (Account) entry);
+            if (mAAC.hasRightsToList(entry, Admin.R_listAccount, null)) {
+                ToXML.encodeAccount(mParent, (Account)entry, true, null, mAAC.getAttrRightChecker(entry)); 
+            }
         }
     }
     

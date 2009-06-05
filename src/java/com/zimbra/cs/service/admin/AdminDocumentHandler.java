@@ -412,8 +412,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * DL right
      * --------
      */
-    protected void checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkDistributionListRight(this, dl, needed);
+    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkDistributionListRight(this, dl, needed);
+        return aac;
     }
     
     /*

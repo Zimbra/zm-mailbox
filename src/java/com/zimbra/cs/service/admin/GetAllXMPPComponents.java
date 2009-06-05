@@ -39,14 +39,13 @@ public class GetAllXMPPComponents extends AdminDocumentHandler {
         
         List<XMPPComponent> components = prov.getAllXMPPComponents();
         
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        
         Element response = zsc.createElement(AdminConstants.GET_ALL_XMPPCOMPONENTS_REQUEST);
         
         for (XMPPComponent comp : components) {
-            
-            if (!hasRightsToList(zsc, comp, Admin.R_listXMPPComponent, Admin.R_getXMPPComponent))
-                continue;
-            
-            GetXMPPComponent.encodeXMPPComponent(response, comp);
+            if (aac.hasRightsToList(comp, Admin.R_listXMPPComponent, null))
+                GetXMPPComponent.encodeXMPPComponent(response, comp, null, aac.getAttrRightChecker(comp));
         }
         
         return response;

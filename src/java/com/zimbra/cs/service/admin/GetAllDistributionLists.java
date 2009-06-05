@@ -75,29 +75,28 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
             domain = getAuthTokenAccountDomain(zsc);
         }
 
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        
         if (domain != null) {
             response = zsc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
-            doDomain(zsc, response, domain);
+            doDomain(zsc, response, domain, aac);
         } else {
             response = zsc.createElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_RESPONSE);
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain dm = (Domain) dit.next();
-                doDomain(zsc, response, dm);                
+                doDomain(zsc, response, dm, aac);                
             }
         }
         return response;        
     }
     
-    private void doDomain(ZimbraSoapContext zsc, Element e, Domain d) throws ServiceException {
+    private void doDomain(ZimbraSoapContext zsc, Element e, Domain d, AdminAccessControl aac) throws ServiceException {
         List dls = Provisioning.getInstance().getAllDistributionLists(d);
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
             DistributionList dl = (DistributionList) it.next();
-            
-            if (!hasRightsToList(zsc, dl, Admin.R_listDistributionList, Admin.R_getDistributionList))
-                continue;
-            
-            GetDistributionList.doDistributionList(e, dl);
+            if (aac.hasRightsToList(dl, Admin.R_listDistributionList, null))
+                GetDistributionList.encodeDistributionList(e, dl, null, aac.getAttrRightChecker(dl));
         }        
     }
     

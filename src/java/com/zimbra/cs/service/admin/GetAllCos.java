@@ -49,10 +49,12 @@ public class GetAllCos extends AdminDocumentHandler {
 	    Provisioning prov = Provisioning.getInstance();
         List<Cos> coses = prov.getAllCos();
         
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        
         Element response = zsc.createElement(AdminConstants.GET_ALL_COS_RESPONSE);
         for (Cos cos : coses) {
-            if (hasRightsToListCos(zsc, cos, Admin.R_listCos, Admin.R_getCos))
-                GetCos.encodeCos(response, cos);
+            if (aac.hasRightsToList(cos, Admin.R_listCos, null))
+                GetCos.encodeCos(response, cos, null, aac.getAttrRightChecker(cos));
         }
 	    return response;
 	}

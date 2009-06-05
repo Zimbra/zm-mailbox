@@ -56,7 +56,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
 
         Element response = zsc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
         
-        GetDistributionList.doDistributionList(response, dl);
+        GetDistributionList.encodeDistributionList(response, dl);
 
         return response;
     }

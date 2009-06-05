@@ -44,13 +44,14 @@ public class GetAllCalendarResources extends GetAllAccounts {
     }
     
     protected static class CalendarResourceVisitor extends AccountVisitor {
-        CalendarResourceVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler, Element parent) {
+        CalendarResourceVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler, Element parent) 
+        throws ServiceException {
             super(zsc, handler, parent);
         }
         
         public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
-            if (mHandler.hasRightsToList(mZsc, entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource))
-                ToXML.encodeCalendarResourceOld(mParent, (CalendarResource) entry, true);
+            if (mHandler.hasRightsToList(mZsc, entry, Admin.R_listCalendarResource, null))
+                ToXML.encodeCalendarResource(mParent, (CalendarResource)entry, true, null, mAAC.getAttrRightChecker(entry));
         }
     }
     

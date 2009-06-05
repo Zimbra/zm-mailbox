@@ -39,30 +39,28 @@ public class GetAllZimlets extends AdminDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
 
 		List<Zimlet> zimlets = prov.listAllZimlets();
+		
+		AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
 
 	    Element response = zsc.createElement(AdminConstants.GET_ALL_ZIMLETS_RESPONSE);
     	if(AdminConstants.A_EXTENSION.equalsIgnoreCase(exclude)) {
 		    for (Zimlet zimlet : zimlets) {
-		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
-                    continue;
-		        
-    		    if(!zimlet.isExtension())
-    		        GetZimlet.encodeZimlet(response, zimlet);
+		        if (!zimlet.isExtension()) {
+    		        if (aac.hasRightsToList(zimlet, Admin.R_listZimlet, null))
+    		            GetZimlet.encodeZimlet(response, zimlet, null, aac.getAttrRightChecker(zimlet));
+    		    }
 		    }
     	} else if(AdminConstants.A_MAIL.equalsIgnoreCase(exclude)) {
 		    for (Zimlet zimlet : zimlets) {
-		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
-                    continue;    
-		    
-		    	if(zimlet.isExtension())
-		    		GetZimlet.encodeZimlet(response, zimlet);
+		        if (zimlet.isExtension()) {
+		    	    if (aac.hasRightsToList(zimlet, Admin.R_listZimlet, null))
+		    		    GetZimlet.encodeZimlet(response, zimlet, null, aac.getAttrRightChecker(zimlet));
+		    	}
 		    }
     	} else {
 		    for (Zimlet zimlet : zimlets) {
-		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
-                    continue;
-		    
-	    		GetZimlet.encodeZimlet(response, zimlet);
+		        if (aac.hasRightsToList(zimlet, Admin.R_listZimlet, null))
+	    		    GetZimlet.encodeZimlet(response, zimlet, null, aac.getAttrRightChecker(zimlet));
     	    }
     		
     	}
