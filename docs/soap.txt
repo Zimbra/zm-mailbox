@@ -2020,7 +2020,7 @@ u attribute is present iff count > 0
       [<m id="{message-id}"/>]*
       [<mp mid="{message-id}" part="{part-id}"/>]*
       [<cn id="{contact-id}"/>]*
-      [<doc id="{document-id}"/>]*
+      [<doc [id="{document-id}"] [path="{document-path}"]/>]*
     </attach>
   </m>
 </SendMsgRequest>
