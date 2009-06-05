@@ -2017,10 +2017,10 @@ u attribute is present iff count > 0
       <content>...</content>
     </mp>
     <attach [aid="{attach-upload-id}[,{attach-upload-id}]"]>
-      [<m id="{message-id}"/>]*
-      [<mp mid="{message-id}" part="{part-id}"/>]*
-      [<cn id="{contact-id}"/>]*
-      [<doc [id="{document-id}"] [path="{document-path}"]/>]*
+      [<m id="{message-id}" [optional="0|1"]/>]*
+      [<mp mid="{message-id}" part="{part-id}" [optional="0|1"]/>]*
+      [<cn id="{contact-id}" [optional="0|1"]/>]*
+      [<doc (id="{document-id}" | path="{document-path}") [optional="0|1"]/>]*
     </attach>
   </m>
 </SendMsgRequest>
@@ -2070,10 +2070,10 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
       <content>...</content>
     </mp>
     <attach [aid="{attach-upload-id}"]>
-      [<m id="{message-id}"/>]*
-      [<mp mid="{message-id}" part="{part-id}"/>]*
-      [<cn id="{contact-id}"/>]*
-      [<doc id="{document-id}"/>]*
+      [<m id="{message-id}" [optional="0|1"]/>]*
+      [<mp mid="{message-id}" part="{part-id}" [optional="0|1"]/>]*
+      [<cn id="{contact-id}" [optional="0|1"]/>]*
+      [<doc (id="{document-id}" | path="{document-path}") [optional="0|1"]/>]*
     </attach>
   </m>
 </SaveDraftRequest>

@@ -423,25 +423,32 @@ public class ParseMimeMessage {
         }
 
         for (Element elem : attachElem.listElements()) {
-            String eName = elem.getName();
-            if (eName.equals(MailConstants.E_MIMEPART)) {
-                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
-                String part = elem.getAttribute(MailConstants.A_PART);
-                attachPart(mmp, iid, part, contentID, ctxt);
-            } else if (eName.equals(MailConstants.E_MSG)) {
-                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
-                attachMessage(mmp, iid, contentID, ctxt);
-            } else if (eName.equals(MailConstants.E_CONTACT)) {
-                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
-                attachContact(mmp, iid, contentID, ctxt);
-            } else if (eName.equals(MailConstants.E_DOC)) {
-                String path = elem.getAttribute(MailConstants.A_PATH, null);
-                if (path != null) {
-                    attachDocument(mmp, path, contentID, ctxt);
-                } else {
+            String attachType = elem.getName();
+            boolean optional = elem.getAttributeBool(MailConstants.A_OPTIONAL, false);
+            try {
+                if (attachType.equals(MailConstants.E_MIMEPART)) {
+                    ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
+                    String part = elem.getAttribute(MailConstants.A_PART);
+                    attachPart(mmp, iid, part, contentID, ctxt);
+                } else if (attachType.equals(MailConstants.E_MSG)) {
                     ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
-                    attachDocument(mmp, iid, contentID, ctxt);
+                    attachMessage(mmp, iid, contentID, ctxt);
+                } else if (attachType.equals(MailConstants.E_CONTACT)) {
+                    ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
+                    attachContact(mmp, iid, contentID, ctxt);
+                } else if (attachType.equals(MailConstants.E_DOC)) {
+                    String path = elem.getAttribute(MailConstants.A_PATH, null);
+                    if (path != null) {
+                        attachDocument(mmp, path, contentID, ctxt);
+                    } else {
+                        ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
+                        attachDocument(mmp, iid, contentID, ctxt);
+                    }
                 }
+            } catch (NoSuchItemException nsie) {
+                if (!optional)
+                    throw nsie;
+                ZimbraLog.soap.info("skipping missing optional attachment: " + elem);
             }
         }
     }
