@@ -352,4 +352,34 @@
     <servlet-name>ZimletResources</servlet-name>
     <url-pattern>/zimlet/res/*</url-pattern>
   </servlet-mapping>
+
+  <!-- HTTPSBEGIN
+     <security-constraint>
+        <web-resource-collection>
+        <web-resource-name>force https</web-resource-name>
+            <url-pattern>/service/home/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+        <web-resource-name>force https</web-resource-name>
+            <url-pattern>/home/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+        <web-resource-name>force https</web-resource-name>
+            <url-pattern>/dav/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+  HTTPSEND -->
 </web-app>
