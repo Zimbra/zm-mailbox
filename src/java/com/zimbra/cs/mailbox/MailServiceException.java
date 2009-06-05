@@ -236,6 +236,10 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("no such task: "+uid+" "+msg, NO_SUCH_TASK, SENDERS_FAULT, new Argument(UID, uid, Argument.Type.STR));
     }
 
+    public static MailServiceException NO_SUCH_DOC(String path) {
+        return new NoSuchItemException("no such item: "+ path, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, path, Argument.Type.STR));
+    }
+
     public static MailServiceException NO_SUCH_DOC(int id) {
         return new NoSuchItemException("no such document: " + id, NO_SUCH_DOC, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }

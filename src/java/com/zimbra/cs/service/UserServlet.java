@@ -628,25 +628,25 @@ public class UserServlet extends ZimbraServlet {
     }
     
     private void resolveItems(Context context) throws ServiceException {
-    	context.respListItems = new ArrayList<MailItem>();
-    	
+        context.respListItems = new ArrayList<MailItem>();
+
     	for (int id : context.reqListIds) {
-    		try {
-    			context.respListItems.add(context.targetMailbox.getItemById(context.opContext, id, MailItem.TYPE_UNKNOWN));
-    		} catch (NoSuchItemException x) {
-    			ZimbraLog.misc.info(x.getMessage());
-    		} catch (ServiceException x) {
-                if (x.getCode().equals(ServiceException.PERM_DENIED)) {
-                	ZimbraLog.misc.info(x.getMessage());
-                } else {
-                	throw x;
-                }
-    		}
+    	    try {
+    	        context.respListItems.add(context.targetMailbox.getItemById(context.opContext, id, MailItem.TYPE_UNKNOWN));
+    	    } catch (NoSuchItemException x) {
+    	        ZimbraLog.misc.info(x.getMessage());
+    	    } catch (ServiceException x) {
+    	        if (x.getCode().equals(ServiceException.PERM_DENIED)) {
+    	            ZimbraLog.misc.info(x.getMessage());
+    	        } else {
+    	            throw x;
+    	        }
+    	    }
     	}
 
     	// we consider partial success OK -- let the client figure out which item is missing
     	if (context.respListItems.isEmpty())
-    		throw MailServiceException.NO_SUCH_ITEM(context.reqListIds.toString());
+    	    throw MailServiceException.NO_SUCH_ITEM(context.reqListIds.toString());
     }
 
     /*
@@ -752,11 +752,11 @@ public class UserServlet extends ZimbraServlet {
 
     private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context, MailItem item)
     throws IOException, ServiceException, UserServletException {
-    	if (!(item instanceof Mountpoint))
-    		return false;
-    	if (context.format != null && context.format.equals("html"))
-    		return false;
-    	Mountpoint mpt = (Mountpoint) item;
+        if (!(item instanceof Mountpoint))
+            return false;
+        if (context.format != null && context.format.equals("html"))
+            return false;
+        Mountpoint mpt = (Mountpoint) item;
 
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + URLUtil.urlEscape(mpt.getOwnerId()) + "%3A" + mpt.getRemoteId();
         if (context.format != null)
@@ -1342,65 +1342,69 @@ public class UserServlet extends ZimbraServlet {
     }
 
 
-    //Helper class so that we can close connection upon stream close
+    /** Helper class so that we can close connection upon stream close */
     public static class HttpInputStream extends FilterInputStream {
-		private HttpMethod method;
+        private HttpMethod method;
 
-    	public HttpInputStream(HttpMethod m) throws IOException {
-    		super(m.getResponseBodyAsStream());
-    		this.method = m;
-    	}
-    	public int getContentLength() {
-    		String cl = getHeader("Content-Length");
-    		if (cl != null)
-    			return Integer.parseInt(cl);
-    		return -1;
-    	}
-    	public String getHeader(String headerName) {
-    		Header cl = method.getResponseHeader(headerName);
-    		if (cl != null)
-    			return cl.getValue();
-    		return null;
-    	}
-    	public int getStatusCode() {
-    		return method.getStatusCode();
-    	}
-    	@Override public void close() {
-    		method.releaseConnection();
-    	}
+        public HttpInputStream(HttpMethod m) throws IOException {
+            super(m.getResponseBodyAsStream());
+            this.method = m;
+        }
+        public int getContentLength() {
+            String cl = getHeader("Content-Length");
+            if (cl != null)
+                return Integer.parseInt(cl);
+            return -1;
+        }
+        public String getHeader(String headerName) {
+            Header cl = method.getResponseHeader(headerName);
+            if (cl != null)
+                return cl.getValue();
+            return null;
+        }
+        public int getStatusCode() {
+            return method.getStatusCode();
+        }
+        @Override public void close() {
+            method.releaseConnection();
+        }
     }
     
     public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url,
-    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
-    	Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
-    	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
+                String proxyHost, int proxyPort, String proxyUser, String proxyPass)
+    throws ServiceException, IOException {
+        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
+        return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
     public static Pair<Header[], HttpInputStream> putMailItem(ZAuthToken authToken, String url, MailItem item, 
-    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
-    	if (item instanceof Document) {
-        	Document doc = (Document) item;
+                String proxyHost, int proxyPort, String proxyUser, String proxyPass)
+    throws ServiceException, IOException {
+        if (item instanceof Document) {
+            Document doc = (Document) item;
             StringBuilder u = new StringBuilder(url);
             u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
             if (doc.getType() == MailItem.TYPE_WIKI)
-            	u.append("&fmt=wiki");
+                u.append("&fmt=wiki");
             PutMethod method = new PutMethod(u.toString());
             String contentType = doc.getContentType();
             method.addRequestHeader("Content-Type", contentType);
             method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), doc.getSize(), contentType));
             Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, method);
             return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
-    	}
-    	return putRemoteResource(authToken, url, item.getContentStream(), null, proxyHost, proxyPort, proxyUser, proxyPass);
+        }
+        return putRemoteResource(authToken, url, item.getContentStream(), null, proxyHost, proxyPort, proxyUser, proxyPass);
     }
-    
+
     public static Pair<Header[], HttpInputStream> putRemoteResource(AuthToken authToken, String url, Account target,
-            InputStream req, Header[] headers) throws ServiceException, IOException {
+                InputStream req, Header[] headers)
+    throws ServiceException, IOException {
         return putRemoteResource(authToken.toZAuthToken(), url, req, headers, null, 0, null, null);
     }
     
     public static Pair<Header[], HttpInputStream> putRemoteResource(ZAuthToken authToken, String url,
-    		InputStream req, Header[] headers, String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
+    		InputStream req, Header[] headers, String proxyHost, int proxyPort, String proxyUser, String proxyPass)
+    throws ServiceException, IOException {
         StringBuilder u = new StringBuilder(url);
         u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
         PutMethod method = new PutMethod(u.toString());
@@ -1418,8 +1422,8 @@ public class UserServlet extends ZimbraServlet {
         return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
-    private static Pair<Header[], HttpMethod> doHttpOp(ZAuthToken authToken,
-            String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method) throws ServiceException {
+    private static Pair<Header[], HttpMethod> doHttpOp(ZAuthToken authToken, String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method)
+    throws ServiceException {
         // create an HTTP client with the same cookies
         String url = "";
         String hostname = "";

@@ -409,7 +409,7 @@ public class UrlNamespace {
     }
     
     private static RemoteCalendarCollection getRemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
-        ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
+        ItemId remoteId = mp.getTarget();
         Pair<String,ItemId> key = new Pair<String,ItemId>(mp.getAccount().getId(), remoteId);
         RemoteFolder remoteFolder = null;
         synchronized (sApptSummariesMap) {

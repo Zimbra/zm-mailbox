@@ -95,8 +95,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.TYPE_UNKNOWN);
         if (!(item instanceof Mountpoint))
             return null;
-        Mountpoint mpt = (Mountpoint) item;
-        return new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+        return ((Mountpoint) item).getTarget();
     }
 
     private void insertMountpointReferences(Element response, String[] xpath, ItemId iidMountpoint, ItemId iidLocal, ZimbraSoapContext lc) {

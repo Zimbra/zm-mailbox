@@ -341,7 +341,7 @@ public class ImapPath implements Comparable<ImapPath> {
 
         ItemId iidBase;
         if (mFolder instanceof Mountpoint)
-            iidBase = new ItemId(((Mountpoint) mFolder).getOwnerId(), ((Mountpoint) mFolder).getRemoteId());
+            iidBase = ((Mountpoint) mFolder).getTarget();
         else if (mFolder instanceof ZMountpoint)
             iidBase = new ItemId(((ZMountpoint) mFolder).getCanonicalRemoteId(), (String) null);
         else
@@ -382,8 +382,7 @@ public class ImapPath implements Comparable<ImapPath> {
                 }
 
                 // somewhere along the specified path is a visible mountpoint owned by the user
-                Mountpoint mpt = (Mountpoint) mFolder;
-                iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+                iidRemote = ((Mountpoint) mFolder).getTarget();
             } catch (ServiceException e) {
                 return mReferent;
             }

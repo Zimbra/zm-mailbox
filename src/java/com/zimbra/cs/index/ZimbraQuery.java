@@ -832,7 +832,7 @@ public final class ZimbraQuery {
                 } else {
                     // remote!
                     InQuery toRet = new InQuery(mailbox,
-                        null, new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), subfolderPath, null,   
+                        null, mpt.getTarget(), subfolderPath, null,   
                         includeSubfolders, 
                         analyzer, modifier);
 //                    toRet.mRemoteId = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
@@ -904,7 +904,7 @@ public final class ZimbraQuery {
                             if (f instanceof Mountpoint) {
                                 Mountpoint mpt = (Mountpoint)f;
                                 if (!mpt.isLocal()) {
-                                    dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, calcTruth(truth));
+                                    dbop.addInRemoteFolderClause(mpt.getTarget(), "", mIncludeSubfolders, calcTruth(truth));
                                 } else {
                                     // TODO FIXME handle local mountpoints.  Don't forget to check for infinite recursion!
                                 }
@@ -924,7 +924,7 @@ public final class ZimbraQuery {
                             if (f instanceof Mountpoint) {
                                 Mountpoint mpt = (Mountpoint)f;
                                 if (!mpt.isLocal()) {
-                                    dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, calcTruth(truth));
+                                    dbop.addInRemoteFolderClause(mpt.getTarget(), "", mIncludeSubfolders, calcTruth(truth));
                                 } else {
                                     // TODO FIXME handle local mountpoints.  Don't forget to check for infinite recursion!
                                 }

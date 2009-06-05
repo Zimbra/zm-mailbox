@@ -405,7 +405,7 @@ public class RuleRewriter {
             ZimbraLog.filter.info("Creating folder %s in remote folder %s for rule %s.",
                 remotePath, folder.getPath(), ruleName);
             ZMailbox remoteMbox = FilterUtil.getRemoteZMailbox(mMailbox, (Mountpoint) folder);
-            ItemId id = new ItemId(mountpoint.getOwnerId(), mountpoint.getRemoteId());
+            ItemId id = mountpoint.getTarget();
             ZFolder parent = remoteMbox.getFolderById(id.toString());
             if (parent == null) {
                 String msg = String.format("Could not find folder with id %d in remote mailbox %s.",

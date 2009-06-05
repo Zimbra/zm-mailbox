@@ -930,7 +930,7 @@ public class SoapSession extends Session {
         } else if (node.mFolder instanceof Mountpoint) {
             Mountpoint mpt = (Mountpoint) node.mFolder;
             // don't bother generating the subhierarchy more than once
-            ItemId iidTarget = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+            ItemId iidTarget = mpt.getTarget();
             if (mountpoints.containsKey(iidTarget))
                 return;
             

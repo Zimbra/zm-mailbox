@@ -371,8 +371,7 @@ public class ContactAutoComplete {
     				if (f.getDefaultView() != MailItem.TYPE_CONTACT)
     					continue;
         			if (f instanceof Mountpoint) {
-        				Mountpoint mp = (Mountpoint) f;
-        				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), f.getId());
+        				mountpoints.put(((Mountpoint) f).getTarget(), f.getId());
         				isMountpoint = true;
         			}
     				if (!isMountpoint || mIncludeSharedFolders)
@@ -383,8 +382,7 @@ public class ContactAutoComplete {
         		for (int fid : folders) {
         			Folder f = mbox.getFolderById(octxt, fid);
         			if (f instanceof Mountpoint) {
-        				Mountpoint mp = (Mountpoint) f;
-        				mountpoints.put(new ItemId(mp.getOwnerId(), mp.getRemoteId()), fid);
+        				mountpoints.put(((Mountpoint) f).getTarget(), fid);
         			}
         		}
     		}

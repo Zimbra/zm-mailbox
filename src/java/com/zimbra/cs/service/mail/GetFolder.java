@@ -101,7 +101,7 @@ public class GetFolder extends MailDocumentHandler {
 
     private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
 	throws ServiceException, SoapFaultException {
-        ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+        ItemId iidRemote = mpt.getTarget();
         Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
         proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);

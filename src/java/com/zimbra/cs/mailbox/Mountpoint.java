@@ -21,15 +21,16 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.service.util.ItemId;
 
 public class Mountpoint extends Folder {
 
     private String mOwnerId;
     private int    mRemoteId;
 
-	Mountpoint(Mailbox mbox, UnderlyingData ud) throws ServiceException {
-		super(mbox, ud);
-	}
+    Mountpoint(Mailbox mbox, UnderlyingData ud) throws ServiceException {
+        super(mbox, ud);
+    }
 
     /** Returns the <code>zimbraId</code> of the remote shared item's
      *  mailbox's owner.
@@ -46,7 +47,16 @@ public class Mountpoint extends Folder {
     public int getRemoteId() {
         return mRemoteId;
     }
-    
+
+    /** Returns the {@link ItemId} of the remote shared item referenced by
+     *  this <code>Mountpoint</code>.
+     * 
+     * @see Mountpoint#getOwnerId()
+     * @see Mountpoint#getRemoteId() */
+    public ItemId getTarget() {
+        return new ItemId(mOwnerId, mRemoteId);
+    }
+
     /** @return TRUE if this mountpoint points to its owner's mailbox */
     public boolean isLocal() {
         return (getOwnerId().equals(getMailbox().getAccountId()));

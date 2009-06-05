@@ -301,7 +301,7 @@ public class ItemActionHelper {
         if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0 && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH && mIidFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
             Folder folder = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
             if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId())) {
-                mIidFolder = new ItemId(((Mountpoint) folder).getOwnerId(), ((Mountpoint) folder).getRemoteId());
+                mIidFolder = ((Mountpoint) folder).getTarget();
                 mHopCount++;
             }
         }

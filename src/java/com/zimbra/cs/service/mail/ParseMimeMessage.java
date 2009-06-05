@@ -48,6 +48,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -57,12 +58,16 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
@@ -80,9 +85,6 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author tim
- */
 public class ParseMimeMessage {
 
     static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
@@ -110,8 +112,6 @@ public class ParseMimeMessage {
     }
 
     /**
-     * @author tim
-     * 
      * Callback routine for parsing the <inv> element and building a iCal4j Calendar from it
      * 
      *  We use a callback b/c there are differences in the parsing depending on the operation: 
@@ -139,6 +139,7 @@ public class ParseMimeMessage {
 
     // by default, no invite allowed
     static InviteParser NO_INV_ALLOWED_PARSER = new InviteParser() {
+        @Override
         public InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt, Account account, Element inviteElem)
         throws ServiceException {
             throw ServiceException.INVALID_REQUEST("No <inv> element allowed for this request", null);
@@ -434,8 +435,13 @@ public class ParseMimeMessage {
                 ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
                 attachContact(mmp, iid, contentID, ctxt);
             } else if (eName.equals(MailConstants.E_DOC)) {
-                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
-                attachDocument(mmp, iid, contentID, ctxt);
+                String path = elem.getAttribute(MailConstants.A_PATH, null);
+                if (path != null) {
+                    attachDocument(mmp, path, contentID, ctxt);
+                } else {
+                    ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
+                    attachDocument(mmp, iid, contentID, ctxt);
+                }
             }
         }
     }
@@ -606,7 +612,8 @@ public class ParseMimeMessage {
         mmp.addBodyPart(mbp);
     }
 
-    private static void attachRemoteItem(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt, Map<String, String> params, ContentType ctypeOverride)
+    private static void attachRemoteItem(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt,
+                                         Map<String, String> params, ContentType ctypeOverride)
     throws ServiceException, MessagingException {
         try {
             Upload up = UserServlet.getRemoteResourceAsUpload(ctxt.zsc.getAuthToken(), iid, params);
@@ -614,7 +621,7 @@ public class ParseMimeMessage {
             ctxt.out.addFetch(up);
             return;
         } catch (IOException ioe) {
-            throw ServiceException.FAILURE("can't serialize remote contact", ioe);
+            throw ServiceException.FAILURE("can't serialize remote item", ioe);
         }
     }
 
@@ -664,18 +671,49 @@ public class ParseMimeMessage {
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
     }
-    
+
     @SuppressWarnings("unchecked")
     private static void attachDocument(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt) 
-    	throws MessagingException, ServiceException
-    {
+    throws MessagingException, ServiceException {
         if (!iid.isLocal()) {
             attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, null);
             return;
         }
+
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
         Document doc = mbox.getDocumentById(ctxt.octxt, iid.getId());
-        ctxt.incrementSize("attached document", (long)(doc.getSize() * 1.33));
+        attachDocument(mmp, doc, contentID, ctxt);
+    }
+
+    private static void attachDocument(MimeMultipart mmp, String path, String contentID, ParseMessageContext ctxt) 
+    throws MessagingException, ServiceException {
+        MailItem item = null;
+        try {
+            // first, just blindly try to fetch the item
+            item = ctxt.mbox.getItemByPath(ctxt.octxt, path);
+        } catch (NoSuchItemException nsie) { }
+
+        if (item == null) {
+            // on a miss, check for a mountpoint and, if so, fetch via UserServlet
+            Pair<Folder, String> match = ctxt.mbox.getFolderByPathLongestMatch(ctxt.octxt, Mailbox.ID_FOLDER_USER_ROOT, path);
+            if (!(match.getFirst() instanceof Mountpoint))
+                throw MailServiceException.NO_SUCH_DOC(path);
+
+            Map<String, String> params = new HashMap<String, String>(3);
+            params.put(UserServlet.QP_NAME, match.getSecond());
+            attachRemoteItem(mmp, ((Mountpoint) match.getFirst()).getTarget(), contentID, ctxt, params, null);
+            return;
+        }
+
+        // on a hit, attach it directly
+        if (!(item instanceof Document))
+            throw MailServiceException.NO_SUCH_DOC(path);
+        attachDocument(mmp, (Document) item, contentID, ctxt);
+    }
+
+    private static void attachDocument(MimeMultipart mmp, Document doc, String contentID, ParseMessageContext ctxt) 
+    throws MessagingException, ServiceException {
+        ctxt.incrementSize("attached document", (long) (doc.getSize() * 1.33));
         String ct = doc.getContentType();
 
         MimeBodyPart mbp = new MimeBodyPart();

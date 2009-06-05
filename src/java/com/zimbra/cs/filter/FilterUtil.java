@@ -24,7 +24,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -240,7 +239,7 @@ public class FilterUtil {
 
             // Look up remote folder.
             String remoteAccountId = mountpoint.getOwnerId();
-            ItemId id = new ItemId(remoteAccountId, mountpoint.getRemoteId());
+            ItemId id = mountpoint.getTarget();
             ZFolder remoteFolder = remoteMbox.getFolderById(id.toString());
             if (remoteFolder != null) {
                 if (remainingPath != null) {

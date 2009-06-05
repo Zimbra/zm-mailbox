@@ -169,7 +169,7 @@ class DBQueryOperation extends QueryOperation {
                         if (!mpt.isLocal()) {
                             // add remote folder ref
                             DBQueryOperation db = new DBQueryOperation();
-                            db.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", true, true);
+                            db.addInRemoteFolderClause(mpt.getTarget(), "", true, true);
                             toRet.add(db);
                             added = true;
                         }

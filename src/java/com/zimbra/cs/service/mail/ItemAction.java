@@ -69,7 +69,8 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_RENAME      = "rename";
     public static final String OP_UPDATE      = "update";
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
+    @Override public Element handle(Element request, Map<String, Object> context)
+    throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
@@ -207,8 +208,7 @@ public class ItemAction extends MailDocumentHandler {
                 Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
                 if (!(folder instanceof Mountpoint))
                     break;
-                Mountpoint mpt = (Mountpoint) folder;
-                iidFolder = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+                iidFolder = ((Mountpoint) folder).getTarget();
             } else {
                 if (zat == null) {
                     AuthToken at = zsc.getAuthToken();
