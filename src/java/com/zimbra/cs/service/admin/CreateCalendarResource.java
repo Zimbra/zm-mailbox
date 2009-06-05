@@ -64,7 +64,7 @@ public class CreateCalendarResource extends AdminDocumentHandler {
         Element response = zsc.createElement(
                 AdminConstants.CREATE_CALENDAR_RESOURCE_RESPONSE);
 
-        ToXML.encodeCalendarResourceOld(response, resource, true);
+        ToXML.encodeCalendarResource(response, resource, true);
 
         return response;
     }

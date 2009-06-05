@@ -21,26 +21,19 @@ package com.zimbra.cs.service.admin;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * @author schemers
@@ -117,53 +110,13 @@ public class SearchAccounts extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
-            if (entry instanceof CalendarResource) {
-                ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
-            } else if (entry instanceof Account) {
-                ToXML.encodeAccountOld(response, (Account) entry, applyCos);
-            } else if (entry instanceof DistributionList) {
-                doDistributionList(response, (DistributionList) entry);
-            } else if (entry instanceof Alias) {
-                doAlias(response, (Alias)entry);
-            } else if (entry instanceof Domain) {
-                GetDomain.encodeDomain(response, (Domain) entry, applyCos);
-            }
+            SearchDirectory.encodeEntry(prov, response, entry, applyCos, null, aac);
         }          
 
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
     }
-
-    static void doDistributionList(Element e, DistributionList list) {
-        Element elist = e.addElement(AdminConstants.E_DL);
-        elist.addAttribute(AdminConstants.A_NAME, list.getName());
-        elist.addAttribute(AdminConstants.A_ID, list.getId());
-        Map attrs = list.getUnicodeAttrs();
-        doAttrs(elist, attrs);
-    }
-
-    static void doAlias(Element e, Alias a) {
-        Element ealias = e.addElement(AdminConstants.E_ALIAS);
-        ealias.addAttribute(AdminConstants.A_NAME, a.getName());
-        ealias.addAttribute(AdminConstants.A_ID, a.getId());
-        Map attrs = a.getUnicodeAttrs();
-        doAttrs(ealias, attrs);
-    }
-
-    static void doAttrs(Element e, Map attrs) {
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
-            } else if (value instanceof String)
-                e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
-        }       
-    }   
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {

@@ -84,7 +84,7 @@ public class RenameAccount extends AdminDocumentHandler {
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
 	    Element response = zsc.createElement(AdminConstants.RENAME_ACCOUNT_RESPONSE);
-        ToXML.encodeAccountOld(response, account);
+        ToXML.encodeAccount(response, account);
 	    return response;
 	}
 	

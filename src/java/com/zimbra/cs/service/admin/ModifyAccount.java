@@ -105,7 +105,7 @@ public class ModifyAccount extends AdminDocumentHandler {
             
 
         Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
-        ToXML.encodeAccountOld(response, account);
+        ToXML.encodeAccount(response, account);
 	    return response;
 	}
 	

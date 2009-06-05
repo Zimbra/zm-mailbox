@@ -78,7 +78,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         AttrRightChecker arc = aac.getAttrRightChecker(distributionList);
             
         Element response = zsc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
-        Element dlElement = encodeDistributionList(response, distributionList, reqAttrs, arc);
+        Element dlElement = encodeDistributionList(response, distributionList, true, reqAttrs, arc);
         
         // return member info only if the authed has right to see zimbraMailForwardingAddress
         boolean allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_zimbraMailForwardingAddress);
@@ -117,19 +117,19 @@ public class GetDistributionList extends AdminDocumentHandler {
     }
 
     public static Element encodeDistributionList(Element e, DistributionList d) throws ServiceException {
-        return encodeDistributionList(e, d, null, null);
+        return encodeDistributionList(e, d, true, null, null);
     }
     
-    public static Element encodeDistributionList(Element e, DistributionList d, Set<String> reqAttrs, 
+    public static Element encodeDistributionList(Element e, DistributionList d, boolean hideZMFA, Set<String> reqAttrs, 
             AttrRightChecker attrRightChecker) throws ServiceException {
         Element distributionList = e.addElement(AdminConstants.E_DL);
         distributionList.addAttribute(AdminConstants.A_NAME, d.getName());
         distributionList.addAttribute(AdminConstants.A_ID,d.getId());
-        encodeDistributionListAttrs(distributionList, d.getUnicodeAttrs(), reqAttrs, attrRightChecker);
+        encodeDistributionListAttrs(distributionList, d.getUnicodeAttrs(), hideZMFA, reqAttrs, attrRightChecker);
         return distributionList;
     }
 
-    static void encodeDistributionListAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
+    static void encodeDistributionListAttrs(Element e, Map attrs, boolean hideZMFA, Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
     throws ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
         
@@ -139,7 +139,7 @@ public class GetDistributionList extends AdminDocumentHandler {
             Object value = entry.getValue();
            
             // Hide the postfix lookup table attr - should we though?
-            if (name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
+            if (hideZMFA && name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
                 continue;
             }
             

@@ -69,7 +69,7 @@ public class CreateAccount extends AdminDocumentHandler {
 
 	    Element response = zsc.createElement(AdminConstants.CREATE_ACCOUNT_RESPONSE);
 
-        ToXML.encodeAccountOld(response, account);
+        ToXML.encodeAccount(response, account);
 
 	    return response;
 	}

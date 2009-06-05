@@ -52,6 +52,10 @@ import java.util.Stack;
 
 public class ToXML {
     
+    public static Element encodeAccount(Element parent, Account account) {
+        return encodeAccount(parent, account, true, null, null);
+    }
+    
     public static Element encodeAccount(Element parent, Account account, boolean applyCos) {
         return encodeAccount(parent, account, applyCos, null, null);
     }
@@ -62,30 +66,16 @@ public class ToXML {
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
         Map attrs = account.getUnicodeAttrs(applyCos);
-        addAccountAttrs(acctElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
+        encodeAttrs(acctElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
         return acctElem;
     }
-
-    public static Element encodeAccountOld(Element parent, Account account, boolean applyCos) {
-        return encodeAccountOld(parent, account, applyCos, null);
-    }
-    
-    public static Element encodeAccountOld(Element parent, Account account, boolean applyCos, Set<String> reqAttrs) {
-        Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
-        acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
-        acctElem.addAttribute(AccountConstants.A_ID, account.getId());
-        Map attrs = account.getUnicodeAttrs(applyCos);
-        addAccountAttrsOld(acctElem, attrs, AccountConstants.A_N, reqAttrs);
-        return acctElem;
-    }
-
-    public static Element encodeAccountOld(Element parent, Account account) {
-        return encodeAccountOld(parent, account, true);
-    }
-
 
     public static Element encodeCalendarResource(Element parent, CalendarResource resource) {
         return encodeCalendarResource(parent, resource, false, null, null);
+    }
+    
+    public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos) {
+        return encodeCalendarResource(parent, resource, applyCos, null, null);
     }
     
     public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos, 
@@ -94,71 +84,15 @@ public class ToXML {
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
         resElem.addAttribute(AccountConstants.A_ID, resource.getId());
         Map attrs = resource.getUnicodeAttrs(applyCos);
-        addAccountAttrs(resElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
+        encodeAttrs(resElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
         return resElem;
     }
 
-    public static Element encodeCalendarResourceOld(Element parent, CalendarResource resource, boolean applyCos) {
-        return encodeCalendarResourceOld(parent, resource, applyCos, null);
-    }
-    
-    public static Element encodeCalendarResourceOld(Element parent, CalendarResource resource, boolean applyCos,  Set<String> reqAttrs) {
-        Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
-        resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
-        resElem.addAttribute(AccountConstants.A_ID, resource.getId());
-        Map attrs = resource.getUnicodeAttrs(applyCos);
-        addAccountAttrsOld(resElem, attrs, AccountConstants.A_N, reqAttrs);
-        return resElem;
-    }
-
-    private static void addAccountAttrs(Element e, Map attrs, String key, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        AttributeManager attrMgr = null;
-        try {
-            attrMgr = AttributeManager.getInstance();
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
-        }
-        
-        for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
-            Map.Entry entry = (Entry) iter.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-
-            // Never return data source passwords
-            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
-                continue;
-
-            // Never return password.
-            if (name.equalsIgnoreCase(Provisioning.A_userPassword))
-                value = "VALUE-BLOCKED";
-            
-            // only returns requested attrs
-            if (reqAttrs != null && !reqAttrs.contains(name))
-                continue;
-            
-            boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
-            
-            IDNType idnType = AttributeManager.idnType(attrMgr, name);
-
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++) {
-                    encodeAttr(e, name, sv[i], AccountConstants.E_A, key, idnType, allowed);
-                }
-            } else if (value instanceof String) {
-                fixupZimbraPrefTimeZoneId(name, (String)value);
-                encodeAttr(e, name, (String)value, AccountConstants.E_A, key, idnType, allowed);
-            }
-        }       
-    }
-
-    public static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, 
-            AttrRightChecker attrRightChecker) {
+    public static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         encodeAttrs(e, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
     }
     
-    private static void encodeAttrs(Element e, Map attrs, String key, Set<String> reqAttrs, 
-            AttrRightChecker attrRightChecker) {
+    private static void encodeAttrs(Element e, Map attrs, String key, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         AttributeManager attrMgr = null;
         try {
             attrMgr = AttributeManager.getInstance();
@@ -195,45 +129,6 @@ public class ToXML {
             } else if (value instanceof String) {
                 fixupZimbraPrefTimeZoneId(name, (String)value);
                 encodeAttr(e, name, (String)value, AccountConstants.E_A, key, idnType, allowed);
-            }
-        }       
-    }
-
-    private static void addAccountAttrsOld(Element e, Map attrs, String key, Set<String> reqAttrs) {
-        AttributeManager attrMgr = null;
-        try {
-            attrMgr = AttributeManager.getInstance();
-        } catch (ServiceException se) {
-            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
-        }
-        
-        for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
-            Map.Entry entry = (Entry) iter.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-
-            // Never return data source passwords
-            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
-                continue;
-
-            // Never return password.
-            if (name.equalsIgnoreCase(Provisioning.A_userPassword))
-                value = "VALUE-BLOCKED";
-            
-            // only returns requested attrs
-            if (reqAttrs != null && !reqAttrs.contains(name))
-                continue;
-            
-            IDNType idnType = AttributeManager.idnType(attrMgr, name);
-
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++) {
-                    encodeAttrOld(e, name, sv[i], AccountConstants.E_A, key, idnType);
-                }
-            } else if (value instanceof String) {
-                fixupZimbraPrefTimeZoneId(name, (String)value);
-                encodeAttrOld(e, name, (String)value, AccountConstants.E_A, key, idnType);
             }
         }       
     }
@@ -298,7 +193,7 @@ public class ToXML {
         Element e = parent.addElement(AccountConstants.E_IDENTITY);
         e.addAttribute(AccountConstants.A_NAME, identity.getName());
         e.addAttribute(AccountConstants.A_ID, identity.getId());
-        addAccountAttrs(e, identity.getUnicodeAttrs(), AccountConstants.A_NAME, null, null);
+        encodeAttrs(e, identity.getUnicodeAttrs(), AccountConstants.A_NAME, null, null);
         return e;
     }
     
@@ -319,7 +214,7 @@ public class ToXML {
         e.addAttribute(AccountConstants.A_NAME, ds.getName());
         e.addAttribute(AccountConstants.A_ID, ds.getId());
         e.addAttribute(AccountConstants.A_TYPE, ds.getType().name());
-        addAccountAttrs(e, ds.getUnicodeAttrs(), AccountConstants.A_N, null, null);
+        encodeAttrs(e, ds.getUnicodeAttrs(), AccountConstants.A_N, null, null);
         return e;
     }
     
@@ -333,14 +228,6 @@ public class ToXML {
         } else {
             kvPair = parent.addKeyValuePair(key, IDNUtil.toUnicode(value, idnType), eltname, attrname);
         }
-    }
-    
-    public static Element encodeAttrOld(Element parent, String key, String value, String eltname, String attrname, 
-            IDNType idnType) {
-        Element e = parent.addElement(eltname);
-        e.addAttribute(attrname, key);
-        e.setText(IDNUtil.toUnicode(value, idnType));
-        return e;
     }
     
     /**

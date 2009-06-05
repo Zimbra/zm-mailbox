@@ -96,7 +96,7 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
             DistributionList dl = (DistributionList) it.next();
             if (aac.hasRightsToList(dl, Admin.R_listDistributionList, null))
-                GetDistributionList.encodeDistributionList(e, dl, null, aac.getAttrRightChecker(dl));
+                GetDistributionList.encodeDistributionList(e, dl, true, null, aac.getAttrRightChecker(dl));
         }        
     }
     

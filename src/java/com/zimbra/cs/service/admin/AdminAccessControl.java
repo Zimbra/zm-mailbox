@@ -610,39 +610,16 @@ public abstract class AdminAccessControl {
     public static class SearchDirectoryRightChecker implements NamedEntry.CheckRight {
         private AdminAccessControl mAC;
         private Provisioning mProv;
-        private Set<String> mReqAttrs;
-        private Map<AttributeClass, Set<String>> mValidReqAttrsByAttrClass;
+        private Set<String> mReqAttrs; // not used/checked now after bug 38452
         
         public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
             mReqAttrs = reqAttrs;
-            
-            if (mReqAttrs != null) {
-                AttributeManager attrMgr = AttributeManager.getInstance();
-                mValidReqAttrsByAttrClass = new HashMap<AttributeClass, Set<String>>();
-                
-                setValidReqAttrs(attrMgr, AttributeClass.account);
-                setValidReqAttrs(attrMgr, AttributeClass.calendarResource);
-                setValidReqAttrs(attrMgr, AttributeClass.cos);
-                setValidReqAttrs(attrMgr, AttributeClass.distributionList);
-                setValidReqAttrs(attrMgr, AttributeClass.domain);
-            }
         }
         
-        private void setValidReqAttrs(AttributeManager attrMgr, AttributeClass klass) {
-            Set<String> attrsOnEntry = attrMgr.getAllAttrsInClass(klass);
-            Set<String> validAttrs = SetUtil.intersect(mReqAttrs, attrsOnEntry);
-            mValidReqAttrsByAttrClass.put(klass, validAttrs);
-        }
-        
-        private boolean hasRightsToList(NamedEntry target, 
-                AdminRight listRight, Object getAllAttrsRight, Set<String> getAttrsRight) throws ServiceException {
-            
-            if (getAttrsRight == null)
-                return mAC.hasRightsToList(target, listRight, getAllAttrsRight);
-            else
-                return mAC.hasRightsToList(target, listRight, getAttrsRight);
+        private boolean hasRightsToList(NamedEntry target, AdminRight listRight) throws ServiceException {
+            return mAC.hasRightsToList(target, listRight, null);
         }
         
         private boolean hasRightsToListDanglingAlias(Alias alias) throws ServiceException {
@@ -679,35 +656,22 @@ public abstract class AdminAccessControl {
             return hasRight;
         }
         
-        private Set<String> requiredAttrs(AttributeClass klass) throws ServiceException {
-            if (mReqAttrs == null) 
-                return mReqAttrs;
-            else {
-                Set<String> validReqAttrs = mValidReqAttrsByAttrClass.get(klass);
-                
-                if (validReqAttrs == null)  // really an internal error, why would an unexpected entry type found?
-                    throw ServiceException.INVALID_REQUEST("unsupported search type: " + klass.name(), null);
-                
-                return validReqAttrs;
-            }
-        }
-        
         /**
          * returns if entry is allowed.
          */
         public boolean allow(NamedEntry entry) throws ServiceException {
             if (entry instanceof CalendarResource) {
-                return hasRightsToList(entry, Admin.R_listCalendarResource, Admin.R_getCalendarResource, requiredAttrs(AttributeClass.calendarResource));
+                return hasRightsToList(entry, Admin.R_listCalendarResource);
             } else if (entry instanceof Account) {
-                return hasRightsToList(entry, Admin.R_listAccount, Admin.R_getAccount, requiredAttrs(AttributeClass.account));
+                return hasRightsToList(entry, Admin.R_listAccount);
             } else if (entry instanceof DistributionList) {
-                return hasRightsToList(entry, Admin.R_listDistributionList, Admin.R_getDistributionList, requiredAttrs(AttributeClass.distributionList));
+                return hasRightsToList(entry, Admin.R_listDistributionList);
             } else if (entry instanceof Alias) {
                 return hasRightsToListAlias((Alias)entry);
             } else if (entry instanceof Domain) {
-                return hasRightsToList(entry, Admin.R_listDomain, Admin.R_getDomain, requiredAttrs(AttributeClass.domain));
+                return hasRightsToList(entry, Admin.R_listDomain);
             } else if (entry instanceof Cos) {
-                return hasRightsToList(entry, Admin.R_listCos, Admin.R_getCos, requiredAttrs(AttributeClass.cos));
+                return hasRightsToList(entry, Admin.R_listCos);
             } else
                 return false;
         }

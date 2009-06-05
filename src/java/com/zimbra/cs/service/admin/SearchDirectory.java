@@ -19,6 +19,7 @@
 package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -29,6 +30,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -168,35 +170,39 @@ public class SearchDirectory extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
-            if (entry instanceof CalendarResource) {
-                ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
-            } else if (entry instanceof Account) {
-                ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
-            } else if (entry instanceof DistributionList) {
-                doDistributionList(response, (DistributionList)entry);
-            } else if (entry instanceof Alias) {
-                doAlias(response, prov, (Alias)entry);
-            } else if (entry instanceof Domain) {
-                GetDomain.encodeDomain(response, (Domain)entry, applyConfig, reqAttrs, null);
-            } else if (entry instanceof Cos) {
-                GetCos.encodeCos(response, (Cos)entry);
-            }
+            
+            boolean applyDefault = true;
+            if (entry instanceof Account)
+                applyDefault = applyCos;
+            else if (entry instanceof Domain)
+                applyDefault = applyConfig;
+            
+            encodeEntry(prov, response, entry, applyDefault, reqAttrs, aac);
         }          
 
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
     }
-
-    static void doDistributionList(Element e, DistributionList list) {
-        Element elist = e.addElement(AdminConstants.E_DL);
-        elist.addAttribute(AdminConstants.A_NAME, list.getUnicodeName());
-        elist.addAttribute(AdminConstants.A_ID, list.getId());
-        Map attrs = list.getUnicodeAttrs();
-        doAttrs(elist, attrs);
+    
+    static void encodeEntry(Provisioning prov, Element parent, NamedEntry entry, boolean applyDefault, Set<String> reqAttrs, AdminAccessControl aac) 
+    throws ServiceException {
+        if (entry instanceof CalendarResource) {
+            ToXML.encodeCalendarResource(parent, (CalendarResource)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((CalendarResource)entry));
+        } else if (entry instanceof Account) {
+            ToXML.encodeAccount(parent, (Account)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((Account)entry));
+        } else if (entry instanceof DistributionList) {
+            GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
+        } else if (entry instanceof Alias) {
+            encodeAlias(parent, prov, (Alias)entry, reqAttrs);
+        } else if (entry instanceof Domain) {
+            GetDomain.encodeDomain(parent, (Domain)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((Domain)entry));
+        } else if (entry instanceof Cos) {
+            GetCos.encodeCos(parent, (Cos)entry, reqAttrs, aac.getAttrRightChecker((Cos)entry));
+        }
     }
 
-    static void doAlias(Element e, Provisioning prov, Alias a) throws ServiceException {
+    private static void encodeAlias(Element e, Provisioning prov, Alias a, Set<String> reqAttrs) throws ServiceException {
         Element ealias = e.addElement(AdminConstants.E_ALIAS);
         ealias.addAttribute(AdminConstants.A_NAME, a.getUnicodeName());
         ealias.addAttribute(AdminConstants.A_ID, a.getId());
@@ -207,22 +213,10 @@ public class SearchDirectory extends AdminDocumentHandler {
             ealias.addAttribute(AdminConstants.A_TYPE, tt.getCode());
         
         Map attrs = a.getUnicodeAttrs();
-        doAttrs(ealias, attrs);
+        
+        ToXML.encodeAttrs(ealias, attrs, reqAttrs, null); // don't have/need an AttrRightChecker for alias
     }
-
-    static void doAttrs(Element e, Map attrs) {
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
-            } else if (value instanceof String)
-                e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
-        }       
-    }   
+  
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {

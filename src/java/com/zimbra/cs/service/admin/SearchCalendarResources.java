@@ -107,7 +107,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < resources.size(); i++) {
             NamedEntry entry = (NamedEntry) resources.get(i);
-            ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos);
+            ToXML.encodeCalendarResource(response, (CalendarResource)entry, applyCos, null, aac.getAttrRightChecker((CalendarResource)entry));
         }
 
         response.addAttribute(AdminConstants.A_MORE, i < resources.size());

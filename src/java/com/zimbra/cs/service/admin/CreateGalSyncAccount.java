@@ -159,7 +159,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
                 new String[] {"cmd", "CreateGalSyncAccount", "name", acctName} ));         
 
 	    Element response = zsc.createElement(AdminConstants.CREATE_GAL_SYNC_ACCOUNT_RESPONSE);
-        ToXML.encodeAccountOld(response, account, false, emptySet);
+        ToXML.encodeAccount(response, account, false, emptySet, null);
 	    return response;
 	}
 	

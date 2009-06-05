@@ -70,7 +70,7 @@ public class ModifyCalendarResource extends AdminDocumentHandler {
                               resource.getName()}, attrs));
 
         Element response = zsc.createElement(AdminConstants.MODIFY_CALENDAR_RESOURCE_RESPONSE);
-        ToXML.encodeCalendarResourceOld(response, resource, true);
+        ToXML.encodeCalendarResource(response, resource, true);
         return response;
     }
     
