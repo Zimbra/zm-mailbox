@@ -253,7 +253,7 @@ SECTION ldap
 	LDAP ldap_overlay_syncprov_sessionlog LOCAL ldap_overlay_syncprov_sessionlog
 	LDAP ldap_overlay_accesslog_logpurge LOCAL ldap_overlay_accesslog_logpurge
 
-section cbpolicyd
+SECTION cbpolicyd
 	REWRITE conf/cbpolicyd.conf.in conf/cbpolicyd.conf
 	LOCAL cbpolicyd_pid_file
 	LOCAL cbpolicyd_log_file
@@ -274,7 +274,7 @@ section cbpolicyd
 	if SERVICE cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions check_policy_service inet:127.0.0.1:10031
 	fi
-	if !SERVICE cbpolicyd
+	if SERVICE !cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions
 	fi
 	
