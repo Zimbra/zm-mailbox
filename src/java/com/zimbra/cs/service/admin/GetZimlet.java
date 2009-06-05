@@ -24,8 +24,10 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,42 +48,28 @@ public class GetZimlet extends AdminDocumentHandler {
         if (zimlet == null)
             throw AccountServiceException.NO_SUCH_ZIMLET(n);
         
-        checkRight(zsc, context, zimlet, reqAttrs == null ? Admin.R_getZimlet : reqAttrs);
+        AdminAccessControl aac = checkRight(zsc, context, zimlet, AdminRight.PR_ALWAYS_ALLOW);
 
         Element response = zsc.createElement(AdminConstants.GET_ZIMLET_RESPONSE);
-        doZimlet(response, zimlet, reqAttrs);
+        encodeZimlet(response, zimlet, reqAttrs, aac.getAttrRightChecker(zimlet));
         
         return response;
     }
 
-    static Element doZimlet(Element response, Zimlet zimlet) throws ServiceException {
-        return doZimlet(response, zimlet, null);
+    static void encodeZimlet(Element response, Zimlet zimlet) throws ServiceException {
+        encodeZimlet(response, zimlet, null, null);
     }
 
-    static Element doZimlet(Element response, Zimlet zimlet, Set<String> reqAttrs) throws ServiceException {
-        Map<String,Object> attrs = zimlet.getUnicodeAttrs();
-        
+    static void encodeZimlet(Element response, Zimlet zimlet, Set<String> reqAttrs, 
+            AttrRightChecker attrRightChecker) throws ServiceException {
         Element zim = response.addElement(AdminConstants.E_ZIMLET);
         zim.addAttribute(AdminConstants.A_NAME, zimlet.getName());
         zim.addAttribute(AdminConstants.A_ID, zimlet.getId());
         String keyword = zimlet.getAttr(Provisioning.A_zimbraZimletKeyword);
         if (keyword != null)
             zim.addAttribute(AdminConstants.A_HAS_KEYWORD, keyword);
-        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
-            String name = entry.getKey();
-            Object value = entry.getValue();
-            
-            if (reqAttrs != null && !reqAttrs.contains(name))
-                continue;
-            
-            if (value instanceof String[]) {
-                String zv[] = (String[]) value;
-                for (int i = 0; i < zv.length; i++)
-                	zim.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(zv[i]);
-            } else if (value instanceof String)
-                zim.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
-        }
-        return zim;
+        Map<String,Object> attrs = zimlet.getUnicodeAttrs();
+        ToXML.encodeAttrs(zim, attrs, reqAttrs, attrRightChecker);
     }
     
     @Override

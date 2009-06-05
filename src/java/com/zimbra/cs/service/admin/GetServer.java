@@ -23,15 +23,19 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -59,40 +63,29 @@ public class GetServer extends AdminDocumentHandler {
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(name);
         
-        checkRight(zsc, context, server, reqAttrs == null ? Admin.R_getServer : reqAttrs);
+        AdminAccessControl aac = checkRight(zsc, context, server, AdminRight.PR_ALWAYS_ALLOW);
         
         // reload the server 
         prov.reload(server);
         
         Element response = zsc.createElement(AdminConstants.GET_SERVER_RESPONSE);
-        doServer(response, server, applyConfig, reqAttrs);
+        encodeServer(response, server, applyConfig, reqAttrs, aac.getAttrRightChecker(server));
 
         return response;
     }
 
-    public static void doServer(Element e, Server s) throws ServiceException {
-        doServer(e, s, true, null);
+    public static void encodeServer(Element e, Server s) throws ServiceException {
+        encodeServer(e, s, true, null, null);
     }
 
-    public static void doServer(Element e, Server s, boolean applyConfig, Set<String> reqAttrs) throws ServiceException {
+    public static void encodeServer(Element e, Server s, boolean applyConfig, Set<String> reqAttrs,
+            AttrRightChecker attrRightChecker) throws ServiceException {
         Element server = e.addElement(AdminConstants.E_SERVER);
         server.addAttribute(AdminConstants.A_NAME, s.getName());
         server.addAttribute(AdminConstants.A_ID, s.getId());
         Map<String, Object> attrs = s.getUnicodeAttrs(applyConfig);
-        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
-            String name = entry.getKey();
-            Object value = entry.getValue();
-            
-            if (reqAttrs != null && !reqAttrs.contains(name))
-                continue;
-            
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    server.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
-            } else if (value instanceof String)
-                server.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
-        }
+        
+        ToXML.encodeAttrs(server, attrs, reqAttrs, attrRightChecker);
     }
     
     @Override

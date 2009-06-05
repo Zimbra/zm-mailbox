@@ -79,7 +79,7 @@ public class CreateXMPPComponent extends AdminDocumentHandler {
         XMPPComponent comp = prov.createXMPPComponent(name, domain, server, attrs);
         
         Element response = zsc.createElement(AdminConstants.CREATE_XMPPCOMPONENT_RESPONSE);
-        ToXML.encodeXMPPComponent(response, comp);
+        GetXMPPComponent.encodeXMPPComponent(response, comp);
         return response;
     }
     

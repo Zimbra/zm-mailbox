@@ -65,10 +65,10 @@ public class GetCalendarResource extends AdminDocumentHandler {
         if (resource == null)
             throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(value);
 
-        checkCalendarResourceRight(zsc, resource, reqAttrs == null ? Admin.R_getCalendarResource : reqAttrs);
-
+        AdminAccessControl aac = checkCalendarResourceRight(zsc, resource, AdminRight.PR_ALWAYS_ALLOW);
+        
         Element response = zsc.createElement(AdminConstants.GET_CALENDAR_RESOURCE_RESPONSE);
-        ToXML.encodeCalendarResourceOld(response, resource, applyCos, reqAttrs);
+        ToXML.encodeCalendarResource(response, resource, applyCos, reqAttrs, aac.getAttrRightChecker(resource));
 
         return response;
     }

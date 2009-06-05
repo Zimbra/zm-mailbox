@@ -118,7 +118,7 @@ public class SearchDirectory extends AdminDocumentHandler {
                         if (d == null)
                             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
                     }
-                    GetDomain.doDomain(response, d, applyConfig, reqAttrs);
+                    GetDomain.encodeDomain(response, d, applyConfig, reqAttrs, null);
                     response.addAttribute(AdminConstants.A_MORE, false);
                     response.addAttribute(AdminConstants.A_SEARCH_TOTAL, 1);
                     return response;
@@ -177,9 +177,9 @@ public class SearchDirectory extends AdminDocumentHandler {
             } else if (entry instanceof Alias) {
                 doAlias(response, prov, (Alias)entry);
             } else if (entry instanceof Domain) {
-                GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
+                GetDomain.encodeDomain(response, (Domain)entry, applyConfig, reqAttrs, null);
             } else if (entry instanceof Cos) {
-                GetCos.doCos(response, (Cos)entry);
+                GetCos.encodeCos(response, (Cos)entry);
             }
         }          
 

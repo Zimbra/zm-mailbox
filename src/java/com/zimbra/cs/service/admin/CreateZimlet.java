@@ -47,7 +47,7 @@ public class CreateZimlet extends AdminDocumentHandler {
                 new String[] {"cmd", "CreateZimlet","name", name}, attrs));
 
 	    Element response = lc.createElement(AdminConstants.CREATE_ZIMLET_RESPONSE);
-	    GetZimlet.doZimlet(response, zimlet);
+	    GetZimlet.encodeZimlet(response, zimlet);
 
 	    return response;
 	}

@@ -18,6 +18,7 @@ package com.zimbra.cs.service.account;
 import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.ZimbraLog;
@@ -26,6 +27,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.IDNUtil;
@@ -37,6 +40,7 @@ import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.service.admin.GetConfig;
 import com.zimbra.common.util.L10nUtil;
 
 import java.util.Iterator;
@@ -107,7 +111,6 @@ public class ToXML {
         return resElem;
     }
 
-
     private static void addAccountAttrs(Element e, Map attrs, String key, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         AttributeManager attrMgr = null;
         try {
@@ -143,12 +146,55 @@ public class ToXML {
                     encodeAttr(e, name, sv[i], AccountConstants.E_A, key, idnType, allowed);
                 }
             } else if (value instanceof String) {
-                
-                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
-                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
-                    value = TZIDMapper.canonicalize((String) value);
-                
-                encodeAttr(e, name, (String) value, AccountConstants.E_A, key, idnType, allowed);
+                fixupZimbraPrefTimeZoneId(name, (String)value);
+                encodeAttr(e, name, (String)value, AccountConstants.E_A, key, idnType, allowed);
+            }
+        }       
+    }
+
+    public static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, 
+            AttrRightChecker attrRightChecker) {
+        encodeAttrs(e, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
+    }
+    
+    private static void encodeAttrs(Element e, Map attrs, String key, Set<String> reqAttrs, 
+            AttrRightChecker attrRightChecker) {
+        AttributeManager attrMgr = null;
+        try {
+            attrMgr = AttributeManager.getInstance();
+        } catch (ServiceException se) {
+            ZimbraLog.account.warn("failed to get AttributeManager instance", se);
+        }
+        
+        for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
+            Map.Entry entry = (Entry) iter.next();
+            String name = (String) entry.getKey();
+            Object value = entry.getValue();
+
+            // Never return data source passwords
+            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
+                continue;
+
+            // Never return password.
+            if (name.equalsIgnoreCase(Provisioning.A_userPassword))
+                value = "VALUE-BLOCKED";
+            
+            // only returns requested attrs
+            if (reqAttrs != null && !reqAttrs.contains(name))
+                continue;
+            
+            boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
+            
+            IDNType idnType = AttributeManager.idnType(attrMgr, name);
+
+            if (value instanceof String[]) {
+                String sv[] = (String[]) value;
+                for (int i = 0; i < sv.length; i++) {
+                    encodeAttr(e, name, sv[i], AccountConstants.E_A, key, idnType, allowed);
+                }
+            } else if (value instanceof String) {
+                fixupZimbraPrefTimeZoneId(name, (String)value);
+                encodeAttr(e, name, (String)value, AccountConstants.E_A, key, idnType, allowed);
             }
         }       
     }
@@ -183,25 +229,11 @@ public class ToXML {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
-                    /*
-                    Element pref = e.addElement(AccountConstants.E_A);
-                    pref.addAttribute(key, name);
-                    pref.setText(sv[i]);
-                    */
                     encodeAttrOld(e, name, sv[i], AccountConstants.E_A, key, idnType);
                 }
             } else if (value instanceof String) {
-                /*
-                Element pref = e.addElement(AccountConstants.E_A);
-                pref.addAttribute(key, name);
-                pref.setText((String) value);
-                */
-
-                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
-                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
-                    value = TZIDMapper.canonicalize((String) value);
-
-                encodeAttrOld(e, name, (String) value, AccountConstants.E_A, key, idnType);
+                fixupZimbraPrefTimeZoneId(name, (String)value);
+                encodeAttrOld(e, name, (String)value, AccountConstants.E_A, key, idnType);
             }
         }       
     }
@@ -291,28 +323,6 @@ public class ToXML {
         return e;
     }
     
-    public static Element encodeXMPPComponent(Element parent, XMPPComponent comp) {
-        return encodeXMPPComponent(parent, comp, null, null);
-    }
-    
-    public static Element encodeXMPPComponent(Element parent, XMPPComponent comp,
-            Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
-        Element e = parent.addElement(AccountConstants.E_XMPP_COMPONENT);
-        e.addAttribute(AccountConstants.A_NAME, comp.getName());
-        e.addAttribute(AccountConstants.A_ID, comp.getId());
-        
-        try { // for testing only
-            e.addAttribute("x-domainName", comp.getDomain().getName());
-        } catch (ServiceException ex) {}
-
-        try { // for testing only
-            e.addAttribute("x-serverName", comp.getServer().getName());
-        } catch (ServiceException ex) {}
-        
-        addAccountAttrs(e, comp.getUnicodeAttrs(), AccountConstants.A_N, reqAttrs, attrRightChecker);
-        return e;
-    }
-    
     public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, 
             IDNType idnType, boolean allowed) {
         
@@ -331,6 +341,16 @@ public class ToXML {
         e.addAttribute(attrname, key);
         e.setText(IDNUtil.toUnicode(value, idnType));
         return e;
+    }
+    
+    /**
+     * Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
+     */
+    public static String fixupZimbraPrefTimeZoneId(String attrName, String attrValue) {
+        if (Provisioning.A_zimbraPrefTimeZoneId.equals(attrName))
+            return TZIDMapper.canonicalize(attrValue);
+        else
+            return attrValue;
     }
     
 }

@@ -18,17 +18,20 @@
  */
 package com.zimbra.cs.service.admin;
 
-import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Iterator;
@@ -66,46 +69,30 @@ public class GetDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(value);
 
-        checkDomainRight(zsc, domain, reqAttrs == null ? Admin.R_getDomain : reqAttrs);
+        AdminAccessControl aac = checkDomainRight(zsc, domain, AdminRight.PR_ALWAYS_ALLOW);
 
         Element response = zsc.createElement(AdminConstants.GET_DOMAIN_RESPONSE);
-        doDomain(response, domain, applyConfig, reqAttrs);
+        encodeDomain(response, domain, applyConfig, reqAttrs, aac.getAttrRightChecker(domain));
 
         return response;
     }
 
-    public static void doDomain(Element e, Domain d) throws ServiceException {
-        doDomain(e, d, true);
+    public static void encodeDomain(Element e, Domain d) throws ServiceException {
+        encodeDomain(e, d, true);
     }
     
-    public static void doDomain(Element e, Domain d, boolean applyConfig) throws ServiceException {
-        doDomain(e, d, applyConfig, null);
+    public static void encodeDomain(Element e, Domain d, boolean applyConfig) throws ServiceException {
+        encodeDomain(e, d, applyConfig, null, null);
     }
     
-    public static void doDomain(Element e, Domain d, boolean applyConfig, Set<String> reqAttrs) throws ServiceException {
+    public static void encodeDomain(Element e, Domain d, boolean applyConfig, Set<String> reqAttrs, 
+            AttrRightChecker attrRightChecker) throws ServiceException {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
         domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
         domain.addAttribute(AdminConstants.A_ID,d.getId());
         Map attrs = d.getUnicodeAttrs(applyConfig);
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-            
-            if (reqAttrs != null && !reqAttrs.contains(name))
-                continue;
-            
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(sv[i]);
-            } else if (value instanceof String) {
-                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
-                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
-                    value = TZIDMapper.canonicalize((String) value);
-                domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
-            }
-        }
+        
+        ToXML.encodeAttrs(domain, attrs, reqAttrs, attrRightChecker);
     }
     
     @Override

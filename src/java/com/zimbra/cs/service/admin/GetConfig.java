@@ -24,12 +24,17 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -47,34 +52,20 @@ public class GetConfig extends AdminDocumentHandler {
 
         Config config = prov.getConfig();
         
-        checkRight(zsc, context, config, needGetAttrsRight(name));
+        AdminAccessControl aac = checkRight(zsc, context, config, AdminRight.PR_ALWAYS_ALLOW);
         
         String value[] = config.getMultiAttr(name);
 
         Element response = zsc.createElement(AdminConstants.GET_CONFIG_RESPONSE);
-        doConfig(response, name, value);
+        
+        AttributeManager attrMgr = AttributeManager.getInstance();
+        IDNType idnType = AttributeManager.idnType(attrMgr, name);
+        boolean allowed = aac.getAttrRightChecker(config).allowAttr(name);
+        for (int i = 0; i < value.length; i++)
+            ToXML.encodeAttr(response, name, value[i], AccountConstants.E_A, AccountConstants.A_N, idnType, allowed);
 
         return response;
 	}
-	
-	public static void doConfig(Element e, String name, String[] value) {
-        if (value == null)
-            return;
-        for (int i = 0; i < value.length; i++)
-            e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value[i]);
-    }
-
-	public static void doConfig(Element e, String name, String value) {
-        if (value == null)
-            return;
-        e.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText(value);
-    }
-	
-    private Set<String> needGetAttrsRight(String attrName) {
-        Set<String> attrsNeeded = new HashSet<String>();
-        attrsNeeded.add(attrName);
-        return attrsNeeded;
-    }
 	
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {

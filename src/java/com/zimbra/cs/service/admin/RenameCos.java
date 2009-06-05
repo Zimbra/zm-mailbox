@@ -66,7 +66,7 @@ public class RenameCos extends AdminDocumentHandler {
         if (cos == null)
             throw ServiceException.FAILURE("unabled to get renamed cos: "+id, null);
 	    Element response = lc.createElement(AdminConstants.RENAME_COS_RESPONSE);
-	    GetCos.doCos(response, cos);
+	    GetCos.encodeCos(response, cos);
 	    return response;
 	}
 

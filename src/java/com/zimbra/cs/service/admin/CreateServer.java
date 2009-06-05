@@ -54,7 +54,7 @@ public class CreateServer extends AdminDocumentHandler {
                 new String[] {"cmd", "CreateServer","name", name}, attrs));
 
 	    Element response = zsc.createElement(AdminConstants.CREATE_SERVER_RESPONSE);
-	    GetServer.doServer(response, server);
+	    GetServer.encodeServer(response, server);
 
 	    return response;
 	}

@@ -46,7 +46,7 @@ public class GetAllXMPPComponents extends AdminDocumentHandler {
             if (!hasRightsToList(zsc, comp, Admin.R_listXMPPComponent, Admin.R_getXMPPComponent))
                 continue;
             
-            ToXML.encodeXMPPComponent(response, comp);
+            GetXMPPComponent.encodeXMPPComponent(response, comp);
         }
         
         return response;

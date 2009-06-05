@@ -54,7 +54,7 @@ public class GetAllDomains extends AdminDocumentHandler {
             if (!hasRightsToList(zsc, domain, Admin.R_listDomain, Admin.R_getDomain))
                 continue;
             
-            GetDomain.doDomain(response, domain, applyConfig);
+            GetDomain.encodeDomain(response, domain, applyConfig);
         }
 
 	    return response;

@@ -74,7 +74,7 @@ public class ModifyDomain extends AdminDocumentHandler {
                 new String[] {"cmd", "ModifyDomain","name", domain.getName()}, attrs));	    
 
         Element response = zsc.createElement(AdminConstants.MODIFY_DOMAIN_RESPONSE);
-	    GetDomain.doDomain(response, domain);
+	    GetDomain.encodeDomain(response, domain);
 	    return response;
 	}
 	

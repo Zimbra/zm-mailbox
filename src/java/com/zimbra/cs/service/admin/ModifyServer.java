@@ -70,7 +70,7 @@ public class ModifyServer extends AdminDocumentHandler {
         }
 
         Element response = zsc.createElement(AdminConstants.MODIFY_SERVER_RESPONSE);
-        GetServer.doServer(response, server);
+        GetServer.encodeServer(response, server);
         return response;
     }
     

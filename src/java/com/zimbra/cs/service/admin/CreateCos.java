@@ -54,7 +54,7 @@ public class CreateCos extends AdminDocumentHandler {
                 new String[] {"cmd", "CreateCos","name", name}, attrs));         
 
 	    Element response = zsc.createElement(AdminConstants.CREATE_COS_RESPONSE);
-	    GetCos.doCos(response, cos);
+	    GetCos.encodeCos(response, cos);
 
 	    return response;
 	}

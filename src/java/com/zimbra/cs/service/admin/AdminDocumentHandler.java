@@ -318,8 +318,13 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * here.  But we sanity check again, just in case.
      * -------------------
      */
-    protected void checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
+    protected AdminAccessControl checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
+        
+        //
+        // yuck, the isDomainBasedAccessManager logic has to be here
+        // only because of the call to domainAuthSufficient
+        //
         if (AdminAccessControl.isDomainBasedAccessManager(am)) {
             // sanity check, this path is really for global admins 
             if (isDomainAdminOnly(zsc)) {
@@ -327,8 +332,14 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                     throw ServiceException.PERM_DENIED("cannot access entry");
             }
             
+            // yuck, return a AdminAccessControl object instead of null so
+            // we don't NPE at callsites or having to check null if they need 
+            // to use the aac.
+            // this whole method should probably be deleted anyway.
+            return AdminAccessControl.getAdminAccessControl(zsc);
+            
         } else {
-            checkRight(zsc, target, needed);
+            return checkRight(zsc, target, needed);
         }
     }
     
@@ -357,8 +368,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * @param needed
      * @throws ServiceException
      */
-    public static void checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkRight(target, needed);
+    public static AdminAccessControl checkRight(ZimbraSoapContext zsc, Entry target, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkRight(target, needed);
+        return aac;
     }
    
     /* 
@@ -366,8 +379,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * cos right
      * -------------
      */
-    protected void checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkCosRight(cos, needed);
+    protected AdminAccessControl checkCosRight(ZimbraSoapContext zsc, Cos cos, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkCosRight(cos, needed);
+        return aac;
     }
     
     /* 
@@ -386,8 +401,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * calendar resource right
      * -----------------------
      */
-    protected void checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkCalendarResourceRight(this, cr, needed);
+    protected AdminAccessControl checkCalendarResourceRight(ZimbraSoapContext zsc, CalendarResource cr, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkCalendarResourceRight(this, cr, needed);
+        return aac;
     }
         
     /* 
@@ -410,22 +427,28 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * 
      * Note: this method *do* check domain status.  
      */
-    protected void checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkDomainRightByEmail(this, email, needed);
+    protected AdminAccessControl checkDomainRightByEmail(ZimbraSoapContext zsc, String email, AdminRight needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkDomainRightByEmail(this, email, needed);
+        return aac;
     }
     
     /**
      * Note: this method do *not* check domain status.  
      */
-    protected void checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkDomainRight(this, domainName, needed);
+    protected AdminAccessControl checkDomainRight(ZimbraSoapContext zsc, String domainName, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkDomainRight(this, domainName, needed);
+        return aac;
     }
     
     /**
      * Note: this method do *not* check domain status.  
      */
-    protected void checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
-        AdminAccessControl.getAdminAccessControl(zsc).checkDomainRight(this, domain, needed);
+    protected AdminAccessControl checkDomainRight(ZimbraSoapContext zsc, Domain domain, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkDomainRight(this, domain, needed);
+        return aac;
     }
 
     // ==========================================

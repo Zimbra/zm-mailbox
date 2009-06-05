@@ -126,7 +126,7 @@ public class SearchAccounts extends AdminDocumentHandler {
             } else if (entry instanceof Alias) {
                 doAlias(response, (Alias)entry);
             } else if (entry instanceof Domain) {
-                GetDomain.doDomain(response, (Domain) entry, applyCos);
+                GetDomain.encodeDomain(response, (Domain) entry, applyCos);
             }
         }          
 

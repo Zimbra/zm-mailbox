@@ -24,19 +24,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -64,19 +67,19 @@ public class GetCos extends AdminDocumentHandler {
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);
         
-        checkCosRight(zsc, cos, reqAttrs == null ? Admin.R_getCos : reqAttrs);
-
+        AdminAccessControl aac = checkCosRight(zsc, cos, AdminRight.PR_ALWAYS_ALLOW);
+        
         Element response = zsc.createElement(AdminConstants.GET_COS_RESPONSE);
-        doCos(response, cos, reqAttrs);
+        encodeCos(response, cos, reqAttrs, aac.getAttrRightChecker(cos));
 
         return response;
     }
 
-    public static void doCos(Element e, Cos c) throws ServiceException {
-        doCos(e, c, null);
+    public static void encodeCos(Element e, Cos c) throws ServiceException {
+        encodeCos(e, c, null, null);
     }
 
-    public static void doCos(Element e, Cos c, Set<String> reqAttrs) throws ServiceException {
+    public static void encodeCos(Element e, Cos c, Set<String> reqAttrs, AttrRightChecker attrRightChecker) throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
         Element cos = e.addElement(AdminConstants.E_COS);
         cos.addAttribute(AdminConstants.A_NAME, c.getName());
@@ -91,27 +94,32 @@ public class GetCos extends AdminDocumentHandler {
             if (reqAttrs != null && !reqAttrs.contains(name))
                 continue;
             
+            boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
+            
             boolean isCosAttr = !attrMgr.isAccountInherited(name);
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++) {
-                    Element attr = cos.addElement(AdminConstants.E_A);
-                    attr.addAttribute(AdminConstants.A_N, name);
-                    if (isCosAttr) 
-                        attr.addAttribute(AdminConstants.A_C, "1");
-                    attr.setText(sv[i]);
+                    encodeCosAttr(cos, name, sv[i], isCosAttr, allowed);
                 }
             } else if (value instanceof String) {
-                Element attr = cos.addElement(AdminConstants.E_A);
-                attr.addAttribute(AdminConstants.A_N, name);
-                if (isCosAttr) 
-                    attr.addAttribute(AdminConstants.A_C, "1");
-                // Fixup for time zone id.  Always use canonical (Olson ZoneInfo) ID.
-                if (name.equals(Provisioning.A_zimbraPrefTimeZoneId))
-                    value = TZIDMapper.canonicalize((String) value);
-                attr.setText((String) value);
+                ToXML.fixupZimbraPrefTimeZoneId(name, (String)value);
+                encodeCosAttr(cos, name, (String)value, isCosAttr, allowed);
             }
         }
+    }
+    
+    private static void encodeCosAttr(Element parent, String key, String value, boolean isCosAttr, boolean allowed) {
+        KeyValuePair kvPair;
+        if (!allowed) {
+            kvPair = parent.addKeyValuePair(key, "", AdminConstants.E_A, AdminConstants.A_N);
+            kvPair.addAttribute(AccountConstants.A_PERM_DENIED, true);
+        } else {
+            kvPair = parent.addKeyValuePair(key, value, AdminConstants.E_A, AdminConstants.A_N);
+        }
+        
+        if (isCosAttr) 
+            kvPair.addAttribute(AdminConstants.A_C, true);
     }
 
     @Override

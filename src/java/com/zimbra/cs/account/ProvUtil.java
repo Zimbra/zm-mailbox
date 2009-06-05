@@ -2074,10 +2074,14 @@ public class ProvUtil implements HttpDebugListener {
                 if (value instanceof String[]) {
                     String sv[] = (String[]) value;
                     for (String aSv : sv) {
-                        printOutput(name + ": " + aSv);
+                        // don't print permission denied attr
+                        if (aSv.length() > 0)
+                            printOutput(name + ": " + aSv);
                     }
-                } else if (value instanceof String){
-                    printOutput(name+": "+value);
+                } else if (value instanceof String) {
+                    // don't print permission denied attr
+                    if (((String)value).length() > 0)
+                        printOutput(name+": "+value);
                 }
             }
         }

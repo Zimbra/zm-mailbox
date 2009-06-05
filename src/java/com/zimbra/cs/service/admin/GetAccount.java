@@ -66,7 +66,6 @@ public class GetAccount extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        // checkAccountRight(zsc, account, AdminRight.PR_ALWAYS_ALLOW);
         AdminAccessControl aac = checkAccountRight(zsc, account, AdminRight.PR_ALWAYS_ALLOW);
         
         Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);

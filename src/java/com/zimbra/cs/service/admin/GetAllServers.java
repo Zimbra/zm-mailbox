@@ -55,7 +55,7 @@ public class GetAllServers extends AdminDocumentHandler {
             if (!hasRightsToList(zsc, server, Admin.R_listServer, Admin.R_getServer))
                 continue;
             
-            GetServer.doServer(response, server, applyConfig, null);
+            GetServer.encodeServer(response, server, applyConfig, null, null);
         }
 
 	    return response;

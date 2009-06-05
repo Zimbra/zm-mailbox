@@ -47,7 +47,7 @@ public class GetAllZimlets extends AdminDocumentHandler {
                     continue;
 		        
     		    if(!zimlet.isExtension())
-    		        GetZimlet.doZimlet(response, zimlet);
+    		        GetZimlet.encodeZimlet(response, zimlet);
 		    }
     	} else if(AdminConstants.A_MAIL.equalsIgnoreCase(exclude)) {
 		    for (Zimlet zimlet : zimlets) {
@@ -55,14 +55,14 @@ public class GetAllZimlets extends AdminDocumentHandler {
                     continue;    
 		    
 		    	if(zimlet.isExtension())
-		    		GetZimlet.doZimlet(response, zimlet);
+		    		GetZimlet.encodeZimlet(response, zimlet);
 		    }
     	} else {
 		    for (Zimlet zimlet : zimlets) {
 		        if (!hasRightsToList(zsc, zimlet, Admin.R_listZimlet, Admin.R_getZimlet))
                     continue;
 		    
-	    		GetZimlet.doZimlet(response, zimlet);
+	    		GetZimlet.encodeZimlet(response, zimlet);
     	    }
     		
     	}

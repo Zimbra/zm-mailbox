@@ -58,7 +58,7 @@ public class CopyCos extends AdminDocumentHandler {
                 new String[] {"cmd", "CopyCos","name", destCosName, "cos", srcCosNameOrId}));         
 
         Element response = lc.createElement(AdminConstants.COPY_COS_RESPONSE);
-        GetCos.doCos(response, cos);
+        GetCos.encodeCos(response, cos);
 
         return response;
     }

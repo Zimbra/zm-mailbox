@@ -18,18 +18,19 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -44,25 +45,18 @@ public class GetAllConfig extends AdminDocumentHandler {
 
 	    Config config = prov.getConfig();
 	        
-	    checkRight(zsc, context, config, Admin.R_getGlobalConfig);
-	        
-	    Map attrs = config.getUnicodeAttrs();
+	    AdminAccessControl aac = checkRight(zsc, context, config, AdminRight.PR_ALWAYS_ALLOW);
 
-	    Element response = zsc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);
-	    
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                GetConfig.doConfig(response, name, sv);
-            } else if (value instanceof String){
-                GetConfig.doConfig(response, name, (String) value);
-            }
-        }
+	    Element response = zsc.createElement(AdminConstants.GET_ALL_CONFIG_RESPONSE);	    
+	    encodeConfig(response, config, null, aac.getAttrRightChecker(config));
+
 	    return response;
 	}
+	
+    public static void encodeConfig(Element e, Config config, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+        Map attrs = config.getUnicodeAttrs();
+        ToXML.encodeAttrs(e, attrs, reqAttrs, attrRightChecker);
+    }
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {

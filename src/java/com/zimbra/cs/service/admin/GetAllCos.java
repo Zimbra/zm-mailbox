@@ -52,7 +52,7 @@ public class GetAllCos extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.GET_ALL_COS_RESPONSE);
         for (Cos cos : coses) {
             if (hasRightsToListCos(zsc, cos, Admin.R_listCos, Admin.R_getCos))
-                GetCos.doCos(response, cos);
+                GetCos.encodeCos(response, cos);
         }
 	    return response;
 	}

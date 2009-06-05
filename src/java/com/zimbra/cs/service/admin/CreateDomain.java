@@ -68,7 +68,7 @@ public class CreateDomain extends AdminDocumentHandler {
                 new String[] {"cmd", "CreateDomain","name", name}, attrs));         
 
 	    Element response = zsc.createElement(AdminConstants.CREATE_DOMAIN_RESPONSE);
-	    GetDomain.doDomain(response, domain);
+	    GetDomain.encodeDomain(response, domain);
 
 	    return response;
 	}

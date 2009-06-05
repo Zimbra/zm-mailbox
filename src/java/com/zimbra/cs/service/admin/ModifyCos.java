@@ -59,7 +59,7 @@ public class ModifyCos extends AdminDocumentHandler {
                 new String[] {"cmd", "ModifyCos","name", cos.getName()}, attrs));
         
 	    Element response = zsc.createElement(AdminConstants.MODIFY_COS_RESPONSE);
-	    GetCos.doCos(response, cos);
+	    GetCos.encodeCos(response, cos);
 	    return response;
 	}
 	
