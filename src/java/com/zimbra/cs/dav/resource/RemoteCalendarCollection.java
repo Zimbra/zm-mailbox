@@ -131,7 +131,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     		buf.append(path).append("/");
     		buf.append(uid);
     		buf.append(".ics");
-    		hrefmap.put(buf.toString(), uid);
+    		hrefmap.put(URLUtil.urlEscape(buf.toString()), uid);
     		appts.add(new CalDavClient.Appointment(buf.toString(), null));
     	}
     	cl.setAuthCookie(authToken.toZAuthToken());
@@ -235,8 +235,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
     
     public DavResource getAppointment(DavContext ctxt, String uid) throws DavException {
-    	getChildren(ctxt);
-        return mAppts.get(uid);
+    	return getAppointmentMap(ctxt, null).get(uid);
     }
     
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
