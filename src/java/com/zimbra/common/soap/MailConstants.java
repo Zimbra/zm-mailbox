@@ -17,7 +17,6 @@ package com.zimbra.common.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-
 public class MailConstants {
 
     public static final String NAMESPACE_STR = "urn:zimbraMail";
@@ -244,9 +243,9 @@ public class MailConstants {
     public static final String E_CONV = "c";
     public static final String E_CHAT = "chat";
     public static final String E_NOTE = "note";
-	public static final String E_TAG = "tag";
+    public static final String E_TAG = "tag";
     public static final String E_CONTACT = "cn";
-	public static final String E_FOLDER = "folder";
+    public static final String E_FOLDER = "folder";
     public static final String E_SEARCH = "search";
     public static final String E_MOUNT = "link";
 
@@ -357,12 +356,12 @@ public class MailConstants {
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
     public static final String A_DEFAULT_VIEW = "view";
-	public static final String A_UNREAD = "u";
-	public static final String A_COLOR = "color";
+    public static final String A_UNREAD = "u";
+    public static final String A_COLOR = "color";
     public static final String A_CREATED_DATE = "cd";
     public static final String A_ATTRIBUTE_NAME = "n";
     public static final String A_REPLACE = "replace";
-	public static final String A_BOUNDS = "pos";
+    public static final String A_BOUNDS = "pos";
     public static final String A_STATUS = "status";
     public static final String A_EXCLUDE_FREEBUSY = "excludeFreeBusy";
     public static final String A_FILE_AS_STR = "fileAsStr";
@@ -404,6 +403,7 @@ public class MailConstants {
     // send/save draft
     public static final String E_ATTACH = "attach";
     public static final String A_ATTACHMENT_ID = "aid";
+    public static final String A_OPTIONAL = "optional";
     public static final String A_ORIG_ID = "origid";
     public static final String A_REPLY_TYPE = "rt";
     public static final String A_IDENTITY_ID = "idnt";
