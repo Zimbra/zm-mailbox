@@ -2154,7 +2154,7 @@ public class Invite {
             ZProperty orgProp = organizer.toProperty();
             component.addProperty(orgProp);
             // Hack for Outlook 2007 (bug 25777)
-            if (organizer.hasSentBy()) {
+            if (organizer.hasSentBy() && !ICalTok.REPLY.equals(mMethod) && !ICalTok.COUNTER.equals(mMethod)) {
                 String sentByParam = orgProp.paramVal(ICalTok.SENT_BY, null);
                 if (sentByParam != null) {
                     ZProperty xMsOlkSender = new ZProperty("X-MS-OLK-SENDER");
