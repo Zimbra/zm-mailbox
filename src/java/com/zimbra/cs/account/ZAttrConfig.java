@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090602-1105 */
+    /* build: 6.0.0 pshao 20090605-1708 */
 
     /**
      * RFC2256: descriptive information
@@ -13250,6 +13250,160 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaBlockedExtension(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaBlockedExtension, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to email admin on detection of attachment with blocked
+     * extension
+     *
+     * @return zimbraMtaBlockedExtensionWarnAdmin, or true if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1031)
+    public boolean isMtaBlockedExtensionWarnAdmin() {
+        return getBooleanAttr(Provisioning.A_zimbraMtaBlockedExtensionWarnAdmin, true);
+    }
+
+    /**
+     * Whether to email admin on detection of attachment with blocked
+     * extension
+     *
+     * @param zimbraMtaBlockedExtensionWarnAdmin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1031)
+    public void setMtaBlockedExtensionWarnAdmin(boolean zimbraMtaBlockedExtensionWarnAdmin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnAdmin, zimbraMtaBlockedExtensionWarnAdmin ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to email admin on detection of attachment with blocked
+     * extension
+     *
+     * @param zimbraMtaBlockedExtensionWarnAdmin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1031)
+    public Map<String,Object> setMtaBlockedExtensionWarnAdmin(boolean zimbraMtaBlockedExtensionWarnAdmin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnAdmin, zimbraMtaBlockedExtensionWarnAdmin ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to email admin on detection of attachment with blocked
+     * extension
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1031)
+    public void unsetMtaBlockedExtensionWarnAdmin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnAdmin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to email admin on detection of attachment with blocked
+     * extension
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1031)
+    public Map<String,Object> unsetMtaBlockedExtensionWarnAdmin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnAdmin, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to email recipient on detection of attachment with blocked
+     * extension
+     *
+     * @return zimbraMtaBlockedExtensionWarnRecipient, or true if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1032)
+    public boolean isMtaBlockedExtensionWarnRecipient() {
+        return getBooleanAttr(Provisioning.A_zimbraMtaBlockedExtensionWarnRecipient, true);
+    }
+
+    /**
+     * Whether to email recipient on detection of attachment with blocked
+     * extension
+     *
+     * @param zimbraMtaBlockedExtensionWarnRecipient new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1032)
+    public void setMtaBlockedExtensionWarnRecipient(boolean zimbraMtaBlockedExtensionWarnRecipient) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnRecipient, zimbraMtaBlockedExtensionWarnRecipient ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to email recipient on detection of attachment with blocked
+     * extension
+     *
+     * @param zimbraMtaBlockedExtensionWarnRecipient new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1032)
+    public Map<String,Object> setMtaBlockedExtensionWarnRecipient(boolean zimbraMtaBlockedExtensionWarnRecipient, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnRecipient, zimbraMtaBlockedExtensionWarnRecipient ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to email recipient on detection of attachment with blocked
+     * extension
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1032)
+    public void unsetMtaBlockedExtensionWarnRecipient() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnRecipient, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to email recipient on detection of attachment with blocked
+     * extension
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1032)
+    public Map<String,Object> unsetMtaBlockedExtensionWarnRecipient(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaBlockedExtensionWarnRecipient, "");
         return attrs;
     }
 

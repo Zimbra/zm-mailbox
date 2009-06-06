@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090602-1105 */
+    /* build: 6.0.0 pshao 20090605-1708 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3834,7 +3834,7 @@ public class ZAttrProvisioning {
      * moved to the Trash folder. If FALSE, a message is purged from Trash
      * based on the date that it was added to the mailbox.
      *
-     * @since ZCS 6.0.0_BETA1
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=748)
     public static final String A_zimbraMailPurgeUseChangeDateForTrash = "zimbraMailPurgeUseChangeDateForTrash";
@@ -4306,6 +4306,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=195)
     public static final String A_zimbraMtaBlockedExtension = "zimbraMtaBlockedExtension";
+
+    /**
+     * Whether to email admin on detection of attachment with blocked
+     * extension
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1031)
+    public static final String A_zimbraMtaBlockedExtensionWarnAdmin = "zimbraMtaBlockedExtensionWarnAdmin";
+
+    /**
+     * Whether to email recipient on detection of attachment with blocked
+     * extension
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1032)
+    public static final String A_zimbraMtaBlockedExtensionWarnRecipient = "zimbraMtaBlockedExtensionWarnRecipient";
 
     /**
      * Commonly blocked attachment file extensions

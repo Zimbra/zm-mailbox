@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090602-1105 */
+    /* build: 6.0.0 pshao 20090605-1708 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9434,7 +9434,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMailPurgeUseChangeDateForTrash, or true if unset
      *
-     * @since ZCS 6.0.0_BETA1
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=748)
     public boolean isMailPurgeUseChangeDateForTrash() {
@@ -9449,7 +9449,7 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraMailPurgeUseChangeDateForTrash new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA1
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=748)
     public void setMailPurgeUseChangeDateForTrash(boolean zimbraMailPurgeUseChangeDateForTrash) throws com.zimbra.common.service.ServiceException {
@@ -9467,7 +9467,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA1
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=748)
     public Map<String,Object> setMailPurgeUseChangeDateForTrash(boolean zimbraMailPurgeUseChangeDateForTrash, Map<String,Object> attrs) {
@@ -9483,7 +9483,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA1
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=748)
     public void unsetMailPurgeUseChangeDateForTrash() throws com.zimbra.common.service.ServiceException {
@@ -9500,7 +9500,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA1
+     * @since ZCS 5.0.17
      */
     @ZAttr(id=748)
     public Map<String,Object> unsetMailPurgeUseChangeDateForTrash(Map<String,Object> attrs) {
