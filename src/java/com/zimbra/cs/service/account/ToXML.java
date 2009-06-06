@@ -127,7 +127,7 @@ public class ToXML {
                     encodeAttr(e, name, sv[i], AccountConstants.E_A, key, idnType, allowed);
                 }
             } else if (value instanceof String) {
-                fixupZimbraPrefTimeZoneId(name, (String)value);
+                value = fixupZimbraPrefTimeZoneId(name, (String)value);
                 encodeAttr(e, name, (String)value, AccountConstants.E_A, key, idnType, allowed);
             }
         }       

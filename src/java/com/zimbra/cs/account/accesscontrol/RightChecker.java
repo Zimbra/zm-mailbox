@@ -58,6 +58,7 @@ import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.service.account.ToXML;
 
 public class RightChecker {
 
@@ -1015,8 +1016,9 @@ public class RightChecker {
             
             Object defaultValue = target.getAttrDefault(attrName);
             if (defaultValue instanceof String) {
-                    defaultValues = new HashSet<String>();
-                    defaultValues.add((String)defaultValue);
+                defaultValue = ToXML.fixupZimbraPrefTimeZoneId(attrName, (String)defaultValue);
+                defaultValues = new HashSet<String>();
+                defaultValues.add((String)defaultValue);
             } else if (defaultValue instanceof String[]) {
                 defaultValues = new HashSet<String>(Arrays.asList((String[])defaultValue));
             }

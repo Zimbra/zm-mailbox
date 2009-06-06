@@ -103,7 +103,7 @@ public class GetCos extends AdminDocumentHandler {
                     encodeCosAttr(cos, name, sv[i], isCosAttr, allowed);
                 }
             } else if (value instanceof String) {
-                ToXML.fixupZimbraPrefTimeZoneId(name, (String)value);
+                value = ToXML.fixupZimbraPrefTimeZoneId(name, (String)value);
                 encodeCosAttr(cos, name, (String)value, isCosAttr, allowed);
             }
         }
