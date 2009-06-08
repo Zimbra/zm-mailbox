@@ -60,6 +60,7 @@ public class SQLite extends Db {
             case ON_UPDATE_CASCADE:          return false;
             case READ_COMMITTED_ISOLATION:   return false;
             case REPLACE_INTO:               return true;
+            case REQUEST_UTF8_UNICODE_COLLATION:  return false;
             case ROW_LEVEL_LOCKING:          return false;
             case UNIQUE_NAME_INDEX:          return false;
         }
@@ -158,7 +159,7 @@ public class SQLite extends Db {
 
     private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
 
-    private static final int MAX_ATTACHED_DATABASES = 7;
+    private static final int MAX_ATTACHED_DATABASES = readConfigInt("sqlite_max_attached_databases", "max # of attached databases", 7);
 
     private static final HashMap<java.sql.Connection, LinkedHashMap<String, String>> sAttachedDatabases =
             new HashMap<java.sql.Connection, LinkedHashMap<String, String>>(DEFAULT_CONNECTION_POOL_SIZE);
@@ -224,7 +225,7 @@ public class SQLite extends Db {
                 conn.getConnection().setAutoCommit(autocommit);
             return true;
         } catch (SQLException e) {
-            ZimbraLog.sqltrace.warn("database overflow autoclose failed for DB " + dbname, e);
+            ZimbraLog.dbconn.warn("database overflow autoclose failed for DB " + dbname, e);
             return false;
         } finally {
             DbPool.quietCloseStatement(stmt);
@@ -275,7 +276,7 @@ public class SQLite extends Db {
 
     @Override void deleteDatabaseFile(String dbname) {
         assert(dbname != null && !dbname.trim().equals(""));
-        ZimbraLog.sqltrace.info("deleting database file for DB '" + dbname + "'");
+        ZimbraLog.dbconn.info("deleting database file for DB '" + dbname + "'");
         new File(getDatabaseFilename(dbname)).delete();
     }
 
@@ -295,14 +296,7 @@ public class SQLite extends Db {
             mDatabaseProperties = getSQLiteProperties();
 
             // override pool size if specified in prefs
-            try {
-                String poolsize = LC.get("sqlite_pool_size");
-                if (poolsize != null && !poolsize.trim().equals(""))
-                    mPoolSize = Integer.parseInt(poolsize);
-            } catch (NumberFormatException nfe) {
-                ZimbraLog.system.warn("exception parsing 'sqlite_pool_size' config; defaulting pool size to " + mPoolSize, nfe);
-            }
-            ZimbraLog.misc.info("setting connection pool size to " + mPoolSize);
+            mPoolSize = readConfigInt("sqlite_pool_size", "connection pool size", DEFAULT_CONNECTION_POOL_SIZE);
         }
 
         private Properties getSQLiteProperties() {
@@ -310,6 +304,24 @@ public class SQLite extends Db {
             props.setProperty("shared_cache", "true");
             return props;
         }
+    }
+
+    static int readConfigInt(final String keyname, final String description, final int defaultvalue) {
+        int value = defaultvalue;
+        try {
+            String configvalue = LC.get(keyname);
+            if (configvalue != null && !configvalue.trim().equals(""))
+                value = Math.max(1, Integer.parseInt(configvalue));
+        } catch (NumberFormatException nfe) {
+            ZimbraLog.dbconn.warn("exception parsing '" + keyname  + "' config; defaulting limit to " + defaultvalue, nfe);
+        }
+        ZimbraLog.dbconn.info("setting " + description + " to " + value);
+        return value;
+    }
+
+
+    @Override public void flushToDisk() {
+        // not really implemented
     }
 
     @Override public String toString() {
@@ -343,9 +355,5 @@ public class SQLite extends Db {
             e.printStackTrace();
             System.exit(-1);
         }
-    }
-
-    @Override public void flushToDisk() {
-        // not really implemented
     }
 }

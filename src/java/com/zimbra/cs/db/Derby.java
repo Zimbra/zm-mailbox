@@ -71,6 +71,7 @@ public class Derby extends Db {
 
     @Override boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
+            case AVOID_OR_IN_WHERE_CLAUSE:   return true;
             case BITWISE_OPERATIONS:         return false;
             case BOOLEAN_DATATYPE:           return false;
             case BROKEN_IN_CLAUSE:           return true;
@@ -85,9 +86,9 @@ public class Derby extends Db {
             case ON_UPDATE_CASCADE:          return false;
             case READ_COMMITTED_ISOLATION:   return true;
             case REPLACE_INTO:               return false;
+            case REQUEST_UTF8_UNICODE_COLLATION:  return false;
             case ROW_LEVEL_LOCKING:          return true;
             case UNIQUE_NAME_INDEX:          return false;
-            case AVOID_OR_IN_WHERE_CLAUSE:   return true;
         }
         return false;
     }
@@ -139,38 +140,38 @@ public class Derby extends Db {
     }
 
     @Override void shutdown() {
-    	try {
-    		DriverManager.getConnection("jdbc:derby:" + System.getProperty("derby.system.home", LC.zimbra_home.value() + File.separator + "derby") + ";shutdown=true");
-    	} catch (Exception x) {
-    		//an exception is always throw with a 08006 status to indicate shutdown
-    	}
+        try {
+            DriverManager.getConnection("jdbc:derby:" + System.getProperty("derby.system.home", LC.zimbra_home.value() + File.separator + "derby") + ";shutdown=true");
+        } catch (Exception x) {
+            //an exception is always throw with a 08006 status to indicate shutdown
+        }
     }
 
     public static OutputStream disableDerbyLogFile(){
         return new OutputStream() {
-            public void write(int b) {
+            @Override public void write(int b) {
                 // Ignore all log messages
             }
         };
     }
-    
+
     static final class DerbyConfig extends DbPool.PoolConfig {
         DerbyConfig() {
-        	Properties props = new Properties();
-        	try {
+            Properties props = new Properties();
+            try {
                 String propsfile = LC.get("zdesktop_derby_properties");
                 if (propsfile == null || propsfile.equals(""))
                     propsfile = LC.derby_properties.value();
-        		props.load(new FileInputStream(propsfile));
-        	} catch (FileNotFoundException x) {
-        	} catch (IOException x) {
-        		throw new RuntimeException(x);
-        	}
+                props.load(new FileInputStream(propsfile));
+            } catch (FileNotFoundException x) {
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
 
-        	for (Enumeration<?> e = props.propertyNames(); e.hasMoreElements(); ) {
-        		String key = (String) e.nextElement();
-        		System.setProperty(key, props.getProperty(key));
-        	}
+            for (Enumeration<?> e = props.propertyNames(); e.hasMoreElements(); ) {
+                String key = (String) e.nextElement();
+                System.setProperty(key, props.getProperty(key));
+            }
 
             mDriverClassName = "org.apache.derby.jdbc.EmbeddedDriver";
             mPoolSize = 12;
