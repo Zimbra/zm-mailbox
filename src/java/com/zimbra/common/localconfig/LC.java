@@ -448,6 +448,7 @@ public class LC {
     
     public static final KnownKey freebusy_queue_directory;
     
+    public static final KnownKey jdbc_results_streaming_enabled;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1267,6 +1268,7 @@ public class LC {
         freebusy_queue_directory = new KnownKey("freebusy_queue_directory");
         freebusy_queue_directory.setDefault("${zimbra_home}" + FS + "fbqueue" + FS);
         
+        jdbc_results_streaming_enabled = new KnownKey("jdbc_results_streaming_enabled", "true");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
