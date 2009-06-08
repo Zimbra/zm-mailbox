@@ -2673,7 +2673,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static class Color {
-    	private static final int  ORANGE = 10;
+    	private static final int  ORANGE = 9;
     	private static final long RGB_INDICATOR      = 0x01000000;
     	private static final long RGB_INDICATOR_MASK = 0xff000000;
     	private static final long RGB_MASK           = 0x00ffffff;
@@ -2705,7 +2705,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         	return mRgb;
         }
         public byte getMappedColor() {
-        	byte c = 1;
+        	byte c = 0;
         	for (long color : COLORS) {
         		if (mRgb == color)
         			return c;
@@ -2717,9 +2717,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         	mRgb = rgb;
         }
         public void setColor(byte color) {
-        	if (color > ORANGE || color < 1)
+        	if (color > ORANGE || color < 0)
         		color = ORANGE;
-        	mRgb = COLORS[color-1];
+        	mRgb = COLORS[color];
         }
         long toMetadata() {
         	return (mRgb | RGB_INDICATOR);
