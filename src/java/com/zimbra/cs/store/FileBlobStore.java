@@ -131,7 +131,18 @@ public class FileBlobStore extends StoreManager {
         ensureParentDirExists(f);
         return path;
     }
-    
+
+    @Override
+    public BlobBuilder getBlobBuilder(String path, short volumeId)
+        throws IOException, ServiceException {
+        if (path == null) {
+            path = getUniqueIncomingPath(volumeId);
+        } else {
+            ensureParentDirExists(new File(path));
+        }
+        return new BlobBuilder(path, volumeId);
+    }
+
     @Override public Blob storeIncoming(InputStream in, int sizeHint, String path, short volumeId,
                                         StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
@@ -151,7 +162,7 @@ public class FileBlobStore extends StoreManager {
         } catch (NoSuchAlgorithmException e) {
             throw ServiceException.FAILURE("", e);
         }
-        
+
         DigestInputStream digestStream = new DigestInputStream(in, digest);
         FileOutputStream fos = null;
         OutputStream out = null;

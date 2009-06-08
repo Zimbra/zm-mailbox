@@ -53,6 +53,21 @@ public abstract class StoreManager {
     public abstract void shutdown();
 
     /**
+     * Returns a 'BlobBuilder' which can be used to store a blob in incoming
+     * directory asynchronously one chunk at a time. Blob will be compressed
+     * if volume supports compression and blob size is over the compression
+     * threshold.
+     *
+     * @param path file path for blob data. If null, the store assignes one
+     * @param volumeId store volume id
+     * @return the BlobBuilder to use to construct the Blob
+     * @throws IOException if an I/O error occurred
+     * @throws ServiceException if a service exception occurred
+     */
+    public abstract BlobBuilder getBlobBuilder(String path, short volumeId)
+        throws IOException, ServiceException;
+    
+    /**
      * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
      * and blob size is over the compression threshold.
      * @param data
