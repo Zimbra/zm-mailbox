@@ -28,7 +28,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -39,7 +38,6 @@ import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -103,23 +101,25 @@ public class GetCos extends AdminDocumentHandler {
                     encodeCosAttr(cos, name, sv[i], isCosAttr, allowed);
                 }
             } else if (value instanceof String) {
-                value = ToXML.fixupZimbraPrefTimeZoneId(name, (String)value);
+                value = com.zimbra.cs.service.account.ToXML.fixupZimbraPrefTimeZoneId(name, (String)value);
                 encodeCosAttr(cos, name, (String)value, isCosAttr, allowed);
             }
         }
     }
     
     private static void encodeCosAttr(Element parent, String key, String value, boolean isCosAttr, boolean allowed) {
-        KeyValuePair kvPair;
-        if (!allowed) {
-            kvPair = parent.addKeyValuePair(key, "", AdminConstants.E_A, AdminConstants.A_N);
-            kvPair.addAttribute(AccountConstants.A_PERM_DENIED, true);
+        
+        Element e = parent.addElement(AdminConstants.E_A);
+        e.addAttribute(AdminConstants.A_N, key);
+        
+        if (allowed) {
+            e.setText(value);
         } else {
-            kvPair = parent.addKeyValuePair(key, value, AdminConstants.E_A, AdminConstants.A_N);
+            e.addAttribute(AccountConstants.A_PERM_DENIED, true);
         }
         
         if (isCosAttr) 
-            kvPair.addAttribute(AdminConstants.A_C, true);
+            e.addAttribute(AdminConstants.A_C, true);
     }
 
     @Override

@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
@@ -37,7 +36,6 @@ import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AdminDocumentHandler {
@@ -154,9 +152,9 @@ public class GetDistributionList extends AdminDocumentHandler {
             if (value instanceof String[]) {
                 String sv[] = (String[]) value;
                 for (int i = 0; i < sv.length; i++)
-                    ToXML.encodeAttr(e, name, sv[i], AccountConstants.E_A, AccountConstants.A_N, idnType, allowed);
+                    ToXML.encodeAttr(e, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, idnType, allowed);
             } else if (value instanceof String) {
-                ToXML.encodeAttr(e, name, (String)value, AccountConstants.E_A, AccountConstants.A_N, idnType, allowed);
+                ToXML.encodeAttr(e, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, idnType, allowed);
             } 
         }
     }

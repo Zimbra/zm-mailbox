@@ -18,7 +18,6 @@ package com.zimbra.cs.service.account;
 import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.ZimbraLog;
@@ -27,12 +26,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
@@ -40,7 +36,6 @@ import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.service.admin.GetConfig;
 import com.zimbra.common.util.L10nUtil;
 
 import java.util.Iterator;
@@ -52,15 +47,11 @@ import java.util.Stack;
 
 public class ToXML {
     
-    public static Element encodeAccount(Element parent, Account account) {
+    static Element encodeAccount(Element parent, Account account) {
         return encodeAccount(parent, account, true, null, null);
     }
-    
-    public static Element encodeAccount(Element parent, Account account, boolean applyCos) {
-        return encodeAccount(parent, account, applyCos, null, null);
-    }
 
-    public static Element encodeAccount(Element parent, Account account, boolean applyCos, 
+    static Element encodeAccount(Element parent, Account account, boolean applyCos, 
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
@@ -70,15 +61,15 @@ public class ToXML {
         return acctElem;
     }
 
-    public static Element encodeCalendarResource(Element parent, CalendarResource resource) {
+    static Element encodeCalendarResource(Element parent, CalendarResource resource) {
         return encodeCalendarResource(parent, resource, false, null, null);
     }
     
-    public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos) {
+    static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos) {
         return encodeCalendarResource(parent, resource, applyCos, null, null);
     }
     
-    public static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos, 
+    static Element encodeCalendarResource(Element parent, CalendarResource resource, boolean applyCos, 
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
         resElem.addAttribute(AccountConstants.A_NAME, resource.getUnicodeName());
@@ -88,7 +79,7 @@ public class ToXML {
         return resElem;
     }
 
-    public static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+    static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         encodeAttrs(e, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
     }
     
@@ -222,11 +213,11 @@ public class ToXML {
             IDNType idnType, boolean allowed) {
         
         KeyValuePair kvPair;
-        if (!allowed) {
+        if (allowed) {
+            kvPair = parent.addKeyValuePair(key, IDNUtil.toUnicode(value, idnType), eltname, attrname);
+        } else {
             kvPair = parent.addKeyValuePair(key, "", eltname, attrname);
             kvPair.addAttribute(AccountConstants.A_PERM_DENIED, true);
-        } else {
-            kvPair = parent.addKeyValuePair(key, IDNUtil.toUnicode(value, idnType), eltname, attrname);
         }
     }
     

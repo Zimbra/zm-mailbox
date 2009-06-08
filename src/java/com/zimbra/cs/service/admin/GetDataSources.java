@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -68,7 +67,7 @@ public class GetDataSources extends AdminDocumentHandler  {
 	    Element response = zsc.createElement(AdminConstants.GET_DATA_SOURCES_RESPONSE);
         List<DataSource> sources = Provisioning.getInstance().getAllDataSources(account);
         for (DataSource ds : sources) {
-            ToXML.encodeDataSource(response, ds);
+            com.zimbra.cs.service.account.ToXML.encodeDataSource(response, ds);
         }
         return response;
     }

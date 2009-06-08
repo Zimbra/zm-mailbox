@@ -18,7 +18,6 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;

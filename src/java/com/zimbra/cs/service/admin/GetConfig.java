@@ -18,23 +18,17 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -62,7 +56,7 @@ public class GetConfig extends AdminDocumentHandler {
         IDNType idnType = AttributeManager.idnType(attrMgr, name);
         boolean allowed = aac.getAttrRightChecker(config).allowAttr(name);
         for (int i = 0; i < value.length; i++)
-            ToXML.encodeAttr(response, name, value[i], AccountConstants.E_A, AccountConstants.A_N, idnType, allowed);
+            ToXML.encodeAttr(response, name, value[i], AdminConstants.E_A, AdminConstants.A_N, idnType, allowed);
 
         return response;
 	}

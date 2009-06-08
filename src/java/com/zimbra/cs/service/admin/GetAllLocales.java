@@ -24,7 +24,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAllLocales extends AdminDocumentHandler {
@@ -39,7 +38,7 @@ public class GetAllLocales extends AdminDocumentHandler {
         Locale locales[] = L10nUtil.getAllLocalesSorted();
         Element response = zsc.createElement(AdminConstants.GET_ALL_LOCALES_RESPONSE);
         for (Locale locale : locales)
-            ToXML.encodeLocale(response, locale, Locale.US);
+            com.zimbra.cs.service.account.ToXML.encodeLocale(response, locale, Locale.US);
         return response;
     }
 
