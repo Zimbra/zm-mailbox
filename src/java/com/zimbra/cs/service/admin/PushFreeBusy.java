@@ -82,8 +82,20 @@ public class PushFreeBusy extends AdminDocumentHandler {
         
         public void visit(NamedEntry entry) throws ServiceException {
             if (entry instanceof Account) {
-                mHandler.checkAccountRight(mZsc, (Account)entry, Admin.R_adminLoginAs);
-                FreeBusyProvider.mailboxChanged(((Account)entry).getId());
+            	Account acct = (Account) entry;
+                mHandler.checkAccountRight(mZsc, acct, Admin.R_adminLoginAs);
+                String[] fps = acct.getForeignPrincipal();
+				if (fps != null && fps.length > 0) {
+					for (String fp : fps) {
+						if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
+							int idx = fp.indexOf(':');
+							if (idx != -1) {
+				                FreeBusyProvider.mailboxChanged(acct.getId());
+				                break;
+							}
+						}
+					}
+				}
             }
         }
     }
