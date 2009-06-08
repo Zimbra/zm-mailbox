@@ -52,14 +52,16 @@ public class TraceInputStream extends InputStream {
     }
     
     public boolean suspendTrace(String msg) {
-        if (!enabled) return false;
-        if (msg != null) {
-            if (eol) traceOut.print(prefix);
-            traceOut.print(msg);
-            eol = msg.endsWith("\n");
+        if (enabled) {
+            if (msg != null) {
+                if (eol) traceOut.print(prefix);
+                traceOut.print(msg);
+                eol = msg.endsWith("\n");
+            }
+            enabled = false;
+            return true;
         }
-        enabled = false;
-        return true;
+        return false;
     }
 
     public void resumeTrace() {
@@ -72,8 +74,8 @@ public class TraceInputStream extends InputStream {
         if (b != -1 && enabled) {
             if (eol) traceOut.print(prefix);
             printByte((byte) b);
+            eol = (b == '\n');
         }
-        eol = (b == '\n');
         return b;
     }
 
@@ -96,10 +98,12 @@ public class TraceInputStream extends InputStream {
         return off - start;
     }
 
-    public void flush() throws IOException {
-        if (enabled) {
-            traceOut.flush();
+    @Override
+    public void close() throws IOException {
+        if (traceOut != null) {
+            traceOut.close();
         }
+        in.close();
     }
     
     private void printByte(byte b) {

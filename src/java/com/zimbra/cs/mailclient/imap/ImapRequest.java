@@ -16,6 +16,7 @@ package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.DateUtil;
 
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
+import java.net.SocketTimeoutException;
 
 public class ImapRequest {
     private final ImapConnection connection;
@@ -77,7 +79,20 @@ public class ImapRequest {
     }
     
     public ImapResponse send() throws IOException {
-        return connection.sendRequest(this);
+        try {
+            return connection.sendRequest(this);
+        } catch (SocketTimeoutException e) {
+            connection.close();
+            throw failed("Timeout waiting for response", e);
+        } catch (MailException e) {
+            if (e instanceof ParseException) {
+                connection.close();
+            }
+            throw failed("Error in response", e);
+        } catch (IOException e) {
+            connection.close();
+            throw e;
+        }
     }
 
     public ImapResponse sendCheckStatus() throws IOException {

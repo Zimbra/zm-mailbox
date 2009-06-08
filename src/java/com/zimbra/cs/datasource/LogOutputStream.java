@@ -23,13 +23,16 @@ import java.io.ByteArrayOutputStream;
 class LogOutputStream extends OutputStream {
     private final Log log;
     private final ByteArrayOutputStream baos;
+    private boolean closed;
 
     public LogOutputStream(Log log) {
         this.log = log;
         baos = new ByteArrayOutputStream(256);
     }
 
+    @Override
     public void write(int b) throws IOException {
+        if (closed) throw new IOException("stream is closed");
         if (b == '\n') {
             flushLine();
         } else {
@@ -37,9 +40,14 @@ class LogOutputStream extends OutputStream {
         }
     }
 
-    public void flush() throws IOException {
-        if (baos.size() > 0) {
-            flushLine();
+    @Override
+    public void close() {
+        if (!closed) {
+            // Make sure any remaining bytes are flushed to log file
+            if (baos.size() > 0) {
+                flushLine();
+            }
+            closed = true;
         }
     }
     

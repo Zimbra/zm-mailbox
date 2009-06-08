@@ -32,7 +32,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.net.SocketTimeoutException;
 
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 import org.apache.log4j.Logger;
@@ -42,9 +41,6 @@ public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
     private Mailbox mailbox;
     private ImapRequest request;
-    private ImapResponse response;
-    private Runnable reader;
-    private Throwable error;
     private DataHandler dataHandler;
     
     private final AtomicInteger tagCount = new AtomicInteger();
@@ -466,50 +462,30 @@ public final class ImapConnection extends MailConnection {
         if (isClosed()) {
             throw new IOException("Connection is closed");
         }
-        if (request != null) {
-            throw new IllegalStateException("Request already pending");
-        }
         request = req;
         try {
-            req.write((ImapOutputStream) mailOut);
-        } catch (LiteralException e) {
-            request = null;
-            return e.res; 
-        }
-        // Wait for final response, handle continuation response
-        while (true) {
-            ImapResponse res;
             try {
-                res = waitForResponse();
-            } catch (SocketTimeoutException e) {
-                throw req.failed("Timeout waiting for response", e);
-            } catch (MailException e) {
-                throw req.failed("Error in response", e);
-            } finally {
-                // Make sure that any partial trace data is logged
-                flushTraceStreams();
+                req.write((ImapOutputStream) mailOut);
+            } catch (LiteralException e) {
+                return e.res;
             }
-            if (res.isTagged()) {
-                request = null;
-                return res;
+            // Wait for final response, handle continuation response
+            while (true) {
+                ImapResponse res = waitForResponse();
+                if (res.isTagged()) {
+                    return res;
+                }
+                assert res.isContinuation();
+                if (!req.isAuthenticate()) {
+                    throw req.failed("Unexpected continuation response");
+                }
+                processContinuation(res.getResponseText().getText());
             }
-            assert res.isContinuation();
-            if (!req.isAuthenticate()) {
-                throw req.failed("Unexpected continuation response");
-            }
-            processContinuation(res.getResponseText().getText());
+        } finally {
+            request = null;
         }
     }
 
-    private void flushTraceStreams() throws IOException {
-        if (traceOut != null) {
-            traceOut.flush();
-        }
-        if (traceIn != null) {
-            traceIn.flush();
-        }
-    }
-    
     // Called from ImapRequest
     void writeLiteral(Literal lit) throws IOException {
         boolean lp = getImapConfig().isUseLiteralPlus() &&
@@ -553,80 +529,6 @@ public final class ImapConnection extends MailConnection {
         }
     }
     
-    // Wait for tagged response
-    private ImapResponse waitForResponse() throws IOException {
-        try {
-            if (reader == null) {
-                // Reader thread not active, so read response inline
-                return nextResponse();
-            }
-            response = null;
-            while (response == null && !isClosed()) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    throw new IOException("Thread interrupted");
-                }
-            }
-            if (response != null) {
-                return response;
-            }
-            if (error instanceof IOException) {
-                throw (IOException) error; 
-            } else {
-                throw (IOException)
-                    new IOException("Error in response handler").initCause(error);
-            }
-        } catch (SocketTimeoutException e) {
-            close();
-            throw e;
-        } finally {
-            response = null;
-        }
-    }
-
-    private synchronized void setResponse(ImapResponse res) {
-        if (request == null) {
-            getLogger().warn("Ignoring tagged or continuation response since" +
-                             " no request pending: " + res);
-        } else if (response != null) {
-            getLogger().warn("Ignoring unexpected tagged or continuation" +
-                             " response: " + res);
-        }
-        response = res;
-        notifyAll();
-    }
-
-    //
-    // NOTE: Currently unused until read timeout implementation can be resolved.
-    //
-    private void startReader() {
-        if (reader != null) return;
-        reader = new Runnable() {
-            public void run() {
-                try {
-                    while (!isClosed()) {
-                        setResponse(nextResponse());
-                    }
-                } catch (Throwable e) {
-                    readerError(e);
-                }
-            }
-        };
-        Thread t = new Thread(reader);
-        t.setDaemon(true);
-        t.start();
-    }
-
-    private synchronized void readerError(Throwable e) {
-        if (!(e instanceof IOException && isShutdown())) {
-            // Only record an error if not shutting down
-            this.error = e;
-        }
-        super.close();
-        notifyAll();
-    }
-
     private boolean isShutdown() {
         return isClosed() || isLogout();
     }
@@ -636,7 +538,7 @@ public final class ImapConnection extends MailConnection {
     * has been received. Throws EOFException if end of stream has been
     * reached.
     */
-    private ImapResponse nextResponse() throws IOException {
+    private ImapResponse waitForResponse() throws IOException {
         ImapResponse res;
         do {
             res = readResponse();
@@ -649,9 +551,9 @@ public final class ImapConnection extends MailConnection {
     }
 
     /*
-    * Process IMAP response. Returns true if this is not a tagged or
-    * continuation response and reading should continue. Returns false
-    * if tagged, untagged BAD, or continuation response.
+    * Process IMAP response. Returns true if this is not a final response and
+    * reading should continue. Otherwise, returns false if tagged, untagged BAD,
+    * or continuation response.
     */
     private synchronized boolean processResponse(ImapResponse res)
         throws IOException {
@@ -666,10 +568,8 @@ public final class ImapConnection extends MailConnection {
             if (processUntagged(res)) {
                 return true;
             }
-            res.dispose(); // Clean up any associated literal data
-        } else if (request == null) {
-            throw new MailException(
-                "Received tagged response with no request pending: " + res);
+            res.dispose(); // Clean up associated literal data
+
         }
         if (res.isOK()) {
             ResponseText rt = res.getResponseText();
@@ -685,18 +585,20 @@ public final class ImapConnection extends MailConnection {
         return res.isUntagged();
     }
 
+    /*
+     * Process untagged response. Returns true if request handler processed
+     * response otherwise returns false.
+     */
     private boolean processUntagged(ImapResponse res) throws IOException {
-        if (request != null) {
-            // Request pending, check for response handler
-            ResponseHandler handler = request.getResponseHandler();
-            if (handler != null) {
-                try {
-                    if (handler.handleResponse(res)) {
-                        return true; // Handler processed response
-                    }
-                } catch (Throwable e) {
-                    throw new MailException("Exception in response handler", e);
+        assert request != null;
+        ResponseHandler handler = request.getResponseHandler();
+        if (handler != null) {
+            try {
+                if (handler.handleResponse(res)) {
+                    return true;
                 }
+            } catch (Throwable e) {
+                throw new MailException("Exception in response handler", e);
             }
         }
         return false;

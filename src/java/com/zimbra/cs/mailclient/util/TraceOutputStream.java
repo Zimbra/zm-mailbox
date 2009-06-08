@@ -92,6 +92,14 @@ public class TraceOutputStream extends OutputStream {
             traceOut.flush();
         }
     }
+
+    @Override
+    public void close() throws IOException {
+        if (traceOut != null) {
+            traceOut.close();
+        }
+        out.close();
+    }
     
     private void printByte(byte b) {
         switch (b) {

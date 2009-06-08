@@ -418,6 +418,16 @@ public abstract class MailConnection {
         if (isClosed()) return;
         setState(State.CLOSED);
         try {
+            mailIn.close();
+        } catch (IOException e) {
+            // Ignore
+        }
+        try {
+            mailOut.close();
+        } catch (IOException e) {
+            // Ignore
+        }
+        try {
             socket.close();
         } catch (IOException e) {
             getLogger().info("Error while closing connection", e);
