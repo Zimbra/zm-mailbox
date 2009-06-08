@@ -82,15 +82,15 @@ public class SharedFile {
             // File offset is in the buffer range.
             int bufOffset = (int) (fileOffset - mBufStartPos);
             ZimbraPerf.COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.increment(0);
-            return mBuf[bufOffset];
+            return mBuf[bufOffset] & 0xff;
         } else {
             // Read from file.
             byte[] buf = new byte[1];
             int retVal = read(fileOffset, buf, 0, 1);
-            if (retVal <= 0) {
+            if (retVal < 0) {
                 return retVal;
             } else {
-                return buf[0];
+                return buf[0] & 0xff;
             }
         }
     }

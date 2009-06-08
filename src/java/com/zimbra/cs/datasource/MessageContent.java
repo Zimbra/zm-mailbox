@@ -10,7 +10,7 @@ import com.zimbra.common.service.ServiceException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.DataInputStream;
+import java.io.ByteArrayOutputStream;
 
 public class MessageContent {
     private Blob blob;
@@ -24,13 +24,12 @@ public class MessageContent {
 
     private MessageContent() {}
     
-    private void readContent(InputStream is, int size) throws IOException, ServiceException {
-        if (size < FileBlobStore.getDiskStreamingThreshold()) {
-            data = new byte[size];
-            new DataInputStream(is).readFully(data);
+    private void readContent(InputStream is, int sizeHint) throws IOException, ServiceException {
+        if (sizeHint < FileBlobStore.getDiskStreamingThreshold()) {
+            data = readBytes(is, sizeHint);
         } else {
             short vid = Volume.getCurrentMessageVolume().getId();
-            blob = StoreManager.getInstance().storeIncoming(is, size, null, vid, null);
+            blob = StoreManager.getInstance().storeIncoming(is, sizeHint, null, vid, null);
         }
     }
 
@@ -56,6 +55,23 @@ public class MessageContent {
             StoreManager.getInstance().delete(blob);
             blob = null;
         }
+    }
+
+    private byte[] readBytes(InputStream is, int size) throws IOException {
+        // Return original byte array and avoid copy if possible
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(size) {
+            public byte[] toByteArray() {
+                return buf.length == count ? buf : super.toByteArray();
+            }
+        };
+        int b;
+        while ((b = is.read()) != -1) {
+            baos.write(b);
+        }
+        if (size != baos.size()) {
+            // ZimbraLog.datasource.debug("Content size mismatch: expected %d but got %d bytes", size, baos.size());
+        }
+        return baos.toByteArray();
     }
 
     @Override
