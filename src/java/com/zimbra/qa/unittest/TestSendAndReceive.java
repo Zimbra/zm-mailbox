@@ -124,14 +124,14 @@ public class TestSendAndReceive extends TestCase {
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapUtil.LDAP_FALSE);
         String subject = NAME_PREFIX + " testAuthenticatedUserHeader false";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
-        ZMessage msg = TestUtil.waitForMessage(mbox, "subject:\"" + subject + "\"");
+        ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertNull(TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
         
         // X-Authenticated-User sent.
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapUtil.LDAP_TRUE);
         subject = NAME_PREFIX + " testAuthenticatedUserHeader true";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
-        msg = TestUtil.waitForMessage(mbox, "subject:\"" + subject + "\"");
+        msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
     }
     
