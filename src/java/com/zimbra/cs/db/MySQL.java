@@ -19,6 +19,7 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -100,6 +101,14 @@ public class MySQL extends Db {
         }
 
         return (numSchemas > 0);
+    }
+    
+    @Override
+    public void enableStreaming(Statement stmt)
+    throws SQLException {
+        if (LC.jdbc_results_streaming_enabled.booleanValue()) {
+            stmt.setFetchSize(Integer.MIN_VALUE);
+        }
     }
 
     static final class MySQLConfig extends DbPool.PoolConfig {

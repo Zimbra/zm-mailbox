@@ -24,6 +24,7 @@
 package com.zimbra.cs.db;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -193,5 +194,10 @@ public abstract class Db {
             return column + " & " + bitmask;
         else
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";
+    }
+    
+    @SuppressWarnings("unused")
+    public void enableStreaming(Statement stmt)
+    throws SQLException {
     }
 }
