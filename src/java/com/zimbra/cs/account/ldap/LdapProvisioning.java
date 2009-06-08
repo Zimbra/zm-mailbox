@@ -3977,17 +3977,16 @@ public class LdapProvisioning extends Provisioning {
     }
 
     @Override
-    public List searchCalendarResources(
+    public List<NamedEntry> searchCalendarResources(
         Domain d,
         EntrySearchFilter filter,
         String returnAttrs[],
         String sortAttr,
         boolean sortAscending)
     throws ServiceException {
-        LdapDomain ld = (LdapDomain) d;
         return searchCalendarResources(filter, returnAttrs,
                                        sortAttr, sortAscending,
-                                       mDIT.domainDNToAccountSearchDN(ld.getDN()));
+                                       LdapUtil.getZimbraSearchBase(d, GalOp.search));
     }
 
     @Override

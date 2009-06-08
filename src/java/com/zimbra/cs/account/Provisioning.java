@@ -2650,7 +2650,7 @@ public abstract class Provisioning {
      * @return a list of all calendar resources that matched
      * @throws ServiceException
      */
-    public abstract List searchCalendarResources(
+    public abstract List<NamedEntry> searchCalendarResources(
         Domain d,
         EntrySearchFilter filter,
         String returnAttrs[],
