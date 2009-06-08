@@ -24,6 +24,7 @@ import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -99,7 +100,6 @@ public class ImapSync extends MailItemImport {
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
-        config.setMaxLiteralMemSize(LC.data_source_max_message_memory_size.intValue());
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
         // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
@@ -134,6 +134,8 @@ public class ImapSync extends MailItemImport {
     
     private void enableTrace(ImapConfig config) {
         config.setTrace(true);
+        config.setMaxLiteralTraceSize(
+            dataSource.getIntAttr(Provisioning.A_zimbraDataSourceMaxTraceSize, 64));
         if (dataSource.isOffline()) {
             config.setTraceStream(
                 new PrintStream(new LogOutputStream(ZimbraLog.imap), true));

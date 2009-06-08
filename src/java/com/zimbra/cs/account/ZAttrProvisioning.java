@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090605-1708 */
+    /* build: 6.0.0 dac 20090607-2210 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2068,6 +2068,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=426)
     public static final String A_zimbraDataSourceMaxNumEntries = "zimbraDataSourceMaxNumEntries";
+
+    /**
+     * Message content data exceeding this size will not be included in IMAP
+     * trace file
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1033)
+    public static final String A_zimbraDataSourceMaxTraceSize = "zimbraDataSourceMaxTraceSize";
 
     /**
      * Shortest allowed duration for zimbraDataSourcePollingInterval.

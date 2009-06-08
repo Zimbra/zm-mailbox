@@ -4555,5 +4555,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether to email recipient on detection of attachment with blocked extension</desc>
 </attr>
 
+<attr id="1033" name="zimbraDataSourceMaxTraceSize" type="integer" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="6.0.0_BETA3">
+  <desc>Message content data exceeding this size will not be included in IMAP trace file</desc>
+</attr>
 
 </attrs>
