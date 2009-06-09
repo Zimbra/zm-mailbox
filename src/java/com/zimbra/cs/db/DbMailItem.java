@@ -95,6 +95,7 @@ public class DbMailItem {
     public static final String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ";
     public static final String MAILBOX_ID = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
     public static final String MAILBOX_ID_VALUE = DebugConfig.disableMailboxGroups ? "" : "?, ";
+    private static final int RESULTS_STREAMING_MIN_ROWS = 10000; 
     
     static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
         if (!DebugConfig.disableMailboxGroups)
@@ -1576,6 +1577,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT type, ids FROM " + getTombstoneTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "sequence > ? AND ids IS NOT NULL" +
                         " ORDER BY sequence");
+            Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -1767,11 +1769,16 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + DbSearch.sortQuery(sort));
+            if (type == MailItem.TYPE_MESSAGE) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 result.add(constructItem(rs));
+            rs.close(); rs = null;
+            stmt.close(); stmt = null;
 
             if (type == MailItem.TYPE_CONVERSATION)
                 completeConversations(mbox, result);
@@ -1799,6 +1806,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(parent.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? " + DbSearch.sortQuery(sort));
+            if (parent.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -1839,6 +1849,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
+            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -1879,6 +1892,9 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
                         DbSearch.sortQuery(sort));
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS && type == MailItem.TYPE_MESSAGE) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -2088,6 +2104,9 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
                         " ORDER BY mod_metadata, id");
+            if (type == MailItem.TYPE_MESSAGE) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -2191,7 +2210,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
-            int pos = 1;
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
+             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folderId);
@@ -2199,7 +2221,11 @@ public class DbMailItem {
 
             info.rootId = folderId;
             info.size   = 0;
-            accumulateLeafNodes(info, mbox, rs);
+            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
+            rs.close(); rs = null;
+            stmt.close(); stmt = null;
+            accumulateLeafRevisions(info, mbox, versionedIds);
+            
             // make sure that the folder is in the list of deleted item ids
             info.itemIds.add(folder.getType(), folderId);
 
@@ -2234,6 +2260,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + constraint);
+            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -2248,13 +2277,27 @@ public class DbMailItem {
 
             info.rootId = 0;
             info.size   = 0;
-            return accumulateLeafNodes(info, mbox, rs);
+            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
+            rs.close(); rs = null;
+            stmt.close(); stmt = null;
+            accumulateLeafRevisions(info, mbox, versionedIds);
+            return info;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching list of items for purge", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+    
+    private static int getTotalFolderSize(Collection<Folder> folders) {
+        int totalSize = 0;
+        if (folders != null) {
+            for (Folder folder : folders) {
+                totalSize += folder.getSize();
+            }
+        }
+        return totalSize;
     }
 
     public static PendingDelete getImapDeleted(Mailbox mbox, Set<Folder> folders) throws ServiceException {
@@ -2277,6 +2320,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + IMAP_TYPES + flagconstraint + folderconstraint);
+            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -2292,7 +2338,11 @@ public class DbMailItem {
 
             info.rootId = 0;
             info.size   = 0;
-            return accumulateLeafNodes(info, mbox, rs);
+            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
+            rs.close(); rs = null;
+            stmt.close(); stmt = null;
+            accumulateLeafRevisions(info, mbox, versionedIds);
+            return info;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching list of \\Deleted items for purge", e);
         } finally {
@@ -2310,9 +2360,14 @@ public class DbMailItem {
         public LocationCount increment(LocationCount lc)  { count += lc.count;  size += lc.size;  return this; }
     }
 
-    private static PendingDelete accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
+    /**
+     * Accumulates <tt>PendingDelete</tt> info for the given <tt>ResultSet</tt>.
+     * @return a <tt>List</tt> of all versioned items, to be used in a subsequent call to
+     * {@link DbMailItem#accumulateLeafRevisions}, or an empty list.
+     */
+    private static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
-        List<Integer> versioned = null;
+        List<Integer> versioned = new ArrayList<Integer>();
 
         while (rs.next()) {
             // first check to make sure we don't have a modify conflict
@@ -2372,8 +2427,6 @@ public class DbMailItem {
 
             int flags = rs.getInt(LEAF_CI_FLAGS);
             if ((flags & Flag.BITMASK_VERSIONED) != 0) {
-                if (versioned == null)
-                    versioned = new ArrayList<Integer>();
                 versioned.add(id);
             }
 
@@ -2387,14 +2440,13 @@ public class DbMailItem {
                 else          info.sharedIndex.add(indexId);
             }
         }
-
-        if (versioned != null)
-            accumulateLeafRevisions(info, mbox, versioned);
-
-        return info;
+        return versioned;
     }
 
     private static void accumulateLeafRevisions(PendingDelete info, Mailbox mbox, List<Integer> versioned) throws ServiceException {
+        if (versioned == null || versioned.size() == 0) {
+            return;
+        }
         Connection conn = mbox.getOperationConnection();
         StoreManager sm = StoreManager.getInstance();
 
@@ -2517,6 +2569,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + IMAP_FIELDS +
                         " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES);
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -2580,6 +2635,9 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox, " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES +
                         " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED) + dateConstraint);
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
@@ -2643,6 +2701,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(folder) +
                         " WHERE " + IN_THIS_MAILBOX_AND + typeConstraint + "folder_id = ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
+            if (type == MailItem.TYPE_MESSAGE && folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+                Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());

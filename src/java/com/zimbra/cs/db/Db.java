@@ -22,6 +22,7 @@
 package com.zimbra.cs.db;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.apache.commons.dbcp.PoolingDataSource;
 
@@ -254,7 +255,11 @@ public abstract class Db {
         else
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";
     }
-
+    
+    @SuppressWarnings("unused")
+    public void enableStreaming(Statement stmt)
+    throws SQLException {
+    }
 
     /** Generates a WHERE-type clause that evaluates to <code>expr1</code> if
      *  its value is non-<tt>NULL</tt> and <code>expr2</code> otherwise. */
