@@ -490,6 +490,7 @@ public class LC {
     public static final KnownKey freebusy_queue_directory;
     public static final KnownKey contact_ranking_enabled;
     
+    public static final KnownKey jdbc_results_streaming_enabled;
     public static final KnownKey smtp_host_retry_millis;
     
     static {
@@ -1424,6 +1425,7 @@ public class LC {
         freebusy_queue_directory.setDefault("${zimbra_home}" + FS + "fbqueue" + FS);
         contact_ranking_enabled = new KnownKey("contact_ranking_enabled", "true", "Enable contact ranking table");
         
+        jdbc_results_streaming_enabled = new KnownKey("jdbc_results_streaming_enabled", "true");
         smtp_host_retry_millis = new KnownKey("smtp_host_retry_millis", "60000");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
