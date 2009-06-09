@@ -1994,12 +1994,13 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getAllRevisions", octxt);
-            MailItem item = checkAccess(getItemById(id, type));
-            List<MailItem> revisions = item.loadRevisions();
-            List<T> result = new ArrayList<T>(revisions.size());
-            for (MailItem rev : revisions) {
+            T item = (T) checkAccess(getItemById(id, type));
+            List<MailItem> previousRevisions = item.loadRevisions();
+            List<T> result = new ArrayList<T>(previousRevisions.size());
+            for (MailItem rev : previousRevisions) {
                 result.add((T) rev);
             }
+            result.add(item);
 
             success = true;
             return result;
