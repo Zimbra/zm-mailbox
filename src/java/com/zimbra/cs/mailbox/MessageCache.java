@@ -101,7 +101,7 @@ public class MessageCache {
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
-    static void purge(String digest) {
+    public static void purge(String digest) {
         if (digest != null) {
             synchronized (sCache) {
                 CacheNode node = sCache.remove(digest);
