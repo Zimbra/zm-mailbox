@@ -385,7 +385,6 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     
     public static void main(String[] args) throws ServiceException {
         DomainPublicServiceProtocolAndPort upgrade = new DomainPublicServiceProtocolAndPort();
-        upgrade.setBug("");
         upgrade.setVerbose(true);
         upgrade.populateTestData();
     }

@@ -323,7 +323,6 @@ public class ZimbraMtaAuthEnabled extends LdapUpgrade {
         String notsetTrue = setupTestServer("notsetTrue",   null, Boolean.TRUE).getName();
         
         ZimbraMtaAuthEnabled upgrade = new ZimbraMtaAuthEnabled();
-        upgrade.setBug("test");
         upgrade.setVerbose(true);
         
         for (Map.Entry<String, ZAttrProvisioning.MtaTlsSecurityLevel> entry : servers.entrySet()) {
