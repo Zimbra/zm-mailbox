@@ -98,6 +98,42 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
         return sb.toString();
     }
     
+    private boolean needsUpgrade(AttributeManager am, String attr, BuildInfo.Version attrVersion) throws ServiceException  {
+        String since = mSince.toString();
+        
+        if (attrVersion == null)
+            return false;  // no version info, i.e. a 4.X attr, not need to upgrade
+        
+        if (!am.inVersion(attr, since) && !attrVersion.isFuture())
+            return true;
+        
+        /*
+         *  bug 38426, check out of order releases
+         */
+        
+        //
+        // 5.0.17_GA is after 6.0.0_BETA2
+        //
+        // We need to fixup:
+        //    (1) 6.0.0_BETA1 -> 6.0.0_* upgrades 
+        //            - if the 6.0.0_BETA1 was freshly installed before a 5.0.17 attr was added
+        //            - if the 6.0.0_BETA1 was upgraded from a 5.0.X before a 5.0.17 attr was added
+        //    and 
+        //    (2) 6.0.0_BETA2 -> 6.0.0_* upgrades 
+        //            - if the 6.0.0_BETA2 was freshly installed before a 5.0.17 attr was added
+        //            - this is fixed in 6.0.0_BETA3, if the system was upgraded to 
+        //              6.0.0_BETA2 from a 6.0.0_BETA1 described above, attrs added in 5.0.17
+        //              that were missing in the 6.0.0_BETA1 are still missing in the 6.0.0_BETA2
+        //
+        if (attrVersion.compare("5.0.17") == 0) {
+            boolean fromATroubledInstall = (mSince.compare("6.0.0_BETA1") == 0 || mSince.compare("6.0.0_BETA2") == 0);
+            if (fromATroubledInstall)
+                return true;
+        }
+        
+        return false;
+    }
+    
     private void doEntry(ZimbraLdapContext zlc, Entry entry, String entryName, AttributeClass klass) throws ServiceException {
         
         System.out.println();
@@ -113,7 +149,7 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
             AttributeInfo ai = am.getAttributeInfo(attr);
             BuildInfo.Version attrVersion = ai.getSince();
             
-            if (!am.inVersion(attr, since) && !attrVersion.isFuture()) {
+            if (needsUpgrade(am, attr, attrVersion)) {    
                 if (mVerbose) {
                     System.out.println("");
                     System.out.println("Checking " + entryName + " attribute: " + attr + "(" + attrVersion + ")");
