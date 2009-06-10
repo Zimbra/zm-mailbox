@@ -7,9 +7,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
-public class GalLdapFilterDef extends LdapUpgrade {
+public class ZimbraGalLdapFilterDef extends LdapUpgrade {
     
-    GalLdapFilterDef() throws ServiceException {
+    ZimbraGalLdapFilterDef() throws ServiceException {
     }
     
     @Override

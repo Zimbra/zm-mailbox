@@ -40,11 +40,11 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.BuildInfo.Version;
 
-public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
+public class CosAndGlobalConfigDefault extends LdapUpgrade {
 
     private Version mSince;
     
-    SetCosAndGlobalConfigDefault() throws ServiceException {
+    CosAndGlobalConfigDefault() throws ServiceException {
     }
     
     @Override

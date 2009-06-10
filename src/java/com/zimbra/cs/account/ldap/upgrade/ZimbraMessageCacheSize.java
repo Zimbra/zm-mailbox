@@ -26,9 +26,9 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 
-public class MigrateZimbraMessageCacheSize extends LdapUpgrade {
+public class ZimbraMessageCacheSize extends LdapUpgrade {
 
-    MigrateZimbraMessageCacheSize() throws ServiceException {
+    ZimbraMessageCacheSize() throws ServiceException {
     }
     
     @Override

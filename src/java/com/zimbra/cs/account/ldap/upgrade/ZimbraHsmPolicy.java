@@ -12,9 +12,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
-public class HsmPolicy extends LdapUpgrade {
+public class ZimbraHsmPolicy extends LdapUpgrade {
 
-    HsmPolicy() throws ServiceException {
+    ZimbraHsmPolicy() throws ServiceException {
     }
     
     @Override

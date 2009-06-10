@@ -3,15 +3,16 @@ package com.zimbra.cs.account.ldap.upgrade;
 import com.zimbra.common.service.ServiceException;
 
 public enum UpgradeTask {
-    BUG_14531(GalLdapFilterDef.class),
-    BUG_18277(MigrateDomainAdmins.class),
-    BUG_22033(SetZimbraCreateTimestamp.class),
-    BUG_27075(SetCosAndGlobalConfigDefault.class),
+    BUG_14531(ZimbraGalLdapFilterDef.class),
+    BUG_18277(DomainAdminRights.class),
+    BUG_22033(ZimbraCreateTimestamp.class),
+    BUG_27075(CosAndGlobalConfigDefault.class),
     BUG_29978(DomainPublicServiceProtocolAndPort.class),
-    // BUG_31284(SetZimbraPrefFromDisplay.class),
-    BUG_31694(MigrateZimbraMessageCacheSize.class),
+    // BUG_31284(ZimbraPrefFromDisplay.class),
+    BUG_31694(ZimbraMessageCacheSize.class),
     BUG_32557(DomainObjectClassAmavisAccount.class),
-    BUG_33814(MigrateZimbraMtaAuthEnabled.class);
+    BUG_32719(ZimbraHsmPolicy.class),
+    BUG_33814(ZimbraMtaAuthEnabled.class);
     
     private Class mUpgradeClass;
     
@@ -29,11 +30,19 @@ public enum UpgradeTask {
         }
     }
     
+    String getBugNumber() {
+        String bug = this.name();
+        return bug.substring(4);
+    }
+    
     LdapUpgrade getUpgrader() throws ServiceException {
         try {
             Object obj = mUpgradeClass.newInstance();
-            if (obj instanceof LdapUpgrade)
-                return (LdapUpgrade)obj;
+            if (obj instanceof LdapUpgrade) {
+                LdapUpgrade ldapUpgrade = (LdapUpgrade)obj;
+                ldapUpgrade.setBug(getBugNumber());
+                return ldapUpgrade;
+            }
         } catch (IllegalAccessException e) {
             throw ServiceException.FAILURE("IllegalAccessException", e);
         } catch (InstantiationException e) {
@@ -42,5 +51,18 @@ public enum UpgradeTask {
         throw ServiceException.FAILURE("unable to instantiate upgrade object", null);
     }
 
+    public static void main(String[] args) throws ServiceException {
+        // sanity test
+        for (UpgradeTask upgradeTask : UpgradeTask.values()) {
+            LdapUpgrade upgrade = upgradeTask.getUpgrader();
+            
+            System.out.println("====================================");
+            System.out.println("Testing " + upgrade.getBug() + " ");
+            
+            upgrade.setVerbose(true);
+            upgrade.doUpgrade();
+        }
+    }
+    
 }
 

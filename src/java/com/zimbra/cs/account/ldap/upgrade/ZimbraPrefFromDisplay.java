@@ -15,9 +15,9 @@ import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
-public class SetZimbraPrefFromDisplay extends LdapUpgrade {    
+public class ZimbraPrefFromDisplay extends LdapUpgrade {    
     
-    SetZimbraPrefFromDisplay() throws ServiceException {
+    ZimbraPrefFromDisplay() throws ServiceException {
     }
     
     @Override

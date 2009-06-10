@@ -51,8 +51,16 @@ abstract class LdapUpgrade {
             mProv = (LdapProvisioning)prov;
     };
     
+    String getBug() {
+        return mBug;
+    }
+    
     void setBug(String bug) {
         mBug = bug;
+    }
+    
+    boolean getVerbose() {
+        return mVerbose;
     }
     
     void setVerbose(boolean verbose) {
@@ -173,7 +181,6 @@ abstract class LdapUpgrade {
         } 
         
         LdapUpgrade upgrade = upgradeTask.getUpgrader();
-        upgrade.setBug(bug);
         upgrade.setVerbose(verbose);
 
         if (!upgrade.parseCommandLine(cl)) {

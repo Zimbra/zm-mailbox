@@ -48,7 +48,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 
-public class MigrateDomainAdmins extends LdapUpgrade {
+public class DomainAdminRights extends LdapUpgrade {
     
     private static String[] sAdminUICompForAllDomainAdmins = new String[] {
         "accountListView",
@@ -73,7 +73,7 @@ public class MigrateDomainAdmins extends LdapUpgrade {
         "domainSkinsTab"
     };
 
-    MigrateDomainAdmins() throws ServiceException {
+    DomainAdminRights() throws ServiceException {
     }
     
     @Override

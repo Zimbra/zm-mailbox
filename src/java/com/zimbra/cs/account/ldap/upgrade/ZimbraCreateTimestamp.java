@@ -43,7 +43,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
-public class SetZimbraCreateTimestamp extends LdapUpgrade {
+public class ZimbraCreateTimestamp extends LdapUpgrade {
     
     enum Type {
         account,
@@ -71,7 +71,7 @@ public class SetZimbraCreateTimestamp extends LdapUpgrade {
     
     private Type mType;
 
-    SetZimbraCreateTimestamp() throws ServiceException {
+    ZimbraCreateTimestamp() throws ServiceException {
     }
     
     @Override
