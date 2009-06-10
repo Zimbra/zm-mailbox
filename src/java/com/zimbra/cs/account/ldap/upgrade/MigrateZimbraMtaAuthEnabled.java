@@ -39,8 +39,7 @@ import com.zimbra.cs.util.BuildInfo;
 
 public class MigrateZimbraMtaAuthEnabled extends LdapUpgrade {
 
-    MigrateZimbraMtaAuthEnabled(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    MigrateZimbraMtaAuthEnabled() throws ServiceException {
     }
     
     @Override
@@ -323,7 +322,9 @@ public class MigrateZimbraMtaAuthEnabled extends LdapUpgrade {
         String trueNotset = setupTestServer("trueNotset", Boolean.TRUE, null).getName();
         String notsetTrue = setupTestServer("notsetTrue",   null, Boolean.TRUE).getName();
         
-        MigrateZimbraMtaAuthEnabled upgrade = new MigrateZimbraMtaAuthEnabled("test", true);
+        MigrateZimbraMtaAuthEnabled upgrade = new MigrateZimbraMtaAuthEnabled();
+        upgrade.setBug("test");
+        upgrade.setVerbose(true);
         
         for (Map.Entry<String, ZAttrProvisioning.MtaTlsSecurityLevel> entry : servers.entrySet()) {
             doTest(upgrade, entry.getKey(), entry.getValue());

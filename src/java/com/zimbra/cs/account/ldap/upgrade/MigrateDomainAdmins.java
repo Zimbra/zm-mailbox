@@ -73,8 +73,7 @@ public class MigrateDomainAdmins extends LdapUpgrade {
         "domainSkinsTab"
     };
 
-    MigrateDomainAdmins(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    MigrateDomainAdmins() throws ServiceException {
     }
     
     @Override

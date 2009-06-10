@@ -71,8 +71,7 @@ public class SetZimbraCreateTimestamp extends LdapUpgrade {
     
     private Type mType;
 
-    SetZimbraCreateTimestamp(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    SetZimbraCreateTimestamp() throws ServiceException {
     }
     
     @Override

@@ -34,8 +34,7 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     
-    DomainPublicServiceProtocolAndPort(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    DomainPublicServiceProtocolAndPort() throws ServiceException {
     }
     
     private static String genQuery(List<Server> servers) {
@@ -385,7 +384,9 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     }
     
     public static void main(String[] args) throws ServiceException {
-        DomainPublicServiceProtocolAndPort upgrade = new DomainPublicServiceProtocolAndPort("test", true);
+        DomainPublicServiceProtocolAndPort upgrade = new DomainPublicServiceProtocolAndPort();
+        upgrade.setBug("");
+        upgrade.setVerbose(true);
         upgrade.populateTestData();
     }
 }

@@ -17,8 +17,7 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 public class SetZimbraPrefFromDisplay extends LdapUpgrade {    
     
-    SetZimbraPrefFromDisplay(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    SetZimbraPrefFromDisplay() throws ServiceException {
     }
     
     @Override

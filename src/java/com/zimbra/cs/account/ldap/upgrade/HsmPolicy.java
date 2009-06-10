@@ -14,8 +14,7 @@ import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 public class HsmPolicy extends LdapUpgrade {
 
-    HsmPolicy(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    HsmPolicy() throws ServiceException {
     }
     
     @Override

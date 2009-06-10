@@ -44,8 +44,7 @@ public class SetCosAndGlobalConfigDefault extends LdapUpgrade {
 
     private Version mSince;
     
-    SetCosAndGlobalConfigDefault(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    SetCosAndGlobalConfigDefault() throws ServiceException {
     }
     
     @Override

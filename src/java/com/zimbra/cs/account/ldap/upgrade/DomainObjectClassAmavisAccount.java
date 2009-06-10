@@ -17,9 +17,7 @@
 package com.zimbra.cs.account.ldap.upgrade;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.naming.NamingException;
 
@@ -27,15 +25,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.account.ldap.upgrade.DomainPublicServiceProtocolAndPort.DomainPuclicServiceProtocolAndPortVisitor;
 
 public class DomainObjectClassAmavisAccount extends LdapUpgrade {
 
-    DomainObjectClassAmavisAccount(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    DomainObjectClassAmavisAccount() throws ServiceException {
     }
     
     static class AddDomainObjectClassAmavisAccountVisitor extends LdapUpgrade.UpgradeVisitor implements NamedEntry.Visitor {

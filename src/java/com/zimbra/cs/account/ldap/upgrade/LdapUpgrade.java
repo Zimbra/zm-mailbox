@@ -43,16 +43,21 @@ abstract class LdapUpgrade {
     protected boolean mVerbose;
     protected LdapProvisioning mProv;
     
-    LdapUpgrade(String bug, boolean verbose) throws ServiceException {
-        mBug = bug;
-        mVerbose = verbose;
-        
+    LdapUpgrade() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (!(prov instanceof LdapProvisioning))
             throw ServiceException.FAILURE("Provisioning is not instance of LdapProvisioning", null);
         else
             mProv = (LdapProvisioning)prov;
     };
+    
+    void setBug(String bug) {
+        mBug = bug;
+    }
+    
+    void setVerbose(boolean verbose) {
+        mVerbose = verbose;
+    }
     
     abstract void doUpgrade() throws ServiceException;
     
@@ -157,38 +162,20 @@ abstract class LdapUpgrade {
             System.exit(1);
         }
         
+        String bug = cl.getOptionValue(O_BUG);
         boolean verbose = cl.hasOption(O_VERBOSE);
         
-        String bug = cl.getOptionValue(O_BUG);
-        LdapUpgrade upgrade = null;
+        UpgradeTask upgradeTask = UpgradeTask.fromString(bug);
         
-        if ("14531".equalsIgnoreCase(bug)) {
-            upgrade = new GalLdapFilterDef(bug, verbose);
-        } else if ("18277".equalsIgnoreCase(bug)) {
-            upgrade = new MigrateDomainAdmins(bug, verbose);
-        } else if ("22033".equalsIgnoreCase(bug)) {
-            upgrade = new SetZimbraCreateTimestamp(bug, verbose);
-        } else if ("27075".equalsIgnoreCase(bug)) {
-            // e.g. -b 27075 5.0.12
-            upgrade = new SetCosAndGlobalConfigDefault(bug, verbose);
-        } else if ("29978".equalsIgnoreCase(bug)) {
-            upgrade = new DomainPublicServiceProtocolAndPort(bug, verbose);
-//        } else if ("31284".equalsIgnoreCase(bug)) {
-//            upgrade = new SetZimbraPrefFromDisplay(bug, verbose);
-        } else if ("31694".equalsIgnoreCase(bug)) {
-            upgrade = new MigrateZimbraMessageCacheSize(bug, verbose);
-        } else if ("32557".equalsIgnoreCase(bug)) {
-            upgrade = new DomainObjectClassAmavisAccount(bug, verbose);
-        } else if ("32719".equalsIgnoreCase(bug)) {
-            upgrade = new HsmPolicy(bug, verbose);
-        } else if ("33814".equalsIgnoreCase(bug)) {
-            // note: has to be run *before* running -b 27075
-            upgrade = new MigrateZimbraMtaAuthEnabled(bug, verbose);
-        } else {
+        if (upgradeTask == null) {
             System.out.println("unrecognized bug number");
             System.exit(1);
-        }
+        } 
         
+        LdapUpgrade upgrade = upgradeTask.getUpgrader();
+        upgrade.setBug(bug);
+        upgrade.setVerbose(verbose);
+
         if (!upgrade.parseCommandLine(cl)) {
             System.exit(1);
         }

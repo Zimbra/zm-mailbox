@@ -9,8 +9,7 @@ import com.zimbra.cs.account.Provisioning;
 
 public class GalLdapFilterDef extends LdapUpgrade {
     
-    GalLdapFilterDef(String bug, boolean verbose) throws ServiceException {
-        super(bug, verbose);
+    GalLdapFilterDef() throws ServiceException {
     }
     
     @Override
