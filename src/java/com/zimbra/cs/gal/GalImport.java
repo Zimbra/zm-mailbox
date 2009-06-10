@@ -184,6 +184,7 @@ public class GalImport extends MailItemImport {
 		public void visit(GalContact contact) throws ServiceException {
 			Map<String,Object> attrs = contact.getAttrs();
 			String id = contact.getId();
+			attrs.put("dn", id);
 			ZimbraLog.gal.debug("processing gal contact "+id);
 			DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
 	        String modifiedDate = (String) contact.getAttrs().get("modifyTimeStamp");

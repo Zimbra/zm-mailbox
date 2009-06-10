@@ -129,7 +129,7 @@ public class GalSearchControl {
 			// if the presented sync token is old LDAP timestamp format, we need to sync
 			// against LDAP server to keep the client up to date.
 			GalSyncToken gst = mParams.getGalSyncToken();
-			if (mParams.isIdOnly() || gst.doMailboxSync())
+			if (mParams.isIdOnly() && gst.doMailboxSync())
 				return;
 		} catch (GalAccountNotConfiguredException e) {
 			// fallback to ldap search
@@ -288,7 +288,7 @@ public class GalSearchControl {
 				DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
 				syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
     		}
-			if (mParams.isIdOnly() || token.doMailboxSync()) {
+			if (mParams.isIdOnly() && token.doMailboxSync()) {
 				int changeId = token.getChangeId(galAcct.getId());
 	    		List<Integer> deleted = mbox.getTombstones(changeId).getAll();
 				Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
