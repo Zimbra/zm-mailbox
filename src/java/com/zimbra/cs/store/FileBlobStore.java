@@ -53,11 +53,16 @@ public class FileBlobStore extends StoreManager {
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
     private static int sDiskStreamingThreshold;
     private UncompressedFileCache<String> mUncompressedFileCache;
+    private FileDescriptorCache mFileDescriptorCache;
 
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
 	FileBlobStore() throws Exception {
         mUniqueFilenameGenerator = new UniqueFileNameGenerator();
+	}
+	
+	public FileDescriptorCache getFileDescriptorCache() {
+	    return mFileDescriptorCache;
 	}
 
 	@Override public void startup()
@@ -68,11 +73,12 @@ public class FileBlobStore extends StoreManager {
                                                 sweepMaxAgeMS);
         mSweeper.start();
         
-        // Initialize uncompressed file cache.
+        // Initialize file uncompressed file cache and file descriptor cache.
         String tmpPath = System.getProperty("java.io.tmpdir", "/tmp");
         String uncompressedPath = tmpPath + "/uncompressed";
         FileUtil.ensureDirExists(uncompressedPath);
         mUncompressedFileCache = new UncompressedFileCache<String>(uncompressedPath);
+        mFileDescriptorCache = new FileDescriptorCache(mUncompressedFileCache);
 
         loadSettings();
         mUncompressedFileCache.startup();
@@ -116,10 +122,6 @@ public class FileBlobStore extends StoreManager {
         store.mUncompressedFileCache.setMaxFiles(uncompressedMaxFiles);
     }
     
-    public UncompressedFileCache<String> getUncompressedFileCache() {
-        return mUncompressedFileCache;
-    }
-
     @Override public String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException {
         Volume volume = Volume.getById(volumeId);
         String incomingDir = volume.getIncomingMsgDir();

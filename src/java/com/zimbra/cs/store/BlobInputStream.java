@@ -17,16 +17,11 @@ package com.zimbra.cs.store;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Set;
 
 import javax.mail.internet.SharedInputStream;
 
-import org.jivesoftware.util.ConcurrentHashSet;
-
-import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.cs.localconfig.DebugConfig;
 
 public class BlobInputStream extends InputStream
 implements SharedInputStream {
@@ -39,18 +34,6 @@ implements SharedInputStream {
      * parent.
      */
     private File mFile;
-    
-    /**
-     * <tt>true</tt> if {@link #mFile} is gzip-compressed.  Only set on the
-     * root stream.
-     */
-    private Boolean mIsGzipped;
-
-    /**
-     * The <tt>SharedFile</tt> object for this stream group.  Only set on
-     * the root stream.
-     */
-    private SharedFile mSharedFile;
     
     // All indexes are relative to the file, not relative to mStart/mEnd.
     
@@ -78,13 +61,6 @@ implements SharedInputStream {
      * End index of this stream (exclusive).
      */
     private long mEnd;
-    
-    /**
-     * Contains this stream and all related streams created with {@link #newStream}.
-     * This set is shared between the original stream and all other streams in its
-     * group.
-     */
-    private Set<BlobInputStream> mGroup;
     
     private BlobInputStream mRoot;
     
@@ -120,16 +96,12 @@ implements SharedInputStream {
         if (parent == null) {
             // Top-level stream.
             mFile = file;
-            mIsGzipped = FileUtil.isGzipped(file);
-            mGroup = new ConcurrentHashSet<BlobInputStream>();
             mRoot = this;
         } else {
             // New stream.  Get settings from the parent and add this stream to the group.
             mRoot = parent.mRoot;
-            mGroup = parent.mGroup;
             file = mRoot.mFile;
         }
-        mGroup.add(this);
         
         if (!file.exists()) {
             throw new IOException(file.getPath() + " does not exist.");
@@ -145,7 +117,7 @@ implements SharedInputStream {
             mStart = start;
             mPos = start;
         }
-        long dataLength = getSharedFile().getLength();
+        long dataLength = getFileDescriptorCache().getLength(file.getPath());
         if (end == null) {
             mEnd = dataLength;
         } else {
@@ -160,51 +132,23 @@ implements SharedInputStream {
             this, file.getPath(), file.length(), dataLength, start, end, parent, mStart, mEnd);
     }
     
-    private boolean isGzipped() {
-        return mRoot.mIsGzipped;
+    private FileDescriptorCache getFileDescriptorCache() {
+        return ((FileBlobStore) StoreManager.getInstance()).getFileDescriptorCache();
     }
     
     /**
-     * Gets the <tt>SharedFile</tt> or creates a new one.
-     */
-    private SharedFile getSharedFile()
-    throws IOException {
-        if (mRoot.mSharedFile == null) {
-            if (isGzipped()) {
-                mRoot.mSharedFile = getUncompressedCache().get(mRoot.mFile.getPath(), mRoot.mFile, !DebugConfig.disableMessageStoreFsync);
-            } else {
-                mRoot.mSharedFile = new SharedFile(mRoot.mFile);
-            }
-        }
-        return mRoot.mSharedFile;
-    }
-    
-    private UncompressedFileCache<String> getUncompressedCache() {
-        return ((FileBlobStore) StoreManager.getInstance()).getUncompressedFileCache();
-    }
-    
-    /**
-     * Closes the file descriptor used by this stream group.
+     * Closes the file descriptor referenced by this stream.
      */
     public void closeFile() {
-        if (mRoot.mSharedFile != null) {
-            try {
-                mRoot.mSharedFile.close();
-            } catch (IOException e) {
-                sLog.warn("Unable to close SharedFile " + mRoot.mFile.getPath(), e);
-            }
-            mRoot.mSharedFile = null;
-        }
+        getFileDescriptorCache().close(mRoot.mFile.getPath());
     }
 
     /**
      * Updates this stream group with a new file location.
      */
-    public void fileMoved(File newFile)
-    throws IOException {
+    public void fileMoved(File newFile) {
         closeFile();
         mRoot.mFile = newFile;
-        mRoot.mIsGzipped = FileUtil.isGzipped(mRoot.mFile);
     }
     
     ////////////// InputStream methods //////////////
@@ -217,10 +161,6 @@ implements SharedInputStream {
     @Override
     public void close() {
         mPos = mEnd;
-        mGroup.remove(this);
-        if (mGroup.size() == 0) {
-            closeFile();
-        }
     }
 
     @Override
@@ -239,11 +179,10 @@ implements SharedInputStream {
         if (mPos >= mEnd) {
             return -1;
         }
-        int retVal = getSharedFile().read(mPos);
+        int retVal = getFileDescriptorCache().read(mRoot.mFile.getPath(), mPos);
         if (retVal >= 0) {
             mPos++;
         } else {
-            // Close proactively, since JavaMail keeps SharedInputStreams open.
             close();
         }
         return retVal;
@@ -260,11 +199,10 @@ implements SharedInputStream {
         
         // Make sure we don't read past the endpoint passed to the constructor
         len = (int) Math.min(len, mEnd - mPos);
-        int numRead = getSharedFile().read(mPos, b, off, len);
+        int numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mPos, b, off, len);
         if (numRead > 0) {
             mPos += numRead;
         } else {
-            // Close proactively, since JavaMail keeps SharedInputStreams open.
             close();
         }
         return numRead;
