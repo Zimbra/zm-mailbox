@@ -83,6 +83,8 @@ public abstract class Filter {
 					mTextMatches.add(new TextMatch(e));
 				else if (name.equals(DavElements.E_TIME_RANGE))
 					mTimeRange = new TimeRange(e);
+				else if (name.equals(DavElements.E_IS_NOT_DEFINED))
+					mIsNotDefinedSet = true;
 				else
 					ZimbraLog.dav.info("unrecognized filter "+name.getNamespaceURI()+":"+name.getName());
 			}
@@ -129,19 +131,26 @@ public abstract class Filter {
 	public static class TextMatch {
 		private String mCollation;
 		private String mText;
+		private boolean mNegate;
 		
 		public TextMatch(Element elem) {
-			mCollation = elem.attributeValue(DavElements.P_COLLATION);
+			mCollation = elem.attributeValue(DavElements.P_COLLATION, DavElements.ASCII);
+			mNegate = elem.attributeValue(DavElements.P_NEGATE_CONDITION, DavElements.NO).equals(DavElements.YES);
 			mText = elem.getText();
 		}
 		
 		public boolean match(String val) {
 			boolean ignoreCase = mCollation.equals(DavElements.ASCII);
+			boolean ret;
 			
 			if (ignoreCase)
-				return val.equalsIgnoreCase(mText);
+				ret = val.equalsIgnoreCase(mText);
 			else
-				return val.equals(mText);
+				ret = val.equals(mText);
+			if (mNegate)
+				return !ret;
+			else
+				return ret;
 		}
 	}
 	public static class ParamFilter extends Filter {
@@ -150,9 +159,11 @@ public abstract class Filter {
 		}
 		public boolean match(ZCalendar.ZProperty prop) {
 			ZCalendar.ICalTok tok = ZCalendar.ICalTok.lookup(mName);
+			if (tok == null)
+				return false;
 			ZCalendar.ZParameter param = prop.getParameter(tok);
 			if (param == null)
-				return false;
+				return mIsNotDefinedSet;
 			return runTextMatch(param.getValue());
 		}
 		protected boolean canHaveCompFilter()  { return false; }
@@ -171,6 +182,8 @@ public abstract class Filter {
 				return false;
 			boolean matched = true;
 			ZCalendar.ZProperty prop = comp.getProperty(tok);
+			if (prop == null)
+				return mIsNotDefinedSet;
 			for (ParamFilter pf : mParams)
 				matched &= pf.match(prop);
 			matched &= runTextMatch(prop.getValue());

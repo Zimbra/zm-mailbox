@@ -41,6 +41,8 @@ public class DavElements {
 
 	public static final String ASCII = "i;ascii-casemap";  // case insensitive
 	public static final String OCTET = "i;octet";
+	public static final String YES = "yes";
+	public static final String NO  = "no";
 	
 	// properties strings in alphabetical order
 	public static final String P_ABSTRACT = "abstract";
@@ -143,6 +145,7 @@ public class DavElements {
 	
 	public static final String P_NAME = "name";
 	public static final String P_NAMESPACE = "namespace";
+	public static final String P_NEGATE_CONDITION = "negate-condition";
 	public static final String P_NEED_PRIVILEGES = "need-privileges";
 	public static final String P_NO_INVERT = "no-invert";
 	public static final String P_NOVALUE = "novalue";
