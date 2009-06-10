@@ -15,10 +15,7 @@
 package com.zimbra.cs.service.formatter;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -26,15 +23,20 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.UserServlet.HttpInputStream;
 import com.zimbra.cs.service.UserServletException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+
+import org.apache.commons.httpclient.Header;
+
 import java.io.IOException;
 
 public class HtmlFormatter extends Formatter {
@@ -105,6 +107,33 @@ public class HtmlFormatter extends Formatter {
         Account targetAccount = context.targetAccount;
         MailItem targetItem = context.target;
         String uri = (String) context.req.getAttribute("requestedPath");
+        
+        if (targetItem instanceof Mountpoint) {
+        	Mountpoint mp = (Mountpoint) targetItem;
+            Provisioning prov = Provisioning.getInstance();
+            targetAccount = prov.getAccountById(mp.getOwnerId());
+        	Pair<Header[], HttpInputStream> remoteItem = UserServlet.getRemoteResourceAsStream((auth == null) ? null : auth.toZAuthToken(), mp.getTarget(), context.extraPath);
+        	remoteItem.getSecond().close();
+        	String remoteItemId = null;
+        	String remoteItemType = null;
+        	String remoteItemName = null;
+        	String remoteItemPath = null;
+        	for (Header h : remoteItem.getFirst())
+        		if (h.getName().compareToIgnoreCase("X-Zimbra-ItemId") == 0)
+        			remoteItemId = h.getValue();
+        		else if (h.getName().compareToIgnoreCase("X-Zimbra-ItemType") == 0)
+        			remoteItemType = h.getValue();
+        		else if (h.getName().compareToIgnoreCase("X-Zimbra-ItemName") == 0)
+        			remoteItemName = h.getValue();
+        		else if (h.getName().compareToIgnoreCase("X-Zimbra-ItemPath") == 0)
+        			remoteItemPath = h.getValue();
+        	
+            context.req.setAttribute(ATTR_TARGET_ITEM_ID, remoteItemId);
+            context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, remoteItemType);
+            context.req.setAttribute(ATTR_TARGET_ITEM_NAME, remoteItemName);
+            context.req.setAttribute(ATTR_TARGET_ITEM_PATH, remoteItemPath);
+            targetItem = null;
+        }
 
         context.req.setAttribute(ATTR_INTERNAL_DISPATCH, "yes");
         context.req.setAttribute(ATTR_REQUEST_URI, uri != null ? uri : context.req.getRequestURI());
@@ -132,24 +161,5 @@ public class HtmlFormatter extends Formatter {
         ServletContext targetContext = servlet.getServletConfig().getServletContext().getContext(PATH_MAIN_CONTEXT);
         RequestDispatcher dispatcher = targetContext.getRequestDispatcher(PATH_JSP_REST_PAGE);
         dispatcher.forward(context.req, context.resp);
-    }
-
-    public static void main(String[] args) throws Exception {
-        if (args.length == 0)
-            return;
-        SoapHttpTransport tr;
-        //AuthToken auth = new AuthToken(ACL.GUID_PUBLIC, "foo@bar.com", "test123", null, System.currentTimeMillis() + AUTH_EXPIRATION);
-        AuthToken auth = AuthToken.getAuthToken(ACL.GUID_PUBLIC, null, null, null, System.currentTimeMillis() + AUTH_EXPIRATION);
-        String url = "http://localhost:7070/service/soap";
-        tr = new SoapHttpTransport(url);
-        tr.setAuthToken(auth.getEncoded());
-        tr.setTargetAcctName("user1");
-        XMLElement req = new XMLElement(MailConstants.GET_WIKI_REQUEST);
-        Element w = req.addElement(MailConstants.E_WIKIWORD);
-        w.addAttribute(MailConstants.A_ID, args[0]);
-        if (args.length > 1)
-            w.addAttribute(MailConstants.A_VERSION, args[1]);
-        Element resp = tr.invoke(req);
-        System.out.println(resp);
     }
 }

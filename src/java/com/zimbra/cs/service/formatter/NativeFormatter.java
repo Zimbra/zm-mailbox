@@ -76,6 +76,7 @@ public class NativeFormatter extends Formatter {
 
     public void formatCallback(Context context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
+        	sendZimbraHeaders(context.resp, context.target);
             if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
             } else if (context.target instanceof CalendarItem) {
@@ -300,13 +301,23 @@ public class NativeFormatter extends Formatter {
         } finally {
             is.close();
         }
-        if (item != null) {
-        	context.resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
-        	context.resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
-        	context.resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
-        	context.resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
-        	context.resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
-        }
+        sendZimbraHeaders(context.resp, item);
+    }
+    
+    private void sendZimbraHeaders(HttpServletResponse resp, MailItem item) {
+    	if (resp == null || item == null)
+    		return;
+    	resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
+    	resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
+    	resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
+    	resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
+    	resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
+    	resp.addHeader("X-Zimbra-ItemType", MailItem.getNameForType(item));
+    	resp.addHeader("X-Zimbra-ItemName", item.getName());
+    	try {
+    		resp.addHeader("X-Zimbra-ItemPath", item.getPath());
+    	} catch (ServiceException e) {
+    	}
     }
     
     private static final int READ_AHEAD_BUFFER_SIZE = 256;

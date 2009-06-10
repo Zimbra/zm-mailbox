@@ -1370,6 +1370,16 @@ public class UserServlet extends ZimbraServlet {
         }
     }
     
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(ZAuthToken authToken, ItemId iid, String extraPath)
+            throws ServiceException, IOException {
+        Map<String,String> params = new HashMap<String,String>();
+        params.put(QP_ID, iid.toString());
+        params.put(QP_NAME, extraPath);
+        Account target = Provisioning.getInstance().getAccountById(iid.getAccountId());
+        String url = getRemoteUrl(target, null, params);
+        return getRemoteResourceAsStream(authToken, url, null, 0, null, null);
+    }
+    
     public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url,
                 String proxyHost, int proxyPort, String proxyUser, String proxyPass)
     throws ServiceException, IOException {
