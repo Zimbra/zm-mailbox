@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 dac 20090607-2210 */
+    /* build: 6.0.0 pshao 20090610-1958 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3763,6 +3763,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=565)
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
+
+    /**
+     * Maximum number of file descriptors that are opened for accessing
+     * message content.
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1034)
+    public static final String A_zimbraMailFileDescriptorCacheSize = "zimbraMailFileDescriptorCacheSize";
 
     /**
      * RFC822 forwarding address for an account

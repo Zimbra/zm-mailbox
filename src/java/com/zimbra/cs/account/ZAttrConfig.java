@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090605-1708 */
+    /* build: 6.0.0 pshao 20090610-1958 */
 
     /**
      * RFC2256: descriptive information
@@ -10587,6 +10587,83 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailDiskStreamingThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of file descriptors that are opened for accessing
+     * message content.
+     *
+     * @return zimbraMailFileDescriptorCacheSize, or 1000 if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1034)
+    public int getMailFileDescriptorCacheSize() {
+        return getIntAttr(Provisioning.A_zimbraMailFileDescriptorCacheSize, 1000);
+    }
+
+    /**
+     * Maximum number of file descriptors that are opened for accessing
+     * message content.
+     *
+     * @param zimbraMailFileDescriptorCacheSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1034)
+    public void setMailFileDescriptorCacheSize(int zimbraMailFileDescriptorCacheSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorCacheSize, Integer.toString(zimbraMailFileDescriptorCacheSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of file descriptors that are opened for accessing
+     * message content.
+     *
+     * @param zimbraMailFileDescriptorCacheSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1034)
+    public Map<String,Object> setMailFileDescriptorCacheSize(int zimbraMailFileDescriptorCacheSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorCacheSize, Integer.toString(zimbraMailFileDescriptorCacheSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of file descriptors that are opened for accessing
+     * message content.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1034)
+    public void unsetMailFileDescriptorCacheSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorCacheSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of file descriptors that are opened for accessing
+     * message content.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1034)
+    public Map<String,Object> unsetMailFileDescriptorCacheSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorCacheSize, "");
         return attrs;
     }
 
