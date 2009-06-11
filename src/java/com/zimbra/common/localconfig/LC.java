@@ -288,8 +288,9 @@ public class LC {
 
     public static final KnownKey mailboxd_directory;
     public static final KnownKey mailboxd_java_heap_memory_percent;
+    public static final KnownKey mailboxd_java_heap_new_size_percent;
+    public static final KnownKey mailboxd_thread_stack_size;
     public static final KnownKey mailboxd_java_options;
-    public static final KnownKey mailboxd_java_home;
     public static final KnownKey mailboxd_pidfile;
     public static final KnownKey mailboxd_keystore;
     public static final KnownKey mailboxd_keystore_password;
@@ -300,7 +301,6 @@ public class LC {
     public static final KnownKey mailboxd_output_filename;
     public static final KnownKey mailboxd_output_file;
     public static final KnownKey mailboxd_output_rotate_interval;
-    public static final KnownKey mailboxd_thread_stack_size;
     
     public static final KnownKey ssl_allow_untrusted_certs;
     public static final KnownKey ssl_allow_mismatched_certs;
@@ -1035,11 +1035,14 @@ public class LC {
         mailboxd_java_heap_memory_percent = new KnownKey("mailboxd_java_heap_memory_percent");
         mailboxd_java_heap_memory_percent.setDefault("30");
 
-        mailboxd_java_options = new KnownKey("mailboxd_java_options");
-        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
+        mailboxd_thread_stack_size = new KnownKey("mailboxd_thread_stack_size");
+        mailboxd_thread_stack_size.setDefault("256k");
 
-        mailboxd_java_home = new KnownKey("mailboxd_java_home");
-        mailboxd_java_home.setDefault("${zimbra_java_home}");
+        mailboxd_java_heap_new_size_percent = new KnownKey("mailboxd_java_heap_new_size_percent");
+        mailboxd_java_heap_new_size_percent.setDefault("25");
+        
+        mailboxd_java_options = new KnownKey("mailboxd_java_options");
+        mailboxd_java_options.setDefault("-server -Djava.awt.headless=true -XX:+UseConcMarkSweepGC -XX:NewRatio=2 -XX:PermSize=128m -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
 
         mailboxd_pidfile = new KnownKey("mailboxd_pidfile");
         mailboxd_pidfile.setDefault("${zimbra_log_directory}" + FS + "mailboxd.pid");
@@ -1070,9 +1073,6 @@ public class LC {
 
         mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
         mailboxd_output_rotate_interval.setDefault("86400");
-
-        mailboxd_thread_stack_size = new KnownKey("mailboxd_thread_stack_size");
-        mailboxd_thread_stack_size.setDefault("256k");
 
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");

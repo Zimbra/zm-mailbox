@@ -34,6 +34,8 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
+import com.zimbra.common.util.FileUtil;
+
 public class LocalConfig {
 
     static final String E_LOCALCONFIG = "localconfig";
@@ -64,7 +66,7 @@ public class LocalConfig {
         mConfiguredKeys.put(key, value);
     }
 
-    private String getRaw(String key) 
+    String getRaw(String key) 
     {
         if (mConfiguredKeys.containsKey(key))
             return mConfiguredKeys.get(key);
@@ -148,6 +150,10 @@ public class LocalConfig {
         tempFile.renameTo(configFile);
     }
 
+    void backup(String suffix) throws IOException {
+	FileUtil.copy(new File(mConfigFile), new File(mConfigFile + suffix), true);
+    }
+    
     public LocalConfig(String file) throws DocumentException, ConfigException {
         mConfigFile = file;
         if (mConfigFile == null) {
