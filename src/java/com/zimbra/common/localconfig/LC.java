@@ -422,7 +422,6 @@ public class LC {
     public static final KnownKey httpclient_connmgr_max_host_connections;
     public static final KnownKey httpclient_connmgr_max_total_connections;
     public static final KnownKey httpclient_connmgr_keepalive_connections;
-    public static final KnownKey httpclient_connmgr_retry_count;
     public static final KnownKey httpclient_connmgr_tcp_nodelay;
     public static final KnownKey httpclient_connmgr_connection_timeout;
     public static final KnownKey httpclient_connmgr_so_timeout;
@@ -431,6 +430,7 @@ public class LC {
     public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
     
     // http client read timeouts
+    public static final KnownKey httpclient_soaphttptransport_retry_count;
     public static final KnownKey httpclient_soaphttptransport_so_timeout;
     
     public static final KnownKey shared_mime_info_globs;
@@ -1313,12 +1313,6 @@ public class LC {
                 "httpclient connection manager: " +
                 "Defines whether HTTP keep-alive connections should be used");
 
-        httpclient_connmgr_retry_count = new KnownKey(
-                "httpclient_connmgr_retry_count", 
-                "2",
-                "httpclient connection manager: " +
-                "Defines the number retries after a temporary failure");
-
         httpclient_connmgr_tcp_nodelay = new KnownKey(
                 "httpclient_connmgr_tcp_nodelay", 
                 "false",
@@ -1350,11 +1344,17 @@ public class LC {
                 "httpclient connection manager idle reaper: " +
                 "the timeout value to use when testing for idle connections.");
         
-        // http client socket read timeouts
+        httpclient_soaphttptransport_retry_count = new KnownKey(
+                "httpclient_soaphttptransport_retry_count", 
+                "2",
+                "Defines the number retries after a temporary failure for SOAP clients using the SoapHttpTransport class");
+        
         httpclient_soaphttptransport_so_timeout = new KnownKey(
                 "httpclient_soap_so_timeout", 
                 Long.toString(300 * Constants.MILLIS_PER_SECOND),
                 "socket timeout in milliseconds for SOAP clients using the SoapHttpTransport class");
+        
+        
         
         shared_mime_info_globs = new KnownKey("shared_mime_info_globs",
             "${zimbra_home}" + FS + "conf" + FS + "globs2",

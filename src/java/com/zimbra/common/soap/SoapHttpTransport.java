@@ -52,13 +52,13 @@ public class SoapHttpTransport extends SoapTransport {
     private Map<String, String> mCustomHeaders;
     private HostConfiguration mHostConfig = null;
     private HttpDebugListener mHttpDebugListener;
-    private boolean mKeepAlive = keepAlive;
-    private int mRetryCount = retryCount;
+    private boolean mKeepAlive = defaultKeepAlive;
+    private int mRetryCount = defaultRetryCount;
     private int mTimeout = defaultTimeout;
     private String mUri;
     private URI mURI;
-    private static boolean keepAlive = LC.httpclient_connmgr_keepalive_connections.booleanValue();
-    private static int retryCount = LC.httpclient_connmgr_retry_count.intValue();
+    private static boolean defaultKeepAlive = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getKeepAlive();
+    private static int defaultRetryCount = LC.httpclient_soaphttptransport_retry_count.intValue();
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
     
     public interface HttpDebugListener {
@@ -166,7 +166,7 @@ public class SoapHttpTransport extends SoapTransport {
      * <p> Default value is <code>1</code>.
      */
     public void setRetryCount(int newRetryCount) {
-        mRetryCount = newRetryCount < 0 ? retryCount : newRetryCount;
+        mRetryCount = newRetryCount < 0 ? defaultRetryCount : newRetryCount;
     }
 
     /**

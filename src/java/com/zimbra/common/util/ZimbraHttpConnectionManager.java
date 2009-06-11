@@ -181,6 +181,10 @@ public class ZimbraHttpConnectionManager {
         return mHttpConnMgr;
     }
     
+    public boolean getKeepAlive() {
+        return LC.httpclient_connmgr_keepalive_connections.booleanValue();
+    }
+    
     /**
      * ==========================================================
      * Important notes on using HttpClient returned by 
