@@ -94,6 +94,7 @@
     <a n="zimbraFeatureVoiceUpsellURL"/>
     <a n="zimbraForeignPrincipal"/>
     <a n="zimbraFreebusyLocalMailboxNotActive"/>
+    <a n="zimbraGalSyncAccountBasedAutoCompleteEnabled"/>
     <a n="zimbraHideInGal"/>
     <a n="zimbraIMAvailableInteropGateways"/>
     <a n="zimbraIMService"/>
@@ -115,6 +116,9 @@
     <a n="zimbraMailSpamLifetime"/>
     <a n="zimbraMailStatus"/>
     <a n="zimbraMailTrashLifetime"/>
+    <a n="zimbraMaxContactsPerPage"/>
+    <a n="zimbraMaxMailItemsPerPage"/>
+    <a n="zimbraMaxVoiceItemsPerPage"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
@@ -139,6 +143,7 @@
     <a n="zimbraPop3Enabled"/>
     <a n="zimbraPortalName"/>
     <a n="zimbraPrefAdvancedClientEnforceMinDisplay"/>
+    <a n="zimbraPrefAppleIcalDelegationEnabled"/>
     <a n="zimbraPrefAutoAddAddressEnabled"/>
     <a n="zimbraPrefAutoSaveDraftInterval"/>
     <a n="zimbraPrefBccAddress"/>
@@ -165,6 +170,7 @@
     <a n="zimbraPrefCalendarReminderSoundsEnabled"/>
     <a n="zimbraPrefCalendarReminderYMessenger"/>
     <a n="zimbraPrefCalendarSendInviteDeniedAutoReply"/>
+    <a n="zimbraPrefCalendarShowPastDueReminders"/>
     <a n="zimbraPrefCalendarToasterEnabled"/>
     <a n="zimbraPrefCalendarUseQuickAdd"/>
     <a n="zimbraPrefChildVisibleAccount"/>
@@ -173,6 +179,7 @@
     <a n="zimbraPrefComposeInNewWindow"/>
     <a n="zimbraPrefContactsInitialView"/>
     <a n="zimbraPrefContactsPerPage"/>
+    <a n="zimbraPrefConvReadingPaneLocation"/>
     <a n="zimbraPrefConversationOrder"/>
     <a n="zimbraPrefDedupeMessagesSentToSelf"/>
     <a n="zimbraPrefDefaultSignatureId"/>

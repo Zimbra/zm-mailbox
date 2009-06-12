@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+========================================================
+        cross mailbox search management rights
+========================================================
+-->
+
+<rights>
+
+<include file="zimbra-rights.xml"/>
+
+
+<right name="abortXMbxSearch" type="preset" targetType="server">
+  <desc>abort a running cross mailbox search task on a server</desc>
+</right>
+
+<right name="createXMbxSearch" type="preset" targetType="server">
+  <desc>create a cross mailbox search task on a server</desc>
+</right>
+
+<right name="deleteXMbxSearch" type="preset" targetType="server">
+  <desc>delete a cross mailbox search task on a server</desc>
+</right>
+
+<right name="listXMbxSearch" type="preset" targetType="server">
+  <desc>retrieves details of all search tasks running or cashed on a server</desc>
+</right>
+
+<right name="purgeXMbxSearch" type="preset" targetType="server">
+  <desc>delete all inactive search tasks on a server. </desc>
+</right>
+
+<right type="combo" name="XMbxSearchRights">
+  <desc>cross mailbox search tasks management rights</desc>
+  <rights>
+    <r n="abortXMbxSearch"/>
+    <r n="createXMbxSearch"/>
+    <r n="deleteXMbxSearch"/>
+    <r n="listXMbxSearch"/>
+    <r n="purgeXMbxSearch"/>
+  </rights>
+</right>
+      
+
+</rights>
