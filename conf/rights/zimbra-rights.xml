@@ -124,17 +124,17 @@
 
 <right name="getAccountShareInfo" type="preset" targetType="account">
   <desc>get share info on account</desc>
-</right>         
+</right>  
+
+<right name="moveAccountMailbox" type="preset" targetType="account">
+  <desc>move account mailbox</desc>
+</right>        
 
 <!--
     TODO:      
           - getMailboxDump                     : get mailbox dump for legal intercept
-          - moveMailbox                        : move mailbox from one server to another
           - reindexMailbox                     : reindex mailbox
           - viewEmail                          : view the account's email
-          
-          - backupAccount                      : backup account
-          - restoreAccount                     : restore account from backup
 -->
  
 <right name="setAccountPassword" type="preset" targetType="account">
@@ -273,12 +273,8 @@
    TODO:
 
           - getMailboxDump                     : get mailbox dump for legal intercept
-          - moveMailbox                        : move mailbox from one server to another
           - reindexMailbox                     : reindex mailbox
           - viewEmail                          : view the calendar resource's email
-          
-          - backupCalenceResource              : backup calendar resource
-          - restoreCalenceResource             : restore calendar resource from backup
 -->
        
 <right name="setCalendarResourcePassword" type="preset" targetType="calresource">
@@ -294,8 +290,12 @@
 </right>
 
 <right name="getCalendarResourceShareInfo" type="preset" targetType="calresource">
-  <desc>get share info on distribution list</desc>
+  <desc>get share info on calendar resource</desc>
 </right>
+
+<right name="moveCalendarResourceMailbox" type="preset" targetType="calresource">
+  <desc>move calendar resource mailbox</desc>
+</right>   
 
 <!-- 
 ========================================================
@@ -465,11 +465,6 @@
 <right name="getDomainQuotaUsage" type="preset" targetType="domain">
   <desc>get domain quota usage</desc>
 </right>
-          
-<!--       
-  TODO:      
-          - crossMailboxSearch                : run search mail (CMBS) functionality
--->   
 
 <right name="createAccount" type="preset" targetType="domain">
   <desc>create account in the domain</desc>
@@ -614,6 +609,26 @@
 
 <right name="deployZimlet" type="preset" targetType="server">
   <desc>deploy and undeploy zimlets on a server</desc>
+</right>
+
+<right name="backupAccount" type="preset" targetType="server">
+  <desc>backup accounts on a server</desc>
+</right> 
+
+<right name="restoreAccount" type="preset" targetType="server">
+  <desc>restore accounts on a server</desc>
+</right> 
+
+<right name="rolloverRedoLog" type="preset" targetType="server">
+  <desc>rollover redo log on a server</desc>
+</right> 
+
+<right name="moveMailboxToServer" type="preset" targetType="server">
+  <desc>move mailboxes to a server</desc>
+</right> 
+
+<right name="moveMailboxFromServer" type="preset" targetType="server">
+  <desc>move mailboxes from a server and purge moved mailboxes</desc>
 </right> 
        
 <!-- 
