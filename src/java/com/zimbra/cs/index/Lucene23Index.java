@@ -49,6 +49,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -204,7 +205,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
     public void endBatchOperation() {
     }
 
-    public void addDocument(Document[] docs, int itemId, String indexId, int modContent, long receivedDate, 
+    public void addDocument(Document[] docs, MailItem item, int itemId, String indexId, int modContent, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;

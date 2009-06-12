@@ -499,7 +499,7 @@ public final class MailboxIndex
                 if (docList != null) {
                     Document[] docs = new Document[docList.size()];
                     docs = docList.toArray(docs);
-                    mTextIndex.addDocument(docs, mi.getId(), indexId, modContent, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
+                    mTextIndex.addDocument(docs, mi, mi.getId(), indexId, modContent, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexMailItem caught IOException", e);

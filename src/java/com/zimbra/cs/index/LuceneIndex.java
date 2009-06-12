@@ -45,6 +45,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.SyncToken;
 
 
@@ -172,7 +173,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
-    public void addDocument(Document[] docs, int itemId, String indexId, int modContent, long receivedDate, 
+    public void addDocument(Document[] docs, MailItem item, int itemId, String indexId, int modContent, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
