@@ -30,9 +30,11 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 5.0 pshao 20090421-1009 */
+    /* build: 6.0.0 pshao 20090612-1014 */
 
 
+    public static AdminRight R_XMbxSearchRights;
+    public static AdminRight R_abortXMbxSearch;
     public static AdminRight R_accessGAL;
     public static AdminRight R_addAccountAlias;
     public static AdminRight R_addCalendarResourceAlias;
@@ -66,6 +68,7 @@ public class AdminRights {
     public static AdminRight R_createSubDomain;
     public static AdminRight R_createTopDomain;
     public static AdminRight R_createXMPPComponent;
+    public static AdminRight R_createXMbxSearch;
     public static AdminRight R_createZimlet;
     public static AdminRight R_crossDomainAdmin;
     public static AdminRight R_deleteAccount;
@@ -76,6 +79,7 @@ public class AdminRights {
     public static AdminRight R_deleteDomain;
     public static AdminRight R_deleteServer;
     public static AdminRight R_deleteXMPPComponent;
+    public static AdminRight R_deleteXMbxSearch;
     public static AdminRight R_deleteZimlet;
     public static AdminRight R_deployZimlet;
     public static AdminRight R_domainAdminAccountRights;
@@ -113,6 +117,7 @@ public class AdminRights {
     public static AdminRight R_listDomain;
     public static AdminRight R_listServer;
     public static AdminRight R_listXMPPComponent;
+    public static AdminRight R_listXMbxSearch;
     public static AdminRight R_listZimlet;
     public static AdminRight R_manageAccountLogger;
     public static AdminRight R_manageMailQueue;
@@ -134,6 +139,7 @@ public class AdminRights {
     public static AdminRight R_purgeAccountCalendarCache;
     public static AdminRight R_purgeCalendarResourceCalendarCache;
     public static AdminRight R_purgeMessages;
+    public static AdminRight R_purgeXMbxSearch;
     public static AdminRight R_reindexMailbox;
     public static AdminRight R_removeAccountAlias;
     public static AdminRight R_removeCalendarResourceAlias;
@@ -158,6 +164,8 @@ public class AdminRights {
 
 
     public static void init(RightManager rm) throws ServiceException {
+        R_XMbxSearchRights                     = rm.getAdminRight(Right.RT_XMbxSearchRights);
+        R_abortXMbxSearch                      = rm.getAdminRight(Right.RT_abortXMbxSearch);
         R_accessGAL                            = rm.getAdminRight(Right.RT_accessGAL);
         R_addAccountAlias                      = rm.getAdminRight(Right.RT_addAccountAlias);
         R_addCalendarResourceAlias             = rm.getAdminRight(Right.RT_addCalendarResourceAlias);
@@ -191,6 +199,7 @@ public class AdminRights {
         R_createSubDomain                      = rm.getAdminRight(Right.RT_createSubDomain);
         R_createTopDomain                      = rm.getAdminRight(Right.RT_createTopDomain);
         R_createXMPPComponent                  = rm.getAdminRight(Right.RT_createXMPPComponent);
+        R_createXMbxSearch                     = rm.getAdminRight(Right.RT_createXMbxSearch);
         R_createZimlet                         = rm.getAdminRight(Right.RT_createZimlet);
         R_crossDomainAdmin                     = rm.getAdminRight(Right.RT_crossDomainAdmin);
         R_deleteAccount                        = rm.getAdminRight(Right.RT_deleteAccount);
@@ -201,6 +210,7 @@ public class AdminRights {
         R_deleteDomain                         = rm.getAdminRight(Right.RT_deleteDomain);
         R_deleteServer                         = rm.getAdminRight(Right.RT_deleteServer);
         R_deleteXMPPComponent                  = rm.getAdminRight(Right.RT_deleteXMPPComponent);
+        R_deleteXMbxSearch                     = rm.getAdminRight(Right.RT_deleteXMbxSearch);
         R_deleteZimlet                         = rm.getAdminRight(Right.RT_deleteZimlet);
         R_deployZimlet                         = rm.getAdminRight(Right.RT_deployZimlet);
         R_domainAdminAccountRights             = rm.getAdminRight(Right.RT_domainAdminAccountRights);
@@ -238,6 +248,7 @@ public class AdminRights {
         R_listDomain                           = rm.getAdminRight(Right.RT_listDomain);
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
         R_listXMPPComponent                    = rm.getAdminRight(Right.RT_listXMPPComponent);
+        R_listXMbxSearch                       = rm.getAdminRight(Right.RT_listXMbxSearch);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
         R_manageAccountLogger                  = rm.getAdminRight(Right.RT_manageAccountLogger);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
@@ -259,6 +270,7 @@ public class AdminRights {
         R_purgeAccountCalendarCache            = rm.getAdminRight(Right.RT_purgeAccountCalendarCache);
         R_purgeCalendarResourceCalendarCache   = rm.getAdminRight(Right.RT_purgeCalendarResourceCalendarCache);
         R_purgeMessages                        = rm.getAdminRight(Right.RT_purgeMessages);
+        R_purgeXMbxSearch                      = rm.getAdminRight(Right.RT_purgeXMbxSearch);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);
         R_removeAccountAlias                   = rm.getAdminRight(Right.RT_removeAccountAlias);
         R_removeCalendarResourceAlias          = rm.getAdminRight(Right.RT_removeCalendarResourceAlias);
