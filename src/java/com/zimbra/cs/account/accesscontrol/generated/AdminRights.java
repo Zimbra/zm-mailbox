@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090612-1014 */
+    /* build: 6.0.0 pshao 20090612-1607 */
 
 
     public static AdminRight R_XMbxSearchRights;
@@ -42,6 +42,7 @@ public class AdminRights {
     public static AdminRight R_addDistributionListMember;
     public static AdminRight R_adminLoginAs;
     public static AdminRight R_assignCos;
+    public static AdminRight R_backupAccount;
     public static AdminRight R_checkDirectoryOnFileSystem;
     public static AdminRight R_checkDomainMXRecord;
     public static AdminRight R_checkExchangeAuthConfig;
@@ -133,6 +134,10 @@ public class AdminRights {
     public static AdminRight R_modifyServer;
     public static AdminRight R_modifyXMPPComponent;
     public static AdminRight R_modifyZimlet;
+    public static AdminRight R_moveAccountMailbox;
+    public static AdminRight R_moveCalendarResourceMailbox;
+    public static AdminRight R_moveMailboxFromServer;
+    public static AdminRight R_moveMailboxToServer;
     public static AdminRight R_publishAccountShareInfo;
     public static AdminRight R_publishCalendarResourceShareInfo;
     public static AdminRight R_publishDistributionListShareInfo;
@@ -149,6 +154,8 @@ public class AdminRights {
     public static AdminRight R_renameCalendarResource;
     public static AdminRight R_renameCos;
     public static AdminRight R_renameDistributionList;
+    public static AdminRight R_restoreAccount;
+    public static AdminRight R_rolloverRedoLog;
     public static AdminRight R_setAccountPassword;
     public static AdminRight R_setAdminSavedSearch;
     public static AdminRight R_setCalendarResourcePassword;
@@ -173,6 +180,7 @@ public class AdminRights {
         R_addDistributionListMember            = rm.getAdminRight(Right.RT_addDistributionListMember);
         R_adminLoginAs                         = rm.getAdminRight(Right.RT_adminLoginAs);
         R_assignCos                            = rm.getAdminRight(Right.RT_assignCos);
+        R_backupAccount                        = rm.getAdminRight(Right.RT_backupAccount);
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);
         R_checkDomainMXRecord                  = rm.getAdminRight(Right.RT_checkDomainMXRecord);
         R_checkExchangeAuthConfig              = rm.getAdminRight(Right.RT_checkExchangeAuthConfig);
@@ -264,6 +272,10 @@ public class AdminRights {
         R_modifyServer                         = rm.getAdminRight(Right.RT_modifyServer);
         R_modifyXMPPComponent                  = rm.getAdminRight(Right.RT_modifyXMPPComponent);
         R_modifyZimlet                         = rm.getAdminRight(Right.RT_modifyZimlet);
+        R_moveAccountMailbox                   = rm.getAdminRight(Right.RT_moveAccountMailbox);
+        R_moveCalendarResourceMailbox          = rm.getAdminRight(Right.RT_moveCalendarResourceMailbox);
+        R_moveMailboxFromServer                = rm.getAdminRight(Right.RT_moveMailboxFromServer);
+        R_moveMailboxToServer                  = rm.getAdminRight(Right.RT_moveMailboxToServer);
         R_publishAccountShareInfo              = rm.getAdminRight(Right.RT_publishAccountShareInfo);
         R_publishCalendarResourceShareInfo     = rm.getAdminRight(Right.RT_publishCalendarResourceShareInfo);
         R_publishDistributionListShareInfo     = rm.getAdminRight(Right.RT_publishDistributionListShareInfo);
@@ -280,6 +292,8 @@ public class AdminRights {
         R_renameCalendarResource               = rm.getAdminRight(Right.RT_renameCalendarResource);
         R_renameCos                            = rm.getAdminRight(Right.RT_renameCos);
         R_renameDistributionList               = rm.getAdminRight(Right.RT_renameDistributionList);
+        R_restoreAccount                       = rm.getAdminRight(Right.RT_restoreAccount);
+        R_rolloverRedoLog                      = rm.getAdminRight(Right.RT_rolloverRedoLog);
         R_setAccountPassword                   = rm.getAdminRight(Right.RT_setAccountPassword);
         R_setAdminSavedSearch                  = rm.getAdminRight(Right.RT_setAdminSavedSearch);
         R_setCalendarResourcePassword          = rm.getAdminRight(Right.RT_setCalendarResourcePassword);

@@ -115,73 +115,88 @@ Package: com.zimbra.cs.service.backup
 BackupAccountQueryRequest
 
     Related rights:
+        backupAccount
 
     Notes:
-        Only system admins are allowed.
-
 
 ------------------------------
 BackupQueryRequest
 
     Related rights:
+        backupAccount
 
     Notes:
-        Only system admins are allowed.
-
 
 ------------------------------
 BackupRequest
 
     Related rights:
+        backupAccount
 
     Notes:
-        Only system admins are allowed.
-
 
 ------------------------------
 ExportMailboxRequest
 
     Related rights:
+        moveAccountMailbox
+        moveCalendarResourceMailbox
+        moveMailboxFromServer
+        moveMailboxToServer
 
     Notes:
-        Only system admins are allowed.
+        If the account is a calendar resource, need
+        moveCalendarResourceMailbox right on the calendar resource.
+
+        If the account is a regular account, need moveAccountMailbox right on
+        the account.
+
+        Need moveMailboxFromServer right on the source server
+
+        Need moveMailboxToServer right on the target server
 
 
 ------------------------------
 PurgeMovedMailboxRequest
 
     Related rights:
+        moveAccountMailbox
+        moveCalendarResourceMailbox
+        moveMailboxFromServer
 
     Notes:
-        TDB
+        If the account is a calendar resource, need
+        moveCalendarResourceMailbox right on the calendar resource.
+
+        If the account is a regular account, need moveAccountMailbox right on
+        the account.
+
+        Need moveMailboxFromServer right on the source server
 
 
 ------------------------------
 RestoreRequest
 
     Related rights:
+        restoreAccount
 
     Notes:
-        Only system admins are allowed.
-
 
 ------------------------------
 RolloverRedoLogRequest
 
     Related rights:
+        rolloverRedoLog
 
     Notes:
-        Only system admins are allowed.
-
 
 ------------------------------
 ScheduleBackupsRequest
 
     Related rights:
+        backupAccount
 
     Notes:
-        TDB
-
 
 ========================================
 Package: com.zimbra.cs.service.hsm

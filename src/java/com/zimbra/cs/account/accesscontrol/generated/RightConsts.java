@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090612-1014 */
+    /* build: 6.0.0 pshao 20090612-1607 */
 
 
     /*
@@ -64,7 +64,7 @@ public class RightConsts {
 
 
     /**
-     * cross mailbox search management rights
+     * cross mailbox search tasks management rights
      */
     public static final String RT_XMbxSearchRights = "XMbxSearchRights";
 
@@ -115,6 +115,11 @@ public class RightConsts {
      * assign the cos (to domains or accounts)
      */
     public static final String RT_assignCos = "assignCos";
+
+    /**
+     * backup accounts on a server
+     */
+    public static final String RT_backupAccount = "backupAccount";
 
     /**
      * check and create directory on file system
@@ -387,7 +392,7 @@ public class RightConsts {
     public static final String RT_getCalendarResource = "getCalendarResource";
 
     /**
-     * get share info on distribution list
+     * get share info on calendar resource
      */
     public static final String RT_getCalendarResourceShareInfo = "getCalendarResourceShareInfo";
 
@@ -573,6 +578,26 @@ public class RightConsts {
     public static final String RT_modifyZimlet = "modifyZimlet";
 
     /**
+     * move account mailbox
+     */
+    public static final String RT_moveAccountMailbox = "moveAccountMailbox";
+
+    /**
+     * move calendar resource mailbox
+     */
+    public static final String RT_moveCalendarResourceMailbox = "moveCalendarResourceMailbox";
+
+    /**
+     * move mailboxes from a server and purge moved mailboxes
+     */
+    public static final String RT_moveMailboxFromServer = "moveMailboxFromServer";
+
+    /**
+     * move mailboxes to a server
+     */
+    public static final String RT_moveMailboxToServer = "moveMailboxToServer";
+
+    /**
      * publish share info on account
      */
     public static final String RT_publishAccountShareInfo = "publishAccountShareInfo";
@@ -651,6 +676,16 @@ public class RightConsts {
      * rename distribution list
      */
     public static final String RT_renameDistributionList = "renameDistributionList";
+
+    /**
+     * restore accounts on a server
+     */
+    public static final String RT_restoreAccount = "restoreAccount";
+
+    /**
+     * rollover redo log on a server
+     */
+    public static final String RT_rolloverRedoLog = "rolloverRedoLog";
 
     /**
      * set account password
