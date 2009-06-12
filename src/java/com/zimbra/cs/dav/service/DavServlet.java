@@ -17,6 +17,7 @@ package com.zimbra.cs.dav.service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,11 +30,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -45,8 +52,12 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.DavContext.KnownUserAgent;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.method.*;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.cache.AccountCtags;
@@ -58,7 +69,11 @@ import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheK
 import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheValue;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 @SuppressWarnings("serial")
 public class DavServlet extends ZimbraServlet {
@@ -200,21 +215,7 @@ public class DavServlet extends ZimbraServlet {
         CacheStates cache = null;
         try {
         	cache = checkCachedResponse(ctxt, authUser);
-    		if (!ctxt.isResponseSent()) {
-                /*
-        		try {
-        			DavResource rs = ctxt.getRequestedResource();
-        			if (rs instanceof MailItemResource) {
-        				MailItemResource mir = (MailItemResource) rs;
-        				if (!mir.isLocal()) {
-        					sendProxyRequest(ctxt, method, mir);
-        					return;
-        				}
-        			}
-        		} catch (DavException de) {
-        		} catch (ServiceException se) {
-        		}
-        		*/
+    		if (!ctxt.isResponseSent() && !isProxyRequest(ctxt, method)) {
 		
     			method.checkPrecondition(ctxt);
     			method.handle(ctxt);
@@ -467,5 +468,89 @@ public class DavServlet extends ZimbraServlet {
                 // No big deal if we can't cache the response.  Just move on.
             }
 	    }
+	}
+	private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
+		DavResource rs = ctxt.getRequestedResource();
+		if (true || !(rs instanceof DavResource.RemoteResource))
+			return false;
+		
+		// make sure the target account exists.
+		ItemId target = ((DavResource.RemoteResource)rs).getTarget();
+		Provisioning prov = Provisioning.getInstance();
+		Account acct = prov.get(AccountBy.id, target.getAccountId());
+		if (acct == null)
+			throw new DavException("account not found: "+target.getAccountId(), HttpServletResponse.SC_NOT_FOUND);
+		Server server = prov.getServer(acct);
+		if (server == null)
+			throw new DavException("server not found for account: "+acct.getName(), HttpServletResponse.SC_NOT_FOUND);
+
+		// get the path to the target mail item
+        AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
+        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));
+        zoptions.setNoSession(true);
+        zoptions.setTargetAccount(target.getAccountId());
+        zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        ZFolder f = zmbx.getFolderById("" + target.toString());
+        if (f == null)
+			throw new DavException("folder not found: "+target, HttpServletResponse.SC_NOT_FOUND);
+        String path = f.getPath();
+    	String newPrefix = URLUtil.urlEscape(DAV_PATH + "/" + acct.getName() + f.getPath());
+
+        if (ctxt.hasRequestMessage()) {
+            // replace the path in <href> of the request with the path to the target mail item.
+            Document req = ctxt.getRequestMessage();
+            for (Object hrefObj : req.getRootElement().elements(DavElements.E_HREF)) {
+            	if (!(hrefObj instanceof Element))
+            		continue;
+            	Element href = (Element) hrefObj;
+            	String v = href.getText();
+            	// prefix matching is not as straightforward as we have jetty redirect from /dav to /home/dav.
+            	href.setText(newPrefix + "/" + v.substring(v.lastIndexOf('/')+1));
+            }
+        }
+        
+        // build proxy request
+		String url = getServiceUrl(acct, DAV_PATH) + path;
+		HttpState state = new HttpState();
+        authToken.encode(state, false, server.getAttr(Provisioning.A_zimbraServiceHostname));
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        client.setState(state);
+        HttpMethod method = m.toHttpMethod(ctxt, url);
+		method.addRequestHeader(DavProtocol.HEADER_DEPTH, ctxt.getRequest().getHeader(DavProtocol.HEADER_DEPTH));
+        int statusCode = client.executeMethod(method);
+        ctxt.getResponse().setStatus(statusCode);
+        ctxt.setStatus(statusCode);
+    	InputStream in = method.getResponseBodyAsStream();
+        switch (statusCode) {
+        case DavProtocol.STATUS_MULTI_STATUS:
+        	// rewrite the <href> element in the response to point to local mountpoint.
+        	try {
+        		Document response = new SAXReader().read(in);
+        		Element top = response.getRootElement();
+        		for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
+        			if (!(responseObj instanceof Element))
+        				continue;
+                	Element href = ((Element)responseObj).element(DavElements.E_HREF);
+                	String v = href.getText();
+                	if (v.startsWith(newPrefix))
+                		href.setText(UrlNamespace.getResourceUrl(rs) + v.substring(newPrefix.length()+1));
+        		}
+        		if (ZimbraLog.dav.isDebugEnabled())
+        			ZimbraLog.dav.debug("PROXY RESPONSE:\n"+new String(DomUtil.getBytes(response), "UTF-8"));
+        		DomUtil.writeDocumentToStream(response, ctxt.getResponse().getOutputStream());
+	            ctxt.responseSent();
+        	} catch (DocumentException e) {
+        		ZimbraLog.dav.warn("proxy request failed", e);
+        		return false;
+        	}
+        	break;
+        default:
+        	if (in != null)
+        		ByteUtil.copy(in, true, ctxt.getResponse().getOutputStream(), false);
+        	ctxt.responseSent();
+        	break;
+        }
+		return true;
 	}
 }

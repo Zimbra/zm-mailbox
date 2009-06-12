@@ -58,7 +58,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
 
-public class RemoteCalendarCollection extends CalendarCollection {
+public class RemoteCalendarCollection extends CalendarCollection implements DavResource.RemoteResource {
 
     private HashMap<String,String> mCalendarData;
 	private String mRemoteOwnerId;
@@ -79,6 +79,10 @@ public class RemoteCalendarCollection extends CalendarCollection {
 		setProperty(DavElements.E_GETCTAG, mCtag);
     }
 
+    public ItemId getTarget() {
+    	return new ItemId(mRemoteOwnerId, mRemoteId);
+    }
+    
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);

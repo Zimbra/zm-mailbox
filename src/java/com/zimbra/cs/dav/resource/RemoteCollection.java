@@ -37,7 +37,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
-public class RemoteCollection extends Collection {
+public class RemoteCollection extends Collection implements DavResource.RemoteResource {
 
     private String mRemoteOwnerId;
     private int mRemoteId;
@@ -53,6 +53,9 @@ public class RemoteCollection extends Collection {
 		setProperty(DavElements.E_GETCTAG, mCtag);
     }
 
+    public ItemId getTarget() {
+    	return new ItemId(mRemoteOwnerId, mRemoteId);
+    }
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
