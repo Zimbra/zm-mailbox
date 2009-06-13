@@ -508,6 +508,7 @@ public class AdminConstants {
     public static final String A_PATH_OR_ID = "pathOrId";
     public static final String A_CREATE = "create";
     public static final String A_EXISTS = "exists";
+    public static final String A_IS_DEFAULT_COS = "isDefaultCos";
     public static final String A_IS_DIRECTORY = "isDirectory";
     public static final String A_READABLE = "readable";
     public static final String A_WRITABLE = "writable";
