@@ -27,11 +27,6 @@ public class DomainAccessManager extends AccessManager {
     public boolean isDomainAdminOnly(AuthToken at) {
         return at.isDomainAdmin() && !at.isAdmin();
     }
-    
-    @Override
-    public boolean isGeneralAdmin(AuthToken at) {
-        return at.isAdmin();
-    }
 
     public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
         if (!at.isZimbraUser())

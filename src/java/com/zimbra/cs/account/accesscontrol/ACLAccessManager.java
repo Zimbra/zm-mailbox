@@ -53,11 +53,6 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean isGeneralAdmin(AuthToken at) {
-        return at.isAdmin() || at.isDelegatedAdmin();
-    }
-    
-    @Override
     public boolean canAccessAccount(AuthToken at, Account target,
             boolean asAdmin) throws ServiceException {
          

@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -90,14 +91,15 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     		return;
         }
 
-		boolean isAdminAuth = AccessManager.getInstance().isGeneralAdmin(authToken);
-		
+        boolean isAdminAuth = false;
 //		ZimbraLog.zimlet.info(">>> isAdminAuth: "+isAdminAuth);
 
         // get list of allowed zimlets
         Provisioning prov = Provisioning.getInstance();
 		List<Zimlet> allowedZimlets = new LinkedList<Zimlet>();
 		try {
+		    isAdminAuth = AdminAccessControl.getAdminAccessControl(authToken).isSufficientAdminForZimletFilterServlet();
+		    
 			// add all available zimlets
 			if (!isAdminAuth) {
 				// zimlets for this account's COS

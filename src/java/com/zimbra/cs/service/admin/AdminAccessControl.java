@@ -87,6 +87,53 @@ public abstract class AdminAccessControl {
     }
     
     /**
+     * Returns if the auth token is sufficient for a SOAP request that requires 
+     * some level of admin privileges.  
+     * 
+     * Called from SoapEngine as a gate keeping checking before dispatching to 
+     * the handler.  If this method returns true, the request is eligible to 
+     * be dispatched to the handler, the actual right checking for the request 
+     * is handled in the handler.  If this method returns false, the request 
+     * can no longer proceed and is rejected by the SoapEngine.
+     * 
+     * @param soapCtxt
+     * @param handler
+     * @return
+     * @throws ServiceException
+     */
+    public abstract boolean isSufficientAdminForSoap(Map<String, Object> soapCtxt, DocumentHandler handler);
+    
+    /**
+     * Returns if the auth token is sufficient for the zimlet filter servlet.
+     * 
+     * @return
+     */
+    public abstract boolean isSufficientAdminForZimletFilterServlet();
+    
+    
+    /**
+     * Returns if the specified account is sufficient for delegated auth.
+     * 
+     * Note: this method is static and it checks the specified account.
+     *
+     * @param account
+     * @return
+     */
+    public static boolean isSufficientAdminForSoapDelegatedAuth(Account acct) {
+        AccessManager accessMgr = AccessManager.getInstance();
+        boolean isAdmin;
+        
+        if (isDomainBasedAccessManager(accessMgr))
+            isAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
+                      acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        else
+            isAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false) ||
+                      acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+        
+        return isAdmin;
+    }
+    
+    /**
      *  only called for domain based access manager
      */
     public abstract void checkModifyAttrs(AttributeClass attrClass, Map<String, Object> attrs) throws ServiceException;
@@ -172,6 +219,7 @@ public abstract class AdminAccessControl {
      */
     public abstract AccessManager.AttrRightChecker getAttrRightChecker(Entry target) throws ServiceException;
     
+
     
     /* ================
      * internal methods
@@ -252,6 +300,21 @@ public abstract class AdminAccessControl {
     private static class DomainAccessControl extends AdminAccessControl {
         private DomainAccessControl(AccessManager accessMgr, ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
             super(accessMgr, zsc, authToken, authedAcct);
+        }
+        
+        public boolean isSufficientAdminForSoap(Map<String, Object> soapCtxt, 
+                DocumentHandler handler) {
+            
+            if (mAuthToken.isAdmin())
+                return true;  // is a global admin, all is well
+            
+            // if the request is OK for domain admins, see if the authed is a domain admin
+            boolean ok = handler.domainAuthSufficient(soapCtxt) && mAuthToken.isDomainAdmin();
+            return ok;
+        }
+        
+        public boolean isSufficientAdminForZimletFilterServlet() {
+            return mAuthToken.isAdmin() || mAuthToken.isDomainAdmin();
         }
         
         @Override
@@ -382,6 +445,15 @@ public abstract class AdminAccessControl {
     private static class ACLAccessControl extends AdminAccessControl {
         private ACLAccessControl(AccessManager accessMgr, ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
             super(accessMgr, zsc, authToken, authedAcct);
+        }
+        
+        public boolean isSufficientAdminForSoap(Map<String, Object> soapCtxt, 
+                DocumentHandler handler) {
+            return mAuthToken.isAdmin() || mAuthToken.isDelegatedAdmin();
+        }
+        
+        public boolean isSufficientAdminForZimletFilterServlet() {
+            return mAuthToken.isAdmin() || mAuthToken.isDelegatedAdmin();
         }
         
         @Override

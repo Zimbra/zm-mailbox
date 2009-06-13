@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -339,15 +340,15 @@ public class SoapEngine {
         if ((needsAuth || needsAdminAuth) && at == null)
             return soapFault(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
 
-        if (needsAdminAuth && !AccessManager.getInstance().isGeneralAdmin(at)) {
-            boolean ok = handler.domainAuthSufficient(context) && at.isDomainAdmin();
-            if (!ok)
-                return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need admin token"));
-        }
-
         Element response = null;
         
         try {
+            if (needsAdminAuth) {
+                AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(at);
+                if (!aac.isSufficientAdminForSoap(context, handler))
+                    return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need admin token"));
+            }
+            
             String acctId = null;
             boolean isGuestAccount = true;
             boolean delegatedAuth = false;
@@ -378,8 +379,7 @@ public class SoapEngine {
                         Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
                         if (admin == null)
                             return soapFault(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
-                        boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
-                        admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+                        boolean isAdmin = AdminAccessControl.isSufficientAdminForSoapDelegatedAuth(admin);
                         if (!isAdmin)
                             return soapFault(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
                         if (!admin.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))

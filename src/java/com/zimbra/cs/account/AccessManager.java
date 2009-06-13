@@ -46,7 +46,6 @@ public abstract class AccessManager {
     }
     
     public abstract boolean isDomainAdminOnly(AuthToken at);
-    public abstract boolean isGeneralAdmin(AuthToken at);
 
     public Account getAccount(AuthToken at) throws ServiceException {
         return Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
