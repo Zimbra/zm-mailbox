@@ -381,7 +381,7 @@ public class SoapEngine {
                             return soapFault(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
                         boolean isAdmin = AdminAccessControl.isSufficientAdminForSoapDelegatedAuth(admin);
                         if (!isAdmin)
-                            return soapFault(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
+                            return soapFault(soapProto, "delegating account is not an admin account", ServiceException.PERM_DENIED("not an admin for delegated auth"));
                         if (!admin.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                             return soapFault(soapProto, "delegating account is not active", ServiceException.AUTH_EXPIRED());
                     }
