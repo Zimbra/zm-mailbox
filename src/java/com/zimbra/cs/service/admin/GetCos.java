@@ -82,6 +82,10 @@ public class GetCos extends AdminDocumentHandler {
         Element cos = e.addElement(AdminConstants.E_COS);
         cos.addAttribute(AdminConstants.A_NAME, c.getName());
         cos.addAttribute(AdminConstants.E_ID, c.getId());
+        
+        if (c.isDefaultCos())
+            cos.addAttribute(AdminConstants.A_IS_DEFAULT_COS, true);
+        
         Map attrs = c.getUnicodeAttrs();
         AttributeManager attrMgr = AttributeManager.getInstance();
         for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {

@@ -68,4 +68,8 @@ public class Cos extends ZAttrCos {
     public Map<String, Object> getAccountDefaults() {
         return mAccountDefaults;
     }
+    
+    public boolean isDefaultCos() {
+        return getName().equals(Provisioning.DEFAULT_COS_NAME);
+    }
 }

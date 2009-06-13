@@ -1931,7 +1931,7 @@ public class LdapProvisioning extends Provisioning {
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
-        if (cos.getName().equals(DEFAULT_COS_NAME))
+        if (cos.isDefaultCos())
             throw ServiceException.INVALID_REQUEST("unable to rename default cos", null);
 
         newName = newName.toLowerCase().trim();
@@ -2318,7 +2318,7 @@ public class LdapProvisioning extends Provisioning {
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(zimbraId);
 
-        if (c.getName().equals(DEFAULT_COS_NAME))
+        if (c.isDefaultCos())
             throw ServiceException.INVALID_REQUEST("unable to delete default cos", null);
 
         // TODO: should we go through all accounts with this cos and remove the zimbraCOSId attr?
