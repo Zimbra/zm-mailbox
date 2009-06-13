@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090612-1607 */
+    /* build: 6.0.0 pshao 20090612-1746 */
 
 
     public static AdminRight R_XMbxSearchRights;
@@ -108,6 +108,7 @@ public class AdminRights {
     public static AdminRight R_getMailboxInfo;
     public static AdminRight R_getMailboxStats;
     public static AdminRight R_getServer;
+    public static AdminRight R_getServiceStatus;
     public static AdminRight R_getSessions;
     public static AdminRight R_getXMPPComponent;
     public static AdminRight R_getZimlet;
@@ -246,6 +247,7 @@ public class AdminRights {
         R_getMailboxInfo                       = rm.getAdminRight(Right.RT_getMailboxInfo);
         R_getMailboxStats                      = rm.getAdminRight(Right.RT_getMailboxStats);
         R_getServer                            = rm.getAdminRight(Right.RT_getServer);
+        R_getServiceStatus                     = rm.getAdminRight(Right.RT_getServiceStatus);
         R_getSessions                          = rm.getAdminRight(Right.RT_getSessions);
         R_getXMPPComponent                     = rm.getAdminRight(Right.RT_getXMPPComponent);
         R_getZimlet                            = rm.getAdminRight(Right.RT_getZimlet);

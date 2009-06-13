@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090612-1607 */
+    /* build: 6.0.0 pshao 20090612-1746 */
 
 
     /*
@@ -445,6 +445,11 @@ public class RightConsts {
      * get all server attributes
      */
     public static final String RT_getServer = "getServer";
+
+    /**
+     * get service status of server
+     */
+    public static final String RT_getServiceStatus = "getServiceStatus";
 
     /**
      * dump/get sessions
