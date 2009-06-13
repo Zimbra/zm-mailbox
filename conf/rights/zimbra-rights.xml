@@ -630,6 +630,10 @@
 <right name="moveMailboxFromServer" type="preset" targetType="server">
   <desc>move mailboxes from a server and purge moved mailboxes</desc>
 </right> 
+
+<right name="getServiceStatus" type="preset" targetType="server">
+  <desc>get service status of server</desc>
+</right>
        
 <!-- 
   TODO:
