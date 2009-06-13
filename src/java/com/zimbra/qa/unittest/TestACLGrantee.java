@@ -70,6 +70,7 @@ public class TestACLGrantee extends TestACL {
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
         Account admin = mProv.createAccount(getEmailAddr(testName, "admin"), PASSWORD, attrs);
         
         /*

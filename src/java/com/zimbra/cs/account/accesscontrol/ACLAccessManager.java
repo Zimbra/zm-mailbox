@@ -427,13 +427,23 @@ public class ACLAccessManager extends AccessManager {
                     return false;
             }
 
-            // 1. always allow self for user right, self can also delegate(i.e. grant) the right
+            //
+            // user right treatment
+            //
             if (rightNeeded.isUserRight() && target instanceof Account) {
+                // always allow self for user right, self can also delegate(i.e. grant) the right
                 if (((Account)target).getId().equals(grantee.getId()))
                     return true;
+                
+                // check the loginAs right and family access - if the right being asked for is not loginAs
+                if (rightNeeded != Rights.User.R_loginAs)
+                    if (canAccessAccount(grantee, (Account)target, asAdmin))
+                        return true;
             }
             
-            // 3. check ACL
+            //
+            // check ACL
+            //
             Boolean result = RightChecker.checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
             if (result != null)
                 return result.booleanValue();
