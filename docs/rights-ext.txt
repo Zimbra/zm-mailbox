@@ -14,9 +14,11 @@ GetBulkProvisionAccountsRequest
 
     Related rights:
         createAccount
+        listAccount
 
     Notes:
-        Needs rigths to get zimbraDomainMaxAccountson domain
+        Only accounts on which the authed admin has listAccount right will
+        appear in the uploaded CSV to be provisioned.
 
 
 ------------------------------
