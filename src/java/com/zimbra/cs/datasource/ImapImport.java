@@ -75,6 +75,7 @@ import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailclient.imap.Body;
 
 public class ImapImport extends MailItemImport {
     private final UidFetch uidFetch;
@@ -712,10 +713,14 @@ public class ImapImport extends MailItemImport {
             }
         }
 
+        // Messages that could not be fetched
+        final Set<Long> failedMsgs = new HashSet<Long>();
+
         // Fetch new IMAP messages from remote folder
         long lastUid = trackedMsgs.getLastUid();
         int startIndex = 0;
         int endIndex = msgArray.length - 1;
+
         while (startIndex <= endIndex) {
             long startUid = remoteFolder.getUID(msgArray[startIndex]);
             if (startUid <= lastUid) {
@@ -739,8 +744,20 @@ public class ImapImport extends MailItemImport {
                         return;
                     }
                     IMAPMessage msg = remoteMsgs.get(uid);
-                    if (msg == null) return;
-                    ImapData data = md.getBodySections()[0].getData();
+                    if (msg == null) {
+                        ZimbraLog.datasource.warn("Skipping unexpected message (uid %d) received during fetch", uid);
+                        return;
+                    }
+                    ImapData data = null;
+                    Body[] bodySections = md.getBodySections();
+                    if (bodySections != null && bodySections.length == 1) {
+                        data = bodySections[0].getData();
+                    }
+                    if (data == null) {
+                        ZimbraLog.datasource.warn("Could not fetch uid %d (missing message body)", uid);
+                        failedMsgs.add(uid);
+                        return;
+                    }
                     // If server does not support APPENDUID and there are
                     // local messages without UID, match downloaded messages
                     // based on checksum and assign UID.
@@ -749,14 +766,21 @@ public class ImapImport extends MailItemImport {
                         ImapMessage trackedMsg = noUidMsgs.remove(cksum);
                         if (trackedMsg != null) {
                             ZimbraLog.datasource.debug(
-                                "Matched fetched message to local with checksum %x (UID = %x", cksum, uid);
+                                "Matched fetched message to local with checksum %x (uid %x)", cksum, uid);
                             DbImapMessage.setUid(mbox, trackedMsg.getItemId(), uid);
                             localIds.remove(trackedMsg.getItemId());
                         }
                     } else {
                         Date receivedDate = md.getInternalDate();
-                        Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
-                        ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
+                        Long time = receivedDate != null ? receivedDate.getTime() : null;
+                        ParsedMessage pm;
+                        try {
+                            pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
+                        } catch (Exception e) {
+                            ZimbraLog.datasource.warn("Unable to parse fetched message (uid %d)", uid, e);
+                            failedMsgs.add(uid);
+                            return;
+                        }
                         int flags = getZimbraFlags(msg.getFlags());
                         com.zimbra.cs.mailbox.Message m = addMessage(null, pm, localFolder.getId(), flags);
                         if (m != null) {
@@ -768,6 +792,14 @@ public class ImapImport extends MailItemImport {
             });
             numAddedLocally = fetchCount.intValue();
             startIndex = stopIndex + 1;
+        }
+
+        // Report failed messages
+        if (failedMsgs.size() > 0) {
+            StringBuilder sb = new StringBuilder();
+            for (long uid : failedMsgs) sb.append(' ').append(uid);
+            ZimbraLog.datasource.warn(
+                "Unable to fetch the following message uids:%s", sb);
         }
 
         // Remaining local ID's are messages that were not found on the remote server
@@ -815,18 +847,18 @@ public class ImapImport extends MailItemImport {
         return !runAgain;
     }
 
-    private static ParsedMessage getParsedMessage(ImapData id,
+    private static ParsedMessage getParsedMessage(ImapData data,
                                                   Long receivedDate,
                                                   boolean indexAttachments)
-            throws IOException, MessagingException {
-        if (id.isLiteral()) {
-            Literal lit = (Literal) id;
+        throws IOException, MessagingException {
+        if (data.isLiteral()) {
+            Literal lit = (Literal) data;
             File f = lit.getFile();
             if (f != null) {
                 return new ParsedMessage(f, receivedDate, indexAttachments);
             }
         }
-        return new ParsedMessage(id.getBytes(), receivedDate, indexAttachments);
+        return new ParsedMessage(data.getBytes(), receivedDate, indexAttachments);
     }
     
     /*

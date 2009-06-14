@@ -1,6 +1,7 @@
 package com.zimbra.cs.mailclient.imap;
 
 import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.protocol.IMAPProtocol;
@@ -30,21 +31,16 @@ public class UidFetch {
     }
 
     public void fetch(IMAPFolder folder, final String seq, final Handler handler)
-            throws IOException {
-        try {
-            folder.doCommand(new IMAPFolder.ProtocolCommand() {
-                public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
-                    try {
-                        return doFETCH(protocol, seq, handler);
-                    } catch (IOException e) {
-                        throw (ProtocolException)
-                            new ProtocolException("FETCH failed: " + e).initCause(e);
-                    }
+        throws MessagingException {
+        folder.doCommand(new IMAPFolder.ProtocolCommand() {
+            public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
+                try {
+                    return doFETCH(protocol, seq, handler);
+                } catch (IOException e) {
+                    throw failed("I/O error", e);
                 }
-            });
-        } catch (MessagingException e) {
-            throw (IOException) new IOException("FETCH failed").initCause(e);
-        }
+            }
+        });
     }
 
     public static interface Handler {
@@ -62,22 +58,27 @@ public class UidFetch {
             if (res == null) throw new EOFException();
             try {
                 if (res.isError()) {
-                    throw new CommandFailedException(
-                        "FETCH", res.getResponseText().getText());
+                    throw failed(res.getResponseText().getText());
                 }
                 if (res.isWarning()) {
                     ZimbraLog.datasource.warn(res.getResponseText().getText());
                     continue;
                 }
                 if (res.isTagged()) {
-                    assert res.isOK();
                     if (!tag.equals(res.getTag())) {
-                        throw new IOException("Protocol error: FETCH failed (incorrect tag)");
+                        throw failed("Incorrect tag in response: " + res);
+                    }
+                    if (!res.isOK()) {
+                        throw failed("Unexpected tagged response: " + res);
                     }
                     break;
                 }
                 if (res.getCCode() == CAtom.FETCH) {
-                    handleResponse((MessageData) res.getData(), handler);
+                    try {
+                        handler.handleResponse((MessageData) res.getData());
+                    } catch (Exception e) {
+                        throw failed("Exception in response handler", e);
+                    }
                 }
             } finally {
                 res.dispose();
@@ -86,16 +87,16 @@ public class UidFetch {
         return null;
     }
 
-    private static void handleResponse(MessageData md, Handler handler)
-            throws CommandFailedException {
-        try {
-            handler.handleResponse(md);
-        } catch (Exception e) {
-            throw (CommandFailedException)
-                new CommandFailedException("FETCH", "handler failed").initCause(e);
-        }
+    private static ProtocolException failed(String msg) {
+        return failed(msg, null);
     }
-
+    
+    private static ProtocolException failed(String msg, Throwable t) {
+        ProtocolException pe = new ProtocolException("FETCH failed: " + msg);
+        if (t != null) pe.initCause(t);
+        return pe;
+    }
+    
     private static void pd(String fmt, Object... args) {
         System.out.print("[DEBUG] ");
         System.out.printf(fmt, args);
