@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090610-1958 */
+    /* build: 6.0.0 pshao 20090613-1718 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -5991,12 +5991,28 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * external imap port
      *
+     * <p>Use getExternalImapPortAsString to access value as a string.
+     *
+     * @see #getExternalImapPortAsString()
+     *
+     * @return zimbraExternalImapPort, or -1 if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public int getExternalImapPort() {
+        return getIntAttr(Provisioning.A_zimbraExternalImapPort, -1);
+    }
+
+    /**
+     * external imap port
+     *
      * @return zimbraExternalImapPort, or null if unset
      *
      * @since ZCS 5.0.12
      */
     @ZAttr(id=782)
-    public String getExternalImapPort() {
+    public String getExternalImapPortAsString() {
         return getAttr(Provisioning.A_zimbraExternalImapPort, null);
     }
 
@@ -6009,7 +6025,38 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=782)
-    public void setExternalImapPort(String zimbraExternalImapPort) throws com.zimbra.common.service.ServiceException {
+    public void setExternalImapPort(int zimbraExternalImapPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapPort, Integer.toString(zimbraExternalImapPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap port
+     *
+     * @param zimbraExternalImapPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public Map<String,Object> setExternalImapPort(int zimbraExternalImapPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapPort, Integer.toString(zimbraExternalImapPort));
+        return attrs;
+    }
+
+    /**
+     * external imap port
+     *
+     * @param zimbraExternalImapPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=782)
+    public void setExternalImapPortAsString(String zimbraExternalImapPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalImapPort, zimbraExternalImapPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6025,7 +6072,7 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=782)
-    public Map<String,Object> setExternalImapPort(String zimbraExternalImapPort, Map<String,Object> attrs) {
+    public Map<String,Object> setExternalImapPortAsString(String zimbraExternalImapPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalImapPort, zimbraExternalImapPort);
         return attrs;
@@ -6135,12 +6182,28 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * external imap SSL port
      *
+     * <p>Use getExternalImapSSLPortAsString to access value as a string.
+     *
+     * @see #getExternalImapSSLPortAsString()
+     *
+     * @return zimbraExternalImapSSLPort, or -1 if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public int getExternalImapSSLPort() {
+        return getIntAttr(Provisioning.A_zimbraExternalImapSSLPort, -1);
+    }
+
+    /**
+     * external imap SSL port
+     *
      * @return zimbraExternalImapSSLPort, or null if unset
      *
      * @since ZCS 5.0.12
      */
     @ZAttr(id=783)
-    public String getExternalImapSSLPort() {
+    public String getExternalImapSSLPortAsString() {
         return getAttr(Provisioning.A_zimbraExternalImapSSLPort, null);
     }
 
@@ -6153,7 +6216,38 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=783)
-    public void setExternalImapSSLPort(String zimbraExternalImapSSLPort) throws com.zimbra.common.service.ServiceException {
+    public void setExternalImapSSLPort(int zimbraExternalImapSSLPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLPort, Integer.toString(zimbraExternalImapSSLPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @param zimbraExternalImapSSLPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public Map<String,Object> setExternalImapSSLPort(int zimbraExternalImapSSLPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalImapSSLPort, Integer.toString(zimbraExternalImapSSLPort));
+        return attrs;
+    }
+
+    /**
+     * external imap SSL port
+     *
+     * @param zimbraExternalImapSSLPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=783)
+    public void setExternalImapSSLPortAsString(String zimbraExternalImapSSLPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalImapSSLPort, zimbraExternalImapSSLPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6169,7 +6263,7 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=783)
-    public Map<String,Object> setExternalImapSSLPort(String zimbraExternalImapSSLPort, Map<String,Object> attrs) {
+    public Map<String,Object> setExternalImapSSLPortAsString(String zimbraExternalImapSSLPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalImapSSLPort, zimbraExternalImapSSLPort);
         return attrs;
@@ -6279,12 +6373,28 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * external pop3 port
      *
+     * <p>Use getExternalPop3PortAsString to access value as a string.
+     *
+     * @see #getExternalPop3PortAsString()
+     *
+     * @return zimbraExternalPop3Port, or -1 if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public int getExternalPop3Port() {
+        return getIntAttr(Provisioning.A_zimbraExternalPop3Port, -1);
+    }
+
+    /**
+     * external pop3 port
+     *
      * @return zimbraExternalPop3Port, or null if unset
      *
      * @since ZCS 5.0.12
      */
     @ZAttr(id=780)
-    public String getExternalPop3Port() {
+    public String getExternalPop3PortAsString() {
         return getAttr(Provisioning.A_zimbraExternalPop3Port, null);
     }
 
@@ -6297,7 +6407,38 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=780)
-    public void setExternalPop3Port(String zimbraExternalPop3Port) throws com.zimbra.common.service.ServiceException {
+    public void setExternalPop3Port(int zimbraExternalPop3Port) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Port, Integer.toString(zimbraExternalPop3Port));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @param zimbraExternalPop3Port new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public Map<String,Object> setExternalPop3Port(int zimbraExternalPop3Port, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3Port, Integer.toString(zimbraExternalPop3Port));
+        return attrs;
+    }
+
+    /**
+     * external pop3 port
+     *
+     * @param zimbraExternalPop3Port new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=780)
+    public void setExternalPop3PortAsString(String zimbraExternalPop3Port) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalPop3Port, zimbraExternalPop3Port);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6313,7 +6454,7 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=780)
-    public Map<String,Object> setExternalPop3Port(String zimbraExternalPop3Port, Map<String,Object> attrs) {
+    public Map<String,Object> setExternalPop3PortAsString(String zimbraExternalPop3Port, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalPop3Port, zimbraExternalPop3Port);
         return attrs;
@@ -6423,12 +6564,28 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * external pop3 SSL port
      *
+     * <p>Use getExternalPop3SSLPortAsString to access value as a string.
+     *
+     * @see #getExternalPop3SSLPortAsString()
+     *
+     * @return zimbraExternalPop3SSLPort, or -1 if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public int getExternalPop3SSLPort() {
+        return getIntAttr(Provisioning.A_zimbraExternalPop3SSLPort, -1);
+    }
+
+    /**
+     * external pop3 SSL port
+     *
      * @return zimbraExternalPop3SSLPort, or null if unset
      *
      * @since ZCS 5.0.12
      */
     @ZAttr(id=781)
-    public String getExternalPop3SSLPort() {
+    public String getExternalPop3SSLPortAsString() {
         return getAttr(Provisioning.A_zimbraExternalPop3SSLPort, null);
     }
 
@@ -6441,7 +6598,38 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=781)
-    public void setExternalPop3SSLPort(String zimbraExternalPop3SSLPort) throws com.zimbra.common.service.ServiceException {
+    public void setExternalPop3SSLPort(int zimbraExternalPop3SSLPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, Integer.toString(zimbraExternalPop3SSLPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @param zimbraExternalPop3SSLPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public Map<String,Object> setExternalPop3SSLPort(int zimbraExternalPop3SSLPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, Integer.toString(zimbraExternalPop3SSLPort));
+        return attrs;
+    }
+
+    /**
+     * external pop3 SSL port
+     *
+     * @param zimbraExternalPop3SSLPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=781)
+    public void setExternalPop3SSLPortAsString(String zimbraExternalPop3SSLPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, zimbraExternalPop3SSLPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6457,7 +6645,7 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 5.0.12
      */
     @ZAttr(id=781)
-    public Map<String,Object> setExternalPop3SSLPort(String zimbraExternalPop3SSLPort, Map<String,Object> attrs) {
+    public Map<String,Object> setExternalPop3SSLPortAsString(String zimbraExternalPop3SSLPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, zimbraExternalPop3SSLPort);
         return attrs;

@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090610-1958 */
+    /* build: 6.0.0 pshao 20090613-1718 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -356,10 +356,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * SSL port for admin UI
      *
+     * <p>Use getAdminPortAsString to access value as a string.
+     *
+     * @see #getAdminPortAsString()
+     *
+     * @return zimbraAdminPort, or 7071 if unset
+     */
+    @ZAttr(id=155)
+    public int getAdminPort() {
+        return getIntAttr(Provisioning.A_zimbraAdminPort, 7071);
+    }
+
+    /**
+     * SSL port for admin UI
+     *
      * @return zimbraAdminPort, or "7071" if unset
      */
     @ZAttr(id=155)
-    public String getAdminPort() {
+    public String getAdminPortAsString() {
         return getAttr(Provisioning.A_zimbraAdminPort, "7071");
     }
 
@@ -370,7 +384,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=155)
-    public void setAdminPort(String zimbraAdminPort) throws com.zimbra.common.service.ServiceException {
+    public void setAdminPort(int zimbraAdminPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminPort, Integer.toString(zimbraAdminPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL port for admin UI
+     *
+     * @param zimbraAdminPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=155)
+    public Map<String,Object> setAdminPort(int zimbraAdminPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminPort, Integer.toString(zimbraAdminPort));
+        return attrs;
+    }
+
+    /**
+     * SSL port for admin UI
+     *
+     * @param zimbraAdminPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=155)
+    public void setAdminPortAsString(String zimbraAdminPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminPort, zimbraAdminPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -384,7 +425,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=155)
-    public Map<String,Object> setAdminPort(String zimbraAdminPort, Map<String,Object> attrs) {
+    public Map<String,Object> setAdminPortAsString(String zimbraAdminPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminPort, zimbraAdminPort);
         return attrs;
@@ -3557,10 +3598,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which IMAP server should listen
      *
+     * <p>Use getImapBindPortAsString to access value as a string.
+     *
+     * @see #getImapBindPortAsString()
+     *
+     * @return zimbraImapBindPort, or 7143 if unset
+     */
+    @ZAttr(id=180)
+    public int getImapBindPort() {
+        return getIntAttr(Provisioning.A_zimbraImapBindPort, 7143);
+    }
+
+    /**
+     * port number on which IMAP server should listen
+     *
      * @return zimbraImapBindPort, or "7143" if unset
      */
     @ZAttr(id=180)
-    public String getImapBindPort() {
+    public String getImapBindPortAsString() {
         return getAttr(Provisioning.A_zimbraImapBindPort, "7143");
     }
 
@@ -3571,7 +3626,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=180)
-    public void setImapBindPort(String zimbraImapBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setImapBindPort(int zimbraImapBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapBindPort, Integer.toString(zimbraImapBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which IMAP server should listen
+     *
+     * @param zimbraImapBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=180)
+    public Map<String,Object> setImapBindPort(int zimbraImapBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapBindPort, Integer.toString(zimbraImapBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which IMAP server should listen
+     *
+     * @param zimbraImapBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=180)
+    public void setImapBindPortAsString(String zimbraImapBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapBindPort, zimbraImapBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -3585,7 +3667,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=180)
-    public Map<String,Object> setImapBindPort(String zimbraImapBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setImapBindPortAsString(String zimbraImapBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapBindPort, zimbraImapBindPort);
         return attrs;
@@ -3940,10 +4022,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which IMAP proxy server should listen
      *
+     * <p>Use getImapProxyBindPortAsString to access value as a string.
+     *
+     * @see #getImapProxyBindPortAsString()
+     *
+     * @return zimbraImapProxyBindPort, or 143 if unset
+     */
+    @ZAttr(id=348)
+    public int getImapProxyBindPort() {
+        return getIntAttr(Provisioning.A_zimbraImapProxyBindPort, 143);
+    }
+
+    /**
+     * port number on which IMAP proxy server should listen
+     *
      * @return zimbraImapProxyBindPort, or "143" if unset
      */
     @ZAttr(id=348)
-    public String getImapProxyBindPort() {
+    public String getImapProxyBindPortAsString() {
         return getAttr(Provisioning.A_zimbraImapProxyBindPort, "143");
     }
 
@@ -3954,7 +4050,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=348)
-    public void setImapProxyBindPort(String zimbraImapProxyBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setImapProxyBindPort(int zimbraImapProxyBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapProxyBindPort, Integer.toString(zimbraImapProxyBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which IMAP proxy server should listen
+     *
+     * @param zimbraImapProxyBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=348)
+    public Map<String,Object> setImapProxyBindPort(int zimbraImapProxyBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapProxyBindPort, Integer.toString(zimbraImapProxyBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which IMAP proxy server should listen
+     *
+     * @param zimbraImapProxyBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=348)
+    public void setImapProxyBindPortAsString(String zimbraImapProxyBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapProxyBindPort, zimbraImapProxyBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -3968,7 +4091,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=348)
-    public Map<String,Object> setImapProxyBindPort(String zimbraImapProxyBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setImapProxyBindPortAsString(String zimbraImapProxyBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapProxyBindPort, zimbraImapProxyBindPort);
         return attrs;
@@ -4199,10 +4322,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which IMAP SSL server should listen on
      *
+     * <p>Use getImapSSLBindPortAsString to access value as a string.
+     *
+     * @see #getImapSSLBindPortAsString()
+     *
+     * @return zimbraImapSSLBindPort, or 7993 if unset
+     */
+    @ZAttr(id=183)
+    public int getImapSSLBindPort() {
+        return getIntAttr(Provisioning.A_zimbraImapSSLBindPort, 7993);
+    }
+
+    /**
+     * port number on which IMAP SSL server should listen on
+     *
      * @return zimbraImapSSLBindPort, or "7993" if unset
      */
     @ZAttr(id=183)
-    public String getImapSSLBindPort() {
+    public String getImapSSLBindPortAsString() {
         return getAttr(Provisioning.A_zimbraImapSSLBindPort, "7993");
     }
 
@@ -4213,7 +4350,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=183)
-    public void setImapSSLBindPort(String zimbraImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setImapSSLBindPort(int zimbraImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSSLBindPort, Integer.toString(zimbraImapSSLBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which IMAP SSL server should listen on
+     *
+     * @param zimbraImapSSLBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=183)
+    public Map<String,Object> setImapSSLBindPort(int zimbraImapSSLBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSSLBindPort, Integer.toString(zimbraImapSSLBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which IMAP SSL server should listen on
+     *
+     * @param zimbraImapSSLBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=183)
+    public void setImapSSLBindPortAsString(String zimbraImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapSSLBindPort, zimbraImapSSLBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -4227,7 +4391,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=183)
-    public Map<String,Object> setImapSSLBindPort(String zimbraImapSSLBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setImapSSLBindPortAsString(String zimbraImapSSLBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapSSLBindPort, zimbraImapSSLBindPort);
         return attrs;
@@ -4386,10 +4550,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which IMAPS proxy server should listen
      *
+     * <p>Use getImapSSLProxyBindPortAsString to access value as a string.
+     *
+     * @see #getImapSSLProxyBindPortAsString()
+     *
+     * @return zimbraImapSSLProxyBindPort, or 993 if unset
+     */
+    @ZAttr(id=349)
+    public int getImapSSLProxyBindPort() {
+        return getIntAttr(Provisioning.A_zimbraImapSSLProxyBindPort, 993);
+    }
+
+    /**
+     * port number on which IMAPS proxy server should listen
+     *
      * @return zimbraImapSSLProxyBindPort, or "993" if unset
      */
     @ZAttr(id=349)
-    public String getImapSSLProxyBindPort() {
+    public String getImapSSLProxyBindPortAsString() {
         return getAttr(Provisioning.A_zimbraImapSSLProxyBindPort, "993");
     }
 
@@ -4400,7 +4578,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=349)
-    public void setImapSSLProxyBindPort(String zimbraImapSSLProxyBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setImapSSLProxyBindPort(int zimbraImapSSLProxyBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSSLProxyBindPort, Integer.toString(zimbraImapSSLProxyBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which IMAPS proxy server should listen
+     *
+     * @param zimbraImapSSLProxyBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=349)
+    public Map<String,Object> setImapSSLProxyBindPort(int zimbraImapSSLProxyBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapSSLProxyBindPort, Integer.toString(zimbraImapSSLProxyBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which IMAPS proxy server should listen
+     *
+     * @param zimbraImapSSLProxyBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=349)
+    public void setImapSSLProxyBindPortAsString(String zimbraImapSSLProxyBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapSSLProxyBindPort, zimbraImapSSLProxyBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -4414,7 +4619,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=349)
-    public Map<String,Object> setImapSSLProxyBindPort(String zimbraImapSSLProxyBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setImapSSLProxyBindPortAsString(String zimbraImapSSLProxyBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapSSLProxyBindPort, zimbraImapSSLProxyBindPort);
         return attrs;
@@ -4965,10 +5170,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which LMTP server should listen
      *
+     * <p>Use getLmtpBindPortAsString to access value as a string.
+     *
+     * @see #getLmtpBindPortAsString()
+     *
+     * @return zimbraLmtpBindPort, or 7025 if unset
+     */
+    @ZAttr(id=24)
+    public int getLmtpBindPort() {
+        return getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025);
+    }
+
+    /**
+     * port number on which LMTP server should listen
+     *
      * @return zimbraLmtpBindPort, or "7025" if unset
      */
     @ZAttr(id=24)
-    public String getLmtpBindPort() {
+    public String getLmtpBindPortAsString() {
         return getAttr(Provisioning.A_zimbraLmtpBindPort, "7025");
     }
 
@@ -4979,7 +5198,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=24)
-    public void setLmtpBindPort(String zimbraLmtpBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setLmtpBindPort(int zimbraLmtpBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpBindPort, Integer.toString(zimbraLmtpBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which LMTP server should listen
+     *
+     * @param zimbraLmtpBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=24)
+    public Map<String,Object> setLmtpBindPort(int zimbraLmtpBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpBindPort, Integer.toString(zimbraLmtpBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which LMTP server should listen
+     *
+     * @param zimbraLmtpBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=24)
+    public void setLmtpBindPortAsString(String zimbraLmtpBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLmtpBindPort, zimbraLmtpBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -4993,7 +5239,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=24)
-    public Map<String,Object> setLmtpBindPort(String zimbraLmtpBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setLmtpBindPortAsString(String zimbraLmtpBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLmtpBindPort, zimbraLmtpBindPort);
         return attrs;
@@ -5962,10 +6208,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * HTTP port for end-user UI
      *
+     * <p>Use getMailPortAsString to access value as a string.
+     *
+     * @see #getMailPortAsString()
+     *
+     * @return zimbraMailPort, or 80 if unset
+     */
+    @ZAttr(id=154)
+    public int getMailPort() {
+        return getIntAttr(Provisioning.A_zimbraMailPort, 80);
+    }
+
+    /**
+     * HTTP port for end-user UI
+     *
      * @return zimbraMailPort, or "80" if unset
      */
     @ZAttr(id=154)
-    public String getMailPort() {
+    public String getMailPortAsString() {
         return getAttr(Provisioning.A_zimbraMailPort, "80");
     }
 
@@ -5976,7 +6236,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=154)
-    public void setMailPort(String zimbraMailPort) throws com.zimbra.common.service.ServiceException {
+    public void setMailPort(int zimbraMailPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPort, Integer.toString(zimbraMailPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP port for end-user UI
+     *
+     * @param zimbraMailPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=154)
+    public Map<String,Object> setMailPort(int zimbraMailPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPort, Integer.toString(zimbraMailPort));
+        return attrs;
+    }
+
+    /**
+     * HTTP port for end-user UI
+     *
+     * @param zimbraMailPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=154)
+    public void setMailPortAsString(String zimbraMailPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPort, zimbraMailPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -5990,7 +6277,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=154)
-    public Map<String,Object> setMailPort(String zimbraMailPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMailPortAsString(String zimbraMailPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPort, zimbraMailPort);
         return attrs;
@@ -6024,12 +6311,28 @@ public class ZAttrServer extends NamedEntry {
     /**
      * HTTP proxy port
      *
+     * <p>Use getMailProxyPortAsString to access value as a string.
+     *
+     * @see #getMailProxyPortAsString()
+     *
+     * @return zimbraMailProxyPort, or 0 if unset
+     *
+     * @since ZCS 5.0.3
+     */
+    @ZAttr(id=626)
+    public int getMailProxyPort() {
+        return getIntAttr(Provisioning.A_zimbraMailProxyPort, 0);
+    }
+
+    /**
+     * HTTP proxy port
+     *
      * @return zimbraMailProxyPort, or "0" if unset
      *
      * @since ZCS 5.0.3
      */
     @ZAttr(id=626)
-    public String getMailProxyPort() {
+    public String getMailProxyPortAsString() {
         return getAttr(Provisioning.A_zimbraMailProxyPort, "0");
     }
 
@@ -6042,7 +6345,38 @@ public class ZAttrServer extends NamedEntry {
      * @since ZCS 5.0.3
      */
     @ZAttr(id=626)
-    public void setMailProxyPort(String zimbraMailProxyPort) throws com.zimbra.common.service.ServiceException {
+    public void setMailProxyPort(int zimbraMailProxyPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyPort, Integer.toString(zimbraMailProxyPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * HTTP proxy port
+     *
+     * @param zimbraMailProxyPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
+     */
+    @ZAttr(id=626)
+    public Map<String,Object> setMailProxyPort(int zimbraMailProxyPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyPort, Integer.toString(zimbraMailProxyPort));
+        return attrs;
+    }
+
+    /**
+     * HTTP proxy port
+     *
+     * @param zimbraMailProxyPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
+     */
+    @ZAttr(id=626)
+    public void setMailProxyPortAsString(String zimbraMailProxyPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailProxyPort, zimbraMailProxyPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6058,7 +6392,7 @@ public class ZAttrServer extends NamedEntry {
      * @since ZCS 5.0.3
      */
     @ZAttr(id=626)
-    public Map<String,Object> setMailProxyPort(String zimbraMailProxyPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMailProxyPortAsString(String zimbraMailProxyPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailProxyPort, zimbraMailProxyPort);
         return attrs;
@@ -6435,10 +6769,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * SSL port for end-user UI
      *
+     * <p>Use getMailSSLPortAsString to access value as a string.
+     *
+     * @see #getMailSSLPortAsString()
+     *
+     * @return zimbraMailSSLPort, or 0 if unset
+     */
+    @ZAttr(id=166)
+    public int getMailSSLPort() {
+        return getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+    }
+
+    /**
+     * SSL port for end-user UI
+     *
      * @return zimbraMailSSLPort, or "0" if unset
      */
     @ZAttr(id=166)
-    public String getMailSSLPort() {
+    public String getMailSSLPortAsString() {
         return getAttr(Provisioning.A_zimbraMailSSLPort, "0");
     }
 
@@ -6449,7 +6797,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=166)
-    public void setMailSSLPort(String zimbraMailSSLPort) throws com.zimbra.common.service.ServiceException {
+    public void setMailSSLPort(int zimbraMailSSLPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLPort, Integer.toString(zimbraMailSSLPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL port for end-user UI
+     *
+     * @param zimbraMailSSLPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=166)
+    public Map<String,Object> setMailSSLPort(int zimbraMailSSLPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLPort, Integer.toString(zimbraMailSSLPort));
+        return attrs;
+    }
+
+    /**
+     * SSL port for end-user UI
+     *
+     * @param zimbraMailSSLPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=166)
+    public void setMailSSLPortAsString(String zimbraMailSSLPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLPort, zimbraMailSSLPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6463,7 +6838,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=166)
-    public Map<String,Object> setMailSSLPort(String zimbraMailSSLPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMailSSLPortAsString(String zimbraMailSSLPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLPort, zimbraMailSSLPort);
         return attrs;
@@ -6497,12 +6872,28 @@ public class ZAttrServer extends NamedEntry {
     /**
      * SSL port HTTP proxy
      *
+     * <p>Use getMailSSLProxyPortAsString to access value as a string.
+     *
+     * @see #getMailSSLProxyPortAsString()
+     *
+     * @return zimbraMailSSLProxyPort, or 0 if unset
+     *
+     * @since ZCS 5.0.3
+     */
+    @ZAttr(id=627)
+    public int getMailSSLProxyPort() {
+        return getIntAttr(Provisioning.A_zimbraMailSSLProxyPort, 0);
+    }
+
+    /**
+     * SSL port HTTP proxy
+     *
      * @return zimbraMailSSLProxyPort, or "0" if unset
      *
      * @since ZCS 5.0.3
      */
     @ZAttr(id=627)
-    public String getMailSSLProxyPort() {
+    public String getMailSSLProxyPortAsString() {
         return getAttr(Provisioning.A_zimbraMailSSLProxyPort, "0");
     }
 
@@ -6515,7 +6906,38 @@ public class ZAttrServer extends NamedEntry {
      * @since ZCS 5.0.3
      */
     @ZAttr(id=627)
-    public void setMailSSLProxyPort(String zimbraMailSSLProxyPort) throws com.zimbra.common.service.ServiceException {
+    public void setMailSSLProxyPort(int zimbraMailSSLProxyPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyPort, Integer.toString(zimbraMailSSLProxyPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL port HTTP proxy
+     *
+     * @param zimbraMailSSLProxyPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.3
+     */
+    @ZAttr(id=627)
+    public Map<String,Object> setMailSSLProxyPort(int zimbraMailSSLProxyPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailSSLProxyPort, Integer.toString(zimbraMailSSLProxyPort));
+        return attrs;
+    }
+
+    /**
+     * SSL port HTTP proxy
+     *
+     * @param zimbraMailSSLProxyPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.3
+     */
+    @ZAttr(id=627)
+    public void setMailSSLProxyPortAsString(String zimbraMailSSLProxyPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLProxyPort, zimbraMailSSLProxyPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -6531,7 +6953,7 @@ public class ZAttrServer extends NamedEntry {
      * @since ZCS 5.0.3
      */
     @ZAttr(id=627)
-    public Map<String,Object> setMailSSLProxyPort(String zimbraMailSSLProxyPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMailSSLProxyPortAsString(String zimbraMailSSLProxyPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSSLProxyPort, zimbraMailSSLProxyPort);
         return attrs;
@@ -7422,12 +7844,28 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which memcached server should listen
      *
+     * <p>Use getMemcachedBindPortAsString to access value as a string.
+     *
+     * @see #getMemcachedBindPortAsString()
+     *
+     * @return zimbraMemcachedBindPort, or 11211 if unset
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=580)
+    public int getMemcachedBindPort() {
+        return getIntAttr(Provisioning.A_zimbraMemcachedBindPort, 11211);
+    }
+
+    /**
+     * port number on which memcached server should listen
+     *
      * @return zimbraMemcachedBindPort, or "11211" if unset
      *
      * @since ZCS 5.0.0
      */
     @ZAttr(id=580)
-    public String getMemcachedBindPort() {
+    public String getMemcachedBindPortAsString() {
         return getAttr(Provisioning.A_zimbraMemcachedBindPort, "11211");
     }
 
@@ -7440,7 +7878,38 @@ public class ZAttrServer extends NamedEntry {
      * @since ZCS 5.0.0
      */
     @ZAttr(id=580)
-    public void setMemcachedBindPort(String zimbraMemcachedBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setMemcachedBindPort(int zimbraMemcachedBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedBindPort, Integer.toString(zimbraMemcachedBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which memcached server should listen
+     *
+     * @param zimbraMemcachedBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=580)
+    public Map<String,Object> setMemcachedBindPort(int zimbraMemcachedBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMemcachedBindPort, Integer.toString(zimbraMemcachedBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which memcached server should listen
+     *
+     * @param zimbraMemcachedBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=580)
+    public void setMemcachedBindPortAsString(String zimbraMemcachedBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMemcachedBindPort, zimbraMemcachedBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -7456,7 +7925,7 @@ public class ZAttrServer extends NamedEntry {
      * @since ZCS 5.0.0
      */
     @ZAttr(id=580)
-    public Map<String,Object> setMemcachedBindPort(String zimbraMemcachedBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setMemcachedBindPortAsString(String zimbraMemcachedBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMemcachedBindPort, zimbraMemcachedBindPort);
         return attrs;
@@ -10405,10 +10874,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which POP3 server should listen
      *
+     * <p>Use getPop3BindPortAsString to access value as a string.
+     *
+     * @see #getPop3BindPortAsString()
+     *
+     * @return zimbraPop3BindPort, or 7110 if unset
+     */
+    @ZAttr(id=94)
+    public int getPop3BindPort() {
+        return getIntAttr(Provisioning.A_zimbraPop3BindPort, 7110);
+    }
+
+    /**
+     * port number on which POP3 server should listen
+     *
      * @return zimbraPop3BindPort, or "7110" if unset
      */
     @ZAttr(id=94)
-    public String getPop3BindPort() {
+    public String getPop3BindPortAsString() {
         return getAttr(Provisioning.A_zimbraPop3BindPort, "7110");
     }
 
@@ -10419,7 +10902,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=94)
-    public void setPop3BindPort(String zimbraPop3BindPort) throws com.zimbra.common.service.ServiceException {
+    public void setPop3BindPort(int zimbraPop3BindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3BindPort, Integer.toString(zimbraPop3BindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which POP3 server should listen
+     *
+     * @param zimbraPop3BindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=94)
+    public Map<String,Object> setPop3BindPort(int zimbraPop3BindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3BindPort, Integer.toString(zimbraPop3BindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which POP3 server should listen
+     *
+     * @param zimbraPop3BindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=94)
+    public void setPop3BindPortAsString(String zimbraPop3BindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3BindPort, zimbraPop3BindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -10433,7 +10943,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=94)
-    public Map<String,Object> setPop3BindPort(String zimbraPop3BindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setPop3BindPortAsString(String zimbraPop3BindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3BindPort, zimbraPop3BindPort);
         return attrs;
@@ -10663,10 +11173,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which POP3 proxy server should listen
      *
+     * <p>Use getPop3ProxyBindPortAsString to access value as a string.
+     *
+     * @see #getPop3ProxyBindPortAsString()
+     *
+     * @return zimbraPop3ProxyBindPort, or 110 if unset
+     */
+    @ZAttr(id=350)
+    public int getPop3ProxyBindPort() {
+        return getIntAttr(Provisioning.A_zimbraPop3ProxyBindPort, 110);
+    }
+
+    /**
+     * port number on which POP3 proxy server should listen
+     *
      * @return zimbraPop3ProxyBindPort, or "110" if unset
      */
     @ZAttr(id=350)
-    public String getPop3ProxyBindPort() {
+    public String getPop3ProxyBindPortAsString() {
         return getAttr(Provisioning.A_zimbraPop3ProxyBindPort, "110");
     }
 
@@ -10677,7 +11201,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=350)
-    public void setPop3ProxyBindPort(String zimbraPop3ProxyBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setPop3ProxyBindPort(int zimbraPop3ProxyBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ProxyBindPort, Integer.toString(zimbraPop3ProxyBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which POP3 proxy server should listen
+     *
+     * @param zimbraPop3ProxyBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=350)
+    public Map<String,Object> setPop3ProxyBindPort(int zimbraPop3ProxyBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ProxyBindPort, Integer.toString(zimbraPop3ProxyBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which POP3 proxy server should listen
+     *
+     * @param zimbraPop3ProxyBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=350)
+    public void setPop3ProxyBindPortAsString(String zimbraPop3ProxyBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ProxyBindPort, zimbraPop3ProxyBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -10691,7 +11242,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=350)
-    public Map<String,Object> setPop3ProxyBindPort(String zimbraPop3ProxyBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setPop3ProxyBindPortAsString(String zimbraPop3ProxyBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ProxyBindPort, zimbraPop3ProxyBindPort);
         return attrs;
@@ -10922,10 +11473,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which POP3 server should listen
      *
+     * <p>Use getPop3SSLBindPortAsString to access value as a string.
+     *
+     * @see #getPop3SSLBindPortAsString()
+     *
+     * @return zimbraPop3SSLBindPort, or 7995 if unset
+     */
+    @ZAttr(id=187)
+    public int getPop3SSLBindPort() {
+        return getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, 7995);
+    }
+
+    /**
+     * port number on which POP3 server should listen
+     *
      * @return zimbraPop3SSLBindPort, or "7995" if unset
      */
     @ZAttr(id=187)
-    public String getPop3SSLBindPort() {
+    public String getPop3SSLBindPortAsString() {
         return getAttr(Provisioning.A_zimbraPop3SSLBindPort, "7995");
     }
 
@@ -10936,7 +11501,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=187)
-    public void setPop3SSLBindPort(String zimbraPop3SSLBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setPop3SSLBindPort(int zimbraPop3SSLBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3SSLBindPort, Integer.toString(zimbraPop3SSLBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which POP3 server should listen
+     *
+     * @param zimbraPop3SSLBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=187)
+    public Map<String,Object> setPop3SSLBindPort(int zimbraPop3SSLBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3SSLBindPort, Integer.toString(zimbraPop3SSLBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which POP3 server should listen
+     *
+     * @param zimbraPop3SSLBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=187)
+    public void setPop3SSLBindPortAsString(String zimbraPop3SSLBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3SSLBindPort, zimbraPop3SSLBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -10950,7 +11542,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=187)
-    public Map<String,Object> setPop3SSLBindPort(String zimbraPop3SSLBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setPop3SSLBindPortAsString(String zimbraPop3SSLBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3SSLBindPort, zimbraPop3SSLBindPort);
         return attrs;
@@ -10984,10 +11576,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * port number on which POP3S proxy server should listen
      *
+     * <p>Use getPop3SSLProxyBindPortAsString to access value as a string.
+     *
+     * @see #getPop3SSLProxyBindPortAsString()
+     *
+     * @return zimbraPop3SSLProxyBindPort, or 995 if unset
+     */
+    @ZAttr(id=351)
+    public int getPop3SSLProxyBindPort() {
+        return getIntAttr(Provisioning.A_zimbraPop3SSLProxyBindPort, 995);
+    }
+
+    /**
+     * port number on which POP3S proxy server should listen
+     *
      * @return zimbraPop3SSLProxyBindPort, or "995" if unset
      */
     @ZAttr(id=351)
-    public String getPop3SSLProxyBindPort() {
+    public String getPop3SSLProxyBindPortAsString() {
         return getAttr(Provisioning.A_zimbraPop3SSLProxyBindPort, "995");
     }
 
@@ -10998,7 +11604,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=351)
-    public void setPop3SSLProxyBindPort(String zimbraPop3SSLProxyBindPort) throws com.zimbra.common.service.ServiceException {
+    public void setPop3SSLProxyBindPort(int zimbraPop3SSLProxyBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3SSLProxyBindPort, Integer.toString(zimbraPop3SSLProxyBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which POP3S proxy server should listen
+     *
+     * @param zimbraPop3SSLProxyBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=351)
+    public Map<String,Object> setPop3SSLProxyBindPort(int zimbraPop3SSLProxyBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3SSLProxyBindPort, Integer.toString(zimbraPop3SSLProxyBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which POP3S proxy server should listen
+     *
+     * @param zimbraPop3SSLProxyBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=351)
+    public void setPop3SSLProxyBindPortAsString(String zimbraPop3SSLProxyBindPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3SSLProxyBindPort, zimbraPop3SSLProxyBindPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -11012,7 +11645,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=351)
-    public Map<String,Object> setPop3SSLProxyBindPort(String zimbraPop3SSLProxyBindPort, Map<String,Object> attrs) {
+    public Map<String,Object> setPop3SSLProxyBindPortAsString(String zimbraPop3SSLProxyBindPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3SSLProxyBindPort, zimbraPop3SSLProxyBindPort);
         return attrs;
@@ -15004,10 +15637,24 @@ public class ZAttrServer extends NamedEntry {
     /**
      * the SMTP server port to connect to when sending mail
      *
+     * <p>Use getSmtpPortAsString to access value as a string.
+     *
+     * @see #getSmtpPortAsString()
+     *
+     * @return zimbraSmtpPort, or 25 if unset
+     */
+    @ZAttr(id=98)
+    public int getSmtpPort() {
+        return getIntAttr(Provisioning.A_zimbraSmtpPort, 25);
+    }
+
+    /**
+     * the SMTP server port to connect to when sending mail
+     *
      * @return zimbraSmtpPort, or "25" if unset
      */
     @ZAttr(id=98)
-    public String getSmtpPort() {
+    public String getSmtpPortAsString() {
         return getAttr(Provisioning.A_zimbraSmtpPort, "25");
     }
 
@@ -15018,7 +15665,34 @@ public class ZAttrServer extends NamedEntry {
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
     @ZAttr(id=98)
-    public void setSmtpPort(String zimbraSmtpPort) throws com.zimbra.common.service.ServiceException {
+    public void setSmtpPort(int zimbraSmtpPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpPort, Integer.toString(zimbraSmtpPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the SMTP server port to connect to when sending mail
+     *
+     * @param zimbraSmtpPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=98)
+    public Map<String,Object> setSmtpPort(int zimbraSmtpPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpPort, Integer.toString(zimbraSmtpPort));
+        return attrs;
+    }
+
+    /**
+     * the SMTP server port to connect to when sending mail
+     *
+     * @param zimbraSmtpPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=98)
+    public void setSmtpPortAsString(String zimbraSmtpPort) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpPort, zimbraSmtpPort);
         getProvisioning().modifyAttrs(this, attrs);
@@ -15032,7 +15706,7 @@ public class ZAttrServer extends NamedEntry {
      * @return populated map to pass into Provisioning.modifyAttrs
      */
     @ZAttr(id=98)
-    public Map<String,Object> setSmtpPort(String zimbraSmtpPort, Map<String,Object> attrs) {
+    public Map<String,Object> setSmtpPortAsString(String zimbraSmtpPort, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpPort, zimbraSmtpPort);
         return attrs;

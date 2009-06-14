@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090610-1958 */
+    /* build: 6.0.0 pshao 20090613-1718 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -6526,6 +6526,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=724)
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
+
+    /**
+     * default permission for user rights
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public static final String A_zimbraRightDefaultPermission = "zimbraRightDefaultPermission";
 
     /**
      * Maximum number of scheduled tasks that can run simultaneously.

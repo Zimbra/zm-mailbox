@@ -108,14 +108,14 @@ extends TestCase {
     
     public void setUp()
     throws Exception {
-        mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPort();
+        mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
     }
     
     public void testRejectSender()
     throws Exception {
         Thread smtpServerThread = new Thread(new SmtpRejectSender());
         smtpServerThread.start();
-        Provisioning.getInstance().getLocalServer().setSmtpPort(Integer.toString(TEST_SMTP_PORT));
+        Provisioning.getInstance().getLocalServer().setSmtpPort(TEST_SMTP_PORT);
         
         String content = TestUtil.getTestMessage(NAME_PREFIX + " testRejectSender", RECIPIENT_NAME, SENDER_NAME, null);
         MimeMessage msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
@@ -135,7 +135,7 @@ extends TestCase {
     
     public void tearDown()
     throws Exception {
-        Provisioning.getInstance().getLocalServer().setSmtpPort(mOriginalSmtpPort);
+        Provisioning.getInstance().getLocalServer().setSmtpPortAsString(mOriginalSmtpPort);
     }
     
     public static void main(String[] args)

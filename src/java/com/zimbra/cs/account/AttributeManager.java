@@ -2001,10 +2001,13 @@ public class AttributeManager {
                 case TYPE_DURATION:
                 case TYPE_GENTIME:
                 case TYPE_ENUM:
+                case TYPE_PORT:
                     generateGetter(result, ai, false, ac);
                     generateGetter(result, ai, true, ac);
                     generateSetters(result, ai, false, SetterType.set);
-                    if (ai.getType() == AttributeType.TYPE_GENTIME || ai.getType() == AttributeType.TYPE_ENUM) {
+                    if (ai.getType() == AttributeType.TYPE_GENTIME || 
+                        ai.getType() == AttributeType.TYPE_ENUM || 
+                        ai.getType() == AttributeType.TYPE_PORT) {
                         generateSetters(result, ai, true, SetterType.set);
                     }
                     generateSetters(result, ai, false, SetterType.unset);
@@ -2100,6 +2103,13 @@ public class AttributeManager {
                 javaType = "int";
                 javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
                 javaDocReturns = String.format(", or %s if unset", defaultValue);
+                break;
+            case TYPE_PORT:
+                if (defaultValue == null) defaultValue = "-1";
+                javaType = "int";
+                javaBody = String.format("return getIntAttr(Provisioning.A_%s, %s);", name, defaultValue);
+                javaDocReturns = String.format(", or %s if unset", defaultValue);
+                asStringDoc = true;
                 break;
             case TYPE_ENUM:
                 javaType = "ZAttrProvisioning." + enumName(ai);
@@ -2212,6 +2222,7 @@ public class AttributeManager {
                 putParam = String.format("%s ? Provisioning.TRUE : Provisioning.FALSE", name);
                 break;
             case TYPE_INTEGER:
+            case TYPE_PORT:    
                 javaType = "int";
                 putParam = String.format("Integer.toString(%s)", name);
                 break;
