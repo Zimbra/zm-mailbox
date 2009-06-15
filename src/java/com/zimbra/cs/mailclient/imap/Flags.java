@@ -52,14 +52,14 @@ public final class Flags extends AbstractSet<Atom> {
     };
 
     public static Flags read(ImapInputStream is) throws IOException {
-        is.skipChar('(');
         Flags flags = new Flags();
-        if (is.peekChar() != ')') {
-            do {
-                flags.set(is.readFlag());
-            } while (is.match(' '));
+        is.skipSpaces();
+        is.skipChar('(');
+        is.skipSpaces();
+        while (!is.match(')')) {
+            flags.set(is.readFlag());
+            is.skipSpaces();
         }
-        is.skipChar(')');
         return flags;
     }
 

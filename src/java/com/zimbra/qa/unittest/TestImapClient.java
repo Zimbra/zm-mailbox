@@ -31,6 +31,9 @@ import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.ImapCapabilities;
+import com.zimbra.cs.mailclient.imap.Envelope;
+import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -135,9 +138,12 @@ public class TestImapClient extends TestCase {
 
     public void testList() throws Exception {
         login();
-        List<ListData> lds = connection.list("", "");
-        assertTrue(lds.size() == 1);
-        assertEquals('/', lds.get(0).getDelimiter());
+        List<ListData> lds = connection.list("", "*");
+        for (ListData ld : lds) {
+            assertEquals('/', ld.getDelimiter());
+            assertNotNull(ld.getMailbox());
+            assertTrue(ld.getFlags().size() > 0);
+        }
     }
 
     public void testAppend() throws Exception {
@@ -182,13 +188,33 @@ public class TestImapClient extends TestCase {
         login();
         Mailbox mb = connection.select("INBOX");
         final AtomicLong count = new AtomicLong(mb.getExists());
-        connection.uidFetch("1:*", "(ENVELOPE UID)", new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
+        connection.uidFetch("1:*", "(FLAGS INTERNALDATE RFC822.SIZE ENVELOPE BODY BODY.PEEK[])", new ResponseHandler() {
+            public boolean handleResponse(ImapResponse res) throws Exception {
                 if (res.getCCode() != CAtom.FETCH) return false;
                 MessageData md = (MessageData) res.getData();
                 assertNotNull(md);
-                assertNotNull(md.getEnvelope());
+                Envelope env = md.getEnvelope();
+                assertNotNull(env);
+                assertNotNull(env.getSubject());
                 assertNotNull(md.getUid());
+                assertTrue(md.getRfc822Size() != -1);
+                assertNotNull(md.getInternalDate());
+                BodyStructure bs = md.getBodyStructure();
+                assertNotNull(bs);
+                if (bs.isMultipart()) {
+                    BodyStructure[] parts = bs.getParts();
+                    for (BodyStructure part : parts) {
+                        assertNotNull(part.getType());
+                        assertNotNull(part.getSubtype());
+                    }
+                } else {
+                    assertNotNull(bs.getType());
+                    assertNotNull(bs.getSubtype());
+                }
+                Body[] body = md.getBodySections();
+                assertNotNull(body);
+                assertEquals(1, body.length);
+                assertNotNull(body[0].getBytes());
                 count.decrementAndGet();
                 System.out.printf("Fetched uid = %s\n", md.getUid());
                 return true;
@@ -340,6 +366,11 @@ public class TestImapClient extends TestCase {
         connect();
         connection.login(PASS);
         connection.select("INBOX");
+        assertTrue(connection.getMailbox().getName().equals("INBOX"));
+        ImapCapabilities cap = connection.getCapabilities();
+        assertNotNull(cap);
+        assertTrue(cap.hasCapability(ImapCapabilities.UIDPLUS));
+        assertTrue(cap.hasCapability("UNSELECT"));
     }
     
     private void connect() throws IOException {

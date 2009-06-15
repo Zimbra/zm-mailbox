@@ -55,12 +55,15 @@ public class BodyStructure {
             throws IOException {
         // body            = "(" (body-type-1part / body-type-mpart) ")"
         BodyStructure bs = new BodyStructure();
+        is.skipSpaces();
         is.skipChar('(');
+        is.skipSpaces();
         if (is.peek() == '(') {
             bs.readMPart(is, ext);
         } else {
             bs.read1Part(is, ext);
         }
+        is.skipSpaces();
         is.skipChar(')');
         return bs;
     }
@@ -82,15 +85,15 @@ public class BodyStructure {
     //                   [SP body-fld-loc *(SP body-extension)]]]
 
     private void read1Part(ImapInputStream is, boolean ext) throws IOException {
-        type = is.readString().toLowerCase();
+        type = is.readString().toUpperCase();
         is.skipChar(' ');
-        subtype = is.readString().toLowerCase();
+        subtype = is.readString().toUpperCase();
         is.skipChar(' ');
         readFields(is);
-        if (type.equals("text")) {
+        if (type.equals("TEXT")) {
             is.skipChar(' ');
             lines = is.readNumber();
-        } else if (type.equals("message") && subtype.equals("rfc822")) {
+        } else if (type.equals("MESSAGE") && subtype.equals("RFC822")) {
             is.skipChar(' ');
             envelope = Envelope.read(is);
             is.skipChar(' ');
@@ -110,19 +113,21 @@ public class BodyStructure {
     //                   [SP body-fld-loc *(SP body-extension)]]]
     
     private void readMPart(ImapInputStream is, boolean ext) throws IOException {
-        is.skipChar('(');
-        type = "multipart";
+        type = "MULTIPART";
         List<BodyStructure> parts = new ArrayList<BodyStructure>();
-        do {
+        while (is.peekChar() == '(') {
             parts.add(read(is, ext));
-        } while (!is.match(' '));
-        subtype = is.readString().toLowerCase();
+            is.skipSpaces();
+        }
+        subtype = is.readString().toUpperCase();
         if (ext && is.match(' ')) {
             params = readParams(is);
-            if (is.match(' ')) readExt(is);
+            if (is.match(' ')) {
+                is.skipSpaces();
+                readExt(is);
+            }
         }
         this.parts = parts.toArray(new BodyStructure[parts.size()]);
-        is.skipChar(')');
     }
 
     // ext             = body-fld-dsp [SP body-fld-lang
@@ -131,15 +136,19 @@ public class BodyStructure {
     // body-fld-loc    = nstring
     
     private void readExt(ImapInputStream is) throws IOException {
+        is.skipSpaces();
         if (is.match('(')) {
             disposition = is.readString();
             is.skipChar(' ');
+            is.skipSpaces();
             dispositionParams = readParams(is);
+            is.skipSpaces();
             is.skipChar(')');
         } else {
             is.skipNil();
         }
         if (is.match(' ')) {
+            is.skipSpaces();
             language = readLang(is);
             if (is.match(' ')) {
                 location = is.readNString();
@@ -172,19 +181,20 @@ public class BodyStructure {
 
     // body-fld-param  = "(" string SP string *(SP string SP string) ")" / nil
     private static Map<String, String> readParams(ImapInputStream is)
-            throws IOException {
+        throws IOException {
+        is.skipSpaces();
         if (!is.match('(')) {
             is.skipNil();
             return null;
         }
         HashMap<String, String> params = new HashMap<String, String>();
-        do {
+        is.skipSpaces();
+        while (!is.match(')')) {
             String name = is.readString().toLowerCase();
             is.skipChar(' ');
             String value = is.readString();
             params.put(name, value);
-        } while (is.match(' '));
-        is.skipChar(')');
+        }
         return params;
     }
 
@@ -193,10 +203,11 @@ public class BodyStructure {
     
     private static void skipExtData(ImapInputStream is) throws IOException {
         if (is.match('(')) {
-            do {
+            is.skipSpaces();
+            while (!is.match(')')) {
                 skipExtData(is);
-            } while (is.match(' '));
-            is.skipChar(')');
+                is.skipSpaces();
+            }
         } else {
             is.readAStringData();
         }
@@ -211,10 +222,11 @@ public class BodyStructure {
         }
         is.skipChar('(');
         ArrayList<String> lang = new ArrayList<String>();
-        do {
+        is.skipSpaces();
+        while (!is.match(')')) {
             lang.add(is.readString());
-        } while (is.match(' '));
-        is.skipChar(')');
+            is.skipSpaces();
+        }
         return lang.toArray(new String[lang.size()]);
     }
     
@@ -234,6 +246,9 @@ public class BodyStructure {
     public String getDisposition() { return disposition; }
     public Map<String, String> getDispositionParameters() {
         return dispositionParams;
+    }
+    public boolean isMultipart() {
+        return "MULTIPART".equals(type);
     }
 
     public String toString() {

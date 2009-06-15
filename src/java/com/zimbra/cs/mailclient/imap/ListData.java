@@ -68,6 +68,7 @@ public final class ListData {
             delimiter = delim.charAt(0);
         }
         is.skipChar(' ');
+        is.skipSpaces();
         String s = is.peekChar() == '"' ? readQuoted(is) : is.readAString();
         mailbox = MailboxName.decode(s).toString();
     }

@@ -70,8 +70,9 @@ public final class Mailbox implements ResponseHandler {
     private void parseStatus(ImapInputStream is) throws IOException {
         name = MailboxName.decode(is.readAString()).toString();
         is.skipChar(' ');
+        is.skipSpaces();
         is.skipChar('(');
-        do {
+        while (!is.match(')')) {
             Atom attr = is.readAtom();
             is.skipChar(' ');
             long n = is.readNumber();
@@ -95,8 +96,8 @@ public final class Mailbox implements ResponseHandler {
                 throw new ParseException(
                     "Invalid STATUS response attribute: " + attr);
             }
-        } while (is.match(' '));
-        is.skipChar(')');
+            is.skipSpaces();
+        }
     }
 
     public boolean handleResponse(ImapResponse res) {

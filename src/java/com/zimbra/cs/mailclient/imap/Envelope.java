@@ -63,6 +63,7 @@ public class Envelope {
     }
     
     private void readEnvelope(ImapInputStream is) throws IOException {
+        is.skipSpaces();
         is.skipChar('(');
         date = is.readNString();
         is.skipChar(' ');
@@ -83,15 +84,19 @@ public class Envelope {
         inReplyTo = is.readNString();
         is.skipChar(' ');
         messageId = is.readNString();
+        is.skipSpaces();
         is.skipChar(')');
     }
 
     private static Address[] readAList(ImapInputStream is) throws IOException {
+        is.skipSpaces();
         if (is.match('(')) {
             List<Address> addrs = new ArrayList<Address>();
-            do {
+            is.skipSpaces();
+            while (!is.match(')')) {
                 addrs.add(readAddress(is));
-            } while (!is.match(')'));
+                is.skipSpaces();
+            }
             return addrs.toArray(new Address[addrs.size()]);
         } else {
             is.skipNil();
@@ -100,7 +105,6 @@ public class Envelope {
     }
 
     private static Address readAddress(ImapInputStream is) throws IOException {
-        is.match(' '); // gmail includes an extra space here... ugh
         is.skipChar('(');
         Address addr = new Address();
         addr.name = is.readNString();
@@ -110,6 +114,7 @@ public class Envelope {
         addr.host = is.readNString();
         is.skipChar(' ');
         addr.mailbox = is.readNString();
+        is.skipSpaces();
         is.skipChar(')');
         return addr;
     }
