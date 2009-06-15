@@ -119,15 +119,18 @@ public final class Mailbox implements ResponseHandler {
     }
 
     private boolean handleResponseText(ResponseText rt) {
+        long n;
         switch (rt.getCCode()) {
         case UNSEEN:
             unseen = (Long) rt.getData();
             return true;
         case UIDNEXT:
-            uidNext = (Long) rt.getData();
+            n = (Long) rt.getData();
+            if (n > 0) uidNext = n;     // bug 38521
             return true;
         case UIDVALIDITY:
-            uidValidity = (Long) rt.getData();
+            n = (Long) rt.getData();
+            if (n > 0) uidValidity = n; // bug 38521
             return true;
         case PERMANENTFLAGS:
             permanentFlags = (Flags) rt.getData();

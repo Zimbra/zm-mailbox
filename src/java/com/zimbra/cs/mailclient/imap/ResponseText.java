@@ -57,12 +57,14 @@ public final class ResponseText {
             break;
         case UIDNEXT: case UIDVALIDITY:
             is.skipChar(' ');
-            data = is.readNZNumber();
+            // RFC 3501 says these should both be nz-number but some servers
+            // return 0 if mailbox is empty (bug 38521).
+            data = is.readNumber();
             break;
         case UNSEEN:
             is.skipChar(' ');
-            // Technically, this should be "UNSEEN" SP nz-number but some
-            // servers (i.e. GMail) actually return "0".
+            // RFC 3501 says this should be an nz-number but some servers
+            // (i.e. GMail) return 0. 
             data = is.readNumber();
             break;
         case BADCHARSET:
