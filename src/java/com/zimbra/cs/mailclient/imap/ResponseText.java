@@ -39,6 +39,7 @@ public final class ResponseText {
 
     public static ResponseText read(ImapInputStream is) throws IOException {
         ResponseText rt = new ResponseText();
+        is.skipSpaces();
         if (is.peek() == '[') {
             rt.readCode(is);
         }
@@ -64,7 +65,10 @@ public final class ResponseText {
             break;
         case BADCHARSET:
             if (is.match(' ')) {
-                data = readCharset(is);
+                is.skipSpaces();
+                if (is.peekChar() == '(') {
+                    data = readCharset(is);
+                }
             }
             break;
         case PERMANENTFLAGS:
@@ -73,43 +77,48 @@ public final class ResponseText {
             break;
         case CAPABILITY:
             is.skipChar(' ');
+            is.skipSpaces();
             data = ImapCapabilities.read(is);
             break;
         case APPENDUID:
             // Supports UIDPLUS (RFC 2359):
             // resp_code_apnd ::= "APPENDUID" SPACE nz_number SPACE uniqueid
-            AppendResult ares = new AppendResult();
+            AppendResult ar = new AppendResult();
             is.skipChar(' ');
-            ares.uidValidity = is.readNZNumber();
+            ar.uidValidity = is.readNZNumber();
             is.skipChar(' ');
-            ares.uid = is.readNZNumber();
-            this.data = ares;
+            ar.uid = is.readNZNumber();
+            this.data = ar;
             break;
         case COPYUID:
-            CopyResult cres = new CopyResult();
+            CopyResult cr = new CopyResult();
             is.skipChar(' ');
-            cres.uidValidity = is.readNZNumber();
+            cr.uidValidity = is.readNZNumber();
             is.skipChar(' ');
-            cres.fromUids = is.readText(' ');
+            is.skipSpaces();
+            cr.fromUids = is.readText(" ");
             is.skipChar(' ');
-            cres.toUids = is.readText(']');
-            this.data = cres;
+            is.skipSpaces();
+            cr.toUids = is.readText(" ]");
+            this.data = cr;
             break;
         default:
             if (is.match(' ')) {
-                data = is.readText(']');
+                data = is.readText(" ]");
             }
         }
+        is.skipSpaces();
         is.skipChar(']');
     }
 
     private String[] readCharset(ImapInputStream is) throws IOException {
-        is.skipChar(' ');
         ArrayList<String> cs = new ArrayList<String>();
-        do {
+        is.skipChar('(');
+        is.skipSpaces();
+        while (!is.match(')')) {
             cs.add(is.readAString());
-        } while (is.match(' '));
-        is.skipChar(')');
+            is.skipSpaces();
+        }
         return cs.toArray(new String[cs.size()]);
     }
 

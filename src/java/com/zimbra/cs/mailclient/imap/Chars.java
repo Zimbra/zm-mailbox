@@ -59,19 +59,23 @@ public final class Chars {
         }
     }
 
-    public static boolean isNumber(char c) {
+    public static boolean isDigit(char c) {
         return NUMBER_CHARS[c];
     }
 
-    public static boolean isText(char c) {
+    public static boolean isTextChar(char c) {
         return TEXT_CHARS[c];
     }
 
-    public static boolean isAString(char c) {
+    public static boolean isAtomChar(char c) {
+        return ATOM_CHARS[c];    
+    }
+    
+    public static boolean isAStringChar(char c) {
         return ASTRING_CHARS[c];
     }
     
-    public static boolean isQuotedSpecial(char c) {
+    public static boolean isQuotedSpecialChar(char c) {
         return c == '\\' || c == '\"';
     }
 

@@ -70,7 +70,7 @@ public final class ImapResponse {
             data = ResponseText.read(is);
             break;
         case CAPABILITY:
-            if (is.skipSpaces()) {
+            if (is.match(' ')) {
                 data = ImapCapabilities.read(is);
             } else {
                 data = new ImapCapabilities();
@@ -94,6 +94,7 @@ public final class ImapResponse {
             break;
         case STATUS:
             // "STATUS" SP mailbox SP "(" [status-att-list] ")"
+            is.skipChar(' ');
             data = Mailbox.readStatus(is);
             break;
         case FETCH:
@@ -106,6 +107,7 @@ public final class ImapResponse {
         case EXISTS: case RECENT: case EXPUNGE:
             break;
         case ID:
+            is.skipChar(' ');
             data = IDInfo.read(is);
             break;
         default:
@@ -116,7 +118,10 @@ public final class ImapResponse {
     private List<Long> readSearchData(ImapInputStream is) throws IOException {
         ArrayList<Long> ids = new ArrayList<Long>();
         while (is.match(' ')) {
-            ids.add(is.readNZNumber());
+            is.skipSpaces();
+            if (!is.isEOL()) {
+                ids.add(is.readNZNumber());
+            }
         }
         return ids;
     }

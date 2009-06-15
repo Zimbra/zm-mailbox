@@ -47,16 +47,20 @@ public final class Body {
     }
 
     private void readBody(ImapInputStream is) throws IOException {
+        is.skipSpaces();
         is.skipChar('[');
+        is.skipSpaces();
         if (is.peekChar() != ']') {
             readSection(is);
         }
+        is.skipSpaces();
         is.skipChar(']');
+        is.skipSpaces();
         if (is.match('<')) {
             origin = is.readNZNumber();
+            is.skipSpaces();
             is.skipChar('>');
         }
-        is.skipChar(' ');
         data = is.readFetchData();
     }
 
@@ -64,6 +68,7 @@ public final class Body {
         if (is.isNumber()) {
             part = readPart(is);
         }
+        is.skipSpaces();
         if (is.peek() == ']') return; // No section text
         Atom sec = is.readAtom();
         section = sec.getCAtom();
@@ -72,6 +77,7 @@ public final class Body {
             break;
         case HEADER_FIELDS: case HEADER_FIELDS_NOT:
             is.skipChar(' ');
+            is.skipSpaces();
             fieldNames = readFieldNames(is);
             break;
         case MIME:
@@ -97,13 +103,15 @@ public final class Body {
         return sb.toString();
     }
 
-    private static String[] readFieldNames(ImapInputStream is) throws IOException {
-        is.skipChar('(');
+    private static String[] readFieldNames(ImapInputStream is)
+        throws IOException {
         ArrayList<String> names = new ArrayList<String>();
-        do {
+        is.skipChar('(');
+        is.skipSpaces();
+        while (!is.match(')')) {
             names.add(is.readAString());
-        } while (is.match(' '));
-        is.skipChar(')');
+            is.skipSpaces();
+        }
         return names.toArray(new String[names.size()]);
     }
 

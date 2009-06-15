@@ -59,10 +59,10 @@ public abstract class ImapData {
         Type type = Type.ATOM;  // Assume it's an atom for now
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
-            if (!Chars.isText(c)) {
+            if (!Chars.isTextChar(c)) {
                 return Type.LITERAL;
             }
-            if (!Chars.isAString(c)) {
+            if (!Chars.isAStringChar(c)) {
                 type = Type.QUOTED; // Must be QUOTED or LITERAL
             }
         }

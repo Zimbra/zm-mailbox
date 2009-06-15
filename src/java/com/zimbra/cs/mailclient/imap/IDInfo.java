@@ -37,21 +37,19 @@ public class IDInfo extends TreeMap<String, String> {
     private static final String ENVIRONMENT = "environment";
 
     public static IDInfo read(ImapInputStream is) throws IOException {
-        is.skipChar(' ');
+        is.skipSpaces();
         if (!is.match('(')) {
             is.skipNil();
             return null;
         }
         IDInfo info = new IDInfo();
-        if (is.peekChar() != ')') {
-            do {
-                String name = is.readString();
-                is.skipChar(' ');
-                String value = is.readNString();
-                info.put(name, value);
-            } while (is.match(' '));
+        while (!is.match(')')) {
+            String name = is.readString();
+            is.skipChar(' ');
+            String value = is.readNString();
+            info.put(name, value);
+            is.skipSpaces();
         }
-        is.skipChar(')');
         return info;
     }
     

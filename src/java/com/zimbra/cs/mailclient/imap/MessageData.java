@@ -67,11 +67,13 @@ public final class MessageData {
     private MessageData() {}
     
     private void read(ImapInputStream is) throws IOException {
+        is.skipSpaces();
         is.skipChar('(');
-        do {
+        is.skipSpaces();
+        while (!is.match(')')) {
             readAttribute(is);
-        } while (is.match(' '));
-        is.skipChar(')');
+            is.skipSpaces();
+        }
     }
 
     private void readAttribute(ImapInputStream is) throws IOException {
@@ -90,6 +92,7 @@ public final class MessageData {
             return;
         }
         is.skipChar(' ');
+        is.skipSpaces();
         switch (attr.getCAtom()) {
         case FLAGS:
             flags = Flags.read(is);
@@ -151,7 +154,8 @@ public final class MessageData {
     public long getUid() { return uid; }
     
     public Body[] getBodySections() {
-        return bodySections.toArray(new Body[bodySections.size()]);
+        return bodySections != null ?
+            bodySections.toArray(new Body[bodySections.size()]) : null;
     }
 
     public void addFields(MessageData md) {
