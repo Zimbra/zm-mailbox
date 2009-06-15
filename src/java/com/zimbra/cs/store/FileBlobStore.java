@@ -74,8 +74,7 @@ public class FileBlobStore extends StoreManager {
         mSweeper.start();
         
         // Initialize file uncompressed file cache and file descriptor cache.
-        String tmpPath = System.getProperty("java.io.tmpdir", "/tmp");
-        String uncompressedPath = tmpPath + "/uncompressed";
+        String uncompressedPath = LC.zimbra_tmp_directory.value() + "/uncompressed";
         FileUtil.ensureDirExists(uncompressedPath);
         mUncompressedFileCache = new UncompressedFileCache<String>(uncompressedPath);
         mFileDescriptorCache = new FileDescriptorCache(mUncompressedFileCache);

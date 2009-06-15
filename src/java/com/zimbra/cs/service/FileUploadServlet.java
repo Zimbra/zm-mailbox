@@ -44,6 +44,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeDetect;
@@ -88,6 +89,8 @@ public class FileUploadServlet extends ZimbraServlet {
     public static final String UPLOAD_DELIMITER = ",";
     /** The character separating server ID from upload ID */
     private static final String UPLOAD_PART_DELIMITER = ":";
+    
+    private static String sUploadDir; 
 
     public static final class Upload {
         final String   accountId;
@@ -274,8 +277,11 @@ public class FileUploadServlet extends ZimbraServlet {
             up.purge();
     }
 
-    private static String getTempDirectory() {
-    	return System.getProperty("java.io.tmpdir", "/tmp");
+    private static String getUploadDir() {
+        if (sUploadDir == null) {
+            sUploadDir = LC.zimbra_tmp_directory.value() + "/upload";
+        }
+        return sUploadDir;
     }
 
     private static class TempFileFilter implements FileFilter {
@@ -299,7 +305,7 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     private static void cleanupLeftoverTempFiles() {
-        File files[] = new File(getTempDirectory()).listFiles(new TempFileFilter());
+        File files[] = new File(getUploadDir()).listFiles(new TempFileFilter());
         if (files == null || files.length < 1) return;
 
         mLog.info("deleting " + files.length + " temporary upload files left over from last time");
@@ -596,7 +602,7 @@ public class FileUploadServlet extends ZimbraServlet {
                       " attribute", e);
         }
         dfif.setSizeThreshold(32 * 1024);
-        dfif.setRepository(new File(getTempDirectory()));
+        dfif.setRepository(new File(getUploadDir()));
         upload = new ServletFileUpload(dfif);
         upload.setSizeMax(maxSize);
         return upload;
@@ -612,7 +618,7 @@ public class FileUploadServlet extends ZimbraServlet {
         mLog.info("Servlet " + name + " starting up");
         super.init();
 
-        File tempDir = new File(getTempDirectory());
+        File tempDir = new File(getUploadDir());
         if (!tempDir.exists()) {
         	if (!tempDir.mkdirs()) {
                 String msg = "Unable to create temporary upload directory " + tempDir;
