@@ -1128,7 +1128,7 @@ public class LC {
         calendar_cache_enabled.setDefault("false");
 
         calendar_cache_directory = new KnownKey("calendar_cache_directory");
-        calendar_cache_directory.setDefault("${zimbra_home}" + FS + "store" + FS + "calcache");
+        calendar_cache_directory.setDefault("${" + zimbra_tmp_directory.key() + "}" + FS + "calcache");
 
         calendar_cache_lru_size = new KnownKey("calendar_cache_lru_size");
         calendar_cache_lru_size.setDefault("1000");
