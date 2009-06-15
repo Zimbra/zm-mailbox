@@ -43,6 +43,7 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public Atom readAtom() throws IOException {
+        skipSpaces();
         String s = readChars(Chars.ATOM_CHARS);
         if (s.length() == 0) {
             throw new ParseException("Zero-length atom");
@@ -52,6 +53,7 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public Atom readFlag() throws IOException {
+        skipSpaces();
         sbuf.setLength(0);
         if (peek() == '\\') {
             sbuf.append((char) read());
@@ -61,7 +63,7 @@ public final class ImapInputStream extends MailInputStream {
             }
         }
         int len = sbuf.length();
-        while (Chars.ATOM_CHARS[peekChar()]) {
+        while (Chars.isAtomChar(peekChar())) {
             sbuf.append((char) read());
         }
         if (sbuf.length() - len == 0) {
@@ -101,6 +103,7 @@ public final class ImapInputStream extends MailInputStream {
     }
     
     public ImapData readAStringData() throws IOException {
+        skipSpaces();
         ImapData as;
         String s;
         switch (peekChar()) {
@@ -122,7 +125,7 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public boolean isNumber() throws IOException {
-        return !isEOF() && Chars.isNumber(peekChar());
+        return !isEOF() && Chars.isDigit(peekChar());
     }
     
     public long readNZNumber() throws IOException {
@@ -134,6 +137,7 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     private long readNumber(boolean nz) throws IOException {
+        skipSpaces();
         String s = readChars(Chars.NUMBER_CHARS);
         if (s.length() == 0) {
             throw new ParseException("Zero-length number");
@@ -176,6 +180,7 @@ public final class ImapInputStream extends MailInputStream {
             throw new ParseException("Literal size too large: " + len);
         }
         if (DEBUG) pd("readLiteral: size = %d", len);
+        skipSpaces();
         skipChar('}');
         skipCRLF();
         TraceInputStream is =
@@ -218,12 +223,16 @@ public final class ImapInputStream extends MailInputStream {
     public String readText() throws IOException {
         return readChars(Chars.TEXT_CHARS);
     }
-    
+
     public String readText(char delim) throws IOException {
+        return readText(String.valueOf(delim));
+    }
+    
+    public String readText(String delims) throws IOException {
         sbuf.setLength(0);
         char c;
-        while ((c = peekChar()) != delim) {
-            if (!Chars.isText(c)) {
+        while (delims.indexOf(c = peekChar()) < 0) {
+            if (!Chars.isTextChar(c)) {
                 throw new ParseException(
                     "Unexpected character '" + Ascii.pp((byte) c) +
                     "' while reading TEXT string");
@@ -262,6 +271,7 @@ public final class ImapInputStream extends MailInputStream {
     }
     
     public void skipCRLF() throws IOException {
+        skipSpaces();
         skipChar('\r');
         skipChar('\n');
     }
@@ -282,18 +292,8 @@ public final class ImapInputStream extends MailInputStream {
         return false;
     }
 
-    /**
-     * Skips spaces in input stream.
-     * 
-     * @return true if at least on space was skipped and not at end of line.
-     * @throws IOException if an I/O error occurred
-     */
-    public boolean skipSpaces() throws IOException {
-        if (match(' ')) {
-            while (match(' ')) ;
-            return !isEOL();
-        }
-        return false;
+    public void skipSpaces() throws IOException {
+        while (match(' ')) ;
     }
 
     public boolean isEOL() throws IOException {
