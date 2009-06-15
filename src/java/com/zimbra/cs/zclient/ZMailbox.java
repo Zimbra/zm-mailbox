@@ -3399,6 +3399,7 @@ public class ZMailbox implements ToZJSONObject {
         private List<AttachedMessagePart> mMessagePartsToAttach;
         private List<String> mContactIdsToAttach;
         private List<String> mMessageIdsToAttach;
+        private List<String> mDocIdsToAttach;
         private String mOriginalMessageId;
         private String mReplyType;
 
@@ -3434,6 +3435,10 @@ public class ZMailbox implements ToZJSONObject {
 
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
+
+    public List<String> getDocIdsToAttach() { return mDocIdsToAttach; }
+        public void setDocIdsToAttach(List<String> docIdsToAttach) { mDocIdsToAttach = docIdsToAttach; }
+
 
         public List<AttachedMessagePart> getInlineMessagePartsToAttach() {
             List<AttachedMessagePart> attachments = new ArrayList<AttachedMessagePart>();
@@ -3511,7 +3516,12 @@ public class ZMailbox implements ToZJSONObject {
                 attach.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, mid);
             }
         }
-
+        if (message.getDocIdsToAttach() != null) {
+            if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
+            for (String did: message.getDocIdsToAttach()) {
+                attach.addElement(MailConstants.E_DOC).addAttribute(MailConstants.A_ID, did);
+            }
+        }
         if (message.getMessagePartsToAttach() != null) {
             if (attach == null) attach = m.addElement(MailConstants.E_ATTACH);
             for (AttachedMessagePart part: message.getMessagePartsToAttach()) {
@@ -4650,7 +4660,24 @@ public class ZMailbox implements ToZJSONObject {
             /* ignore */
         }
     }
-
+    public synchronized List<String> saveAttachmentsToBriefcase(String mid, String[] partIds, String folderId ) throws ServiceException {
+        if(partIds == null || partIds.length <= 0 ){
+            return null;
+        }
+        List<String> docIds = new ArrayList<String>();
+        for(String pid: partIds){               //!TODO We should do batch request for performance
+            Element req = newRequestElement(MailConstants.SAVE_DOCUMENT_REQUEST);
+            Element doc = req.addElement(MailConstants.E_DOC).addAttribute(MailConstants.A_FOLDER,folderId);
+            Element m = doc.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID,mid);
+            m.addAttribute(MailConstants.A_PART,pid);
+            Element rDoc = invoke(req).getElement(MailConstants.E_DOC);
+            if(rDoc == null){
+                continue;
+            }
+            docIds.add(rDoc.getAttribute(MailConstants.A_ID));
+        }
+        return docIds;
+    }
     public synchronized String createSignature(ZSignature signature) throws ServiceException {
         Element req = newRequestElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
         signature.toElement(req);
