@@ -23,7 +23,7 @@ import com.zimbra.cs.mina.MinaUtil;
 
 public class MinaLmtpDataRequest implements MinaRequest {
     private ByteBuffer mBuffer; // Data buffer
-    private int mMatched;       // Number of bytes in EOM sequence mMatched so far
+    private int mMatched;       // Number of bytes in EOM sequence matched so far
     private boolean complete;
     
     public MinaLmtpDataRequest(int size, String prefix) {
