@@ -248,7 +248,7 @@ Package: com.zimbra.xmbxsearch
 AbortXMbxSearchRequest
 
     Related rights:
-        abortXMbxSearch
+        manageCrossMailboxSearchTask
 
     Notes:
 
@@ -256,7 +256,7 @@ AbortXMbxSearchRequest
 CreateXMbxSearchRequest
 
     Related rights:
-        createXMbxSearch
+        manageCrossMailboxSearchTask
 
     Notes:
 
@@ -264,7 +264,7 @@ CreateXMbxSearchRequest
 DeleteXMbxSearchRequest
 
     Related rights:
-        deleteXMbxSearch
+        manageCrossMailboxSearchTask
 
     Notes:
 
@@ -272,7 +272,7 @@ DeleteXMbxSearchRequest
 GetXMbxSearchRequest
 
     Related rights:
-        listXMbxSearch
+        manageCrossMailboxSearchTask
 
     Notes:
 
@@ -280,7 +280,7 @@ GetXMbxSearchRequest
 GetXMbxSearchesListRequest
 
     Related rights:
-        listXMbxSearch
+        manageCrossMailboxSearchTask
 
     Notes:
 

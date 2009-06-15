@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090612-1746 */
+    /* build: 6.0.0 pshao 20090615-1442 */
 
 
     /*
@@ -62,16 +62,6 @@ public class RightConsts {
     =============
     */
 
-
-    /**
-     * cross mailbox search tasks management rights
-     */
-    public static final String RT_XMbxSearchRights = "XMbxSearchRights";
-
-    /**
-     * abort a running cross mailbox search task on a server
-     */
-    public static final String RT_abortXMbxSearch = "abortXMbxSearch";
 
     /**
      * access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests
@@ -252,11 +242,6 @@ public class RightConsts {
     public static final String RT_createXMPPComponent = "createXMPPComponent";
 
     /**
-     * create a cross mailbox search task on a server
-     */
-    public static final String RT_createXMbxSearch = "createXMbxSearch";
-
-    /**
      * create zimlet
      */
     public static final String RT_createZimlet = "createZimlet";
@@ -305,11 +290,6 @@ public class RightConsts {
      * delete XMPP component
      */
     public static final String RT_deleteXMPPComponent = "deleteXMPPComponent";
-
-    /**
-     * delete a cross mailbox search task on a server
-     */
-    public static final String RT_deleteXMbxSearch = "deleteXMbxSearch";
 
     /**
      * delete zimlet
@@ -503,11 +483,6 @@ public class RightConsts {
     public static final String RT_listXMPPComponent = "listXMPPComponent";
 
     /**
-     * retrieves details of all search tasks running or cashed on a server
-     */
-    public static final String RT_listXMbxSearch = "listXMbxSearch";
-
-    /**
      * see zimlet in GetAllZimlets
      */
     public static final String RT_listZimlet = "listZimlet";
@@ -516,6 +491,11 @@ public class RightConsts {
      * add/remove account loggers
      */
     public static final String RT_manageAccountLogger = "manageAccountLogger";
+
+    /**
+     * create/abort/delete/purge/get status of a cross mailbox search task
+     */
+    public static final String RT_manageCrossMailboxSearchTask = "manageCrossMailboxSearchTask";
 
     /**
      * view and take actions on mail queues
@@ -631,11 +611,6 @@ public class RightConsts {
      * purge messages of an account
      */
     public static final String RT_purgeMessages = "purgeMessages";
-
-    /**
-     * delete all inactive search tasks on a server.
-     */
-    public static final String RT_purgeXMbxSearch = "purgeXMbxSearch";
 
     /**
      * reindex mailbox
