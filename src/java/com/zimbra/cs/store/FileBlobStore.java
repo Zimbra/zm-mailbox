@@ -111,15 +111,18 @@ public class FileBlobStore extends StoreManager {
         sDiskStreamingThreshold = server.getMailDiskStreamingThreshold();
         int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
         long uncompressedMaxBytes = server.getMailUncompressedCacheMaxBytes();
+        int fileDescriptorCacheSize = server.getMailFileDescriptorCacheSize();
         
-        ZimbraLog.store.info("Loading %s settings: %s=%d, %s=%d, %s=%d.", FileBlobStore.class.getSimpleName(),
+        ZimbraLog.store.info("Loading %s settings: %s=%d, %s=%d, %s=%d, %s=%d.", FileBlobStore.class.getSimpleName(),
             Provisioning.A_zimbraMailDiskStreamingThreshold, sDiskStreamingThreshold,
             Provisioning.A_zimbraMailUncompressedCacheMaxFiles, uncompressedMaxFiles,
-            Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes);
+            Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes,
+            Provisioning.A_zimbraMailFileDescriptorCacheSize, fileDescriptorCacheSize);
             
         FileBlobStore store = (FileBlobStore) getInstance();
         store.mUncompressedFileCache.setMaxBytes(uncompressedMaxBytes);
         store.mUncompressedFileCache.setMaxFiles(uncompressedMaxFiles);
+        store.mFileDescriptorCache.setMaxSize(fileDescriptorCacheSize);
     }
     
     @Override public String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException {

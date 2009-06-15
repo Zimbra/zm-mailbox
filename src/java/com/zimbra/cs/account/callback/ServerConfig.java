@@ -36,7 +36,8 @@ public class ServerConfig extends AttributeCallback {
         try {
             if (attrName.equals(Provisioning.A_zimbraMailDiskStreamingThreshold) ||
                 attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxBytes) ||
-                attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxFiles)) {
+                attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxFiles) ||
+                attrName.equals(Provisioning.A_zimbraMailFileDescriptorCacheSize)) {
                 FileBlobStore.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraMessageCacheSize)) {
                 MessageCache.loadSettings();
