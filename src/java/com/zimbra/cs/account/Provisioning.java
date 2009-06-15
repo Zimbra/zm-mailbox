@@ -869,7 +869,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public abstract List<Domain> getAllDomains()  throws ServiceException;
     
-    public void getAllDomains(NamedEntry.Visitor visitor) throws ServiceException {
+    public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 

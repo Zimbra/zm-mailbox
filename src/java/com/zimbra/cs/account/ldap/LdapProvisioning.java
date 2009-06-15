@@ -1016,18 +1016,23 @@ public class LdapProvisioning extends Provisioning {
         // resource is also a zimbraAccount.
         //
         StringBuffer oc = new StringBuffer();
-        if (!calendarResources) oc.append("(&");
+        
+        if (accounts && !calendarResources) oc.append("(&");
+        
         if (num > 1) oc.append("(|");
+        
         if (accounts) oc.append("(objectclass=zimbraAccount)");
         if (aliases) oc.append("(objectclass=zimbraAlias)");
         if (lists) oc.append("(objectclass=zimbraDistributionList)");
         if (domains) oc.append("(objectclass=zimbraDomain)");
         if (coses) oc.append("(objectclass=zimbraCos)");
-        if (calendarResources)
-            oc.append("(objectclass=zimbraCalendarResource)");
+        if (calendarResources) oc.append("(objectclass=zimbraCalendarResource)");
+        
         if (num > 1) oc.append(")");
-        if (!calendarResources)
+        
+        if (accounts && !calendarResources)
             oc.append("(!(objectclass=zimbraCalendarResource)))");
+        
         return oc.toString();
     }
 
@@ -1230,7 +1235,7 @@ public class LdapProvisioning extends Provisioning {
         boolean needCOSId = true;
         boolean needObjectClass = true;
         boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean needCalendarUserType = true;
+        boolean needCalendarUserType = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;;
         boolean needDomainName = true;
         boolean needZimbraACE = true;
 
@@ -1808,29 +1813,34 @@ public class LdapProvisioning extends Provisioning {
             }
         };
         
-        getAllDomains(visitor);
+        getAllDomains(visitor, null);
         Collections.sort(result);
         return result;
     }
     
     @Override
-    public void getAllDomains(NamedEntry.Visitor visitor) throws ServiceException {
-        ZimbraLdapContext zlc = null;
-        try {
-            zlc = new ZimbraLdapContext();
-
-            NamingEnumeration ne = zlc.searchDir(mDIT.domainBaseDN(), LdapFilter.allDomains(), sSubtreeSC);
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                LdapDomain domain = new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults(), this);
-                visitor.visit(domain);
-            }
-            ne.close();
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to list all domains", e);
-        } finally {
-            ZimbraLdapContext.closeContext(zlc);
+    public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
+        
+        int flags = Provisioning.SA_DOMAIN_FLAG;
+        
+        // if asking for specific attrs only, make sure we have the minimum attrs required 
+        // for the search and to construct a LdapDomain object
+        if (retAttrs != null) {
+            Set<String> attrs = new HashSet<String>(Arrays.asList(retAttrs)); 
+            attrs.add(Provisioning.A_objectClass);
+            attrs.add(Provisioning.A_zimbraId);
+            attrs.add(Provisioning.A_zimbraDomainName);
+            retAttrs = attrs.toArray(new String[attrs.size()]);
+            
+            flags |= Provisioning.SO_NO_FIXUP_RETURNATTRS;
         }
+        
+        searchObjects(null, 
+                      retAttrs, 
+                      mDIT.domainBaseDN(), 
+                      flags, 
+                      visitor,
+                      0);
     }
 
     private static boolean domainDnExists(ZimbraLdapContext zlc, String dn) throws NamingException {

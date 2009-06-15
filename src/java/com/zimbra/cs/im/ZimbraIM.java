@@ -58,7 +58,7 @@ public class ZimbraIM {
                     domainStrs.add(entry.getName());
                 }
             };
-            Provisioning.getInstance().getAllDomains(visitor);
+            Provisioning.getInstance().getAllDomains(visitor, new String[]{Provisioning.A_zimbraDomainName});
             
             // set the special msgs ClassLoader -- so that WF looks in our conf/msgs directory
             // for its localization .properties bundles.
