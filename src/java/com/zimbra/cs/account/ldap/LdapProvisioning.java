@@ -1235,9 +1235,11 @@ public class LdapProvisioning extends Provisioning {
         boolean needCOSId = true;
         boolean needObjectClass = true;
         boolean needAliasTargetId = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
-        boolean needCalendarUserType = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;;
+        boolean needCalendarUserType = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
         boolean needDomainName = true;
         boolean needZimbraACE = true;
+        boolean needCn = (flags & Provisioning.SD_COS_FLAG) != 0;
+        
 
         for (int i=0; i < returnAttrs.length; i++) {
             if (Provisioning.A_uid.equalsIgnoreCase(returnAttrs[i]))
@@ -1254,6 +1256,10 @@ public class LdapProvisioning extends Provisioning {
             	needCalendarUserType = false;
             else if (Provisioning.A_zimbraDomainName.equalsIgnoreCase(returnAttrs[i]))
                 needDomainName = false;
+            else if (Provisioning.A_zimbraACE.equalsIgnoreCase(returnAttrs[i]))
+                needZimbraACE = false;
+            else if (Provisioning.A_cn.equalsIgnoreCase(returnAttrs[i]))
+                needCn = false;
         }
 
         int num = (needUID ? 1 : 0) +
@@ -1263,7 +1269,8 @@ public class LdapProvisioning extends Provisioning {
                   (needObjectClass ? 1 :0) +
                   (needCalendarUserType ? 1 : 0) +
                   (needDomainName ? 1 : 0) +
-                  (needZimbraACE ? 1 : 0);
+                  (needZimbraACE ? 1 : 0) +
+                  (needCn ? 1 : 0);
 
         if (num == 0) return returnAttrs;
 
@@ -1277,6 +1284,7 @@ public class LdapProvisioning extends Provisioning {
         if (needCalendarUserType) result[i++] = Provisioning.A_zimbraAccountCalendarUserType;
         if (needDomainName) result[i++] = Provisioning.A_zimbraDomainName;
         if (needZimbraACE) result[i++] = Provisioning.A_zimbraACE;
+        if (needCn) result[i++] = Provisioning.A_cn;
         System.arraycopy(returnAttrs, 0, result, i, returnAttrs.length);
         return result;
     }
