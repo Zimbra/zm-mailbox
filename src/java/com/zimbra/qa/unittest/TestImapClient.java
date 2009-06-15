@@ -29,7 +29,6 @@ import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Body;
-import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.Envelope;
@@ -37,9 +36,7 @@ import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailException;
-import com.zimbra.cs.mime.charset.ImapUTF7;
 import com.zimbra.cs.util.JMSession;
 import junit.framework.TestCase;
 
@@ -50,14 +47,10 @@ import java.io.FileOutputStream;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
-import java.nio.charset.Charset;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
-import org.junit.Assert;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
@@ -136,6 +129,18 @@ public class TestImapClient extends TestCase {
         assertTrue(mb.getUidNext() > 0);
     }
 
+    public void testStatus() throws Exception {
+        login();
+        Mailbox mbox = connection.status(
+            "INBOX", "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN");
+        assertNotNull(mbox);
+        assertTrue(mbox.getExists() >= 0);
+        assertTrue(mbox.getRecent() >= 0);
+        assertTrue(mbox.getUidNext() > 0);
+        assertTrue(mbox.getUidValidity() > 0);
+        assertTrue(mbox.getUnseen() >= 0);
+    }
+    
     public void testList() throws Exception {
         login();
         List<ListData> lds = connection.list("", "*");
