@@ -60,7 +60,6 @@ public abstract class MimeHandler {
     public static final String CATCH_ALL_TYPE = "all";
 
     protected MimeTypeInfo mMimeTypeInfo;
-    private String mMessageDigest;
     private String mFilename;
     private DataSource mDataSource;
     private String mContentType;
@@ -114,14 +113,6 @@ public abstract class MimeHandler {
 
     public String getFilename() {
         return mFilename;
-    }
-
-    void setMessageDigest(String digest) {
-        mMessageDigest = digest;
-    }
-
-    public String getMessageDigest() {
-        return mMessageDigest;
     }
 
     public DataSource getDataSource() {

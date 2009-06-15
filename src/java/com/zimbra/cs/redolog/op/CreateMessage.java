@@ -26,18 +26,18 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.Volume;
 
@@ -412,7 +412,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             sharedDeliveryCtxt.setIncomingBlob(blob);
             ParsedMessage pm = null;
             try {
-                pm = new ParsedMessage(file, mReceivedDate, mbox.attachmentsIndexingEnabled());
+                ParsedMessageOptions opt = new ParsedMessageOptions()
+                    .withContent(file)
+                    .withReceivedDate(mReceivedDate)
+                    .withAttachmentIndexing(mbox.attachmentsIndexingEnabled())
+                    .withSize(mMsgSize)
+                    .withDigest(mDigest);
+                pm = new ParsedMessage(opt);
                 mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags,
                     mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);
             } catch (MailServiceException e) {

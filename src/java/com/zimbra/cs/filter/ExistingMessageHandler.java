@@ -28,6 +28,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
@@ -70,7 +71,13 @@ extends FilterHandler {
     public ParsedMessage getParsedMessage()
     throws ServiceException {
         if (mParsedMessage == null) {
-            mParsedMessage = new ParsedMessage(getMimeMessage(), mMailbox.attachmentsIndexingEnabled());
+            Message msg = mMailbox.getMessageById(null, mMessageId);
+            ParsedMessageOptions opt = new ParsedMessageOptions()
+                .withContent(msg.getMimeMessage())
+                .withAttachmentIndexing(mMailbox.attachmentsIndexingEnabled())
+                .withSize(msg.getSize())
+                .withDigest(msg.getDigest());
+            mParsedMessage = new ParsedMessage(opt);
         }
         return mParsedMessage;
     }

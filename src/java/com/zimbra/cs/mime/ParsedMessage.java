@@ -130,9 +130,7 @@ public class ParsedMessage {
 
     public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments)
     throws ServiceException {
-        mMimeMessage = msg;
-        mExpandedMessage = msg;
-        initialize(receivedDate, indexAttachments);
+        initialize(msg, receivedDate, indexAttachments, null, null);
     }
 
     public ParsedMessage(byte[] rawData, boolean indexAttachments)
@@ -141,13 +139,8 @@ public class ParsedMessage {
     }
 
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
-        throws ServiceException {
-        if (rawData == null || rawData.length == 0) {
-            throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
-        }
-        mSharedStream = new SharedByteArrayInputStream(rawData);
-        mRawSize = rawData.length;
-        initialize(receivedDate, indexAttachments);
+    throws ServiceException {
+        initialize(rawData, receivedDate, indexAttachments, null);
     }
     
     /**
@@ -156,6 +149,51 @@ public class ParsedMessage {
      */
     public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
     throws ServiceException, IOException {
+        initialize(file, receivedDate, indexAttachments, null, null);
+    }
+    
+    public ParsedMessage(ParsedMessageOptions opt)
+    throws ServiceException {
+        if (opt.getAttachmentIndexing() == null) {
+            throw ServiceException.FAILURE("Options do not specify attachment indexing state.", null);
+        }
+        if (opt.getMimeMessage() != null) {
+            initialize(opt.getMimeMessage(), opt.getReceivedDate(), opt.getAttachmentIndexing(), opt.getSize(), opt.getDigest());
+        } else if (opt.getRawData() != null) {
+            initialize(opt.getRawData(), opt.getReceivedDate(), opt.getAttachmentIndexing(), opt.getDigest());
+        } else if (opt.getFile() != null) {
+            try {
+                initialize(opt.getFile(), opt.getReceivedDate(), opt.getAttachmentIndexing(), opt.getSize(), opt.getDigest());
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+            }
+        } else {
+            throw ServiceException.FAILURE("ParsedMessageOptions do not specify message content", null);
+        }
+    }
+    
+    private void initialize(MimeMessage msg, Long receivedDate, boolean indexAttachments, Integer rawSize, String rawDigest)
+    throws ServiceException {
+        mMimeMessage = msg;
+        mExpandedMessage = msg;
+        mRawSize = rawSize;
+        mRawDigest = rawDigest;
+        initialize(receivedDate, indexAttachments);
+    }
+    
+    private void initialize(byte[] rawData, Long receivedDate, boolean indexAttachments, String rawDigest)
+    throws ServiceException {
+        if (rawData == null || rawData.length == 0) {
+            throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
+        }
+        mSharedStream = new SharedByteArrayInputStream(rawData);
+        mRawSize = rawData.length;
+        mRawDigest = rawDigest;
+        initialize(receivedDate, indexAttachments);
+    }
+    
+    private void initialize(File file, Long receivedDate, boolean indexAttachments, Integer rawSize, String rawDigest)
+    throws IOException, ServiceException {
         if (file == null) {
             throw new IOException("File cannot be null.");
         }
@@ -164,13 +202,16 @@ public class ParsedMessage {
         }
 
         mSharedStream = new BlobInputStream(file);
-        if (!FileUtil.isGzipped(file)) {
+        if (rawSize != null) {
+            mRawSize = rawSize;
+        } else if (!FileUtil.isGzipped(file)) {
             mRawSize = (int) file.length();
         }
+        mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }
-
-    public void initialize(Long receivedDate, boolean indexAttachments)
+    
+    private void initialize(Long receivedDate, boolean indexAttachments)
         throws ServiceException {
         try {
             init(receivedDate, indexAttachments);
@@ -996,11 +1037,6 @@ public class ParsedMessage {
                 handler.init(mpi.getMimePart().getDataHandler().getDataSource());
                 handler.setPartName(mpi.getPartName());
                 handler.setFilename(mpi.getFilename());
-                try {
-                    handler.setMessageDigest(getRawDigest());
-                } catch (IOException e) {
-                    throw new MimeHandlerException("unable to get message digest", e);
-                }
 
                 // remember the first iCalendar attachment
                 if (!ignoreCalendar && mCalendarPartInfo == null) {

@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
@@ -780,7 +781,12 @@ public class Message extends MailItem {
             ParsedMessage pm = null;
             synchronized (getMailbox()) {
                 // force the pm's received-date to be the correct one
-                pm = new ParsedMessage(getMimeMessage(false), getDate(), getMailbox().attachmentsIndexingEnabled());
+                ParsedMessageOptions opt = new ParsedMessageOptions().withContent(getMimeMessage(false))
+                    .withReceivedDate(getDate())
+                    .withAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+                    .withSize(getSize())
+                    .withDigest(getDigest());
+                pm = new ParsedMessage(opt);
             }
             
             if (doConsistencyCheck) {
@@ -813,7 +819,13 @@ public class Message extends MailItem {
 
 
     public void reanalyze() throws ServiceException {
-        ParsedMessage pm = new ParsedMessage(getMimeMessage(false), getDate(), getMailbox().attachmentsIndexingEnabled());
+        ParsedMessageOptions opt = new ParsedMessageOptions()
+            .withContent(getMimeMessage(false))
+            .withReceivedDate(getDate())
+            .withAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+            .withSize(getSize())
+            .withDigest(getDigest());
+        ParsedMessage pm = new ParsedMessage(opt);
         reanalyze(pm);
     }
 

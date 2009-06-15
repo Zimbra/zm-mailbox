@@ -78,7 +78,6 @@ public class ParsedDocument {
                 handler.init(new FileDataSource(blob.getFile()));
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
-            handler.setMessageDigest(mDigest);
             
             String textContent = "";
             try {

@@ -428,7 +428,6 @@ public class ParsedContact {
             handler.init(attach);
             handler.setPartName(attach.getPartName());
             handler.setFilename(attach.getFilename());
-            handler.setMessageDigest(getDigest());
 
             if (indexAttachments && !DebugConfig.disableIndexingAttachmentsTogether) {
                 // add ALL TEXT from EVERY PART to the toplevel body content.
