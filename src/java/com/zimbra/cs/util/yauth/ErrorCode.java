@@ -35,7 +35,7 @@ public enum ErrorCode {
     INVALID_APP_ID("InvalidAppId", "Invalid (missing) appid"),
     INVALID_TOKEN("InvalidToken", "Invalid (missing) token"),
     INVALID_LOGIN_OR_PASSWORD("InvalidLoginOrPassword", "Invalid (missing) login or password"),
-    INVALID_CAPTCHA_WORD_LEN("InvalidCaptchaWWordLen", "Invalid (missing) captchaword"),
+    INVALID_CAPTCHA_WORD_LEN("InvalidCaptchaWordLen", "Invalid (missing) captchaword"),
     INVALID_CAPTCHA_DATA("InvalidCaptchaData", "Invalid (missing) captchadata"),
     INVALID_CAPTCHA("InvalidCaptcha", "Validation of captcha failed"),
     DEACTIVATED_APP_ID("DeactivatedAppId", "Application id disabled"),
