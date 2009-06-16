@@ -75,4 +75,12 @@ public class LmtpServer extends TcpServer {
             lmtpServer = null;
         }
     }
+    
+    public static LmtpServer getInstance() {
+	return (LmtpServer)lmtpServer;
+    }
+    
+    public LmtpConfig getLmtpConfig() {
+	return (LmtpConfig)getConfig();
+    }
 }

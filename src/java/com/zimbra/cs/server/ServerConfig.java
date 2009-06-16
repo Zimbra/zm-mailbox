@@ -20,7 +20,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.NetUtil;
 
 import java.net.ServerSocket;
-import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 
 public class ServerConfig {

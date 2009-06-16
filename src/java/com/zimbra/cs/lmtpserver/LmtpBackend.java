@@ -22,7 +22,7 @@ public interface LmtpBackend {
 	/**
 	 * Gets account status.
 	 */
-	public LmtpStatus getAddressStatus(LmtpAddress address);
+	public LmtpReply getAddressStatus(LmtpAddress address);
 
 	/**
 	 * Delivers this message to the list of recipients in the message, and sets the 
