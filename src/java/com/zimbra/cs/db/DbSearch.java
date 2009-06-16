@@ -251,6 +251,8 @@ public class DbSearch {
 
 
     public static int countResults(Connection conn, DbSearchConstraintsNode node, Mailbox mbox) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         int mailboxId = mbox.getId();
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT count(*) ");
@@ -538,9 +540,7 @@ public class DbSearch {
     }
     
     private static <T> List<T> mergeSortedLists(List<T> toRet, List<List<T>> lists, Comparator<? super T> comparator) {
-        
         // TODO find or code a proper merge-sort here
-        
         int totalNumValues = 0;
         for (List<T> l : lists) {
             totalNumValues += l.size();
@@ -559,6 +559,8 @@ public class DbSearch {
                                             DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                             int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         // this monstrosity for bug 31343
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
                         (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) || 
@@ -586,6 +588,8 @@ public class DbSearch {
                                                     DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                                     int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;

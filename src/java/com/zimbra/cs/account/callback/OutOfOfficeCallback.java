@@ -21,6 +21,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -34,8 +35,8 @@ public class OutOfOfficeCallback extends AttributeCallback {
 
     private static final String KEY = OutOfOfficeCallback.class.getName();
 
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) {
+    @Override public void preModify(Map context, String attrName, Object value,
+                                    Map attrsToModify, Entry entry, boolean isCreate) {
     }
 
     /**
@@ -43,7 +44,7 @@ public class OutOfOfficeCallback extends AttributeCallback {
      * reset info once
      */
 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
         if (!isCreate) {
             Object done = context.get(KEY);
             if (done == null) {
@@ -56,26 +57,32 @@ public class OutOfOfficeCallback extends AttributeCallback {
     }
 
     private void handleOutOfOffice(Account account) {
-        Connection conn = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-            // clear the OOF database for this account
-            conn = DbPool.getConnection();
-            DbOutOfOffice.clear(conn, mbox);
-            conn.commit();
-            ZimbraLog.misc.info("reset vacation info");
-
-            // Convenient place to prune old data, until we determine that this
-            //  needs to be a separate scheduled process.
-            // TODO: only prune once a day?
-            long interval = account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, Notification.DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS);
-            DbOutOfOffice.prune(conn, interval);
-            conn.commit();
+    
+            synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
+                Connection conn = null;
+                try {
+                    // clear the OOF database for this account
+                    conn = DbPool.getConnection(mbox);
+                    DbOutOfOffice.clear(conn, mbox);
+                    conn.commit();
+                    ZimbraLog.misc.info("reset vacation info");
+        
+                    // Convenient place to prune old data, until we determine that this
+                    //  needs to be a separate scheduled process.
+                    // TODO: only prune once a day?
+                    long interval = account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, Notification.DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS);
+                    DbOutOfOffice.prune(conn, interval);
+                    conn.commit();
+                } catch (ServiceException e) {
+                    DbPool.quietRollback(conn);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
+            }
         } catch (ServiceException e) {
-            DbPool.quietRollback(conn);
-        } finally {
-            DbPool.quietClose(conn);
+            ZimbraLog.misc.warn("error handling out-of-office", e);
         }
     }
 }

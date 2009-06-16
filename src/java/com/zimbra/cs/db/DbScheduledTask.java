@@ -26,13 +26,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.ScheduledTask;
 
 /**
  * Database persistence code for <tt>DataSourceTask</tt>s.
- *
- * @author bburtin
  */
 public class DbScheduledTask {
     
@@ -43,10 +42,11 @@ public class DbScheduledTask {
      */
     public static void createTask(Connection conn, ScheduledTask task)
     throws ServiceException {
-        PreparedStatement stmt = null;
-        
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
+
         ZimbraLog.scheduler.debug("Creating %s", task);
 
+        PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
                 "INSERT INTO " + TABLE_SCHEDULED_TASK  +
@@ -81,78 +81,80 @@ public class DbScheduledTask {
     throws ServiceException {
         ZimbraLog.scheduler.debug("Retrieving tasks for class %s, mailbox %d", className, mailboxId);
         
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
         List<ScheduledTask> tasks = new ArrayList<ScheduledTask>();
 
-        try {
-            conn = DbPool.getConnection();
-            String sql =
-                "SELECT class_name, name, mailbox_id, exec_time, interval_millis, metadata " +
-                "FROM " + TABLE_SCHEDULED_TASK;
-            if (className != null) {
-                sql += " WHERE class_name = ?";
-            }
-            if (mailboxId > 0) {
-                if (className == null) {
-                    sql += " WHERE mailbox_id = ?";
-                } else {
-                    sql += " AND mailbox_id = ?";
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                conn = DbPool.getConnection();
+                String sql =
+                    "SELECT class_name, name, mailbox_id, exec_time, interval_millis, metadata " +
+                    "FROM " + TABLE_SCHEDULED_TASK;
+                if (className != null) {
+                    sql += " WHERE class_name = ?";
                 }
-            }
-            stmt = conn.prepareStatement(sql);
-            int i = 1;
-            if (className != null) {
-                stmt.setString(i++, className);
-            }
-            if (mailboxId > 0) {
-                stmt.setInt(i++, mailboxId);
-            }
-
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                className = rs.getString("class_name");
-                String name = rs.getString("name");
-                ScheduledTask task = null;
-                
-                // Instantiate task
-                try {
-                    Object obj = Class.forName(className).newInstance();
-                    if (obj instanceof ScheduledTask) {
-                        task = (ScheduledTask) obj;
+                if (mailboxId > 0) {
+                    if (className == null) {
+                        sql += " WHERE mailbox_id = ?";
                     } else {
-                        ZimbraLog.scheduler.warn("Class %s is not an instance of ScheduledTask for task %s",
-                            className, name);
+                        sql += " AND mailbox_id = ?";
+                    }
+                }
+                stmt = conn.prepareStatement(sql);
+                int i = 1;
+                if (className != null) {
+                    stmt.setString(i++, className);
+                }
+                if (mailboxId > 0) {
+                    stmt.setInt(i++, mailboxId);
+                }
+    
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    className = rs.getString("class_name");
+                    String name = rs.getString("name");
+                    ScheduledTask task = null;
+                    
+                    // Instantiate task
+                    try {
+                        Object obj = Class.forName(className).newInstance();
+                        if (obj instanceof ScheduledTask) {
+                            task = (ScheduledTask) obj;
+                        } else {
+                            ZimbraLog.scheduler.warn("Class %s is not an instance of ScheduledTask for task %s",
+                                className, name);
+                            continue;
+                        }
+                    } catch (Exception e) {
+                        ZimbraLog.scheduler.warn("Unable to instantiate class %s for task %s.  " +
+                            "Class must be an instance of %s and have a constructor with no arguments.",
+                            className, name, ScheduledTask.class.getSimpleName(), e);
                         continue;
                     }
-                } catch (Exception e) {
-                    ZimbraLog.scheduler.warn("Unable to instantiate class %s for task %s.  " +
-                        "Class must be an instance of %s and have a constructor with no arguments.",
-                        className, name, ScheduledTask.class.getSimpleName(), e);
-                    continue;
+                    
+                    // Set member vars
+                    task.setMailboxId(rs.getInt("mailbox_id"));
+                    task.setExecTime(DbUtil.timestampToDate(rs.getTimestamp("exec_time")));
+                    task.setIntervalMillis(rs.getLong("interval_millis"));
+                    
+                    try {
+                        setProperties(task, rs.getString("metadata"));
+                    } catch (ServiceException e) {
+                        ZimbraLog.scheduler.warn("Unable to read metadata for %s.  Not scheduling this task.", task, e);
+                        continue;
+                    }
+                    
+                    tasks.add(task);
                 }
-                
-                // Set member vars
-                task.setMailboxId(rs.getInt("mailbox_id"));
-                task.setExecTime(DbUtil.timestampToDate(rs.getTimestamp("exec_time")));
-                task.setIntervalMillis(rs.getLong("interval_millis"));
-                
-                try {
-                    setProperties(task, rs.getString("metadata"));
-                } catch (ServiceException e) {
-                    ZimbraLog.scheduler.warn("Unable to read metadata for %s.  Not scheduling this task.", task, e);
-                    continue;
-                }
-                
-                tasks.add(task);
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to get all DataSourceTasks", e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
             }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to get all DataSourceTasks", e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
         }
 
         ZimbraLog.scheduler.info("Loaded %d scheduled data source tasks", tasks.size());
@@ -161,10 +163,11 @@ public class DbScheduledTask {
 
     public static void updateTask(Connection conn, ScheduledTask task)
     throws ServiceException {
-        PreparedStatement stmt = null;
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
         
         ZimbraLog.scheduler.debug("Updating %s", task);
 
+        PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
                 "UPDATE  " + TABLE_SCHEDULED_TASK  +
@@ -195,23 +198,26 @@ public class DbScheduledTask {
 
     public static void deleteTask(String className, String taskName)
     throws ServiceException {
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            deleteTask(conn, className, taskName);
-            conn.commit();
-        } finally {
-            DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                deleteTask(conn, className, taskName);
+                conn.commit();
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
     }
-    
+
     public static void deleteTask(Connection conn, String className, String taskName)
     throws ServiceException {
-        PreparedStatement stmt = null;
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
         
         ZimbraLog.scheduler.debug("Deleting scheduled task from the database.  className=%s, taskName=%s",
             className, taskName);
 
+        PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(
                 "DELETE FROM " + TABLE_SCHEDULED_TASK  +

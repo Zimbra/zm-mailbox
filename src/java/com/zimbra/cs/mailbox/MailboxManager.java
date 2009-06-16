@@ -30,6 +30,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -172,12 +173,14 @@ public class MailboxManager {
 
     public MailboxManager() throws ServiceException {
         Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            mMailboxIds = DbMailbox.listMailboxes(conn);
-            mMailboxCache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
-        } finally {
-            DbPool.quietClose(conn);
+        synchronized (this) {
+            try {
+                conn = DbPool.getConnection();
+                mMailboxIds = DbMailbox.listMailboxes(conn, this);
+                mMailboxCache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
     }
 
@@ -206,9 +209,9 @@ public class MailboxManager {
         sInstance = mmgr;
     }
 
-    public void startup()   { 
-    }
-    public void shutdown()  { 
+    public void startup()  {}
+
+    public void shutdown() {
         IndexHelper.shutdown();
     }
 
@@ -393,17 +396,19 @@ public class MailboxManager {
             return null;
 
         ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
-        Connection conn = null;
         MailboxData data;
-        try {
-            // fetch the Mailbox data from the database
-            conn = DbPool.getConnection();
-            data = DbMailbox.getMailboxStats(conn, mailboxId);
-            if (data == null)
-                throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-        } finally {
-            if (conn != null)
-                DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                // fetch the Mailbox data from the database
+                conn = DbPool.getConnection();
+                data = DbMailbox.getMailboxStats(conn, mailboxId);
+                if (data == null)
+                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+            } finally {
+                if (conn != null)
+                    DbPool.quietClose(conn);
+            }
         }
 
         Mailbox mbox = instantiateMailbox(data);
@@ -667,13 +672,15 @@ public class MailboxManager {
             }
         }
 
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            return DbMailbox.getMailboxSizes(conn, requested);
-        } finally {
-            if (conn != null)
-                DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                return DbMailbox.getMailboxSizes(conn, requested);
+            } finally {
+                if (conn != null)
+                    DbPool.quietClose(conn);
+            }
         }
     }
 

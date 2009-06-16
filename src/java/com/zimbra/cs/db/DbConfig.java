@@ -27,10 +27,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.MailboxManager;
 
-/**
- * @author schemers
- */
 public class DbConfig {
 
     private static final String CN_NAME = "name";
@@ -57,6 +55,8 @@ public class DbConfig {
     private Timestamp mDbModified;
     
     public static DbConfig set(Connection conn, String name, String value) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
+
         Timestamp modified = new Timestamp(System.currentTimeMillis());
 
         PreparedStatement stmt = null;
@@ -97,6 +97,8 @@ public class DbConfig {
      * @throws SQLException
      */
     public static boolean delete(Connection conn, String name) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
+
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM config WHERE name = ?");
@@ -118,6 +120,8 @@ public class DbConfig {
      * @throws SQLException
      */
     public static DbConfig get(Connection conn, String name) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         DbConfig result = null;
@@ -145,6 +149,8 @@ public class DbConfig {
      * @throws SQLException
      */
     public static Map<String, DbConfig> getAll(Connection conn, Timestamp ts) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         HashMap<String, DbConfig> result = new HashMap<String, DbConfig>();
@@ -194,7 +200,7 @@ public class DbConfig {
         return mDbModified;
     }
     
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("config: {");
         sb.append(CN_NAME).append(": ").append(mDbName).append(", ");

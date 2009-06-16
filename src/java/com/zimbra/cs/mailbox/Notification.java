@@ -36,6 +36,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -246,15 +247,17 @@ implements LmtpCallback {
         }
 
         // If we've already sent to this user, do not send again
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection(mbox);
-            if (DbOutOfOffice.alreadySent(conn, mbox, destination, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS))) {
-                ofailed("already sent", destination, rcpt, msg);
-                return;
+        synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection(mbox);
+                if (DbOutOfOffice.alreadySent(conn, mbox, destination, account.getTimeInterval(Provisioning.A_zimbraPrefOutOfOfficeCacheDuration, DEFAULT_OUT_OF_OFFICE_CACHE_DURATION_MILLIS))) {
+                    ofailed("already sent", destination, rcpt, msg);
+                    return;
+                }
+            } finally {
+                DbPool.quietClose(conn);
             }
-        } finally {
-            DbPool.quietClose(conn);
         }
 
         // Send the message
@@ -309,13 +312,15 @@ implements LmtpCallback {
             ZimbraLog.mailbox.info("outofoffice sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
             
             // Save so we will not send to again
-            conn = null;
-            try {
-                conn = DbPool.getConnection(mbox);
-                DbOutOfOffice.setSentTime(conn, mbox, destination);
-                conn.commit();
-            } finally {
-                DbPool.quietClose(conn);
+            synchronized (DbMailbox.getZimbraSynchronizer(mbox)) {
+                Connection conn = null;
+                try {
+                    conn = DbPool.getConnection(mbox);
+                    DbOutOfOffice.setSentTime(conn, mbox, destination);
+                    conn.commit();
+                } finally {
+                    DbPool.quietClose(conn);
+                }
             }
         } catch (MessagingException me) {
             ofailed("send failed", destination, rcpt, msg, me);

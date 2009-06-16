@@ -38,8 +38,6 @@ import com.zimbra.cs.util.Zimbra;
 
 /**
  * Validates <tt>DataSource</tt> attribute values.
- * 
- * @author bburtin
  */
 public class DataSourceCallback extends AttributeCallback {
 
@@ -64,10 +62,9 @@ public class DataSourceCallback extends AttributeCallback {
       * @param entry a {@link DataSource} or {@link Account}
       */
     @SuppressWarnings("unchecked")
-    public void preModify(Map context, String attrName, Object attrValue, Map attrsToModify,
-                          Entry entry, boolean isCreate)
+    @Override public void preModify(Map context, String attrName, Object attrValue,
+                                    Map attrsToModify, Entry entry, boolean isCreate)
     throws ServiceException {
-        
         if (isCreate) {
             // No old value, so nothing to do.  Creation is handled in postModify().
             return;
@@ -105,8 +102,7 @@ public class DataSourceCallback extends AttributeCallback {
     }
     
     @SuppressWarnings("unchecked")
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-        
+    @Override public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
         // Don't do anything unless inside the server
         if (!Zimbra.started())
             return;
@@ -181,14 +177,16 @@ public class DataSourceCallback extends AttributeCallback {
         ZimbraLog.datasource.info("Updating schedule for all DataSources for all accounts in COS %s.", cos.getName());
         
         // Look up all account id's for this server
-        Connection conn = null;
         Set<String> accountIds = null;
-        
-        try {
-            conn = DbPool.getConnection();
-            accountIds = DbMailbox.listAccountIds(conn);
-        } finally {
-            DbPool.quietClose(conn);
+
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                accountIds = DbMailbox.listAccountIds(conn);
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
         
         // Update schedules for all data sources on this server

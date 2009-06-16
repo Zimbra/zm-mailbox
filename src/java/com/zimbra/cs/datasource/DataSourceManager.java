@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -226,7 +227,7 @@ public class DataSourceManager {
      * <tt>data_source_task</tt> database table.
      */
     public static void updateSchedule(String accountId, String dsId)
-        throws ServiceException {
+    throws ServiceException {
         ZimbraLog.datasource.debug("Updating schedule for account %s, data source %s", accountId, dsId);
         
         // Look up account and data source
@@ -260,23 +261,25 @@ public class DataSourceManager {
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
             return;
         }
-        Connection conn = null;
         
         ZimbraLog.datasource.info("Updating schedule for data source %s", ds.getName());
-        try {
-            conn = DbPool.getConnection();
-            ScheduledTaskManager.cancel(conn, DataSourceTask.class.getName(), ds.getId(), mbox.getId(), false);
-            if (ds.isScheduled()) {
-                DataSourceTask task = new DataSourceTask(mbox.getId(), accountId, dsId, ds.getPollingInterval());
-                ZimbraLog.datasource.debug("Scheduling %s", task);
-                ScheduledTaskManager.schedule(conn, task);
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                ScheduledTaskManager.cancel(conn, DataSourceTask.class.getName(), ds.getId(), mbox.getId(), false);
+                if (ds.isScheduled()) {
+                    DataSourceTask task = new DataSourceTask(mbox.getId(), accountId, dsId, ds.getPollingInterval());
+                    ZimbraLog.datasource.debug("Scheduling %s", task);
+                    ScheduledTaskManager.schedule(conn, task);
+                }
+                conn.commit();
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.warn("Unable to schedule data source %s", ds.getName(), e);
+                DbPool.quietRollback(conn);
+            } finally {
+                DbPool.quietClose(conn);
             }
-            conn.commit();
-        } catch (ServiceException e) {
-            ZimbraLog.datasource.warn("Unable to schedule data source %s", ds.getName(), e);
-            DbPool.quietRollback(conn);
-        } finally {
-            DbPool.quietClose(conn);
         }
     }
 }

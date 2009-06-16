@@ -22,6 +22,7 @@ import com.zimbra.common.util.ScheduledTaskCallback;
 import com.zimbra.common.util.TaskScheduler;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -49,6 +50,7 @@ public class ScheduledTaskManager {
         int minThreads = numThreads / 2;
         sScheduler = new TaskScheduler<Void>(null, minThreads, numThreads);
         sScheduler.addCallback(new TaskCleanup());
+
         
         for (ScheduledTask task : DbScheduledTask.getTasks(null, 0)) {
             try {
@@ -71,13 +73,14 @@ public class ScheduledTaskManager {
     public static void schedule(ScheduledTask task)
     throws ServiceException {
         Connection conn = null;
-        
-        try {
-            conn = DbPool.getConnection();
-            schedule(conn, task);
-            conn.commit();
-        } finally {
-            DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            try {
+                conn = DbPool.getConnection();
+                schedule(conn, task);
+                conn.commit();
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
     }
     
@@ -121,13 +124,14 @@ public class ScheduledTaskManager {
     throws ServiceException {
         Connection conn = null;
         ScheduledTask task = null;
-        
-        try {
-            conn = DbPool.getConnection();
-            task = cancel(conn, className, taskName, mailboxId, mayInterruptIfRunning);
-            conn.commit();
-        } finally {
-            DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            try {
+                conn = DbPool.getConnection();
+                task = cancel(conn, className, taskName, mailboxId, mayInterruptIfRunning);
+                conn.commit();
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
         return task;
     }
@@ -176,14 +180,16 @@ public class ScheduledTaskManager {
                 return;
             }
             
-            try {
-                conn = DbPool.getConnection();
-                DbScheduledTask.deleteTask(conn, task.getClass().getName(), task.getName());
-                conn.commit();
-            } catch (ServiceException e) {
-                ZimbraLog.scheduler.warn("Unable to clean up %s", task, e);
-            } finally {
-                DbPool.quietClose(conn);
+            synchronized (DbMailbox.getSynchronizer()) {
+                try {
+                    conn = DbPool.getConnection();
+                    DbScheduledTask.deleteTask(conn, task.getClass().getName(), task.getName());
+                    conn.commit();
+                } catch (ServiceException e) {
+                    ZimbraLog.scheduler.warn("Unable to clean up %s", task, e);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
             }
         }
     }

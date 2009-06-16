@@ -30,7 +30,6 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.admin.GetAllMailboxes.MailboxesParams;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -38,7 +37,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetMailboxStats extends AdminDocumentHandler {
     private static final String GET_MAILBOX_STATS_CACHE_KEY = "GetMailboxStats";
     
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         Server localServer = Provisioning.getInstance().getLocalServer();
@@ -84,14 +83,15 @@ public class GetMailboxStats extends AdminDocumentHandler {
     }
     
     private List<Mailbox.MailboxData> doSearch() throws ServiceException {
-        Connection conn = null;
         List <Mailbox.MailboxData> result = null;
-        
-        try {
-            conn = DbPool.getConnection();
-            result = DbMailbox.getMailboxRawData(conn);
-        } finally {
-            DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                result = DbMailbox.getMailboxRawData(conn);
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
         return result;
     }

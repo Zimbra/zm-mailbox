@@ -32,8 +32,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
 
 /**
- * @author jhahm
- *
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
@@ -63,8 +61,8 @@ public class DbStatus {
                 mLog.info("Ignoring error while closing database result set during health check", e);
             }
             try {
-				DbPool.closeStatement(stmt);
-			} catch (ServiceException e) {
+                DbPool.closeStatement(stmt);
+            } catch (ServiceException e) {
                 mLog.info("Ignoring error while closing database statement during health check", e);            
             }
             if (conn != null)

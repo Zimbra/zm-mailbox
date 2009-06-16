@@ -39,6 +39,7 @@ import org.apache.lucene.search.BooleanQuery;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.Db;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -843,15 +844,6 @@ class DBQueryOperation extends QueryOperation {
         return mConstraints.tryDbFirst(getMailbox());
     }
 
-    /** If the database doesn't support row-level locking, try to synchronize
-     *  database accesses on the Mailbox object to avoid having read/write
-     *  conflicts with Mailbox write transactions.  In the case where the DB
-     *  <u>does</u> support row-level locking, synchronizing on a local
-     *  <code>Object</code> shouldn't add problematic overhead. */
-    private Object getSearchSynchronizer(Mailbox mbox) {
-        return Db.supports(Db.Capability.ROW_LEVEL_LOCKING) ? new Object() : mbox;
-    }
-
     private void noLuceneGetNextChunk(Connection conn, Mailbox mbox, SortBy sort) throws ServiceException {
         if (mParams.getEstimateSize() && mSizeEstimate == -1)
             mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
@@ -1097,7 +1089,7 @@ class DBQueryOperation extends QueryOperation {
             SortBy sort = getSortOrder();
             mDBHits = new ArrayList<SearchResult>();
 
-            synchronized (getSearchSynchronizer(mbox)) {
+            synchronized (DbMailItem.getSynchronizer(mbox)) {
                 Connection conn = null;
                 try {
                     conn = DbPool.getConnection(mbox);
@@ -1373,7 +1365,7 @@ class DBQueryOperation extends QueryOperation {
         if (mCountDbResults == -1) {
             Mailbox mbox = getMailbox();
 
-            synchronized (getSearchSynchronizer(mbox)) {
+            synchronized (DbMailItem.getSynchronizer(mbox)) {
                 Connection conn = null;
                 try {
                     conn = DbPool.getConnection(mbox);

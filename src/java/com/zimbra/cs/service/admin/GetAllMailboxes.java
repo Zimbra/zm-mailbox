@@ -132,16 +132,17 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         }
 
         List<Mailbox.MailboxData> doSearch() throws ServiceException {
-            if (mResult != null) return mResult; 
+            if (mResult != null) return mResult;
             
-            Connection conn = null;
             List <Mailbox.MailboxData> result = null;
-            
-            try {
-                conn = DbPool.getConnection();
-                result = DbMailbox.getMailboxRawData(conn);
-            } finally {
-                DbPool.quietClose(conn);
+            synchronized (DbMailbox.getSynchronizer()) {
+                Connection conn = null;
+                try {
+                    conn = DbPool.getConnection();
+                    result = DbMailbox.getMailboxRawData(conn);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
             }
             mResult = result;
             return mResult;

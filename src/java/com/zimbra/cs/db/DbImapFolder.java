@@ -36,6 +36,8 @@ public class DbImapFolder {
      */
     public static ImapFolderCollection getImapFolders(Mailbox mbox, DataSource ds)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         ImapFolderCollection imapFolders = new ImapFolderCollection();
 
         Connection conn = null;
@@ -79,6 +81,8 @@ public class DbImapFolder {
     public static ImapFolder createImapFolder(Mailbox mbox, DataSource ds, int itemId,
                                               String localPath, String remotePath, long uidValidity)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
@@ -116,6 +120,8 @@ public class DbImapFolder {
     throws ServiceException {
         Mailbox mbox = imapFolder.getDataSource().getMailbox();
 
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
@@ -152,6 +158,8 @@ public class DbImapFolder {
      */
     public static void deleteImapData(Mailbox mbox, String dataSourceId)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         ZimbraLog.datasource.info("Deleting IMAP data for DataSource %s", dataSourceId);
 
         if (StringUtil.isNullOrEmpty(dataSourceId))
@@ -185,6 +193,8 @@ public class DbImapFolder {
      */
     public static void deleteImapFolder(Mailbox mbox, DataSource ds, ImapFolder folder)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         ZimbraLog.datasource.info("Deleting IMAP data for %s in %s", folder, ds);
         
         Connection conn = null;

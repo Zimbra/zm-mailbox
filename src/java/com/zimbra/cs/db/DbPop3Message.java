@@ -42,6 +42,8 @@ public class DbPop3Message {
      */
     public static void storeUid(Mailbox mbox, String dataSourceId, String uid, int itemId)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         if (StringUtil.isNullOrEmpty(uid))
             return;
 
@@ -74,6 +76,8 @@ public class DbPop3Message {
      */
     public static void deleteUids(Mailbox mbox, String dataSourceId)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
 
         Connection conn = null;
@@ -101,8 +105,10 @@ public class DbPop3Message {
     /**
      * Returns the map of persisted itemId to UID mappings
      */
-    public static Map<Integer, String> getMappings(Mailbox mbox,
-        String dataSourceId) throws ServiceException {
+    public static Map<Integer, String> getMappings(Mailbox mbox, String dataSourceId)
+    throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         Map<Integer, String> mappings = new HashMap<Integer, String>();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -139,6 +145,8 @@ public class DbPop3Message {
     public static Set<String> getMatchingUids(Mailbox mbox, DataSource ds,
                                               Collection<String> uids)
     throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
         ZimbraLog.mailbox.debug("%s: looking for uids that match a set of size %d", ds, uids.size());
         
         List<List<String>> splitIds = ListUtil.split(uids, Db.getINClauseBatchSize());

@@ -30,6 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbConfig;
+import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 
@@ -58,21 +59,23 @@ public class Config {
     private static Timestamp mYoungest;
     
     private static void init(Timestamp ts) throws ServiceException {
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            mConfigMap = DbConfig.getAll(conn, ts);
-            for (Iterator<DbConfig> it = mConfigMap.values().iterator(); it.hasNext();) {
-                DbConfig c = it.next();
-                if (mYoungest == null) {
-                    mYoungest = c.getModified();
-                } else if (c.getModified().after(mYoungest)) {
-                    mYoungest = c.getModified();
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                mConfigMap = DbConfig.getAll(conn, ts);
+                for (Iterator<DbConfig> it = mConfigMap.values().iterator(); it.hasNext();) {
+                    DbConfig c = it.next();
+                    if (mYoungest == null) {
+                        mYoungest = c.getModified();
+                    } else if (c.getModified().after(mYoungest)) {
+                        mYoungest = c.getModified();
+                    }
                 }
+            } finally {
+                if (conn != null)
+                    DbPool.quietClose(conn);
             }
-        } finally {
-            if (conn != null)
-                DbPool.quietClose(conn);
         }
 
         Server serverConfig = Provisioning.getInstance().getLocalServer();
@@ -99,21 +102,23 @@ public class Config {
      */
     public static synchronized String getString(String name, String defaultValue) {
         initConfig();
-        DbConfig c =  mConfigMap.get(name);
+        DbConfig c = mConfigMap.get(name);
         return c != null ? c.getValue() : defaultValue;
     }
     
     public static synchronized void setString(String name, String value)
     throws ServiceException {
         initConfig();
-        Connection conn = null;
-        try {
-            conn = DbPool.getConnection();
-            DbConfig c = DbConfig.set(conn, name, value);
-            mConfigMap.put(name, c);
-            conn.commit();
-        } finally {
-            DbPool.quietClose(conn);
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                conn = DbPool.getConnection();
+                DbConfig c = DbConfig.set(conn, name, value);
+                mConfigMap.put(name, c);
+                conn.commit();
+            } finally {
+                DbPool.quietClose(conn);
+            }
         }
     }
     
@@ -184,7 +189,7 @@ public class Config {
         attrs.put(Provisioning.A_zimbraUserServicesEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);        
         prov.modifyAttrs(serverConfig, attrs);
     	synchronized (sUserServicesEnabledGuard) {
-    		sUserServicesEnabled = enabled;
+    	    sUserServicesEnabled = enabled;
         }
     }
 
@@ -196,7 +201,7 @@ public class Config {
     public static boolean userServicesEnabled() {
         initConfig();
     	synchronized (sUserServicesEnabledGuard) {
-    		return sUserServicesEnabled;
+    	    return sUserServicesEnabled;
         }
     }
 }
