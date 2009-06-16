@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<rights>
+
+<include file="zimbra-rights.xml"/>
+
+<!--
+  =======================================================
+    Admin Console Accounts List View
+  =======================================================
+-->
+<!-- Admin Console Accounts Info Tab -->
+<right name="setAdminConsoleAccountsInfoTab" type="setAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for accounts contact tab </desc>
+  <attrs>
+    <a n="givenName"/>
+    <a n="initials"/>
+    <a n="sn"/>
+    <a n="displayName"/>
+    <a n="zimbraMailCanonicalAddress"/>
+    <a n="zimbraHideInGal"/>
+    <a n="zimbraAccountStatus"/>
+    <!-- <a n="zimbraCOSId"/> -->
+    <!-- <a n="zimbraIsAdminAccount -->
+    <a n="zimbraIsDelegatedAdminAccount"/>
+    <!-- admin groups? -->
+    <a n="zimbraDomainAdminMaxMailQuota"/>
+    <!-- rights to change password -->
+    <a n="zimbraPasswordMustChange"/>
+    <a n="description"/>
+    <a n="zimbraNotes"/>
+  </attrs>
+</right>
+
+<right name="viewAdminConsoleAccountsInfoTab" type="getAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for accounts contact tab </desc>
+  <attrs>
+    <a n="givenName"/>
+    <a n="initials"/>
+    <a n="uid"/>
+    <a n="cn"/>
+    <a n="sn"/>
+    <a n="displayName"/>
+    <a n="zimbraMailCanonicalAddress"/>
+    <a n="zimbraHideInGal"/>
+    <a n="zimbraAccountStatus"/>
+    <!-- <a n="zimbraCOSId"/> -->
+    <!-- <a n="zimbraIsAdminAccount -->
+    <a n="zimbraIsDelegatedAdminAccount"/>
+    <!-- admin groups? -->
+    <a n="zimbraDomainAdminMaxMailQuota"/>
+    <!-- rights to change password -->
+    <a n="zimbraPasswordMustChange"/>
+    <a n="description"/>
+    <a n="zimbraNotes"/>
+    <a n="zimbraLastLogonTimestamp"/>
+  </attrs>
+</right>
+
+<right type="combo" name="AdminConsoleAccountsInfoTabRights">
+  <desc> Legacy Domain Admin Console rights for AccountsInfoTab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsInfoTab"/>
+    <r n="viewAdminConsoleAccountsInfoTab"/>
+    <r n="getAccountInfo"/>
+    <r n="deleteAccount"/>
+    <r n="renameAccount"/>
+    <r n="setAccountPassword"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Contact Tab -->
+<right name="setAdminConsoleAccountsContactTab" type="setAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for accounts contact tab </desc>
+  <attrs>
+    <a n="telephoneNumber"/>
+    <a n="company"/>
+    <a n="street"/>
+    <a n="l"/>
+    <a n="st"/>
+    <a n="postalCode"/>
+    <a n="co"/>
+  </attrs>
+</right>
+
+<right name="viewAdminConsoleAccountsContactTab" type="getAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for accounts contact tab </desc>
+  <attrs>
+    <a n="telephoneNumber"/>
+    <a n="company"/>
+    <a n="street"/>
+    <a n="l"/>
+    <a n="st"/>
+    <a n="postalCode"/>
+    <a n="co"/>
+  </attrs>
+</right>
+
+<right name="AdminConsoleAccountsContactTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for AccountsContactTab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsContactTab"/>
+    <r n="viewAdminConsoleAccountsContactTab"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts MemberOf Tab -->
+<!-- <right name="setAdminConsoleAccountsMemberOfTab" type="setAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts MemberOf Tab </desc>
+  <attrs></attrs>
+</right> -->
+<!-- <right name="viewAdminConsoleAccountsMemberOfTab" type="getAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts MemberOf Tab </desc>
+  <attrs></attrs>
+</right> -->
+<right name="AdminConsoleAccountsMemberOfTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for Accounts MemberOf Tab </desc>
+  <rights>
+    <r n="getAccountMembership"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Aliases Tab -->
+<right name="setAdminConsoleAccountsAliasesTab" type="setAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts Aliases Tab </desc>
+  <attrs>
+    <a n="zimbraMailAlias"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsAliasesTab" type="getAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts Aliases Tab </desc>
+  <attrs>
+    <a n="zimbraMailAlias"/>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsAliasesTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for Accounts Aliases Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsAliasesTab"/>
+    <r n="viewAdminConsoleAccountsAliasesTab"/>
+    <r n="createAlias"/>
+    <r n="deleteAlias"/>
+    <r n="addAccountAlias"/>
+    <r n="removeAccountAlias"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Features Tab -->
+<right name="setAdminConsoleAccountsFeaturesTab" type="setAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts Features Tab </desc>
+  <attrs>
+    <a n="zimbraImapEnabled"/>
+    <a n="zimbraImapEnabled"/>
+    <a n="zimbraPop3Enabled"/>
+    <a n="zimbraFeatureReadReceiptsEnabled"/>
+    <a n="zimbraFeatureMailEnabled"/>
+    <a n="zimbraFeatureContactsEnabled"/>
+    <a n="zimbraFeatureCalendarEnabled"/>
+    <a n="zimbraFeatureTasksEnabled"/>
+    <a n="zimbraFeatureNotebookEnabled"/>
+    <a n="zimbraFeatureBriefcasesEnabled"/>
+    <a n="zimbraFeatureIMEnabled"/>
+    <a n="zimbraFeatureOptionsEnabled"/>
+    <a n="zimbraFeatureTaggingEnabled"/>
+    <a n="zimbraFeatureSharingEnabled"/>
+    <a n="zimbraFeatureChangePasswordEnabled"/>
+    <a n="zimbraFeatureSkinChangeEnabled"/>
+    <a n="zimbraFeatureHtmlComposeEnabled"/>
+    <a n="zimbraFeatureShortcutAliasesEnabled"/>
+    <a n="zimbraFeatureGalEnabled"/>
+    <a n="zimbraFeatureGalAutoCompleteEnabled"/>
+    <a n="zimbraFeatureMailPriorityEnabled"/>
+    <a n="zimbraFeatureFlaggingEnabled"/>
+    <a n="zimbraFeatureImapDataSourceEnabled"/>
+    <a n="zimbraFeaturePop3DataSourceEnabled"/>
+    <a n="zimbraFeatureConversationsEnabled"/>
+    <a n="zimbraFeatureFiltersEnabled"/>
+    <a n="zimbraFeatureOutOfOfficeReplyEnabled"/>
+    <a n="zimbraFeatureNewMailNotificationEnabled"/>
+    <a n="zimbraFeatureMailPollingIntervalPreferenceEnabled"/>
+    <a n="zimbraFeatureIdentitiesEnabled"/>
+    <a n="zimbraFeatureGroupCalendarEnabled"/>
+    <a n="zimbraFeatureInstantNotify"/>
+    <a n="zimbraFeatureAdvancedSearchEnabled"/>
+    <a n="zimbraFeatureSavedSearchesEnabled"/>
+    <a n="zimbraFeatureInitialSearchPreferenceEnabled"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsFeaturesTab" type="getAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts Features Tab </desc>
+  <attrs>
+    <a n="zimbraImapEnabled"/>
+    <a n="zimbraImapEnabled"/>
+    <a n="zimbraPop3Enabled"/>
+    <a n="zimbraFeatureReadReceiptsEnabled"/>
+    <a n="zimbraFeatureMailEnabled"/>
+    <a n="zimbraFeatureContactsEnabled"/>
+    <a n="zimbraFeatureCalendarEnabled"/>
+    <a n="zimbraFeatureTasksEnabled"/>
+    <a n="zimbraFeatureNotebookEnabled"/>
+    <a n="zimbraFeatureBriefcasesEnabled"/>
+    <a n="zimbraFeatureIMEnabled"/>
+    <a n="zimbraFeatureOptionsEnabled"/>
+    <a n="zimbraFeatureTaggingEnabled"/>
+    <a n="zimbraFeatureSharingEnabled"/>
+    <a n="zimbraFeatureChangePasswordEnabled"/>
+    <a n="zimbraFeatureSkinChangeEnabled"/>
+    <a n="zimbraFeatureHtmlComposeEnabled"/>
+    <a n="zimbraFeatureShortcutAliasesEnabled"/>
+    <a n="zimbraFeatureGalEnabled"/>
+    <a n="zimbraFeatureGalAutoCompleteEnabled"/>
+    <a n="zimbraFeatureMailPriorityEnabled"/>
+    <a n="zimbraFeatureFlaggingEnabled"/>
+    <a n="zimbraFeatureImapDataSourceEnabled"/>
+    <a n="zimbraFeaturePop3DataSourceEnabled"/>
+    <a n="zimbraFeatureConversationsEnabled"/>
+    <a n="zimbraFeatureFiltersEnabled"/>
+    <a n="zimbraFeatureOutOfOfficeReplyEnabled"/>
+    <a n="zimbraFeatureNewMailNotificationEnabled"/>
+    <a n="zimbraFeatureMailPollingIntervalPreferenceEnabled"/>
+    <a n="zimbraFeatureIdentitiesEnabled"/>
+    <a n="zimbraFeatureGroupCalendarEnabled"/>
+    <a n="zimbraFeatureInstantNotify"/>
+    <a n="zimbraFeatureAdvancedSearchEnabled"/>
+    <a n="zimbraFeatureSavedSearchesEnabled"/>
+    <a n="zimbraFeatureInitialSearchPreferenceEnabled"/>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsFeaturesTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for Accounts Features Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsFeaturesTab"/>
+    <r n="viewAdminConsoleAccountsFeaturesTab"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Forwarding Tab -->
+<right name="setAdminConsoleAccountsForwardingTab" type="setAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts Forwarding Tab </desc>
+  <attrs>
+    <a n="zimbraFeatureMailForwardingEnabled"/>
+    <a n="zimbraPrefMailLocalDeliveryDisabled"/>
+    <a n="zimbraMailForwardingAddress"/>
+    <a n="zimbraPrefMailForwardingAddress"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsForwardingTab" type="getAttrs" targetType="account">
+  <desc> Legacy Domain Admin Console set attr rights for Accounts Forwarding Tab </desc>
+  <attrs>
+    <a n="zimbraFeatureMailForwardingEnabled"/>
+    <a n="zimbraPrefMailLocalDeliveryDisabled"/>
+    <a n="zimbraMailForwardingAddress"/>
+    <a n="zimbraPrefMailForwardingAddress"/>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsForwardingTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for Accounts Forwarding Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsForwardingTab"/>
+    <r n="viewAdminConsoleAccountsForwardingTab"/>
+  </rights>
+</right>
+
+
+<!-- Admin Console Accounts Preferences Tab -->
+
+<!-- Admin Console Accounts FreeBusyInterop Tab -->
+<right name="setAdminConsoleAccountsFreeBusyInteropTab" type="setAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts FreeBusyInterop Tab </desc>
+  <attrs>
+    <a n="zimbraForeignPrincipal"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsFreeBusyInteropTab" type="getAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts FreeBusyInterop Tab </desc>
+  <attrs>
+    <a n="zimbraForeignPrincipal"/>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsFreeBusyInteropTabRights" type="combo">
+  <desc> Admin Console rights for Accounts FreeBusyInterop Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsFreeBusyInteropTab"/>
+    <r n="viewAdminConsoleAccountsFreeBusyInteropTab"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Themes Tab -->
+<right name="setAdminConsoleAccountsThemesTab" type="setAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Themes Tab </desc>
+  <attrs>
+    <a n="zimbraPrefSkin"/>
+    <a n="zimbraAvailableSkin"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsThemesTab" type="getAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Themes Tab </desc>
+  <attrs>
+    <a n="zimbraPrefSkin"/>
+    <a n="zimbraAvailableSkin"/>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsThemesTabRights" type="combo">
+  <desc> Admin Console rights for Accounts Themes Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsThemesTab"/>
+    <r n="viewAdminConsoleAccountsThemesTab"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Zimlets Tab -->
+<right name="setAdminConsoleAccountsZimletsTab" type="setAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Zimlets Tab </desc>
+  <attrs>
+    <a n="zimbraZimletAvailableZimlets"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsZimletsTab" type="getAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Zimlets Tab </desc>
+  <attrs>
+    <a n="zimbraZimletAvailableZimlets"/>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsZimletsTabRights" type="combo">
+  <desc> Admin Console rights for Accounts Zimlets Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsZimletsTab"/>
+    <r n="viewAdminConsoleAccountsZimletsTab"/>
+  </rights>
+</right>
+
+<!-- Admin Console Accounts Advanced Tab -->
+<!-- syntax or bad attr somewhere in the advanced tab config --> 
+<!-- <right name="setAdminConsoleAccountsAdvancedTab" type="setAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Advanced Tab </desc>
+  <attrs>
+    <a n="zimbraAttachmentsBlocked"\>
+    <a n="zimbraMailQuota"\>
+    <a n="zimbraContactMaxNumEntries"\>
+    <a n="zimbraQuotaWarnPercent"\>
+    <a n="zimbraQuotaWarnInterval"\>
+    <a n="zimbraQuotaWarnMessage"\>
+    <a n="zimbraPasswordLocked"\>
+    <a n="zimbraPasswordMinLength"\>
+    <a n="zimbraPasswordMaxLength"\>
+    <a n="zimbraPasswordMinUpperCaseChars"\>
+    <a n="zimbraPasswordMinLowerCaseChars"\>
+    <a n="zimbraPasswordMinPunctuationChars"\>
+    <a n="zimbraPasswordMinNumericChars"\>
+    <a n="zimbraPasswordMinAge"\>
+    <a n="zimbraPasswordMaxAge"\>
+    <a n="zimbraPasswordEnforceHistory"\>
+    <a n="zimbraPasswordLockoutEnabled"\>
+    <a n="zimbraPasswordLockoutMaxFailures"\>
+    <a n="zimbraPasswordLockoutDuration"\>
+    <a n="zimbraPasswordLockoutFailureLifetime"\>
+    <a n="zimbraAdminAuthTokenLifetime"\>
+    <a n="zimbraAuthTokenLifetime"\>
+    <a n="zimbraMailIdleSessionTimeout"\>
+    <a n="zimbraMailMessageLifetime"\>
+    <a n="zimbraMailTrashLifetime"\>
+    <a n="zimbraMailSpamLifetime"\>
+    <a n="zimbraFreebusyExchangeUserOrg"\>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsAdvancedTab" type="getAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Advanced Tab </desc>
+  <attrs>
+    <a n="zimbraAttachmentsBlocked"\>
+    <a n="zimbraMailQuota"\>
+    <a n="zimbraContactMaxNumEntries"\>
+    <a n="zimbraQuotaWarnPercent"\>
+    <a n="zimbraQuotaWarnInterval"\>
+    <a n="zimbraQuotaWarnMessage"\>
+    <a n="zimbraPasswordLocked"\>
+    <a n="zimbraPasswordMinLength"\>
+    <a n="zimbraPasswordMaxLength"\>
+    <a n="zimbraPasswordMinUpperCaseChars"\>
+    <a n="zimbraPasswordMinLowerCaseChars"\>
+    <a n="zimbraPasswordMinPunctuationChars"\>
+    <a n="zimbraPasswordMinNumericChars"\>
+    <a n="zimbraPasswordMinAge"\>
+    <a n="zimbraPasswordMaxAge"\>
+    <a n="zimbraPasswordEnforceHistory"\>
+    <a n="zimbraPasswordLockoutEnabled"\>
+    <a n="zimbraPasswordLockoutMaxFailures"\>
+    <a n="zimbraPasswordLockoutDuration"\>
+    <a n="zimbraPasswordLockoutFailureLifetime"\>
+    <a n="zimbraAdminAuthTokenLifetime"\>
+    <a n="zimbraAuthTokenLifetime"\>
+    <a n="zimbraMailIdleSessionTimeout"\>
+    <a n="zimbraMailMessageLifetime"\>
+    <a n="zimbraMailTrashLifetime"\>
+    <a n="zimbraMailSpamLifetime"\>
+    <a n="zimbraFreebusyExchangeUserOrg"\>
+  </attrs>
+</right>
+<right name="AdminConsoleAccountsAdvancedTabRights" type="combo">
+  <desc> Admin Console rights for Accounts Advanced Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsAdvancedTab"/>
+    <r n="viewAdminConsoleAccountsAdvancedTab"/>
+  </rights>
+</right> -->
+
+<!-- Admin Console Accounts Zimbra Mobile Tab -->
+<!-- Admin Console Accounts ACL Tab -->
+<!-- Admin Console Accounts Admin Views Tab -->
+
+<!--
+  =======================================================
+    Admin Console Alias List View
+  =======================================================
+-->
+<!-- nothing to do here -->
+
+<!--
+  =======================================================
+    Admin Console Distribution List List View
+  =======================================================
+-->
+<!-- Admin Console DL Members Tab -->
+<right name="setAdminConsoleDLMembersTab" type="setAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Members Tab </desc>
+  <attrs>
+    <a n="cn"/>
+    <a n="displayName"/>
+    <a n="description"/>
+    <a n="zimbraIsAdminGroup"/>
+    <a n="zimbraMailStatus"/>
+    <a n="zimbraMailAlias"/>
+    <a n="zimbraHideInGal"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleDLMembersTab" type="getAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Members Tab </desc>
+  <attrs>
+    <a n="cn"/>
+    <a n="displayName"/>
+    <a n="description"/>
+    <a n="mail"/>
+    <a n="uid"/>
+    <a n="zimbraId"/>
+    <a n="zimbraIsAdminGroup"/>
+    <a n="zimbraMailStatus"/>
+    <a n="zimbraMailAlias"/>
+    <a n="zimbraHideInGal"/>
+    <a n="zimbraMailForwardingAddress"/>
+  </attrs>
+</right>
+<right name="AdminConsoleDLMembersTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for DL Members Tab </desc>
+  <rights>
+    <r n="setAdminConsoleDLMembersTab"/>
+    <r n="viewAdminConsoleDLMembersTab"/>
+    <r n="addDistributionListMember"/>
+    <r n="removeDistributionListMember"/>
+  </rights>
+</right>
+<!-- Admin Console DL Notes Tab -->
+<right name="setAdminConsoleDLNotesTab" type="setAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Notes Tab </desc>
+  <attrs>
+    <a n="zimbraNotes"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleDLNotesTab" type="getAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Notes Tab </desc>
+  <attrs>
+    <a n="zimbraNotes"/>
+  </attrs>
+</right>
+<right name="AdminConsoleDLNotesTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for DL Notes Tab </desc>
+  <rights>
+    <r n="setAdminConsoleDLNotesTab"/>
+    <r n="viewAdminConsoleDLNotesTab"/>
+  </rights>
+</right>
+
+<!-- Admin Console DL MemberOf Tab -->
+<right name="AdminConsoleDLMemberOfTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for DL MemberOf Tab </desc>
+  <rights>
+    <r n="getDistributionListMembership"/>
+  </rights>
+</right>
+
+<!-- Admin Console DL Aliases Tab -->
+<right name="setAdminConsoleDLAliasesTab" type="setAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Aliases Tab </desc>
+  <attrs>
+    <a n="zimbraMailAlias"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleDLAliasesTab" type="getAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Aliases Tab </desc>
+  <attrs>
+    <a n="zimbraMailAlias"/>
+  </attrs>
+</right>
+<right name="AdminConsoleDLAliasesTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for DL Aliases Tab </desc>
+  <rights>
+    <r n="setAdminConsoleDLAliasesTab"/>
+    <r n="viewAdminConsoleDLAliasesTab"/>
+    <r n="createAlias"/>
+    <r n="deleteAlias"/>
+    <r n="addCalendarResourceAlias"/>
+    <r n="removeCalendarResourceAlias"/>
+  </rights>
+</right>
+
+<!-- Admin Console DL Shares Tab -->
+<right name="setAdminConsoleDLSharesTab" type="setAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Shares Tab </desc>
+  <attrs>
+    <a n="zimbraDistributionListSendShareMessageToNewMembers"/>
+    <a n="zimbraDistributionListSendShareMessageFromAddress"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleDLSharesTab" type="getAttrs" targetType="dl">
+  <desc> Legacy Domain Admin Console set attr rights for DL Shares Tab </desc>
+  <attrs>
+    <a n="zimbraDistributionListSendShareMessageToNewMembers"/>
+    <a n="zimbraDistributionListSendShareMessageFromAddress"/>
+  </attrs>
+</right>
+<right name="AdminConsoleDLSharesTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for DL Shares Tab </desc>
+  <rights>
+    <r n="setAdminConsoleDLSharesTab"/>
+    <r n="viewAdminConsoleDLSharesTab"/>
+    <r n="getDistributionListShareInfo"/>
+    <r n="publishDistributionListShareInfo"/>
+  </rights>
+</right>
+<!-- Admin Console DL ACL Tab -->
+<!-- Admin Console DL Admin View Tab -->
+<!--
+  =======================================================
+    Admin Console Resource List View
+  =======================================================
+-->
+<!-- Admin Console Resources Properties Tab -->
+<!-- Admin Console Resources Location/Contact Tab -->
+<!-- Admin Console Resources ACL Tab -->
+
+
+<!-- <right type="getAttrs" name="adminConsoleDomainInfoRights" targetType="domain">
+  <desc> Admin Console Domain Rights </desc>
+  <attrs>
+    <a n="zimbraDomainName"/>
+  </attrs>
+</right> -->
+
+
+<!--
+  =======================================================
+    Roll-up Combo Rights
+  =======================================================
+-->
+<right type="combo" name="LegacyAdminConsoleDomainAdminAccountRights">
+  <desc>Admin Console Legacy Domain Admin Account Rights</desc>
+  <rights>
+    <r n="getMailboxInfo"/> <!-- where does this go -->
+    <r n="AdminConsoleAccountsInfoTabRights"/>
+    <r n="AdminConsoleAccountsContactTabRights"/>
+    <r n="AdminConsoleAccountsMemberOfTabRights"/>
+    <r n="AdminConsoleAccountsAliasesTabRights"/>
+    <r n="AdminConsoleAccountsForwardingTabRights"/>
+    <r n="listAccount"/>
+    <r n="viewAccountAdminUI"/>
+  </rights>
+</right>
+
+<right type="combo" name="LegacyAdminConsoleDomainAdminAliasRights">
+  <desc>Admin Console Legacy Domain Admin Alias Rights</desc>
+  <rights>
+    <r n="viewAccountAdminUI"/>
+  </rights>
+</right>
+
+<right type="combo" name="LegacyAdminConsoleDomainAdminDLRights">
+  <desc>Admin Console Legacy Domain Admin DL Rights</desc>
+  <rights>
+    <r n="AdminConsoleDLMembersTabRights"/>
+    <r n="AdminConsoleDLNotesTabRights"/>
+    <r n="AdminConsoleDLMemberOfTabRights"/>
+    <r n="AdminConsoleDLAliasesTabRights"/>
+    <r n="AdminConsoleDLSharesTabRights"/>
+    <r n="listDistributionList"/>
+    <r n="viewDistributionListAdminUI"/>
+  </rights>
+</right>
+
+<right type="combo" name="LegacyAdminConsoleDomainAdminResourceRights">
+  <desc>Admin Console Legacy Domain Admin Resource Rights</desc>
+  <rights>
+    <r n="listCalendarResource"/>
+    <r n="viewAccountAdminUI"/>
+  </rights>
+</right>
+
+<right type="combo" name="LegacyAdminConsoleDomainAdminRights">
+  <desc>Legacy Admin Console Rights and Views</desc>
+  <rights>
+    <r n="LegacyAdminConsoleDomainAdminAccountRights"/>
+    <r n="LegacyAdminConsoleDomainAdminAliasRights"/>
+    <r n="LegacyAdminConsoleDomainAdminDLRights"/>
+    <r n="LegacyAdminConsoleDomainAdminResourceRights"/>
+    <r n="setAdminSavedSearch"/>
+    <r n="viewAdminSavedSearch"/>
+    <!-- <r n="domainAdminDomainRights"/> -->
+  </rights>
+</right>
+
+</rights>
