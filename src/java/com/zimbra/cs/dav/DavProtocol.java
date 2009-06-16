@@ -85,6 +85,7 @@ public class DavProtocol {
 		return buf.toString();
 	}
 	
+	public static final String XML_CONTENT_TYPE = "text/xml";
 	public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
 	public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 	public static final String ENCODING_GZIP = "gzip";

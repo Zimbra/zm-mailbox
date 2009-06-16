@@ -334,7 +334,7 @@ public class DavContext {
 	/* Returns true if the DAV request contains a message. */
 	public boolean hasRequestMessage() {
 		try {
-			return getUpload().getSize() > 0;
+			return getUpload().getSize() > 0 && getUpload().getContentType().startsWith(DavProtocol.XML_CONTENT_TYPE);
 		} catch (Exception e) {
 		}
 		return false;

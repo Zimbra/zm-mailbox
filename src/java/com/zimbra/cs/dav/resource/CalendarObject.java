@@ -18,9 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +27,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -49,10 +46,6 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.zclient.ZAppointmentHit;
 
 /**
  * CalendarObject is a single instance of iCalendar (RFC 2445) object, such as
@@ -253,8 +246,6 @@ public interface CalendarObject {
     			DavResource rs = UrlNamespace.getResourceByItemId(ctxt, user, mId);
     			if (rs instanceof LocalCalendarObject)
     				return (LocalCalendarObject)rs;
-    			else if (rs instanceof RemoteCalendarObject)
-    				return (RemoteCalendarObject)rs;
     			else
         			throw new DavException("not a calendar item", HttpServletResponse.SC_BAD_REQUEST);
     		} catch (ServiceException se) {
@@ -383,112 +374,4 @@ public interface CalendarObject {
         	return true;
         }
     }
-	
-	public static class RemoteCalendarObject extends DavResource implements CalendarObject {
-
-	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt, RemoteCalendarCollection parent) {
-	        super(CalendarPath.generate(null, uri, appt.getUid(), -1), owner);
-	        mParent = parent;
-	        mUid = appt.getUid();
-            ItemId iid;
-            try {
-                iid = new ItemId(appt.getId(), (String)null);
-                mRemoteId = iid.getAccountId();
-                mItemId = iid.getId();
-            } catch (ServiceException e) {
-                ZimbraLog.dav.warn("can't generate itemId from "+appt.getId(), e);
-            }
-	        mEtag = getEtag(appt);
-			setProperty(DavElements.E_GETETAG, getEtag(), true);
-            setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-            addProperty(CalDavProperty.getCalendarData(this));
-	    }
-
-	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCalendarCollection parent, boolean newlyCreated) {
-	        super(uri, owner);
-	        mParent = parent;
-	        mEtag = etag;
-            setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-            mNewlyCreated = newlyCreated;
-	    }
-	    
-	    public boolean hasEtag() {
-	    	return true;
-	    }
-	    
-	    public String getEtag() {
-	    	return mEtag;
-	    }
-	    
-        public static String getEtag(ZAppointmentHit item) {
-            return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getSavedSeq())+"\"";
-        }
-		private RemoteCalendarCollection mParent;
-	    private String mRemoteId;
-	    private int mItemId;
-	    private String mUid;
-	    private String mEtag;
-	    private byte[] mContent;
-	    
-	    @Override
-	    public void delete(DavContext ctxt) throws DavException {
-	    	mParent.deleteAppointment(ctxt, mItemId);
-	    }
-
-	    @Override
-	    public InputStream getContent(DavContext ctxt) throws IOException, DavException {
-            byte[] result = getRemoteContent(ctxt);
-            if (result != null)
-                return new ByteArrayInputStream(result);
-	        return null;
-	    }
-
-	    @Override
-	    public boolean isCollection() {
-	        return false;
-	    }
-	    
-	    @Override
-	    public boolean hasContent(DavContext ctxt) {
-	        return true;
-	    }
-	    
-	    public String getUid() {
-	        return mUid;
-	    }
-	    
-	    public boolean match(Filter filter) {
-	    	return true;  // XXX implement time range filter on shared calendars.  CalDAV proxying probably works better.
-	    }
-	    
-	    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException {
-            byte[] result = getRemoteContent(ctxt);
-            if (result != null)
-                return new String(result, "UTF-8");
-            return "";
-	    }
-	    
-        public byte[] getRemoteContent(DavContext ctxt) {
-        	if (mContent != null)
-        		return mContent;
-        	String data = mParent.getCalendarData(mUid);
-        	if (data != null) {
-        		try {
-                    mContent = data.getBytes("UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    ZimbraLog.dav.warn("can't get remote contents for "+mRemoteId+", "+mItemId, e);
-                }
-        		return mContent;
-        	}
-            try {
-                AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
-                ItemId iid = new ItemId(mRemoteId, mItemId);
-                HashMap<String,String> params = new HashMap<String,String>();
-                mContent = UserServlet.getRemoteContent(authToken, iid, params);
-            } catch (ServiceException e) {
-                ZimbraLog.dav.warn("can't get remote contents for "+mRemoteId+", "+mItemId, e);
-            }
-            return mContent;
-        }
-	}
 }

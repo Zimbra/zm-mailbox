@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.QName;
 
-import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -273,11 +272,8 @@ public class CalendarCollection extends Collection {
 	/* creates an appointment sent in PUT request in this calendar. */
     @Override
 	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-		HttpServletRequest req = ctxt.getRequest();
-		ContentType ct = new ContentType(req.getContentType());
-		if (req.getContentLength() <= 0 ||
-                ct.getValue() == null || 
-                !ct.getValue().equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
+    	if (!ctxt.getUpload().getContentType().equals(Mime.CT_TEXT_CALENDAR) ||
+    		 ctxt.getUpload().getSize() <= 0)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		
 		/*
@@ -292,6 +288,7 @@ public class CalendarCollection extends Collection {
 		 * ical correctly understands etag and sets If-Match for existing etags, but
 		 * does not use If-None-Match for new resource creation.
 		 */
+		HttpServletRequest req = ctxt.getRequest();
 		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
 		boolean useEtag = (etag != null);
 

@@ -26,6 +26,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
@@ -73,13 +74,17 @@ public abstract class DavMethod {
 	}
 	
 	public HttpMethod toHttpMethod(DavContext ctxt, String targetUrl) throws IOException, DavException {
-		if (ctxt.hasRequestMessage()) {
+		if (ctxt.getUpload() != null && ctxt.getUpload().getSize() > 0) {
 			PostMethod method = new PostMethod(targetUrl) {
 				public String getName() { return getMethodName(); }
 			};
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			XMLWriter writer = new XMLWriter(baos);
-			writer.write(ctxt.getRequestMessage());
+			if (ctxt.hasRequestMessage()) {
+				XMLWriter writer = new XMLWriter(baos);
+				writer.write(ctxt.getRequestMessage());
+			} else {
+				ByteUtil.copy(ctxt.getUpload().getInputStream(), true, baos, false);
+			}
 			ByteArrayRequestEntity reqEntry = new ByteArrayRequestEntity(baos.toByteArray());
 			method.setRequestEntity(reqEntry);
 			return method;

@@ -40,6 +40,7 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -54,12 +55,13 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.DavContext.KnownUserAgent;
-import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.method.*;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.calendar.cache.AccountCtags;
 import com.zimbra.cs.mailbox.calendar.cache.AccountKey;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
@@ -469,15 +471,51 @@ public class DavServlet extends ZimbraServlet {
             }
 	    }
 	}
+	
+	private static String[] PROXY_HEADERS = {
+		DavProtocol.HEADER_DAV,
+		DavProtocol.HEADER_DEPTH,
+		DavProtocol.HEADER_CONTENT_TYPE,
+		DavProtocol.HEADER_ETAG,
+		DavProtocol.HEADER_IF_MATCH
+	};
+	
 	private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
-		DavResource rs = ctxt.getRequestedResource();
-		if (true || !(rs instanceof DavResource.RemoteResource))
+		Provisioning prov = Provisioning.getInstance();
+		ItemId target = null;
+		String extraPath = null;
+		try {
+			Account account = prov.getAccountByName(ctxt.getUser());
+			if (account == null)
+				return false;
+			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+			Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(ctxt.getOperationContext(), Mailbox.ID_FOLDER_USER_ROOT, ctxt.getPath());
+			Folder targetFolder = match.getFirst();
+			if (!(targetFolder instanceof Mountpoint))
+				return false;
+			Mountpoint mp = (Mountpoint) targetFolder;
+			target = new ItemId(mp.getOwnerId(), mp.getRemoteId());
+			extraPath = match.getSecond();
+		} catch (ServiceException e) {
+			ZimbraLog.dav.debug("can't get path", e);
+			return false;
+		}
+		
+		// we don't proxy zero depth PROPFIND, and all PROPPATCH on mountpoints,
+		// because the mountpoint object contains WebDAV properties that are
+		// private to the user.
+		if (extraPath == null 
+			&& (m.getName().equals(PropFind.PROPFIND) && ctxt.getDepth() == DavContext.Depth.zero
+				|| m.getName().equals(PropPatch.PROPPATCH)))
 			return false;
 		
+		String prefix = ctxt.getPath();
+		if (extraPath != null)
+			prefix = prefix.substring(0, prefix.indexOf(extraPath));
+		prefix = URLUtil.urlEscape(DAV_PATH + "/" + ctxt.getUser() + prefix);
+		
 		// make sure the target account exists.
-		ItemId target = ((DavResource.RemoteResource)rs).getTarget();
-		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(AccountBy.id, target.getAccountId());
+		Account acct = prov.getAccountById(target.getAccountId());
 		if (acct == null)
 			throw new DavException("account not found: "+target.getAccountId(), HttpServletResponse.SC_NOT_FOUND);
 		Server server = prov.getServer(acct);
@@ -511,13 +549,17 @@ public class DavServlet extends ZimbraServlet {
         }
         
         // build proxy request
-		String url = getServiceUrl(acct, DAV_PATH) + path;
+		String url = getServiceUrl(acct, DAV_PATH) + URLUtil.urlEscape(path + "/" + (extraPath == null ? "" : extraPath));
 		HttpState state = new HttpState();
         authToken.encode(state, false, server.getAttr(Provisioning.A_zimbraServiceHostname));
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         client.setState(state);
         HttpMethod method = m.toHttpMethod(ctxt, url);
-		method.addRequestHeader(DavProtocol.HEADER_DEPTH, ctxt.getRequest().getHeader(DavProtocol.HEADER_DEPTH));
+        for (String h : PROXY_HEADERS) {
+            String hval = ctxt.getRequest().getHeader(h);
+            if (hval != null)
+            	method.addRequestHeader(h, hval);
+        }
         int statusCode = client.executeMethod(method);
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
@@ -534,7 +576,7 @@ public class DavServlet extends ZimbraServlet {
                 	Element href = ((Element)responseObj).element(DavElements.E_HREF);
                 	String v = href.getText();
                 	if (v.startsWith(newPrefix))
-                		href.setText(UrlNamespace.getResourceUrl(rs) + v.substring(newPrefix.length()+1));
+                		href.setText(prefix + v.substring(newPrefix.length()+1));
         		}
         		if (ZimbraLog.dav.isDebugEnabled())
         			ZimbraLog.dav.debug("PROXY RESPONSE:\n"+new String(DomUtil.getBytes(response), "UTF-8"));
