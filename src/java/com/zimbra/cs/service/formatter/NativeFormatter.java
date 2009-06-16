@@ -161,7 +161,7 @@ public class NativeFormatter extends Formatter {
             if (contentType == null) {
                 contentType = Mime.CT_TEXT_PLAIN;
             } else if (contentType.equals(Mime.CT_APPLICATION_OCTET_STREAM)) {
-                if ((contentType = MimeDetect.getMimeDetect().detect(mp.getInputStream(), Mime.getFilename(mp))) == null)
+                if ((contentType = MimeDetect.getMimeDetect().detect(Mime.getFilename(mp), mp.getInputStream())) == null)
                     contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             }
             // CR or LF in Content-Type causes Chrome to barf, unfortunately
