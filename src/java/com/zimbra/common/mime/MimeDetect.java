@@ -145,37 +145,43 @@ public class MimeDetect {
             }
 
             public boolean detect(byte data[], int limit) {
-                for (int pos = offset; pos < offset + range; pos++) {
-                    if (pos + value.length >= Math.min(limit, data.length))
-                        return false;
+                if (limit == -1)
+                    limit = data.length;
+                loop:
+                for (int pos = offset; pos < offset + range &&
+                    pos + value.length <= limit; pos++) {
                     for (int i = 0; i < value.length; i++) {
                         if ((value[i] & mask[i]) != (data[pos + i] & mask[i]))
-                            return false;
+                            continue loop;
                     }
+                    return true;
                 }
-                return true;
+                return false;
             }
 
-            public boolean detect(RandomAccessFile raf) {
-                byte buf[] = null;
-                
-                for (int pos = offset; pos < offset + range; pos++) {
-                    try {
-                        if (raf.length() < pos + value.length)
-                            return false;
-                        raf.seek(pos);
-                        if (buf == null)
-                            buf = new byte[value.length];
-                        raf.readFully(buf);
-                        for (int i = 0; i < value.length; i++) {
-                            if ((value[i] & mask[i]) != (buf[i] & mask[i]))
-                                return false;
-                        }
-                    } catch (IOException e) {
+            public boolean detect(RandomAccessFile raf, int limit) {
+                try {
+                    byte buf[];
+                    long maxpos = (limit == -1 ? raf.length() : limit);
+
+                    if (maxpos <= offset + value.length)
                         return false;
+                    buf = new byte[offset + value.length + range < maxpos ?
+                        value.length + range : (int)(maxpos - offset)];
+                    raf.seek(offset);
+                    raf.readFully(buf);
+                    loop:
+                    for (int pos = 0; pos < range &&
+                        pos + value.length <= buf.length; pos++) {
+                        for (int i = 0; i < value.length; i++) {
+                            if ((value[i] & mask[i]) != (buf[pos + i] & mask[i]))
+                                continue loop;
+                        }
+                        return true;
                     }
+                } catch (Exception e) {
                 }
-                return true;
+                return false;
             }
         }
         
@@ -273,23 +279,29 @@ public class MimeDetect {
     public static MimeDetect getMimeDetect() { return mimeDetect; }
     
     public String detect(String file) {
-        for (Map.Entry<Glob, String> entry : globs.entrySet())
-            if (entry.getKey().pattern.matcher(file).matches())
-                return entry.getValue();
+        if (file != null) {
+            for (Map.Entry<Glob, String> entry : globs.entrySet())
+                if (entry.getKey().pattern.matcher(file).matches())
+                    return entry.getValue();
+        }
         return null;
     }
 
-    public String detect(byte data[]) { return detect(data, null, data.length); }
+    public String detect(byte data[]) { return detect(null, data, data.length); }
     
-    public String detect(byte data[], String file) {
-        return detect(data, file, data.length);
+    public String detect(String file, byte data[]) {
+        return detect(file, data, data.length);
     }
     
     public String detect(byte data[], int limit) {
-        return detect(data, null, limit);
+        return detect(null, data, limit);
     }
     
-    public String detect(byte data[], String file, int limit) {
+    public String detect(String file, byte data[], int limit) {
+        String ct = detect(file);
+        
+        if (ct != null)
+            return ct;
         for (Map.Entry<Magic, String> entry : magics.entrySet()) {
             boolean found = true;
             int indent = 0;
@@ -303,7 +315,7 @@ public class MimeDetect {
             if (found)
                 return entry.getValue();
         }
-        return file == null ? null : detect(file);
+        return null;
     }
 
     public String detect(File file) throws IOException {
@@ -311,49 +323,75 @@ public class MimeDetect {
     }
 
     public String detect(File file, int limit) throws IOException {
-        RandomAccessFile raf = new RandomAccessFile(file, "r");
+        return detect(file.getName(), file, limit);
+    }
+
+    public String detect(String file, File fd, int limit) throws IOException {
+        String ct = detect(file);
         
-        if (limit == -1) {
+        if (ct != null)
+            return ct;        
+        if (limit == -1 || limit > DEFAULT_LIMIT) {
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+
             for (Map.Entry<Magic, String> entry : magics.entrySet()) {
                 boolean found = true;
                 int indent = 0;
                 
                 for (Magic.Rule rule : entry.getKey().rules) {
                     if (rule.indent == indent) {
-                        if (found = rule.detect(raf))
+                        if (found = rule.detect(raf, limit))
                             indent++;
                     }
                 }
                 if (found)
                     return entry.getValue();
             }
-            return detect(file.getName());
+            return null;
+        } else {
+            return detect(new FileInputStream(file), limit);
         }
-        
-        byte data[] = new byte[(int)raf.length() < limit ? (int)raf.length() :
-            limit];
-
-        raf.readFully(data);
-        return detect(data, file.getName());
     }
     
     public String detect(InputStream is) throws IOException {
-        return detect(is, null, DEFAULT_LIMIT);
-    }
-
-    public String detect(InputStream is, String file) throws IOException {
-        return detect(is, file, DEFAULT_LIMIT);
+        return detect(null, is, DEFAULT_LIMIT);
     }
 
     public String detect(InputStream is, int limit) throws IOException {
-        return detect(is, null, limit);
+        return detect(null, is, limit);
     }
     
-    public String detect(InputStream is, String file, int limit) throws IOException {
-        return detect(ByteUtil.getPartialContent(is, limit, limit), file, limit);
-        
+    public String detect(String file, InputStream is) throws IOException {
+        return detect(file, is, DEFAULT_LIMIT);
+    }
+
+    public String detect(String file, InputStream is, int limit) throws IOException {
+        return detect(file, ByteUtil.getPartialContent(is, limit, limit), limit);
+    }
+
+    public String validate(String file, byte data[], int limit) {
+        return validate(detect(file), detect(data, limit));
     }
     
+    public String validate(String file, InputStream is, int limit) throws IOException {
+        return validate(detect(file), detect(is, limit));
+    }
+    
+    public String validate(File fd, int limit) throws IOException {
+        return validate(detect(fd.getName()), detect(null, fd, limit));
+    }
+    
+    private String validate(String ct1, String ct2) {
+        if (ct1 == null)
+            return ct2;
+        else if (ct2 == null)
+            return ct1;
+        else if (ct1.equals(ct2))
+            return ct1;
+        else
+            return null;
+    }
+
     public void addGlob(String type, String regex, int priority) throws
         IOException {
         globs.put(new Glob(regex, priority), type);
@@ -438,10 +476,12 @@ public class MimeDetect {
         CommandLineParser parser = new GnuParser();
         int ret = 1;
 
+        opts.addOption("d", "data", false, "data only");
         opts.addOption("g", "globs", true, "globs file");
         opts.addOption("l", "limit", true, "size limit");
         opts.addOption("m", "magic", true, "magic file");
         opts.addOption("n", "name", false, "name only");
+        opts.addOption("v", "validate", false, "validate extension and data");
         try {
             CommandLine cl = parser.parse(opts, args);
             String file;
@@ -462,10 +502,11 @@ public class MimeDetect {
             if (cl.hasOption('n')) {
                 type = md.detect(file);
             } else if (file.equals("-")) {
-                byte data[] = new byte[limit == -1 ? 1024 * 1024 : limit];
-                int len = System.in.read(data);
-                
-                type = md.detect(data, len);
+                type = md.detect(System.in, limit);
+            } else if (cl.hasOption('d')) {
+                type = md.detect(new FileInputStream(file), limit);
+            } else if (cl.hasOption('v')) {
+                type = md.validate(new File(file), limit);
             } else {
                 type = md.detect(new File(file), limit);
             }
