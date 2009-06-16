@@ -203,6 +203,10 @@ public class DataSourceManager {
         StringBuilder buf = new StringBuilder();
         boolean isFirst = true;
         while (t != null) {
+			// HACK: go with JavaMail error message
+			if (t.getClass().getName().startsWith("javax.mail.")) {
+				return t.getMessage();
+			}
             if (isFirst) {
                 isFirst = false;
             } else {
