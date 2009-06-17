@@ -24,17 +24,19 @@ import javax.mail.internet.SharedInputStream;
 
 import junit.framework.TestCase;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.SharedFile;
 import com.zimbra.cs.store.StoreManager;
 
 
 public class TestBlobInputStream extends TestCase {
 
     private File mFile;
+    private String mOrigBufferSize;
     
     public void setUp()
     throws Exception {
+        mOrigBufferSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailFileDescriptorBufferSize);
     }
     
     /**
@@ -42,9 +44,9 @@ public class TestBlobInputStream extends TestCase {
      */
     public void testBlobInputStream()
     throws Exception {
-        int[] bufferSizes = new int[] { 1, 4, 5, 9, 10, 99, 999, 1000, 2000 }; 
+        int[] bufferSizes = new int[] { 0, 1, 4, 5, 9, 10, 99, 999, 1000, 2000 }; 
         for (int bufferSize : bufferSizes) {
-            SharedFile.setBufferSize(bufferSize);
+            TestUtil.setServerAttr(Provisioning.A_zimbraMailFileDescriptorBufferSize, Integer.toString(bufferSize));
             runBlobInputStreamTest();
             runLargeFileTest();
         }
@@ -293,6 +295,7 @@ public class TestBlobInputStream extends TestCase {
     	if (mFile != null && mFile.exists()) {
     		mFile.delete();
     	}
+    	TestUtil.setServerAttr(Provisioning.A_zimbraMailFileDescriptorBufferSize, mOrigBufferSize);
     }
 
     public static void main(String[] args)

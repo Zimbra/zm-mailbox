@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -31,8 +33,9 @@ import com.zimbra.cs.stats.ZimbraPerf;
  * <tt>BlobInputStream</tt> objects that share a single file descriptor.
  */
 public class SharedFile {
-    private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
 
+    private static final int DEFAULT_BUFFER_SIZE = 4096;
+    
     private File mFile;
     private RandomAccessFile mRAF;
     private long mPos = 0;
@@ -44,7 +47,7 @@ public class SharedFile {
     private long mLength;
     
     /** Read buffer. */
-    private byte[] mBuf = new byte[BUFFER_SIZE];
+    private byte[] mBuf;
     
     /**
      * Position of the start of the read buffer, relative to the file
@@ -57,17 +60,25 @@ public class SharedFile {
      * 0 means that the buffer is not initialized.
      */
     private int mBufSize = 0;
-    
+
     SharedFile(File file)
     throws IOException {
         if (file == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("file cannot be null");
         }
         if (!file.exists()) {
             throw new IOException(file.getPath() + " does not exist.");
         }
         mFile = file;
         mLength = file.length();
+        int bufSize = DEFAULT_BUFFER_SIZE;
+        try {
+            bufSize = Provisioning.getInstance().getLocalServer().getMailFileDescriptorBufferSize();
+        } catch (ServiceException e) {
+            ZimbraLog.store.warn("Unable to determine default buffer size.  Using %d.", DEFAULT_BUFFER_SIZE, e);
+        }
+        bufSize = (int) Math.min(bufSize, mLength);
+        mBuf = new byte[bufSize]; 
         openIfNecessary();
     }
 
@@ -101,7 +112,7 @@ public class SharedFile {
         boolean seeked = false;
         openIfNecessary();
 
-        if (len <= BUFFER_SIZE) {
+        if (len <= mBuf.length) {
             // Read from buffer.
             if (fileOffset >= mBufStartPos &&
                 fileOffset < (mBufStartPos + mBufSize)) {
@@ -166,16 +177,5 @@ public class SharedFile {
             mPos = 0;
             mRAF = null;
         }
-    }
-    
-    /**
-     * Sets the the size of the read buffer used by <tt>BlobInputStream</tt>.
-     * To be used for unit testing only.
-     */
-    public static void setBufferSize(int bufferSize) {
-        if (bufferSize < 1) {
-            throw new IllegalArgumentException("Buffer size " + bufferSize + " must be at least 1");
-        }
-        BUFFER_SIZE = bufferSize;
     }
 }
