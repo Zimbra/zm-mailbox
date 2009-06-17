@@ -136,8 +136,12 @@ public class Zimbra {
         DbPool.quietClose(conn);
     }
 
-    public static void startup() throws ServiceException {
-        startup(true);
+    public static void startup() {
+	try {
+	    startup(true);
+	} catch (ServiceException se) {
+	    Zimbra.halt("Exception during startup, aborting server, please check your config", se);
+	}
     }
 
     public static void startupCLI() throws ServiceException {
