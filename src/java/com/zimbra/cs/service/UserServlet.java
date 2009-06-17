@@ -1374,7 +1374,8 @@ public class UserServlet extends ZimbraServlet {
             throws ServiceException, IOException {
         Map<String,String> params = new HashMap<String,String>();
         params.put(QP_ID, iid.toString());
-        params.put(QP_NAME, extraPath);
+        if (extraPath != null)
+        	params.put(QP_NAME, extraPath);
         Account target = Provisioning.getInstance().getAccountById(iid.getAccountId());
         String url = getRemoteUrl(target, null, params);
         return getRemoteResourceAsStream(authToken, url, null, 0, null, null);

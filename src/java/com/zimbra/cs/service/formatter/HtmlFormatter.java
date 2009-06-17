@@ -108,7 +108,7 @@ public class HtmlFormatter extends Formatter {
         MailItem targetItem = context.target;
         String uri = (String) context.req.getAttribute("requestedPath");
         
-        if (targetItem instanceof Mountpoint) {
+        if (targetItem instanceof Mountpoint && ((Mountpoint)targetItem).getDefaultView() != MailItem.TYPE_APPOINTMENT) {
         	Mountpoint mp = (Mountpoint) targetItem;
             Provisioning prov = Provisioning.getInstance();
             targetAccount = prov.getAccountById(mp.getOwnerId());
@@ -132,6 +132,8 @@ public class HtmlFormatter extends Formatter {
             context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, remoteItemType);
             context.req.setAttribute(ATTR_TARGET_ITEM_NAME, remoteItemName);
             context.req.setAttribute(ATTR_TARGET_ITEM_PATH, remoteItemPath);
+            context.req.setAttribute(ATTR_TARGET_ITEM_COLOR, mp.getColor());
+            context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, MailItem.getNameForType(mp.getDefaultView()));
             targetItem = null;
         }
 
