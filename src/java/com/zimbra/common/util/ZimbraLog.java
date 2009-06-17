@@ -589,8 +589,8 @@ public class ZimbraLog {
     /**
      * Adds mailbox id to the current thread's logging context.
      */
-    public static void addMboxToContext(int mboxId) {
-        addToContext(C_MID, Integer.toString(mboxId));
+    public static void addMboxToContext(long mboxId) {
+        addToContext(C_MID, Long.toString(mboxId));
     }
     
     /**
