@@ -29,11 +29,17 @@ public abstract class OperationContextData {
      * @param mbox
      */
     public static void setGranteeNames(OperationContext octxt, Mailbox mbox) {
+        if (mbox == null)
+            return;
+        
         GranteeNames data = new GranteeNames(octxt, mbox);
         octxt.SetCtxtData(GranteeNames.getKey(), data);
     }
     
     public static void addGranteeNames(OperationContext octxt, Mailbox.FolderNode node) {
+        if (node == null)
+            return;
+        
         GranteeNames data = getGranteeNames(octxt);
         if (data == null) {
             data = new GranteeNames(node);
