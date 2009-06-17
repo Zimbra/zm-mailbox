@@ -91,7 +91,6 @@ public class LC {
     public static final KnownKey zimbra_store_sweeper_max_age;
     public static final KnownKey zimbra_store_copy_buffer_size_kb;
     public static final KnownKey zimbra_nio_file_copy_chunk_size_kb;
-    public static final KnownKey zimbra_blob_input_stream_buffer_size_kb;
 
     public static final KnownKey zimbra_mailbox_manager_hardref_cache;
     public static final KnownKey zimbra_mailbox_active_cache;
@@ -594,9 +593,6 @@ public class LC {
 
         zimbra_nio_file_copy_chunk_size_kb = new KnownKey("zimbra_nio_file_copy_chunk_size_kb");
         zimbra_nio_file_copy_chunk_size_kb.setDefault("512");  // 512KB
-
-        zimbra_blob_input_stream_buffer_size_kb = new KnownKey("zimbra_blob_input_stream_buffer_size_kb");
-        zimbra_blob_input_stream_buffer_size_kb.setDefault("1");  // 1KB
 
         zimbra_mailbox_manager_hardref_cache = new KnownKey("zimbra_mailbox_manager_hardref_cache");
         zimbra_mailbox_manager_hardref_cache.setDefault("2500");
