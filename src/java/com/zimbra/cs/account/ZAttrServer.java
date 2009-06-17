@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090613-1718 */
+    /* build: 6.0.0 pshao 20090617-1133 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -5930,6 +5930,88 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailDiskStreamingThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @return zimbraMailFileDescriptorBufferSize, or 4096 if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public int getMailFileDescriptorBufferSize() {
+        return getIntAttr(Provisioning.A_zimbraMailFileDescriptorBufferSize, 4096);
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @param zimbraMailFileDescriptorBufferSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public void setMailFileDescriptorBufferSize(int zimbraMailFileDescriptorBufferSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, Integer.toString(zimbraMailFileDescriptorBufferSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @param zimbraMailFileDescriptorBufferSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public Map<String,Object> setMailFileDescriptorBufferSize(int zimbraMailFileDescriptorBufferSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, Integer.toString(zimbraMailFileDescriptorBufferSize));
+        return attrs;
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public void unsetMailFileDescriptorBufferSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public Map<String,Object> unsetMailFileDescriptorBufferSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, "");
         return attrs;
     }
 

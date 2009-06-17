@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090613-1718 */
+    /* build: 6.0.0 pshao 20090617-1133 */
 
     /**
      * RFC2256: descriptive information
@@ -10833,6 +10833,88 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailDiskStreamingThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @return zimbraMailFileDescriptorBufferSize, or 4096 if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public int getMailFileDescriptorBufferSize() {
+        return getIntAttr(Provisioning.A_zimbraMailFileDescriptorBufferSize, 4096);
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @param zimbraMailFileDescriptorBufferSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public void setMailFileDescriptorBufferSize(int zimbraMailFileDescriptorBufferSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, Integer.toString(zimbraMailFileDescriptorBufferSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @param zimbraMailFileDescriptorBufferSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public Map<String,Object> setMailFileDescriptorBufferSize(int zimbraMailFileDescriptorBufferSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, Integer.toString(zimbraMailFileDescriptorBufferSize));
+        return attrs;
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public void unsetMailFileDescriptorBufferSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public Map<String,Object> unsetMailFileDescriptorBufferSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailFileDescriptorBufferSize, "");
         return attrs;
     }
 
@@ -22916,140 +22998,6 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyWorkerProcesses(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyWorkerProcesses, "");
-        return attrs;
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @return zimbraRightDefaultPermission, or empty array if unset
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public String[] getRightDefaultPermission() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraRightDefaultPermission); return value.length > 0 ? value : new String[] {"1000"};
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param zimbraRightDefaultPermission new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public void setRightDefaultPermission(String[] zimbraRightDefaultPermission) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRightDefaultPermission, zimbraRightDefaultPermission);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param zimbraRightDefaultPermission new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public Map<String,Object> setRightDefaultPermission(String[] zimbraRightDefaultPermission, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRightDefaultPermission, zimbraRightDefaultPermission);
-        return attrs;
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param zimbraRightDefaultPermission new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public void addRightDefaultPermission(String zimbraRightDefaultPermission) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightDefaultPermission, zimbraRightDefaultPermission);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param zimbraRightDefaultPermission new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public Map<String,Object> addRightDefaultPermission(String zimbraRightDefaultPermission, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraRightDefaultPermission, zimbraRightDefaultPermission);
-        return attrs;
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param zimbraRightDefaultPermission existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public void removeRightDefaultPermission(String zimbraRightDefaultPermission) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightDefaultPermission, zimbraRightDefaultPermission);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param zimbraRightDefaultPermission existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public Map<String,Object> removeRightDefaultPermission(String zimbraRightDefaultPermission, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraRightDefaultPermission, zimbraRightDefaultPermission);
-        return attrs;
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public void unsetRightDefaultPermission() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRightDefaultPermission, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * default permission for user rights
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public Map<String,Object> unsetRightDefaultPermission(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRightDefaultPermission, "");
         return attrs;
     }
 

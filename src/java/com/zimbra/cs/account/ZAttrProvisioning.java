@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090613-1718 */
+    /* build: 6.0.0 pshao 20090617-1133 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3765,6 +3765,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
     /**
+     * Number of bytes to buffer in memory per file descriptor in the cache.
+     * Larger values result in fewer disk reads, but increase memory
+     * consumption.
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1035)
+    public static final String A_zimbraMailFileDescriptorBufferSize = "zimbraMailFileDescriptorBufferSize";
+
+    /**
      * Maximum number of file descriptors that are opened for accessing
      * message content.
      *
@@ -6526,14 +6536,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=724)
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
-
-    /**
-     * default permission for user rights
-     *
-     * @since ZCS 6.0.0_BETA3
-     */
-    @ZAttr(id=1035)
-    public static final String A_zimbraRightDefaultPermission = "zimbraRightDefaultPermission";
 
     /**
      * Maximum number of scheduled tasks that can run simultaneously.
