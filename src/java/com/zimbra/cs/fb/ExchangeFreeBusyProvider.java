@@ -48,9 +48,9 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.util.NetUtil;
 
 public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	
@@ -305,7 +305,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		method.setDoAuthentication(true);
 		method.setRequestHeader(HEADER_USER_AGENT, USER_AGENT);
 		HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
-		NetUtil.configureProxy(client);
+		HttpProxyUtil.configureProxy(client);
 		switch (info.scheme) {
 		case basic:
 			basicAuth(client, info);

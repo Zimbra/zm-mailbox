@@ -47,11 +47,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.NetUtil;
 
 /**
  * @author jylee
@@ -178,7 +178,7 @@ public class ProxyServlet extends ZimbraServlet {
         HttpMethod method = null;
         try {
             HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-            NetUtil.configureProxy(client);
+            HttpProxyUtil.configureProxy(client);
             String reqMethod = req.getMethod();
             if (reqMethod.equalsIgnoreCase("GET"))
                 method = new GetMethod(target);

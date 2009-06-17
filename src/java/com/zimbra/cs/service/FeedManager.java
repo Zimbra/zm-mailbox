@@ -57,6 +57,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
@@ -64,7 +65,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -94,7 +94,7 @@ public class FeedManager {
 
     public static SubscriptionData retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd) throws ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
-        NetUtil.configureProxy(client);
+        HttpProxyUtil.configureProxy(client);
         
         // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.
         // see comments in ZimbraHttpConnectionManager

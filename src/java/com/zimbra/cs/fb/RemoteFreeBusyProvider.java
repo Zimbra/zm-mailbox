@@ -40,9 +40,9 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
-import com.zimbra.cs.util.NetUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -115,7 +115,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                     } catch (UnsupportedEncodingException e) {}
                 }
                 HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-                NetUtil.configureProxy(client);
+                HttpProxyUtil.configureProxy(client);
                 method = new GetMethod(targetUrl.toString());
                 String fbMsg;
                 try {

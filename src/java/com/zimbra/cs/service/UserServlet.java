@@ -69,6 +69,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
@@ -84,7 +85,6 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.NetUtil;
 
 /**
  * 
@@ -1462,7 +1462,7 @@ public class UserServlet extends ZimbraServlet {
     			client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
     		}
     	} else {
-    	    NetUtil.configureProxy(client);
+    	    HttpProxyUtil.configureProxy(client);
     	}
         
     	if (method instanceof PutMethod) {

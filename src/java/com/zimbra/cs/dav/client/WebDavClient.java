@@ -49,9 +49,9 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.NetUtil;
 
 public class WebDavClient {
 
@@ -62,7 +62,7 @@ public class WebDavClient {
 	public WebDavClient(String baseUrl, String app) {
 		mBaseUrl = baseUrl;
 		mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-		NetUtil.configureProxy(mClient);
+		HttpProxyUtil.configureProxy(mClient);
 		setAppName(app);
 	}
 	
