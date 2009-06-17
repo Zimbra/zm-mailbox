@@ -141,15 +141,15 @@ public class NetUtil {
             socket.setEnabledCipherSuites(enabledCiphers);
     }
     
-    private static Map mBoundSockets = new HashMap();
+    private static Map<String, ServerSocket> mBoundSockets = new HashMap<String, ServerSocket>();
     
     private static String makeKey(String address, int port, boolean ssl, boolean useChannels) {
         return "[ssl=" + ssl + ";addr=" + address + ";port=" + port + ";useChannels=" + useChannels + "]";
     }
     
     public static void dumpMap() {
-        for (Iterator iter = mBoundSockets.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry)iter.next();
+        for (Iterator<Map.Entry<String, ServerSocket>> iter = mBoundSockets.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<String, ServerSocket> entry = iter.next();
             System.err.println(entry.getKey() + " => " + entry.getValue());
         }
     }
@@ -165,7 +165,7 @@ public class NetUtil {
         mBoundSockets.put(key, serverSocket);
         //dumpMap();
     }
-
+    
     private static ServerSocket getAlreadyBoundServerSocket(String address, int port, boolean ssl, boolean useChannels) {
         //dumpMap();
         String key = makeKey(address, port, ssl, useChannels);
