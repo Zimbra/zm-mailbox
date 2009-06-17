@@ -1792,12 +1792,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (type == MailItem.TYPE_MESSAGE)
-                Db.getInstance().enableStreaming(stmt);
-
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + DbSearch.sortQuery(sort));
+            if (type == MailItem.TYPE_MESSAGE)
+                Db.getInstance().enableStreaming(stmt);
             setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
             while (rs.next())
@@ -1868,9 +1867,6 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS)
-                Db.getInstance().enableStreaming(stmt);
-
             String relation;
             if (relativeTo instanceof VirtualConversation)  relation = "id = ?";
             else if (relativeTo instanceof Conversation)    relation = "parent_id = ?";
@@ -1882,6 +1878,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
+            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             if (relativeTo instanceof Tag)
@@ -2248,12 +2246,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS)
-                Db.getInstance().enableStreaming(stmt);
-
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
@@ -2289,9 +2286,6 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
-                Db.getInstance().enableStreaming(stmt);
-
             String constraint;
             String dateColumn = (useChangeDate ? "change_date" : "date");
             if (globalMessages)
@@ -2305,6 +2299,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + constraint);
+            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, before);
@@ -2352,9 +2348,6 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
-                Db.getInstance().enableStreaming(stmt);
-
             // figure out the set of FLAGS bitmasks containing the \Deleted flag
             Set<Long> flagsets = getFlagsetCache(conn, mbox).getMatchingTagsets(Flag.BITMASK_DELETED, Flag.BITMASK_DELETED);
             if (flagsets != null && flagsets.isEmpty())
@@ -2366,6 +2359,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + IMAP_TYPES + flagconstraint + folderconstraint);
+            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             if (flagsets != null) {
