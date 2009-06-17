@@ -4569,5 +4569,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Number of bytes to buffer in memory per file descriptor in the cache.  Larger values result in fewer disk reads, but increase memory consumption.</desc>
 </attr>
 
+<attr id="1036" name="zimbraPrefAdminConsoleWarnOnExit" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA3">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to display a warning when users try to navigate away from the admin console</desc>
+</attr>
 
 </attrs>

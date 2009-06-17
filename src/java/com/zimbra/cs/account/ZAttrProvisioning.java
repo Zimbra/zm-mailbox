@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090617-1133 */
+    /* build: 6.0.0 pshao 20090617-1150 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4853,6 +4853,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=307)
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
+
+    /**
+     * whether to display a warning when users try to navigate away from the
+     * admin console
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1036)
+    public static final String A_zimbraPrefAdminConsoleWarnOnExit = "zimbraPrefAdminConsoleWarnOnExit";
 
     /**
      * After login, whether the advanced client should enforce minimum
