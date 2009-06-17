@@ -41,7 +41,7 @@ log4j.appender.SYSLOG.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - 
 
 # Logger service appender
 log4j.appender.SLOGGER=org.apache.log4j.net.SyslogAppender
-log4j.appender.SLOGGER.SyslogHost=localhost
+log4j.appender.SLOGGER.SyslogHost=@@zimbra_server_hostname@@
 log4j.appender.SLOGGER.Facility=LOCAL1
 log4j.appender.SLOGGER.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SLOGGER.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - %m
