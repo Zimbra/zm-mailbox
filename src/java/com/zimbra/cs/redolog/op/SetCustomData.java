@@ -30,7 +30,7 @@ public class SetCustomData extends RedoableOp {
 
     public SetCustomData() { }
 
-    public SetCustomData(int mailboxId, int id, byte type, CustomMetadata custom) {
+    public SetCustomData(long mailboxId, int id, byte type, CustomMetadata custom) {
         setMailboxId(mailboxId);
         mId = id;
         mType = type;
@@ -62,8 +62,7 @@ public class SetCustomData extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mailbox.setCustomData(getOperationContext(), mId, mType, mExtendedData);
     }
 }

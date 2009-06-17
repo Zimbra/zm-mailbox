@@ -22,7 +22,7 @@ import com.zimbra.common.service.ServiceException;
 public class LuceneFactory implements IIndexFactory {
 
     public ILuceneIndex create(MailboxIndex idx, String idxParentDir,
-                               int mailboxId) throws ServiceException {
+                               long mailboxId) throws ServiceException {
         return new LuceneIndex(idx, idxParentDir, mailboxId);
     }
 

@@ -29,7 +29,7 @@ public class RenameMailbox extends RedoableOp {
 
     public RenameMailbox() {}
 
-    public RenameMailbox(int mailboxId, String oldName, String newName) {
+    public RenameMailbox(long mailboxId, String oldName, String newName) {
         setMailboxId(mailboxId);
         mNewName = newName;
     }
@@ -60,7 +60,7 @@ public class RenameMailbox extends RedoableOp {
 
     @Override
     public void redo() throws Exception {
-        int mboxId = getMailboxId();
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         if (mNewName != null)
             mbox.renameMailbox(mOldName, mNewName);

@@ -33,34 +33,34 @@ public class SetPermissions extends RedoableOp {
         mACL = "";
     }
 
-    public SetPermissions(int mailboxId, int folderId, ACL acl) {
+    public SetPermissions(long mailboxId, int folderId, ACL acl) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mACL = acl == null ? "" : acl.toString();
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SET_PERMISSIONS;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mFolderId);
         sb.append(", acl=").append(mACL);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
         out.writeUTF(mACL);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         mACL = in.readUTF();
     }
 
     
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         ACL acl = (mACL.equals("") ? null : new ACL(new MetadataList(mACL)));
         mbox.setPermissions(getOperationContext(), mFolderId, acl);

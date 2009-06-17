@@ -33,12 +33,6 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.store.VolumeServiceException;
 
-/**
- * @author jhahm
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public class StoreIncomingBlob extends RedoableOp {
 
     static final int MAX_BLOB_SIZE = 100 * 1024 * 1024;  // 100MB size limit
@@ -49,28 +43,26 @@ public class StoreIncomingBlob extends RedoableOp {
     private short mVolumeId = -1;   // volume on which the blob is saved
     private int mMsgSize;           // original, uncompressed blob size in bytes
     private RedoableOpData mData;
-    private List<Integer> mMailboxIdList;
+    private List<Long> mMailboxIdList;
 
-    public StoreIncomingBlob() {
-    }
+    public StoreIncomingBlob()  {}
 
-    public StoreIncomingBlob(String digest, int msgSize,
-    						 List<Integer> mboxIdList) {
+    public StoreIncomingBlob(String digest, int msgSize, List<Long> mboxIdList) {
         setMailboxId(MAILBOX_ID_ALL);
         mDigest = digest != null ? digest : "";
         mMsgSize = msgSize;
         mMailboxIdList = mboxIdList;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_STORE_INCOMING_BLOB;
     }
 
-    public List<Integer> getMailboxIdList() {
-    	return mMailboxIdList;
+    public List<Long> getMailboxIdList() {
+        return mMailboxIdList;
     }
 
-    public void setMailboxIdList(List<Integer> list) {
+    public void setMailboxIdList(List<Long> list) {
         mMailboxIdList = list;
     }
 
@@ -79,20 +71,20 @@ public class StoreIncomingBlob extends RedoableOp {
         mPath = path;
         mVolumeId = volumeId;
     }
-    
+
     public void setBlobBodyInfo(File file, short volumeId) {
         mData = new RedoableOpData(file);
         mPath = file.getPath();
         mVolumeId = volumeId;
     }
-    
+
     public void setBlobBodyInfo(InputStream dataStream, int dataLength, String path, short volumeId) {
         mData = new RedoableOpData(dataStream, dataLength);
         mPath = path;
         mVolumeId = volumeId;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("blobDigest=\"");
         sb.append(mDigest).append("\", size=").append(mMsgSize);
         sb.append(", dataLen=").append(mData.getLength());
@@ -100,13 +92,13 @@ public class StoreIncomingBlob extends RedoableOp {
         sb.append(", path=").append(mPath);
         sb.append(", mbox=[");
         if (mMailboxIdList != null) {
-	        int i = 0;
-	        for (Integer mboxId : mMailboxIdList) {
-	        	if (i > 0)
-	        		sb.append(", ");
-	        	sb.append(mboxId.toString());
-	        	i++;
-	        }
+            int i = 0;
+            for (Long mboxId : mMailboxIdList) {
+                if (i > 0)
+                    sb.append(", ");
+                sb.append(mboxId.toString());
+                i++;
+            }
         }
         sb.append("]");
         return sb.toString();
@@ -117,22 +109,22 @@ public class StoreIncomingBlob extends RedoableOp {
     throws IOException {
         return mData.getInputStream();
     }
-    
-    protected void serializeData(RedoLogOutput out) throws IOException {
-    	if (getVersion().atLeast(1, 0)) {
-    		if (mMailboxIdList != null) {
-				out.writeInt(mMailboxIdList.size());
-				for (Integer mboxId : mMailboxIdList)
-					out.writeInt(mboxId.intValue());
-    		} else
-    			out.writeInt(0);
-    	}
+
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        if (getVersion().atLeast(1, 0)) {
+            if (mMailboxIdList != null) {
+                out.writeInt(mMailboxIdList.size());
+                for (Long mboxId : mMailboxIdList)
+                    out.writeInt(mboxId.intValue());
+            } else
+                out.writeInt(0);
+        }
         out.writeUTF(mDigest);
         out.writeUTF(mPath);
         out.writeShort(mVolumeId);
         out.writeInt(mMsgSize);
         out.writeInt(mData.getLength());
-        
+
         // During serialize, do not serialize the blob data buffer.
         // Blob buffer is handled by getSerializedByteArrayVector()
         // implementation in this class as the last vector element.
@@ -141,19 +133,23 @@ public class StoreIncomingBlob extends RedoableOp {
         //out.write(mData);  // Don't do this here!
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
-    	if (getVersion().atLeast(1, 0)) {
-    		int listLen = in.readInt();
-    		if (listLen > MAX_MAILBOX_LIST_LENGTH)
-    			throw new IOException("Deserialized mailbox list too large (" +
-    								  listLen + ")");
-    		if (listLen >= 1) {
-	    		List<Integer> list = new ArrayList<Integer>(listLen);
-	    		for (int i = 0; i < listLen; i++)
-	    			list.add(new Integer(in.readInt()));
-	    		mMailboxIdList = list;
-    		}
-    	}
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+        if (getVersion().atLeast(1, 0)) {
+            int listLen = in.readInt();
+            if (listLen > MAX_MAILBOX_LIST_LENGTH)
+                throw new IOException("Deserialized mailbox list too large (" +
+                        listLen + ")");
+            if (listLen >= 1) {
+                List<Long> list = new ArrayList<Long>(listLen);
+                for (int i = 0; i < listLen; i++) {
+                    if (getVersion().atLeast(1, 26))
+                        list.add(new Long(in.readLong()));
+                    else
+                        list.add(new Long(in.readInt()));
+                }
+                mMailboxIdList = list;
+            }
+        }
         mDigest = in.readUTF();
         mPath = in.readUTF();
         mVolumeId = in.readShort();
@@ -164,17 +160,17 @@ public class StoreIncomingBlob extends RedoableOp {
         // serializeData().
         long pos = in.getFilePointer();
         mData = new RedoableOpData(new File(in.getPath()), pos, dataLen);
-        
+
         // Now that we have a stream to the data, skip to the next op.
         int numSkipped = in.skipBytes(dataLen);
         if (numSkipped != dataLen) {
             String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
-                dataLen, pos, in.getPath(), numSkipped);
+                    dataLen, pos, in.getPath(), numSkipped);
             throw new IOException(msg);
         }
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         // Use current message volume if old volume is gone.
         Volume vol = null;
         try {
@@ -194,7 +190,7 @@ public class StoreIncomingBlob extends RedoableOp {
         StoreIncomingBlob redoRecorder = null;
         if (!getUnloggedReplay()) {
             redoRecorder =
-            	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
+                new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder.start(getTimestamp());
             redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath, volumeId);
             redoRecorder.log();
@@ -207,7 +203,7 @@ public class StoreIncomingBlob extends RedoableOp {
             success = true;
         } finally {
             if (redoRecorder != null) {
-            	if (success)
+                if (success)
                     redoRecorder.commit();
                 else
                     redoRecorder.abort();

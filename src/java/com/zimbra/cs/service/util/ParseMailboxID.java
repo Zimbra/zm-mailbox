@@ -58,7 +58,7 @@ public class ParseMailboxID
      */
     public static ParseMailboxID parse(String idStr) throws ServiceException {
         try {
-        	ZimbraLog.misc.info("Parsing id string %s", idStr);
+            ZimbraLog.misc.info("Parsing id string %s", idStr);
             return new ParseMailboxID(idStr, false);
         } catch (IllegalArgumentException e) {
             throw ServiceException.FAILURE("Error parsing MailboxID specifier: "+idStr, e);
@@ -98,7 +98,7 @@ public class ParseMailboxID
      * you need to pass this request on to another server.
      */
     public String getString() { return mInitialString; };
-    public String toString()  { return getString(); };
+    @Override public String toString()  { return getString(); };
     
     /**
      * @return TRUE if the mailbox is owned by this server
@@ -116,7 +116,7 @@ public class ParseMailboxID
      * @return the integer ID part of the mailbox, if we have one.  Note that if the
      * mailbox is nonlocal, then we may not have this value...
      */
-    public int getMailboxId() { return mMailboxId; }
+    public long getMailboxId() { return mMailboxId; }
     
     
     /**
@@ -139,13 +139,13 @@ public class ParseMailboxID
     
     /**
      * @return the account email address, if we have one.  Account email address is available only if the 
-     * object is instanciated from an email address or account's zimbraId.
+     * object is instantiated from an email address or account's zimbraId.
      */
     public String getEmailAddress() { return mEmailAddress; }
     
     protected String mHostName = null; // if not localhost
     protected Mailbox mMailbox = null;
-    protected int mMailboxId = 0;
+    protected long mMailboxId = 0;
     protected boolean mIsLocal = false;
     protected boolean mAllMailboxIds = false;
     protected boolean mAllServers = false;
@@ -160,14 +160,14 @@ public class ParseMailboxID
         mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
         mInitialString = (idStr==null)?account.getId():idStr;
         mEmailAddress = account.getName();
-    	if (!forceRemote &&  Provisioning.onLocalServer(account)) {
-    		ZimbraLog.misc.info("Account %s is local", account.getId());
+        if (!forceRemote &&  Provisioning.onLocalServer(account)) {
+            ZimbraLog.misc.info("Account %s is local", account.getId());
             mIsLocal = true;
             mMailbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId());
             mMailboxId = mMailbox.getId();
-    		ZimbraLog.misc.info("Account id %s, mailbox id %s", account.getId(),mMailbox.getId());
+            ZimbraLog.misc.info("Account id %s, mailbox id %s", account.getId(),mMailbox.getId());
         } else {
-        	ZimbraLog.misc.info("Account %s is not local", account.getId());
+            ZimbraLog.misc.info("Account %s is not local", account.getId());
         }
     }
     
@@ -208,7 +208,7 @@ public class ParseMailboxID
                 if (mAllServers==true) {
                     throw new IllegalArgumentException("Invalid mailboxID (\"*/number is not allowed): "+ idStr);
                 }
-                mMailboxId = Integer.parseInt(substrs[2]);
+                mMailboxId = Long.parseLong(substrs[2]);
             }
                 
             

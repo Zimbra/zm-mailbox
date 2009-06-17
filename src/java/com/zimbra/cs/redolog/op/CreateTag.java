@@ -26,66 +26,58 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class CreateTag extends RedoableOp {
 
-	private int mTagId;
-	private String mName;
-	private byte mColor;
+    private int mTagId;
+    private String mName;
+    private byte mColor;
 
-	public CreateTag() {
-		mTagId = UNKNOWN_ID;
-		mColor = 0;
-	}
+    public CreateTag() {
+        mTagId = UNKNOWN_ID;
+        mColor = 0;
+    }
 
-	public CreateTag(int mailboxId, String name, byte color) {
-		setMailboxId(mailboxId);
-		mTagId = UNKNOWN_ID;
-		mName = name != null ? name : "";
-		mColor = color;
-	}
+    public CreateTag(long mailboxId, String name, byte color) {
+        setMailboxId(mailboxId);
+        mTagId = UNKNOWN_ID;
+        mName = name != null ? name : "";
+        mColor = color;
+    }
 
-	public int getTagId() {
-		return mTagId;
-	}
+    public int getTagId() {
+        return mTagId;
+    }
 
-	public void setTagId(int tagId) {
-		mTagId = tagId;
-	}
+    public void setTagId(int tagId) {
+        mTagId = tagId;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.Redoable#getOperationCode()
-	 */
-	public int getOpCode() {
-		return OP_CREATE_TAG;
-	}
+    @Override public int getOpCode() {
+        return OP_CREATE_TAG;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
-	 */
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mTagId);
         sb.append(", name=").append(mName).append(", color=").append(mColor);
         return sb.toString();
-	}
+    }
 
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(mTagId);
-		out.writeUTF(mName);
-		out.writeByte(mColor);
-	}
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeInt(mTagId);
+        out.writeUTF(mName);
+        out.writeByte(mColor);
+    }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
-		mTagId = in.readInt();
-		mName = in.readUTF();
-		mColor = in.readByte();
-	}
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+        mTagId = in.readInt();
+        mName = in.readUTF();
+        mColor = in.readByte();
+    }
 
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mbox.createTag(getOperationContext(), mName, mColor);
         } catch (MailServiceException e) {
@@ -93,8 +85,9 @@ public class CreateTag extends RedoableOp {
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {
                 if (mLog.isInfoEnabled())
                     mLog.info("Tag " + mTagId + " already exists in mailbox " + mboxId);
-            } else
+            } else {
                 throw e;
+            }
         }
-	}
+    }
 }

@@ -36,7 +36,7 @@ public class FixCalendarItemTZ extends RedoableOp {
 
     public FixCalendarItemTZ() {}
 
-    public FixCalendarItemTZ(int mailboxId, int itemId) {
+    public FixCalendarItemTZ(long mailboxId, int itemId) {
         setMailboxId(mailboxId);
         mId = itemId;
     }
@@ -111,7 +111,7 @@ public class FixCalendarItemTZ extends RedoableOp {
 
     @Override
     public void redo() throws Exception {
-        int mboxId = getMailboxId();
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         TimeZoneFixupRules rules = new TimeZoneFixupRules(mReplacementMap);
         mbox.fixCalendarItemTZ(getOperationContext(), mId, rules);

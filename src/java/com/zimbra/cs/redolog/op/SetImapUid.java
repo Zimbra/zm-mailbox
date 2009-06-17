@@ -29,9 +29,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class SetImapUid extends RedoableOp {
 
     private Map<Integer, Integer> mImapUids = new HashMap<Integer, Integer>();
@@ -39,7 +36,7 @@ public class SetImapUid extends RedoableOp {
     public SetImapUid() {
     }
 
-    public SetImapUid(int mailboxId, List<Integer> msgIds) {
+    public SetImapUid(long mailboxId, List<Integer> msgIds) {
         setMailboxId(mailboxId);
         for (int id : msgIds)
             mImapUids.put(id, UNKNOWN_ID);
@@ -55,24 +52,18 @@ public class SetImapUid extends RedoableOp {
         mImapUids.put(msgId, imapId);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.Redoable#getOperationCode()
-     */
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SET_IMAP_UID;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.Redoable#getRedoContent()
-     */
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Integer, Integer> entry : mImapUids.entrySet())
             sb.append(sb.length() == 0 ? "" : ", ").append(entry.getKey()).append('=').append(entry.getValue());
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mImapUids.size());
         for (Map.Entry<Integer, Integer> entry : mImapUids.entrySet()) {
             out.writeInt(entry.getKey());
@@ -80,7 +71,7 @@ public class SetImapUid extends RedoableOp {
         }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
             int msgId = in.readInt();
@@ -88,7 +79,7 @@ public class SetImapUid extends RedoableOp {
         }
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.resetImapUid(getOperationContext(), new ArrayList<Integer>(mImapUids.keySet()));
     }

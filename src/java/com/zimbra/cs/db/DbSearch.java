@@ -253,7 +253,6 @@ public class DbSearch {
     public static int countResults(Connection conn, DbSearchConstraintsNode node, Mailbox mbox) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        int mailboxId = mbox.getId();
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT count(*) ");
         statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, " mi"));
@@ -266,15 +265,14 @@ public class DbSearch {
             num += encodeConstraint(mbox, node, null, false, statement, conn);
 
             stmt = conn.prepareStatement(statement.toString());
-            int param = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(param++, mailboxId);
-            param = setSearchVars(stmt, node, param, null, false);
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            pos = setSearchVars(stmt, node, pos, null, false);
 
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
 
-            assert(param == num + 1); 
+            assert(pos == num + 1); 
             rs = stmt.executeQuery();
             rs.next();
             return rs.getInt(1);

@@ -27,8 +27,6 @@ import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
- * @author jhahm
- *
  * THIS REDOLOG OPERATION IS DEPRECATED.  Backing up a mailbox will no longer
  * log this operation in redolog.
  *
@@ -46,10 +44,10 @@ public class BackupMailbox extends RedoableOp {
     private long mEndTime;          // when backup of this mailbox finished (probably not that important)
     private String mLabel;          // any random label/description for this backup
 
-	public BackupMailbox() {
-	}
+    public BackupMailbox() {
+    }
 
-    public BackupMailbox(int mailboxId, long backupSetTstamp, long startTime, long endTime, String label) {
+    public BackupMailbox(long mailboxId, long backupSetTstamp, long startTime, long endTime, String label) {
         setMailboxId(mailboxId);
         mBackupSetTstamp = backupSetTstamp;
         mStartTime = startTime;
@@ -57,52 +55,37 @@ public class BackupMailbox extends RedoableOp {
         mLabel = label;
     }
 
-    /* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
-	 */
-	public int getOpCode() {
-		return OP_DEPRECATED_BACKUP_MAILBOX;
-	}
+    @Override public int getOpCode() {
+        return OP_DEPRECATED_BACKUP_MAILBOX;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
-	 */
-	public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         // Nothing to do.  This operation only serves as a marker within a
         // redo log file to find the correct starting log to replay after
         // restoring a particular backup.
-	}
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
-	 */
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("backupSetTstamp=");
         sb.append(mBackupSetTstamp).append(", startTime=").append(mStartTime);
         sb.append(", endTime=").append(mEndTime);
         if (mLabel != null)
-        	sb.append("label=\"").append(mLabel).append("\"");
-		return sb.toString();
-	}
+            sb.append("label=\"").append(mLabel).append("\"");
+        return sb.toString();
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
-	 */
-	protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeLong(mBackupSetTstamp);
         out.writeLong(mStartTime);
         out.writeLong(mEndTime);
         out.writeUTF(mLabel != null ? mLabel : "");
-	}
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
-	 */
-	protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mBackupSetTstamp = in.readLong();
         mStartTime = in.readLong();
         mEndTime = in.readLong();
         mLabel = in.readUTF();
-	}
+    }
 
 }

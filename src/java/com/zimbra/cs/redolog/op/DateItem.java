@@ -24,9 +24,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author tfr
- */
 public class DateItem extends RedoableOp {
 
     private int mId;
@@ -35,36 +32,36 @@ public class DateItem extends RedoableOp {
 
     public DateItem() { }
 
-    public DateItem(int mailboxId, int itemId, byte type, long date) {
+    public DateItem(long mailboxId, int itemId, byte type, long date) {
         setMailboxId(mailboxId);
         mId = itemId;
         mType = type;
         mDate = date;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_DATE_ITEM;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mId);
         sb.append(", date=").append(mDate);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeByte(mType);
         out.writeLong(mDate);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mType = in.readByte();
         mDate = in.readLong();
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.setDate(getOperationContext(), mId, mType, mDate);
     }

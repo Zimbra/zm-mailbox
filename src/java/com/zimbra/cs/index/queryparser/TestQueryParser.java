@@ -42,12 +42,12 @@ import com.zimbra.qa.unittest.TestUtil;
  * 
  */
 public class TestQueryParser extends TestCase {
-    int mMailboxId;
+    long mMailboxId;
     Mailbox mMbox;
     MailboxIndex mMi;
     
     
-    protected void setUp() throws Exception {
+    @Override protected void setUp() throws Exception {
         super.setUp();
         Mailbox mbox = TestUtil.getMailbox("user1");
         mMailboxId = mbox.getId();

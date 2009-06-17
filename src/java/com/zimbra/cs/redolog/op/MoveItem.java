@@ -29,30 +29,27 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class MoveItem extends RedoableOp {
 
-	private int[] mIds;
+    private int[] mIds;
     private byte mType;
-	private int mDestId;
+    private int mDestId;
     private String mConstraint;
     private int mUIDNEXT = Mailbox.ID_AUTO_INCREMENT;
 
-	public MoveItem() {
+    public MoveItem() {
         mType = MailItem.TYPE_UNKNOWN;
-		mDestId = 0;
+        mDestId = 0;
         mConstraint = null;
-	}
+    }
 
-	public MoveItem(int mailboxId, int[] ids, byte type, int destId, TargetConstraint tcon) {
-		setMailboxId(mailboxId);
-		mIds = ids;
+    public MoveItem(long mailboxId, int[] ids, byte type, int destId, TargetConstraint tcon) {
+        setMailboxId(mailboxId);
+        mIds = ids;
         mType = type;
-		mDestId = destId;
+        mDestId = destId;
         mConstraint = (tcon == null ? null : tcon.toString());
-	}
+    }
 
     public void setUIDNEXT(int uidnext) {
         mUIDNEXT = (uidnext > 0 ? uidnext : Mailbox.ID_AUTO_INCREMENT);
@@ -62,11 +59,11 @@ public class MoveItem extends RedoableOp {
         return mUIDNEXT;
     }
 
-	public int getOpCode() {
-		return OP_MOVE_ITEM;
-	}
+    @Override public int getOpCode() {
+        return OP_MOVE_ITEM;
+    }
 
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
         sb.append(", dest=").append(mDestId);
@@ -75,12 +72,12 @@ public class MoveItem extends RedoableOp {
         if (mUIDNEXT != Mailbox.ID_AUTO_INCREMENT)
             sb.append(", uidnext=").append(mUIDNEXT);
         return sb.toString();
-	}
+    }
 
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(-1);
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeInt(-1);
         out.writeByte(mType);
-		out.writeInt(mDestId);
+        out.writeInt(mDestId);
         boolean hasConstraint = mConstraint != null;
         out.writeBoolean(hasConstraint);
         if (hasConstraint)
@@ -91,14 +88,14 @@ public class MoveItem extends RedoableOp {
                 out.writeInt(mIds[i]);
         if (getVersion().atLeast(1, 16))
             out.writeInt(mUIDNEXT);
-	}
+    }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         int id = in.readInt();
         if (id > 0)
             mIds = new int[] { id };
         mType = in.readByte();
-		mDestId = in.readInt();
+        mDestId = in.readInt();
         if (in.readBoolean())
             mConstraint = in.readUTF();
         if (id <= 0) {
@@ -108,11 +105,10 @@ public class MoveItem extends RedoableOp {
         }
         if (getVersion().atLeast(1, 16))
             mUIDNEXT = in.readInt();
-	}
+    }
 
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 
         TargetConstraint tcon = null;
         if (mConstraint != null)
@@ -122,12 +118,11 @@ public class MoveItem extends RedoableOp {
                 mLog.warn(e);
             }
 
-        // No extra checking needed because Mailbox.move() is already idempotent.
-        mbox.move(getOperationContext(), mIds, mType, mDestId, tcon);
-	}
+            // No extra checking needed because Mailbox.move() is already idempotent.
+            mbox.move(getOperationContext(), mIds, mType, mDestId, tcon);
+    }
 
-    @Override
-    public boolean isDeleteOp() {
+    @Override public boolean isDeleteOp() {
         return mDestId == Mailbox.ID_FOLDER_TRASH;
     }
 }

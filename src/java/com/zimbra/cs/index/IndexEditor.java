@@ -57,7 +57,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.*;
 
-
 public class IndexEditor {
 
     static final int SEARCH_RETURN_CONVERSATIONS = 1;
@@ -70,7 +69,7 @@ public class IndexEditor {
 
     private static Log mLog = LogFactory.getLog(IndexEditor.class);
 
-    public void deleteIndex(int mailboxId) throws ServiceException {
+    public void deleteIndex(long mailboxId) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
         MailboxIndex mi = mbox.getMailboxIndex();
         try {
@@ -88,7 +87,7 @@ public class IndexEditor {
             ZimbraLog.index.error("could not retrieve mailbox manager; aborting reindex", e);
             return;
         }
-        int ids[] = mmgr.getMailboxIds();
+        long ids[] = mmgr.getMailboxIds();
         for (int i = 0; i < ids.length; i++) {
             mLog.info("Mailbox "+ids[i]+"\n");
             try {
@@ -100,7 +99,7 @@ public class IndexEditor {
         }
     }
 
-    public void reIndex(int mailboxId) {
+    public void reIndex(long mailboxId) {
         MailboxIndex midx = null;
         try {
             Mailbox mbx = MailboxManager.getInstance().getMailboxById(mailboxId);
@@ -114,7 +113,7 @@ public class IndexEditor {
         }
     }
 
-    public void checkIndex(int mailboxId, boolean repair) {
+    public void checkIndex(long mailboxId, boolean repair) {
     }
 
     public interface QueryRunner
@@ -124,9 +123,9 @@ public class IndexEditor {
 
     public class SingleQueryRunner implements QueryRunner
     {
-        int mMailboxId;
+        long mMailboxId;
 
-        SingleQueryRunner(int mailboxId) throws ServiceException {
+        SingleQueryRunner(long mailboxId) throws ServiceException {
             mMailboxId = mailboxId;
         }
 
@@ -148,19 +147,19 @@ public class IndexEditor {
 
     public class MultiQueryRunner implements QueryRunner
     {
-        int mMailboxId[];
+        long mMailboxId[];
 
-        MultiQueryRunner(int[] mailboxId) throws ServiceException {
-            mMailboxId = new int[mailboxId.length];
+        MultiQueryRunner(long[] mailboxId) throws ServiceException {
+            mMailboxId = new long[mailboxId.length];
             for (int i = 0; i < mailboxId.length; i++) {
                 mMailboxId[i] = mailboxId[i];
             }
         }
 
-        MultiQueryRunner(ArrayList /* Integer */ mailboxId) throws ServiceException {
-            mMailboxId = new int[mailboxId.size()];
+        MultiQueryRunner(ArrayList /* Long */ mailboxId) throws ServiceException {
+            mMailboxId = new long[mailboxId.size()];
             for (int i = 0; i < mailboxId.size(); i++) {
-                mMailboxId[i] = ((Integer) mailboxId.get(i)).intValue();
+                mMailboxId[i] = ((Long) mailboxId.get(i)).longValue();
             }
         }
 
@@ -289,7 +288,7 @@ public class IndexEditor {
     }
 
 
-//  public static void newQuery(int mailboxId) throws IOException, ParseException
+//  public static void newQuery(long mailboxId) throws IOException, ParseException
 //  {
 //  ZimbraSearcher searcher = Indexer.GetInstance().getSearcher(mailboxId);
 //  try {
@@ -351,7 +350,7 @@ public class IndexEditor {
 //  }
 
 
-    public void dumpFields(int mailboxId) throws IOException, ServiceException
+    public void dumpFields(long mailboxId) throws IOException, ServiceException
     {
 ////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
 //        MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
@@ -499,7 +498,7 @@ public class IndexEditor {
 //
 //    }
 
-    public void dumpAll(int mailboxId) throws IOException, ServiceException
+    public void dumpAll(long mailboxId) throws IOException, ServiceException
     {
 ////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
 //        MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
@@ -514,7 +513,7 @@ public class IndexEditor {
 //        }
     }
 
-    public void dumpDocumentByMailItemId(int mailboxId, int mailItemId) throws ServiceException, IOException
+    public void dumpDocumentByMailItemId(long mailboxId, int mailItemId) throws ServiceException, IOException
     {
 //        Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId));
 //        MailboxIndex idx = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
@@ -553,7 +552,7 @@ public class IndexEditor {
     }
 
 
-    public void dumpTerms(int mailboxId) throws IOException, ServiceException
+    public void dumpTerms(long mailboxId) throws IOException, ServiceException
     {
 //        outputStream.print("Field Name> ");
 //        String field = inputReader.readLine();
@@ -662,7 +661,7 @@ public class IndexEditor {
 //        }
     }
 
-    public void getTerms(int mailboxId, String field, int minNum, int maxNum, Collection ret) throws IOException, ServiceException
+    public void getTerms(long mailboxId, String field, int minNum, int maxNum, Collection ret) throws IOException, ServiceException
     {
 ////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
 ////      MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
@@ -770,7 +769,7 @@ public class IndexEditor {
 
     }
 
-    public void spanTest(int mailboxId) throws IOException, ServiceException
+    public void spanTest(long mailboxId) throws IOException, ServiceException
     {
 //        outputStream.println("SpanTest!\n");
 //        outputStream.print("Field1 Name> ");
@@ -1129,7 +1128,7 @@ public class IndexEditor {
         outputStream = _outputStream;
 
         String mailboxIdStr = null;
-        int mailboxId = 0;
+        long mailboxId = 0;
 //      try {
 //      outputStream.print("Enter Mbox ID> ");
 
@@ -1212,15 +1211,15 @@ public class IndexEditor {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
                     doQuery(runner,true, SEARCH_RETURN_DOCUMENTS);
                 } else if (command.equals("mq")) {
-                    ArrayList ids = new ArrayList();
+                    ArrayList<Long> ids = new ArrayList<Long>();
                     do {
                         outputStream.print("Enter Mailbox ID (blank when done): ");
                         mailboxIdStr = inputReader.readLine();
 
                         if (!mailboxIdStr.equals("")) {
-                            int id = getMailboxIdFromString(mailboxIdStr);
+                            long id = getMailboxIdFromString(mailboxIdStr);
                             outputStream.println("\tAdded mailbox ID "+id);
-                            ids.add(new Integer(id));
+                            ids.add(new Long(id));
                         }
                     } while (!mailboxIdStr.equals(""));
                     QueryRunner runner = new MultiQueryRunner(ids);
@@ -1246,7 +1245,7 @@ public class IndexEditor {
                     String midStr = inputReader.readLine();
 
                     if (!midStr.equals("")) {
-                        int id = getMailboxIdFromString(midStr);
+                        int id = Integer.parseInt(midStr);
                         dumpDocumentByMailItemId(mailboxId, id);
                     }
                 } else if (command.equals("dumpall")) {
@@ -1292,7 +1291,7 @@ public class IndexEditor {
     }
 
 
-    int getMailboxIdFromString(String str) throws ServiceException {
+    long getMailboxIdFromString(String str) throws ServiceException {
         if (str != null && !str.equals("")) {
             if (str.indexOf('@') >= 0) {
                 // account
@@ -1301,7 +1300,7 @@ public class IndexEditor {
                 return mbx.getId();
 
             } else {
-                return Integer.parseInt(str);
+                return Long.parseLong(str);
             }
         }
         return 0;
@@ -1368,7 +1367,7 @@ public class IndexEditor {
         MailboxIndex.shutdown();
     }
 
-    void getSize(int mailboxId) throws ServiceException {
+    void getSize(long mailboxId) throws ServiceException {
         Mailbox mbx = MailboxManager.getInstance().getMailboxById(mailboxId);
         long size = mbx.getSize();
         outputStream.println("Mailbox "+mailboxId+" has size "+size+" ("+(size/1024)+"kb)");

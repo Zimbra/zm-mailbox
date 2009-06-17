@@ -26,9 +26,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class GrantAccess extends RedoableOp {
 
     private int mFolderId;
@@ -42,7 +39,7 @@ public class GrantAccess extends RedoableOp {
         mGrantee = "";
     }
 
-    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
+    public GrantAccess(long mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;
@@ -51,11 +48,11 @@ public class GrantAccess extends RedoableOp {
         mPassword = password == null ? "" : password;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_GRANT_ACCESS;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mFolderId);
         sb.append(", grantee=").append(mGrantee);
         sb.append(", type=").append(mGranteeType);
@@ -64,7 +61,7 @@ public class GrantAccess extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
         out.writeUTF(mGrantee);
         out.writeByte(mGranteeType);
@@ -74,7 +71,7 @@ public class GrantAccess extends RedoableOp {
         	out.writeUTF(mPassword);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         mGrantee = in.readUTF();
         mGranteeType = in.readByte();
@@ -84,7 +81,7 @@ public class GrantAccess extends RedoableOp {
         	mPassword = in.readUTF();
     }
 
-    public void redo() throws ServiceException {
+    @Override public void redo() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mPassword);
     }

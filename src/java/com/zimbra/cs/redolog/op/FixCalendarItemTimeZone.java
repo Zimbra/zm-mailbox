@@ -20,9 +20,6 @@ import java.io.IOException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class FixCalendarItemTimeZone extends RedoableOp {
 
     private int mId;
@@ -31,18 +28,18 @@ public class FixCalendarItemTimeZone extends RedoableOp {
 
     public FixCalendarItemTimeZone() {}
 
-    public FixCalendarItemTimeZone(int mailboxId, int itemId, long after, String country) {
+    public FixCalendarItemTimeZone(long mailboxId, int itemId, long after, String country) {
         setMailboxId(mailboxId);
         mId = itemId;
         mAfter = after;
         mCountry = country;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_FIX_CALENDAR_ITEM_TIME_ZONE;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=");
         sb.append(mId);
         sb.append(", after=").append(mAfter);
@@ -50,19 +47,19 @@ public class FixCalendarItemTimeZone extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeLong(mAfter);
         out.writeUTF(mCountry);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mAfter = in.readLong();
         mCountry = in.readUTF();
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         // do nothing; this op has been deprecated
     }
 }

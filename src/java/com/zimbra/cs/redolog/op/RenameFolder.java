@@ -24,9 +24,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class RenameFolder extends RenameItem {
 
     public RenameFolder() {
@@ -34,21 +31,21 @@ public class RenameFolder extends RenameItem {
         mType = MailItem.TYPE_FOLDER;
     }
 
-    public RenameFolder(int mailboxId, int id, String name, int parentId) {
+    public RenameFolder(long mailboxId, int id, String name, int parentId) {
         super(mailboxId, id, MailItem.TYPE_FOLDER, name, parentId);
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_RENAME_FOLDER;
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
         out.writeUTF(mName);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
         mName = in.readUTF();

@@ -24,9 +24,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class RenameFolderPath extends RenameItemPath {
 
     public RenameFolderPath() {
@@ -34,15 +31,15 @@ public class RenameFolderPath extends RenameItemPath {
         mType = MailItem.TYPE_FOLDER;
     }
 
-    public RenameFolderPath(int mailboxId, int id, String path) {
+    public RenameFolderPath(long mailboxId, int id, String path) {
         super(mailboxId, id, MailItem.TYPE_FOLDER, path);
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_RENAME_FOLDER_PATH;
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeUTF(mPath);
         if (mParentIds != null) {
@@ -54,7 +51,7 @@ public class RenameFolderPath extends RenameItemPath {
         }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mPath = in.readUTF();
         int numParentIds = in.readInt();

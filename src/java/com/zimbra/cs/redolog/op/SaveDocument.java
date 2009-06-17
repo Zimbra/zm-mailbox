@@ -26,60 +26,61 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SaveDocument extends CreateMessage {
 
-	private String mFilename;
-	private String mMimeType;
-	private String mAuthor;
-	private byte mItemType;
-	
-	public SaveDocument() {
-	}
-	
-    public SaveDocument(int mailboxId, String digest, int msgSize, int folderId) {
+    private String mFilename;
+    private String mMimeType;
+    private String mAuthor;
+    private byte mItemType;
+
+    public SaveDocument() {
+    }
+
+    public SaveDocument(long mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, 0, null);
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SAVE_DOCUMENT;
     }
 
     public String getFilename() {
-    	return mFilename;
+        return mFilename;
     }
-    
+
     public void setFilename(String filename) {
-    	mFilename = filename;
+        mFilename = filename;
     }
-    
+
     public String getMimeType() {
-    	return mMimeType;
+        return mMimeType;
     }
-    
+
     public void setMimeType(String mimeType) {
-    	mMimeType = mimeType;
+        mMimeType = mimeType;
     }
-    
+
     public String getAuthor() {
-    	return mAuthor;
+        return mAuthor;
     }
-    
+
     public void setAuthor(String a) {
-    	mAuthor = a;
+        mAuthor = a;
     }
-    
+
     public byte getItemType() {
-    	return mItemType;
+        return mItemType;
     }
-    
+
     public void setItemType(byte type) {
-    	mItemType = type;
+        mItemType = type;
     }
-    
+
     public void setDocument(ParsedDocument doc) {
-    	setFilename(doc.getFilename());
-    	setMimeType(doc.getContentType());
+        setFilename(doc.getFilename());
+        setMimeType(doc.getContentType());
         setAuthor(doc.getCreator());
     }
-    protected void serializeData(RedoLogOutput out) throws IOException {
+
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mFilename);
         out.writeUTF(mMimeType);
         out.writeUTF(mAuthor);
@@ -87,7 +88,7 @@ public class SaveDocument extends CreateMessage {
         super.serializeData(out);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFilename = in.readUTF();
         mMimeType = in.readUTF();
         mAuthor = in.readUTF();
@@ -95,9 +96,10 @@ public class SaveDocument extends CreateMessage {
         super.deserializeData(in);
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getAdditionalDataStream(), mItemType);
         } catch (MailServiceException e) {

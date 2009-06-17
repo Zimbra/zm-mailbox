@@ -25,41 +25,42 @@ import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class AddDocumentRevision extends SaveDocument {
-	private int mDocId;
-	
-	public AddDocumentRevision() {
-	}
-	
-    public AddDocumentRevision(int mailboxId, String digest, int msgSize, int folderId) {
+    private int mDocId;
+
+    public AddDocumentRevision() {
+    }
+
+    public AddDocumentRevision(long mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, digest, msgSize, folderId);
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_ADD_DOCUMENT_REVISION;
     }
 
     public void setDocId(int docId) {
-    	mDocId = docId;
+        mDocId = docId;
     }
-    
+
     public int getDocId() {
-    	return mDocId;
+        return mDocId;
     }
-    
-    protected void serializeData(RedoLogOutput out) throws IOException {
+
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mDocId);
         super.serializeData(out);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mDocId = in.readInt();
         super.deserializeData(in);
     }
-    
-    public void redo() throws Exception {
-    	OperationContext octxt = getOperationContext();
-        int mboxId = getMailboxId();
+
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
+        OperationContext octxt = getOperationContext();
         try {
             mbox.addDocumentRevision(octxt, mDocId, getAdditionalDataStream(), getAuthor(), getFilename());
         } catch (MailServiceException e) {

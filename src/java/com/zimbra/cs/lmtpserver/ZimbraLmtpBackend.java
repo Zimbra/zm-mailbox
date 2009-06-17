@@ -165,10 +165,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
 	synchronized (sReceivedMessageIDs) {
 	    Object hit = sReceivedMessageIDs.get(msgid);
-	    if (hit instanceof Integer)
-		return hit.equals(new Integer(mbox.getId()));
+	    if (hit instanceof Long)
+		return hit.equals(new Long(mbox.getId()));
 	    else if (hit instanceof Set)
-		return ((Set) hit).contains(new Integer(mbox.getId()));
+		return ((Set) hit).contains(new Long(mbox.getId()));
 	    else
 		return false;
 	}
@@ -180,18 +180,19 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 	    return;
 	if (msgid == null || msgid.equals(""))
 	    return;
-	Integer mboxid = mbox.getId();
+	Long mboxid = mbox.getId();
 
 	synchronized (sReceivedMessageIDs) {
 	    Object hit = sReceivedMessageIDs.get(msgid);
-	    if (hit instanceof Integer) {
-		Set<Integer> set = new HashSet<Integer>();
-		set.add((Integer) hit);  set.add(mboxid);
+	    if (hit instanceof Long) {
+		Set<Long> set = new HashSet<Long>();
+		set.add((Long) hit);  set.add(mboxid);
 		sReceivedMessageIDs.put(msgid, set);
-	    } else if (hit instanceof Set)
+	    } else if (hit instanceof Set) {
 		((Set) hit).add(mboxid);
-	    else
+	    } else {
 		sReceivedMessageIDs.put(msgid, mboxid);
+	    }
 	}
     }
 
@@ -241,7 +242,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 	String envSender = env.getSender().getEmailAddress();
 
 	boolean shared = recipients.size() > 1;
-	List<Integer> targetMailboxIds = new ArrayList<Integer>(recipients.size());
+	List<Long> targetMailboxIds = new ArrayList<Long>(recipients.size());
 
 	Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
 	Blob blob = null;
@@ -341,7 +342,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 		    }
 		    rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, endSharedDelivery, da));
 		    if (da == DeliveryAction.deliver)
-			targetMailboxIds.add(new Integer(mbox.getId()));
+			targetMailboxIds.add(new Long(mbox.getId()));
 		}
 	    }
 

@@ -37,8 +37,6 @@ import com.zimbra.cs.store.StoreManager;
 
 /**
  * Tests redolog operations
- * @author bburtin
- *
  */
 public class TestRedoLog
 extends TestCase {
@@ -47,7 +45,7 @@ extends TestCase {
     private static final String RESTORED_NAME = "testredolog";
     private static final String NAME_PREFIX = TestRedoLog.class.getSimpleName();
     
-    public void setUp()
+    @Override public void setUp()
     throws Exception {
         cleanUp();
     }
@@ -74,7 +72,7 @@ extends TestCase {
         // Replay log to destination account.
         Account destAccount = TestUtil.createAccount(RESTORED_NAME);
         RedoPlayer player = new RedoPlayer(false, true, false, false);
-        Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
+        Map<Long, Long> idMap = new HashMap<Long, Long>();
         Mailbox destMbox = MailboxManager.getInstance().getMailboxByAccount(destAccount); 
         idMap.put(sourceMbox.getId(), destMbox.getId());
         player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE);
@@ -97,7 +95,7 @@ extends TestCase {
         return new File("/opt/zimbra/redolog/redo.log");
     }
 
-    public void tearDown()
+    @Override public void tearDown()
     throws Exception {
         cleanUp();
     }

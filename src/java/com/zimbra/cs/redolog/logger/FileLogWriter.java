@@ -352,7 +352,7 @@ public class FileLogWriter implements LogWriter {
         }
     }
 
-    private int mLastOpMboxId;
+    private long mLastOpMboxId;
 
     public void flush() throws IOException {
         fsync();

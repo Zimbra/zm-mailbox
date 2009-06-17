@@ -57,14 +57,14 @@ import com.zimbra.cs.mime.Mime;
 public interface CalendarObject {
 
     public static final String CAL_EXTENSION = ".ics";
-    
+
     public String getUid();
     public boolean match(Filter filter);
     public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;
 
     public static class Vcalendar {
 
-    	private static Invite getFixedUpCopy(Invite inv, Account acct) throws ServiceException {
+        private static Invite getFixedUpCopy(Invite inv, Account acct) throws ServiceException {
             ZAttendee attendee = inv.getMatchingAttendee(acct);
             if (attendee != null && attendee.hasRsvp() && attendee.getRsvp() && IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(attendee.getPartStat())) {
                 Invite copy = inv.newCopy();
@@ -75,7 +75,7 @@ public interface CalendarObject {
             } else {
                 return inv;
             }
-    	}
+        }
 
         public static String toString(Account acct, Invite inv, Filter filter, boolean allowPrivateAccess) throws IOException {
             CharArrayWriter wr = null;
@@ -135,12 +135,12 @@ public interface CalendarObject {
 
     public static class CalendarPath {
         public static String generate(DavContext ctxt, String itemPath, String uid, int extra) {
-        	if (ctxt != null) {
-        		if (ctxt.getCollectionPath() != null)
-            		itemPath = ctxt.getCollectionPath();
-        		else if (ctxt.getPathInfo() != null)
-        			itemPath += ctxt.getPathInfo();
-        	}
+            if (ctxt != null) {
+                if (ctxt.getCollectionPath() != null)
+                    itemPath = ctxt.getCollectionPath();
+                else if (ctxt.getPathInfo() != null)
+                    itemPath += ctxt.getPathInfo();
+            }
             // escape uid
             StringBuilder path = new StringBuilder();
             path.append(itemPath);
@@ -148,22 +148,22 @@ public interface CalendarObject {
                 path.append("/");
             path.append(uid);
             if (extra >= 0)
-            	path.append(",").append(extra);
+                path.append(",").append(extra);
             path.append(CAL_EXTENSION);
             return path.toString();
         }
     }
     public static class ScheduleMessage extends MailItemResource implements CalendarObject {
-    	public ScheduleMessage(DavContext ctxt, String path, String owner, Invite inv, Message msg) throws ServiceException {
-    		super(ctxt, path, msg);
-    		mInvite = inv;
+        public ScheduleMessage(DavContext ctxt, String path, String owner, Invite inv, Message msg) throws ServiceException {
+            super(ctxt, path, msg);
+            mInvite = inv;
             addProperty(CalDavProperty.getCalendarData(this));
-    	}
+        }
         public String getUid() {
-        	return mInvite.getUid();
+            return mInvite.getUid();
         }
         public boolean match(Filter filter) {
-        	return true;
+            return true;
         }
         public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
             StringBuilder buf = new StringBuilder();
@@ -186,75 +186,75 @@ public interface CalendarObject {
             buf.append("END:VCALENDAR\r\n");
             return buf.toString();
         }
-    	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
-    		return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
-    	}
-    	public boolean isCollection() {
-    		return false;
-    	}
-    	private Invite mInvite;
+        @Override public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+            return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
+        }
+        @Override public boolean isCollection() {
+            return false;
+        }
+        private Invite mInvite;
     }
     public static class LightWeightCalendarObject extends DavResource implements CalendarObject {
-    	private int mMailboxId;
-    	private int mId;
-    	private String mUid;
-    	private String mEtag;
-    	private long mStart;
-    	private long mEnd;
-    	
-    	public LightWeightCalendarObject(String path, String owner, CalendarItem.CalendarMetadata data) {
-    		super(CalendarPath.generate(null, path, data.uid, -1), owner);
-    		mMailboxId = data.mailboxId;
-    		mId = data.itemId;
-    		mUid = data.uid;
-    		mStart = data.start_time;
-    		mEnd = data.end_time;
-    		mEtag = MailItemResource.getEtag(Integer.toString(data.mod_metadata), Integer.toString(data.mod_content));
-    		setProperty(DavElements.P_GETETAG, mEtag);
+        private long mMailboxId;
+        private int mId;
+        private String mUid;
+        private String mEtag;
+        private long mStart;
+        private long mEnd;
+
+        public LightWeightCalendarObject(String path, String owner, CalendarItem.CalendarMetadata data) {
+            super(CalendarPath.generate(null, path, data.uid, -1), owner);
+            mMailboxId = data.mailboxId;
+            mId = data.itemId;
+            mUid = data.uid;
+            mStart = data.start_time;
+            mEnd = data.end_time;
+            mEtag = MailItemResource.getEtag(Integer.toString(data.mod_metadata), Integer.toString(data.mod_content));
+            setProperty(DavElements.P_GETETAG, mEtag);
             addProperty(CalDavProperty.getCalendarData(this));
-    	}
+        }
         public String getUid() {
-        	return mUid;
+            return mUid;
         }
         public boolean match(Filter filter) {
-        	TimeRange range = filter.getTimeRange();
-        	if (range == null)
-        		return true;
-        	return range.matches(mMailboxId, mId, mStart, mEnd);
+            TimeRange range = filter.getTimeRange();
+            if (range == null)
+                return true;
+            return range.matches(mMailboxId, mId, mStart, mEnd);
         }
-        public String getEtag() {
-    		return mEtag;
-    	}
+        @Override public String getEtag() {
+            return mEtag;
+        }
         public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
             ZimbraLog.dav.debug("constructing full resource");
-    		return getFullResource(ctxt).getVcalendar(ctxt, filter);
+            return getFullResource(ctxt).getVcalendar(ctxt, filter);
         }
-    	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
-    		return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
-    	}
-    	public boolean isCollection() {
-    		return false;
-    	}
-    	public void delete(DavContext ctxt) throws DavException {
-    	}
-    	private CalendarObject getFullResource(DavContext ctxt) throws DavException {
-    		String user = null;
-    		Account acct = ctxt.getOperationContext().getAuthenticatedUser();
-    		if (acct != null)
-    			user = acct.getName();
-    		try {
-    			DavResource rs = UrlNamespace.getResourceByItemId(ctxt, user, mId);
-    			if (rs instanceof LocalCalendarObject)
-    				return (LocalCalendarObject)rs;
-    			else
-        			throw new DavException("not a calendar item", HttpServletResponse.SC_BAD_REQUEST);
-    		} catch (ServiceException se) {
-    			throw new DavException("can't fetch item", se);
-    		}
-    	}
-    	public boolean hasContent(DavContext ctxt) {
-    		return true;
-    	}
+        @Override public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+            return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
+        }
+        @Override public boolean isCollection() {
+            return false;
+        }
+        @Override public void delete(DavContext ctxt) throws DavException {
+        }
+        private CalendarObject getFullResource(DavContext ctxt) throws DavException {
+            String user = null;
+            Account acct = ctxt.getOperationContext().getAuthenticatedUser();
+            if (acct != null)
+                user = acct.getName();
+            try {
+                DavResource rs = UrlNamespace.getResourceByItemId(ctxt, user, mId);
+                if (rs instanceof LocalCalendarObject)
+                    return (LocalCalendarObject)rs;
+                else
+                    throw new DavException("not a calendar item", HttpServletResponse.SC_BAD_REQUEST);
+            } catch (ServiceException se) {
+                throw new DavException("can't fetch item", se);
+            }
+        }
+        @Override public boolean hasContent(DavContext ctxt) {
+            return true;
+        }
     }
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {
 
@@ -279,17 +279,17 @@ public interface CalendarObject {
             setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(calItem.getSize()));
             addProperty(CalDavProperty.getCalendarData(this));
             if (mInvites[0].hasRecurId() && mInvites.length > 1) {
-            	// put the main series to be the first invite, otherwise iCal won't like it.
-            	ArrayList<Invite> newList = new ArrayList<Invite>();
-            	ArrayList<Invite> exceptions = new ArrayList<Invite>();
-            	for (Invite i : mInvites) {
-            		if (i.hasRecurId())
-            			exceptions.add(i);
-            		else
-            			newList.add(i);
-            	}
-            	newList.addAll(exceptions);
-            	mInvites = newList.toArray(new Invite[0]);
+                // put the main series to be the first invite, otherwise iCal won't like it.
+                ArrayList<Invite> newList = new ArrayList<Invite>();
+                ArrayList<Invite> exceptions = new ArrayList<Invite>();
+                for (Invite i : mInvites) {
+                    if (i.hasRecurId())
+                        exceptions.add(i);
+                    else
+                        newList.add(i);
+                }
+                newList.addAll(exceptions);
+                mInvites = newList.toArray(new Invite[0]);
             }
             mMailboxId = calItem.getMailboxId();
             mStart = calItem.getStartTime();
@@ -299,24 +299,24 @@ public interface CalendarObject {
         private String mUid;
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
-        private int mMailboxId;
+        private long mMailboxId;
         private long mStart;
         private long mEnd;
 
         /* Returns true if the supplied Filter matches this calendar object. */
         public boolean match(Filter filter) {
-        	TimeRange range = filter.getTimeRange();
-        	if (range != null && !range.matches(mMailboxId, mId, mStart, mEnd))
-        		return false;
+            TimeRange range = filter.getTimeRange();
+            if (range != null && !range.matches(mMailboxId, mId, mStart, mEnd))
+                return false;
             for (Invite inv : mInvites) {
-            	try {
-            		ZCalendar.ZComponent vcomp = inv.newToVComponent(false, false);
-            		if (filter.match(vcomp))
-            			return true;
-            	} catch (ServiceException se) {
+                try {
+                    ZCalendar.ZComponent vcomp = inv.newToVComponent(false, false);
+                    if (filter.match(vcomp))
+                        return true;
+                } catch (ServiceException se) {
                     ZimbraLog.dav.warn("cannot convert to ICalendar", se);
-            		continue;
-            	}
+                    continue;
+                }
             }
 
             return false;
@@ -333,7 +333,7 @@ public interface CalendarObject {
             buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
             Iterator<ICalTimeZone> iter = mTzmap.tzIterator();
             while (iter.hasNext()) {
-                ICalTimeZone tz = (ICalTimeZone) iter.next();
+                ICalTimeZone tz = iter.next();
                 CharArrayWriter wr = new CharArrayWriter();
                 tz.newToVTimeZone().toICalendar(wr, true);
                 wr.flush();
@@ -369,9 +369,9 @@ public interface CalendarObject {
         public String getUid() {
             return mUid;
         }
-        
+
         public boolean hasContent(DavContext ctxt) {
-        	return true;
+            return true;
         }
     }
 }

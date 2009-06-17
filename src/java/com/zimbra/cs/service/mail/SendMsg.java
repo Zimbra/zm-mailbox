@@ -75,8 +75,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
- * @author tim
- *
  * Process the <SendMsg> request from the client and send an email message.
  */
 public class SendMsg extends MailDocumentHandler {
@@ -90,7 +88,7 @@ public class SendMsg extends MailDocumentHandler {
 
     private static final ItemId NO_MESSAGE_SAVED_TO_SENT = new ItemId((String) null, -1);
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
@@ -236,10 +234,10 @@ public class SendMsg extends MailDocumentHandler {
     }
 
 
-    private static final Map<Integer, List<Pair<String, ItemId>>> sSentTokens = new HashMap<Integer, List<Pair<String, ItemId>>>(100);
+    private static final Map<Long, List<Pair<String, ItemId>>> sSentTokens = new HashMap<Long, List<Pair<String, ItemId>>>(100);
     private static final int MAX_SEND_UID_CACHE = 5;
 
-    private static Pair<SendState, Pair<String, ItemId>> findPendingSend(Integer mailboxId, String sendUid) {
+    private static Pair<SendState, Pair<String, ItemId>> findPendingSend(Long mailboxId, String sendUid) {
         SendState state = SendState.NEW;
         Pair<String, ItemId> sendRecord = null;
 
@@ -270,7 +268,7 @@ public class SendMsg extends MailDocumentHandler {
         return new Pair<SendState, Pair<String, ItemId>>(state, sendRecord);
     }
 
-    private static void clearPendingSend(Integer mailboxId, Pair<String, ItemId> sendRecord) {
+    private static void clearPendingSend(Long mailboxId, Pair<String, ItemId> sendRecord) {
         if (sendRecord != null) {
             synchronized (sSentTokens) {
                 sSentTokens.get(mailboxId).remove(sendRecord);

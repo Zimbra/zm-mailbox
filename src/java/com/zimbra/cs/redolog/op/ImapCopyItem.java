@@ -38,7 +38,7 @@ public class ImapCopyItem extends RedoableOp {
         mDestVolumeId = -1;
     }
 
-    public ImapCopyItem(int mailboxId, byte type, int folderId, short volumeId) {
+    public ImapCopyItem(long mailboxId, byte type, int folderId, short volumeId) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
@@ -70,11 +70,11 @@ public class ImapCopyItem extends RedoableOp {
         return mDestVolumeId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_IMAP_COPY_ITEM;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
         sb.append(", destVolumeId=").append(mDestVolumeId);
@@ -84,7 +84,7 @@ public class ImapCopyItem extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeByte(mType);
         out.writeInt(mDestFolderId);
         out.writeShort(mDestVolumeId);
@@ -97,7 +97,7 @@ public class ImapCopyItem extends RedoableOp {
         }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mType = in.readByte();
         mDestFolderId = in.readInt();
         mDestVolumeId = in.readShort();
@@ -109,8 +109,8 @@ public class ImapCopyItem extends RedoableOp {
         }
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         int i = 0, itemIds[] = new int[mDestIds.size()];

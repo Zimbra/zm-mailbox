@@ -79,13 +79,13 @@ public class DbMailItem {
 
     /** Maps the mailbox id to the set of all tag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by tag. */
-    private static final Map<Integer, TagsetCache> sTagsetCache =
-        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
+    private static final Map<Long, TagsetCache> sTagsetCache =
+        new TimeoutMap<Long, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
     /** Maps the mailbox id to the set of all flag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by flag. */
-    private static final Map<Integer, TagsetCache> sFlagsetCache =
-        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
+    private static final Map<Long, TagsetCache> sFlagsetCache =
+        new TimeoutMap<Long, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
     public static final int MAX_SENDER_LENGTH  = 128;
     public static final int MAX_SUBJECT_LENGTH = 1024;
@@ -95,15 +95,16 @@ public class DbMailItem {
     public static final String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ";
     public static final String MAILBOX_ID = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
     public static final String MAILBOX_ID_VALUE = DebugConfig.disableMailboxGroups ? "" : "?, ";
+
     private static final int RESULTS_STREAMING_MIN_ROWS = 10000; 
     
-    static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
+    public static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
         if (!DebugConfig.disableMailboxGroups)
-            stmt.setInt(pos++, mbox.getId());
+            stmt.setLong(pos++, mbox.getId());
         return pos;
     }
     
-    public static final String getInThisMailboxAnd(int mboxId, String miAlias, String apAlias) {
+    public static final String getInThisMailboxAnd(long mboxId, String miAlias, String apAlias) {
         if (DebugConfig.disableMailboxGroups)
             return "";
 
@@ -130,11 +131,9 @@ public class DbMailItem {
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                         " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
-                        "VALUES (" + MAILBOX_ID_VALUE +
-                        " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        "VALUES (" + MAILBOX_ID_VALUE + " ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
             if (data.parentId <= 0)
@@ -207,8 +206,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND id <> ? AND " + Db.equalsSTRING("name"));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, modifiedItemId);
             stmt.setString(pos++, StringUtil.trimTrailingSpaces(name.toUpperCase()));
@@ -247,8 +245,7 @@ public class DbMailItem {
                         " flags, tags, sender, subject, name, ?, ?, ?, ? FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, id);                            // ID
             if (parentId <= 0)
                 stmt.setNull(pos++, Types.INTEGER);            // PARENT_ID null for messages in virtual convs
@@ -265,8 +262,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -323,8 +319,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, source.getId());
             stmt.executeUpdate();
             stmt.close();
@@ -345,8 +340,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
                 }
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, source.getId());
                 stmt.executeUpdate();
                 stmt.close();
@@ -384,8 +378,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, version);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
             if (num != 1)
@@ -414,8 +407,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("DELETE FROM " + getRevisionTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ? AND version <= ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.setInt(pos++, highestPurged);
             stmt.executeUpdate();
@@ -438,8 +430,7 @@ public class DbMailItem {
                         " SET type = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, type);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -488,8 +479,7 @@ public class DbMailItem {
                     stmt.setString(pos++, item.getIndexId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -545,8 +535,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, folder.getId());
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, msgs.get(index).getId());
                 stmt.executeUpdate();
@@ -579,8 +568,7 @@ public class DbMailItem {
                             " SET index_id = id" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, msgs.get(index).getId());
                 stmt.executeUpdate();
@@ -627,8 +615,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, parent.getId());
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, children[index].getId());
                 stmt.executeUpdate();
@@ -666,8 +653,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, newParent.getId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, oldParent instanceof VirtualConversation ? ((VirtualConversation) oldParent).getMessageId() : oldParent.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -695,8 +681,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -727,8 +712,7 @@ public class DbMailItem {
             else
                 stmt.setNull(pos++, Types.INTEGER);
             stmt.setInt(pos++, item.getSavedSequence());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -757,8 +741,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, note.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -798,8 +781,7 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getOperationChangeID());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -862,8 +844,7 @@ public class DbMailItem {
                 stmt.setShort(pos++, item.getVolumeId());
             else
                 stmt.setNull(pos++, Types.TINYINT);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
@@ -896,8 +877,7 @@ public class DbMailItem {
                         "(" + mailbox_id + "hash, conv_id)" +
                         " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -910,8 +890,7 @@ public class DbMailItem {
                             " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ?");
                     int pos = 1;
                     stmt.setInt(pos++, item.getId());
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    pos = setMailboxId(stmt, mbox, pos);
                     stmt.setString(pos++, hash);
                     stmt.executeUpdate();
                 } catch (SQLException nested) {
@@ -936,8 +915,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(item) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -958,6 +936,7 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         long cutoff = (System.currentTimeMillis() - timeoutMillis) / 1000;
+        ZimbraLog.purge.debug("Closing conversations dated before %d.", cutoff);
         try {
             String mailboxJoin = (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = open_conversation.mailbox_id");
             stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(mbox) +
@@ -967,10 +946,7 @@ public class DbMailItem {
                    mailboxJoin +
                 "  AND date < ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups) {
-                stmt.setInt(pos++, mbox.getId());
-            }
-            ZimbraLog.purge.debug("Closing conversations dated before %d.", cutoff);
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, cutoff); 
             int numRows = stmt.executeUpdate();
             if (numRows > 0) {
@@ -995,8 +971,7 @@ public class DbMailItem {
                         " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
             int pos = 1;
             stmt.setInt(pos++, newTargetId);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, hash);
             stmt.setInt(pos++, oldTarget.getId());
             stmt.executeUpdate();
@@ -1021,7 +996,7 @@ public class DbMailItem {
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -1046,8 +1021,7 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getImapUid());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -1095,8 +1069,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
             }
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, tag.getBitmask());
             if (item instanceof Tag)
                 stmt.setLong(pos++, ((Tag) item).getBitmask());
@@ -1150,8 +1123,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
                 }
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 stmt.setLong(pos++, tag.getBitmask());
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, itemIDs.get(index));
@@ -1188,8 +1160,7 @@ public class DbMailItem {
             stmt.setLong(pos++, tag.getBitmask());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, tag.getBitmask());
             stmt.executeUpdate();
 
@@ -1232,8 +1203,7 @@ public class DbMailItem {
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, unread ? 0 : 1);
             if (item instanceof Tag)
                 stmt.setLong(pos++, ((Tag) item).getBitmask());
@@ -1270,8 +1240,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, unread ? 1 : 0);
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, unread ? 0 : 1);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, itemIDs.get(index));
@@ -1312,13 +1281,11 @@ public class DbMailItem {
                             " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, folder.getId());
                 stmt.setInt(pos++, mbox.getOperationChangeID());
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 stmt.executeUpdate();
                 stmt.close();
             } else {
@@ -1326,8 +1293,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND parent_id IS NOT NULL" +
                         " GROUP BY parent_id");
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, folder.getId());
                 rs = stmt.executeQuery();
                 Map<Integer, List<Integer>> counts = new HashMap<Integer, List<Integer>>();
@@ -1353,8 +1319,7 @@ public class DbMailItem {
                         stmt.setInt(pos++, update.getKey());
                         stmt.setInt(pos++, mbox.getOperationChangeID());
                         stmt.setInt(pos++, mbox.getOperationTimestamp());
-                        if (!DebugConfig.disableMailboxGroups)
-                            stmt.setInt(pos++, mbox.getId());
+                        pos = setMailboxId(stmt, mbox, pos);
                         for (int index = i; index < i + count; index++)
                             stmt.setInt(pos++, convIDs.get(index));
                         stmt.executeUpdate();
@@ -1402,14 +1367,12 @@ public class DbMailItem {
                                 " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                                 " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                     int pos = 1;
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    pos = setMailboxId(stmt, mbox, pos);
                     for (int index = i; index < i + count; index++)
                         stmt.setInt(pos++, ids.get(index));
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    pos = setMailboxId(stmt, mbox, pos);
                     stmt.executeUpdate();
                     stmt.close();
                 }
@@ -1418,8 +1381,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(ids) + "AND parent_id IS NOT NULL" +
                         " GROUP BY parent_id");
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int id : ids)
                     stmt.setInt(pos++, id);
                 rs = stmt.executeQuery();
@@ -1443,8 +1405,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, update.getKey());
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    pos = setMailboxId(stmt, mbox, pos);
                     for (int convId : update.getValue())
                         stmt.setInt(pos++, convId);
                     stmt.executeUpdate();
@@ -1480,8 +1441,7 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND size <= 0");
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, it.next());
                 rs = stmt.executeQuery();
@@ -1542,8 +1502,7 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, targets.get(index));
                 stmt.executeUpdate();
@@ -1573,8 +1532,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(item) +
                         " WHERE " + IN_THIS_MAILBOX_AND + target + " AND type NOT IN " + FOLDER_TYPES);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -1621,8 +1579,7 @@ public class DbMailItem {
                         "(" + mailbox_id + "sequence, date, type, ids)" +
                         " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setByte(pos++, type);
@@ -1649,8 +1606,7 @@ public class DbMailItem {
                         " ORDER BY sequence");
             Db.getInstance().enableStreaming(stmt);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, lastSync);
             rs = stmt.executeQuery();
 
@@ -1709,8 +1665,7 @@ public class DbMailItem {
 
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + FOLDER_AND_TAG_TYPES);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(1, mbox.getId());
+            setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
             while (rs.next()) {
                 UnderlyingData data = constructItem(rs);
@@ -1733,8 +1688,7 @@ public class DbMailItem {
                             " SET parent_id = folder_id" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
                     int pos = 1;
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    pos = setMailboxId(stmt, mbox, pos);
                     stmt.setInt(pos++, data.id);
                     stmt.executeUpdate();
 
@@ -1768,8 +1722,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), SUM(size)" +
                         " FROM " + table + " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + NON_SEARCHABLE_TYPES +
                         " GROUP BY folder_id, type, tags");
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(1, mbox.getId());
+            setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -1809,8 +1762,7 @@ public class DbMailItem {
                         " WHERE mi.id = rev.item_id" +
                         (DebugConfig.disableMailboxGroups ? "" : " AND rev.mailbox_id = ? AND mi.mailbox_id = rev.mailbox_id") + 
                         " GROUP BY folder_id");
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(1, mbox.getId());
+            setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -1840,14 +1792,13 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            if (type == MailItem.TYPE_MESSAGE)
+                Db.getInstance().enableStreaming(stmt);
+
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox, " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + DbSearch.sortQuery(sort));
-            if (type == MailItem.TYPE_MESSAGE) {
-                Db.getInstance().enableStreaming(stmt);
-            }
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(1, mbox.getId());
+            setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
             while (rs.next())
                 result.add(constructItem(rs));
@@ -1887,8 +1838,7 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, parent.getId());
             rs = stmt.executeQuery();
 
@@ -1918,6 +1868,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
+
             String relation;
             if (relativeTo instanceof VirtualConversation)  relation = "id = ?";
             else if (relativeTo instanceof Conversation)    relation = "parent_id = ?";
@@ -1929,12 +1882,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
-            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS) {
-                Db.getInstance().enableStreaming(stmt);
-            }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             if (relativeTo instanceof Tag)
                 stmt.setLong(pos++, ((Tag) relativeTo).getBitmask());
             else if (relativeTo instanceof VirtualConversation)
@@ -1979,8 +1928,7 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
@@ -2009,8 +1957,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox, "mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, id);
             rs = stmt.executeQuery();
 
@@ -2041,8 +1988,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox, "mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND imap_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, imapId);
             rs = stmt.executeQuery();
@@ -2083,8 +2029,7 @@ public class DbMailItem {
                             " FROM " + getMailItemTableName(mbox, "mi") +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setInt(pos++, it.next());
 
@@ -2127,8 +2072,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
                         " AND " + Db.equalsSTRING("name"));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
             stmt.setString(pos++, name.toUpperCase());
             rs = stmt.executeQuery();
@@ -2162,8 +2106,7 @@ public class DbMailItem {
                         (DebugConfig.disableMailboxGroups ? "" : " AND oc.mailbox_id = ? AND mi.mailbox_id = oc.mailbox_id"));
             int pos = 1;
             stmt.setString(pos++, hash);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
             if (!rs.next())
@@ -2203,8 +2146,7 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setLong(pos++, lastSync);
             rs = stmt.executeQuery();
 
@@ -2250,8 +2192,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
                     UnderlyingData data = convData.get(index);
                     stmt.setInt(pos++, data.id);
@@ -2307,15 +2248,14 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
+
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
-            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
-                Db.getInstance().enableStreaming(stmt);
-            }
-             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
             rs = stmt.executeQuery();
 
@@ -2349,6 +2289,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
+
             String constraint;
             String dateColumn = (useChangeDate ? "change_date" : "date");
             if (globalMessages)
@@ -2362,12 +2305,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + constraint);
-            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
-                Db.getInstance().enableStreaming(stmt);
-            }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, before);
             if (!globalMessages) {
                 for (Folder folder : folders)
@@ -2413,6 +2352,9 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
+                Db.getInstance().enableStreaming(stmt);
+
             // figure out the set of FLAGS bitmasks containing the \Deleted flag
             Set<Long> flagsets = getFlagsetCache(conn, mbox).getMatchingTagsets(Flag.BITMASK_DELETED, Flag.BITMASK_DELETED);
             if (flagsets != null && flagsets.isEmpty())
@@ -2424,12 +2366,8 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + IMAP_TYPES + flagconstraint + folderconstraint);
-            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
-                Db.getInstance().enableStreaming(stmt);
-            }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             if (flagsets != null) {
                 for (long flags : flagsets)
                     stmt.setInt(pos++, (int) flags);
@@ -2564,8 +2502,7 @@ public class DbMailItem {
             int pos = 1;
             for (int vid : versioned)
                 stmt.setInt(pos++, vid);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -2611,8 +2548,7 @@ public class DbMailItem {
                     " FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, itemId);
             rs = stmt.executeQuery();
 
@@ -2642,8 +2578,7 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(count));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
                     stmt.setString(pos++, indexIDs.get(index));
                 rs = stmt.executeQuery();
@@ -2685,8 +2620,7 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
@@ -2716,8 +2650,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + IMAP_TYPES +
                         " AND (imap_id IS NULL OR imap_id = 0 OR imap_id > ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
             stmt.setInt(pos++, uidCutoff);
             rs = stmt.executeQuery();
@@ -2756,8 +2689,7 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
             if (popDate >= 0)
                 stmt.setInt(pos++, (int) (popDate / 1000L));
@@ -2791,8 +2723,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ?" +
                         " ORDER BY version");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             rs = stmt.executeQuery();
 
@@ -2827,8 +2758,7 @@ public class DbMailItem {
                 Db.getInstance().enableStreaming(stmt);
             }
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             if (!allTypes)
                 stmt.setByte(pos++, type);
             stmt.setInt(pos++, folder.getId());
@@ -2859,8 +2789,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
@@ -2991,8 +2920,7 @@ public class DbMailItem {
 
             int pos = 1;
             stmt.setString(pos++, uid);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
             if (rs.next())
@@ -3079,18 +3007,17 @@ public class DbMailItem {
                     (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
                     (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
 
-        int param = 1;
+        int pos = 1;
         if (end > 0)
-            stmt.setTimestamp(param++, new Timestamp(end));
+            stmt.setTimestamp(pos++, new Timestamp(end));
         if (start > 0)
-            stmt.setTimestamp(param++, new Timestamp(start));
-        if (!DebugConfig.disableMailboxGroups)
-            stmt.setInt(param++, mbox.getId());
+            stmt.setTimestamp(pos++, new Timestamp(start));
+        pos = setMailboxId(stmt, mbox, pos);
         if (folderSpecified)
-            stmt.setInt(param++, folderId);
+            stmt.setInt(pos++, folderId);
         if (excludeFolderIds != null) {
             for (int id : excludeFolderIds)
-                stmt.setInt(param++, id);
+                stmt.setInt(pos++, id);
         }
 
         return stmt;
@@ -3112,7 +3039,7 @@ public class DbMailItem {
                         " AND date > ? AND date < ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
-            stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             if (!allTypes)
                 stmt.setByte(pos++, type);
             stmt.setInt(pos++, folderId);
@@ -3149,8 +3076,7 @@ public class DbMailItem {
                         " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
                         " VALUES (" + (DebugConfig.disableMailboxGroups ? "" : "?, ") + "?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, calItem.getUid());
             stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
@@ -3183,8 +3109,7 @@ public class DbMailItem {
                         " (" + mailbox_id + "uid, item_id, start_time, end_time)" +
                         " VALUES (" + MAILBOX_ID_VALUE + "?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, calItem.getUid());
             stmt.setInt(pos++, calItem.getId());
             stmt.setTimestamp(pos++, startTs);
@@ -3201,8 +3126,7 @@ public class DbMailItem {
                     stmt.setInt(pos++, calItem.getId());
                     stmt.setTimestamp(pos++, startTs);
                     stmt.setTimestamp(pos++, endTs);
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    pos = setMailboxId(stmt, mbox, pos);
                     stmt.setString(pos++, calItem.getUid());
                     stmt.executeUpdate();
                 } catch (SQLException nested) {
@@ -3236,8 +3160,7 @@ public class DbMailItem {
                         (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? ") +
                         startConstraint + endConstraint + folderConstraint);
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             if (start > 0)
                 stmt.setTimestamp(pos++, new Timestamp(start));
             if (end > 0)
@@ -3279,8 +3202,7 @@ public class DbMailItem {
                         " FROM " + getMailItemTableName(mbox, "mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             rs = stmt.executeQuery();
 
@@ -3383,7 +3305,7 @@ public class DbMailItem {
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified
      * by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
-    public static String getMailItemTableName(int mailboxId, int groupId) {
+    public static String getMailItemTableName(long mailboxId, long groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_MAIL_ITEM);
     }
     public static String getMailItemTableName(MailItem item) {
@@ -3400,7 +3322,7 @@ public class DbMailItem {
      * Returns the name of the table that stores data on old revisions of {@link MailItem}s.
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
-    public static String getRevisionTableName(int mailboxId, int groupId) {
+    public static String getRevisionTableName(long mailboxId, long groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_REVISION);
     }
     public static String getRevisionTableName(MailItem item) {
@@ -3417,7 +3339,7 @@ public class DbMailItem {
      * Returns the name of the table that stores {@link CalendarItem} data.  The table name is qualified
      * by the name of the database (e.g. <tt>mailbox1.appointment</tt>).
      */
-    public static String getCalendarItemTableName(int mailboxId, int groupId) {
+    public static String getCalendarItemTableName(long mailboxId, long groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_APPOINTMENT);
     }
     public static String getCalendarItemTableName(Mailbox mbox) {
@@ -3431,7 +3353,7 @@ public class DbMailItem {
      * Returns the name of the table that maps subject hashes to {@link Conversation} ids.  The table 
      * name is qualified by the name of the database (e.g. <tt>mailbox1.open_conversation</tt>).
      */
-    public static String getConversationTableName(int mailboxId, int groupId) {
+    public static String getConversationTableName(long mailboxId, long groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_OPEN_CONVERSATION);
     }
     public static String getConversationTableName(MailItem item) {
@@ -3448,7 +3370,7 @@ public class DbMailItem {
      * Returns the name of the table that stores data on deleted items for the purpose of sync.
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.tombstone</tt>).
      */
-    public static String getTombstoneTableName(int mailboxId, int groupId) {
+    public static String getTombstoneTableName(long mailboxId, long groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_TOMBSTONE);
     }
     public static String getTombstoneTableName(Mailbox mbox) {
@@ -3473,8 +3395,8 @@ public class DbMailItem {
     }
 
     static TagsetCache getTagsetCache(Connection conn, Mailbox mbox) throws ServiceException {
-        int mailboxId = mbox.getId();
-        Integer id = new Integer(mailboxId);
+        long mailboxId = mbox.getId();
+        Long id = new Long(mailboxId);
         TagsetCache tagsets = null;
 
         synchronized (sTagsetCache) {
@@ -3504,8 +3426,8 @@ public class DbMailItem {
     }
 
     static TagsetCache getFlagsetCache(Connection conn, Mailbox mbox) throws ServiceException {
-        int mailboxId = mbox.getId();
-        Integer id = new Integer(mailboxId);
+        long mailboxId = mbox.getId();
+        Long id = new Long(mailboxId);
         TagsetCache flagsets = null;
 
         synchronized (sFlagsetCache) {

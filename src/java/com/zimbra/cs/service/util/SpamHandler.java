@@ -179,13 +179,13 @@ public class SpamHandler {
 
     private static final class SpamReport {
         final String mAccountName;
-        final int mMailboxId;
+        final long mMailboxId;
         final int mMessageId;
         final boolean mIsSpam;
         final String mOrigIp;
         private String mDescString;
         
-        SpamReport(String accountName, int mailboxId, int messageId, boolean isSpam, String origIp) {
+        SpamReport(String accountName, long mailboxId, int messageId, boolean isSpam, String origIp) {
             mAccountName = accountName;
             mMailboxId = mailboxId;
             mMessageId = messageId;
@@ -193,7 +193,7 @@ public class SpamHandler {
             mOrigIp = origIp;
         }
         
-        public String toString() {
+        @Override public String toString() {
             if (mDescString == null) {
                 mDescString = "spamreport: acct=" + mAccountName + 
                 " mbox=" + mMailboxId + " id=" + mMessageId + 

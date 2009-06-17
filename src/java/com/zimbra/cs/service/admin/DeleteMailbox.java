@@ -35,22 +35,19 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class DeleteMailbox extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID };
-    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+    @Override protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
 
     /**
      * must be careful and only allow access to domain if domain admin
      */
-    public boolean domainAuthSufficient(Map context) {
+    @Override public boolean domainAuthSufficient(Map<String, Object> context) {
         return true;
     }
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
@@ -78,14 +75,14 @@ public class DeleteMailbox extends AdminDocumentHandler {
             IMPersona.deleteIMPersona(account.getName());
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
-        int mailboxId = -1;
+        long mailboxId = -1;
         if (mbox != null) {
             mailboxId = mbox.getId();
             mbox.deleteMailbox();
         }
         
         String idString = (mbox == null) ?
-            "<no mailbox for account " + accountId + ">" : Integer.toString(mailboxId);
+            "<no mailbox for account " + accountId + ">" : Long.toString(mailboxId);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteMailbox","id", idString}));
         

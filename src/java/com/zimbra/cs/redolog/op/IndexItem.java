@@ -29,9 +29,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class IndexItem extends RedoableOp {
 
     private int mId;
@@ -47,7 +44,7 @@ public class IndexItem extends RedoableOp {
         mCommitAbortDone = false;
     }
 
-    public IndexItem(int mailboxId, int id, byte type, boolean deleteFirst) {
+    public IndexItem(long mailboxId, int id, byte type, boolean deleteFirst) {
         setMailboxId(mailboxId);
         mId = id;
         mType = type;
@@ -56,28 +53,28 @@ public class IndexItem extends RedoableOp {
         mCommitAbortDone = false;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_INDEX_ITEM;
     }
 
-    public boolean deferCrashRecovery() {
+    @Override public boolean deferCrashRecovery() {
         return true;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeByte(mType);
         if (getVersion().atLeast(1,8))
             out.writeBoolean(mDeleteFirst);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mType = in.readByte();
         if (getVersion().atLeast(1,8)) 
@@ -86,8 +83,8 @@ public class IndexItem extends RedoableOp {
             mDeleteFirst = false;
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         MailItem item;
         try {
@@ -154,7 +151,7 @@ public class IndexItem extends RedoableOp {
      * commit/abort has been called already and ignore the subsequent
      * calls.
      */
-    public synchronized void commit() {
+    @Override public synchronized void commit() {
         if (ZimbraLog.index.isDebugEnabled())
             ZimbraLog.index.debug(this.toString()+" committed");
         
@@ -169,7 +166,7 @@ public class IndexItem extends RedoableOp {
         }
     }
 
-    public synchronized void abort() {
+    @Override public synchronized void abort() {
         if (!mCommitAbortDone) {
             super.abort();
             mCommitAbortDone = true;

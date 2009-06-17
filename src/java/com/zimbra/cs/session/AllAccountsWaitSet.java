@@ -163,14 +163,14 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         
         CommitId cid = CommitId.decodeFromString(commitIdStr);
         
-        Pair<Set<Integer>, CommitId> changes = rmgr.getChangedMailboxesSince(cid);
+        Pair<Set<Long>, CommitId> changes = rmgr.getChangedMailboxesSince(cid);
         if (changes == null) {
             throw ServiceException.FAILURE("Unable to sync to commit id "+commitIdStr, null);
         }
         
-        Set<Integer> mailboxes = changes.getFirst();
+        Set<Long> mailboxes = changes.getFirst();
         
-        for (Integer id : mailboxes) {
+        for (Long id : mailboxes) {
             try {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
                 if (mbox != null) {
@@ -206,11 +206,13 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         }
     }
     
+    @Override
     protected boolean cbSeqIsCurrent() {
         return (mCurrentSeqNo.equals(mCbSeqNo));        
     }
     
     
+    @Override
     protected String toNextSeqNo() {
         mCurrentSeqNo = mNextSeqNo;
         assert(mCurrentSeqNo != null);
@@ -237,6 +239,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         return null;
     }
     
+    @Override
     public synchronized void handleQuery(Element response) {
         super.handleQuery(response);
         

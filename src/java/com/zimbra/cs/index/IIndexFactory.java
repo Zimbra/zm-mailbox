@@ -20,8 +20,7 @@ import com.zimbra.common.service.ServiceException;
  * 
  */
 public interface IIndexFactory {
-    public ITextIndex create(MailboxIndex idx, String idxParentDir,
-                               int mailboxId) throws ServiceException;
+    public ITextIndex create(MailboxIndex idx, String idxParentDir, long mailboxId) throws ServiceException;
     public void flushAllWriters();
     public void shutdown();
     public void startup();

@@ -714,9 +714,9 @@ public class RedoLogManager {
      * @throws IOException
      * @throws MailServiceException
      */
-    public Pair<Set<Integer>, CommitId> getChangedMailboxesSince(CommitId cid)
+    public Pair<Set<Long>, CommitId> getChangedMailboxesSince(CommitId cid)
     throws IOException, MailServiceException {
-        Set<Integer> mailboxes = new HashSet<Integer>();
+        Set<Long> mailboxes = new HashSet<Long>();
 
         // Grab a read lock to prevent rollover.
         Sync readLock = mRWLock.readLock();
@@ -794,7 +794,7 @@ public class RedoLogManager {
 
                         lastCommitTxn = (CommitTxn) op;
                         if (foundMarker) {
-                            int mboxId = op.getMailboxId();
+                            long mboxId = op.getMailboxId();
                             if (mboxId > 0)
                                 mailboxes.add(mboxId);
                         } else {

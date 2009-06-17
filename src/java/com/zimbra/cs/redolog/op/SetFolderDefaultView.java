@@ -22,9 +22,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jjzhuang
- */
 public class SetFolderDefaultView extends RedoableOp {
 
     private int mFolderId;
@@ -35,33 +32,33 @@ public class SetFolderDefaultView extends RedoableOp {
         mDefaultView = MailItem.TYPE_UNKNOWN;
     }
 
-    public SetFolderDefaultView(int mailboxId, int folderId, byte view) {
+    public SetFolderDefaultView(long mailboxId, int folderId, byte view) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mDefaultView = view;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SET_DEFAULT_VIEW;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mFolderId);
         sb.append(", view=").append(mDefaultView);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
         out.writeByte(mDefaultView);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         mDefaultView = in.readByte();
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.setFolderDefaultView(getOperationContext(), mFolderId, mDefaultView);
     }

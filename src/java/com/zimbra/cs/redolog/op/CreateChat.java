@@ -28,31 +28,26 @@ public class CreateChat extends CreateMessage {
     public CreateChat() {
     }
 
-    public CreateChat(int mailboxId, 
-                String digest,
-                int msgSize,
-                int folderId,
-                int flags,
-                String tags) 
-    {
+    public CreateChat(long mailboxId, String digest, int msgSize, int folderId, int flags, String tags) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, flags, tags);
     }
     
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_CHAT;
     }
     
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         super.serializeData(out);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         super.deserializeData(in);
     }
     
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         ParsedMessage  pm = new ParsedMessage(getMessageBody(), getTimestamp(), mbox.attachmentsIndexingEnabled());
         try {
             mbox.createChat(getOperationContext(), pm, getFolderId(), getFlags(), getTags());

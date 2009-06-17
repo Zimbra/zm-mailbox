@@ -28,9 +28,6 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class ModifyInvitePartStat extends RedoableOp 
 {
     private int mCalItemId = UNKNOWN_ID; // calendar item which contains invite
@@ -48,7 +45,7 @@ public class ModifyInvitePartStat extends RedoableOp
     public ModifyInvitePartStat() {
     }
 
-    public ModifyInvitePartStat(int mailboxId, int calItemId, RecurId recurId, 
+    public ModifyInvitePartStat(long mailboxId, int calItemId, RecurId recurId, 
             String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, 
             int seqNo, long dtStamp)
     {
@@ -68,11 +65,11 @@ public class ModifyInvitePartStat extends RedoableOp
         mDtStamp = dtStamp;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_MODIFY_INVITE_PARTSTAT;
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         CalendarItem calItem = mbox.getCalendarItemById(null, mCalItemId);
         RecurId recurId = null;
@@ -81,7 +78,7 @@ public class ModifyInvitePartStat extends RedoableOp
         mbox.modifyPartStat(getOperationContext(), mCalItemId, recurId, mCnStr, mAddressStr, mCUTypeStr, mRoleStr, mPartStatStr, mRsvp, mSeqNo, mDtStamp); 
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("calItemId=").append(mCalItemId);
         if (mRecurIdDt != null) {
             sb.append(", recurIdDt=").append(mRecurIdDt);
@@ -98,7 +95,7 @@ public class ModifyInvitePartStat extends RedoableOp
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mCalItemId);
         boolean hasRecurId = mRecurIdDt != null;
         out.writeBoolean(hasRecurId);
@@ -117,7 +114,7 @@ public class ModifyInvitePartStat extends RedoableOp
         out.writeLong(mDtStamp);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mCalItemId = in.readInt();
         boolean hasRecurId = in.readBoolean();
         if (hasRecurId) {

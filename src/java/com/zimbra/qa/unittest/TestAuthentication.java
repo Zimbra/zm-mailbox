@@ -29,19 +29,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.soap.SoapFaultException;
 
-
-/**
- * @author bburtin
- */
 public class TestAuthentication
 extends TestCase {
     private static String USER_NAME = "testauthentication";
     private static String PASSWORD = "test123";
     
     private Provisioning mProv;
-    private Integer mMboxId;
+    private Long mMboxId;
     
-    public void setUp()
+    @Override public void setUp()
     throws Exception {
         mProv = Provisioning.getInstance();
         cleanUp();
@@ -57,7 +53,7 @@ extends TestCase {
         mMboxId = MailboxManager.getInstance().getMailboxByAccount(account).getId();
     }
     
-    protected void tearDown()
+    @Override protected void tearDown()
     throws Exception {
         cleanUp();
     }

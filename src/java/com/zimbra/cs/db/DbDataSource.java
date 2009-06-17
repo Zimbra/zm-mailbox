@@ -466,7 +466,7 @@ public class DbDataSource {
                     fmt.format(" AND remote_id LIKE '%s%%'", prefix);
                 }
                 stmt = conn.prepareStatement(fmt.toString());
-                stmt.setInt(1, mbox.getId());
+                stmt.setLong(1, mbox.getId());
                 stmt.setString(2, ds.getId());
                 stmt.setInt(3, folderId);
                 rs = stmt.executeQuery();

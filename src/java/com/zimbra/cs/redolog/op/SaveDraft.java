@@ -28,9 +28,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class SaveDraft extends CreateMessage {
 
     private int mImapId;           // new IMAP id for this message
@@ -38,7 +35,7 @@ public class SaveDraft extends CreateMessage {
     public SaveDraft() {
     }
 
-    public SaveDraft(int mailboxId, int draftId, String digest, int msgSize) {
+    public SaveDraft(long mailboxId, int draftId, String digest, int msgSize) {
         super(mailboxId, ":API:", false, digest, msgSize, -1, true, 0, null);
         setMessageId(draftId);
     }
@@ -51,26 +48,26 @@ public class SaveDraft extends CreateMessage {
         mImapId = imapId;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         return super.getPrintableData() + ",imap=" + mImapId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SAVE_DRAFT;
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mImapId);
         super.serializeData(out);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mImapId = in.readInt();
         super.deserializeData(in);
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         InputStream in = null;
 

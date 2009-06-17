@@ -27,9 +27,6 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class CreateNote extends RedoableOp {
 
     private int mId;
@@ -44,7 +41,7 @@ public class CreateNote extends RedoableOp {
         mFolderId = UNKNOWN_ID;
     }
 
-    public CreateNote(int mailboxId, int folderId,
+    public CreateNote(long mailboxId, int folderId,
                       String content, byte color, Note.Rectangle bounds) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -70,11 +67,11 @@ public class CreateNote extends RedoableOp {
         return mVolumeId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_NOTE;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mId);
         sb.append(", folder=").append(mFolderId);
         sb.append(", vol=").append(mVolumeId);
@@ -85,7 +82,7 @@ public class CreateNote extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
         out.writeShort(mVolumeId);
@@ -97,7 +94,7 @@ public class CreateNote extends RedoableOp {
         out.writeInt(mBounds.height);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
         mVolumeId = in.readShort();
@@ -110,9 +107,10 @@ public class CreateNote extends RedoableOp {
         mBounds = new Note.Rectangle(x, y, w, h);
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mailbox.createNote(getOperationContext(), mContent, mBounds, mColor, mFolderId);
         } catch (MailServiceException e) {

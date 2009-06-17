@@ -26,9 +26,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class CreateFolderPath extends RedoableOp {
 
     private String mPath;
@@ -39,9 +36,9 @@ public class CreateFolderPath extends RedoableOp {
     private String mUrl;
     private int mFolderIds[];
 
-    public CreateFolderPath() { }
+    public CreateFolderPath()  { }
 
-    public CreateFolderPath(int mailboxId, String name, byte attrs, byte view, int flags, byte color, String url) {
+    public CreateFolderPath(long mailboxId, String name, byte attrs, byte view, int flags, byte color, String url) {
         setMailboxId(mailboxId);
         mPath = name == null ? "" : name;
         mAttrs = attrs;
@@ -59,11 +56,11 @@ public class CreateFolderPath extends RedoableOp {
         mFolderIds = parentIds;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_FOLDER_PATH;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("name=").append(mPath);
         sb.append(", attrs=").append(mAttrs).append(", view=").append(mDefaultView);
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
@@ -80,7 +77,7 @@ public class CreateFolderPath extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mPath);
         out.writeByte(mAttrs);
         out.writeByte(mDefaultView);
@@ -91,11 +88,12 @@ public class CreateFolderPath extends RedoableOp {
             out.writeInt(mFolderIds.length);
             for (int i = 0; i < mFolderIds.length; i++)
                 out.writeInt(mFolderIds[i]);
-        } else
+        } else {
             out.writeInt(0);
+        }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mPath = in.readUTF();
         mAttrs = in.readByte();
         mDefaultView = in.readByte();
@@ -110,9 +108,10 @@ public class CreateFolderPath extends RedoableOp {
         }
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mailbox.createFolder(getOperationContext(), mPath, mAttrs, mDefaultView, mFlags, mColor, mUrl);
         } catch (MailServiceException e) {

@@ -25,9 +25,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class CreateMountpoint extends RedoableOp {
 
     private int mId;
@@ -43,7 +40,8 @@ public class CreateMountpoint extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId, byte view, int flags, byte color) {
+    public CreateMountpoint(long mailboxId, int folderId, String name, String ownerId, int remoteId,
+                            byte view, int flags, byte color) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -63,11 +61,11 @@ public class CreateMountpoint extends RedoableOp {
         mId = id;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_LINK;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=").append(mId);
         sb.append(", name=").append(mName).append(", folder=").append(mFolderId);
         sb.append(", owner=").append(mOwnerId).append(", remote=").append(mRemoteId);
@@ -75,7 +73,7 @@ public class CreateMountpoint extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeUTF(mName);
         out.writeUTF(mOwnerId);
@@ -86,7 +84,7 @@ public class CreateMountpoint extends RedoableOp {
         out.writeByte(mColor);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mName = in.readUTF();
         mOwnerId = in.readUTF();
@@ -97,9 +95,10 @@ public class CreateMountpoint extends RedoableOp {
         mColor = in.readByte();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mDefaultView, mFlags, mColor);
         } catch (MailServiceException e) {

@@ -41,7 +41,7 @@ public class FileStore {
 
     private static final long MAX_CACHE_FILE_LEN = 100 * 1024 * 1024;  // 100MB
 
-    private static File getMailboxDir(int mboxId) {
+    private static File getMailboxDir(long mboxId) {
         long mdir = mboxId >> MBOX_BITS;
         mdir &= MBOX_GROUP_BITS;
 
@@ -50,7 +50,7 @@ public class FileStore {
         return new File(sb.toString());
     }
 
-    private static File getCalFolderFile(int mboxId, int folderId) {
+    private static File getCalFolderFile(long mboxId, int folderId) {
         long mdir = mboxId >> MBOX_BITS;
         mdir &= MBOX_GROUP_BITS;
         long fdir = folderId >> FILE_BITS;
@@ -62,14 +62,14 @@ public class FileStore {
         return new File(sb.toString());
     }
 
-    static void deleteCalendarData(int mboxId, int folderId)
+    static void deleteCalendarData(long mboxId, int folderId)
     throws ServiceException {
         File file = getCalFolderFile(mboxId, folderId);
         if (file.exists())
             file.delete();
     }
 
-    static void saveCalendarData(int mboxId, CalendarData calData)
+    static void saveCalendarData(long mboxId, CalendarData calData)
     throws ServiceException {
         File file = getCalFolderFile(mboxId, calData.getFolderId());
         try {
@@ -86,7 +86,7 @@ public class FileStore {
         saveToFile(file, encoded);
     }
 
-    static CalendarData loadCalendarData(int mboxId, int folderId, int modSeq)
+    static CalendarData loadCalendarData(long mboxId, int folderId, int modSeq)
     throws ServiceException {
         File file = getCalFolderFile(mboxId, folderId);
         String encoded = loadFromFile(file);
@@ -173,7 +173,7 @@ public class FileStore {
         return null;
     }
 
-    static void removeMailbox(int mboxId) {
+    static void removeMailbox(long mboxId) {
         File dir = getMailboxDir(mboxId);
         try {
             FileUtil.deleteDir(dir);

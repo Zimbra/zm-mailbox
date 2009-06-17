@@ -506,7 +506,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
-    public int getMailboxId() {
+    public long getMailboxId() {
         return mMailbox.getId();
     }
 

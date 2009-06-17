@@ -128,23 +128,23 @@ public abstract class CalendarItem extends MailItem {
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
     public static class CalendarMetadata {
-    	public int mailboxId;
-    	public int itemId;
-    	public String uid;
-    	public int mod_metadata;
-    	public int mod_content;
-    	public long start_time;
-    	public long end_time;
-    	
-    	public CalendarMetadata(int mailboxId, int itemId, String uid, int mod_metadata, int mod_content, long start_time, long end_time) {
-    		this.mailboxId = mailboxId;
-    		this.itemId = itemId;
-    		this.uid = uid;
-    		this.mod_metadata = mod_metadata;
-    		this.mod_content = mod_content;
-    		this.start_time = start_time;
-    		this.end_time = end_time;
-    	}
+        public long mailboxId;
+        public int itemId;
+        public String uid;
+        public int mod_metadata;
+        public int mod_content;
+        public long start_time;
+        public long end_time;
+
+        public CalendarMetadata(long mailboxId, int itemId, String uid, int mod_metadata, int mod_content, long start_time, long end_time) {
+            this.mailboxId = mailboxId;
+            this.itemId = itemId;
+            this.uid = uid;
+            this.mod_metadata = mod_metadata;
+            this.mod_content = mod_content;
+            this.start_time = start_time;
+            this.end_time = end_time;
+        }
     }
     
     protected CalendarItem(Mailbox mbox, UnderlyingData data) throws ServiceException {

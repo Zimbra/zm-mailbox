@@ -25,56 +25,52 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class ModifySavedSearch extends RedoableOp {
 
-	private int mSearchId;
+    private int mSearchId;
     private String mQuery;
     private String mTypes;
     private String mSort;
 
-	public ModifySavedSearch() {
-		mSearchId = UNKNOWN_ID;
-	}
+    public ModifySavedSearch() {
+        mSearchId = UNKNOWN_ID;
+    }
 
-	public ModifySavedSearch(int mailboxId, int searchId, String query, String types, String sort) {
-		setMailboxId(mailboxId);
-		mSearchId = searchId;
+    public ModifySavedSearch(long mailboxId, int searchId, String query, String types, String sort) {
+        setMailboxId(mailboxId);
+        mSearchId = searchId;
         mQuery = query != null ? query : "";
         mTypes = types != null ? types : "";
         mSort = sort != null ? sort : "";
-	}
+    }
 
-	public int getOpCode() {
-		return OP_MODIFY_SAVED_SEARCH;
-	}
+    @Override public int getOpCode() {
+        return OP_MODIFY_SAVED_SEARCH;
+    }
 
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mSearchId).append(", query=").append(mQuery);
         sb.append(", types=").append(mTypes).append(", sort=").append(mSort);
         return sb.toString();
-	}
+    }
 
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(mSearchId);
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeInt(mSearchId);
         out.writeUTF(mQuery);
         out.writeUTF(mTypes);
         out.writeUTF(mSort);
-	}
+    }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
-		mSearchId = in.readInt();
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+        mSearchId = in.readInt();
         mQuery = in.readUTF();
         mTypes = in.readUTF();
         mSort = in.readUTF();
-	}
+    }
 
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
-    	mailbox.modifySearchFolder(getOperationContext(), mSearchId, mQuery, mTypes, mSort);
-	}
+    @Override public void redo() throws Exception {
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+        mailbox.modifySearchFolder(getOperationContext(), mSearchId, mQuery, mTypes, mSort);
+    }
 }

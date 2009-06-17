@@ -290,7 +290,7 @@ public final class MailboxIndex
     }
 
     public MailboxIndex(Mailbox mbox, String root) throws ServiceException {
-        int mailboxId = mbox.getId();
+        long mailboxId = mbox.getId();
 
         mMailboxId = mailboxId;
         mMailbox = mbox;
@@ -350,7 +350,7 @@ public final class MailboxIndex
     private ILuceneIndex mLucene;
     private ITextIndex mTextIndex;
 
-    private int mMailboxId;
+    private long mMailboxId;
     private Mailbox mMailbox;
     
     public static void startup() {
@@ -534,5 +534,5 @@ public final class MailboxIndex
         return mMailbox;
     }
     
-    int getMailboxId() { return mMailboxId; }
+    long getMailboxId() { return mMailboxId; }
 }

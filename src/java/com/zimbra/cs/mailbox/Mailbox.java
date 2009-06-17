@@ -157,8 +157,8 @@ public class Mailbox {
 
 
     public static final class MailboxData implements Cloneable {
-        public int     id;
-        public int     schemaGroupId;
+        public long    id;
+        public long    schemaGroupId;
         public String  accountId;
         public long    size;
         public int     contacts;
@@ -360,7 +360,7 @@ public class Mailbox {
     private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
 
-    private int           mId;
+    private long          mId;
     private MailboxData   mData;
     private MailboxChange mCurrentChange = new MailboxChange();
     private List<Session> mListeners = new CopyOnWriteArrayList<Session>();
@@ -442,12 +442,12 @@ public class Mailbox {
     /** Returns the server-local numeric ID for this mailbox.  To get a
      *  system-wide, persistent unique identifier for the mailbox, use
      *  {@link #getAccountId()}. */
-    public int getId() {
+    public long getId() {
         return mId;
     }
 
     /** Returns which MBOXGROUP<N> database this mailbox is homed in. */
-    public int getSchemaGroupId() {
+    public long getSchemaGroupId() {
         return mData.schemaGroupId;
     }
 
@@ -4281,7 +4281,7 @@ public class Mailbox {
             // priority is calculated from headers
             flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             flags |= pm.getPriorityBitmask();
-            
+
             folder = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
             long tags = Tag.tagsToBitmask(tagStr);
@@ -5508,8 +5508,8 @@ public class Mailbox {
      */
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
-		return createFolder(octxt, name, parentId, (byte)0, defaultView, flags, color, url);
-	}
+        return createFolder(octxt, name, parentId, (byte)0, defaultView, flags, color, url);
+    }
 
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {

@@ -120,7 +120,7 @@ public class ScheduledTaskManager {
     /**
      * Cancels a persistent task.
      */
-    public static ScheduledTask cancel(String className, String taskName, int mailboxId, boolean mayInterruptIfRunning)
+    public static ScheduledTask cancel(String className, String taskName, long mailboxId, boolean mayInterruptIfRunning)
     throws ServiceException {
         Connection conn = null;
         ScheduledTask task = null;
@@ -144,7 +144,7 @@ public class ScheduledTaskManager {
      * @return the task, or <tt>null</tt> if the task could not be found
      */
     public static ScheduledTask cancel(Connection conn, String className, String taskName,
-                                       int mailboxId, boolean mayInterruptIfRunning)
+                                       long mailboxId, boolean mayInterruptIfRunning)
     throws ServiceException {
         if (conn != null) {
             DbScheduledTask.deleteTask(conn, className, taskName);
@@ -152,7 +152,7 @@ public class ScheduledTaskManager {
         return (ScheduledTask) sScheduler.cancel(getKey(className, taskName, mailboxId), mayInterruptIfRunning);
     }
     
-    private static String getKey(String className, String taskName, int mailboxId) {
+    private static String getKey(String className, String taskName, long mailboxId) {
         StringBuilder sb = new StringBuilder();
         sb.append(className).append(':').append(taskName);
         if (mailboxId > 0) {
@@ -171,7 +171,8 @@ public class ScheduledTaskManager {
      */
     private static class TaskCleanup
     implements ScheduledTaskCallback<Void> {
-        
+        TaskCleanup()  { }
+
         public void afterTaskRun(Callable<Void> c) {
             Connection conn = null;
             ScheduledTask task = (ScheduledTask) c;

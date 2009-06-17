@@ -110,7 +110,7 @@ extends Thread {
      * Iterates all mailboxes, purging one at a time and sleeping
      * between purges.
      */
-    public void run() {
+    @Override public void run() {
         // Sleep before doing work, to give the server time to warm up.  Also limits the amount
         // of random effect when determining the next mailbox id.
         long sleepTime = LC.purge_initial_sleep_time.longValue();
@@ -124,10 +124,10 @@ extends Thread {
         }
         
         while (true) {
-            List<Integer> mailboxIds = getMailboxIds();
+            List<Long> mailboxIds = getMailboxIds();
             boolean slept = false;
             
-            for (int mailboxId : mailboxIds) {
+            for (long mailboxId : mailboxIds) {
                 if (mShutdownRequested) {
                     ZimbraLog.purge.info("Shutting down purge thread.");
                     return;
@@ -144,7 +144,7 @@ extends Thread {
                         Account account = mbox.getAccount();
                         ZimbraLog.addAccountNameToContext(account.getName());
                         mbox.purgeMessages(null);
-                        Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
+                        Config.setLong(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
                     }
@@ -222,18 +222,18 @@ extends Thread {
      * Returns all the mailbox id's in purge order, starting with the one
      * after {@link Provisioning#A_zimbraMailLastPurgedMailboxId}.
      */
-    private List<Integer> getMailboxIds() {
-        List<Integer> mailboxIds = new ArrayList<Integer>();
+    private List<Long> getMailboxIds() {
+        List<Long> mailboxIds = new ArrayList<Long>();
 
         try {
             // Get sorted list of id's
-            for (int id : MailboxManager.getInstance().getMailboxIds()) {
+            for (long id : MailboxManager.getInstance().getMailboxIds()) {
                 mailboxIds.add(id);
             }
             Collections.sort(mailboxIds);
             
             // Reorder id's so that we start with the one after the last purged
-            int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
+            long lastId = Config.getLong(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
             for (int i = 0; i < mailboxIds.size(); i++) {
                 if (mailboxIds.get(i) > lastId) {
                     Collections.rotate(mailboxIds, -i);

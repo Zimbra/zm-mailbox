@@ -49,7 +49,7 @@ public class DbOutOfOffice {
      * @param mbox the sender's mailbox
      * @param sentTo the recipient's email address
      * @param cacheDurationMillis threshold for determining last sent time
-     * @throws ServiceException if a database error occrurs
+     * @throws ServiceException if a database error occurs
      */
     public static boolean alreadySent(Connection conn, Mailbox mbox, String sentTo, long cacheDurationMillis)
     throws ServiceException {
@@ -65,8 +65,7 @@ public class DbOutOfOffice {
             stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "sent_to = ? AND sent_on > ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, sentTo);
             stmt.setTimestamp(pos++, cutoff);
 
@@ -120,14 +119,14 @@ public class DbOutOfOffice {
 
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
-                    "(mailbox_id, sent_to, sent_on) VALUES (?, ?, ?) " +
-                    (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? "ON DUPLICATE KEY UPDATE sent_on = ?" : ""));
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, sentTo.toLowerCase());
-            stmt.setTimestamp(3, ts);
-            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY))
-                stmt.setTimestamp(4, ts);
+            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
+            stmt = conn.prepareStatement(command + " INTO " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
+                    "(" + DbMailItem.MAILBOX_ID + "sent_to, sent_on)" +
+                    " VALUES (" + DbMailItem.MAILBOX_ID_VALUE +" ?, ?) ");
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setString(pos++, sentTo.toLowerCase());
+            stmt.setTimestamp(pos++, ts);
             int num = stmt.executeUpdate();
             if (num > 0) {
                 if (mLog.isDebugEnabled()) {
@@ -139,16 +138,17 @@ public class DbOutOfOffice {
                         + " sent_to=" + sentTo + " sent_on=" + sentOn + " rows=" + num + ")");
             }
         } catch (SQLException e) {
-            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 try {
                     stmt.close();
 
-                    stmt = conn.prepareStatement("UPDATE " + TABLE_NAME +
+                    stmt = conn.prepareStatement("UPDATE " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
                             " SET sent_on = ?" +
-                            " WHERE mailbox_id = ? AND sent_to = ?");
-                    stmt.setTimestamp(1, ts);
-                    stmt.setInt(2, mbox.getId());
-                    stmt.setString(3, sentTo.toLowerCase());
+                            " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "sent_to = ?");
+                    int pos = 1;
+                    stmt.setTimestamp(pos++, ts);
+                    pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                    stmt.setString(pos++, sentTo.toLowerCase());
                     stmt.executeUpdate();
                 } catch (SQLException nested) {
                     throw ServiceException.FAILURE("DbOutOfOffice.setSentTime: sql exception " +
@@ -179,9 +179,9 @@ public class DbOutOfOffice {
         try {
             stmt = conn.prepareStatement("DELETE FROM " + DbMailbox.qualifyZimbraTableName(mbox, TABLE_NAME) +
                     (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(1, mbox.getId());
+            DbMailItem.setMailboxId(stmt, mbox, 1);
             int num = stmt.executeUpdate();
+ 
             mLog.debug("DbOutOfOffice.clear() mbox=" + mbox.getId() + " rows=" + num);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("DbOutOfOffice.clear acctId=" + mbox.getAccountId(), e);
@@ -205,9 +205,9 @@ public class DbOutOfOffice {
             stmt = conn.prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE sent_on <= ?");
             stmt.setTimestamp(1, cutoff);
             int num = stmt.executeUpdate();
-            if (mLog.isDebugEnabled()) {
+
+            if (mLog.isDebugEnabled())
                 mLog.debug("DbOutOfOffice.prune() deleted " + num + " rows");
-            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("DbOutOfOffice.prune()", e);
         } finally {

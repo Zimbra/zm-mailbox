@@ -23,36 +23,33 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class TrackImap extends RedoableOp {
 
     public TrackImap() {
     }
 
-    public TrackImap(int mailboxId) {
+    public TrackImap(long mailboxId) {
         setMailboxId(mailboxId);
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_TRACK_IMAP;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         // no members to print
         return null;
     }
 
-    protected void serializeData(RedoLogOutput out) {
+    @Override protected void serializeData(RedoLogOutput out) {
         // no members to serialize
     }
 
-    protected void deserializeData(RedoLogInput in) {
+    @Override protected void deserializeData(RedoLogInput in) {
         // no members to deserialize
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.beginTrackingImap();
     }

@@ -26,9 +26,6 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class RepositionNote extends RedoableOp {
 
     private int mId;
@@ -38,17 +35,17 @@ public class RepositionNote extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public RepositionNote(int mailboxId, int id, Note.Rectangle bounds) {
+    public RepositionNote(long mailboxId, int id, Note.Rectangle bounds) {
         setMailboxId(mailboxId);
         mId = id;
         mBounds = bounds;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_REPOSITION_NOTE;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId);
         if (mBounds != null)
@@ -56,7 +53,7 @@ public class RepositionNote extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mBounds.x);
         out.writeInt(mBounds.y);
@@ -64,7 +61,7 @@ public class RepositionNote extends RedoableOp {
         out.writeInt(mBounds.height);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         int x = in.readInt();
         int y = in.readInt();
@@ -73,9 +70,8 @@ public class RepositionNote extends RedoableOp {
         mBounds = new Note.Rectangle(x, y, w, h);
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mailbox.repositionNote(getOperationContext(), mId, mBounds);
     }
 }

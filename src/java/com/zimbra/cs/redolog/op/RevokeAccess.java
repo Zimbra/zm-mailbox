@@ -25,9 +25,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class RevokeAccess extends RedoableOp {
 
     private int mFolderId;
@@ -38,33 +35,33 @@ public class RevokeAccess extends RedoableOp {
         mGrantee = "";
     }
 
-    public RevokeAccess(int mailboxId, int folderId, String grantee) {
+    public RevokeAccess(long mailboxId, int folderId, String grantee) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_REVOKE_ACCESS;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mFolderId);
         sb.append(", grantee=").append(mGrantee);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
         out.writeUTF(mGrantee);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         mGrantee = in.readUTF();
     }
 
-    public void redo() throws ServiceException {
+    @Override public void redo() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.revokeAccess(getOperationContext(), mFolderId, mGrantee);
     }

@@ -26,9 +26,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class RenameItem extends RedoableOp {
 
     int mId;
@@ -41,7 +38,7 @@ public class RenameItem extends RedoableOp {
         mType = MailItem.TYPE_UNKNOWN;
     }
 
-    public RenameItem(int mailboxId, int id, byte type, String name, int folderId) {
+    public RenameItem(long mailboxId, int id, byte type, String name, int folderId) {
         setMailboxId(mailboxId);
         mId = id;
         mType = type;
@@ -49,31 +46,30 @@ public class RenameItem extends RedoableOp {
         mName = name != null ? name : "";
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_RENAME_ITEM;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         return "id=" + mId + ", type=" + mType + ", name=" + mName + ",parent=" + mFolderId;
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
         out.writeUTF(mName);
         out.writeByte(mType);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
         mName = in.readUTF();
         mType = in.readByte();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mailbox.rename(getOperationContext(), mId, mType, mName, mFolderId);
     }
 }

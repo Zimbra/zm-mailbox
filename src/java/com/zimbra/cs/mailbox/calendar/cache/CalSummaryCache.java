@@ -685,7 +685,7 @@ public class CalSummaryCache {
     private void invalidateSummary(Mailbox mbox, int folderId) {
         if (!LC.calendar_cache_enabled.booleanValue())
             return;
-        int mboxId = mbox.getId();
+        long mboxId = mbox.getId();
         CalSummaryKey key = new CalSummaryKey(mbox.getAccountId(), folderId);
         synchronized (mSummaryCache) {
             mSummaryCache.remove(key);

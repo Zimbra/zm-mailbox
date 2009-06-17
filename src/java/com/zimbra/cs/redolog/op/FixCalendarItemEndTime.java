@@ -24,40 +24,37 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class FixCalendarItemEndTime extends RedoableOp {
 
     private int mId;
 
-    public FixCalendarItemEndTime() {}
+    public FixCalendarItemEndTime()  {}
 
-    public FixCalendarItemEndTime(int mailboxId, int itemId) {
+    public FixCalendarItemEndTime(long mailboxId, int itemId) {
         setMailboxId(mailboxId);
         mId = itemId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_FIX_CALENDAR_ITEM_END_TIME;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=");
         sb.append(mId);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         OperationContext octxt = getOperationContext();
         CalendarItem calItem = mbox.getCalendarItemById(octxt, mId);

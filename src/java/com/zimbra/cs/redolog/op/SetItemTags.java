@@ -29,36 +29,33 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class SetItemTags extends RedoableOp {
 
-	private int[] mIds;
-	private byte mType;
-	private int mFlags;
+    private int[] mIds;
+    private byte mType;
+    private int mFlags;
     private long mTags;
     private String mConstraint;
 
-	public SetItemTags() {
-		mType = MailItem.TYPE_UNKNOWN;
+    public SetItemTags() {
+        mType = MailItem.TYPE_UNKNOWN;
         mConstraint = null;
-	}
+    }
 
-	public SetItemTags(int mailboxId, int[] itemIds, byte itemType, int flags, long tags, TargetConstraint tcon) {
-		setMailboxId(mailboxId);
-		mIds = itemIds;
-		mType = itemType;
-		mFlags = flags;
+    public SetItemTags(long mailboxId, int[] itemIds, byte itemType, int flags, long tags, TargetConstraint tcon) {
+        setMailboxId(mailboxId);
+        mIds = itemIds;
+        mType = itemType;
+        mFlags = flags;
         mTags = tags;
         mConstraint = (tcon == null ? null : tcon.toString());
-	}
+    }
 
-	public int getOpCode() {
-		return OP_SET_ITEM_TAGS;
-	}
+    @Override public int getOpCode() {
+        return OP_SET_ITEM_TAGS;
+    }
 
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("ids=");
         sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
         sb.append(", flags=[").append(mFlags);
@@ -66,11 +63,11 @@ public class SetItemTags extends RedoableOp {
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();
-	}
+    }
 
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(-1);
-		out.writeByte(mType);
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeInt(-1);
+        out.writeByte(mType);
         out.writeInt(mFlags);
         out.writeLong(mTags);
         boolean hasConstraint = mConstraint != null;
@@ -81,13 +78,13 @@ public class SetItemTags extends RedoableOp {
         if (mIds != null)
             for (int i = 0; i < mIds.length; i++)
                 out.writeInt(mIds[i]);
-	}
+    }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         int id = in.readInt();
         if (id > 0)
             mIds = new int[] { id };
-		mType = in.readByte();
+        mType = in.readByte();
         mFlags = in.readInt();
         mTags = in.readLong();
         if (in.readBoolean())
@@ -97,20 +94,20 @@ public class SetItemTags extends RedoableOp {
             for (int i = 0; i < mIds.length; i++)
                 mIds[i] = in.readInt();
         }
-	}
+    }
 
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 
         TargetConstraint tcon = null;
-        if (mConstraint != null)
+        if (mConstraint != null) {
             try {
                 tcon = TargetConstraint.parseConstraint(mbox, mConstraint);
             } catch (ServiceException e) {
                 mLog.warn(e);
             }
+        }
 
-		mbox.setTags(getOperationContext(), mIds, mType, mFlags, mTags, tcon);
-	}
+        mbox.setTags(getOperationContext(), mIds, mType, mFlags, mTags, tcon);
+    }
 }

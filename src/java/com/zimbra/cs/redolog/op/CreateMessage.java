@@ -21,7 +21,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -86,13 +86,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mNoICal = false;
     }
 
-    protected CreateMessage(int mailboxId, String rcptEmail, boolean shared,
+    protected CreateMessage(long mailboxId, String rcptEmail, boolean shared,
                             String digest, int msgSize, int folderId, boolean noICal,
                             int flags, String tags) {
         this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest, msgSize, folderId, noICal, flags, tags, null);
     }
 
-    public CreateMessage(int mailboxId, String rcptEmail, long receivedDate,
+    public CreateMessage(long mailboxId, String rcptEmail, long receivedDate,
                          boolean shared, String digest, int msgSize, int folderId,
                          boolean noICal, int flags, String tags, CustomMetadata extended) {
         setMailboxId(mailboxId);
@@ -209,7 +209,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             return mVolumeId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_MESSAGE;
     }
 
@@ -254,7 +254,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return mData;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=").append(mMsgId);
         sb.append(", rcpt=").append(mRcptEmail);
         sb.append(", rcvDate=").append(mReceivedDate);
@@ -292,7 +292,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
     
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mRcptEmail != null ? mRcptEmail : "");
         if (getVersion().atLeast(1, 4))
             out.writeLong(mReceivedDate);
@@ -335,7 +335,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mRcptEmail = in.readUTF();
         if (getVersion().atLeast(1, 4))
             mReceivedDate = in.readLong();
@@ -393,12 +393,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
-        List<Integer> mboxList = new ArrayList<Integer>(1);
-        mboxList.add(new Integer(mboxId));
+        List<Long> mboxList = Arrays.asList(mboxId);
         DeliveryContext sharedDeliveryCtxt = new DeliveryContext(mShared, mboxList);
         
         if (mMsgBodyType == MSGBODY_LINK) {

@@ -29,10 +29,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-
-/**
- * @author jhahm
- */
 public class CopyItem extends RedoableOp {
 
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
@@ -46,7 +42,7 @@ public class CopyItem extends RedoableOp {
         mDestVolumeId = -1;
     }
 
-    public CopyItem(int mailboxId, byte type, int folderId, short volumeId) {
+    public CopyItem(long mailboxId, byte type, int folderId, short volumeId) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
@@ -78,11 +74,11 @@ public class CopyItem extends RedoableOp {
         return mDestVolumeId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_COPY_ITEM;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
         sb.append(", destVolumeId=").append(mDestVolumeId);
@@ -92,7 +88,7 @@ public class CopyItem extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(-1);
         out.writeInt(-1);
         out.writeByte(mType);
@@ -105,7 +101,7 @@ public class CopyItem extends RedoableOp {
         }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         // deal with old-style redologs
         int srcId = in.readInt();
         int destId = in.readInt();
@@ -124,8 +120,8 @@ public class CopyItem extends RedoableOp {
         }
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         int i = 0, itemIds[] = new int[mDestIds.size()];

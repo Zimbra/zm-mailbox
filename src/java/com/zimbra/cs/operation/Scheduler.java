@@ -191,7 +191,7 @@ public class Scheduler {
         if (mbox == null) {
             return sScheduler[0];
         }
-        return sScheduler[mbox.getId() % sScheduler.length]; 
+        return sScheduler[(int) (mbox.getId() % sScheduler.length)]; 
     }
 
     /**

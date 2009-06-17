@@ -120,7 +120,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         return Integer.toString(itemId);
     }
     
-    LuceneIndex(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
+    LuceneIndex(MailboxIndex mbidx, String idxParentDir, long mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
         

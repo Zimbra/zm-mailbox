@@ -30,7 +30,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -74,12 +73,12 @@ public class MailboxManager {
 
     public static final class MailboxLock {
         private final String accountId;
-        private final int    mailboxId;
+        private final long   mailboxId;
         private Mailbox mailbox;
         private List<Thread> allowedThreads;
 
-        MailboxLock(String acct, int id)  { this(acct, id, null); }
-        MailboxLock(String acct, int id, Mailbox mbox) {
+        MailboxLock(String acct, long id)  { this(acct, id, null); }
+        MailboxLock(String acct, long id, Mailbox mbox) {
             accountId = acct.toLowerCase();  mailboxId = id;
             mailbox = mbox;
             allowedThreads = new ArrayList<Thread>();
@@ -87,7 +86,7 @@ public class MailboxManager {
         }
 
         String getAccountId()  { return accountId; }
-        int getMailboxId()     { return mailboxId; }
+        long getMailboxId()    { return mailboxId; }
         Mailbox getMailbox()   { return mailbox; }
 
         public synchronized void registerAllowedThread(Thread t) {
@@ -158,7 +157,7 @@ public class MailboxManager {
     /** Maps account IDs (<code>String</code>s) to mailbox IDs
      *  (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
      *  server appears in this mapping. */
-    private Map<String, Integer> mMailboxIds;
+    private Map<String, Long> mMailboxIds;
 
     /** Maps mailbox IDs (<code>Integer</code>s) to either <ul>
      *     <li>a loaded <code>Mailbox</code>, or
@@ -287,7 +286,7 @@ public class MailboxManager {
         if (accountId == null)
             throw new IllegalArgumentException();
 
-        Integer mailboxKey;
+        Long mailboxKey;
         synchronized (this) {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
         }
@@ -337,7 +336,7 @@ public class MailboxManager {
      *        lives on a different host
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
      *        has been deleted</ul> */
-    public Mailbox getMailboxById(int mailboxId) throws ServiceException {
+    public Mailbox getMailboxById(long mailboxId) throws ServiceException {
         return getMailboxById(mailboxId, FetchMode.DO_NOT_AUTOCREATE, false);
     }
 
@@ -365,12 +364,12 @@ public class MailboxManager {
      *        lives on a different host
      *    <li><code>account.NO_SUCH_ACCOUNT</code> - if the mailbox's Account
      *        has been deleted and <code>skipMailHostCheck=false</code></ul> */
-    public Mailbox getMailboxById(int mailboxId, boolean skipMailHostCheck) 
+    public Mailbox getMailboxById(long mailboxId, boolean skipMailHostCheck) 
     throws ServiceException {
         return getMailboxById(mailboxId, FetchMode.DO_NOT_AUTOCREATE, skipMailHostCheck);
     }
     
-    private Mailbox getMailboxById(int mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
+    private Mailbox getMailboxById(long mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
     throws ServiceException {
         
         // see bug 19088 - we do NOT want to call this while holding the mgr lock, because
@@ -489,7 +488,7 @@ public class MailboxManager {
      *         be called for this mailbox at some point in the future, if this mailbox
      *         is ever accessed
      */
-    public synchronized boolean isMailboxLoadedAndAvailable(int mailboxId) {
+    public synchronized boolean isMailboxLoadedAndAvailable(long mailboxId) {
         Object cached = mMailboxCache.get(mailboxId);
         if (cached == null)
             return false;
@@ -500,7 +499,7 @@ public class MailboxManager {
             return true;
     }
 
-    private Object retrieveFromCache(int mailboxId, boolean trackGC) throws MailServiceException {
+    private Object retrieveFromCache(long mailboxId, boolean trackGC) throws MailServiceException {
         synchronized (this) {
             Object cached = mMailboxCache.get(mailboxId, trackGC);
             if (cached instanceof MailboxLock) {
@@ -519,8 +518,8 @@ public class MailboxManager {
         return new Mailbox(data);
     }
 
-    protected synchronized void cacheAccount(String accountId, int mailboxId) {
-        mMailboxIds.put(accountId.toLowerCase(), new Integer(mailboxId));
+    protected synchronized void cacheAccount(String accountId, long mailboxId) {
+        mMailboxIds.put(accountId.toLowerCase(), new Long(mailboxId));
     }
 
     private Mailbox cacheMailbox(Mailbox mailbox) {
@@ -529,7 +528,7 @@ public class MailboxManager {
     }
 
 
-    public MailboxLock beginMaintenance(String accountId, int mailboxId) throws ServiceException {
+    public MailboxLock beginMaintenance(String accountId, long mailboxId) throws ServiceException {
         Mailbox mbox = getMailboxByAccountId(accountId, false);
         if (mbox == null) {
             synchronized (this) {
@@ -621,12 +620,12 @@ public class MailboxManager {
      *  order. Note that <code>Mailbox</code>es are lazily created, so this is
      *  not the same as the set of mailboxes for accounts whose
      *  <code>zimbraMailHost</code> LDAP attribute points to this server. */
-    public int[] getMailboxIds() {
+    public long[] getMailboxIds() {
         int i = 0;
         synchronized (this) {
-            Collection<Integer> col = mMailboxIds.values();
-            int[] mailboxIds = new int[col.size()];
-            for (int id : col)
+            Collection<Long> col = mMailboxIds.values();
+            long[] mailboxIds = new long[col.size()];
+            for (long id : col)
                 mailboxIds[i++] = id;
             return mailboxIds;
         }
@@ -658,14 +657,14 @@ public class MailboxManager {
      *    <li><code>service.FAILURE</code> - an error occurred while accessing
      *        the database; a SQLException is encapsulated</ul> */
     public Map<String, Long> getMailboxSizes(List<NamedEntry> accounts) throws ServiceException {
-        List<Integer> requested;
+        List<Long> requested;
         synchronized (this) {
             if (accounts == null) {
-                requested = new ArrayList<Integer>(mMailboxIds.values());
+                requested = new ArrayList<Long>(mMailboxIds.values());
             } else {
-                requested = new ArrayList<Integer>(accounts.size());
+                requested = new ArrayList<Long>(accounts.size());
                 for (NamedEntry account : accounts) {
-                    Integer mailboxId = mMailboxIds.get(account.getId());
+                    Long mailboxId = mMailboxIds.get(account.getId());
                     if (mailboxId != null)
                         requested.add(mailboxId);
                 }
@@ -710,7 +709,7 @@ public class MailboxManager {
 
         synchronized (this) {
             // check to make sure the mailbox doesn't already exist
-            Integer mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
+            Long mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
             if (mailboxKey != null)
                 return getMailboxById(mailboxKey.intValue());
 
@@ -724,7 +723,7 @@ public class MailboxManager {
 
                 // create the mailbox row and the mailbox database
                 CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
-                int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
+                long id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
                 MailboxData data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
                 ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
@@ -796,9 +795,9 @@ public class MailboxManager {
         sb.append("MAILBOX CACHE DUMPS\n");
         sb.append("----------------------------------------------------------------------\n");
         synchronized (this) {
-            for (Map.Entry<String,Integer> entry : mMailboxIds.entrySet())
+            for (Map.Entry<String,Long> entry : mMailboxIds.entrySet())
                 sb.append("1) key=" + entry.getKey() + " (hash=" + entry.getKey().hashCode() + "); val=" + entry.getValue() + "\n");
-            for (Map.Entry<Integer,Object> entry : mMailboxCache.entrySet())
+            for (Map.Entry<Long,Object> entry : mMailboxCache.entrySet())
                 sb.append("2) key=" + entry.getKey() + "; val=" + entry.getValue() + "(class= " + entry.getValue().getClass().getName() + ",hash=" + entry.getValue().hashCode() + ")");
         }
         sb.append("----------------------------------------------------------------------\n");
@@ -806,17 +805,17 @@ public class MailboxManager {
     }
 
 
-    private static class MailboxMap implements Map<Integer, Object> {
+    private static class MailboxMap implements Map<Long, Object> {
         final int mHardSize;
-        final LinkedHashMap<Integer, Object> mHardMap;
-        final HashMap<Integer, Object> mSoftMap;
+        final LinkedHashMap<Long, Object> mHardMap;
+        final HashMap<Long, Object> mSoftMap;
 
         @SuppressWarnings("serial") MailboxMap(int hardSize) {
             hardSize = Math.max(hardSize, 0);
             mHardSize = hardSize;
-            mSoftMap = new HashMap<Integer, Object>();
-            mHardMap = new LinkedHashMap<Integer, Object>(mHardSize / 4, (float) .75, true) {
-                @Override protected boolean removeEldestEntry(Entry<Integer, Object> eldest) {
+            mSoftMap = new HashMap<Long, Object>();
+            mHardMap = new LinkedHashMap<Long, Object>(mHardSize / 4, (float) .75, true) {
+                @Override protected boolean removeEldestEntry(Entry<Long, Object> eldest) {
                     if (size() <= mHardSize)
                         return false;
 
@@ -842,8 +841,8 @@ public class MailboxManager {
             return mHardMap.containsValue(value) || mSoftMap.containsValue(value);
         }
 
-        public Set<Entry<Integer, Object>> entrySet() {
-            Set<Entry<Integer, Object>> entries = new HashSet<Entry<Integer, Object>>(size());
+        public Set<Entry<Long, Object>> entrySet() {
+            Set<Entry<Long, Object>> entries = new HashSet<Entry<Long, Object>>(size());
             if (mHardSize > 0)
                 entries.addAll(mHardMap.entrySet());
             entries.addAll(mSoftMap.entrySet());
@@ -871,15 +870,15 @@ public class MailboxManager {
             return mHardMap.isEmpty() && mSoftMap.isEmpty();
         }
 
-        public Set<Integer> keySet() {
-            Set<Integer> keys = new HashSet<Integer>(size());
+        public Set<Long> keySet() {
+            Set<Long> keys = new HashSet<Long>(size());
             if (mHardSize > 0)
                 keys.addAll(mHardMap.keySet());
             keys.addAll(mSoftMap.keySet());
             return keys;
         }
 
-        public Object put(Integer key, Object value) {
+        public Object put(Long key, Object value) {
             Object removed;
             if (mHardSize > 0) {
                 removed = mHardMap.put(key, value);
@@ -895,8 +894,8 @@ public class MailboxManager {
             return removed;
         }
 
-        public void putAll(Map<? extends Integer, ? extends Object> t) {
-            for (Entry<? extends Integer, ? extends Object> entry : t.entrySet())
+        public void putAll(Map<? extends Long, ? extends Object> t) {
+            for (Entry<? extends Long, ? extends Object> entry : t.entrySet())
                 put(entry.getKey(), entry.getValue());
         }
 

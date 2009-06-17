@@ -25,40 +25,41 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 
 public class SaveWiki extends SaveDocument {
 
-	private String mWikiword;
-	
-	public SaveWiki() {
-	}
-	
-    public SaveWiki(int mailboxId, String digest, int msgSize, int folderId) {
+    private String mWikiword;
+
+    public SaveWiki() {
+    }
+
+    public SaveWiki(long mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, digest, msgSize, folderId);
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SAVE_WIKI;
     }
 
     public String getWikiword() {
-    	return mWikiword;
+        return mWikiword;
     }
-    
+
     public void setWikiword(String w) {
-    	mWikiword = w;
+        mWikiword = w;
     }
-    
-    protected void serializeData(RedoLogOutput out) throws IOException {
+
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mWikiword);
         super.serializeData(out);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mWikiword = in.readUTF();
         super.deserializeData(in);
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getAdditionalDataStream());
         } catch (MailServiceException e) {

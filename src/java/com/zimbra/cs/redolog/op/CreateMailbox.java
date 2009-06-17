@@ -30,69 +30,52 @@ import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class CreateMailbox extends RedoableOp {
 
-	private String mAccountId;
+    private String mAccountId;
 
-	public CreateMailbox() {
-	}
+    public CreateMailbox() {
+    }
 
-	public CreateMailbox(String accountId) {
-		mAccountId = accountId;
-	}
+    public CreateMailbox(String accountId) {
+        mAccountId = accountId;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#getOperationCode()
-	 */
-	public int getOpCode() {
-		return OP_CREATE_MAILBOX;
-	}
+    @Override public int getOpCode() {
+        return OP_CREATE_MAILBOX;
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
-	 */
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("account=").append(mAccountId != null ? mAccountId : "");
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
-	 */
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeUTF(mAccountId);
-	}
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeUTF(mAccountId);
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
-	 */
-	protected void deserializeData(RedoLogInput in) throws IOException {
-		mAccountId = in.readUTF();
-	}
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+        mAccountId = in.readUTF();
+    }
 
-	/* (non-Javadoc)
-	 * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
-	 */
-	public void redo() throws Exception {
-		int opMboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId, false);
-		if (mbox != null) {
-			int mboxId = mbox.getId();
-			if (opMboxId == mboxId) {
-				mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
-				return;
-			} else {
-			    throw new MailboxIdConflictException(mAccountId, opMboxId, mboxId, this);
-			}
-		} else {
-    		Account account = Provisioning.getInstance().get(AccountBy.id, mAccountId);
-    		if (account == null)
-    			throw new RedoException("Account " + mAccountId + " does not exist", this);
-    
-    		mbox = MailboxManager.getInstance().createMailbox(getOperationContext(), account);
-		}
-	}
+    @Override public void redo() throws Exception {
+        long opMboxId = getMailboxId();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId, false);
+
+        if (mbox != null) {
+            long mboxId = mbox.getId();
+            if (opMboxId == mboxId) {
+                mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
+                return;
+            } else {
+                throw new MailboxIdConflictException(mAccountId, opMboxId, mboxId, this);
+            }
+        } else {
+            Account account = Provisioning.getInstance().get(AccountBy.id, mAccountId);
+            if (account == null)
+                throw new RedoException("Account " + mAccountId + " does not exist", this);
+
+            mbox = MailboxManager.getInstance().createMailbox(getOperationContext(), account);
+        }
+    }
 }

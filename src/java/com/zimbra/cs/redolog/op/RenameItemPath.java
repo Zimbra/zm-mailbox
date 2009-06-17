@@ -26,9 +26,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class RenameItemPath extends RedoableOp {
 
     int mId;
@@ -41,7 +38,7 @@ public class RenameItemPath extends RedoableOp {
         mType = MailItem.TYPE_UNKNOWN;
     }
 
-    public RenameItemPath(int mailboxId, int id, byte type, String path) {
+    public RenameItemPath(long mailboxId, int id, byte type, String path) {
         setMailboxId(mailboxId);
         mId = id;
         mPath = path != null ? path : "";
@@ -55,11 +52,11 @@ public class RenameItemPath extends RedoableOp {
         mParentIds = parentIds;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_RENAME_ITEM_PATH;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", type=").append(mType).append(", path=").append(mPath);
         if (mParentIds != null) {
@@ -74,7 +71,7 @@ public class RenameItemPath extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeUTF(mPath);
         if (mParentIds != null) {
@@ -87,7 +84,7 @@ public class RenameItemPath extends RedoableOp {
         out.writeByte(mType);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mPath = in.readUTF();
         int numParentIds = in.readInt();
@@ -99,9 +96,8 @@ public class RenameItemPath extends RedoableOp {
         mType = in.readByte();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mailbox.rename(getOperationContext(), mId, mType, mPath);
     }
 }

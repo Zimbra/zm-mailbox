@@ -25,9 +25,6 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class SetConfig extends RedoableOp {
 
     private String mSection;
@@ -38,33 +35,33 @@ public class SetConfig extends RedoableOp {
         mConfig = "";
     }
 
-    public SetConfig(int mailboxId, String section, Metadata config) {
+    public SetConfig(long mailboxId, String section, Metadata config) {
         setMailboxId(mailboxId);
         mSection = section == null ? "" : section;
         mConfig = config == null ? "" : config.toString();
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SET_CONFIG;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("section=").append(mSection);
         sb.append(", config=").append(mConfig.equals("") ? "null" : mConfig);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mSection);
         out.writeUTF(mConfig);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mSection = in.readUTF();
         mConfig = in.readUTF();
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.setConfig(getOperationContext(), mSection, mConfig.equals("") ? null : new Metadata(mConfig));
     }

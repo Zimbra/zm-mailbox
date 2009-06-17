@@ -26,9 +26,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class CreateSavedSearch extends RedoableOp {
 
     private int mSearchId;
@@ -43,7 +40,7 @@ public class CreateSavedSearch extends RedoableOp {
         mSearchId = UNKNOWN_ID;
     }
 
-    public CreateSavedSearch(int mailboxId, int folderId, String name, String query, String types, String sort, byte color) {
+    public CreateSavedSearch(long mailboxId, int folderId, String name, String query, String types, String sort, byte color) {
         setMailboxId(mailboxId);
         mSearchId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -62,11 +59,11 @@ public class CreateSavedSearch extends RedoableOp {
         mSearchId = searchId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_SAVED_SEARCH;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=").append(mSearchId);
         sb.append(", name=").append(mName).append(", query=").append(mQuery);
         sb.append(", types=").append(mTypes).append(", sort=").append(mSort);
@@ -74,7 +71,7 @@ public class CreateSavedSearch extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mSearchId);
         out.writeUTF(mName);
         out.writeUTF(mQuery);
@@ -84,7 +81,7 @@ public class CreateSavedSearch extends RedoableOp {
         out.writeByte(mColor);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mSearchId = in.readInt();
         mName = in.readUTF();
         mQuery = in.readUTF();
@@ -94,9 +91,10 @@ public class CreateSavedSearch extends RedoableOp {
         mColor = in.readByte();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         try {
             mailbox.createSearchFolder(getOperationContext(), mFolderId, mName, mQuery, mTypes, mSort, mColor);
         } catch (MailServiceException e) {

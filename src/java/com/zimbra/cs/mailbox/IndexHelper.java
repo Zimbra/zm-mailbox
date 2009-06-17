@@ -378,7 +378,7 @@ public class IndexHelper {
             if (globalStatus) {
                 synchronized(getMailbox()) {
                     if (getMailbox().isReIndexInProgress())
-                        throw ServiceException.ALREADY_IN_PROGRESS(Integer.toString(getMailbox().getId()), mReIndexStatus.toString());
+                        throw ServiceException.ALREADY_IN_PROGRESS(Long.toString(getMailbox().getId()), mReIndexStatus.toString());
                     mReIndexStatus = task.mStatus;
                     task.setUseGlobalStatus(true);
                 }

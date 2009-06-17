@@ -52,7 +52,7 @@ public class BlobRepair implements Runnable {
                 in = new ObjectInputStream(new FileInputStream(reportFile));
                 Map<Byte,Volume> volumes = (Map) in.readObject();
                 List<ItemFault> faults = (List) in.readObject();
-                int lastGroup = -1;
+                long lastGroup = -1;
                 for (ItemFault fault : faults) {
                     if (lastGroup != fault.item.group) {
                         if (c != null)

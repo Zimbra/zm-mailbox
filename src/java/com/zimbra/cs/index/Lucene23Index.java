@@ -146,7 +146,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex {
         return Integer.toString(itemId);
     }
     
-    Lucene23Index(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
+    Lucene23Index(MailboxIndex mbidx, String idxParentDir, long mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
         

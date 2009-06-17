@@ -25,9 +25,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class EditNote extends RedoableOp {
 
     private int mId;
@@ -37,35 +34,34 @@ public class EditNote extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public EditNote(int mailboxId, int id, String content) {
+    public EditNote(long mailboxId, int id, String content) {
         setMailboxId(mailboxId);
         mId = id;
         mContent = content != null ? content : "";
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_EDIT_NOTE;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", content=").append(mContent);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeUTF(mContent);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mContent = in.readUTF();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mailbox.editNote(getOperationContext(), mId, mContent);
     }
 }

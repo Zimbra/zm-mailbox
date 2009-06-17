@@ -34,7 +34,6 @@ import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -54,11 +53,6 @@ import com.zimbra.cs.index.ResultValidator.ExpectedMessageHit;
 import com.zimbra.cs.index.ResultValidator.ExpectedHitValidator;
 import com.zimbra.qa.unittest.TestUtil;
 
-
-
-/**
- * @author tim
- */
 public class TestSearch extends TestCase {
     
     public void testSearch() throws ServiceException
@@ -306,7 +300,7 @@ public class TestSearch extends TestCase {
             ResultValidator val = new ResultValidator()
             {
                 int cmpId = Mailbox.ID_FOLDER_INBOX;
-                public void validate(ZimbraHit hit) throws ServiceException
+                @Override public void validate(ZimbraHit hit) throws ServiceException
                 {
                     MessageHit mh = (MessageHit)hit;
                     //                Date date = new Date(mh.getDateHeader());
@@ -326,7 +320,7 @@ public class TestSearch extends TestCase {
 
             ResultValidator val = new ResultValidator()
             {
-                public void validate(ZimbraHit hit) throws ServiceException
+                @Override public void validate(ZimbraHit hit) throws ServiceException
                 {
                     MessageHit mh = (MessageHit)hit;
                     Date date = new Date(mh.getDateHeader());
@@ -350,7 +344,7 @@ public class TestSearch extends TestCase {
         System.out.println("UnitTests completed in: "+time+"ms");
     }
 
-    public static void makeTestQuery(int mailboxId, String qstr, boolean conv)
+    public static void makeTestQuery(long mailboxId, String qstr, boolean conv)
     {
         try {
             QueryResult[] ret = runQuery(mailboxId, qstr, conv, getMessageTypes(conv), SortBy.DATE_DESCENDING, null);
@@ -385,7 +379,7 @@ public class TestSearch extends TestCase {
 
         ResultValidator val = new ResultValidator()
         {
-            public void validate(ZimbraHit hit) throws ServiceException
+            @Override public void validate(ZimbraHit hit) throws ServiceException
             {
                 MessageHit mh = (MessageHit)hit;
                 //                Date date = new Date(mh.getDateHeader());
@@ -429,20 +423,20 @@ public class TestSearch extends TestCase {
         return types;
     }
 
-    boolean runTestQuery(int mailboxId, String qstr, boolean conv, QueryResult[] expected, SortBy sort) {
+    boolean runTestQuery(long mailboxId, String qstr, boolean conv, QueryResult[] expected, SortBy sort) {
         byte[] types = getMessageTypes(conv);
         return runTestQuery(mailboxId, qstr, conv, types, SortBy.DATE_DESCENDING, expected, null);
     }
     
-    boolean runTestQuery(int mailboxId, String qstr, boolean conv, byte[] types, SortBy sort,
-                                QueryResult[] expected, ResultValidator validator)
+    boolean runTestQuery(long mailboxId, String qstr, boolean conv, byte[] types, SortBy sort,
+                         QueryResult[] expected, ResultValidator validator)
     {
         try {
             if ((expected != null && expected != NO_EXPECTED_CHECK) && validator != null) 
                 throw new IllegalArgumentException("Only one of subject validator or expected may be passed!");
             
             if (expected != null && expected != NO_EXPECTED_CHECK)
-                validator = new ExpectedHitValidator((ResultValidator.ExpectedHit[])expected);
+                validator = new ExpectedHitValidator(expected);
             
             runQuery(mailboxId, qstr, conv, types, sort, validator);
 //            checkExpected(qstr, ret, expected);
@@ -473,9 +467,9 @@ public class TestSearch extends TestCase {
      * @throws ParseException
      * @throws ServiceException
      */
-    static QueryResult[] runQuery(int mailboxId, String qstr, 
-        boolean conv, byte[] types, SortBy sort, ResultValidator validator) throws IOException, 
-        MailServiceException, ParseException, ServiceException {
+    static QueryResult[] runQuery(long mailboxId, String qstr, boolean conv,
+                                  byte[] types, SortBy sort, ResultValidator validator)
+    throws IOException, MailServiceException, ParseException, ServiceException {
         
         ArrayList<QueryResult> ret = new ArrayList<QueryResult>();
 
@@ -579,14 +573,11 @@ public class TestSearch extends TestCase {
             res.doneWithSearchResults();
         }
         QueryResult[] retArray = new QueryResult[ret.size()];
-        return (QueryResult[])ret.toArray(retArray);
+        return ret.toArray(retArray);
 
     }
 
-    /* (non-Javadoc)
-     * @see junit.framework.TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
+    @Override protected void tearDown() throws Exception {
         super.tearDown();
     }
     
@@ -629,14 +620,14 @@ public class TestSearch extends TestCase {
         }
     }
     
-    public int mMailboxId;
+    public long mMailboxId;
 
     public TestSearch() {
     }
     /*
      * @see TestCase#setUp()
      */
-    protected void setUp() throws Exception {
+    @Override protected void setUp() throws Exception {
         super.setUp();
         Mailbox mbox = TestUtil.getMailbox("user1");
         mMailboxId = mbox.getId();

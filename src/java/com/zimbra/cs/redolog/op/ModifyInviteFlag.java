@@ -34,7 +34,7 @@ public class ModifyInviteFlag extends RedoableOp {
     public ModifyInviteFlag() {
     }
 
-    public ModifyInviteFlag(int mailboxId, int id, int compNum, int flag, boolean add) {
+    public ModifyInviteFlag(long mailboxId, int id, int compNum, int flag, boolean add) {
         setMailboxId(mailboxId);
         mId = id;
         mCompNum = compNum;
@@ -42,30 +42,30 @@ public class ModifyInviteFlag extends RedoableOp {
         mAdd = add;
     }
     
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_MODIFY_INVITE_FLAG;
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         MailboxManager.getInstance().getMailboxById(getMailboxId());
 //        mbox.modifyInviteFlag(getOperationContext(), mId, mCompNum, mFlag, mAdd);
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", comp=").append(mCompNum);
         sb.append(", flag=").append(mFlag).append(", add=").append(mAdd);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mCompNum);
         out.writeInt(mFlag);
         out.writeBoolean(mAdd);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mCompNum = in.readInt();
         mFlag = in.readInt();

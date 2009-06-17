@@ -35,7 +35,6 @@ import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.localconfig.LC;
 
-
 public class ReportGenerator implements Runnable {
 
     // the cast will wrap to the correct signedness
@@ -44,8 +43,8 @@ public class ReportGenerator implements Runnable {
     private boolean skipBlobStore;
     private final String mysqlPasswd;
     private final File reportFile;
-    private final int mailboxId;
-    private final int mboxGroupId;
+    private final long mailboxId;
+    private final long mboxGroupId;
     private final boolean doQuotas;
     final static String JDBC_URL;
     
@@ -93,7 +92,7 @@ public class ReportGenerator implements Runnable {
 
     public ReportGenerator(String mysqlPasswd, File reportFile,
             boolean checkCompressed, boolean doQuotas, boolean skipBlobStore,
-            int mailboxId, int mboxGroupId) {
+            long mailboxId, long mboxGroupId) {
         this.mysqlPasswd = mysqlPasswd;
         this.reportFile = reportFile;
         this.checkCompressed = checkCompressed;
@@ -117,7 +116,7 @@ public class ReportGenerator implements Runnable {
                 StatementExecutor e = new StatementExecutor(c);
                 volumes = getVolumeInfo(e);
                 
-                List<Integer> mboxGroups = null;
+                List<Long> mboxGroups = null;
                 if (mailboxId == -1)
                     mboxGroups = getMailboxGroupList(e);
                 c.close();
@@ -155,7 +154,7 @@ public class ReportGenerator implements Runnable {
                     System.out.println("ERROR: mailbox " + mailboxId + " not found!");
                     System.exit(1);
                 } else {
-                    for (int group : mboxGroups) {
+                    for (long group : mboxGroups) {
                         String mboxgroup = "mboxgroup" + group;
                         System.out.println("Retrieving items from " + mboxgroup);
                         c = DriverManager.getConnection(JDBC_URL + mboxgroup,
@@ -163,12 +162,12 @@ public class ReportGenerator implements Runnable {
                         e = new StatementExecutor(c);
                         items += getMailItems(group, e, out);
                         if (doQuotas) {
-                            final HashMap<Integer,Long> sizeMap = new HashMap<Integer,Long>();
+                            final HashMap<Long,Long> sizeMap = new HashMap<Long,Long>();
                             StatementExecutor.ObjectMapper om = new StatementExecutor.ObjectMapper() {
                                 public void mapRow(ResultSet rs)
                                         throws SQLException {
                                     long size = rs.getLong(1);
-                                    int mailboxId = rs.getInt(2);
+                                    long mailboxId = rs.getLong(2);
                                     if (!sizeMap.containsKey(mailboxId)) {
                                         sizeMap.put(mailboxId, size);
                                     } else {
@@ -178,7 +177,7 @@ public class ReportGenerator implements Runnable {
                             };
                             e.query(ITEM_SIZE_QUERY, om);
                             System.out.println("Quota usage (mbox: usage)");
-                            for (Map.Entry<Integer,Long> entry : sizeMap.entrySet())
+                            for (Map.Entry<Long,Long> entry : sizeMap.entrySet())
                                 System.out.printf("    %d: %d\n", entry.getKey(), entry.getValue());
                         }
                         c.close();
@@ -274,8 +273,8 @@ public class ReportGenerator implements Runnable {
                     try {
                         String itemIdAndModContent = file[file.length - 1];
                         String mboxIdStr = file[file.length - 4];
-                        int mboxId = Integer.parseInt(mboxIdStr);
-                        int mboxGroup = mboxId % 100;
+                        long mboxId = Long.parseLong(mboxIdStr);
+                        long mboxGroup = mboxId % 100;
                         if (mboxGroup == 0) mboxGroup = 100;
 
                         String itemIdStr = itemIdAndModContent.substring(
@@ -546,28 +545,28 @@ public class ReportGenerator implements Runnable {
         return m;
     }
 
-    private List<Integer> getMailboxGroupList(StatementExecutor e)
+    private List<Long> getMailboxGroupList(StatementExecutor e)
     throws SQLException {
         System.out.println("Retrieving mboxgroup list");
-        final ArrayList<Integer> l = new ArrayList<Integer>();
+        final ArrayList<Long> l = new ArrayList<Long>();
         e.query("SHOW DATABASES", new StatementExecutor.ObjectMapper() {
             public void mapRow(ResultSet rs) throws SQLException {
                 String name = rs.getString(1);
                 // add number only
                 if (name != null && name.startsWith("mboxgroup"))
-                    l.add(Integer.parseInt(name.substring(9)));
+                    l.add(Long.parseLong(name.substring(9)));
             }
         });
         Collections.sort(l);
         return l;
     }
 
-    private int getMailItems(int group, StatementExecutor e,
+    private int getMailItems(long group, StatementExecutor e,
             ObjectOutputStream oos)
     throws SQLException, IOException {
         return getMailItems(-1, group, e, oos);
     }
-    private int getMailItems(final int mboxId, final int group,
+    private int getMailItems(final long mboxId, final long group,
             StatementExecutor e, final ObjectOutputStream oos)
     throws SQLException, IOException {
         // lazy, fake pointer
@@ -593,7 +592,7 @@ public class ReportGenerator implements Runnable {
 
             public void mapRow(ResultSet rs) throws SQLException {
                 int id = rs.getInt("id");
-                int mailboxId = rs.getInt("i.mailbox_id");
+                long mailboxId = rs.getLong("i.mailbox_id");
 
                 if (lastItem[0] != null &&
                         lastItem[0].id == id && lastItem[0].mailboxId == mailboxId) {

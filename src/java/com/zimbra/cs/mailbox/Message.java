@@ -117,7 +117,7 @@ public class Message extends MailItem {
             Invite inv = null;
             Metadata metaInv = meta.getMap(FN_INV, true);
             if (metaInv != null) {
-                int mboxId = mbox.getId();
+                long mboxId = mbox.getId();
                 ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(mbox.getAccount());
                 inv = Invite.decodeMetadata(mboxId, metaInv, null, accountTZ);
             }

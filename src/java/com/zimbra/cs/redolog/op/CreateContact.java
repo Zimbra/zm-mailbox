@@ -33,21 +33,18 @@ import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class CreateContact extends RedoableOp {
 
     private int mId;
     private int mFolderId;
     private Map<String, String> mFields;
-    
+
     /** Used when this op is created from a <tt>ParsedContact</tt>. */
     private ParsedContact mParsedContact;
-    
+
     /** Used when this op is read from the redolog. */
     private RedoableOpData mRedoLogContent;
-    
+
     private short mVolumeId = -1;
     private String mTags;
 
@@ -56,7 +53,7 @@ public class CreateContact extends RedoableOp {
         mFolderId = UNKNOWN_ID;
     }
 
-    public CreateContact(int mailboxId, int folderId, ParsedContact pc, String tags) {
+    public CreateContact(long mailboxId, int folderId, ParsedContact pc, String tags) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -66,28 +63,26 @@ public class CreateContact extends RedoableOp {
     }
 
     public void setContactId(int id) {
-    	mId = id;
+        mId = id;
     }
 
     public int getContactId() {
-    	return mId;
+        return mId;
     }
 
     public void setVolumeId(short volumeId) {
-    	mVolumeId = volumeId;
+        mVolumeId = volumeId;
     }
 
     public short getVolumeId() {
-    	return mVolumeId;
+        return mVolumeId;
     }
 
-    @Override
-    public int getOpCode() {
-		return OP_CREATE_CONTACT;
-	}
+    @Override public int getOpCode() {
+        return OP_CREATE_CONTACT;
+    }
 
-    @Override
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("folder=").append(mFolderId);
         sb.append(", vol=").append(mVolumeId);
         sb.append(", tags=\"").append(mTags).append("\"");
@@ -100,11 +95,10 @@ public class CreateContact extends RedoableOp {
             }
             sb.append("\n}");
         }
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-    @Override
-	protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
         out.writeShort(mVolumeId);
@@ -121,11 +115,10 @@ public class CreateContact extends RedoableOp {
         if (getVersion().atLeast(1, 14)) {
             out.writeInt((int) mParsedContact.getSize());
         }
-	}
+    }
 
-    
-    @Override
-    public InputStream getAdditionalDataStream() throws IOException {
+
+    @Override public InputStream getAdditionalDataStream() throws IOException {
         if (getVersion().atLeast(1, 14)) {
             if (mParsedContact != null) {
                 return mParsedContact.getContentStream();
@@ -136,8 +129,7 @@ public class CreateContact extends RedoableOp {
         return null;
     }
 
-    @Override
-	protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
         mVolumeId = in.readShort();
@@ -157,7 +149,7 @@ public class CreateContact extends RedoableOp {
                 throw new IOException("deserialized message size too large (" + length + " bytes)");
             if (length > 0) {
                 mRedoLogContent = new RedoableOpData(new File(in.getPath()), in.getFilePointer(), length);
-                
+
                 // Now that we have a stream to the data, skip to the next op.
                 long pos = in.getFilePointer();
                 int numSkipped = in.skipBytes(length);
@@ -168,12 +160,12 @@ public class CreateContact extends RedoableOp {
                 }
             }
         }
-	}
+    }
 
-    @Override
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
         InputStream in = null;
         try {
             in = getAdditionalDataStream();

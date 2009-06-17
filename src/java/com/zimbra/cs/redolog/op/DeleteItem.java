@@ -30,41 +30,38 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class DeleteItem extends RedoableOp {
 
-	private int[] mIds;
+    private int[] mIds;
     private byte mType;
     private String mConstraint;
 
-	public DeleteItem() {
+    public DeleteItem() {
         mType = MailItem.TYPE_UNKNOWN;
         mConstraint = null;
-	}
+    }
 
-	public DeleteItem(int mailboxId, int[] ids, byte type, TargetConstraint tcon) {
-		setMailboxId(mailboxId);
-		mIds = ids;
+    public DeleteItem(long mailboxId, int[] ids, byte type, TargetConstraint tcon) {
+        setMailboxId(mailboxId);
+        mIds = ids;
         mType = type;
         mConstraint = (tcon == null ? null : tcon.toString());
-	}
+    }
 
-	public int getOpCode() {
-		return OP_DELETE_ITEM;
-	}
+    @Override public int getOpCode() {
+        return OP_DELETE_ITEM;
+    }
 
-	protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("ids=");
         sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
         if (mConstraint != null)
             sb.append(", constraint=").append(mConstraint);
         return sb.toString();
-	}
+    }
 
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		out.writeInt(-1);
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+        out.writeInt(-1);
         out.writeByte(mType);
         boolean hasConstraint = mConstraint != null;
         out.writeBoolean(hasConstraint);
@@ -73,10 +70,10 @@ public class DeleteItem extends RedoableOp {
         out.writeInt(mIds.length);
         for (int id : mIds)
             out.writeInt(id);
-	}
+    }
 
-	protected void deserializeData(RedoLogInput in) throws IOException {
-		int id = in.readInt();
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+        int id = in.readInt();
         if (id > 0)
             mIds = new int[] { id };
         mType = in.readByte();
@@ -87,11 +84,11 @@ public class DeleteItem extends RedoableOp {
             for (int i = 0; i < mIds.length; i++)
                 mIds[i] = in.readInt();
         }
-	}
+    }
 
-	public void redo() throws Exception {
-		int mboxId = getMailboxId();
-		Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         TargetConstraint tcon = null;
         if (mConstraint != null)
@@ -101,16 +98,15 @@ public class DeleteItem extends RedoableOp {
                 mLog.warn(e);
             }
 
-        try {
-    		mbox.delete(getOperationContext(), mIds, mType, tcon);
-        } catch (MailServiceException.NoSuchItemException e) {
-            if (mLog.isInfoEnabled())
-                mLog.info("Some of the items being deleted were already deleted from mailbox " + mboxId);
-        }
-	}
+            try {
+                mbox.delete(getOperationContext(), mIds, mType, tcon);
+            } catch (MailServiceException.NoSuchItemException e) {
+                if (mLog.isInfoEnabled())
+                    mLog.info("Some of the items being deleted were already deleted from mailbox " + mboxId);
+            }
+    }
 
-    @Override
-    public boolean isDeleteOp() {
+    @Override public boolean isDeleteOp() {
         return true;
     }
 }

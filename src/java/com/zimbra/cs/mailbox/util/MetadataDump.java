@@ -119,7 +119,7 @@ public class MetadataDump {
                 short volId = Short.parseShort(mMap.get("volume_id"));
                 Volume vol = Volume.getById(volId);
                 if (vol != null) {
-                    int mboxId = Integer.parseInt(mMap.get("mailbox_id"));
+                    long mboxId = Long.parseLong(mMap.get("mailbox_id"));
                     String itemIdStr = mMap.get("id");
                     if (itemIdStr == null)
                         itemIdStr = mMap.get("item_id");
@@ -138,18 +138,18 @@ public class MetadataDump {
         }
     }
 
-    private static int getMailboxGroup(Connection conn, int mboxId)
-    throws SQLException, ServiceException {
-        int gid = 0;
+    private static long getMailboxGroup(Connection conn, long mboxId)
+    throws SQLException {
+        long gid = 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(
                     "SELECT group_id FROM mailbox WHERE id = ?");
-            stmt.setInt(1, mboxId);
+            stmt.setLong(1, mboxId);
             rs = stmt.executeQuery();
             if (rs.next())
-                gid = rs.getInt(1);
+                gid = rs.getLong(1);
         } finally {
             if (rs != null)
                 rs.close();
@@ -177,7 +177,7 @@ public class MetadataDump {
         }
     }
 
-    private static Row getItemRow(Connection conn, int groupId, int mboxId, int itemId)
+    private static Row getItemRow(Connection conn, long groupId, long mboxId, int itemId)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -209,7 +209,7 @@ public class MetadataDump {
         }
     }
 
-    private static List<Row> getRevisionRows(Connection conn, int groupId, int mboxId, int itemId)
+    private static List<Row> getRevisionRows(Connection conn, long groupId, long mboxId, int itemId)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -276,7 +276,7 @@ public class MetadataDump {
     public static void main(String[] args) {
         try {
             CliUtil.toolSetup();
-            int mboxId = 0;
+            long mboxId = 0;
             int itemId = 0;
     
             PrintStream out = new PrintStream(System.out, true, "utf-8");
@@ -333,7 +333,7 @@ public class MetadataDump {
     
                 if (conn == null)
                     conn = DbPool.getConnection();
-                int groupId = getMailboxGroup(conn, mboxId);
+                long groupId = getMailboxGroup(conn, mboxId);
     
                 boolean first = true;
     

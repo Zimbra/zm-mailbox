@@ -43,7 +43,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 
 class Pop3Mailbox {
-    private int mId; // id of the mailbox
+    private long mId; // id of the mailbox
     private int mNumDeleted; // number of messages deleted
     private long mTotalSize; // raw size from blob store
     private long mDeletedSize; // raw size from blob store    
@@ -103,7 +103,7 @@ class Pop3Mailbox {
      * 
      * @return the zimbra mailbox id
      */
-    int getId() {
+    long getId() {
         return mId;
     }
     

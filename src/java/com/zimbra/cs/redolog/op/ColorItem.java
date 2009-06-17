@@ -25,9 +25,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class ColorItem extends RedoableOp {
 
     private int[] mIds;
@@ -36,34 +33,35 @@ public class ColorItem extends RedoableOp {
 
     public ColorItem() { }
 
-    public ColorItem(int mailboxId, int[] ids, byte type, byte color) {
+    public ColorItem(long mailboxId, int[] ids, byte type, byte color) {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;
         mColor = color;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_COLOR_ITEM;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(Arrays.toString(mIds)).append(", color=").append(mColor);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(-1);
         out.writeByte(mType);
         out.writeByte(mColor);
         out.writeInt(mIds == null ? 0 : mIds.length);
-        if (mIds != null)
+        if (mIds != null) {
             for (int i = 0; i < mIds.length; i++)
                 out.writeInt(mIds[i]);
+        }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         int id = in.readInt();
         if (id > 0)
             mIds = new int[] { id };
@@ -76,8 +74,8 @@ public class ColorItem extends RedoableOp {
         }
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         mailbox.setColor(getOperationContext(), mIds, mType, mColor);
     }

@@ -24,8 +24,6 @@ import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
- * @author jhahm
- *
  * Purge old messages.  The arguments to this operation are mailbox ID and
  * operation timestamp, both of which are managed by the superclass.  See
  * Mailbox.purgeMessages() for more info.
@@ -35,49 +33,33 @@ public class PurgeOldMessages extends RedoableOp {
     public PurgeOldMessages() {
     }
 
-    public PurgeOldMessages(int mailboxId) {
+    public PurgeOldMessages(long mailboxId) {
         setMailboxId(mailboxId);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getOpCode()
-     */
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_PURGE_OLD_MESSAGES;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
-     */
-    public void redo() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.purgeMessages(getOperationContext());
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
-     */
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         // no members to print
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
-     */
-    protected void serializeData(RedoLogOutput out) {
+    @Override protected void serializeData(RedoLogOutput out) {
         // no members to serialize
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
-     */
-    protected void deserializeData(RedoLogInput in) {
+    @Override protected void deserializeData(RedoLogInput in) {
         // no members to deserialize
     }
 
-    @Override
-    public boolean isDeleteOp() {
+    @Override public boolean isDeleteOp() {
         return true;
+    }
+
+    @Override public void redo() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+        mbox.purgeMessages(getOperationContext());
     }
 }

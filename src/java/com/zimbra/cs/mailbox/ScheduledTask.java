@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
 public abstract class ScheduledTask
 implements Callable<Void> {
 
-    private int mMailboxId;
+    private long mMailboxId;
     private Map<String, String> mProperties = new HashMap<String, String>();
     private long mIntervalMillis;
     private Date mExecTime;
@@ -37,9 +37,9 @@ implements Callable<Void> {
      * Returns the mailbox id, or <tt>0</tt> if this task is not
      * specific to a mailbox.
      */
-    public int getMailboxId() { return mMailboxId; }
+    public long getMailboxId() { return mMailboxId; }
     
-    public void setMailboxId(int mailboxId) {
+    public void setMailboxId(long mailboxId) {
         mMailboxId = mailboxId;
     }
     

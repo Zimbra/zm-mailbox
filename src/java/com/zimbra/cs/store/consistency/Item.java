@@ -21,17 +21,17 @@ import java.util.ArrayList;
 public class Item implements Serializable {
 
     public final int id;
-    public final int mailboxId;
+    public final long mailboxId;
     public final byte type;
     public final byte volumeId;
     public final long size;
     public final String digest;
     public final int mod;
-    public final int group;
+    public final long group;
     public final  List<Revision> revisions = new ArrayList<Revision>();
     private final static long serialVersionUID = 200805081714L;
 
-    public Item(int id, int group, int mailboxId,
+    public Item(int id, long group, long mailboxId,
             byte type, byte volumeId, long size, String digest, int mod) {
         this.id = id;
         this.group = group;
@@ -68,6 +68,7 @@ public class Item implements Serializable {
         }
     }
 
+    @Override
     public boolean equals(Object other) {
         if (other instanceof Item) {
             return ((Item)other).id == id;
@@ -75,6 +76,7 @@ public class Item implements Serializable {
         return false;
     }
 
+    @Override
     public int hashCode() {
         return id;
     }

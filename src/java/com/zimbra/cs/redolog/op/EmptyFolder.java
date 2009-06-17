@@ -25,9 +25,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class EmptyFolder extends RedoableOp {
 
     private int mId;
@@ -39,40 +36,38 @@ public class EmptyFolder extends RedoableOp {
         mSubfolders = false;
     }
 
-    public EmptyFolder(int mailboxId, int id, boolean subfolders) {
+    public EmptyFolder(long mailboxId, int id, boolean subfolders) {
         setMailboxId(mailboxId);
         mId = id;
         mSubfolders = subfolders;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_EMPTY_FOLDER;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
         sb.append(mId).append(", subfolders=").append(mSubfolders);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeBoolean(mSubfolders);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mSubfolders = in.readBoolean();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mbox.emptyFolder(getOperationContext(), mId, mSubfolders);
+    @Override public boolean isDeleteOp() {
+        return true;
     }
 
-    @Override
-    public boolean isDeleteOp() {
-        return true;
+    @Override public void redo() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
+        mbox.emptyFolder(getOperationContext(), mId, mSubfolders);
     }
 }

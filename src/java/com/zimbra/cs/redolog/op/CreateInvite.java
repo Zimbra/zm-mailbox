@@ -44,7 +44,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     
     public CreateInvite() { }
 
-    public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data,
+    public CreateInvite(long mailboxId, Invite inv, int folderId, byte[] data,
                         boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision) {
         setMailboxId(mailboxId);
         mInvite = inv;
@@ -55,11 +55,11 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         mAddRevision = addRevision;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_CREATE_INVITE;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("calItemId=").append(mCalendarItemId);
         sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", folder=").append(mFolderId);
@@ -75,7 +75,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mCalendarItemId);
         if (getVersion().atLeast(1, 1))
             out.writeUTF(mCalendarItemPartStat);
@@ -103,7 +103,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
             out.writeBoolean(mAddRevision);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mCalendarItemId = in.readInt();
         if (getVersion().atLeast(1, 1))
             mCalendarItemPartStat = in.readUTF();
@@ -173,7 +173,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     		return mVolumeId;
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         ParsedMessage pm = null;
         if (mData != null && mData.length > 0)

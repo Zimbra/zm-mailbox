@@ -45,38 +45,35 @@ import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.Version;
 import com.zimbra.cs.util.Zimbra;
 
-/**
- * @author jhahm
- */
 public abstract class RedoableOp {
 
-	protected static Log mLog = LogFactory.getLog(RedoableOp.class);
+    protected static Log mLog = LogFactory.getLog(RedoableOp.class);
     private static String sPackageName = RedoableOp.class.getPackage().getName();
 
-	// magic marker for each redo item in redo log
-	public static final String REDO_MAGIC = "ZMREDO";
+    // magic marker for each redo item in redo log
+    public static final String REDO_MAGIC = "ZMREDO";
 
-	// for initializing various ID member values
-	public static final int UNKNOWN_ID = 0;
+    // for initializing various ID member values
+    public static final int UNKNOWN_ID = 0;
 
     // special ID value meaning operation is not for any specific mailbox
     // but is needed by all mailboxes
     public static final int MAILBOX_ID_ALL = -1;
 
 
-	// List of supported operations
+    // List of supported operations
     // The integer values keep changing during development in order to
     // keep related operations next to each other.  Once we ship, there
     // should not be any more rearranging.  New operations should only
     // get added at the end, and deprecated operations should result in
     // holes.
 
-	public static final int OP_UNKNOWN                  = 0;
-	public static final int OP_CHECKPOINT               = 1;
-	public static final int OP_START_TXN                = 2;
-	public static final int OP_COMMIT_TXN               = 3;
-	public static final int OP_ABORT_TXN                = 4;
-	public static final int OP_LAST_CONTROL_OP			= 5;
+    public static final int OP_UNKNOWN                  = 0;
+    public static final int OP_CHECKPOINT               = 1;
+    public static final int OP_START_TXN                = 2;
+    public static final int OP_COMMIT_TXN               = 3;
+    public static final int OP_ABORT_TXN                = 4;
+    public static final int OP_LAST_CONTROL_OP          = 5;
 
     public static final int OP_ROLLOVER                 = 6;
 
@@ -112,7 +109,7 @@ public abstract class RedoableOp {
     public static final int OP_EDIT_NOTE                = 33;
     public static final int OP_REPOSITION_NOTE          = 34;
     public static final int OP_CREATE_LINK              = 35;
-    
+
     public static final int OP_MODIFY_INVITE_FLAG       = 36;
     public static final int OP_MODIFY_INVITE_PARTSTAT   = 37;
 
@@ -135,7 +132,7 @@ public abstract class RedoableOp {
     public static final int OP_SAVE_WIKI                = 52;
     public static final int OP_SAVE_DOCUMENT            = 53;
     public static final int OP_ADD_DOCUMENT_REVISION    = 54;
-    
+
     public static final int OP_TRACK_IMAP               = 55;
     public static final int OP_IMAP_COPY_ITEM           = 56;
 
@@ -157,7 +154,7 @@ public abstract class RedoableOp {
     public static final int OP_DISMISS_CALENDAR_ITEM_ALARM = 66;
 
     public static final int OP_FIX_CALENDAR_ITEM_END_TIME = 67;
-    
+
     public static final int OP_INDEX_DEFERRED_ITEMS     = 68;
 
     public static final int OP_RENAME_MAILBOX           = 69;
@@ -170,11 +167,11 @@ public abstract class RedoableOp {
 
     public static final int OP_SET_CUSTOM_DATA          = 73;
 
-    public static final int OP_LAST	                    = 74;
-    
+    public static final int OP_LAST                     = 74;
 
-	// Element index is same as Redoable.OP_* constants.
-	// The strings must match the class names.
+
+    // Element index is same as Redoable.OP_* constants.
+    // The strings must match the class names.
     public static final String[] sOpClassNameArray = {
         "UNKNOWN",                      // 0
         "Checkpoint",
@@ -250,41 +247,41 @@ public abstract class RedoableOp {
         "DateItem",
         "SetFolderDefaultView",
         "SetCustomData"
-	};
+    };
 
-	public static String getOpClassName(int opcode) {
-		if (opcode > OP_UNKNOWN && opcode < OP_LAST)
-			return sOpClassNameArray[opcode];
-		else
-			return null;
-	}
+    public static String getOpClassName(int opcode) {
+        if (opcode > OP_UNKNOWN && opcode < OP_LAST)
+            return sOpClassNameArray[opcode];
+        else
+            return null;
+    }
 
 
-	private Version mVersion;
-	private TransactionId mTxnId;
-	private boolean mActive;
-	private long mTimestamp;		// timestamp of the operation
+    private Version mVersion;
+    private TransactionId mTxnId;
+    private boolean mActive;
+    private long mTimestamp;		// timestamp of the operation
     private int mChangeId = -1;
     private int mChangeConstraint;
-	private int mMailboxId;
-	private RedoLogManager mRedoLogMgr;
+    private long mMailboxId;
+    private RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     RedoCommitCallback mCommitCallback;
 
-	public RedoableOp() {
-		mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
-		mVersion = new Version();
-		mTxnId = null;
-		mActive = false;
-		mMailboxId = UNKNOWN_ID;
+    public RedoableOp() {
+        mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
+        mVersion = new Version();
+        mTxnId = null;
+        mActive = false;
+        mMailboxId = UNKNOWN_ID;
         mUnloggedReplay = false;
-	}
+    }
 
-	protected Version getVersion() { return mVersion; }
-	private void setVersion(Version v) { mVersion = v; }
+    protected Version getVersion()      { return mVersion; }
+    private void setVersion(Version v)  { mVersion = v; }
 
-    public boolean getUnloggedReplay() { return mUnloggedReplay; }
-    public void setUnloggedReplay(boolean b) { mUnloggedReplay = b; }
+    public boolean getUnloggedReplay()        { return mUnloggedReplay; }
+    public void setUnloggedReplay(boolean b)  { mUnloggedReplay = b; }
 
     /**
      * Set up a callback that will be called when the transaction commits and
@@ -297,22 +294,22 @@ public abstract class RedoableOp {
     }
 
     public void start(long timestamp) {
-		// Assign timestamp and txn ID to the operation.
-		// Doing the assignment in this method means we timestamp and sequence
-		// the operation start time, not when the operation get committed or
-		// logged.
-		//
-		// Ideally, operations should start, commit, and log in precisely the
-		// same order, but we can guarantee that only by eliminating concurrency.
+        // Assign timestamp and txn ID to the operation.
+        // Doing the assignment in this method means we timestamp and sequence
+        // the operation start time, not when the operation get committed or
+        // logged.
+        //
+        // Ideally, operations should start, commit, and log in precisely the
+        // same order, but we can guarantee that only by eliminating concurrency.
 
-		mTimestamp = timestamp;
-		if (isStartMarker())
-			setTransactionId(mRedoLogMgr.getNewTxnId());
-	}
+        mTimestamp = timestamp;
+        if (isStartMarker())
+            setTransactionId(mRedoLogMgr.getNewTxnId());
+    }
 
-	public void log() {
+    public void log() {
         log(true);
-	}
+    }
 
     public void log(boolean synchronous) {
         mRedoLogMgr.log(this, synchronous);
@@ -335,49 +332,49 @@ public abstract class RedoableOp {
         return octxt;
     }
 
-	public synchronized void commit() {
-		if (mActive) {
-			mActive = false;
-			mRedoLogMgr.commit(this);
+    public synchronized void commit() {
+        if (mActive) {
+            mActive = false;
+            mRedoLogMgr.commit(this);
             if (mChainedOps != null) {
                 for (RedoableOp rop : mChainedOps)
                     rop.commit();
                 mChainedOps = null;
             }
-		}
+        }
         // We don't need to hang onto the byte arrays after commit/abort.
         synchronized (mSBAVGuard) {
             mSerializedByteArrayVector = null;
         }
-	}
+    }
 
-	public synchronized void abort() {
-		if (mActive) {
-			mActive = false;
-			mRedoLogMgr.abort(this);
+    public synchronized void abort() {
+        if (mActive) {
+            mActive = false;
+            mRedoLogMgr.abort(this);
             if (mChainedOps != null) {
                 for (RedoableOp rop : mChainedOps)
                     rop.abort();
                 mChainedOps = null;
             }
-		}
+        }
         // We don't need to hang onto the byte arrays after commit/abort.
         synchronized (mSBAVGuard) {
             mSerializedByteArrayVector = null;
         }
-	}
+    }
 
-	// whether this is a record that marks the beginning of a transaction
-	public boolean isStartMarker() {
-		return getOpCode() > OP_LAST_CONTROL_OP;
-	}
+    // whether this is a record that marks the beginning of a transaction
+    public boolean isStartMarker() {
+        return getOpCode() > OP_LAST_CONTROL_OP;
+    }
 
-	// whether this is a recod that marks the end of a transaction
-	// (true for CommitTxn and AbortTxn, false for all others)
-	public boolean isEndMarker() {
-		int opCode = getOpCode();
-		return opCode == OP_COMMIT_TXN || opCode == OP_ABORT_TXN;
-	}
+    // whether this is a recod that marks the end of a transaction
+    // (true for CommitTxn and AbortTxn, false for all others)
+    public boolean isEndMarker() {
+        int opCode = getOpCode();
+        return opCode == OP_COMMIT_TXN || opCode == OP_ABORT_TXN;
+    }
 
     /**
      * Crash recovery redoes all uncommitted operations from previous crash
@@ -390,11 +387,11 @@ public abstract class RedoableOp {
      * @return
      */
     public boolean deferCrashRecovery() {
-    	return false;
+        return false;
     }
 
     public long getTimestamp() {
-    	return mTimestamp;
+        return mTimestamp;
     }
 
     protected void setTimestamp(long timestamp) {
@@ -409,67 +406,70 @@ public abstract class RedoableOp {
         mChangeId = changeId;
     }
 
-	public TransactionId getTransactionId() {
-		return mTxnId;
-	}
+    public TransactionId getTransactionId() {
+        return mTxnId;
+    }
 
-	protected void setTransactionId(TransactionId txnId) {
-		mTxnId = txnId;
-	}
+    protected void setTransactionId(TransactionId txnId) {
+        mTxnId = txnId;
+    }
 
-	public int getMailboxId() {
-		return mMailboxId;
-	}
+    public long getMailboxId() {
+        return mMailboxId;
+    }
 
-	public void setMailboxId(int mboxId) {
-		mMailboxId = mboxId;
-	}
+    public void setMailboxId(long mboxId) {
+        mMailboxId = mboxId;
+    }
 
-	protected void serializeHeader(RedoLogOutput out) throws IOException {
-		out.write(REDO_MAGIC.getBytes());
-		mVersion.serialize(out);
-		out.writeInt(getOpCode());
+    protected void serializeHeader(RedoLogOutput out) throws IOException {
+        out.write(REDO_MAGIC.getBytes());
+        mVersion.serialize(out);
+        out.writeInt(getOpCode());
 
         out.writeLong(mTimestamp);
         out.writeInt(mChangeId);
         out.writeInt(mChangeConstraint);
-		mTxnId.serialize(out);
-		out.writeInt(mMailboxId);
-	}
+        mTxnId.serialize(out);
+        out.writeLong(mMailboxId);
+    }
 
-	private void deserialize(RedoLogInput in) throws IOException {
-		// We don't deserialize magic marker, version, and operation code
-		// because they were already deserialized by deserializeOp.
+    private void deserialize(RedoLogInput in) throws IOException {
+        // We don't deserialize magic marker, version, and operation code
+        // because they were already deserialized by deserializeOp.
 
         mTimestamp = in.readLong();
         mChangeId = in.readInt();
         mChangeConstraint = in.readInt();
-		mTxnId = new TransactionId();
-		mTxnId.deserialize(in);
-		mMailboxId = in.readInt();
+        mTxnId = new TransactionId();
+        mTxnId.deserialize(in);
+        if (getVersion().atLeast(1, 26))
+            mMailboxId = in.readLong();
+        else
+            mMailboxId = in.readInt();
 
-		// Deserialize the subclass.
-		deserializeData(in);
-	}
+        // Deserialize the subclass.
+        deserializeData(in);
+    }
 
-	public String toString() {
-		StringBuffer sb = new StringBuffer("txn ");
-		sb.append(mTxnId).append(" [").append(getOpClassName(getOpCode()));
-		sb.append("] ver=").append(mVersion);
+    @Override public String toString() {
+        StringBuffer sb = new StringBuffer("txn ");
+        sb.append(mTxnId).append(" [").append(getOpClassName(getOpCode()));
+        sb.append("] ver=").append(mVersion);
         sb.append(", tstamp=").append(mTimestamp);
         if (mChangeId != -1)
             sb.append(", change=").append(mChangeId);
         if (mChangeConstraint != 0)
             sb.append(", constraint=").append(mChangeConstraint);
-		String data = getPrintableData();
-		if (mMailboxId != UNKNOWN_ID) {
-			sb.append(", mailbox=").append(mMailboxId);
-			if (data != null)
-				sb.append(", ").append(data);
-		} else if (data != null)
-			sb.append(", ").append(data);
-		return sb.toString();
-	}
+        String data = getPrintableData();
+        if (mMailboxId != UNKNOWN_ID) {
+            sb.append(", mailbox=").append(mMailboxId);
+            if (data != null)
+                sb.append(", ").append(data);
+        } else if (data != null)
+            sb.append(", ").append(data);
+        return sb.toString();
+    }
 
     /**
      * Returns the operation code of the transaction.  Returns the
@@ -487,20 +487,20 @@ public abstract class RedoableOp {
      * @return
      */
     // Should return one of the OP_xyz constants defined above.
-	public abstract int getOpCode();
+    public abstract int getOpCode();
 
-	/**
-	 * Repeat the operation.
-	 */
-	public abstract void redo() throws Exception;
+    /**
+     * Repeat the operation.
+     */
+    public abstract void redo() throws Exception;
 
-	// Used to toString().
-	protected abstract String getPrintableData();
+    // Used to toString().
+    protected abstract String getPrintableData();
 
-	// Used by serialize() and deserialize().
-	protected abstract void serializeData(RedoLogOutput out) throws IOException;
-	protected abstract void deserializeData(RedoLogInput in) throws IOException;
-    
+    // Used by serialize() and deserialize().
+    protected abstract void serializeData(RedoLogOutput out) throws IOException;
+    protected abstract void deserializeData(RedoLogInput in) throws IOException;
+
     /**
      * Returns any additional data that must be written after the usual header
      * and data.
@@ -509,68 +509,68 @@ public abstract class RedoableOp {
         return null;
     }
 
-	/**
-	 * Returns the next operation in the redo log stream.
-	 * @return a RedoableOp object
-	 * @throws EOFException - if end of stream is reached while reading;
-	 *						  EOF may happen in the middle of a log entry,
-	 *						  indicating the server may have died unexpectedly
-	 * @throws IOException - if any other error occurs
-	 */
-	public static RedoableOp deserializeOp(RedoLogInput in)
-	throws EOFException, IOException {
-		return deserializeOp(in, false);
-	}
+    /**
+     * Returns the next operation in the redo log stream.
+     * @return a RedoableOp object
+     * @throws EOFException - if end of stream is reached while reading;
+     *						  EOF may happen in the middle of a log entry,
+     *						  indicating the server may have died unexpectedly
+     * @throws IOException - if any other error occurs
+     */
+    public static RedoableOp deserializeOp(RedoLogInput in)
+    throws EOFException, IOException {
+        return deserializeOp(in, false);
+    }
 
-	public static RedoableOp deserializeOp(RedoLogInput in, boolean skipDetail)
-	throws EOFException, IOException {
-		RedoableOp op = null;
-		byte[] magicBuf = new byte[REDO_MAGIC.length()];
-		in.readFully(magicBuf, 0, magicBuf.length);
-		String magic = new String(magicBuf);
-		if (magic.compareTo(REDO_MAGIC) != 0)
-			throw new IOException("Missing redo item magic marker");
+    public static RedoableOp deserializeOp(RedoLogInput in, boolean skipDetail)
+    throws EOFException, IOException {
+        RedoableOp op = null;
+        byte[] magicBuf = new byte[REDO_MAGIC.length()];
+        in.readFully(magicBuf, 0, magicBuf.length);
+        String magic = new String(magicBuf);
+        if (magic.compareTo(REDO_MAGIC) != 0)
+            throw new IOException("Missing redo item magic marker");
 
-		Version ver = new Version();
-		ver.deserialize(in);
-		if (ver.tooHigh())
-			throw new IOException("Redo op version " + ver +
-								  " is higher than the highest known version " +
-								  Version.latest());
+        Version ver = new Version();
+        ver.deserialize(in);
+        if (ver.tooHigh())
+            throw new IOException("Redo op version " + ver +
+                    " is higher than the highest known version " +
+                    Version.latest());
 
-		int opcode = in.readInt();
-		if (!skipDetail) {
-			String className = RedoableOp.getOpClassName(opcode);
-			if (className != null) {
-				Class clz = null;
-				try {
-                	clz = loadOpClass(sPackageName + "." + className);
-				} catch (ClassNotFoundException e) {
-					throw new IOException("ClassNotFoundException for redo operation " + className);
-				}
-				try {
-					op = (RedoableOp) clz.newInstance();
-				} catch (InstantiationException e) {
-					String msg = "Unable to instantiate " + className;
-					mLog.error(msg, e);
-					throw new IOException("Unable to instantiate " + className);
-				} catch (IllegalAccessException e) {
-					String msg = "IllegalAccessException while instantiating " + className;
-					mLog.error(msg, e);
-					throw new IOException(msg);
-				}
-			} else {
-				throw new IOException("Invalid redo operation code " + opcode);
-			}
-		} else {
-			op = new HeaderOnlyOp(opcode);
-		}
-		op.setVersion(ver);
-		op.deserialize(in);
-		return op;
-	}
+        int opcode = in.readInt();
+        if (!skipDetail) {
+            String className = RedoableOp.getOpClassName(opcode);
+            if (className != null) {
+                Class clz = null;
+                try {
+                    clz = loadOpClass(sPackageName + "." + className);
+                } catch (ClassNotFoundException e) {
+                    throw new IOException("ClassNotFoundException for redo operation " + className);
+                }
+                try {
+                    op = (RedoableOp) clz.newInstance();
+                } catch (InstantiationException e) {
+                    String msg = "Unable to instantiate " + className;
+                    mLog.error(msg, e);
+                    throw new IOException("Unable to instantiate " + className);
+                } catch (IllegalAccessException e) {
+                    String msg = "IllegalAccessException while instantiating " + className;
+                    mLog.error(msg, e);
+                    throw new IOException(msg);
+                }
+            } else {
+                throw new IOException("Invalid redo operation code " + opcode);
+            }
+        } else {
+            op = new HeaderOnlyOp(opcode);
+        }
+        op.setVersion(ver);
+        op.deserialize(in);
+        return op;
+    }
 
-	protected byte[][] mSerializedByteArrayVector;
+    protected byte[][] mSerializedByteArrayVector;
     // Synchronize access to mSerializedByteArrayVector with mSBAVGuard.
     // Don't synchronize on "this" object because that can cause deadlock
     // between a thread committing this op and another thread doing
@@ -578,22 +578,22 @@ public abstract class RedoableOp {
     // object to log it to new redo log file.
     protected final Object mSBAVGuard = new Object();
 
-	public void setSerializedByteArray(byte[] data) {
+    public void setSerializedByteArray(byte[] data) {
         synchronized (mSBAVGuard) {
             if (data != null) {
                 mSerializedByteArrayVector = new byte[1][];
                 mSerializedByteArrayVector[0] = data;
             } else {
-            	// clear current vector
+                // clear current vector
                 mSerializedByteArrayVector = null;
             }
         }
-	}
+    }
 
-	/**
-	 * Returns the core redoable op data as a <tt>byte[]</tt>.  Does not include
-	 * the result of {@link #getAdditionalDataStream()}.
-	 */
+    /**
+     * Returns the core redoable op data as a <tt>byte[]</tt>.  Does not include
+     * the result of {@link #getAdditionalDataStream()}.
+     */
     private byte[] serializeToByteArray() throws IOException {
         byte[] buf;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
@@ -621,11 +621,11 @@ public abstract class RedoableOp {
             if (additional != null) {
                 streams.add(additional);
             }
-            
-    		return new SequenceInputStream(Collections.enumeration(streams));
+
+            return new SequenceInputStream(Collections.enumeration(streams));
         }
-	}
-    
+    }
+
     // indexing sub-operation that is chained to this operation
 
     private List<RedoableOp> mChainedOps;
@@ -633,7 +633,7 @@ public abstract class RedoableOp {
     public synchronized void addChainedOp(RedoableOp subOp) {
         if (mChainedOps == null)
             mChainedOps = new LinkedList<RedoableOp>();
-    	mChainedOps.add(subOp);
+        mChainedOps.add(subOp);
     }
 
 
@@ -642,12 +642,12 @@ public abstract class RedoableOp {
         for (int opcode = OP_UNKNOWN + 1; opcode < OP_LAST; opcode++) {
             String className = RedoableOp.getOpClassName(opcode);
             if (className == null) {
-            	mLog.error("Invalid redo operation code: " + opcode);
+                mLog.error("Invalid redo operation code: " + opcode);
                 allGood = false;
             } else if (className.compareTo("UNKNOWN") != 0) {
                 Class clz = null;
                 try {
-                	clz = loadOpClass(sPackageName + "." + className);
+                    clz = loadOpClass(sPackageName + "." + className);
                     clz.newInstance();
                 } catch (ClassNotFoundException e) {
                     // Some classes may not be found depending on which
@@ -655,7 +655,7 @@ public abstract class RedoableOp {
                     mLog.debug("Ignoring ClassNotFoundException for redo operation " + className);
                 } catch (InstantiationException e) {
                     String msg = "Unable to instantiate " + className +
-                                 "; Check default constructor is defined.";
+                    "; Check default constructor is defined.";
                     mLog.error(msg, e);
                     allGood = false;
                 } catch (IllegalAccessException e) {
@@ -665,21 +665,21 @@ public abstract class RedoableOp {
                 }
             }
         }
-    	return allGood;
+        return allGood;
     }
 
     private static Map<String, Class> sOpClassMap;
     private static List<ClassLoader> sOpClassLoaders;
 
     static {
-    	sOpClassMap = new HashMap<String, Class>();
-    	sOpClassLoaders = new ArrayList<ClassLoader>();
+        sOpClassMap = new HashMap<String, Class>();
+        sOpClassLoaders = new ArrayList<ClassLoader>();
 
-    	boolean allSubclassesGood = checkSubclasses();
+        boolean allSubclassesGood = checkSubclasses();
         if (!allSubclassesGood) {
-        	Zimbra.halt(
-        	    "Some RedoableOp subclasses are incomplete.  " +
-        	    "Hint: Make sure the subclass defines a default constructor.");
+            Zimbra.halt(
+                    "Some RedoableOp subclasses are incomplete.  " +
+            "Hint: Make sure the subclass defines a default constructor.");
         }
     }
 
@@ -688,58 +688,58 @@ public abstract class RedoableOp {
      * @param ldr
      */
     public synchronized static void registerClassLoader(ClassLoader ldr) {
-    	mLog.debug("Registering class loader " + ldr);
-    	for (ClassLoader loader : sOpClassLoaders) {
-    		if (loader.equals(ldr)) return;
-    	}
-    	sOpClassLoaders.add(ldr);
+        mLog.debug("Registering class loader " + ldr);
+        for (ClassLoader loader : sOpClassLoaders) {
+            if (loader.equals(ldr)) return;
+        }
+        sOpClassLoaders.add(ldr);
     }
 
     public synchronized static void deregisterClassLoader(ClassLoader ldr) {
-    	mLog.debug("Deregistering class loader " + ldr);
-    	List<String> toRemove = new ArrayList<String>();
-    	for (Map.Entry<String, Class> entry : sOpClassMap.entrySet()) {
-    		Class clz = entry.getValue();
-    		if (clz.getClassLoader().equals(ldr))
-    			toRemove.add(entry.getKey());
-    	}
-    	for (String key : toRemove) {
-    		sOpClassMap.remove(key);
-    		mLog.debug("Removed " + key + " from redo op class map");
-    	}
-    	for (Iterator iter = sOpClassLoaders.iterator(); iter.hasNext(); ) {
-    		ClassLoader loader = (ClassLoader) iter.next();
-    		if (loader.equals(ldr))
-    			iter.remove();
-    	}
+        mLog.debug("Deregistering class loader " + ldr);
+        List<String> toRemove = new ArrayList<String>();
+        for (Map.Entry<String, Class> entry : sOpClassMap.entrySet()) {
+            Class clz = entry.getValue();
+            if (clz.getClassLoader().equals(ldr))
+                toRemove.add(entry.getKey());
+        }
+        for (String key : toRemove) {
+            sOpClassMap.remove(key);
+            mLog.debug("Removed " + key + " from redo op class map");
+        }
+        for (Iterator iter = sOpClassLoaders.iterator(); iter.hasNext(); ) {
+            ClassLoader loader = (ClassLoader) iter.next();
+            if (loader.equals(ldr))
+                iter.remove();
+        }
     }
 
     private synchronized static Class loadOpClass(String className)
     throws ClassNotFoundException {
-    	Class clz = sOpClassMap.get(className);
-    	if (clz == null) {
-    		// Try default class loader first.
-    		try {
-	    		clz = Class.forName(className);
-	    		sOpClassMap.put(className, clz);
-    		} catch (ClassNotFoundException e) {
-        		// Try the registered class loaders.
-        		for (ClassLoader loader : sOpClassLoaders) {
-        			try {
-        				clz = loader.loadClass(className);
-        				mLog.debug(
-        				    "Loaded class " + className +
-        				    " using class loader " + loader);
-        				sOpClassMap.put(className, clz);
-        				break;
-        			} catch (ClassNotFoundException e2) {}
-        		}
-        		if (clz == null)
-        			throw e;
-    		}
+        Class clz = sOpClassMap.get(className);
+        if (clz == null) {
+            // Try default class loader first.
+            try {
+                clz = Class.forName(className);
+                sOpClassMap.put(className, clz);
+            } catch (ClassNotFoundException e) {
+                // Try the registered class loaders.
+                for (ClassLoader loader : sOpClassLoaders) {
+                    try {
+                        clz = loader.loadClass(className);
+                        mLog.debug(
+                                "Loaded class " + className +
+                                " using class loader " + loader);
+                        sOpClassMap.put(className, clz);
+                        break;
+                    } catch (ClassNotFoundException e2) {}
+                }
+                if (clz == null)
+                    throw e;
+            }
 
-    	}
-    	return clz;
+        }
+        return clz;
     }
 
     public boolean isDeleteOp() {

@@ -110,7 +110,7 @@ public class Invite {
             RecurId recurrenceId,
             long dtstamp,
             int seqno,
-            int mailboxId,
+            long mailboxId,
             int mailItemId,
             int componentNum,
             boolean sentByMe,
@@ -222,7 +222,7 @@ public class Invite {
      * @param sentByMe TRUE if this mailbox sent this invite 
      */
     public static Invite createInvite(
-            int mailboxId,
+            long mailboxId,
             byte itemType,
             String method,
             TimeZoneMap tzMap, 
@@ -544,7 +544,7 @@ public class Invite {
      * @return
      * @throws ServiceException
      */
-    public static Invite decodeMetadata(int mailboxId, Metadata meta, CalendarItem calItem, ICalTimeZone accountTZ) 
+    public static Invite decodeMetadata(long mailboxId, Metadata meta, CalendarItem calItem, ICalTimeZone accountTZ) 
     throws ServiceException {
         byte itemType = (byte) meta.getLong(FN_ITEMTYPE, MailItem.TYPE_APPOINTMENT);
         String uid = meta.get(FN_UID, null);
@@ -1007,7 +1007,9 @@ public class Invite {
     }
     public int getComponentNum() { return mComponentNum; }
     public void setComponentNum(int num) { mComponentNum = num; }
-    void setMailboxId(int id) { mMailboxId = id; }
+    public long getMailboxId() { return mMailboxId; }
+    void setMailboxId(long id) { mMailboxId = id; }
+    public int getMailItemId() { return mMailItemId; }
     public void setMailItemId(int id) { mMailItemId = id; }
     public int getFlags() { return mFlags; }
     public void setFlags(int flags) { mFlags = flags; }
@@ -1016,8 +1018,6 @@ public class Invite {
     public void setRsvp(boolean rsvp) { mRsvp = rsvp; }
     public String getUid() { return mUid; };
     public void setUid(String uid) { mUid = uid; }
-    public int getMailboxId() { return mMailboxId; }
-    public int getMailItemId() { return mMailItemId; }
     public String getName() { return mName; };
     public void setName(String name) { mName = name; }
     public String getStatus() { return mStatus; }
@@ -1283,7 +1283,7 @@ public class Invite {
     protected boolean mRsvp = false;
 
     // not in metadata:
-    protected int mMailboxId = 0;
+    protected long mMailboxId = 0;
     protected int mMailItemId = 0;
     protected int mComponentNum = 0;
 

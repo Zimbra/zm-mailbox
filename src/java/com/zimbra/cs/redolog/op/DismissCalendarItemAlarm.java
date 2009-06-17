@@ -31,34 +31,34 @@ public class DismissCalendarItemAlarm extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public DismissCalendarItemAlarm(int mailboxId, int id, long dismissedAt) {
+    public DismissCalendarItemAlarm(long mailboxId, int id, long dismissedAt) {
         setMailboxId(mailboxId);
         mId = id;
         mDismissedAt = dismissedAt;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_DISMISS_CALENDAR_ITEM_ALARM;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("id=");
         sb.append(mId).append(", dismissedAt=").append(mDismissedAt);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeLong(mDismissedAt);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mDismissedAt = in.readLong();
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         mailbox.dismissCalendarItemAlarm(getOperationContext(), mId, mDismissedAt);
     }

@@ -36,7 +36,7 @@ extends ScheduledTask {
     public DataSourceTask() {
     }
     
-    public DataSourceTask(int mailboxId, String accountId, String dataSourceId, long intervalMillis) {
+    public DataSourceTask(long mailboxId, String accountId, String dataSourceId, long intervalMillis) {
         if (StringUtil.isNullOrEmpty(accountId)) {
             throw new IllegalArgumentException("accountId cannot be null or empty");
         }
@@ -49,7 +49,7 @@ extends ScheduledTask {
         setIntervalMillis(intervalMillis);
     }
 
-    public String getName() { return getDataSourceId(); }
+    @Override public String getName() { return getDataSourceId(); }
     
     public String getDataSourceId() {
         return getProperty(KEY_DATA_SOURCE_ID);

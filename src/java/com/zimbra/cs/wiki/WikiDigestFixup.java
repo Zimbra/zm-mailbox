@@ -39,8 +39,6 @@ import com.zimbra.common.util.CliUtil;
 /**
  * Migration utility to fix the mail_item.blob_digest database column
  * for Wiki items (bug 9693)
- * 
- * @author jhahm
  *
  */
 public class WikiDigestFixup {
@@ -48,13 +46,13 @@ public class WikiDigestFixup {
     private static StoreManager sStore;
 
     private static class Mbox {
-        private int mId;
+        private long mId;
         private String mEmail;
-        public Mbox(int id, String email) {
+        public Mbox(long id, String email) {
             mId = id;
             mEmail = email;
         }
-        public int getId() { return mId; }
+        public long getId() { return mId; }
         public String getEmail() { return mEmail; }
     }
 
@@ -79,22 +77,22 @@ public class WikiDigestFixup {
     }
 
     private static class WikiDigest {
-        private int mMboxId;
+        private long mMboxId;
         private int mItemId;
         private String mDigest;
 
-        public WikiDigest(int mboxId, int itemId, String digest) {
+        public WikiDigest(long mboxId, int itemId, String digest) {
             mMboxId = mboxId;
             mItemId = itemId;
             mDigest = digest;
         }
 
-        public int getMboxid() { return mMboxId; }
+        public long getMboxid() { return mMboxId; }
         public int getItemId() { return mItemId; }
         public String getDigest() { return mDigest; }
     }
 
-    private static List<WikiDigest> getWikiDigests(int mboxId) throws IOException, ServiceException {
+    private static List<WikiDigest> getWikiDigests(long mboxId) throws IOException, ServiceException {
         Mailbox mbox = null;
         try {
             mbox = MailboxManager.getInstance().getMailboxById(mboxId);
@@ -146,7 +144,7 @@ public class WikiDigestFixup {
         return list;
     }
 
-    private static void fixupItems(Connection conn, int mboxId, List<WikiDigest> digests)
+    private static void fixupItems(Connection conn, long mboxId, List<WikiDigest> digests)
     throws SQLException, ServiceException {
         StringBuilder sql = new StringBuilder("UPDATE ");
         sql.append("mailbox" + mboxId + ".mail_item");
@@ -194,7 +192,7 @@ public class WikiDigestFixup {
             System.out.println("Getting mailbox list...");
             List<Mbox> mboxList = getMboxList(conn);
             for (Mbox m : mboxList) {
-                int mboxId = m.getId();
+                long mboxId = m.getId();
                 System.out.println("Processing mailbox " + mboxId + " (" + m.getEmail() + ") ...");
                 System.out.println("Getting wiki items needing fixup...");
                 List<WikiDigest> digests = getWikiDigests(mboxId);

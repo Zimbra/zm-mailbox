@@ -319,23 +319,23 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     @Override
-	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
-        
-	    String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
-	    
-	    ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
+
+        String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
+
+        ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
 
         // file upload requires authentication
-	    boolean isAdminRequest = false;
-	    try {
-	    	isAdminRequest = isAdminRequest(req);
-	    } catch (ServiceException e) {
+        boolean isAdminRequest = false;
+        try {
+            isAdminRequest = isAdminRequest(req);
+        } catch (ServiceException e) {
             drainRequestStream(req);
             throw new ServletException(e);
-	    }
-	    
+        }
+
         AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, false) : getAuthTokenFromCookie(req, resp, false);
         if (at == null) {
             drainRequestStream(req);
@@ -344,37 +344,37 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         try {
-        	if (!isAdminRequest) {
-        		Provisioning prov = Provisioning.getInstance();
-        		// make sure the authenticated account exists and is active
-        		Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
-        		if (acct == null)
-        			throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
-        		ZimbraLog.addAccountNameToContext(acct.getName());
-        		String acctStatus = acct.getAccountStatus(prov);
-        		if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-        			throw AccountServiceException.MAINTENANCE_MODE();
-        		else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-        			throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
-        		// fetching the mailbox will except if it's in maintenance mode
+            if (!isAdminRequest) {
+                Provisioning prov = Provisioning.getInstance();
+                // make sure the authenticated account exists and is active
+                Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
+                if (acct == null)
+                    throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
+                ZimbraLog.addAccountNameToContext(acct.getName());
+                String acctStatus = acct.getAccountStatus(prov);
+                if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+                    throw AccountServiceException.MAINTENANCE_MODE();
+                else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+                // fetching the mailbox will except if it's in maintenance mode
                 if (Provisioning.onLocalServer(acct)) {
-            		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
-            		if (mbox != null)
-            			ZimbraLog.addMboxToContext(mbox.getId());
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+                    if (mbox != null)
+                        ZimbraLog.addMboxToContext(mbox.getId());
                 }
-        	}
+            }
 
-        	boolean limitByFileUploadMaxSize = (req.getParameter(FileUploadServlet.PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null);
+            boolean limitByFileUploadMaxSize = (req.getParameter(FileUploadServlet.PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null);
 
-        	// file upload requires multipart enctype
-        	if (ServletFileUpload.isMultipartContent(req))
-        		handleMultipartUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
-        	else
-        		handlePlainUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
+            // file upload requires multipart enctype
+            if (ServletFileUpload.isMultipartContent(req))
+                handleMultipartUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
+            else
+                handlePlainUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
         } catch (ServiceException e) {
             mLog.info("File upload failed", e);
             drainRequestStream(req);
-        	returnError(resp, e);
+            returnError(resp, e);
         }
     }
 

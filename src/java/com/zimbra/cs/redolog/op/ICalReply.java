@@ -29,18 +29,18 @@ public class ICalReply extends RedoableOp {
 
     private Invite mInvite;
     
-    public ICalReply() {}
+    public ICalReply()  {}
 
-    public ICalReply(int mailboxId, Invite inv) {
+    public ICalReply(long mailboxId, Invite inv) {
         setMailboxId(mailboxId);
         mInvite = inv;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_ICAL_REPLY;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder();
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         sb.append("localTZ=").append(localTz.encodeAsMetadata().toString());
@@ -48,13 +48,13 @@ public class ICalReply extends RedoableOp {
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         out.writeUTF(localTz.encodeAsMetadata().toString());
         out.writeUTF(Invite.encodeMetadata(mInvite).toString());
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         try {
             ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
             mInvite = Invite.decodeMetadata(getMailboxId(), new Metadata(in.readUTF()), null, localTz);
@@ -64,7 +64,7 @@ public class ICalReply extends RedoableOp {
         }
     }
     
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.processICalReply(getOperationContext(), mInvite);
     }

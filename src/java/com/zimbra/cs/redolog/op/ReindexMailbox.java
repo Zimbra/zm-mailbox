@@ -29,9 +29,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author jhahm
- */
 public class ReindexMailbox extends RedoableOp {
     
     private Set<Byte> mTypes = null;
@@ -41,7 +38,7 @@ public class ReindexMailbox extends RedoableOp {
 
     public ReindexMailbox() { }
 
-    public ReindexMailbox(int mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) {
+    public ReindexMailbox(long mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) {
         setMailboxId(mailboxId);
         assert(typesOrNull == null || itemIdsOrNull == null);
         mTypes = typesOrNull;
@@ -49,31 +46,21 @@ public class ReindexMailbox extends RedoableOp {
         mCompletionId = completionId;
         mSkipDelete = skipDelete;
     }
-    
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getOpCode()
-     */
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_REINDEX_MAILBOX;
     }
 
-    public boolean deferCrashRecovery() {
+    @Override public boolean deferCrashRecovery() {
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#redo()
-     */
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mSkipDelete);
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#getPrintableData()
-     */
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("Completion="+mCompletionId);
         sb.append(" SkipDelete="+(mSkipDelete?"TRUE":"FALSE"));
         if (mItemIds != null) {
@@ -87,7 +74,7 @@ public class ReindexMailbox extends RedoableOp {
                 sb.append(i);
             }
             sb.append(']');
-                        
+
             return sb.toString();
         } else if (mTypes != null) {
             sb.append(" TYPES[");
@@ -107,10 +94,7 @@ public class ReindexMailbox extends RedoableOp {
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#serializeData(java.io.RedoLogOutput)
-     */
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         if (getVersion().atLeast(1,9)) {
             // completion ID
             out.writeInt(mCompletionId);
@@ -152,10 +136,7 @@ public class ReindexMailbox extends RedoableOp {
         } // v9
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.redolog.op.RedoableOp#deserializeData(java.io.RedoLogInput)
-     */
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         if (getVersion().atLeast(1,9)) {
             // completionId
             mCompletionId = in.readInt();

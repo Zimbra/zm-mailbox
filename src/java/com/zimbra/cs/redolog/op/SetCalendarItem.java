@@ -61,7 +61,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     public SetCalendarItem() {}
     
     private void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
-    throws IOException, MessagingException {
+    throws IOException {
         out.writeBoolean(true);  // keep this for backward compatibility with when SetCalendarItemData
                                  // used to have mForce field
         
@@ -87,7 +87,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     throws IOException, MessagingException {
         Mailbox.SetCalendarItemData toRet = new Mailbox.SetCalendarItemData();
 
-        int mboxId = getMailboxId();
+        long mboxId = getMailboxId();
         try {
             in.readBoolean();  // keep this for backward compatibility with when SetCalendarItemData
                                // used to have mForce field
@@ -121,7 +121,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return toRet;
     }
     
-    protected void serializeData(RedoLogOutput out) throws IOException 
+    @Override protected void serializeData(RedoLogOutput out) throws IOException 
     {
         assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
@@ -141,11 +141,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         if (getVersion().atLeast(1, 17))
             out.writeBoolean(hasDefaultInvite);
         if (hasDefaultInvite) {
-            try {
-                serializeSetCalendarItemData(out, mDefaultInvite);
-            } catch(MessagingException me) { 
-                throw new IOException("Caught MessagingException trying to serialize Default invite: "+me);
-            }
+            serializeSetCalendarItemData(out, mDefaultInvite);
         }
         
         if (mExceptions == null) {
@@ -153,11 +149,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         } else {
             out.writeInt(mExceptions.length);
             for (int i = 0; i < mExceptions.length; i++) {
-                try {
-                    serializeSetCalendarItemData(out, mExceptions[i]);
-                } catch(MessagingException me) { 
-                    throw new IOException("Caught MessagingException trying to serialize Exception invite #"+i+": "+me);
-                }
+                serializeSetCalendarItemData(out, mExceptions[i]);
             }
         }
 
@@ -181,7 +173,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
@@ -259,7 +251,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
     }
 
-    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
+    public SetCalendarItem(long mailboxId, boolean attachmentIndexingEnabled,
                            int flags, long tags) {
         super(); 
         setMailboxId(mailboxId);
@@ -321,19 +313,19 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             return mVolumeId;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SET_CALENDAR_ITEM;
     }
 
-    public void redo() throws Exception {
-        int mboxId = getMailboxId();
+    @Override public void redo() throws Exception {
+        long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         
         mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
                              mDefaultInvite, mExceptions, mReplies, mNextAlarm);
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer toRet = new StringBuffer();
         toRet.append("calItemId=").append(mCalendarItemId);
         toRet.append(", calItemPartStat=").append(mCalendarItemPartStat);

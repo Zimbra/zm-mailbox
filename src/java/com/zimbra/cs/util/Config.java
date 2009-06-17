@@ -137,11 +137,33 @@ public class Config {
         }
         return intValue;
     }
-    
+
     public static synchronized void setInt(String name, int value)
     throws ServiceException {
         initConfig();
         setString(name, Integer.toString(value));
+    }
+
+    public static synchronized void setLong(String name, long value)
+    throws ServiceException {
+        initConfig();
+        setString(name, Long.toString(value));
+    }
+    
+    public static synchronized long getLong(String name, long defaultValue) {
+        initConfig();
+        String value = getString(name, null);
+        if (value == null) {
+            return defaultValue;
+        }
+        long longValue = defaultValue;
+        try {
+            longValue = Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            ZimbraLog.misc.warn("Invalid long value '%s' for config key '%s'.  Returning default value %d.",
+                value, name, longValue);
+        }
+        return longValue;
     }
 
     /**

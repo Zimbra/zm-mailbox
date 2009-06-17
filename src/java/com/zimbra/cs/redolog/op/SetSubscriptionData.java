@@ -24,9 +24,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
-/**
- * @author dkarp
- */
 public class SetSubscriptionData extends RedoableOp {
 
     private int mFolderId;
@@ -38,37 +35,37 @@ public class SetSubscriptionData extends RedoableOp {
         mLastItemGuid = "";
     }
 
-    public SetSubscriptionData(int mailboxId, int folderId, long date, String guid) {
+    public SetSubscriptionData(long mailboxId, int folderId, long date, String guid) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mLastItemDate = date;
         mLastItemGuid = guid == null ? "" : guid;
     }
 
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_SET_SUBSCRIPTION_DATA;
     }
 
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mFolderId);
         sb.append(", date=").append(mLastItemDate);
         sb.append(", guid=").append(mLastItemGuid);
         return sb.toString();
     }
 
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mFolderId);
         out.writeLong(mLastItemDate);
         out.writeUTF(mLastItemGuid);
     }
 
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         mLastItemDate = in.readLong();
         mLastItemGuid = in.readUTF();
     }
 
-    public void redo() throws Exception {
+    @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.setSubscriptionData(getOperationContext(), mFolderId, mLastItemDate, mLastItemGuid);
     }

@@ -48,7 +48,7 @@ public class ParallelRedoPlayer extends RedoPlayer {
         }
     }
 
-    public void shutdown() {
+    @Override public void shutdown() {
         ZimbraLog.redolog.debug("Shutting down ParallelRedoPlayer");
         try {
             super.shutdown();
@@ -60,9 +60,9 @@ public class ParallelRedoPlayer extends RedoPlayer {
         ZimbraLog.redolog.debug("ParallelRedoPlayer shutdown complete");
     }
 
-    protected void playOp(RedoableOp op) throws Exception {
+    @Override protected void playOp(RedoableOp op) throws Exception {
         checkError();
-        int mboxId = op.getMailboxId();
+        long mboxId = op.getMailboxId();
         if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
             // Multi-mailbox ops are executed by the main thread to prevent later ops
             // that depend on this op's result aren't run out of order.
@@ -74,7 +74,7 @@ public class ParallelRedoPlayer extends RedoPlayer {
             // all ops for the same mailbox are sent to the same player thread.  The
             // ops are added to the thread's internal queue and played back in order.
             // This assignment of ops to threads will result in uneven distribution.
-            int index = Math.abs(mboxId % mPlayerThreads.length);
+            int index = (int) Math.abs(mboxId % mPlayerThreads.length);
             PlayerThread player = mPlayerThreads[index];
             RedoTask task = new RedoTask(op);
             if (ZimbraLog.redolog.isDebugEnabled())
@@ -148,7 +148,7 @@ public class ParallelRedoPlayer extends RedoPlayer {
             } catch (InterruptedException e) {}
         }
 
-        public void run() {
+        @Override public void run() {
             while (true) {
                 RedoTask task;
                 try {
