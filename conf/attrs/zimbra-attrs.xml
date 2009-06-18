@@ -4574,4 +4574,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to display a warning when users try to navigate away from the admin console</desc>
 </attr>
 
+<attr id="1037" name="zimbraDataSourceDomain" type="string" max="128" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="6.0.0_BETA3">
+  <desc>domain name of data source</desc>
+</attr>
+
 </attrs>

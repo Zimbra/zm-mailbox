@@ -156,6 +156,8 @@ public class DataSource extends AccountProperty {
     
     public String getUsername() { return getAttr(Provisioning.A_zimbraDataSourceUsername); }
     
+    public String getDomain() { return getAttr(Provisioning.A_zimbraDataSourceDomain, null); }
+    
     public Integer getPort() {
         if (getAttr(Provisioning.A_zimbraDataSourcePort) == null) {
             return null;

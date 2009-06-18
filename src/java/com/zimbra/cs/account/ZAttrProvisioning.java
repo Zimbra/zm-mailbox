@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090617-1150 */
+    /* build: 6.0.0 jjzhuang 20090617-2257 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1961,6 +1961,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=425)
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";
+
+    /**
+     * domain name of data source
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1037)
+    public static final String A_zimbraDataSourceDomain = "zimbraDataSourceDomain";
 
     /**
      * email address for the data source
