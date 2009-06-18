@@ -129,7 +129,7 @@ public class CalendarCollection extends Collection {
 	/* Returns all the appoinments stored in the calendar as DavResource. */
     @Override
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
-    	return getChildren(ctxt, null, null);
+    	return getChildren(ctxt, null);
 	}
 
     protected Map<String,DavResource> mAppts;
@@ -137,10 +137,8 @@ public class CalendarCollection extends Collection {
     protected String mCtag;
     
 	/* Returns all the appointments specified in hrefs */
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
-		Map<String,String> uidmap = getHrefUidMap(hrefs, true);
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange range) throws DavException {
 		Map<String,DavResource> requestedAppts = null;
-		ArrayList<DavResource> resp = new ArrayList<DavResource>();
 		boolean fetchAppts = 
 			range != null || // ranged request
 			mAppts == null; // hasn't fetched before
@@ -157,34 +155,18 @@ public class CalendarCollection extends Collection {
 		} else {
 			requestedAppts = mAppts;
 		}
-		if (uidmap == null)
-			return requestedAppts.values();
-		for (String uid : uidmap.keySet()) {
-			String href = uidmap.get(uid);
-			DavResource appt = requestedAppts.get(uid);
-			if (appt == null)
-				appt = new DavResource.InvalidResource(href, getOwner());
-			appt.setHref(href);
-			resp.add(appt);
-		}
-		return resp;
+		return requestedAppts.values();
 	}
 	
-    protected Map<String,String> getHrefUidMap(java.util.Collection<String> hrefs, boolean reverseMap) {
-    	if (hrefs == null)
-    		return null;
+    protected Map<String,String> getUidToHrefMap(java.util.Collection<String> hrefs) {
 		HashMap<String,String> uidmap = new HashMap<String,String>();
 		for (String href : hrefs) {
 			try {
 				href = URLDecoder.decode(href, "UTF-8");
 				int start = href.lastIndexOf('/') + 1;
 				int end = href.lastIndexOf(".ics");
-				if (start > 0 && end > 0 && end > start) {
-					if (reverseMap)
-						uidmap.put(href.substring(start, end), href);
-					else
-						uidmap.put(href, href.substring(start, end));
-				}
+				if (start > 0 && end > 0 && end > start)
+					uidmap.put(href.substring(start, end), href);
 			} catch (IOException e) {
 				ZimbraLog.dav.warn("can't decode href "+href, e);
 			}
@@ -232,6 +214,23 @@ public class CalendarCollection extends Collection {
         } else {
             for (CalendarItem calItem : mbox.getCalendarItemsForRange(ctxt.getOperationContext(), start, end, getId(), null))
                 appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
+        }
+        return appts;
+	}
+	
+	public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {
+		Map<String,String> uidmap = getUidToHrefMap(hrefs);
+		Mailbox mbox = getCalendarMailbox(ctxt);
+		
+        ArrayList<DavResource> appts = new ArrayList<DavResource>();
+        ctxt.setCollectionPath(getUri());
+        Map<String,CalendarItem> calItems = mbox.getCalendarItemsByUid(ctxt.getOperationContext(), new ArrayList<String>(uidmap.keySet()));
+        for (String uid : calItems.keySet()) {
+        	CalendarItem calItem = calItems.get(uid);
+        	if (calItem == null)
+				appts.add(new DavResource.InvalidResource(uidmap.get(uid), getOwner()));
+        	else
+        		appts.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
         }
         return appts;
 	}

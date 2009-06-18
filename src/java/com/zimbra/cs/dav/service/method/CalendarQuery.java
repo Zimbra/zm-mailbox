@@ -65,7 +65,7 @@ public class CalendarQuery extends Report {
 		if (tr == null)
 			tr = new TimeRange(rsc.getOwner());
 
-		for (DavResource calItem : cal.getChildren(ctxt, null, tr))
+		for (DavResource calItem : cal.getChildren(ctxt, tr))
 		    handleCalendarItem(qctxt, calItem);
 	}
 	

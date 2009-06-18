@@ -2960,6 +2960,43 @@ public class DbMailItem {
         }
     }
 
+    public static List<UnderlyingData> getCalendarItems(Mailbox mbox, List<String> uids) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+        try {
+            for (int i = 0; i < uids.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), uids.size() - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                            " SET index_id = id" +
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
+                        " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
+                        " WHERE mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
+                        (DebugConfig.disableMailboxGroups ? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
+                		" AND ci.uid IN " + DbUtil.suitableNumberOfVariables(count));
+                int pos = 1;
+                pos = setMailboxId(stmt, mbox, pos);
+                for (int index = i; index < i + count; index++)
+                	stmt.setString(pos++, uids.get(index));
+                rs = stmt.executeQuery();
+                while (rs.next())
+                    result.add(constructItem(rs));
+                stmt.close();
+                stmt = null;
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
     public static TypedIdList listCalendarItems(Mailbox mbox, byte type, long start, long end, int folderId, int[] excludeFolderIds) 
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));

@@ -3902,6 +3902,32 @@ public class Mailbox {
         }
     }
 
+    public synchronized Map<String,CalendarItem> getCalendarItemsByUid(OperationContext octxt, List<String> uids)
+    		throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getCalendarItemsByUid", octxt);
+            ArrayList<String> uidList = new ArrayList<String>(uids);
+            Map<String,CalendarItem> calItems = new HashMap<String,CalendarItem>();
+            List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, uids);
+            for (MailItem.UnderlyingData data : invData) {
+                try {
+                    CalendarItem calItem = getCalendarItem(data);
+                    calItems.put(calItem.getUid(), calItem);
+                    uidList.remove(calItem.getUid());
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Error while retrieving calendar item " + data.id + " in mailbox " + mId + "; skipping item", e);
+                }
+            }
+            success = true;
+            for (String missingUid : uidList)
+            	calItems.put(missingUid, null);
+            return calItems;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     private static final String DEDUPE_ALL    = "dedupeAll";
     private static final String DEDUPE_INBOX  = "moveSentMessageToInbox";
     private static final String DEDUPE_SECOND = "secondCopyifOnToOrCC";

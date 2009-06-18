@@ -77,7 +77,7 @@ public class RemoteCalendarCollection extends CalendarCollection implements DavR
     }
 
     @Override
-    public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange range) throws DavException {
+    public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange range) throws DavException {
         throw new DavException("request should be proxied", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
     }
 

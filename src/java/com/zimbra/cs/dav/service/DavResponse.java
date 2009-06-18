@@ -128,19 +128,19 @@ public class DavResponse {
 	public void addResource(DavContext ctxt, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		ctxt.setDavCompliance(DavProtocol.getComplianceString(rs.getComplianceList()));
-		Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
-		addResourceTo(ctxt, resp, rs, props, includeChildren);
+		addResourceTo(ctxt, rs, props, includeChildren);
 		
 		if (rs.isCollection() && includeChildren)
 			for (DavResource child : rs.getChildren(ctxt))
 				addResource(ctxt, child, props, includeChildren);
 	}
 
-	public void addResourceTo(DavContext ctxt, Element top, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
+	public void addResourceTo(DavContext ctxt, DavResource rs, DavContext.RequestProp props, boolean includeChildren) throws DavException {
 		if (!rs.isValid()) {
 			addStatus(ctxt, rs.getUri(), HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
+		Element top = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		rs.getProperty(DavElements.E_HREF).toElement(ctxt, top, false);
 		
 		Collection<QName> propNames;
@@ -173,8 +173,7 @@ public class DavResponse {
 		for (DavResource rs : rss) {
 			if (first)
 				ctxt.setDavCompliance(DavProtocol.getComplianceString(rs.getComplianceList()));
-			Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
-			addResourceTo(ctxt, resp, rs, props, false);
+			addResourceTo(ctxt, rs, props, false);
 			first = false;
 		}
 	}

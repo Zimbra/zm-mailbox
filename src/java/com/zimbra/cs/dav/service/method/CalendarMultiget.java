@@ -67,11 +67,10 @@ public class CalendarMultiget extends Report {
 		long now = System.currentTimeMillis();
 		ZimbraLog.dav.debug("GetRequestedResource: "+(now - ts)+"ms");
 		RequestProp reqProp = ctxt.getRequestProp();
-		for (DavResource rs : calResource.getChildren(ctxt, hrefs, null)) {
+		for (DavResource rs : calResource.getAppointmentsByUids(ctxt, hrefs))
 			resp.addResource(ctxt, rs, reqProp, false);
-			ts = now;
-			now = System.currentTimeMillis();
-			ZimbraLog.dav.debug("addResource: "+(now - ts)+"ms");
-		}
+		ts = now;
+		now = System.currentTimeMillis();
+		ZimbraLog.dav.debug("multiget: "+(now - ts)+"ms");
 	}
 }
