@@ -292,20 +292,30 @@ public class RuleManager {
         }
     }
     
+    public static List<ItemId> applyRulesToIncomingMessage(
+        Mailbox mailbox, ParsedMessage pm, String recipient,
+        DeliveryContext sharedDeliveryCtxt, int incomingFolderId)
+    throws ServiceException {
+        return applyRulesToIncomingMessage(mailbox, pm, recipient, sharedDeliveryCtxt, incomingFolderId, true);
+    }
+    
     /**
      * Adds a message to a mailbox.  If filter rules exist, processes
      * the filter rules.  Otherwise, files to <tt>Inbox</tt> or <tt>Spam</tt>.
      * 
+     * @param allowFilterToMountpoint if <tt>false</tt>, rules 
      * @return the list of message id's that were added, or an empty list.
      */
     public static List<ItemId> applyRulesToIncomingMessage(
         Mailbox mailbox, ParsedMessage pm, String recipient,
-        DeliveryContext sharedDeliveryCtxt, int incomingFolderId)
+        DeliveryContext sharedDeliveryCtxt, int incomingFolderId,
+        boolean allowFilterToMountpoint)
     throws ServiceException {
         List<ItemId> addedMessageIds = null;
         IncomingMessageHandler handler = new IncomingMessageHandler(
             sharedDeliveryCtxt, mailbox, recipient, pm, incomingFolderId);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+        mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
         
         try {
             Account account = mailbox.getAccount();

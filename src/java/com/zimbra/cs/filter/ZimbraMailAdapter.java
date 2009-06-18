@@ -42,15 +42,18 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -67,6 +70,7 @@ public class ZimbraMailAdapter implements MailAdapter
     private FilterHandler mHandler;
     private Integer mFlagBitmask;
     private String mTags;
+    private boolean mAllowFilterToMountpoint = true;
     
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -102,7 +106,11 @@ public class ZimbraMailAdapter implements MailAdapter
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         mMailbox = mailbox;
         mHandler = handler;
-    }    
+    }
+    
+    public void setAllowFilterToMountpoint(boolean allowFilterToMountpoint) {
+        mAllowFilterToMountpoint = allowFilterToMountpoint;
+    }
 
     /**
      * Returns the <tt>ParsedMessage</tt>, or <tt>null</tt> if it is not available.
@@ -186,7 +194,13 @@ public class ZimbraMailAdapter implements MailAdapter
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
                     try {
-                        fileInto(folderPath);
+                        if (!mAllowFilterToMountpoint && isMountpoint(mMailbox, folderPath)) {
+                            ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
+                                folderPath);
+                            explicitKeep();
+                        } else {
+                            fileInto(folderPath);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
                             folderPath, mHandler.getDefaultFolderPath(), e);
@@ -212,6 +226,16 @@ public class ZimbraMailAdapter implements MailAdapter
         } catch (ServiceException e) {
             throw new ZimbraSieveException(e);
         }
+    }
+    
+    private static boolean isMountpoint(Mailbox mbox, String folderPath)
+    throws ServiceException {
+        Pair<Folder, String> pair = mbox.getFolderByPathLongestMatch(null, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
+        Folder f = pair.getFirst();
+        if (f != null && f instanceof Mountpoint) {
+            return true;
+        }
+        return false;
     }
     
     private List<Action> getDeliveryActions() {

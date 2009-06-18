@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.localconfig.LC;
@@ -32,15 +31,15 @@ import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.pop3.ContentInputStream;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
-import com.zimbra.cs.mailclient.pop3.ContentInputStream;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class Pop3Sync extends MailItemImport {
@@ -59,7 +58,7 @@ public class Pop3Sync extends MailItemImport {
         indexAttachments = mbox.attachmentsIndexingEnabled();
     }
 
-    private Pop3Config getPop3Config(DataSource ds) throws ServiceException {
+    private Pop3Config getPop3Config(DataSource ds) {
         Pop3Config config = new Pop3Config();
 
         config.setHost(ds.getHost());
@@ -150,19 +149,19 @@ public class Pop3Sync extends MailItemImport {
     }
     
     private void fetchAndDeleteMessages()
-        throws ServiceException, MessagingException, IOException {
+        throws ServiceException, IOException {
         Integer sizes[] = connection.getMessageSizes();
         
         LOG.info("Found %d new message(s) on remote server", sizes.length);
         for (int msgno = sizes.length; msgno > 0; --msgno) {
             LOG.debug("Fetching message number %d", msgno);
-            fetchAndAddMessage(msgno, sizes[msgno - 1], null);
+            fetchAndAddMessage(msgno, sizes[msgno - 1], null, true);
             connection.deleteMessage(msgno);
         }
     }
 
     private void fetchAndRetainMessages()
-        throws ServiceException, MessagingException, IOException {
+        throws ServiceException, IOException {
         String[] uids = connection.getMessageUids();
         Set<String> existingUids = PopMessage.getMatchingUids(dataSource, uids);
         int count = uids.length - existingUids.size();
@@ -180,13 +179,16 @@ public class Pop3Sync extends MailItemImport {
             
             if (!existingUids.contains(uid)) {
                 LOG.debug("Fetching message with uid %s", uid);
-                fetchAndAddMessage(msgno, connection.getMessageSize(msgno), uid);
+                // Don't allow filtering to a mountpoint when retaining the
+                // message.  We don't have a local id, so we can't keep track
+                // of it in the data_source_item table.
+                fetchAndAddMessage(msgno, connection.getMessageSize(msgno), uid, false);
             }
         }
     }
 
-    private void fetchAndAddMessage(int msgno, int size, String uid)
-        throws ServiceException, MessagingException, IOException {
+    private void fetchAndAddMessage(int msgno, int size, String uid, boolean allowFilterToMountpoint)
+        throws ServiceException, IOException {
         ContentInputStream cis = null;
         MessageContent mc = null;
         try {
@@ -201,7 +203,7 @@ public class Pop3Sync extends MailItemImport {
             } else {
                 Integer localId = getFirstLocalId(
                     RuleManager.applyRulesToIncomingMessage(
-                        mbox, pm, dataSource.getEmailAddress(), dc, dataSource.getFolderId()));
+                        mbox, pm, dataSource.getEmailAddress(), dc, dataSource.getFolderId(), allowFilterToMountpoint));
                 if (localId != null) {
                     msg = mbox.getMessageById(null, localId);
                 }
