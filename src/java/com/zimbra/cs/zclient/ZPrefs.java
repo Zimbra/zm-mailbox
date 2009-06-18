@@ -55,6 +55,8 @@ public class ZPrefs {
 
     public Map<String, List<String>> getPrefs() { return mPrefs; }
 
+    public String getAppleiCalDelegationEnabled() { return get(Provisioning.A_zimbraPrefAppleIcalDelegationEnabled); }
+    
     public String getComposeFormat() { return get(Provisioning.A_zimbraPrefComposeFormat); }
 
     public String getHtmlEditorDefaultFontFamily() { return get(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily); }
