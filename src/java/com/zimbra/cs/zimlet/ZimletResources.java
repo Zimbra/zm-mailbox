@@ -133,6 +133,7 @@ public class ZimletResources
 
             if (type.equals(T_JAVASCRIPT) && !debug) {
                 // compress JS code
+				text = text.replaceAll("(^|\n)\\s*DBG\\.\\w+\\(.*\\);\\s*(\n|$)", "\n");
                 JavaScriptCompressor compressor = new JavaScriptCompressor(new StringReader(text), new ErrorReporter() {
 
                     public void warning(String message, String sourceName,
