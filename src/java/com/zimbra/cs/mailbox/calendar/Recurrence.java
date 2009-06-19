@@ -508,6 +508,12 @@ public class Recurrence
             mRecur = recur;
             mInvId = invId;
             mDuration = duration;
+            if (mDuration == null) {
+                if (mDtStart != null && !mDtStart.hasTime())
+                    mDuration = ParsedDuration.ONE_DAY;
+                else
+                    mDuration = ParsedDuration.ONE_SECOND;
+            }
         }
         
         public int getType() { return TYPE_REPEATING; }
@@ -746,11 +752,15 @@ public class Recurrence
         }
         
         public SimpleRepeatingRule(Metadata meta, TimeZoneMap tzmap) throws ServiceException {
-//          mDtStart = meta.getAttributeLong(FN_DTSTART);
-//          mDuration = meta.getAttributeLong(FN_DURATION);
             try {
                 mDtStart = ParsedDateTime.parse(meta.get(FN_DTSTART, null), tzmap);
                 mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
+                if (mDuration == null) {
+                    if (mDtStart != null && !mDtStart.hasTime())
+                        mDuration = ParsedDuration.ONE_DAY;
+                    else
+                        mDuration = ParsedDuration.ONE_SECOND;
+                }
             } catch (ParseException e) {
                 throw ServiceException.FAILURE("ParseException ", e);
             }
@@ -785,6 +795,12 @@ public class Recurrence
         {
             mDtStart = dtstart;
             mDuration = duration;
+            if (mDuration == null) {
+                if (mDtStart != null && !mDtStart.hasTime())
+                    mDuration = ParsedDuration.ONE_DAY;
+                else
+                    mDuration = ParsedDuration.ONE_SECOND;
+            }
             mInvId = invId;
             mAddRules = new MultiRuleSorter(addRules);
             if (subtractRules.size() > 0) {
@@ -812,6 +828,12 @@ public class Recurrence
         {
             mDtStart = dtstart;
             mDuration = duration;
+            if (mDuration == null) {
+                if (mDtStart != null && !mDtStart.hasTime())
+                    mDuration = ParsedDuration.ONE_DAY;
+                else
+                    mDuration = ParsedDuration.ONE_SECOND;
+            }
             mInvId = invId;
             mAddRules = null;
             mSubtractRules = null;
@@ -919,6 +941,12 @@ public class Recurrence
             String str = meta.get(FN_DTSTART, null);
             mDtStart = ParsedDateTime.parse(str, tzmap);
             mDuration = ParsedDuration.parse(meta.get(FN_DURATION, null));
+            if (mDuration == null) {
+                if (mDtStart != null && !mDtStart.hasTime())
+                    mDuration = ParsedDuration.ONE_DAY;
+                else
+                    mDuration = ParsedDuration.ONE_SECOND;
+            }
 
             Metadata metaRules = meta.getMap(FN_ADDRULES, true);
             if (metaRules != null) {
@@ -940,6 +968,12 @@ public class Recurrence
         {
             mDtStart = dtstart;
             mDuration = duration;
+            if (mDuration == null) {
+                if (mDtStart != null && !mDtStart.hasTime())
+                    mDuration = ParsedDuration.ONE_DAY;
+                else
+                    mDuration = ParsedDuration.ONE_SECOND;
+            }
             mAddRules = addRules;
             mSubtractRules = subtractRules;
             mInvId = invID;
