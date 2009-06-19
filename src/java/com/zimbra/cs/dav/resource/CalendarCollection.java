@@ -162,11 +162,11 @@ public class CalendarCollection extends Collection {
 		HashMap<String,String> uidmap = new HashMap<String,String>();
 		for (String href : hrefs) {
 			try {
-				href = URLDecoder.decode(href, "UTF-8");
-				int start = href.lastIndexOf('/') + 1;
-				int end = href.lastIndexOf(".ics");
+				String hrefDecoded = URLDecoder.decode(href, "UTF-8");
+				int start = hrefDecoded.lastIndexOf('/') + 1;
+				int end = hrefDecoded.lastIndexOf(".ics");
 				if (start > 0 && end > 0 && end > start)
-					uidmap.put(href.substring(start, end), href);
+					uidmap.put(hrefDecoded.substring(start, end), href);
 			} catch (IOException e) {
 				ZimbraLog.dav.warn("can't decode href "+href, e);
 			}
