@@ -2021,12 +2021,12 @@ public class Invite {
                 e);
     }
     
-    public ZComponent newToVComponent(boolean useOutlookCompatMode, boolean includePrivateData)
+    public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData)
     throws ServiceException {
         ICalTok compTok;
         if (mItemType == MailItem.TYPE_TASK) {
             compTok = ICalTok.VTODO;
-            useOutlookCompatMode = false;
+            useOutlookCompatAllDayEvents = false;
         } else {
             compTok = ICalTok.VEVENT;
         }
@@ -2167,7 +2167,7 @@ public class Invite {
         // DTSTART
         ParsedDateTime dtstart = getStartTime();
         if (dtstart != null)
-            component.addProperty(dtstart.toProperty(ICalTok.DTSTART, useOutlookCompatMode));
+            component.addProperty(dtstart.toProperty(ICalTok.DTSTART, useOutlookCompatAllDayEvents));
         
         // DTEND or DUE
         ParsedDateTime dtend = getEndTime();
@@ -2175,7 +2175,7 @@ public class Invite {
             ICalTok prop = ICalTok.DTEND;
             if (isTodo())
                 prop = ICalTok.DUE;
-            component.addProperty(dtend.toProperty(prop, useOutlookCompatMode));
+            component.addProperty(dtend.toProperty(prop, useOutlookCompatAllDayEvents));
         }
         
         // DURATION
@@ -2221,11 +2221,11 @@ public class Invite {
         // RECURRENCE-ID
         RecurId recurId = getRecurId();
         if (recurId != null) 
-            component.addProperty(recurId.toProperty(useOutlookCompatMode));
+            component.addProperty(recurId.toProperty(useOutlookCompatAllDayEvents));
         
         // DTSTAMP
         ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(getDTStamp());
-        component.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatMode));
+        component.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatAllDayEvents));
         
         // SEQUENCE
         component.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
@@ -2239,6 +2239,65 @@ public class Invite {
             component.addProperty(new ZProperty(ICalTok.X_ZIMBRA_LOCAL_ONLY, true));
 
         return component;
+    }
+
+    public static ZComponent[] toVComponents(Invite[] invites,
+                                             boolean includePrivateData,
+                                             boolean useOutlookCompatAllDayEvents,
+                                             boolean convertCanceledInstancesToExdates)
+    throws ServiceException {
+        List<ZComponent> comps = new ArrayList<ZComponent>(invites.length);
+        if (!convertCanceledInstancesToExdates || invites.length <= 1) {
+            for (Invite inv : invites) {
+                ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                comps.add(comp);
+            }
+        } else {
+            // Activate the hack that converts standalone VEVENT/VTODO components with STATUS:CANCELLED
+            // into EXDATEs on the series component. (bug 36434)
+            Invite seriesInv = null;
+            ZComponent seriesComp = null;
+            // Find the series invite.
+            for (Invite inv : invites) {
+                if (inv.isRecurrence()) {
+                    ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                    seriesComp = comp;
+                    comps.add(seriesComp);
+                    seriesInv = inv;
+                    break;
+                }
+            }
+            for (Invite inv : invites) {
+                if (inv != seriesInv) {  // We already handled the series invite in the previous loop.
+                    if (inv.hasRecurId() && inv.isCancel()) {
+                        // Canceled instance is added as an EXDATE to the series, instead of being treated
+                        // as a standalone component.
+                        if (seriesComp != null) {
+                            RecurId rid = inv.getRecurId();
+                            ZProperty ridProp = rid.toProperty(false);
+                            // EXDATE and RECURRENCE-ID have same value types and parameter list.  Just copy over.
+                            ZProperty exdateProp = new ZProperty(ICalTok.EXDATE, ridProp.getValue());
+                            for (Iterator<ZParameter> paramsIter = ridProp.parameterIterator(); paramsIter.hasNext(); ) {
+                                ZParameter param = paramsIter.next();
+                                exdateProp.addParameter(param);
+                            }
+                            seriesComp.addProperty(exdateProp);
+                        } else {
+                            // But if there is no series component, let the canceled instance be a component.
+                            ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                            if (comp != null)
+                                comps.add(comp);
+                        }
+                    } else {
+                        // Modified instances are added as standalone components.
+                        ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData);
+                        if (comp != null)
+                            comps.add(comp);
+                    }
+                }
+            }
+        }
+        return comps.toArray(new ZComponent[0]);
     }
 
     public Iterator<Alarm> alarmsIterator() { return mAlarms.iterator(); }
