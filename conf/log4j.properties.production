@@ -39,13 +39,6 @@ log4j.appender.SYSLOG.Facility=LOCAL0
 log4j.appender.SYSLOG.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SYSLOG.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - %m
 
-# Logger service appender
-log4j.appender.SLOGGER=org.apache.log4j.net.SyslogAppender
-log4j.appender.SLOGGER.SyslogHost=@@zimbra_server_hostname@@
-log4j.appender.SLOGGER.Facility=LOCAL1
-log4j.appender.SLOGGER.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SLOGGER.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - %m
-
 # Appender SYNC writes to the file "sync.log".
 log4j.appender.SYNC=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.SYNC.File=/opt/zimbra/log/sync.log
@@ -93,6 +86,4 @@ log4j.logger.zimbra.wbxml=DEBUG,WBXML
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
 log4j.logger.com.zimbra=INFO
-log4j.additivity.zimbra.slogger=FALSE
-log4j.logger.zimbra.slogger=INFO,SLOGGER
 
