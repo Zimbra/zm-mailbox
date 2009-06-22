@@ -781,11 +781,11 @@ public class Message extends MailItem {
             ParsedMessage pm = null;
             synchronized (getMailbox()) {
                 // force the pm's received-date to be the correct one
-                ParsedMessageOptions opt = new ParsedMessageOptions().withContent(getMimeMessage(false))
-                    .withReceivedDate(getDate())
-                    .withAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
-                    .withSize(getSize())
-                    .withDigest(getDigest());
+                ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
+                    .setReceivedDate(getDate())
+                    .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+                    .setSize(getSize())
+                    .setDigest(getDigest());
                 pm = new ParsedMessage(opt);
             }
             
@@ -820,11 +820,11 @@ public class Message extends MailItem {
 
     public void reanalyze() throws ServiceException {
         ParsedMessageOptions opt = new ParsedMessageOptions()
-            .withContent(getMimeMessage(false))
-            .withReceivedDate(getDate())
-            .withAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
-            .withSize(getSize())
-            .withDigest(getDigest());
+            .setContent(getMimeMessage(false))
+            .setReceivedDate(getDate())
+            .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
+            .setSize(getSize())
+            .setDigest(getDigest());
         ParsedMessage pm = new ParsedMessage(opt);
         reanalyze(pm);
     }

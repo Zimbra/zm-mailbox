@@ -412,11 +412,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             ParsedMessage pm = null;
             try {
                 ParsedMessageOptions opt = new ParsedMessageOptions()
-                    .withContent(file)
-                    .withReceivedDate(mReceivedDate)
-                    .withAttachmentIndexing(mbox.attachmentsIndexingEnabled())
-                    .withSize(mMsgSize)
-                    .withDigest(mDigest);
+                    .setContent(file)
+                    .setReceivedDate(mReceivedDate)
+                    .setAttachmentIndexing(mbox.attachmentsIndexingEnabled())
+                    .setSize(mMsgSize)
+                    .setDigest(mDigest);
                 pm = new ParsedMessage(opt);
                 mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags,
                     mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);

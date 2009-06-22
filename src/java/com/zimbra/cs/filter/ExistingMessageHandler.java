@@ -73,10 +73,10 @@ extends FilterHandler {
         if (mParsedMessage == null) {
             Message msg = mMailbox.getMessageById(null, mMessageId);
             ParsedMessageOptions opt = new ParsedMessageOptions()
-                .withContent(msg.getMimeMessage())
-                .withAttachmentIndexing(mMailbox.attachmentsIndexingEnabled())
-                .withSize(msg.getSize())
-                .withDigest(msg.getDigest());
+                .setContent(msg.getMimeMessage())
+                .setAttachmentIndexing(mMailbox.attachmentsIndexingEnabled())
+                .setSize(msg.getSize())
+                .setDigest(msg.getDigest());
             mParsedMessage = new ParsedMessage(opt);
         }
         return mParsedMessage;

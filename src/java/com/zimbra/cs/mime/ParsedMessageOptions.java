@@ -32,7 +32,7 @@ public class ParsedMessageOptions {
     public ParsedMessageOptions() {
     }
     
-    public ParsedMessageOptions withContent(MimeMessage mimeMessage) {
+    public ParsedMessageOptions setContent(MimeMessage mimeMessage) {
         if (mRawData != null || mFile != null) {
             throw new IllegalArgumentException("Content can only come from one source.");
         }
@@ -40,7 +40,7 @@ public class ParsedMessageOptions {
         return this;
     }
     
-    public ParsedMessageOptions withContent(byte[] rawData) {
+    public ParsedMessageOptions setContent(byte[] rawData) {
         if (mMimeMessage != null || mFile != null) {
             throw new IllegalArgumentException("Content can only come from one source.");
         }
@@ -48,7 +48,7 @@ public class ParsedMessageOptions {
         return this;
     }
     
-    public ParsedMessageOptions withContent(File file) {
+    public ParsedMessageOptions setContent(File file) {
         if (mRawData != null || mMimeMessage != null) {
             throw new IllegalArgumentException("Content can only come from one source.");
         }
@@ -56,22 +56,22 @@ public class ParsedMessageOptions {
         return this;
     }
     
-    public ParsedMessageOptions withDigest(String digest) {
+    public ParsedMessageOptions setDigest(String digest) {
         mRawDigest = digest;
         return this;
     }
     
-    public ParsedMessageOptions withSize(long size) {
+    public ParsedMessageOptions setSize(long size) {
         mRawSize = (int) size;
         return this;
     }
     
-    public ParsedMessageOptions withReceivedDate(long receivedDate) {
+    public ParsedMessageOptions setReceivedDate(long receivedDate) {
         mReceivedDate = receivedDate;
         return this;
     }
     
-    public ParsedMessageOptions withAttachmentIndexing(boolean enabled) {
+    public ParsedMessageOptions setAttachmentIndexing(boolean enabled) {
         mIndexAttachments = enabled;
         return this;
     }
