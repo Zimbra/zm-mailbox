@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.mailclient.MailConfig;
 
 import java.io.IOException;
 import java.util.List;
@@ -103,6 +104,22 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return msg;
     }
 
+    protected MailConfig.Security getSecurity(DataSource.ConnectionType type) {
+        if (type != null) {
+            switch (type) {
+            case cleartext:
+                return MailConfig.Security.NONE;
+            case ssl:
+                return MailConfig.Security.SSL;
+            case tls:
+                return MailConfig.Security.TLS;
+            case tls_if_available:
+                return MailConfig.Security.TLS_IF_AVAILABLE;
+            }
+        }
+        return MailConfig.Security.NONE;
+    }
+    
     public boolean isSslEnabled() {
         return dataSource.getConnectionType() == DataSource.ConnectionType.ssl;
     }

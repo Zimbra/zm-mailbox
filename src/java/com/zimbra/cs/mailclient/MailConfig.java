@@ -30,8 +30,7 @@ import java.io.IOException;
 public abstract class MailConfig {
     private String host;
     private int port = -1;
-    private boolean sslEnabled;
-    private boolean tlsEnabled;
+    private Security security;
     private String authorizationId;
     private String authenticationId;
     private String mechanism;
@@ -45,12 +44,17 @@ public abstract class MailConfig {
     private int readTimeout;
     private int connectTimeout;
 
+    public static enum Security {
+        NONE, SSL, TLS, TLS_IF_AVAILABLE
+    }
+    
     /**                                                                 
      * Creates a new <tt>MailConfig</tt> instance.
      */
     protected MailConfig() {
         traceOut = System.out;
         authenticationId = System.getProperty("user.name");
+        security = Security.NONE;
     }
 
     /**
@@ -106,42 +110,12 @@ public abstract class MailConfig {
         this.port = port;
     }
 
-    /**
-     * Returns true if SSL is enabled for the connection. The default is
-     * for SSL to be disabled.
-     *
-     * @return true if SSL enabled, false if disabled
-     */
-    public boolean isSslEnabled() {
-        return sslEnabled;
+    public Security getSecurity() {
+        return security;
     }
 
-    /**
-     * Enables or disables SSL for the connection.
-     *
-     * @param enabled if <tt>true</tt> then enable SSL
-     */
-    public void setSslEnabled(boolean enabled) {
-        sslEnabled = enabled;
-    }
-
-    /**
-     * Enables or disables TLS for the connection.
-     *
-     * @param enabled if <tt>true</tt> then enable TLS
-     */
-    public void setTlsEnabled(boolean enabled) {
-        tlsEnabled = enabled;
-    }
-
-    /**
-     * Returns true if TLS is enabled for the connection. The default is
-     * for TLS to be disabled.
-     *
-     * @return true if TLS enabled, false if disabled
-     */
-    public boolean isTlsEnabled() {
-        return tlsEnabled;
+    public void setSecurity(Security security) {
+        this.security = security;
     }
 
     /**

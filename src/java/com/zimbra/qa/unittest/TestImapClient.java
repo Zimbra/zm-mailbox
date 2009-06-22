@@ -27,7 +27,6 @@ import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Body;
-import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.Envelope;
@@ -35,9 +34,8 @@ import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailException;
-import com.zimbra.cs.mime.charset.ImapUTF7;
+import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.util.JMSession;
 import junit.framework.TestCase;
 
@@ -45,18 +43,13 @@ import java.io.IOException;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
-import java.nio.charset.Charset;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
-import org.junit.Assert;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
@@ -98,18 +91,23 @@ public class TestImapClient extends TestCase {
     }
 
     public void testLogin() throws Exception {
-        connect(false);
+        connect();
         connection.login(PASS);
     }
 
     public void testSSLLogin() throws Exception {
-        connect(true);
+        connect(MailConfig.Security.SSL);
+        connection.login(PASS);
+    }
+
+    public void testStartTls() throws Exception {
+        connect(MailConfig.Security.TLS);
         connection.login(PASS);
     }
 
     public void testPlainAuth() throws Exception {
         try {
-        connect(false);
+        connect();
         connection.authenticate(PASS);
         } catch (Throwable e) {
             e.printStackTrace();
@@ -117,7 +115,7 @@ public class TestImapClient extends TestCase {
     }
 
     public void testBadAuth() throws Exception {
-        connect(false);
+        connect();
         try {
             connection.authenticate("foobaz");
         } catch (CommandFailedException e) {
@@ -184,7 +182,7 @@ public class TestImapClient extends TestCase {
     }
 
     public void testFetch() throws Exception {
-        connect(true);
+        connect();
         login();
         Mailbox mb = connection.select("INBOX");
         final AtomicLong count = new AtomicLong(mb.getExists());
@@ -228,7 +226,7 @@ public class TestImapClient extends TestCase {
         id.setName("foo");
         assertEquals("foo", id.getName());
         assertEquals("foo", id.get("Name"));
-        connect(false);
+        connect();
         IDInfo id1 = connection.id(id);
         assertNotNull(id1);
         assertEquals("Zimbra", id1.getName());
@@ -374,24 +372,27 @@ public class TestImapClient extends TestCase {
     }
     
     private void connect() throws IOException {
-        connect(false);
+        connect(null);
     }
     
-    private void connect(boolean ssl) throws IOException {
+    private void connect(MailConfig.Security security) throws IOException {
         if (config == null) {
-            config = getConfig(ssl);
+            config = getConfig(security);
         }
         System.out.println("---------");
         connection = new ImapConnection(config);
         connection.connect();
     }
 
-    private static ImapConfig getConfig(boolean ssl) throws IOException {
+    private static ImapConfig getConfig(MailConfig.Security security) throws IOException {
         ImapConfig config = new ImapConfig(HOST);
-        config.setSslEnabled(ssl);
-        config.setPort(ssl ? SSL_PORT : PORT);
-        if (ssl) {
-            config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+        config.setPort(PORT);
+        if (security != null) {
+            config.setSecurity(security);
+            if (security == MailConfig.Security.SSL) {
+                config.setPort(SSL_PORT);
+                config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+            }
         }
         config.setDebug(DEBUG);
         config.setTrace(true);

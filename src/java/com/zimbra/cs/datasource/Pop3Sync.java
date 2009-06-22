@@ -64,8 +64,7 @@ public class Pop3Sync extends MailItemImport {
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
-        config.setTlsEnabled(LC.javamail_pop3_enable_starttls.booleanValue());
-        config.setSslEnabled(ds.isSslEnabled());
+        config.setSecurity(getSecurity(ds.getConnectionType()));
         if (ds.isDebugTraceEnabled()) {
             config.setDebug(true);
             enableTrace(config);

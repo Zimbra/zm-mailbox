@@ -25,6 +25,7 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Mailbox;
+import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -57,7 +58,6 @@ public class TestImapSync {
         config = new ImapConfig();
         config.setHost("localhost");
         config.setPort(7143);
-        config.setTlsEnabled(false);
         config.setAuthenticationId("user1");
         pass = "test123";
     }
@@ -82,7 +82,7 @@ public class TestImapSync {
         }
         TestUtil.createAccount(LOCAL_USER);
         localMailbox = TestUtil.getZMailbox(LOCAL_USER);
-        dataSource = createDataSource(config);
+        dataSource = createDataSource();
         connect();
         deleteImapFolders();
     }
@@ -105,9 +105,10 @@ public class TestImapSync {
         TestUtil.importDataSource(dataSource, localMailbox, null);
     }
 
-    private ZDataSource createDataSource(ImapConfig ic) throws Exception {
-        DataSource.ConnectionType ctype = ic.isSslEnabled() ?
-            DataSource.ConnectionType.ssl : DataSource.ConnectionType.cleartext;
+    private ZDataSource createDataSource() throws Exception {
+        DataSource.ConnectionType ctype =
+            config.getSecurity() == MailConfig.Security.SSL ?
+                DataSource.ConnectionType.ssl : DataSource.ConnectionType.cleartext;
         String id = localMailbox.createDataSource(
             new ZImapDataSource(
                 "TestImapSync", true, config.getHost(), config.getPort(),

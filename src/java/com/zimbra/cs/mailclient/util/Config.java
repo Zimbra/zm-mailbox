@@ -121,10 +121,11 @@ public final class Config {
                type == Character.class || type == Character.TYPE ||
                type == Byte.class || type == Byte.TYPE ||
                type == Boolean.class || type == Boolean.TYPE ||
-               type == String.class;
+               type == String.class || type.isEnum();
     }
 
     // Parse property value according to type
+    @SuppressWarnings("unchecked")
     private static Object parseValue(String value, Class type) {
         if (type == Long.class || type == Long.TYPE) {
             return Long.parseLong(value);
@@ -144,6 +145,8 @@ public final class Config {
             return Boolean.parseBoolean(value);
         } else if (type == String.class) {
             return value;
+        } else if (type.isEnum()) {
+            return Enum.valueOf(type, value);
         } else {
             return null;
         }

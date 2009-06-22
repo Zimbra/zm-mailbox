@@ -77,11 +77,6 @@ public final class ImapConnection extends MailConnection {
     }
 
     @Override
-    protected boolean isTlsEnabled() {
-        return super.isTlsEnabled() && hasCapability(ImapCapabilities.STARTTLS);
-    }
-
-    @Override
     protected void processGreeting() throws IOException {
         ImapResponse res = readResponse();
         if (res.isUntagged()) {

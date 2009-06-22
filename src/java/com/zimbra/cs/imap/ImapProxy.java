@@ -69,7 +69,7 @@ class ImapProxy {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapBindPort, ImapConfig.DEFAULT_PORT));
         } else if (server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, true)) {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, ImapConfig.DEFAULT_SSL_PORT));
-            config.setSslEnabled(true);
+            config.setSecurity(MailConfig.Security.SSL);
         } else {
             throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }

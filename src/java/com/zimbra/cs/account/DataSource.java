@@ -70,7 +70,7 @@ public class DataSource extends AccountProperty {
     }
 
     public enum ConnectionType {
-        cleartext, ssl;
+        cleartext, ssl, tls, tls_if_available;
         
         public static ConnectionType fromString(String s) throws ServiceException {
             try {
@@ -134,13 +134,13 @@ public class DataSource extends AccountProperty {
     public boolean isEnabled() { return getBooleanAttr(Provisioning.A_zimbraDataSourceEnabled, false); }
 
     public ConnectionType getConnectionType() {
-        String val = getAttr(Provisioning.A_zimbraDataSourceConnectionType);
+        String value = getAttr(Provisioning.A_zimbraDataSourceConnectionType);
         ConnectionType connectionType = null;
-        if (val != null) {
+        if (value != null) {
             try {
-                connectionType = ConnectionType.fromString(val);
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Unable to determine connection type of " + toString(), e);
+                connectionType = ConnectionType.valueOf(value);
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.mailbox.warn("Illegal connection type: " + value);
             }
         }
         return connectionType;

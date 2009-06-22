@@ -97,7 +97,7 @@ public class ImapConfig extends MailConfig {
     public int getPort() {
         int port = super.getPort();
         if (port != -1) return port;
-        return isSslEnabled() ? DEFAULT_SSL_PORT : DEFAULT_PORT;
+        return getSecurity() == Security.SSL ? DEFAULT_SSL_PORT : DEFAULT_PORT;
     }
 
     /**

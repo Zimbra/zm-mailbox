@@ -72,8 +72,7 @@ public abstract class MailConnection {
 
     /**
      * Opens connection to the mail server. Does nothing if the connection
-     * is already open. If TLS is enabled then automatically initiated TLS
-     * handshake.
+     * is already open.
      *
      * @throws IOException if an I/O error occurs
      */
@@ -84,13 +83,30 @@ public abstract class MailConnection {
             initStreams(new BufferedInputStream(socket.getInputStream()),
                         new BufferedOutputStream(socket.getOutputStream()));
             processGreeting();
-            if (isTlsEnabled()) {
+            switch (config.getSecurity()) {
+            case TLS:
                 startTls();
+                break;
+            case TLS_IF_AVAILABLE:
+                try {
+                    startTls();
+                } catch (CommandFailedException e) {
+                    getLogger().debug("STARTTLS failed", e);
+                }
+                break;
             }
         } catch (IOException e) {
             close();
             throw e;
         }
+    }
+
+    private void startTls() throws IOException {
+        checkState(State.NOT_AUTHENTICATED);
+        sendStartTls();
+        SSLSocket sock = newSSLSocket(socket);
+        sock.startHandshake();
+        initStreams(sock.getInputStream(), sock.getOutputStream());
     }
 
     private void initStreams(InputStream is, OutputStream os)
@@ -101,17 +117,6 @@ public abstract class MailConnection {
         }
         mailIn = newMailInputStream(is);
         mailOut = newMailOutputStream(os);
-    }
-
-    /**
-     * Returns <tt>true</tt> if TLS should be enabled for this connection.
-     * By default, TLS is enabled if the mail configuration specifies that TLS
-     * should be enabled and SSL is <i>not</i> enabled.
-     *
-     * @return <tt>true</tt> if TLS should be enabled, <tt>false</tt> if not
-     */
-    protected boolean isTlsEnabled() {
-        return config.isTlsEnabled() && !config.isSslEnabled();
     }
 
     /**
@@ -145,8 +150,7 @@ public abstract class MailConnection {
     protected abstract void sendAuthenticate(boolean ir) throws IOException;
 
     /**
-     * Sends TLS start command to the server. This will be called if
-     * {@link #isTlsEnabled()} returns <tt>true</tt>.
+     * Sends TLS start command to the server.
      *
      * @throws CommandFailedException if the start TLS command failed
      * @throws IOException if an I/O error occurs
@@ -280,19 +284,6 @@ public abstract class MailConnection {
         mailOut.flush();
     }
 
-    private void startTls() throws IOException {
-        checkState(State.NOT_AUTHENTICATED);
-        try {
-            sendStartTls();
-        } catch (CommandFailedException e) {
-            getLogger().warn("Start TLS failed", e);
-            return;
-        }
-        SSLSocket sock = newSSLSocket(socket);
-        sock.startHandshake();
-        initStreams(sock.getInputStream(), sock.getOutputStream());
-    }
-
     /**
      * If SASL authentication was used, then returns the negotiated quality
      * of protection for the connection.
@@ -351,6 +342,7 @@ public abstract class MailConnection {
      *
      * @param readTimeout  The new read timeout, in seconds.
      *                     <tt>0</tt> means no timeout.
+     * @throws SocketException if a socket I/O error occurs
      */
     public void setReadTimeout(final int readTimeout) throws SocketException {
         int timeout = (int) Math.min(readTimeout * 1000L, Integer.MAX_VALUE);
@@ -442,8 +434,9 @@ public abstract class MailConnection {
     }
 
     private Socket newSocket() throws IOException {
-        SocketFactory sf = config.isSslEnabled() ?
-            getSSLSocketFactory() : SocketFactory.getDefault();
+        SocketFactory sf =
+            config.getSecurity() == MailConfig.Security.SSL ?
+                getSSLSocketFactory() : SocketFactory.getDefault();
         Socket sock = sf.createSocket();
         int connectTimeout = (int)
             Math.min(config.getConnectTimeout() * 1000L, Integer.MAX_VALUE);

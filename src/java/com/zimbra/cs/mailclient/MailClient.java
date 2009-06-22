@@ -208,10 +208,10 @@ public abstract class MailClient {
                 maxQop = parseQop(arg, args.next());
                 break;
             case 's':
-                config.setSslEnabled(true);
+                config.setSecurity(MailConfig.Security.SSL);
                 break;
             case 't':
-                config.setTlsEnabled(true);
+                config.setSecurity(MailConfig.Security.TLS_IF_AVAILABLE);
                 break;
             case 'd':
                 config.setDebug(true);
@@ -229,7 +229,7 @@ public abstract class MailClient {
             throw new IllegalArgumentException("Option requires argument: " + arg);
         }
         // If SSL is enabled then only QOP_AUTH is supported
-        if (!config.isSslEnabled()) {
+        if (config.getSecurity() != MailConfig.Security.SSL) {
             Map<String, String> props = new HashMap<String, String>();
             props.put(Sasl.QOP, getQop(minQop, maxQop));
             config.setSaslProperties(props);

@@ -25,6 +25,7 @@ import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 import com.zimbra.cs.mailclient.util.SSLUtil;
+import com.zimbra.cs.mailclient.MailConfig;
 
 public class TestPop3Client extends TestCase {
     private Pop3Config config;
@@ -61,7 +62,7 @@ public class TestPop3Client extends TestCase {
 
     public void testTls() throws Exception {
         config = getConfig(false);
-        config.setTlsEnabled(true);
+        config.setSecurity(MailConfig.Security.TLS);
         connect();
         login();
     }
@@ -153,7 +154,7 @@ public class TestPop3Client extends TestCase {
 
     private static Pop3Config getConfig(boolean ssl) throws IOException {
         Pop3Config config = new Pop3Config(HOST);
-        config.setSslEnabled(ssl);
+        if (ssl) config.setSecurity(MailConfig.Security.SSL);
         config.setPort(ssl ? SSL_PORT : PORT);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         config.setDebug(DEBUG);

@@ -22,7 +22,6 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
@@ -100,8 +99,7 @@ public class ImapSync extends MailItemImport {
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
-        config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
-        config.setSslEnabled(ds.isSslEnabled());
+        config.setSecurity(getSecurity(ds.getConnectionType()));
         // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
         // Avoiding LITERAL+ also gives servers a chance to reject uploaded
         // messages that are too big, since the server must send a continuation
