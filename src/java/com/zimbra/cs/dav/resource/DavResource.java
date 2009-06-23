@@ -41,7 +41,6 @@ import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.service.util.ItemId;
 
 /**
  * DavResource is an object identified by a URL in the hierarchy of HTTP URL
@@ -60,10 +59,6 @@ public abstract class DavResource {
 		public void delete(DavContext ctxt) { }
 		public boolean isCollection() { return false; }
 		public boolean isValid() { return false; }
-	}
-	
-	public static interface RemoteResource {
-		public ItemId getTarget();
 	}
 	
 	protected String mUri;

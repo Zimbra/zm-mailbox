@@ -504,9 +504,11 @@ public class DavServlet extends ZimbraServlet {
 		// we don't proxy zero depth PROPFIND, and all PROPPATCH on mountpoints,
 		// because the mountpoint object contains WebDAV properties that are
 		// private to the user.
+		// we also don't proxy DELETE on a mountpoint.
 		if (extraPath == null 
 			&& (m.getName().equals(PropFind.PROPFIND) && ctxt.getDepth() == DavContext.Depth.zero
-				|| m.getName().equals(PropPatch.PROPPATCH)))
+				|| m.getName().equals(PropPatch.PROPPATCH)
+				|| m.getName().equals(Delete.DELETE)))
 			return false;
 		
 		String prefix = ctxt.getPath();

@@ -24,7 +24,6 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -46,7 +45,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.service.util.ItemId;
 
 /**
  * UrlNamespace provides a mapping from a URL to a DavResource.
@@ -283,25 +281,7 @@ public class UrlNamespace {
 		return DavServlet.getServiceUrl(server, domain, path);
     }
     
-	private static LRUMap sApptSummariesMap = new LRUMap(100);
 	private static LRUMap sRenamedResourceMap = new LRUMap(100);
-	
-	private static class RemoteFolder {
-	    static final long AGE = 60L * 1000L;
-	    CalendarCollection folder;
-	    long ts;
-	    boolean isStale(long now) {
-	    	if (folder == null)
-	    		return true;
-	    	try {
-		    	Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, folder.mOwnerId);
-		    	long interval = owner.getTimeInterval(Provisioning.A_zimbraCalendarCalDavSharedFolderCacheDuration, AGE);
-		    	return (ts + interval) < now;
-	    	} catch (Exception e) {
-	    	}
-	    	return true;
-	    }
-	}
 	
 	public static void addToRenamedResource(String path, DavResource rsc) {
 		synchronized (sRenamedResourceMap) {
@@ -366,18 +346,7 @@ public class UrlNamespace {
         	if (path.toLowerCase().endsWith(CalendarObject.CAL_EXTENSION)) {
         		String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
         		index = uid.indexOf(',');
-        		if (f.getType() == MailItem.TYPE_MOUNTPOINT) {
-        			Mountpoint mp = (Mountpoint)f;
-        			// if the folder is a mountpoint instantiate a remote object.
-        			// the only information we have is the calendar UID and remote account folder id.
-        			// we need the itemId for the calendar appt in order to query from the remote server.
-        			// so we'll need to do getApptSummaries on the remote folder, then cache the result.
-        			RemoteCalendarCollection col = getRemoteCalendarCollection(ctxt, mp);
-        			DavResource res = col.getAppointment(ctxt, uid);
-        			if (res == null)
-        				throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
-        			return res;
-        		} else if (index > 0) {
+        		if (index > 0) {
         			id = uid.substring(index+1);
         			item = mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
 
@@ -406,37 +375,6 @@ public class UrlNamespace {
         for (Folder f : mbox.getVisibleFolders(octxt))
         	rss.add(getResourceFromMailItem(ctxt, f));
         return rss;
-    }
-    
-    private static RemoteCalendarCollection getRemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
-        ItemId remoteId = mp.getTarget();
-        Pair<String,ItemId> key = new Pair<String,ItemId>(mp.getAccount().getId(), remoteId);
-        RemoteFolder remoteFolder = null;
-        synchronized (sApptSummariesMap) {
-            remoteFolder = (RemoteFolder)sApptSummariesMap.get(key);
-            long now = System.currentTimeMillis();
-            if (remoteFolder != null && remoteFolder.isStale(now)) {
-                sApptSummariesMap.remove(key);
-                remoteFolder = null;
-            }
-        }
-        if (remoteFolder != null && remoteFolder.folder instanceof RemoteCalendarCollection)
-        	return (RemoteCalendarCollection)remoteFolder.folder;
-        remoteFolder = new RemoteFolder();
-        remoteFolder.folder = new RemoteCalendarCollection(ctxt, mp);
-        remoteFolder.ts = System.currentTimeMillis();
-        synchronized (sApptSummariesMap) {
-//        	sApptSummariesMap.put(key, remoteFolder);
-        }
-        return (RemoteCalendarCollection)remoteFolder.folder;
-    }
-    
-    public static void invalidateApptSummariesCache(String ownerId, String acctId, int itemId) {
-        ItemId remoteId = new ItemId(acctId, itemId);
-        Pair<String,ItemId> key = new Pair<String,ItemId>(ownerId, remoteId);
-        synchronized (sApptSummariesMap) {
-            sApptSummariesMap.remove(key);
-        }
     }
     
     private static DavResource getCalendarItemForMessage(DavContext ctxt, Message msg) throws ServiceException {
@@ -479,7 +417,7 @@ public class UrlNamespace {
             	viewType = mp.getDefaultView();
             	// don't expose mounted calendars when using iCal style delegation model.
             	if (!ctxt.useIcalDelegation() && viewType == MailItem.TYPE_APPOINTMENT)
-            		resource = getRemoteCalendarCollection(ctxt, mp);
+            		resource = new RemoteCalendarCollection(ctxt, mp);
             	else
             		resource = new RemoteCollection(ctxt, mp);
                 break;

@@ -44,7 +44,6 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.caldav.TimeRange;
-import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
@@ -81,11 +80,6 @@ public class CalendarCollection extends Collection {
 	public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		Account acct = f.getAccount();
-		mDavCompliance.add(Compliance.one);
-		mDavCompliance.add(Compliance.two);
-		mDavCompliance.add(Compliance.three);
-		mDavCompliance.add(Compliance.access_control);
-		mDavCompliance.add(Compliance.calendar_access);
 		if (ctxt.isSchedulingEnabled())
 			mDavCompliance.add(Compliance.calendar_schedule);
 
@@ -111,15 +105,10 @@ public class CalendarCollection extends Collection {
 		mCtag = CtagInfo.makeCtag(f);
 		setProperty(DavElements.E_GETCTAG, mCtag);
 		
-		byte color = f.getColor();
-		if (color >= COLOR_MAP.length)
-			color = 0;
-		setProperty(DavElements.E_DISPLAYNAME, f.getName());
-		setProperty(DavElements.E_CALENDAR_COLOR, COLOR_MAP[color]);
+		setProperty(DavElements.E_CALENDAR_COLOR, COLOR_MAP[mColor]);
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
-		addProperty(Acl.getPrincipalUrl(this));
 
 		// remaining recommented attributes: calendar-timezone, max-resource-size,
 		// min-date-time, max-date-time, max-instances, max-attendees-per-instance,

@@ -43,6 +43,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.mailbox.ACL;
@@ -64,6 +65,7 @@ public abstract class MailItemResource extends DavResource {
 	protected int  mFolderId;
 	protected int  mId;
 	protected byte mType;
+	protected byte mColor;
 	protected String mEtag;
 	protected String mSubject;
 	protected String mPath;
@@ -118,6 +120,11 @@ public abstract class MailItemResource extends DavResource {
 		setProperty(DavElements.P_GETETAG, mEtag);
 		if (mModifiedDate > 0)
             setLastModifiedDate(mModifiedDate);
+		mColor = item.getColor();
+		if (mColor >= COLOR_MAP.length)
+			mColor = 0;
+		setProperty(DavElements.E_DISPLAYNAME, item.getName());
+		addProperty(Acl.getPrincipalUrl(this));
 	}
 	
 	public MailItemResource(String path, String acct) {
