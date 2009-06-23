@@ -2293,7 +2293,7 @@ returns all shares owned by user1@test.com that are shared with dl@test.com.
                         
 ----------------------------
  
-<CreateGalSyncAccountRequest name="{identifier}" [domain="true"] [folder="{contact-folder-name}"] >
+<CreateGalSyncAccountRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" [folder="{contact-folder-name}"] >
   <account by="id|name">...</account>
   <a n="attr-name">...</a>+
 </CreateGalSyncAccountRequest>
@@ -2307,21 +2307,20 @@ Notes:
 
 	- if the referenced account is not found it will be created.
     - the identifier used in name attr is used for SyncGal and SearchGal.
-    - if domain attr is not present it'll set up gal sync account for Zimbra LDAP server.
+    - name attribute is for the name of the data source.
     - if folder attr is not present it'll default to Contacts folder.
-    - passed in attrs are used to initialize the gal data source.
-      for domain gal sync account use <a/> to pass in the gal configuration.
+    - passed in attrs in <a/> are used to initialize the gal data source.
 
 
 example for creating gal sync account for Zimbra LDAP server.
 
-    <CreateGalSyncAccountRequest name="zimbra">
-      <account by="name">zimbragal@domain.com</account>
+    <CreateGalSyncAccountRequest name="zimbra" domain="mydomain.com" type="zimbra">
+      <account by="name">gal@mydomain.com</account>
     </CreateGalSyncAccountRequest>
 
 example for creating domain gal sync account.
 
-    <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com">
+    <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com" type="ldap">
       <account by="name">gal@mydomain.com</account>
       <a n="zimbraGalLdapURL">ldap://ldap.mydomain.com</a>
       <a n="zimbraGalLdapStartTlsEnabled">TRUE</a>
