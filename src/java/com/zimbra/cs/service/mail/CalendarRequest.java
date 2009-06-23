@@ -55,6 +55,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.store.StoreManager;
@@ -331,7 +332,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 ByteUtil.closeStream(os);
                 os = null;
                 is = new FileInputStream(tempMmFile);
-                csd.mMm = new MimeMessage(JMSession.getSession(), is);
+                csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("error creating calendar message content", e);
             } catch (MessagingException e) {
