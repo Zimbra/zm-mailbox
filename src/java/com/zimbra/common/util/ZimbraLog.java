@@ -16,9 +16,9 @@ package com.zimbra.common.util;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -473,7 +473,7 @@ public class ZimbraLog {
         } else {
             // Add
             if (contextMap == null) {
-                contextMap = new HashMap<String, String>();
+                contextMap = new LinkedHashMap<String, String>();
                 sContextMap.set(contextMap);
             }
             String oldValue = contextMap.put(key, value);
