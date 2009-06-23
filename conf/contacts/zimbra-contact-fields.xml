@@ -457,28 +457,4 @@ translate the value of into Zimbra tag.
         <column name="User 4" field="custom4"/>
         <column name="Web Page" field="workURL"/>
     </format>
-
-    <format name="gmail-csv" type="csv">
-        <column name="Title" field="jobTitle"/>
-        <column name="Name" field="firstName,middleName,lastName" type="name"/>
-        <column name="Company" field="company"/>
-        <column name="Job Title" field="jobTitle"/>
-        <column name="Business Address" field="workStreet"/>
-        <column name="Home Address" field="homeStreet"/>
-        <column name="Other Address" field="otherStreet"/>
-        <column name="Business Fax" field="workFax"/>
-        <column name="Business Phone" field="workPhone"/>
-        <column name="Business Phone 2" field="workPhone2"/>
-        <column name="Home Fax" field="homeFax"/>
-        <column name="Home Phone" field="homePhone"/>
-        <column name="Home Phone 2" field="homePhone2"/>
-        <column name="Mobile Phone" field="mobilePhone"/>
-        <column name="Other Fax" field="otherFax"/>
-        <column name="Other Phone" field="otherPhone"/>
-        <column name="Pager" field="pager"/>
-        <column name="E-mail" field="email"/>
-        <column name="E-mail 2" field="email2"/>
-        <column name="E-mail 3" field="email3"/>
-        <column name="Notes" field="notes"/>
-    </format>
 </contacts>
