@@ -1,0 +1,99 @@
+
+
+Documentation for sample rights provided for admin console views.
+
+
+Starting in 6.0.x the admin console dynamically generates the views
+based on the attributes and soap calls on each page and the rights the
+current admin has for each of those items.
+
+IE if an admin console page contains only the attribute
+zimbraDefaultDomainName and you assign an inline right to view this
+attribute, the admin console would display the page as read-only.  If
+you also assign a inline set right, the admin console will display the
+attribute as editable.
+
+zimbra-rights-legacydomainadmin.xml provides combo rights that
+coorespond to 5.0.x Admin Console domain admin views.  Traditionally ZCS
+has allowed significally more domainAdminModifiable attributes then were
+exposed via the domain admin admin console extension. 
+
+Assigning the combo right domainAdminRights will actually expose most of
+the admin console UI views since it includes the getAccounts right which
+allows read access to all account attributes.
+
+======================================================================
+Addresses Section
+======================================================================
+
+  Admin Console Accounts List View
+    LegacyAdminConsoleDomainAdminAccountRights
+
+    Accounts Info Tab
+      AdminConsoleAccountsInfoTabRights
+    Accounts Contact Tab
+      AdminConsoleAccountsContactTabRights
+    Accounts MemberOf Tab
+      AdminConsoleAccountsMemberOfTabRights
+    Accounts Aliases Tab
+      AdminConsoleAccountsAliasesTabRights
+    Accounts Features Tab
+      AdminConsoleAccountsFeaturesTabRights
+    Accounts Forwarding Tab
+      AdminConsoleAccountsForwardingTabRights
+    Accounts Preferences Tab
+    Accounts FreeBusyInterop Tab
+      AdminConsoleAccountsFreeBusyInteropTabRights
+    Accounts Themes Tab
+      AdminConsoleAccountsThemesTabRights
+    Accounts Zimlets Tab
+      AdminConsoleAccountsZimletsTabRights
+    Accounts Advanced Tab
+      AdminConsoleAccountsAdvancedTabRights
+    Accounts Zimbra Mobile Tab
+    Accounts ACL Tab
+    Accounts Admin Views Tab
+
+  Admin Console Alias List View
+    LegacyAdminConsoleDomainAdminAliasRights
+
+  Admin Console Distribution List List View
+    LegacyAdminConsoleDomainAdminDLRights
+
+    DL Members Tab
+      AdminConsoleDLMembersTabRights
+    DL Notes Tab
+      AdminConsoleDLNotesTabRights
+    DL MemberOf Tab
+      AdminConsoleDLMemberOfTabRights
+    DL Aliases Tab
+      AdminConsoleDLAliasesTabRights
+    DL Shares Tab
+      AdminConsoleDLSharesTabRights
+    DL ACL Tab
+    DL Admin View Tab
+
+  Admin Console Resources List View
+    LegacyAdminConsoleDomainAdminResourceRights
+
+    Resources Properties Tab
+      AdminConsoleResourcesPropertiesTabRights
+    Resources Location/Contact Tab
+      AdminConsoleResourcesContactTabRights
+    Resources ACL Tab
+
+
+Legacy Domain Admin View is defined by providing the following rights
+
+    LegacyAdminConsoleDomainAdminRights
+
+    Which is a roll-up of these rights
+      LegacyAdminConsoleDomainAdminAccountRights
+      LegacyAdminConsoleDomainAdminAliasRights
+      LegacyAdminConsoleDomainAdminDLRights
+      LegacyAdminConsoleDomainAdminResourceRights
+      setAdminSavedSearch
+      viewAdminSavedSearch
+
+
+
