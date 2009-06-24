@@ -18,18 +18,31 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
+import java.sql.Ref;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
-
 
 class DebugPreparedStatement implements PreparedStatement {
 
     private static final int MAX_STRING_LENGTH = 1024;
+    private static final long SLOW_QUERY_TIME = 2 * Constants.MILLIS_PER_SECOND;
     
     private String mSql;
     private PreparedStatement mStmt;
@@ -38,6 +51,7 @@ class DebugPreparedStatement implements PreparedStatement {
     /**
      * A list that implicitly resizes when {@link #set} is called.
      */
+    @SuppressWarnings("serial")
     private class AutoSizeList<E>
     extends ArrayList<E> {
         public E set(int index, E element) {
@@ -101,12 +115,19 @@ class DebugPreparedStatement implements PreparedStatement {
     
     private void log() {
         long time = System.currentTimeMillis() - mStartTime;
-        String sql = getSql();
-        ZimbraLog.sqltrace.debug(sql + " - " + time + "ms" + getHashCodeString());
+        if (time > SLOW_QUERY_TIME) {
+            String sql = getSql();
+            ZimbraLog.sqltrace.info("Slow execution (%dms): %s", time,  sql);
+        } else if (ZimbraLog.sqltrace.isDebugEnabled()) {
+            String sql = getSql();
+            ZimbraLog.sqltrace.debug(sql + " - " + time + "ms" + getHashCodeString());
+        }
     }
     
     private void logException(SQLException e) {
-        ZimbraLog.sqltrace.debug(e.toString() + ": " + getSql() + getHashCodeString());
+        if (ZimbraLog.sqltrace.isDebugEnabled()) {
+            ZimbraLog.sqltrace.debug(e.toString() + ": " + getSql() + getHashCodeString());
+        }
     }
 
     private String getHashCodeString() {

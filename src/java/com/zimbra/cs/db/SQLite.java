@@ -34,6 +34,7 @@ import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.dbcp.DelegatingConnection;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -165,7 +166,7 @@ public class SQLite extends Db {
             new HashMap<java.sql.Connection, LinkedHashMap<String, String>>(DEFAULT_CONNECTION_POOL_SIZE);
 
     private LinkedHashMap<String, String> getAttachedDatabases(Connection conn) {
-        return sAttachedDatabases.get(conn.getConnection());
+        return sAttachedDatabases.get(getInnermostConnection(conn.getConnection()));
     }
 
     private void recordAttachedDatabase(Connection conn, String dbname) {
@@ -175,8 +176,17 @@ public class SQLite extends Db {
         } else {
             attachedDBs = new LinkedHashMap<String, String>(MAX_ATTACHED_DATABASES * 3 / 2, (float) 0.75, true);
             attachedDBs.put(dbname, null);
-            sAttachedDatabases.put(conn.getConnection(), attachedDBs);
+            sAttachedDatabases.put(getInnermostConnection(conn.getConnection()), attachedDBs);
         }
+    }
+    
+    private java.sql.Connection getInnermostConnection(java.sql.Connection conn) {
+        java.sql.Connection retVal = null;
+        if (conn instanceof DebugConnection)
+            retVal = ((DebugConnection) conn).getConnection();
+        if (conn instanceof DelegatingConnection)
+            retVal = ((DelegatingConnection) conn).getInnermostDelegate();
+        return retVal == null ? conn : retVal;
     }
 
     @Override public void registerDatabaseInterest(Connection conn, String dbname) throws SQLException {

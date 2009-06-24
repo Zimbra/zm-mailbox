@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
@@ -53,7 +52,7 @@ public class DbPool {
     
     private static boolean isShutdown;
 
-    static ValueCounter sConnectionStackCounter = new ValueCounter();
+    static ValueCounter<String> sConnectionStackCounter = new ValueCounter<String>();
     
     public static class Connection {
         private java.sql.Connection mConnection;
@@ -62,14 +61,9 @@ public class DbPool {
         Connection(java.sql.Connection conn)  { mConnection = conn; }
 
         public java.sql.Connection getConnection() {
-            java.sql.Connection conn = mConnection;
-            if (conn instanceof DebugConnection)
-                conn = ((DebugConnection) conn).getConnection();
-            if (conn instanceof DelegatingConnection)
-                conn = ((DelegatingConnection) conn).getInnermostDelegate();
-            return conn == null ? mConnection : conn;
+            return mConnection;
         }
-
+        
         public void setTransactionIsolation(int level) throws ServiceException {
             try {
                 mConnection.setTransactionIsolation(level);
@@ -186,6 +180,23 @@ public class DbPool {
         sRootUrl = pconfig.mRootUrl;
         sLoggerRootUrl = pconfig.mLoggerUrl;
     }
+    
+    private static class ZimbraConnectionFactory
+    extends DriverManagerConnectionFactory {
+        private ZimbraConnectionFactory(String connectUri, Properties props) {
+            super(connectUri, props);
+        }
+        
+        /**
+         * Wraps the JDBC connection from the pool with a <tt>DebugConnection</tt>,
+         * which does  <tt>sqltrace</tt> logging.
+         */
+        public java.sql.Connection createConnection()
+        throws SQLException {
+            java.sql.Connection conn = super.createConnection();
+            return new DebugConnection(conn);
+        }
+    }
 
     /** Initializes the connection pool. */
     private static synchronized PoolingDataSource getPool() {
@@ -197,7 +208,7 @@ public class DbPool {
 
         PoolConfig pconfig = Db.getInstance().getPoolConfig();
         sConnectionPool = new GenericObjectPool(null, pconfig.mPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, pconfig.mPoolSize);
-        ConnectionFactory cfac = new DriverManagerConnectionFactory(pconfig.mConnectionUrl, pconfig.mDatabaseProperties);
+        ConnectionFactory cfac = new ZimbraConnectionFactory(pconfig.mConnectionUrl, pconfig.mDatabaseProperties);
 
         boolean defAutoCommit = false, defReadOnly = false;
         new PoolableConnectionFactory(cfac, sConnectionPool, null, null, defReadOnly, defAutoCommit);
@@ -258,9 +269,6 @@ public class DbPool {
             if (Db.supports(Db.Capability.READ_COMMITTED_ISOLATION))
                 dbconn.setTransactionIsolation(java.sql.Connection.TRANSACTION_READ_COMMITTED);
 
-            if (ZimbraLog.sqltrace.isDebugEnabled())
-                dbconn = new DebugConnection(dbconn);
-
             conn = new Connection(dbconn);
             Db.getInstance().postOpen(conn);
         } catch (SQLException e) {
@@ -302,9 +310,9 @@ public class DbPool {
         if (ZimbraLog.dbconn.isDebugEnabled()) {
             StringBuilder buf = new StringBuilder();
             synchronized (sConnectionStackCounter) {
-                Iterator i = sConnectionStackCounter.iterator();
+                Iterator<String> i = sConnectionStackCounter.iterator();
                 while (i.hasNext()) {
-                    String stackTrace = (String) i.next();
+                    String stackTrace = i.next();
                     int count = sConnectionStackCounter.getCount(stackTrace);
                     if (count == 0) {
                         i.remove();
