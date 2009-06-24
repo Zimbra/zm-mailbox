@@ -39,8 +39,10 @@ import com.zimbra.soap.ZimbraSoapContext;
  * <GetLoggerStatsRequest>
  *   <!-- when hostname and stats are specified, fetch stats -->
  *   <hostname hn="hostname"/> <!-- optional, will list hosts otherwise -->
- *   <stats name="stat_group"/><!-- optional, will list stat groups if host specified and stats unspecified,
- *                                 will fetch given group for all hosts if hostname not specified -->
+ *   <stats name="stat_group" [limit="1"]/><!-- optional, will list stat groups if host specified and stats unspecified,
+ *                                 will fetch given group for all hosts if hostname not specified
+ *                                 if limit=X is specified, then the backend will attempt to limit the results to under
+ *                                 500 records -->
  *   <stats name="stat_group">1</stats><!-- optional, used in conjunction with hostname, list counters for
  *                                          the specified hostname and stat group -->
  *   <startTime time="ts"/><!-- optional, defaults to last day, both must be specified otherwise -->
@@ -128,10 +130,13 @@ public class GetLoggerStats extends AdminDocumentHandler {
                 // list groups for host
                 fetchGroupNames(response, host.getAttribute(AdminConstants.A_HOSTNAME));
             } else if (stats != null && host == null) {
+                String limitStr = stats.getAttribute(AdminConstants.A_LIMIT, null);
+                boolean limit = limitStr != null && !"no".equalsIgnoreCase(limitStr) &&
+                        !"false".equalsIgnoreCase(limitStr) && !"0".equalsIgnoreCase(limitStr);
+                    
                 // fetch stats for all hosts
                 String startTime = null;
                 String endTime   = null;
-                // TODO implement fetch for all hosts
                 if (start != null || end != null) {
                     if (start == null || end == null)
                         throw ServiceException.FAILURE("both start and end must be specified", null);
@@ -140,10 +145,10 @@ public class GetLoggerStats extends AdminDocumentHandler {
                     endTime   = end.getAttribute(AdminConstants.A_TIME);
                     fetchColumnData(response,
                             stats.getAttribute(AdminConstants.A_NAME),
-                            startTime, endTime);
+                            startTime, endTime, limit);
                 } else {
                     fetchColumnData(response,
-                            stats.getAttribute(AdminConstants.A_NAME));
+                            stats.getAttribute(AdminConstants.A_NAME), limit);
                 }
             } else if (stats != null && host != null) {
                 
@@ -154,6 +159,11 @@ public class GetLoggerStats extends AdminDocumentHandler {
                             host.getAttribute(AdminConstants.A_HOSTNAME),
                             stats.getAttribute(AdminConstants.A_NAME));
                 } else {
+                    
+                    String limitStr = stats.getAttribute(AdminConstants.A_LIMIT, null);
+                    boolean limit = limitStr != null && !"no".equalsIgnoreCase(limitStr) &&
+                           !"false".equalsIgnoreCase(limitStr) && !"0".equalsIgnoreCase(limitStr);
+                    
                     // fetch stats for host
                     String startTime = null;
                     String endTime   = null;
@@ -167,11 +177,11 @@ public class GetLoggerStats extends AdminDocumentHandler {
                         fetchColumnData(response,
                                 host.getAttribute(AdminConstants.A_HOSTNAME),
                                 stats.getAttribute(AdminConstants.A_NAME),
-                                startTime, endTime);
+                                startTime, endTime, limit);
                     } else {
                         fetchColumnData(response,
                                 host.getAttribute(AdminConstants.A_HOSTNAME),
-                                stats.getAttribute(AdminConstants.A_NAME));
+                                stats.getAttribute(AdminConstants.A_NAME), limit);
                     }
                 }
             } else {
@@ -214,26 +224,44 @@ public class GetLoggerStats extends AdminDocumentHandler {
         }
     }
     static void fetchColumnData(Element response, String group,
-            String start, String end)
+            String start, String end, boolean limit)
     throws ServiceException {
-        Iterator<String> results = execfetch("-f", group, "-s", start, "-e", end);
+        Iterator<String> results;
+        if (limit)
+            results = execfetch("-c", "-f", group, "-s", start, "-e", end);
+        else
+            results = execfetch("-f", group, "-s", start, "-e", end);
         populateResponseData(response, group, results);
     }
     static void fetchColumnData(Element response, String hostname, String group,
-            String start, String end)
+            String start, String end, boolean limit)
     throws ServiceException {
-        Iterator<String> results = execfetch("-h", hostname, "-f", group,
-                "-s", start, "-e", end);
+        Iterator<String> results;
+        if (limit) {
+            results = execfetch("-c", "-h", hostname, "-f", group,
+                    "-s", start, "-e", end);
+        } else {
+            results = execfetch("-h", hostname, "-f", group,
+                    "-s", start, "-e", end);
+        }
         populateResponseData(response, hostname, group, results);
     }
-    static void fetchColumnData(Element response, String group)
+    static void fetchColumnData(Element response, String group, boolean limit)
     throws ServiceException {
-        Iterator<String> results = execfetch("-f", group);
+        Iterator<String> results;
+        if (limit)
+            results = execfetch("-c", "-f", group);
+        else
+            results = execfetch("-f", group);
         populateResponseData(response, group, results);
     }
-    static void fetchColumnData(Element response, String hostname, String group)
+    static void fetchColumnData(Element response, String hostname, String group, boolean limit)
     throws ServiceException {
-        Iterator<String> results = execfetch("-h", hostname, "-f", group);
+        Iterator<String> results;
+        if (limit)
+            results = execfetch("-c", "-h", hostname, "-f", group);
+        else
+            results = execfetch("-h", hostname, "-f", group);
         populateResponseData(response, hostname, group, results);
     }
     

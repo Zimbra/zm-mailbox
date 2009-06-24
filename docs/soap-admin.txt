@@ -798,7 +798,7 @@ are returned.  If the stat name is invalid, returns a SOAP fault.
 -----------------------------
 <GetLoggerStatsRequest>
   <hostname hn="..."/>?
-  <stats name="..."/>?
+  <stats name="..." [limit=true]/>?
   <stats name="...">1</stats>?
   <startTime time="ts"/>?
   <endTime time="ts"/>?
@@ -846,6 +846,7 @@ Use cases:
 4 - hostname and stats specified, text content empty, startTime/endTime optional
   - result: all of the statistics for the given host/group are returned, if start
     and end are specified, limit/expand the timerange to the given setting.
+    if limit=true is specified, attempt to reduce result set to under 500 records
     
 -----------------------------
 <GetServiceStatusRequest/>
