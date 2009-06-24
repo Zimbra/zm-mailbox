@@ -249,24 +249,25 @@ extends Assert {
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
     
-    public static void addMessageLmtp(String subject, String recipient, String sender)
+    public static boolean addMessageLmtp(String subject, String recipient, String sender)
     throws Exception {
-        addMessageLmtp(subject, new String[] { recipient }, sender);
+        return addMessageLmtp(subject, new String[] { recipient }, sender);
     }
 
-    public static void addMessageLmtp(String subject, String[] recipients, String sender)
+    public static boolean addMessageLmtp(String subject, String[] recipients, String sender)
     throws Exception {
         String message = getTestMessage(subject, recipients[0], sender, null);
-        addMessageLmtp(recipients, sender, message);
+        return addMessageLmtp(recipients, sender, message);
     }
     
-    public static void addMessageLmtp(String[] recipients, String sender, String message)
+    public static boolean addMessageLmtp(String[] recipients, String sender, String message)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
-        lmtp.sendMessage(new ByteArrayInputStream(data), recipients, sender, "TestUtil", (long) data.length);
+        boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipients, sender, "TestUtil", (long) data.length);
         lmtp.close();
+        return success;
     }
     
     public static String addMessage(ZMailbox mbox, String subject)

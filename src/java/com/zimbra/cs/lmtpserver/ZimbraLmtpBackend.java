@@ -145,6 +145,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private boolean dedupe(ParsedMessage pm, Mailbox mbox) {
         if (sReceivedMessageIDs == null || pm == null || mbox == null)
             return false;
@@ -153,34 +154,32 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             return false;
 
         synchronized (sReceivedMessageIDs) {
-            Object hit = sReceivedMessageIDs.get(msgid);
-            if (hit instanceof Integer)
-                return hit.equals(new Integer(mbox.getId()));
-            else if (hit instanceof Set)
-                return ((Set) hit).contains(new Integer(mbox.getId()));
-            else
-                return false;
+            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
+            if (mboxIds == null) {
+                mboxIds = new HashSet<Integer>();
+                sReceivedMessageIDs.put(msgid, mboxIds);
+            } else {
+                if (mboxIds.contains(mbox.getId())) {
+                    return true;
+                }
+            }
+            mboxIds.add(mbox.getId());
         }
+        return false;
     }
-
+    
     @SuppressWarnings("unchecked")
-    private void recordReceipt(String msgid, Mailbox mbox) {
+    private void removeFromDedupeCache(String msgid, Mailbox mbox) {
         if (sReceivedMessageIDs == null || msgid == null || mbox == null)
             return;
         if (msgid == null || msgid.equals(""))
             return;
-        Integer mboxid = mbox.getId();
 
         synchronized (sReceivedMessageIDs) {
-            Object hit = sReceivedMessageIDs.get(msgid);
-            if (hit instanceof Integer) {
-                Set<Integer> set = new HashSet<Integer>();
-                set.add((Integer) hit);  set.add(mboxid);
-                sReceivedMessageIDs.put(msgid, set);
-            } else if (hit instanceof Set)
-                ((Set) hit).add(mboxid);
-            else
-                sReceivedMessageIDs.put(msgid, mboxid);
+            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
+            if (mboxIds != null) {
+                mboxIds.remove(mbox.getId());
+            }
         }
     }
 
@@ -355,6 +354,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     if (rd.mbox != null)
                         ZimbraLog.addMboxToContext(rd.mbox.getId());
 
+                    boolean success = false;
                     try {
                         if (rd != null) {
                             switch (rd.action) {
@@ -368,7 +368,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 ParsedMessage pm = rd.pm;
                                 Message msg = null;
                                 
-                                String msgid = null;
                                 if (dedupe(pm, mbox)) {
                                     // message was already delivered to this mailbox
                                     ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
@@ -376,17 +375,16 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 } else if (!DebugConfig.disableFilter) {
                                     // Get msgid first, to avoid having to reopen and reparse the blob
                                     // file if Mailbox.addMessageInternal() closes it.
-                                    msgid = pm.getMessageID();
+                                    pm.getMessageID();
                                     msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawSize(),
                                                                                rcptEmail, sharedDeliveryCtxt);
                                 } else {
-                                    msgid = pm.getMessageID();
+                                    pm.getMessageID();
                                     msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
                                                           rcptEmail, sharedDeliveryCtxt);
                                 }
+                                success = true;
                                 if (msg != null) {
-                                    recordReceipt(msgid, mbox);
-                                    
                                     // Execute callbacks
                                     for (LmtpCallback callback : sCallbacks) {
                                         if (ZimbraLog.lmtp.isDebugEnabled()) {
@@ -436,6 +434,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         status = LmtpStatus.TRYAGAIN;
                         ZimbraLog.lmtp.warn("try again for message " + rcptEmail + ": exception occurred", e);
                     } finally {
+                        if (rd.action == DeliveryAction.deliver && !success) {
+                            // Message was not delivered.  Remove it from the dedupe
+                            // cache so we don't dedupe it on LMTP retry.
+                            removeFromDedupeCache(msgId, rd.mbox);
+                        }
                         ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
                         if (shared && rd != null && rd.esd) {

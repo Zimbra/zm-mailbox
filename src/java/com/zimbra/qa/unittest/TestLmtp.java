@@ -16,11 +16,9 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +28,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
@@ -57,6 +56,27 @@ extends TestCase {
     private int mOriginalWarnPercent;
     private String mOriginalServerDiskThreshold;
     private String mOriginalConfigDiskThreshold;
+    private String mOriginalQuota;
+    
+    private class LmtpClientThread
+    implements Runnable {
+        
+        private String mRecipient;
+        private String mContent;
+        
+        private LmtpClientThread(String recipient, String content) {
+            mRecipient = recipient;
+            mContent = content;
+        }
+        
+        public void run() {
+            try {
+                TestUtil.addMessageLmtp(new String[] { mRecipient }, mRecipient, mContent);
+            } catch (Exception e) {
+                ZimbraLog.test.error("Unable to send message to %s.", mRecipient, e);
+            }
+        }
+    }
     
     public void setUp()
     throws Exception {
@@ -68,6 +88,7 @@ extends TestCase {
             TestUtil.getServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold);
         mOriginalConfigDiskThreshold = TestUtil.getConfigAttr(
             Provisioning.A_zimbraMailDiskStreamingThreshold);
+        mOriginalQuota = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota);
         cleanUp();
     }
     
@@ -312,8 +333,6 @@ extends TestCase {
         mbox2.markItemRead(msg2.getId(), true, null);
         mbox2.emptyFolder(folder2.getId());
         mbox1 = TestUtil.getZMailbox(USER_NAME);
-        System.out.println("Getting message content?");
-        
         TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
     }
 
@@ -418,12 +437,63 @@ extends TestCase {
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
     }
     
+    /**
+     * Tests the LMTP deduping code.  Attempts to deliver multiple copies of the
+     * same message to the same message to the same mailbox simultaneously.  Confirms
+     * that only one copy got delivered.  Bug 38898.
+     */
+    public void testConcurrentDedupe()
+    throws Exception {
+        String subject = NAME_PREFIX + " testConcurrentDedupe";
+        String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        content = "Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
+        
+        Thread[] threads = new Thread[5];
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Thread(new LmtpClientThread(USER_NAME, content));
+        }
+        for (int i = 0; i < threads.length; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < threads.length; i++) {
+            threads[i].join();
+        }
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        List<ZMessage> messages = TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"");
+        assertEquals(1, messages.size());
+    }
+    
+    /**
+     * Confirms that delivery succeeds after an initial failure.  This confirms
+     * that the message id was removed from the LMTP dedupe cache when a delivery
+     * failure occurs.  Bug 38898.
+     * @throws Exception
+     */
+    public void testDeliveryAfterFailure()
+    throws Exception {
+        String subject = NAME_PREFIX + " testDeliveryAfterFailure";
+        String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        content = "Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
+        String[] recipients = new String[] { USER_NAME };
+        
+        // Set quota to 1 byte and make sure delivery fails.
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, "1");
+        assertFalse("LMTP should not have succeeded", TestUtil.addMessageLmtp(recipients, USER_NAME, content));
+        
+        // Reset quota, retry, and make sure the delivery succeeds.
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, mOriginalQuota);
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+    }
+    
     public void tearDown()
     throws Exception {
         setQuotaWarnPercent(mOriginalWarnPercent);
         setQuotaWarnInterval(mOriginalWarnInterval);
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalServerDiskThreshold);
         TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalConfigDiskThreshold);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, mOriginalQuota);
         cleanUp();
     }
     
