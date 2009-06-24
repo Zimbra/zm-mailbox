@@ -119,7 +119,6 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -3533,9 +3532,8 @@ public class Mailbox {
             if (defaultInv != null)
                 scidList.add(defaultInv);
             if (exceptions != null) {
-                for (SetCalendarItemData scid : exceptions) {
+                for (SetCalendarItemData scid : exceptions)
                     scidList.add(scid);
-                }
             }
 
             CalendarItem calItem = null;
@@ -3568,8 +3566,6 @@ public class Mailbox {
 
             redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
 
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
             boolean first = true;
             boolean calItemIsNew = true;
             long oldNextAlarm = 0;
@@ -3592,7 +3588,7 @@ public class Mailbox {
                         // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
-                            calItem = createCalendarItem(folderId, volumeId, flags, tags, scid.mInv.getUid(), scid.mPm, scid.mInv, null);
+                            calItem = createCalendarItem(folderId, flags, tags, scid.mInv.getUid(), scid.mPm, scid.mInv, null);
                         } else {
                             return null; // for now, just ignore this Invitation
                         }
@@ -3605,13 +3601,12 @@ public class Mailbox {
                             oldNextAlarm = alarmData.getNextAt();
 
                         calItem.setTags(flags, tags);
-                        calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId,
-                                                 nextAlarm, false, true);
+                        calItem.processNewInvite(scid.mPm, scid.mInv, folderId, nextAlarm, false, true);
                     }
-                    redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
+                    redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
                 } else {
                     // exceptions
-                    calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, nextAlarm, false, false);
+                    calItem.processNewInvite(scid.mPm, scid.mInv, folderId, nextAlarm, false, false);
                 }
             }
 
@@ -3836,22 +3831,21 @@ public class Mailbox {
             try {
                 beginTransaction("addInvite", octxt, redoRecorder);
                 CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.getPlayer());
-                short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-                
+
                 if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
                     int currId = inv.getMailItemId();
                     if (currId <= 0)
                         currId = Mailbox.ID_AUTO_INCREMENT;
                     inv.setInviteId(getNextItemId(currId));
                 }
-                
+
                 boolean calItemIsNew = false;
                 CalendarItem calItem = getCalendarItemByUid(inv.getUid());
                 boolean processed = true;
                 if (calItem == null) { 
                     // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                     if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                        calItem = createCalendarItem(folderId, volumeId, 0, 0, inv.getUid(), pm, inv, null);
+                        calItem = createCalendarItem(folderId, 0, 0, inv.getUid(), pm, inv, null);
                         calItemIsNew = true;
                     } else {
                         return null; // for now, just ignore this Invitation
@@ -3867,13 +3861,12 @@ public class Mailbox {
                     }
                     if (addRevision)
                         calItem.snapshotRevision();
-                    processed = calItem.processNewInvite(
-                            pm, inv, folderId, volumeId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
-                            preserveExistingAlarms, discardExistingInvites);
+                    processed = calItem.processNewInvite(pm, inv, folderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
+                                                         preserveExistingAlarms, discardExistingInvites);
                 }
                 
                 queueForIndexing(calItem, !calItemIsNew, null);
-                redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
+                redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
                 
                 success = true;
                 if (processed)
@@ -4110,7 +4103,6 @@ public class Mailbox {
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
-        Volume vol = Volume.getCurrentMessageVolume();
         Blob incomingBlob = null;
         ParsedMessage pm = null;
         if (deliveryCtxt == null) {
@@ -4119,7 +4111,7 @@ public class Mailbox {
         
         try {
             InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
-            incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), callback);
+            incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
             if (callback.getData() != null) {
                 pm = new ParsedMessage(callback.getData(), receivedDate, attachmentsIndexingEnabled());
             } else {
@@ -4137,7 +4129,7 @@ public class Mailbox {
             }
         }
     }
-    
+
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, DeliveryContext deliveryCtxt)
@@ -4183,12 +4175,11 @@ public class Mailbox {
         }
         boolean deleteIncoming = false;
         if (deliveryCtxt.getIncomingBlob() == null) {
-            InputStream in = null; 
-            Volume vol = Volume.getCurrentMessageVolume();
+            InputStream in = null;
             Blob blob = null;
             try {
                 in = pm.getRawInputStream();
-                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null, vol.getId(), null);
+                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null);
             } finally {
                 ByteUtil.closeStream(in);
             }
@@ -4240,13 +4231,14 @@ public class Mailbox {
             // if the deduping rules say to drop this duplicated incoming message, return null now...
             //   ... but only dedupe messages not carrying a calendar part
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
-            if (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi))
+            if (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                 if (dedupe(pm.getMimeMessage(), sentMsgID)) {
                     ZimbraLog.mailbox.info(
                         "Not delivering message with Message-ID %s because it is a duplicate of sent message %d.",
                         msgidHeader, sentMsgID);
                     return null;
                 }
+            }
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
@@ -4277,12 +4269,21 @@ public class Mailbox {
         boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
         flags &= ~Flag.BITMASK_UNREAD;
 
+        // "having attachments" is currently tracked via flags
+        if (pm.hasAttachments())
+            flags |= Flag.BITMASK_ATTACHED;
+        else
+            flags &= ~Flag.BITMASK_ATTACHED;
+
+        // priority is calculated from headers
+        flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        flags |= pm.getPriorityBitmask();
+
         boolean isSpam = folderId == ID_FOLDER_SPAM;
         boolean isDraft = (flags & Flag.BITMASK_DRAFT) != 0;
 
         Message msg = null;
         boolean success = false;
-        Folder folder = null;
         boolean deferIndexing = (!indexImmediately() || pm.hasTemporaryAnalysisFailure());
 
         CustomMetadata.CustomMetadataList extended = MetadataCallback.preDelivery(pm);
@@ -4298,17 +4299,7 @@ public class Mailbox {
             if (isRedo)
                 rcptEmail = redoPlayer.getRcptEmail();
 
-            // "having attachments" is currently tracked via flags
-            if (pm.hasAttachments())
-                flags |= Flag.BITMASK_ATTACHED;
-            else
-                flags &= ~Flag.BITMASK_ATTACHED;
-
-            // priority is calculated from headers
-            flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
-            flags |= pm.getPriorityBitmask();
-
-            folder = getFolderById(folderId);
+            Folder folder = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
             long tags = Tag.tagsToBitmask(tagStr);
 
@@ -4342,23 +4333,50 @@ public class Mailbox {
                 }
             }
 
-            // step 3: create the message and update the cache
+            // step 3: write the redolog entries
+            if (deliveryCtxt.getShared()) {
+                if (deliveryCtxt.isFirst() && needRedo) {
+                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
+                    // Subsequent CreateMessage ops will reference this blob.  
+                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, deliveryCtxt.getMailboxIdList());
+                    storeRedoRecorder.start(getOperationTimestampMillis());
+                    storeRedoRecorder.setBlobBodyInfo(blob.getFile());
+                    storeRedoRecorder.log();
+                }
+                // Link to the file created by StoreIncomingBlob.
+                redoRecorder.setMessageLinkInfo(blob.getPath());
+            } else {
+                // Store the blob data inside the CreateMessage op.
+                redoRecorder.setMessageBodyInfo(blob.getFile());
+            }
+
+            // step 4: link to existing blob
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mblob = sm.link(blob, this, messageId, getOperationChangeID());
+            markOtherItemDirty(mblob);
+            
+            if (deliveryCtxt.getMailboxBlob() == null) {
+                // Set mailbox blob for in case we want to add the message to the
+                // message cache after delivery.
+                deliveryCtxt.setMailboxBlob(mblob);
+            }
+
+            // step 5: create the message and update the cache
             //         and if the message is also an invite, deal with the calendar item
             Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
             if (convTarget != null && debug)
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
 
-            short volumeId = !isRedo ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
             ZVCalendar iCal = null;
             if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi))
                 iCal = cpi.cal;
-            msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
-                                 volumeId, unread, flags, tags, dinfo, noICal, iCal, extended);
+            msg = Message.create(messageId, folder, convTarget, pm, mblob, msgSize, digest,
+                                 unread, flags, tags, dinfo, noICal, iCal, extended);
 
             redoRecorder.setMessageId(msg.getId());
 
-            // step 4: create a conversation for the message, if necessary
+            // step 6: create a conversation for the message, if necessary
             if (!DebugConfig.disableConversation && convTarget == null) {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
@@ -4413,40 +4431,12 @@ public class Mailbox {
             }
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
 
-            // step 5: write the redolog entries
-            if (deliveryCtxt.getShared()) {
-                if (deliveryCtxt.isFirst() && needRedo) {
-                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
-                    // Subsequent CreateMessage ops will reference this blob.  
-                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, deliveryCtxt.getMailboxIdList());
-                    storeRedoRecorder.start(getOperationTimestampMillis());
-                    storeRedoRecorder.setBlobBodyInfo(blob.getFile(), blob.getVolumeId());
-                    storeRedoRecorder.log();
-                }
-                // Link to the file created by StoreIncomingBlob.
-                redoRecorder.setMessageLinkInfo(blob.getPath(), blob.getVolumeId(), msg.getVolumeId());
-            } else {
-                // Store the blob data inside the CreateMessage op.
-                redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
-            }
-            
-            // step 6: link to existing blob
-            StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mboxBlob = sm.link(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
-            markOtherItemDirty(mboxBlob);
-            
-            if (deliveryCtxt.getMailboxBlob() == null) {
-                // Set mailbox blob for in case we want to add the message to the
-                // message cache after delivery.
-                deliveryCtxt.setMailboxBlob(mboxBlob);
-            }
-
-            // don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't
-            // want to force message analysis!
+            // step 7: queue new message for inline indexing
+            //        (don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't want to force message analysis!)
             queueForIndexing(msg, false, deferIndexing ? null : pm.getLuceneDocuments());
             success = true;
 
-            // step 7: send lawful intercept message
+            // step 8: send lawful intercept message
             try {
                 Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "add message", folder);
             } catch (ServiceException e) {
@@ -4518,12 +4508,11 @@ public class Mailbox {
     public Message saveDraft(OperationContext octxt, InputStream in, int sizeHint,
                              Long receivedDate, int id, String origId, String replyType, String identityId)
     throws IOException, ServiceException {
-        Volume vol = Volume.getCurrentMessageVolume();
         Blob blob = null;
         ParsedMessage pm = null;
         
         try {
-            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), null);
+            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
             pm = new ParsedMessage(blob.getFile(), receivedDate, attachmentsIndexingEnabled());
             return saveDraft(octxt, pm, id, origId, replyType, identityId);
         } finally {
@@ -4553,13 +4542,12 @@ public class Mailbox {
             Message.DraftInfo dinfo = null;
             if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")))
                 dinfo = new Message.DraftInfo(replyType, origId, identityId);
-            
-            Volume vol = Volume.getCurrentMessageVolume();
+
             Blob blob = null;
             InputStream in = null;
             try {
                 in = pm.getRawInputStream();
-                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null, vol.getId(), null);
+                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null);
                 DeliveryContext ctxt = new DeliveryContext();
                 ctxt.setIncomingBlob(blob);
                 return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
@@ -4597,12 +4585,10 @@ public class Mailbox {
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
 
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
             // update the content and increment the revision number
             in = pm.getRawInputStream();
-            Blob blob = msg.setContent(in, size, digest, volumeId, pm);
-            redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
+            Blob blob = msg.setContent(in, size, digest, pm);
+            redoRecorder.setMessageBodyInfo(blob.getFile());
 
             queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
                 
@@ -4853,8 +4839,7 @@ public class Mailbox {
         return copy(octxt, new int[] { itemId }, type, folderId).get(0);
     }
     public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws ServiceException {
-        short volumeId = Volume.getCurrentMessageVolume().getId();
-        CopyItem redoRecorder = new CopyItem(mId, type, folderId, volumeId);
+        CopyItem redoRecorder = new CopyItem(mId, type, folderId);
 
         boolean success = false;
         try {
@@ -4880,7 +4865,7 @@ public class Mailbox {
                         if (!original.canAccess(ACL.RIGHT_READ))
                             continue;
                         int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(original.getId()));
-                        Message msg = (Message) original.copy(folder, newId, ID_AUTO_INCREMENT, volumeId);
+                        Message msg = (Message) original.copy(folder, newId, ID_AUTO_INCREMENT);
                         msgs.add(msg);
                         redoRecorder.setDestId(original.getId(), newId);
                     }
@@ -4895,7 +4880,7 @@ public class Mailbox {
                     }
                 } else {
                     int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(item.getId()));
-                    copy = item.copy(folder, newId, item.getParentId(), item.getVolumeId() == -1 ? -1 : volumeId);
+                    copy = item.copy(folder, newId, item.getParentId());
                     redoRecorder.setDestId(item.getId(), newId);
                 }
 
@@ -4920,8 +4905,7 @@ public class Mailbox {
                 throw MailItem.noSuchItem(id, type);
         }
 
-        short volumeId = Volume.getCurrentMessageVolume().getId();
-        ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId, volumeId);
+        ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId);
 
         boolean success = false;
         try {
@@ -4943,7 +4927,7 @@ public class Mailbox {
                 
                 trainSpamFilter(octxt, item, target);
 
-                MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
+                MailItem copy = item.icopy(target, newId);
                 result.add(copy);
                 redoRecorder.setDestId(srcId, newId);
             }
@@ -5332,18 +5316,14 @@ public class Mailbox {
             CreateNote redoPlayer = (CreateNote) mCurrentChange.getRedoPlayer();
 
             int noteId;
-            short volumeId;
-            if (redoPlayer == null) {
+            if (redoPlayer == null)
                 noteId = getNextItemId(ID_AUTO_INCREMENT);
-                volumeId = Volume.getCurrentMessageVolume().getId();
-            } else {
+            else
                 noteId = getNextItemId(redoPlayer.getNoteId());
-                volumeId = redoPlayer.getVolumeId();
-            }
-            Note note = Note.create(noteId, getFolderById(folderId), volumeId, content, location, new MailItem.Color(color), null);
+            redoRecorder.setNoteId(noteId);
 
-            redoRecorder.setNoteId(note.getId());
-            redoRecorder.setVolumeId(note.getVolumeId());
+            Note note = Note.create(noteId, getFolderById(folderId), content, location, new MailItem.Color(color), null);
+
             queueForIndexing(note, false, null);
             success = true;
             return note;
@@ -5396,7 +5376,7 @@ public class Mailbox {
         }
     }
 
-    CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid,
+    CalendarItem createCalendarItem(int folderId, int flags, long tags, String uid,
                                     ParsedMessage pm, Invite invite, CustomMetadata custom)
     throws ServiceException {
         // FIXME: assuming that we're in the middle of a AddInvite op
@@ -5406,11 +5386,11 @@ public class Mailbox {
         int newCalItemId = redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getCalendarItemId();
         int createId = getNextItemId(newCalItemId);
 
-        CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), volumeId, flags, tags,
+        CalendarItem calItem = CalendarItem.create(createId, getFolderById(folderId), flags, tags,
                                                    uid, pm, invite, CalendarItem.NEXT_ALARM_FROM_NOW, custom);
 
         if (redoRecorder != null)
-            redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), calItem.getVolumeId());
+            redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
         return calItem;
     }
 
@@ -5440,33 +5420,24 @@ public class Mailbox {
             boolean isRedo = redoPlayer != null;
 
             int contactId = getNextItemId(isRedo ? redoPlayer.getContactId() : ID_AUTO_INCREMENT);
-            short volumeId = -1;
-            if (pc.hasAttachment()) {
-                if (isRedo)
-                    volumeId = redoPlayer.getVolumeId();
-                if (volumeId == -1)
-                    volumeId = Volume.getCurrentMessageVolume().getId();
-            }
+            redoRecorder.setContactId(contactId);
             
             int flags = 0;
 
-            Contact con = Contact.create(contactId, getFolderById(folderId), volumeId, pc, flags, tags, null);
-
+            Blob blob = null;
             if (pc.hasAttachment()) {
                 try {
                     StoreManager sm = StoreManager.getInstance();
-                    Blob blob = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null, volumeId, null, false);
-                    MailboxBlob mblob = sm.renameTo(blob, this, contactId, getOperationChangeID(), volumeId);
-
+                    blob = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
+                    MailboxBlob mblob = sm.renameTo(blob, this, contactId, getOperationChangeID());
                     markOtherItemDirty(mblob);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
             }
 
-            redoRecorder.setContactId(con.getId());
-            redoRecorder.setVolumeId(volumeId);
-            
+            Contact con = Contact.create(contactId, getFolderById(folderId), blob, pc, flags, tags, null);
+
             queueForIndexing(con, false, deferIndexing ? null : indexData);
 
             success = true;
@@ -5499,29 +5470,18 @@ public class Mailbox {
             boolean success = false;
             try {
                 beginTransaction("modifyContact", octxt, redoRecorder);
-                ModifyContact redoPlayer = (ModifyContact) mCurrentChange.getRedoPlayer();
                 
                 Contact con = getContactById(contactId);
                 if (!checkItemChangeID(con))
                     throw MailServiceException.MODIFY_CONFLICT();
                 
-                short volumeId = -1;
-                if (pc.hasAttachment()) {
-                    if (redoPlayer != null)
-                        volumeId = redoPlayer.getVolumeId();
-                    if (volumeId == -1)
-                        volumeId = Volume.getCurrentMessageVolume().getId();
-                }
-                
                 try {
-                    con.setContent(pc.getContentStream(), (int) pc.getSize(), pc.getDigest(), volumeId, pc);
+                    con.setContent(pc.getContentStream(), (int) pc.getSize(), pc.getDigest(), pc);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
-                
-                redoRecorder.setVolumeId(volumeId);
+
                 queueForIndexing(con, true, indexData);
-                    
                 success = true;
             } finally {
                 endTransaction(success);
@@ -6109,20 +6069,19 @@ public class Mailbox {
             redoRecorder.setItemType(type);
             
             SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
-            int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            short volumeId = redoPlayer == null ? pd.getBlob().getVolumeId() : redoPlayer.getVolumeId();
+            int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            redoRecorder.setMessageId(itemId);
 
             Document doc;
             if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd.getContentType(), pd, null);
+                doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
             else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(itemId, getFolderById(folderId), volumeId, pd.getFilename(), pd, null);
+                doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
-            redoRecorder.setMessageId(doc.getId());
             Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
-            redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
+            redoRecorder.setMessageBodyInfo(blob.getFile());
 
             queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
             success = true;
@@ -6163,8 +6122,8 @@ public class Mailbox {
             redoRecorder.setDocId(docId);
             redoRecorder.setItemType(doc.getType());
             // TODO: simplify the redoRecorder by not subclassing from CreateMessage
-            redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
-            
+            redoRecorder.setMessageBodyInfo(blob.getFile());
+
             queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
 
             success = true;
@@ -6218,15 +6177,16 @@ public class Mailbox {
                 
                 long tags = Tag.tagsToBitmask(tagsStr);
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-                short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
                 StoreManager sm = StoreManager.getInstance();
-                blob = sm.storeIncoming(data, digest, null, volumeId);
-                redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
+                blob = sm.storeIncoming(data, digest);
+                redoRecorder.setMessageBodyInfo(data, blob.getPath());
                 markOtherItemDirty(blob);
 
-                Chat chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
-                sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
+                MailboxBlob mblob = sm.link(blob, this, itemId, getOperationChangeID());
+                markOtherItemDirty(mblob);
+
+                Chat chat = Chat.create(itemId, getFolderById(folderId), pm, mblob, msgSize, digest, false, flags, tags);
                 redoRecorder.setMessageId(chat.getId());
                 
                 queueForIndexing(chat, false, docList);
@@ -6237,7 +6197,7 @@ public class Mailbox {
             }
         }
     }
-    
+
     public synchronized Chat updateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         byte[] data;
         String digest;
@@ -6267,11 +6227,9 @@ public class Mailbox {
             int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
             redoRecorder.setImapId(imapID);
 
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
             // update the content and increment the revision number
-            Blob blob = chat.setContent(data, digest, volumeId, pm);
-            redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
+            Blob blob = chat.setContent(data, digest, pm);
+            redoRecorder.setMessageBodyInfo(data, blob.getPath());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
             queueForIndexing(chat, true, docList);
@@ -6703,7 +6661,7 @@ public class Mailbox {
                 for (MailboxBlob blob : deletes.blobs) {
                     try {
                         if (blob != null)
-                        sm.delete(blob);
+                            sm.delete(blob);
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }
@@ -6721,10 +6679,10 @@ public class Mailbox {
         // if the calendar items has changed in the mailbox,
         // recalculate the free/busy for the user and propogate to
         // other system.
-    	if (dirty != null && dirty.hasNotifications()) {
-    		FreeBusyProvider.mailboxChanged(getAccountId(), dirty.changedTypes);
-        	MailboxListener.mailboxChanged(getAccountId(), dirty.changedTypes, change.octxt);
-    	}
+        if (dirty != null && dirty.hasNotifications()) {
+            FreeBusyProvider.mailboxChanged(getAccountId(), dirty.changedTypes);
+            MailboxListener.mailboxChanged(getAccountId(), dirty.changedTypes, change.octxt);
+        }
 
         // committed changes, so notify any listeners
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {

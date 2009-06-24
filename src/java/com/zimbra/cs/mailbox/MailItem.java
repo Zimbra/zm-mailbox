@@ -51,7 +51,6 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 
 public abstract class MailItem implements Comparable<MailItem> {
 
@@ -1450,22 +1449,22 @@ public abstract class MailItem implements Comparable<MailItem> {
         getFolder().updateUIDNEXT();
     }
     
-    final Blob setContent(byte[] data, String digest, short volumeId, Object content)
+    final Blob setContent(byte[] data, String digest, Object content)
     throws ServiceException, IOException {
         InputStream dataStream = (data == null ? null : new ByteArrayInputStream(data));
         int dataLength = (data == null ? 0 : data.length);
-        return setContent(dataStream, dataLength, digest, volumeId, content);
+        return setContent(dataStream, dataLength, digest, content);
     }
 
-    final Blob setContent(InputStream dataStream, int dataLength, String digest, short volumeId, Object content)
+    final Blob setContent(InputStream dataStream, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
-        Blob blob = null;
+        Blob incoming = null;
         if (dataStream != null)
-            blob = StoreManager.getInstance().storeIncoming(dataStream, dataLength, null, volumeId, null);
-        return setContent(blob, dataLength, digest, content);
+            incoming = StoreManager.getInstance().storeIncoming(dataStream, dataLength, null);
+        return setContent(incoming, dataLength, digest, content);
     }
 
-    Blob setContent(Blob blob, int dataLength, String digest, Object content)
+    Blob setContent(Blob incoming, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
         addRevision(false);
 
@@ -1495,17 +1494,25 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the content from the cache
         MessageCache.purge(this);
 
-        int size = blob == null ? 0 : dataLength;
+        // write the content (if any) to the store
+        Blob blob = null;
+        if (incoming != null) {
+		    StoreManager sm = StoreManager.getInstance();
+		    MailboxBlob mblob = sm.renameTo(incoming, mMailbox, mId, getSavedSequence());
+		    mMailbox.markOtherItemDirty(mblob);
+		    blob = mblob.getBlob();
+        }
+
+        int size = incoming == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
             mData.size = size;
         }
         getFolder().updateSize(0, size - mData.size);
 
-        short volumeId = blob == null ? -1 : blob.getVolumeId();
-        mData.setBlobDigest(digest);
+        mData.setBlobDigest(incoming == null ? null : digest);
         mData.date     = mMailbox.getOperationTimestamp();
-        mData.volumeId = volumeId;
+        mData.volumeId = blob == null ? -1 : blob.getVolumeId();
         mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
         mBlob = null;
@@ -1513,15 +1520,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content);
 
-        if (blob == null)
-            return null;
-
-        // write the content to the store
-        StoreManager sm = StoreManager.getInstance();
-        MailboxBlob mblob = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
-        mMailbox.markOtherItemDirty(mblob);
-
-        return mblob.getBlob();
+        return blob;
     }
 
     @SuppressWarnings("unused")
@@ -1896,10 +1895,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  {@link Message} will put it in the same {@link Conversation} as the
      *  original (exceptions: draft messages, messages in the Junk folder).
      * 
-     * @param folder        The folder to copy the item to.
-     * @param id            The item id for the newly-created copy.
-     * @param parentId      The target parent ID for the new copy.
-     * @param destVolumeId  The id of the Volume to put the copied blob in.
+     * @param folder    The folder to copy the item to.
+     * @param copyId    The item id for the newly-created copy.
+     * @param parentId  The target parent ID for the new copy.
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
      * @throws ServiceException  The following error codes are possible:<ul>
@@ -1908,9 +1906,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      *        the copy of the item
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul>
-     * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
-    MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
+     *        permissions</ul> */
+    MailItem copy(Folder folder, int copyId, int parentId) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
         if (!folder.canContain(this))
@@ -1926,7 +1923,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (isIndexed()) {
             // reindex the copy if existing item (a) wasn't indexed or (b) is mutable
             if (indexId == null || isMutable())
-                indexId = folder.inSpam() ? null : Integer.toString(id);
+                indexId = folder.inSpam() ? null : Integer.toString(copyId);
         }
         boolean shared = indexId != null && indexId.equals(mData.indexId);
 
@@ -1939,35 +1936,36 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (ZimbraLog.mailop.isDebugEnabled())
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
         }
-        
-        UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
+
+        short volumeId = -1;
+        MailboxBlob srcMblob = getBlob();
+        if (srcMblob != null) {
+        	StoreManager sm = StoreManager.getInstance();
+        	MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
+        	mMailbox.markOtherItemDirty(mblob);
+        	volumeId = mblob.getBlob().getVolumeId();
+        }
+
+        UnderlyingData data = mData.duplicate(copyId, folder.getId(), volumeId);
         data.parentId = detach ? -1 : parentId;
         data.indexId  = indexId;
         data.flags   &= shared ? ~0 : ~Flag.BITMASK_COPIED;
-        
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
-        
+
         if (indexId != null && !indexId.equals(mData.indexId)) {
             // if the copy needs to be reindexed, just set the deferred flag now and index it later
 //            mMailbox.incrementIndexDeferredCount(1);
 //            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
             mMailbox.queueForIndexing(this, false, null);
         }
-        
+
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
-                              getMailopContext(this), id, folder.getId(), folder.getName(), data.parentId);
-        DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
-        
+                              getMailopContext(this), copyId, folder.getId(), folder.getName(), data.parentId);
+        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
+
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(parent);
-        
-        MailboxBlob srcBlob = getBlob();
-        if (srcBlob != null) {
-            StoreManager sm = StoreManager.getInstance();
-            MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
-            mMailbox.markOtherItemDirty(blob);
-        }
 
         return copy;
     }
@@ -1986,9 +1984,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  <b>original</b> Message is placed in a new {@link VirtualConversation}
      *  rather than being grouped with the copied Message.
      * 
-     * @param target        The folder to copy the item to.
-     * @param copyId        The item id for the newly-created copy.
-     * @param destVolumeId  The id of the Volume to put the copied blob in.
+     * @param target  The folder to copy the item to.
+     * @param copyId  The item id for the newly-created copy.
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
      * @throws ServiceException  The following error codes are possible:<ul>
@@ -1997,9 +1994,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      *        the copy of the item
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
-     *        permissions</ul>
-     * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
-    MailItem icopy(Folder target, int copyId, short destVolumeId) throws IOException, ServiceException {
+     *        permissions</ul> */
+    MailItem icopy(Folder target, int copyId) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
         if (!target.canContain(this))
@@ -2026,9 +2022,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
         //   - ITEM_ID = copy's id for hash
 
-        UnderlyingData data = mData.duplicate(copyId, target.getId(), destVolumeId);
+        short volumeId = -1;
+        MailboxBlob srcMblob = getBlob();
+        if (srcMblob != null) {
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
+            mMailbox.markOtherItemDirty(mblob);
+            volumeId = mblob.getBlob().getVolumeId();
+        }
+
+        UnderlyingData data = mData.duplicate(copyId, target.getId(), volumeId);
         data.metadata = encodeMetadata();
         data.imapId = copyId;
+        data.contentChanged(mMailbox);
         
         // we'll share the index entry if this item can't change out from under us
         if (isIndexed()) {
@@ -2043,8 +2049,6 @@ public abstract class MailItem implements Comparable<MailItem> {
 //            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
 //            mMailbox.incrementIndexDeferredCount(1);
         }
-
-        data.contentChanged(mMailbox);
         
         ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
             getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
@@ -2066,13 +2070,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             parent.markItemModified(Change.MODIFIED_CHILDREN);
             mData.metadataChanged(mMailbox);
             mData.parentId = mData.type == TYPE_MESSAGE ? -mId : -1;
-        }
-
-        MailboxBlob srcBlob = getBlob();
-        if (srcBlob != null) {
-            StoreManager sm = StoreManager.getInstance();
-            MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
-            mMailbox.markOtherItemDirty(blob);
         }
         
         return copy;
@@ -2212,7 +2209,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             if (oldblob != null) {
                 try {
-                    StoreManager.getInstance().link(oldblob.getBlob(), mMailbox, mId, getSavedSequence(), Volume.getCurrentMessageVolume().getId());
+                    StoreManager.getInstance().link(oldblob.getBlob(), mMailbox, mId, getSavedSequence());
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not copy blob for renamed document", ioe);
                 }

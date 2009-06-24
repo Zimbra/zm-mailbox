@@ -34,19 +34,16 @@ public class CopyItem extends RedoableOp {
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
     private byte mType;
     private int mDestFolderId;
-    private short mDestVolumeId;
 
     public CopyItem() {
         mType = MailItem.TYPE_UNKNOWN;
         mDestFolderId = 0;
-        mDestVolumeId = -1;
     }
 
-    public CopyItem(long mailboxId, byte type, int folderId, short volumeId) {
+    public CopyItem(long mailboxId, byte type, int folderId) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
-        mDestVolumeId = volumeId;
     }
 
     /**
@@ -62,18 +59,6 @@ public class CopyItem extends RedoableOp {
         return destId == null ? -1 : destId;
     }
 
-    /**
-     * Sets the volume ID for the copied blob.
-     * @param volId
-     */
-    public void setDestVolumeId(short volId) {
-        mDestVolumeId = volId;
-    }
-
-    public short getDestVolumeId() {
-        return mDestVolumeId;
-    }
-
     @Override public int getOpCode() {
         return OP_COPY_ITEM;
     }
@@ -81,7 +66,6 @@ public class CopyItem extends RedoableOp {
     @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
-        sb.append(", destVolumeId=").append(mDestVolumeId);
         sb.append(", [srcId, destId, srcImap]=");
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet())
             sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
@@ -93,7 +77,7 @@ public class CopyItem extends RedoableOp {
         out.writeInt(-1);
         out.writeByte(mType);
         out.writeInt(mDestFolderId);
-        out.writeShort(mDestVolumeId);
+        out.writeShort((short) -1);
         out.writeInt(mDestIds.size());
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
             out.writeInt(entry.getKey());
@@ -110,7 +94,7 @@ public class CopyItem extends RedoableOp {
 
         mType = in.readByte();
         mDestFolderId = in.readInt();
-        mDestVolumeId = in.readShort();
+        in.readShort();
         if (mDestIds.isEmpty()) {
             int count = in.readInt();
             for (int i = 0; i < count; i++) {

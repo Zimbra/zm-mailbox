@@ -24,31 +24,28 @@ import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.Zimbra;
 
-/**
- * @author jhahm
- */
 public abstract class StoreManager {
 
-	private static StoreManager sInstance;
-	static {
+    private static StoreManager sInstance;
+    static {
         try {
             sInstance = new FileBlobStore();
         } catch (Throwable t) {
-        	Zimbra.halt("Unable to initialize blob store", t);
+            Zimbra.halt("Unable to initialize blob store", t);
         }
-	}
+    }
 
-	public static StoreManager getInstance() {
-		return sInstance;
-	}
+    public static StoreManager getInstance() {
+        return sInstance;
+    }
 
-	/**
-	 * Starts the blob store.
-	 */
-	public abstract void startup() throws IOException, ServiceException;
+    /**
+     * Starts the blob store.
+     */
+    public abstract void startup() throws IOException, ServiceException;
 
-	/**
-     * Shutdown the blob store.
+    /**
+     * Shuts down the blob store.
      */
     public abstract void shutdown();
 
@@ -58,14 +55,11 @@ public abstract class StoreManager {
      * if volume supports compression and blob size is over the compression
      * threshold.
      *
-     * @param path file path for blob data. If null, the store assignes one
-     * @param volumeId store volume id
      * @return the BlobBuilder to use to construct the Blob
      * @throws IOException if an I/O error occurred
      * @throws ServiceException if a service exception occurred
      */
-    public abstract BlobBuilder getBlobBuilder(String path, short volumeId)
-        throws IOException, ServiceException;
+    public abstract BlobBuilder getBlobBuilder() throws IOException, ServiceException;
     
     /**
      * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
@@ -73,14 +67,13 @@ public abstract class StoreManager {
      * @param data
      * @param sizeHint used for determining whether data should be compressed
      * @param digest
-     * @param path If null, blob store assigns one.
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId, StorageCallback callback)
+    public Blob storeIncoming(InputStream data, int sizeHint, StorageCallback callback)
     throws IOException, ServiceException {
-        return storeIncoming(data, sizeHint, path, volumeId, callback, false);
+        return storeIncoming(data, sizeHint, callback, false);
     }
 
     /**
@@ -89,14 +82,12 @@ public abstract class StoreManager {
      * @param data
      * @param sizeHint used for determining whether data should be compressed
      * @param digest
-     * @param path If null, blob store assigns one.
      * @param storeAsIs if true, store the blob as is even if volume supports compression
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId,
-                                       StorageCallback callback, boolean storeAsIs)
+    public abstract Blob storeIncoming(InputStream data, int sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException;
 
     /**
@@ -104,14 +95,13 @@ public abstract class StoreManager {
      * and blob size is over the compression threshold.
      * @param data
      * @param digest
-     * @param path If null, blob store assigns one.
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(byte[] data, String digest, String path, short volumeId)
+    public Blob storeIncoming(byte[] data, String digest)
     throws IOException, ServiceException {
-        return storeIncoming(data, digest, path, volumeId, false);
+        return storeIncoming(data, digest, false);
     }
 
     /**
@@ -119,29 +109,19 @@ public abstract class StoreManager {
      * and blob size is over the compression threshold and storeAsIs is false.
      * @param data
      * @param digest
-     * @param path If null, blob store assigns one.
      * @param storeAsIs if true, store the blob as is even if volume supports compression
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(byte[] data, String digest, String path, short volumeId, boolean storeAsIs)
+    public Blob storeIncoming(byte[] data, String digest, boolean storeAsIs)
     throws IOException, ServiceException {
         // Prevent bogus digest values.
         if (!ByteUtil.isValidDigest(digest))
-            throw ServiceException.FAILURE(
-                "Invalid blob digest \"" + digest + "\"", null);
+            throw ServiceException.FAILURE("Invalid blob digest \"" + digest + "\"", null);
 
-        return storeIncoming(new ByteArrayInputStream(data), data.length, path, volumeId, null, storeAsIs);
+        return storeIncoming(new ByteArrayInputStream(data), data.length, null, storeAsIs);
     }
-
-    /**
-     * Return a unique path in incoming directory.
-     * @return
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public abstract String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException;
 
     /**
      * Create a copy in destMbox mailbox with message ID of destMsgId that
@@ -150,14 +130,11 @@ public abstract class StoreManager {
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
-     * @param destVolumeId volume for destination blob
      * @return MailboxBlob object representing the copied blob
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob copy(Blob src, Mailbox destMbox,
-                                     int destMsgId, int destRevision,
-                                     short destVolumeId)
+    public abstract MailboxBlob copy(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -167,14 +144,11 @@ public abstract class StoreManager {
 	 * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
-     * @param destVolumeId volume for destination blob
 	 * @return MailboxBlob object representing the linked blob
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob link(Blob src, Mailbox destMbox,
-                                     int destMsgId, int destRevision,
-                                     short destVolumeId)
+    public abstract MailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
 	throws IOException, ServiceException;
 
     /**
@@ -183,14 +157,11 @@ public abstract class StoreManager {
      * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
-     * @param destVolumeId volume for destination blob
      * @return MailboxBlob object representing the renamed blob
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob renameTo(Blob src, Mailbox destMbox,
-                                         int destMsgId, int destRevision,
-                                         short destVolumeId)
+    public abstract MailboxBlob renameTo(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -216,15 +187,12 @@ public abstract class StoreManager {
      * @param mbox
      * @param msgId mail_item.id value for message
      * @param revision mail_item.mod_content value for message
-     * @param volumeId the volume the blob is on
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
      * 
      * @throws ServiceException
      */
-    public abstract MailboxBlob getMailboxBlob(Mailbox mbox,
-                                               int msgId, int revision,
-                                               short volumeId)
+    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, short volumeId)
     throws ServiceException;
 
     /**

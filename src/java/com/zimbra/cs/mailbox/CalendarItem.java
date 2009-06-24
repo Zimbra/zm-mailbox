@@ -71,6 +71,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
@@ -377,9 +378,9 @@ public abstract class CalendarItem extends MailItem {
         
         return toRet;
     }
-    
-    static CalendarItem create(int id, Folder folder, short volumeId, int flags, long tags, String uid,
-                               ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom)
+
+    static CalendarItem create(int id, Folder folder, int flags, long tags, String uid,
+    						   ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom)
     throws ServiceException {
         firstInvite.sanitize(true);
 
@@ -387,8 +388,9 @@ public abstract class CalendarItem extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         if (!firstInvite.isPublic() && !folder.canAccess(ACL.RIGHT_PRIVATE))
             throw ServiceException.PERM_DENIED("you do not have permission to create private calendar item in this folder");
+
         Mailbox mbox = folder.getMailbox();
-        
+
         if (pm != null && pm.hasAttachments()) {
             firstInvite.setHasAttachment(true);
             flags |= Flag.BITMASK_ATTACHED;
@@ -437,7 +439,7 @@ public abstract class CalendarItem extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId  = mbox.generateIndexId(id);
         data.imapId   = id;
-        data.volumeId = volumeId;
+        data.volumeId = -1;
         data.date     = mbox.getOperationTimestamp();
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
@@ -465,7 +467,7 @@ public abstract class CalendarItem extends MailItem {
         item.finishCreation(null);
 
         if (pm != null)
-            item.createBlob(pm, firstInvite, volumeId);
+            item.createBlob(pm, firstInvite);
 
         item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
@@ -1213,9 +1215,9 @@ public abstract class CalendarItem extends MailItem {
     }
 
     boolean processNewInvite(ParsedMessage pm, Invite invite,
-                             int folderId, short volumeId, boolean replaceExistingInvites)
+                             int folderId, boolean replaceExistingInvites)
     throws ServiceException {
-        return processNewInvite(pm, invite, folderId, volumeId, CalendarItem.NEXT_ALARM_KEEP_CURRENT, true, replaceExistingInvites);
+        return processNewInvite(pm, invite, folderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT, true, replaceExistingInvites);
     }
 
     /**
@@ -1229,7 +1231,7 @@ public abstract class CalendarItem extends MailItem {
      *            unchanged or deleted 
      */
     boolean processNewInvite(ParsedMessage pm, Invite invite,
-                             int folderId, short volumeId, long nextAlarm,
+                             int folderId, long nextAlarm,
                              boolean preserveAlarms, boolean replaceExistingInvites)
     throws ServiceException {
         invite.setHasAttachment(pm != null ? pm.hasAttachments() : false);
@@ -1238,7 +1240,7 @@ public abstract class CalendarItem extends MailItem {
         if (method.equals(ICalTok.REQUEST.toString()) ||
             method.equals(ICalTok.CANCEL.toString()) ||
             method.equals(ICalTok.PUBLISH.toString())) {
-            return processNewInviteRequestOrCancel(pm, invite, folderId, volumeId, nextAlarm,
+            return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
                                                    preserveAlarms, replaceExistingInvites);
         } else if (method.equals("REPLY")) {
             return processNewInviteReply(invite);
@@ -1266,7 +1268,6 @@ public abstract class CalendarItem extends MailItem {
     private boolean processNewInviteRequestOrCancel(ParsedMessage pm,
                                                     Invite newInvite,
                                                     int folderId,
-                                                    short volumeId,
                                                     long nextAlarm,
                                                     boolean preserveAlarms,
                                                     boolean discardExistingInvites)
@@ -1717,12 +1718,12 @@ public abstract class CalendarItem extends MailItem {
                     boolean newInvHasBlobPart = newInvite.hasBlobPart();
                     if (hadBlobPart || newInvHasBlobPart) {
                         if (addNewOne && newInvHasBlobPart) {
-                            modifyBlob(toRemove, discardExistingInvites, toUpdate, pm, newInvite, volumeId,
+                            modifyBlob(toRemove, discardExistingInvites, toUpdate, pm, newInvite,
                                        isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
                         } else {
                             if (!newInvHasBlobPart)
                                 toRemove.add(newInvite);  // force existing MIME part to be removed
-                            modifyBlob(toRemove, discardExistingInvites, toUpdate, null, null, volumeId,
+                            modifyBlob(toRemove, discardExistingInvites, toUpdate, null, null,
                                        isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
                         }
                         // TIM: modifyBlob will save the metadata for us as a side-effect
@@ -1913,24 +1914,22 @@ public abstract class CalendarItem extends MailItem {
             throw new UnsupportedOperationException();
         }
     }
-    
-    private void storeUpdatedBlob(MimeMessage mm, short volumeId)
-    throws ServiceException, IOException {
+
+    private Blob storeUpdatedBlob(MimeMessage mm) throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
         byte[] data = pm.getRawData();
         if (data == null)
             ZimbraLog.calendar.warn(
                 "Invalid state: updating blob with null data for calendar item " + getId() +
                 " in mailbox " + getMailboxId());
-        setContent(data, pm.getRawDigest(), volumeId, pm);
+        return setContent(data, pm.getRawDigest(), pm);
     }
     
-    void reanalyze(Object data) throws ServiceException {
+    @Override void reanalyze(Object data) throws ServiceException {
         String subject = null;
         Invite firstInvite = getDefaultInviteOrNull();
-        if (firstInvite != null) {
+        if (firstInvite != null)
             subject = firstInvite.getName();
-        }
         if (subject == null)
             subject= "";
         
@@ -1944,32 +1943,29 @@ public abstract class CalendarItem extends MailItem {
      * 
      * @param invPm
      * @param firstInvite
-     * @param volumeId
      * @throws ServiceException
      */
-    private void createBlob(ParsedMessage invPm, Invite firstInvite, short volumeId)
+    private Blob createBlob(ParsedMessage invPm, Invite firstInvite)
     throws ServiceException {
         // Create blob only if there's an attachment or DESCRIPTION is too big to be stored in metadata.
-        if (!firstInvite.hasAttachment()
-            && (invPm == null || firstInvite.descInMeta()))
-            return;
+        if (!firstInvite.hasAttachment() && (invPm == null || firstInvite.descInMeta()))
+            return null;
+
         try { 
             // create the toplevel multipart/digest...
             MimeMessage mm = new MimeMessage(JMSession.getSession());            
             MimeMultipart mmp = new MimeMultipart("digest");
             mm.setContent(mmp);
-            
-            
+
             // add the invite
             MimeBodyPart mbp = new MimeBodyPart();
             mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
             mmp.addBodyPart(mbp);
             mbp.addHeader("invId", Integer.toString(firstInvite.getMailItemId()));
-            
+
             mm.saveChanges();
-            
-            storeUpdatedBlob(mm, volumeId);
-            
+
+            return storeUpdatedBlob(mm);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException "+e, e);
         } catch (IOException e) {
@@ -1990,7 +1986,6 @@ public abstract class CalendarItem extends MailItem {
      * @param toUpdate
      * @param invPm
      * @param newInv
-     * @param volumeId
      * @param isCancel if the method is being called while processing a cancel request
      * @param allowPrivateAccess
      * @param forceSave if TRUE then this call is guaranteed to save the current metadata state
@@ -2003,7 +1998,6 @@ public abstract class CalendarItem extends MailItem {
                             List<Invite> toUpdate,
                             ParsedMessage invPm,
                             Invite newInv,
-                            short volumeId,
                             boolean isCancel,
                             boolean allowPrivateAccess,
                             boolean forceSave,
@@ -2027,7 +2021,7 @@ public abstract class CalendarItem extends MailItem {
                 if (newInv != null && invPm != null) {
                     // if the blob isn't already there, and we're going to add one, then
                     // just go into create
-                    createBlob(invPm, newInv, volumeId);
+                    createBlob(invPm, newInv);
                 } else {
                     if (forceSave)
                         saveMetadata();
@@ -2152,14 +2146,14 @@ public abstract class CalendarItem extends MailItem {
             
             if (mmp.getCount() == 0) {
                 markBlobForDeletion();
-                setContent(null, null, volumeId, null);
+                setContent(null, null, null);
                 if (forceSave)
                     saveMetadata();
             } else {
                 // must call this explicitly or else new part won't be added...
                 mm.setContent(mmp);
                 mm.saveChanges();
-                storeUpdatedBlob(mm, volumeId);
+                storeUpdatedBlob(mm);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("MessagingException", e);
@@ -3219,7 +3213,7 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override
-    MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
         if (!isPublic()) {
             boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
             boolean privateAccessDest = folder.canAccess(ACL.RIGHT_PRIVATE);
@@ -3230,7 +3224,7 @@ public abstract class CalendarItem extends MailItem {
                 throw ServiceException.PERM_DENIED(
                         "you do not have permission to copy private calendar item to the target folder");
         }
-        return super.copy(folder, id, parentId, destVolumeId);
+        return super.copy(folder, id, parentId);
     }
 
     @Override

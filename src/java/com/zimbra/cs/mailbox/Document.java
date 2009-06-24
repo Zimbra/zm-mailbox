@@ -127,7 +127,7 @@ public class Document extends MailItem {
         saveData(null);
     }
 
-    protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, short volumeId, String name, String mimeType,
+    protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, String name, String mimeType,
                                                   ParsedDocument pd, Metadata meta, CustomMetadata custom) 
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
@@ -147,8 +147,7 @@ public class Document extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = mbox.generateIndexId(id);
         data.imapId      = id;
-        data.volumeId    = volumeId;
-        data.date        = (int)(pd.getCreatedDate() / 1000L);
+        data.date        = (int) (pd.getCreatedDate() / 1000L);
         data.size        = pd.getSize();
         data.name        = name;
         data.subject     = name;
@@ -157,12 +156,12 @@ public class Document extends MailItem {
         return data;
     }
 
-    static Document create(int id, Folder folder, short volumeId, String filename, String type, ParsedDocument pd, CustomMetadata custom)
+    static Document create(int id, Folder folder, String filename, String type, ParsedDocument pd, CustomMetadata custom)
     throws ServiceException {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         Mailbox mbox = folder.getMailbox();
-        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, volumeId, filename, type, pd, null, custom);
+        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, filename, type, pd, null, custom);
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.", filename, data.id, folder.getId(), folder.getName());

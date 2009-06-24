@@ -28,7 +28,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.Volume;
 
 public class CreateInvite extends RedoableOp implements CreateCalendarItemRecorder, CreateCalendarItemPlayer 
 {
@@ -37,7 +36,6 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     private Invite mInvite;
     private int mFolderId;
     private byte[] mData;
-    private short mVolumeId = -1;
     private boolean mPreserveExistingAlarms;
     private boolean mDiscardExistingInvites;
     private boolean mAddRevision;
@@ -63,8 +61,6 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         StringBuilder sb = new StringBuilder("calItemId=").append(mCalendarItemId);
         sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", folder=").append(mFolderId);
-    	if (getVersion().atLeast(1, 0))
-	        sb.append(", vol=").append(mVolumeId);
         sb.append(", dataLen=").append(mData != null ? mData.length : 0);
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         sb.append(", localTZ=").append(localTz.encodeAsMetadata().toString());
@@ -81,7 +77,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
             out.writeUTF(mCalendarItemPartStat);
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
-            out.writeShort(mVolumeId);
+            out.writeShort((short) -1);
         out.writeBoolean(true);  // keep this for backward compatibility when there was mForce field
                                  // in this class
         
@@ -109,14 +105,14 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
             mCalendarItemPartStat = in.readUTF();
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
-            mVolumeId = in.readShort();
+            in.readShort();
         in.readBoolean();  // keep this for backward compatibility when there was mForce field
                            // in this class
         
         int dataLen = in.readInt();
         if (dataLen > 0) {
-        	mData = new byte[dataLen];
-        	in.readFully(mData);
+            mData = new byte[dataLen];
+            in.readFully(mData);
         }
         
         try {
@@ -141,14 +137,11 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         else
             mAddRevision = false;
     }
-    
-    public void setCalendarItemAttrs(int appointmentId,
-								     int folderId,
-								     short volumeId) {
-		mCalendarItemId = appointmentId;
-		mFolderId = folderId;
-		mVolumeId = volumeId;
-	}
+
+    public void setCalendarItemAttrs(int appointmentId, int folderId) {
+        mCalendarItemId = appointmentId;
+        mFolderId = folderId;
+    }
 
     public int getCalendarItemId() {
         return mCalendarItemId;
@@ -165,20 +158,13 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     public int getFolderId() {
         return mFolderId;
     }
-    
-    public short getVolumeId() {
-    	if (mVolumeId == -1)
-    		return Volume.getCurrentMessageVolume().getId();
-    	else
-    		return mVolumeId;
-    }
 
     @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         ParsedMessage pm = null;
         if (mData != null && mData.length > 0)
             pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
-		mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm,
-		               mPreserveExistingAlarms, mDiscardExistingInvites, mAddRevision);
+        mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm,
+                       mPreserveExistingAlarms, mDiscardExistingInvites, mAddRevision);
     }
 }

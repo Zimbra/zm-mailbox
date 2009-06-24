@@ -36,7 +36,6 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 
 public class ParsedDocument {
 	private Blob mBlob;
@@ -54,7 +53,7 @@ public class ParsedDocument {
     private boolean mTemporaryAnalysisFailure = false;
 
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
-    	return StoreManager.getInstance().storeIncoming(in, 0, null, Volume.getCurrentMessageVolume().getId(), null);
+    	return StoreManager.getInstance().storeIncoming(in, 0, null);
     }
     public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator)
     	throws ServiceException, IOException {

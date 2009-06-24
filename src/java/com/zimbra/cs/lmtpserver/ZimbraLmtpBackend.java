@@ -52,7 +52,6 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.Zimbra;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
@@ -250,9 +249,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
 	try {
 	    // Store the incoming blob.
-	    Volume vol = Volume.getCurrentMessageVolume();
 	    InMemoryDataCallback imc = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
-	    blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, vol.getId(), imc);
+	    blob = StoreManager.getInstance().storeIncoming(in, sizeHint, imc);
 	    data = imc.getData();
 
 	    // Examine attachments indexing option for all recipients and

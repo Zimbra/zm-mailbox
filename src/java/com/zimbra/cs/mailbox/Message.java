@@ -338,17 +338,17 @@ public class Message extends MailItem {
         }
     }
     
-    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, int msgSize,
-                          String digest, short volumeId, boolean unread, int flags, long tags,
+    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, MailboxBlob mblob,
+                          int msgSize, String digest, boolean unread, int flags, long tags,
                           DraftInfo dinfo, boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
     throws ServiceException {
-        return createInternal(id, folder, conv, pm, msgSize, digest, volumeId, unread, 
-                              flags, tags, dinfo, noICal, cal, extended, new MessageCreateFactory());
+        return createInternal(id, folder, conv, pm, mblob, msgSize, digest, unread, flags, tags,
+                              dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
     
-    protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm,
-                                            int msgSize, String digest, short volumeId, boolean unread,
-                                            int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
+    protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, MailboxBlob mblob,
+                                            int msgSize, String digest, boolean unread, int flags, long tags,
+                                            DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
                                             CustomMetadataList extended, MessageCreateFactory fact)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
@@ -401,7 +401,7 @@ public class Message extends MailItem {
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = mbox.generateIndexId(id);
-        data.volumeId    = volumeId;
+        data.volumeId    = mblob == null ? -1 : mblob.getBlob().getVolumeId();
         data.imapId      = id;
         data.date        = (int) (date / 1000);
         data.size        = msgSize;
@@ -421,7 +421,7 @@ public class Message extends MailItem {
         // process the components in this invite (must do this last so blob is created, etc)
         if (components != null) {
             try {
-                msg.processInvitesAfterCreate(methodStr, folder.getId(), volumeId, !noICal, pm, components, cal);
+                msg.processInvitesAfterCreate(methodStr, folder.getId(), !noICal, pm, components, cal);
             } catch (Exception e) {
                 ZimbraLog.calendar.warn("Unable to process iCalendar attachment", e);
             }
@@ -434,7 +434,7 @@ public class Message extends MailItem {
     /** This has to be done as a separate step, after the MailItem has been
      *  added, because of foreign key constraints on the CalendarItems table
      * @param invites */
-    private void processInvitesAfterCreate(String method, int folderId, short volumeId, boolean createCalItem,
+    private void processInvitesAfterCreate(String method, int folderId, boolean createCalItem,
                                            ParsedMessage pm, List<Invite> invites, ZVCalendar cal)
     throws ServiceException {
         if (pm == null)
@@ -613,7 +613,7 @@ public class Message extends MailItem {
 //                                  int flags = Flag.BITMASK_INDEXING_DEFERRED;
 //                                  mMailbox.incrementIndexDeferredCount(1);
                                     int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                                    calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur, null);
+                                    calItem = mMailbox.createCalendarItem(defaultFolder, flags, 0, cur.getUid(), pm, cur, null);
                                     calItemIsNew = true;
                                 }
                             } else {
@@ -662,7 +662,7 @@ public class Message extends MailItem {
                                     else
                                     	calFolderId = Mailbox.ID_FOLDER_CALENDAR;
                                 }
-                                modifiedCalItem = calItem.processNewInvite(pm, cur, calFolderId, volumeId, discardExistingInvites);
+                                modifiedCalItem = calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
                             }
                         }
                     }
@@ -764,8 +764,8 @@ public class Message extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
-        Message copy = (Message) super.copy(folder, id, parentId, destVolumeId);
+    @Override MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
+        Message copy = (Message) super.copy(folder, id, parentId);
 
         Conversation parent = (Conversation) getParent();
         if (parent instanceof VirtualConversation && parent.getId() == parentId && !isDraft() && inSpam() == folder.inSpam()) {

@@ -37,10 +37,8 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
 
@@ -56,7 +54,6 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     private Mailbox.SetCalendarItemData mExceptions[];
     private List<ReplyInfo> mReplies;
     private long mNextAlarm;
-    private short mVolumeId = -1;
 
     public SetCalendarItem() {}
     
@@ -121,12 +118,11 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return toRet;
     }
     
-    @Override protected void serializeData(RedoLogOutput out) throws IOException 
-    {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
-            out.writeShort(mVolumeId);
+            out.writeShort((short) -1);
         out.writeInt(mCalendarItemId);
         if (getVersion().atLeast(1, 1))
             out.writeUTF(mCalendarItemPartStat);
@@ -176,7 +172,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
-            mVolumeId = in.readShort();
+            in.readShort();
         mCalendarItemId = in.readInt();
         if (getVersion().atLeast(1, 1))
             mCalendarItemPartStat = in.readUTF();
@@ -284,10 +280,9 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return mExceptions[exceptionNum];
     }
 
-    public void setCalendarItemAttrs(int calItemId, int folderId, short volumeId) {
+    public void setCalendarItemAttrs(int calItemId, int folderId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
-        mVolumeId = volumeId;
     }
 
     public int getCalendarItemId() {
@@ -306,23 +301,8 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return mFolderId;
     }
 
-    public short getVolumeId() {
-        if (mVolumeId == -1)
-            return Volume.getCurrentMessageVolume().getId();
-        else
-            return mVolumeId;
-    }
-
     @Override public int getOpCode() {
         return OP_SET_CALENDAR_ITEM;
-    }
-
-    @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        
-        mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
-                             mDefaultInvite, mExceptions, mReplies, mNextAlarm);
     }
 
     @Override protected String getPrintableData() {
@@ -330,8 +310,6 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         toRet.append("calItemId=").append(mCalendarItemId);
         toRet.append(", calItemPartStat=").append(mCalendarItemPartStat);
         toRet.append(", folder=").append(mFolderId);
-        if (getVersion().atLeast(1, 0))
-            toRet.append(", vol=").append(mVolumeId);
         if (getVersion().atLeast(1, 11)) {
             toRet.append(", flags=").append(mFlags);
             toRet.append(", tags=").append(mTags);
@@ -353,5 +331,13 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
         toRet.append("nextAlarm=").append(mNextAlarm).append("\n");
         return toRet.toString();
+    }
+
+    public void redo() throws Exception {
+        long mboxId = getMailboxId();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        
+        mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
+                             mDefaultInvite, mExceptions, mReplies, mNextAlarm);
     }
 }

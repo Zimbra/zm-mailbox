@@ -104,7 +104,6 @@ public class Note extends MailItem {
      * 
      * @param id        The id for the new note.
      * @param folder    The {@link Folder} to create the note in.
-     * @param volumeId  The volume to persist the note's blob in.
      * @param content   The note's body.
      * @param location  The note's onscreen bounding box.
      * @param color     The note's color.
@@ -118,7 +117,7 @@ public class Note extends MailItem {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul>
      * @see Folder#canContain(byte) */
-    static Note create(int id, Folder folder, short volumeId, String content, Rectangle location, Color color, CustomMetadata custom)
+    static Note create(int id, Folder folder, String content, Rectangle location, Color color, CustomMetadata custom)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_NOTE))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -137,7 +136,6 @@ public class Note extends MailItem {
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = mbox.generateIndexId(id);
-        data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;
         data.metadata    = encodeMetadata(color, 1, custom, location);
@@ -145,7 +143,7 @@ public class Note extends MailItem {
         ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
             data.id, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data, null);
-        
+
         Note note = new Note(mbox, data);
         note.finishCreation(null);
         return note;

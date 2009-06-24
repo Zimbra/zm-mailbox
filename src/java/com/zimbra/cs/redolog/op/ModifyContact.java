@@ -36,7 +36,6 @@ public class ModifyContact extends RedoableOp {
 
     private int mId;
     private Map<String, String> mFields;
-    private short mVolumeId = -1;
     
     /** Used when this op is created from a <tt>ParsedContact</tt>. */
     private ParsedContact mParsedContact;
@@ -53,14 +52,6 @@ public class ModifyContact extends RedoableOp {
         mId = id;
         mFields = pc.getFields();
         mParsedContact = pc;
-    }
-
-    public void setVolumeId(short volumeId) {
-        mVolumeId = volumeId;
-    }
-
-    public short getVolumeId() {
-        return mVolumeId;
     }
 
     @Override
@@ -98,7 +89,7 @@ public class ModifyContact extends RedoableOp {
             }
         }
         if (getVersion().atLeast(1, 14)) {
-            out.writeShort(mVolumeId);
+            out.writeShort((short) -1);
             out.writeInt((int) mParsedContact.getSize());
         }
     }
@@ -130,7 +121,7 @@ public class ModifyContact extends RedoableOp {
             }
         }
         if (getVersion().atLeast(1, 14)) {
-            mVolumeId = in.readShort();
+            in.readShort();
             int length = in.readInt();
             if (length > 0) {
                 mRedoLogContent = new RedoableOpData(new File(in.getPath()), in.getFilePointer(), length);

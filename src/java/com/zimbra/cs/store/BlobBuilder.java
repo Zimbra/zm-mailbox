@@ -41,8 +41,8 @@ public class BlobBuilder {
     private int totalBytes;
     private boolean finished;
 
-    public BlobBuilder(String path, short volumeId) {
-        blob = new Blob(new File(path), volumeId);
+    BlobBuilder(Blob blob) {
+        this.blob = blob;
     }
 
     public void setSizeHint(int sizeHint) {

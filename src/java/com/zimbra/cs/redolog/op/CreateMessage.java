@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.util.ByteUtil;
@@ -39,7 +38,6 @@ import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.FileBlobStore;
-import com.zimbra.cs.store.Volume;
 
 public class CreateMessage extends RedoableOp
 implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
@@ -54,14 +52,14 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                                     // tracked for logging purpose only; useful because the same
                                     // mailbox may be addressed using any of the defined aliases
     private boolean mShared;        // whether message is shared with other mailboxes
-    private String mDigest;			// Message blob is referenced by digest rather than blob ID.
-    protected int mMsgSize;			// original, uncompressed message size in bytes
-    private int mMsgId;				// ID assigned to newly created message
-    private int mFolderId;			// folder to which the message belongs
-    private int mConvId;			// conversation to which the message belongs; may be newly created
+    private String mDigest;         // Message blob is referenced by digest rather than blob ID.
+    protected int mMsgSize;         // original, uncompressed message size in bytes
+    private int mMsgId;             // ID assigned to newly created message
+    private int mFolderId;          // folder to which the message belongs
+    private int mConvId;            // conversation to which the message belongs; may be newly created
     private int mConvFirstMsgId;    // first message of conversation, if creating new conversation
-    private int mFlags;				// flags applied to the new message
-    private String mTags;			// tags applied to the new message
+    private int mFlags;             // flags applied to the new message
+    private String mTags;           // tags applied to the new message
     private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
@@ -71,9 +69,6 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private byte mMsgBodyType;
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
     // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
-    private short mVolumeId = -1;   // volume on which this message file is saved
-    private short mLinkSrcVolumeId = -1;  // volume on which the link source file is saved;
-    // used only when mMsgBodyType == MSGBODY_LINK
 
     public CreateMessage() {
         mShared = false;
@@ -172,10 +167,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mConvFirstMsgId = convFirstMsgId;
     }
 
-    public void setCalendarItemAttrs(int calItemId, int folderId, short volumeId) {
+    public void setCalendarItemAttrs(int calItemId, int folderId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
-        mVolumeId = volumeId;
     }
 
     public int getCalendarItemId() {
@@ -202,13 +196,6 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return mTags;
     }        
 
-    public short getVolumeId() {
-        if (mVolumeId == -1)
-            return Volume.getCurrentMessageVolume().getId();
-        else
-            return mVolumeId;
-    }
-
     @Override public int getOpCode() {
         return OP_CREATE_MESSAGE;
     }
@@ -224,26 +211,22 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return mPath;
     }
 
-    public void setMessageBodyInfo(byte[] data, String path, short volumeId) {
+    public void setMessageBodyInfo(byte[] data, String path) {
         mMsgBodyType = MSGBODY_INLINE;
         mData = new RedoableOpData(data);
         mPath = path;
-        mVolumeId = volumeId;
     }
     
-    public void setMessageBodyInfo(File dataFile, short volumeId) {
+    public void setMessageBodyInfo(File dataFile) {
         mMsgBodyType = MSGBODY_INLINE;
         mData = new RedoableOpData(dataFile);
         mPath = dataFile.getPath();
-        mVolumeId = volumeId;
     }
 
-    public void setMessageLinkInfo(String linkSrcPath, short linkSrcVolumeId, short destVolumeId) {
+    public void setMessageLinkInfo(String linkSrcPath) {
         mMsgBodyType = MSGBODY_LINK;
         assert(linkSrcPath != null);
         mPath = linkSrcPath;
-        mLinkSrcVolumeId = linkSrcVolumeId;
-        mVolumeId = destVolumeId;
     }
 
     public String getRcptEmail() {
@@ -273,10 +256,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             sb.append(", extended=").append(mExtendedData);
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
-        sb.append(", vol=").append(mVolumeId);
         if (mMsgBodyType == MSGBODY_LINK) {
             sb.append(", linkSourcePath=").append(mPath);
-            sb.append(", linkSrcVol=").append(mLinkSrcVolumeId);
         } else {
             sb.append(", path=").append(mPath);
         }
@@ -311,7 +292,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         out.writeBoolean(mNoICal);
         out.writeUTF(mTags);
         out.writeUTF(mPath);
-        out.writeShort(mVolumeId);
+        out.writeShort((short) -1);
         if (getVersion().atLeast(1, 25)) {
             if (mExtendedData == null) {
                 out.writeUTF(null);
@@ -331,7 +312,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
             // deserializeData() should take this into account.
             //out.write(mData);  // Don't do this here!
         } else {
-            out.writeShort(mLinkSrcVolumeId);
+            out.writeShort((short) -1);
         }
     }
 
@@ -356,7 +337,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mNoICal = in.readBoolean();
         mTags = in.readUTF();
         mPath = in.readUTF();
-        mVolumeId = in.readShort();
+        in.readShort();
         if (getVersion().atLeast(1, 25)) {
             mExtendedData = null;
             String extendedKey = in.readUTF();
@@ -385,11 +366,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                     throw new IOException(msg);
                 }
             }
-            
+
             // Blob data must be the last thing deserialized.  See comments in
             // serializeData().
         } else {
-            mLinkSrcVolumeId = in.readShort();
+            in.readShort();
         }
     }
 
@@ -397,29 +378,25 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
-        List<Long> mboxList = Arrays.asList(mboxId);
-        DeliveryContext sharedDeliveryCtxt = new DeliveryContext(mShared, mboxList);
+        DeliveryContext deliveryCtxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
         
         if (mMsgBodyType == MSGBODY_LINK) {
-            File file = new File(mPath);
-            if (!file.exists())
-                throw new RedoException("Missing link source blob " + mPath +
-                            " (digest=" + mDigest + ")",
-                            this);
-            Volume volume = Volume.getCurrentMessageVolume();
-            Blob blob = new Blob(file, volume.getId()); 
-            sharedDeliveryCtxt.setIncomingBlob(blob);
+            Blob blob = StoreIncomingBlob.fetchBlob(mPath); 
+            if (blob == null)
+                throw new RedoException("Missing link source blob " + mPath + " (digest=" + mDigest + ")", this);
+            deliveryCtxt.setIncomingBlob(blob);
+
             ParsedMessage pm = null;
             try {
                 ParsedMessageOptions opt = new ParsedMessageOptions()
-                    .setContent(file)
+                    .setContent(blob.getFile())
                     .setReceivedDate(mReceivedDate)
                     .setAttachmentIndexing(mbox.attachmentsIndexingEnabled())
                     .setSize(mMsgSize)
                     .setDigest(mDigest);
                 pm = new ParsedMessage(opt);
                 mbox.addMessage(getOperationContext(), pm, mFolderId, mNoICal, mFlags,
-                    mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt);
+                                mTags, mConvId, mRcptEmail, mExtendedData, deliveryCtxt);
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
@@ -441,7 +418,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                     in = new GZIPInputStream(in);
                 }
                 mbox.addMessage(getOperationContext(), in, mMsgSize, mReceivedDate, mFolderId, mNoICal, mFlags,
-                    mTags, mConvId, mRcptEmail, mExtendedData, sharedDeliveryCtxt); 
+                    mTags, mConvId, mRcptEmail, mExtendedData, deliveryCtxt); 
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);

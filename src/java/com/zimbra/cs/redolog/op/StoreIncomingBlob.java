@@ -25,13 +25,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
-import com.zimbra.cs.store.VolumeServiceException;
 
 public class StoreIncomingBlob extends RedoableOp {
 
@@ -40,7 +41,6 @@ public class StoreIncomingBlob extends RedoableOp {
 
     private String mDigest;
     private String mPath;           // full path to blob file
-    private short mVolumeId = -1;   // volume on which the blob is saved
     private int mMsgSize;           // original, uncompressed blob size in bytes
     private RedoableOpData mData;
     private List<Long> mMailboxIdList;
@@ -66,29 +66,25 @@ public class StoreIncomingBlob extends RedoableOp {
         mMailboxIdList = list;
     }
 
-    public void setBlobBodyInfo(byte[] data, String path, short volumeId) {
+    public void setBlobBodyInfo(byte[] data, String path) {
         mData = new RedoableOpData(data);
         mPath = path;
-        mVolumeId = volumeId;
     }
 
-    public void setBlobBodyInfo(File file, short volumeId) {
+    public void setBlobBodyInfo(File file) {
         mData = new RedoableOpData(file);
         mPath = file.getPath();
-        mVolumeId = volumeId;
     }
 
-    public void setBlobBodyInfo(InputStream dataStream, int dataLength, String path, short volumeId) {
+    public void setBlobBodyInfo(InputStream dataStream, int dataLength, String path) {
         mData = new RedoableOpData(dataStream, dataLength);
         mPath = path;
-        mVolumeId = volumeId;
     }
 
     @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("blobDigest=\"");
         sb.append(mDigest).append("\", size=").append(mMsgSize);
         sb.append(", dataLen=").append(mData.getLength());
-        sb.append(", vol=").append(mVolumeId);
         sb.append(", path=").append(mPath);
         sb.append(", mbox=[");
         if (mMailboxIdList != null) {
@@ -104,8 +100,7 @@ public class StoreIncomingBlob extends RedoableOp {
         return sb.toString();
     }
 
-    @Override
-    public InputStream getAdditionalDataStream()
+    @Override public InputStream getAdditionalDataStream()
     throws IOException {
         return mData.getInputStream();
     }
@@ -116,12 +111,13 @@ public class StoreIncomingBlob extends RedoableOp {
                 out.writeInt(mMailboxIdList.size());
                 for (Long mboxId : mMailboxIdList)
                     out.writeInt(mboxId.intValue());
-            } else
+            } else {
                 out.writeInt(0);
+            }
         }
         out.writeUTF(mDigest);
         out.writeUTF(mPath);
-        out.writeShort(mVolumeId);
+        out.writeShort((short) -1);
         out.writeInt(mMsgSize);
         out.writeInt(mData.getLength());
 
@@ -152,7 +148,7 @@ public class StoreIncomingBlob extends RedoableOp {
         }
         mDigest = in.readUTF();
         mPath = in.readUTF();
-        mVolumeId = in.readShort();
+        in.readShort();
         mMsgSize = in.readInt();
         int dataLen = in.readInt();
 
@@ -171,18 +167,6 @@ public class StoreIncomingBlob extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        // Use current message volume if old volume is gone.
-        Volume vol = null;
-        try {
-            vol = Volume.getById(mVolumeId);
-        } catch (VolumeServiceException e) {
-            if (VolumeServiceException.NO_SUCH_VOLUME.equals(e.getCode()))
-                vol = Volume.getCurrentMessageVolume();
-            else
-                throw e;
-        }
-        short volumeId = vol.getId();
-
         // Execution of redo is logged to current redo logger.  For most other
         // ops this is handled by Mailbox class, but StoreIncomingBlob is an
         // exception because of the way it is used in Mailbox.
@@ -191,15 +175,19 @@ public class StoreIncomingBlob extends RedoableOp {
         if (!getUnloggedReplay()) {
             redoRecorder =
                 new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
+            redoRecorder =
+                new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
+            redoRecorder = new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder.start(getTimestamp());
-            redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath, volumeId);
+            redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath);
             redoRecorder.log();
         }
 
         boolean success = false;
         try {
             boolean compressed = mData.getLength() != mMsgSize;
-            StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, mPath, volumeId, null, compressed);
+            Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, null, compressed);
+            registerBlob(mPath, blob);
             success = true;
         } finally {
             if (redoRecorder != null) {
@@ -208,6 +196,18 @@ public class StoreIncomingBlob extends RedoableOp {
                 else
                     redoRecorder.abort();
             }
+        }
+    }
+
+    private static final Map<String, Blob> sReplayedBlobs = new HashMap<String, Blob>();
+    static void registerBlob(String path, Blob blob) {
+        synchronized (sReplayedBlobs) {
+            sReplayedBlobs.put(path, blob);
+        }
+    }
+    static Blob fetchBlob(String path) {
+        synchronized (sReplayedBlobs) {
+            return sReplayedBlobs.get(path);
         }
     }
 }

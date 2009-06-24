@@ -30,19 +30,16 @@ public class ImapCopyItem extends RedoableOp {
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
     private byte mType;
     private int mDestFolderId;
-    private short mDestVolumeId;
 
     public ImapCopyItem() {
         mType = MailItem.TYPE_UNKNOWN;
         mDestFolderId = 0;
-        mDestVolumeId = -1;
     }
 
-    public ImapCopyItem(long mailboxId, byte type, int folderId, short volumeId) {
+    public ImapCopyItem(long mailboxId, byte type, int folderId) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
-        mDestVolumeId = volumeId;
     }
 
     /**
@@ -58,18 +55,6 @@ public class ImapCopyItem extends RedoableOp {
         return destId == null ? -1 : destId;
     }
 
-    /**
-     * Sets the volume ID for the copied blob.
-     * @param volId
-     */
-    public void setDestVolumeId(short volId) {
-        mDestVolumeId = volId;
-    }
-
-    public short getDestVolumeId() {
-        return mDestVolumeId;
-    }
-
     @Override public int getOpCode() {
         return OP_IMAP_COPY_ITEM;
     }
@@ -77,7 +62,6 @@ public class ImapCopyItem extends RedoableOp {
     @Override protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
-        sb.append(", destVolumeId=").append(mDestVolumeId);
         sb.append(", [srcId, destId, srcImap]=");
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet())
             sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
@@ -87,7 +71,7 @@ public class ImapCopyItem extends RedoableOp {
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeByte(mType);
         out.writeInt(mDestFolderId);
-        out.writeShort(mDestVolumeId);
+        out.writeShort((short) -1);
         out.writeInt(mDestIds.size());
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet()) {
             Integer srcId = entry.getKey();
@@ -100,7 +84,7 @@ public class ImapCopyItem extends RedoableOp {
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mType = in.readByte();
         mDestFolderId = in.readInt();
-        mDestVolumeId = in.readShort();
+        in.readShort();
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
             Integer srcId = in.readInt();

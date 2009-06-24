@@ -18,7 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class Chat extends Message {
-    
+
     /**
      * this one will call back into decodeMetadata() to do our initialization
      * 
@@ -33,21 +33,20 @@ public class Chat extends Message {
         if (mData.parentId < 0)
             mData.parentId = -mId;
     }
-    
+
     static class ChatCreateFactory extends MessageCreateFactory {
         @Override Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
             return new Chat(mbox, data);
         }
         @Override byte getType() { return TYPE_CHAT; }
     }
-    
-    static Chat create(int id, Folder folder, ParsedMessage pm,
-                int msgSize, String digest, short volumeId, boolean unread,
-                int flags, long tags)  
+
+    static Chat create(int id, Folder folder, ParsedMessage pm, MailboxBlob mblob,
+                	   int msgSize, String digest, boolean unread, int flags, long tags)  
     throws ServiceException {
-        return (Chat) Message.createInternal(id, folder, null, pm, msgSize, digest, volumeId, unread, flags, tags,
-                                             null, true, null, null, new ChatCreateFactory());
+        return (Chat) Message.createInternal(id, folder, null, pm, mblob, msgSize, digest, unread,
+        									 flags, tags, null, true, null, null, new ChatCreateFactory());
     }
-    
+
     @Override boolean isMutable() { return true; }
 }

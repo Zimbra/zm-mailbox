@@ -2,7 +2,6 @@ package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -28,8 +27,7 @@ public class MessageContent {
         if (sizeHint < FileBlobStore.getDiskStreamingThreshold()) {
             data = readBytes(is, sizeHint);
         } else {
-            short vid = Volume.getCurrentMessageVolume().getId();
-            blob = StoreManager.getInstance().storeIncoming(is, sizeHint, null, vid, null);
+            blob = StoreManager.getInstance().storeIncoming(is, sizeHint, null);
         }
     }
 

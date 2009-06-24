@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.Blob;
 
 /**
  * @author dkarp
@@ -662,12 +663,12 @@ public class Contact extends MailItem {
      *  A real nonnegative item ID must be supplied from a previous call to
      *  {@link Mailbox#getNextItemId(int)}.
      * 
-     * @param id        The id for the new contact.
-     * @param folder    The {@link Folder} to create the contact in.
-     * @param volumeId  The volume to persist any attachments to.
-     * @param pc        The contact's fields and values, plus attachments.
-     * @params flags    Initial flagset
-     * @param tags      A serialized version of all {@link Tag}s to apply.
+     * @param id      The id for the new contact.
+     * @param folder  The {@link Folder} to create the contact in.
+     * @param blob    The on-disk blob containing contact attachments.
+     * @param pc      The contact's fields and values, plus attachments.
+     * @param flags   Initial flagset
+     * @param tags    A serialized version of all {@link Tag}s to apply.
      * @perms {@link ACL#RIGHT_INSERT} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't
@@ -678,7 +679,7 @@ public class Contact extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see #canContain(byte) */
-    static Contact create(int id, Folder folder, short volumeId, ParsedContact pc, int flags, String tags, CustomMetadata custom)
+    static Contact create(int id, Folder folder, Blob blob, ParsedContact pc, int flags, String tags, CustomMetadata custom)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -695,7 +696,7 @@ public class Contact extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = mbox.generateIndexId(id);
         data.imapId      = id;
-        data.volumeId    = volumeId;
+        data.volumeId    = blob == null ? -1 : blob.getVolumeId();
         data.setBlobDigest(pc.getDigest());
         data.size        = pc.getSize();
         data.date        = mbox.getOperationTimestamp();
@@ -705,11 +706,10 @@ public class Contact extends MailItem {
         data.contentChanged(mbox);
         
         if (ZimbraLog.mailop.isInfoEnabled()) {
-            String email="null";
-            if (pc.getFields() != null) {
+            String email = "null";
+            if (pc.getFields() != null)
                 email = pc.getFields().get(Contact.A_email);
-            }
-            ZimbraLog.mailop.info("Adding Contact %s: id=%d, folderId=%d, folderName=%s.",
+            ZimbraLog.mailop.info("adding contact %s: id=%d, folderId=%d, folderName=%s.",
                 email, data.id, folder.getId(), folder.getName());
         }
         
@@ -761,16 +761,16 @@ public class Contact extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
+    @Override MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
-        return super.copy(folder, id, parentId, destVolumeId);
+        return super.copy(folder, id, parentId);
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override MailItem icopy(Folder folder, int copyId, short destVolumeId) throws IOException, ServiceException {
+    @Override MailItem icopy(Folder folder, int copyId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
-        return super.icopy(folder, copyId, destVolumeId);
+        return super.icopy(folder, copyId);
     }
 
     /** @perms {@link ACL#RIGHT_DELETE} on the item */

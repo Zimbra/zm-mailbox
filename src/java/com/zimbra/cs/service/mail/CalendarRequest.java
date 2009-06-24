@@ -58,8 +58,8 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.L10nUtil;
@@ -274,128 +274,130 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean ignoreFailedAddresses,
         boolean updateOwnAppointment)
     throws ServiceException {
-        //synchronized (mbox) {
-            boolean onBehalfOf = zsc.isDelegatedRequest();
-            boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
-            if (notifyOwner) {
-                try {
-                    InternetAddress addr = AccountUtil.getFriendlyEmailAddress(acct);
-                    csd.mMm.addRecipient(javax.mail.Message.RecipientType.TO, addr);
-                } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("count not add calendar owner to recipient list", e);
-                }
-            }
-
-            // Never send a notification to the person making the SOAP request
-            // in a non-delegated request.
-            if (!onBehalfOf) {
-                String[] aliases = acct.getMailAlias();
-                String[] addrs;
-                if (aliases != null && aliases.length > 0) {
-                    addrs = new String[aliases.length + 1];
-                    addrs[0] = acct.getAttr(Provisioning.A_mail);
-                    for (int i = 0; i < aliases.length; i++)
-                        addrs[i + 1] = aliases[i];
-                } else {
-                    addrs = new String[1];
-                    addrs[0] = acct.getAttr(Provisioning.A_mail);
-                }
-                try {
-                    Mime.removeRecipients(csd.mMm, addrs);
-                } catch (MessagingException e) {}
-            }
-
-            ParsedMessage pm = new ParsedMessage(csd.mMm, false);
-
-            if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
-                csd.mInvite.setFragment(pm.getFragment());
-            }
-
-            // Write out the MimeMessage to a temp file and create a new MimeMessage from the file.
-            // If we don't do this, we get into trouble during modify appointment call.  If the blob
-            // is bigger than the streaming threshold (e.g. appointment has a big attachment), the
-            // MimeMessage object is attached to the current blob file.  But the Mailbox.addInvite()
-            // call below updates the blob to a new mod_content (hence new path).  The attached blob
-            // thus having been deleted, the MainSender.sendMimeMessage() call that follows will attempt
-            // to read from a non-existent file and fail.  We can avoid this situation by writing the
-            // to-be-emailed mime message to a temp file, thus detaching it from the appointment's
-            // current blob file.  This is inefficient, but safe.
-            OutputStream os = null;
-            InputStream is = null;
-            File tempMmFile = null;
+        boolean onBehalfOf = zsc.isDelegatedRequest();
+        boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
+        if (notifyOwner) {
             try {
-                Volume vol = Volume.getCurrentMessageVolume();
-                String tempPath = StoreManager.getInstance().getUniqueIncomingPath(vol.getId());
-                tempMmFile = new File(tempPath);
-                os = new FileOutputStream(tempMmFile);
-                csd.mMm.writeTo(os);
-                ByteUtil.closeStream(os);
-                os = null;
-                is = new FileInputStream(tempMmFile);
-                csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("error creating calendar message content", e);
+                InternetAddress addr = AccountUtil.getFriendlyEmailAddress(acct);
+                csd.mMm.addRecipient(javax.mail.Message.RecipientType.TO, addr);
             } catch (MessagingException e) {
-                throw ServiceException.FAILURE("error creating calendar message content", e);
-            } finally {
-                ByteUtil.closeStream(os);
-                ByteUtil.closeStream(is);
+                throw ServiceException.FAILURE("count not add calendar owner to recipient list", e);
             }
+        }
 
-            int[] ids = null;
-            ItemId msgId = null;
+        // Never send a notification to the person making the SOAP request
+        // in a non-delegated request.
+        if (!onBehalfOf) {
+            String[] aliases = acct.getMailAlias();
+            String[] addrs;
+            if (aliases != null && aliases.length > 0) {
+                addrs = new String[aliases.length + 1];
+                addrs[0] = acct.getAttr(Provisioning.A_mail);
+                for (int i = 0; i < aliases.length; i++)
+                    addrs[i + 1] = aliases[i];
+            } else {
+                addrs = new String[1];
+                addrs[0] = acct.getAttr(Provisioning.A_mail);
+            }
             try {
-                if (!csd.mInvite.isCancel()) {
-                    // For create/modify requests, we want to first update the local mailbox (organizer's)
-                    // and send invite emails only if local change succeeded.  This order is also necessary
-                    // because of the side-effect relating to attachments.  (see below comments)
-    
-                    // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
-                    // because sendMimMessage will delete uploaded attachments as a side-effect.
-                    if (updateOwnAppointment)
-                        ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
-                    // Next, notify any attendees.
-                    if (!csd.mDontNotifyAttendees)
-                        msgId = mbox.getMailSender().sendMimeMessage(
-                                octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                                csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
-                } else {
-                    // But if we're sending a cancel request, send emails first THEN update the local mailbox.
-                    // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
-                    // if we couldn't notify the attendees.
-                    //
-                    // This order has a problem when there's an attachment, but cancel requests should not
-                    // have an attachment, so we're okay.
+                Mime.removeRecipients(csd.mMm, addrs);
+            } catch (MessagingException e) {}
+        }
 
-                    // Before sending email, make sure the requester has permission to cancel.
-                    CalendarItem calItem = mbox.getCalendarItemByUid(octxt, csd.mInvite.getUid());
-                    if (calItem != null)
-                        calItem.checkCancelPermission(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), csd.mInvite);
+        ParsedMessage pm = new ParsedMessage(csd.mMm, false);
 
-                    if (!csd.mDontNotifyAttendees)
-                        msgId = mbox.getMailSender().sendMimeMessage(
-                                octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                                csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
-                    if (updateOwnAppointment)
-                        ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
-                }
-            } finally {
-                // Delete the temp file after we're done sending email.
-                if (tempMmFile != null)
-                    tempMmFile.delete();
+        if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
+            csd.mInvite.setFragment(pm.getFragment());
+        }
+
+        // Write out the MimeMessage to a temp file and create a new MimeMessage from the file.
+        // If we don't do this, we get into trouble during modify appointment call.  If the blob
+        // is bigger than the streaming threshold (e.g. appointment has a big attachment), the
+        // MimeMessage object is attached to the current blob file.  But the Mailbox.addInvite()
+        // call below updates the blob to a new mod_content (hence new path).  The attached blob
+        // thus having been deleted, the MainSender.sendMimeMessage() call that follows will attempt
+        // to read from a non-existent file and fail.  We can avoid this situation by writing the
+        // to-be-emailed mime message to a temp file, thus detaching it from the appointment's
+        // current blob file.  This is inefficient, but safe.
+        OutputStream os = null;
+        InputStream is = null;
+        File tempMmFile = null;
+        try {
+        	tempMmFile = File.createTempFile("zcal", "tmp");
+        	tempMmFile.deleteOnExit();
+
+            os = new FileOutputStream(tempMmFile);
+            csd.mMm.writeTo(os);
+            ByteUtil.closeStream(os);
+            os = null;
+
+            is = new FileInputStream(tempMmFile);
+            csd.mMm = new MimeMessage(JMSession.getSession(), is);
+        } catch (IOException e) {
+            if (tempMmFile != null)
+                tempMmFile.delete();
+            throw ServiceException.FAILURE("error creating calendar message content", e);
+        } catch (MessagingException e) {
+            if (tempMmFile != null)
+                tempMmFile.delete();
+            throw ServiceException.FAILURE("error creating calendar message content", e);
+        } finally {
+            ByteUtil.closeStream(os);
+            ByteUtil.closeStream(is);
+        }
+
+        int[] ids = null;
+        ItemId msgId = null;
+        try {
+            if (!csd.mInvite.isCancel()) {
+                // For create/modify requests, we want to first update the local mailbox (organizer's)
+                // and send invite emails only if local change succeeded.  This order is also necessary
+                // because of the side-effect relating to attachments.  (see below comments)
+
+                // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
+                // because sendMimMessage will delete uploaded attachments as a side-effect.
+                if (updateOwnAppointment)
+                    ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                // Next, notify any attendees.
+                if (!csd.mDontNotifyAttendees)
+                    msgId = mbox.getMailSender().sendMimeMessage(
+                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+            } else {
+                // But if we're sending a cancel request, send emails first THEN update the local mailbox.
+                // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
+                // if we couldn't notify the attendees.
+                //
+                // This order has a problem when there's an attachment, but cancel requests should not
+                // have an attachment, so we're okay.
+                // Before sending email, make sure the requester has permission to cancel.
+                CalendarItem calItem = mbox.getCalendarItemByUid(octxt, csd.mInvite.getUid());
+                if (calItem != null)
+                    calItem.checkCancelPermission(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), csd.mInvite);
+
+                if (!csd.mDontNotifyAttendees)
+                    msgId = mbox.getMailSender().sendMimeMessage(
+                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+                if (updateOwnAppointment)
+                    ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
             }
+        } finally {
+            // Delete the temp file after we're done sending email.
+            if (tempMmFile != null)
+                tempMmFile.delete();
+        }
 
-            if (updateOwnAppointment && response != null && ids != null && ids.length >= 2) {
-                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-                String id = ifmt.formatItemId(ids[0]);
-                response.addAttribute(MailConstants.A_CAL_ID, id);
-                if (csd.mInvite.isEvent())
-                    response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
-                response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(ids[0], ids[1]));
-                if (msgId != null)
-                    response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
-            }
-        //}  // synchronized (mbox)
+        if (updateOwnAppointment && response != null && ids != null && ids.length >= 2) {
+            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+            String id = ifmt.formatItemId(ids[0]);
+            response.addAttribute(MailConstants.A_CAL_ID, id);
+            if (csd.mInvite.isEvent())
+                response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
+            response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(ids[0], ids[1]));
+            if (msgId != null)
+                response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
+        }
         
         return response;
     }
