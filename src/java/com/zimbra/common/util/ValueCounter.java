@@ -24,20 +24,20 @@ import java.util.Map;
  * 
  * @author bburtin
  */
-public class ValueCounter {
+public class ValueCounter<E> {
 
-    private Map /* <Object, Integer> */ mValues = new HashMap();
+    private Map<E, Integer> mValues = new HashMap<E, Integer>();
     
-    public void increment(Object value) {
+    public void increment(E value) {
         increment(value, 1);
     }
     
-    public void decrement(Object value) {
+    public void decrement(E value) {
         increment(value, -1);
     }
     
-    public void increment(Object value, int delta) {
-        Integer count = (Integer) mValues.get(value);
+    public void increment(E value, int delta) {
+        Integer count = mValues.get(value);
         if (count == null) {
             count = new Integer(delta);
         } else {
@@ -47,14 +47,14 @@ public class ValueCounter {
     }
     
     public int getCount(Object value) {
-        Integer count = (Integer) mValues.get(value);
+        Integer count = mValues.get(value);
         if (count == null) {
             return 0;
         }
         return count.intValue();
     }
     
-    public Iterator iterator() {
+    public Iterator<E> iterator() {
         return mValues.keySet().iterator();
     }
     
@@ -64,7 +64,7 @@ public class ValueCounter {
     
     public int getTotal() {
         int total = 0;
-        Iterator i = iterator();
+        Iterator<E> i = iterator();
         while (i.hasNext()) {
             total = total + getCount(i.next());
         }
@@ -77,7 +77,7 @@ public class ValueCounter {
     
     public String toString() {
         StringBuffer buf = new StringBuffer();
-        Iterator i = iterator();
+        Iterator<E> i = iterator();
         while (i.hasNext()) {
             if (buf.length() != 0) {
                 buf.append(", ");
