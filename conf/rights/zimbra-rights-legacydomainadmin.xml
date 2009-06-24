@@ -64,6 +64,7 @@
     <r n="setAdminConsoleAccountsInfoTab"/>
     <r n="viewAdminConsoleAccountsInfoTab"/>
     <r n="getAccountInfo"/>
+    <r n="createAccount"/>
     <r n="deleteAccount"/>
     <r n="renameAccount"/>
     <r n="setAccountPassword"/>
@@ -454,6 +455,9 @@
   <rights>
     <r n="setAdminConsoleDLMembersTab"/>
     <r n="viewAdminConsoleDLMembersTab"/>
+    <r n="renameDistributionList"/>
+    <r n="createDistributionList"/>
+    <r n="deleteDistributionList"/>
     <r n="addDistributionListMember"/>
     <r n="removeDistributionListMember"/>
   </rights>
@@ -544,7 +548,138 @@
   =======================================================
 -->
 <!-- Admin Console Resources Properties Tab -->
+<right name="setAdminConsoleResourcesPropertiesTab" type="setAttrs" targetType="calresource">
+  <desc> Legacy Domain Admin Console set attr rights for Resources Properties Tab </desc>
+  <attrs>
+    <a n="displayName"/>
+    <a n="zimbraMailStatus"/>
+    <a n="zimbraMailAlias"/>
+    <a n="zimbraHideInGal"/>
+    <a n="description"/>
+    <a n="zimbraNotes"/>
+    <a n="cn"/>
+    <a n="mail"/>
+    <a n="uid"/>
+    <a n="zimbraAccountStatus"/>
+    <a n="zimbraAccountCalendarUserType"/>
+    <a n="zimbraCalResType"/>
+    <a n="zimbraCalResAutoAcceptDecline"/>
+    <a n="zimbraCalResAutoDeclineIfBusy"/>
+    <a n="zimbraCalResAutoDeclineRecurring"/>
+    <a n="zimbraCalResLocationDisplayName"/>
+    <a n="zimbraCalResSite"/>
+    <a n="zimbraCalResBuilding"/>
+    <a n="zimbraCalResFloor"/>
+    <a n="zimbraCalResRoom"/>
+    <a n="zimbraCalResCapacity"/>
+    <a n="zimbraCalResContactName"/>
+    <a n="zimbraCalResContactEmail"/>
+    <a n="zimbraCalResContactPhone"/>
+    <a n="zimbraLocale"/>
+    <a n="zimbraCalResMaxNumConflictsAllowed"/>
+    <a n="zimbraCalResMaxPercentConflictsAllowed"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleResourcesPropertiesTab" type="getAttrs" targetType="calresource">
+  <desc> Legacy Domain Admin Console set attr rights for Resources Properties Tab </desc>
+  <attrs>
+    <a n="displayName"/>
+    <a n="zimbraId"/>
+    <a n="zimbraMailStatus"/>
+    <a n="zimbraMailAlias"/>
+    <a n="zimbraHideInGal"/>
+    <a n="description"/>
+    <a n="zimbraNotes"/>
+    <a n="zimbraMailForwardingAddress"/>
+    <a n="cn"/>
+    <a n="uid"/>
+    <!-- <a n="zimbraCOSId"/> -->
+    <a n="zimbraAccountStatus"/>
+    <a n="zimbraAccountCalendarUserType"/>
+    <a n="zimbraCalResType"/>
+    <a n="zimbraCalResAutoAcceptDecline"/>
+    <a n="zimbraCalResAutoDeclineIfBusy"/>
+    <a n="zimbraCalResAutoDeclineRecurring"/>
+    <a n="zimbraCalResLocationDisplayName"/>
+    <a n="zimbraCalResSite"/>
+    <a n="zimbraCalResBuilding"/>
+    <a n="zimbraCalResFloor"/>
+    <a n="zimbraCalResRoom"/>
+    <a n="zimbraCalResCapacity"/>
+    <a n="zimbraCalResContactName"/>
+    <a n="zimbraCalResContactEmail"/>
+    <a n="zimbraCalResContactPhone"/>
+    <a n="zimbraLocale"/>
+    <a n="zimbraCreateTimestamp"/>
+    <a n="zimbraCalResMaxNumConflictsAllowed"/>
+    <a n="zimbraCalResMaxPercentConflictsAllowed"/>
+  </attrs>
+</right>
+<right name="AdminConsoleResourcesPropertiesTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for Resources Properties Tab </desc>
+  <rights>
+    <r n="setAdminConsoleResourcesPropertiesTab"/>
+    <r n="viewAdminConsoleResourcesPropertiesTab"/>
+    <r n="addCalendarResourceAlias"/>
+    <r n="removeCalendarResourceAlias"/>
+    <r n="createCalendarResource"/>
+    <r n="renameCalendarResource"/>
+    <r n="deleteCalendarResource"/>
+    <r n="setCalendarResourcePassword"/>
+    <r n="publishCalendarResourceShareInfo"/>
+    <r n="getCalendarResourceShareInfo"/>
+  </rights>
+</right>
 <!-- Admin Console Resources Location/Contact Tab -->
+<right name="setAdminConsoleResourcesContactTab" type="setAttrs" targetType="calresource">
+  <desc> Legacy Domain Admin Console set attr rights for Resources Contact Tab </desc>
+  <attrs>
+    <a n="zimbraCalResLocationDisplayName"/>
+    <a n="zimbraCalResSite"/>
+    <a n="zimbraCalResBuilding"/>
+    <a n="zimbraCalResFloor"/>
+    <a n="zimbraCalResRoom"/>
+    <a n="zimbraCalResCapacity"/>
+    <a n="zimbraCalResContactName"/>
+    <a n="zimbraCalResContactEmail"/>
+    <a n="zimbraCalResContactPhone"/>
+    <a n="telephoneNumber"/>
+    <a n="company"/>
+    <a n="street"/>
+    <a n="l"/>
+    <a n="st"/>
+    <a n="postalCode"/>
+    <a n="co"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleResourcesContactTab" type="getAttrs" targetType="calresource">
+  <desc> Legacy Domain Admin Console set attr rights for Resources Contact Tab </desc>
+  <attrs>
+    <a n="zimbraCalResLocationDisplayName"/>
+    <a n="zimbraCalResSite"/>
+    <a n="zimbraCalResBuilding"/>
+    <a n="zimbraCalResFloor"/>
+    <a n="zimbraCalResRoom"/>
+    <a n="zimbraCalResCapacity"/>
+    <a n="zimbraCalResContactName"/>
+    <a n="zimbraCalResContactEmail"/>
+    <a n="zimbraCalResContactPhone"/>
+    <a n="telephoneNumber"/>
+    <a n="company"/>
+    <a n="street"/>
+    <a n="l"/>
+    <a n="st"/>
+    <a n="postalCode"/>
+    <a n="co"/>
+  </attrs>
+</right>
+<right name="AdminConsoleResourcesContactTabRights" type="combo">
+  <desc> Legacy Domain Admin Console rights for Resources Contact Tab </desc>
+  <rights>
+    <r n="setAdminConsoleResourcesContactTab"/>
+    <r n="viewAdminConsoleResourcesContactTab"/>
+  </rights>
+</right>
 <!-- Admin Console Resources ACL Tab -->
 
 
@@ -598,6 +733,8 @@
 <right type="combo" name="LegacyAdminConsoleDomainAdminResourceRights">
   <desc>Admin Console Legacy Domain Admin Resource Rights</desc>
   <rights>
+    <r n="AdminConsoleResourcesPropertiesTabRights"/>
+    <r n="AdminConsoleResourcesContactTabRights"/>
     <r n="listCalendarResource"/>
     <r n="viewAccountAdminUI"/>
   </rights>
