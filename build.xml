@@ -59,6 +59,7 @@
     <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
     <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
+    <property name="agent.jarfile" location="${build.dir}/zimbraagent.jar"/>
     <property name="common.dir" location="../ZimbraCommon"/>
     <property name="common.classes.dir" location="${common.dir}/build/classes"/>
     <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
@@ -488,7 +489,19 @@
 
     <target name="jar" depends="compile">
         <echo>Hostname: ${zimbra.server.hostname}</echo>
-        <jar destfile="${jarfile}" basedir="${build.classes.dir}"/>
+        <jar destfile="${jarfile}">
+        	<fileset dir="${build.classes.dir}">
+        	   <exclude name="com/zimbra/cs/instrument/**"/>
+        	</fileset>
+        </jar>
+        <jar destfile="${agent.jarfile}">
+        	<fileset dir="${build.classes.dir}">
+        	   <include name="com/zimbra/cs/instrument/**"/>
+        	</fileset>
+        	<manifest>
+        		<attribute name="Premain-Class" value="com.zimbra.cs.instrument.JavaAgent"/>
+        	</manifest>
+        </jar>
         <antcall target="generate-ldap-config"/>
     </target>
 
@@ -671,6 +684,7 @@
         <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${agent.jarfile}" overwrite="true"/>
 
     	<!-- jetty windows service wrapper -->
     	<if>

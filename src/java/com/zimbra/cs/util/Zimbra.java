@@ -249,6 +249,9 @@ public class Zimbra {
             if (app.supports(MemoryStats.class.getName()))
             	MemoryStats.startup();
 
+            if (app.supports(CacheMemoryStats.class.getName()))
+            	CacheMemoryStats.startup();
+
             if (app.supports(ScheduledTaskManager.class.getName()))
             	ScheduledTaskManager.startup();
 

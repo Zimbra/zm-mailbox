@@ -16,6 +16,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,6 +50,13 @@ public class MessageCache {
     }
 
     private static Map<String, CacheNode> sCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
+    
+    /**
+     * statistics-related method, should not be used for anything other than stats collection
+     */
+    public static Map<String,CacheNode> getBackingMap() {
+        return Collections.unmodifiableMap(sCache);
+    }
     private static int sMaxCacheSize;
     static {
         try {

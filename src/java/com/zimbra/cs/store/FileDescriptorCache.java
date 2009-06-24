@@ -141,6 +141,10 @@ public class FileDescriptorCache
         }
     }
     
+    public int size() {
+        return mCache.size();
+    }
+    
     private synchronized void pruneIfNecessary() {
         if (mCache.size() <= mMaxSize) {
             return;
