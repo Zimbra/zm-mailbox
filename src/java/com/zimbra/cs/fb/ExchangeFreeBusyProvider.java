@@ -285,6 +285,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		HttpMethod method = null;
 		
 		try {
+			ZimbraLog.fb.debug("POST "+url);
 			method = msg.createMethod(url, fb);
 			method.setRequestHeader(HEADER_TRANSLATE, "f");
 			int status = sendRequest(method, serverInfo);
