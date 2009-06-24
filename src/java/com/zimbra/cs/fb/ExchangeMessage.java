@@ -28,6 +28,8 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.dom4j.tree.DefaultDocument;
 
+import com.zimbra.common.localconfig.KnownKey;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.fb.FreeBusy.Interval;
@@ -131,11 +133,18 @@ public class ExchangeMessage {
     	mMail = mail;
     }
     
+    private String getRcpt(KnownKey override) {
+    	String value = override.value();
+    	if (value != null && value.length() > 0)
+    		return "/cn="+value+"/cn=";
+    	return PUBURL_RCPT;
+    }
+    
     public String getUrl() {
     	StringBuilder buf = new StringBuilder(PUBURL_FIRST_PART);
     	buf.append(SLASH.matcher(mOu).replaceAll(ENCODED_SLASH));
     	buf.append("/").append(PUBURL_SECOND_PART);
-    	buf.append(SLASH.matcher(PUBURL_RCPT).replaceAll(ENCODED_SLASH));
+    	buf.append(SLASH.matcher(getRcpt(LC.freebusy_exchange_cn1)).replaceAll(ENCODED_SLASH));
     	buf.append(mCn);
     	buf.append(PUBURL_EML);
     	
@@ -151,10 +160,10 @@ public class ExchangeMessage {
     	root.add(NS_MSFT);
     	root.add(NS_WEB_FOLDERS);
     	Element prop = root.addElement(EL_SET).addElement(EL_PROP);
-    	addElement(prop, PR_SUBJECT_A, PUBURL_SECOND_PART + PUBURL_RCPT + mCn);
+    	addElement(prop, PR_SUBJECT_A, PUBURL_SECOND_PART + getRcpt(LC.freebusy_exchange_cn2) + mCn);
     	addElement(prop, PR_FREEBUSY_START_RANGE, minutesSinceMsEpoch(fb.getStartTime()));
     	addElement(prop, PR_FREEBUSY_END_RANGE, minutesSinceMsEpoch(fb.getEndTime()));
-    	addElement(prop, PR_FREEBUSY_EMAIL_ADDRESS, mOu + PUBURL_RCPT + mCn);
+    	addElement(prop, PR_FREEBUSY_EMAIL_ADDRESS, mOu + getRcpt(LC.freebusy_exchange_cn3) + mCn);
     	
     	
     	Element allMonths = addElement(prop, PR_FREEBUSY_ALL_MONTHS, null, ATTR_DT, MV_INT);
