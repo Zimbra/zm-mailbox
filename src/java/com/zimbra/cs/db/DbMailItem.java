@@ -152,10 +152,10 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.imapId);
             stmt.setInt(pos++, data.date);
             stmt.setLong(pos++, data.size);
-            if (data.volumeId >= 0)
-                stmt.setShort(pos++, data.volumeId);
+            if (data.locator != null)
+                stmt.setString(pos++, data.locator);
             else
-                stmt.setNull(pos++, Types.TINYINT);
+                stmt.setNull(pos++, Types.VARCHAR);
             stmt.setString(pos++, data.getBlobDigest());
             if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_CHAT || data.type == MailItem.TYPE_FOLDER)
                 stmt.setInt(pos++, data.unreadCount);
@@ -221,7 +221,7 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, Folder folder, String indexId, int parentId, short volumeId, String metadata)
+    public static void copy(MailItem item, int id, Folder folder, String indexId, int parentId, String locator, String metadata)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
         if (id <= 0 || indexId == null || folder == null || parentId == 0)
@@ -254,10 +254,10 @@ public class DbMailItem {
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
             stmt.setString(pos++, indexId);                       // INDEX_ID
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
-            if (volumeId >= 0)
-                stmt.setShort(pos++, volumeId);                // VOLUME_ID specified by caller
+            if (locator != null)
+                stmt.setString(pos++, locator);                // VOLUME_ID specified by caller
             else
-                stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
+                stmt.setNull(pos++, Types.VARCHAR);            //   or, no VOLUME_ID
             stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
@@ -312,8 +312,8 @@ public class DbMailItem {
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
             stmt.setString(pos++, data.indexId);               // INDEX_ID
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
-            if (data.volumeId >= 0)
-                stmt.setShort(pos++, data.volumeId);           // VOLUME_ID
+            if (data.locator != null)
+                stmt.setString(pos++, data.locator);          // VOLUME_ID
             else
                 stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
@@ -839,9 +839,8 @@ public class DbMailItem {
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, item.getSavedSequence());
-            short vol = item.getVolumeId();
-            if (vol > 0)
-                stmt.setShort(pos++, item.getVolumeId());
+            if (item.getLocator() != null)
+                stmt.setString(pos++, item.getLocator());
             else
                 stmt.setNull(pos++, Types.TINYINT);
             pos = setMailboxId(stmt, mbox, pos);
@@ -2452,9 +2451,9 @@ public class DbMailItem {
             String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
             if (blobDigest != null) {
                 info.blobDigests.add(blobDigest);
-                short volumeId = rs.getShort(LEAF_CI_VOLUME_ID);
+                String locator = rs.getString(LEAF_CI_VOLUME_ID);
                 try {
-                    MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, volumeId);
+                    MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
                     if (mblob == null)
                         sLog.warn("missing blob for id: " + id + ", change: " + revision);
                     else
@@ -2512,7 +2511,7 @@ public class DbMailItem {
                 if (blobDigest != null) {
                     info.blobDigests.add(blobDigest);
                     try {
-                        MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getShort(5));
+                        MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5));
                         if (mblob == null)
                             sLog.error("missing blob for id: " + rs.getInt(1) + ", change: " + rs.getInt(4));
                         else
@@ -2846,9 +2845,7 @@ public class DbMailItem {
             data.imapId = -1;
         data.date        = rs.getInt(CI_DATE + offset);
         data.size        = rs.getLong(CI_SIZE + offset);
-        data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
-        if (rs.wasNull())
-            data.volumeId = -1;
+        data.locator    = rs.getString(CI_VOLUME_ID + offset);
         data.setBlobDigest(rs.getString(CI_BLOB_DIGEST + offset));
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
         data.flags       = rs.getInt(CI_FLAGS + offset);
@@ -2878,9 +2875,7 @@ public class DbMailItem {
         data.imapId      = -1;
         data.date        = rs.getInt(1);
         data.size        = rs.getLong(2);
-        data.volumeId    = rs.getShort(3);
-        if (rs.wasNull())
-            data.volumeId = -1;
+        data.locator    = rs.getString(3);
         data.setBlobDigest(rs.getString(4));
         data.unreadCount = item.getUnreadCount();
         data.flags       = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED;
@@ -3253,7 +3248,7 @@ public class DbMailItem {
             if (data.folderId != dbdata.folderId)        failures += " FOLDER_ID";
             if (data.indexId != dbdata.indexId)          failures += " INDEX_ID";
             if (data.imapId != dbdata.imapId)            failures += " IMAP_ID";
-            if (data.volumeId != dbdata.volumeId)        failures += " VOLUME_ID";
+            if (data.locator != dbdata.locator)        failures += " VOLUME_ID";
             if (data.date != dbdata.date)                failures += " DATE";
             if (data.size != dbdata.size)                failures += " SIZE";
             if (dbdata.type != MailItem.TYPE_CONVERSATION) {

@@ -67,7 +67,7 @@ public class ItemData {
             ud.imapId = json.getInt(Keys.imap_id.toString());
             ud.date = json.getInt(Keys.date.toString());
             ud.size = json.getLong(Keys.size.toString());
-            ud.volumeId = (short)json.getInt(Keys.volume_id.toString());
+            ud.locator = json.getString(Keys.volume_id.toString());
             ud.setBlobDigest(json.optString(Keys.blob_digest.toString()));
             ud.unreadCount = json.getInt(Keys.unread.toString());
             ud.flags = json.getInt(Keys.flags.toString()) |
@@ -104,7 +104,7 @@ public class ItemData {
                 put(Keys.imap_id.toString(), ud.imapId).
                 put(Keys.date.toString(), ud.date).
                 put(Keys.size.toString(), ud.size).
-                put(Keys.volume_id.toString(), ud.volumeId).
+                put(Keys.volume_id.toString(), ud.locator).
                 putOpt(Keys.blob_digest.toString(), ud.getBlobDigest()).
                 put(Keys.unread.toString(), ud.unreadCount).
                 put(Keys.flags.toString(), ud.flags).

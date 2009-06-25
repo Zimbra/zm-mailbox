@@ -1,5 +1,4 @@
 /*
- * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
  * 
@@ -186,9 +185,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         public byte   type;
         public int    parentId = -1;
         public int    folderId = -1;
-        public String indexId  = null;
+        public String indexId;
         public int    imapId   = -1;
-        public short  volumeId = -1;
+        public String locator;
         private String blobDigest;
         public int    date;
         public long   size;
@@ -215,7 +214,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             return (unreadCount > 0);
         }
 
-        UnderlyingData duplicate(int newId, int newFolder, short newVolume) {
+        UnderlyingData duplicate(int newId, int newFolder, String newLocator) {
             UnderlyingData data = new UnderlyingData();
             data.id          = newId;
             data.type        = this.type;
@@ -223,7 +222,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.folderId    = newFolder;
             data.indexId     = this.indexId;
             data.imapId      = this.imapId <= 0 ? this.imapId : newId;
-            data.volumeId    = newVolume;
+            data.locator    = newLocator;
             data.blobDigest  = this.blobDigest;
             data.date        = this.date;
             data.size        = this.size;
@@ -574,9 +573,9 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the ID of the {@link Volume} the item's blob is stored on.
-     *  Returns -1 for items that have no stored blob. */
-    public short getVolumeId() {
-        return mData.volumeId;
+     *  Returns <tt>null</tt> for items that have no stored blob. */
+    public String getLocator() {
+        return mData.locator;
     }
 
     /** Returns the SHA-1 hash of the item's uncompressed blob.
@@ -900,7 +899,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * */
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
-            mBlob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.volumeId);
+            mBlob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.locator);
             if (mBlob == null)
                 throw MailServiceException.NO_SUCH_BLOB(mMailbox.getId(), mId, mData.modContent);
         }
@@ -1511,9 +1510,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         getFolder().updateSize(0, size - mData.size);
 
         mData.setBlobDigest(incoming == null ? null : digest);
-        mData.date     = mMailbox.getOperationTimestamp();
-        mData.volumeId = blob == null ? -1 : blob.getVolumeId();
-        mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.date    = mMailbox.getOperationTimestamp();
+        mData.locator = blob == null ? null : blob.getLocator();
+        mData.imapId  = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
         mBlob = null;
 
@@ -1937,32 +1936,29 @@ public abstract class MailItem implements Comparable<MailItem> {
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
         }
 
-        short volumeId = -1;
+        String locator = null;
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
-        	StoreManager sm = StoreManager.getInstance();
-        	MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
-        	mMailbox.markOtherItemDirty(mblob);
-        	volumeId = mblob.getBlob().getVolumeId();
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
+            mMailbox.markOtherItemDirty(mblob);
+            locator = mblob.getBlob().getLocator();
         }
 
-        UnderlyingData data = mData.duplicate(copyId, folder.getId(), volumeId);
+        UnderlyingData data = mData.duplicate(copyId, folder.getId(), locator);
         data.parentId = detach ? -1 : parentId;
         data.indexId  = indexId;
         data.flags   &= shared ? ~0 : ~Flag.BITMASK_COPIED;
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
 
-        if (indexId != null && !indexId.equals(mData.indexId)) {
-            // if the copy needs to be reindexed, just set the deferred flag now and index it later
-//            mMailbox.incrementIndexDeferredCount(1);
-//            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
+        // if the copy needs to be reindexed, just set the deferred flag now and index it later
+        if (indexId != null && !indexId.equals(mData.indexId))
             mMailbox.queueForIndexing(this, false, null);
-        }
 
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
                               getMailopContext(this), copyId, folder.getId(), folder.getName(), data.parentId);
-        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
+        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.locator, data.metadata);
 
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(parent);
@@ -2022,16 +2018,16 @@ public abstract class MailItem implements Comparable<MailItem> {
         // finally, update OPEN_CONVERSATION if PARENT_ID was NULL
         //   - ITEM_ID = copy's id for hash
 
-        short volumeId = -1;
+        String locator = null;
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
-            volumeId = mblob.getBlob().getVolumeId();
+            locator = mblob.getBlob().getLocator();
         }
 
-        UnderlyingData data = mData.duplicate(copyId, target.getId(), volumeId);
+        UnderlyingData data = mData.duplicate(copyId, target.getId(), locator);
         data.metadata = encodeMetadata();
         data.imapId = copyId;
         data.contentChanged(mMailbox);
@@ -2043,13 +2039,11 @@ public abstract class MailItem implements Comparable<MailItem> {
                 data.indexId = target.inSpam() ? null : Integer.toString(copyId);
         }
         boolean shared = data.indexId != null && data.indexId.equals(mData.indexId);
-        if (data.indexId != null && !data.indexId.equals(mData.indexId)) {
-            // if the copy needs to be reindexed, just set the deferred flag now and index it later
+
+        // if the copy needs to be reindexed, just set the deferred flag now and index it later
+        if (data.indexId != null && !data.indexId.equals(mData.indexId))
             mMailbox.queueForIndexing(this, false, null);
-//            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
-//            mMailbox.incrementIndexDeferredCount(1);
-        }
-        
+
         ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
             getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
         DbMailItem.icopy(this, data, shared);

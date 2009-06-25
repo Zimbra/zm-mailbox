@@ -401,7 +401,7 @@ public class Message extends MailItem {
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = mbox.generateIndexId(id);
-        data.volumeId    = mblob == null ? -1 : mblob.getBlob().getVolumeId();
+        data.locator     = mblob == null ? null : mblob.getBlob().getLocator();
         data.imapId      = id;
         data.date        = (int) (date / 1000);
         data.size        = msgSize;
@@ -547,7 +547,7 @@ public class Message extends MailItem {
             cur.setLocalOnly(false);
             String uid = cur.getUid();
             boolean addRevision;
-            if (cur != null && !calUidsSeen.contains(uid)) {
+            if (!calUidsSeen.contains(uid)) {
                 addRevision = true;
                 calUidsSeen.add(uid);
             } else {

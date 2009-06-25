@@ -59,7 +59,7 @@ extends TestCase {
     String mOriginalMaxContacts;
     
     @BeforeMethod
-    public void setUp()
+    @Override public void setUp()
     throws Exception {
         cleanUp();
         mOriginalMaxContacts = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries);
@@ -293,7 +293,7 @@ extends TestCase {
     }
     
     @AfterMethod
-    public void tearDown()
+    @Override public void tearDown()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
         cleanUp();

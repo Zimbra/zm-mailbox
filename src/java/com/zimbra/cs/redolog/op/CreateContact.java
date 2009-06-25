@@ -45,7 +45,6 @@ public class CreateContact extends RedoableOp {
     /** Used when this op is read from the redolog. */
     private RedoableOpData mRedoLogContent;
 
-    private short mVolumeId = -1;
     private String mTags;
 
     public CreateContact() {
@@ -70,21 +69,12 @@ public class CreateContact extends RedoableOp {
         return mId;
     }
 
-    public void setVolumeId(short volumeId) {
-        mVolumeId = volumeId;
-    }
-
-    public short getVolumeId() {
-        return mVolumeId;
-    }
-
     @Override public int getOpCode() {
         return OP_CREATE_CONTACT;
     }
 
     @Override protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("folder=").append(mFolderId);
-        sb.append(", vol=").append(mVolumeId);
         sb.append(", tags=\"").append(mTags).append("\"");
         if (mFields != null && mFields.size() > 0) {
             sb.append(", attrs={");
@@ -101,7 +91,7 @@ public class CreateContact extends RedoableOp {
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
-        out.writeShort(mVolumeId);
+        out.writeShort((short) -1);
         out.writeUTF(mTags);
         int numAttrs = mFields != null ? mFields.size() : 0;
         out.writeShort((short) numAttrs);
@@ -132,7 +122,7 @@ public class CreateContact extends RedoableOp {
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
-        mVolumeId = in.readShort();
+        in.readShort();
         mTags = in.readUTF();
         int numAttrs = in.readShort();
         if (numAttrs > 0) {

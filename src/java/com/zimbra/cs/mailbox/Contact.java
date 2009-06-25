@@ -696,7 +696,7 @@ public class Contact extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = mbox.generateIndexId(id);
         data.imapId      = id;
-        data.volumeId    = blob == null ? -1 : blob.getVolumeId();
+        data.locator     = blob == null ? null : blob.getLocator();
         data.setBlobDigest(pc.getDigest());
         data.size        = pc.getSize();
         data.date        = mbox.getOperationTimestamp();

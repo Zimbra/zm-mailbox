@@ -35,7 +35,7 @@ public class TestDocument extends TestCase {
     private static final String NAME_PREFIX = TestDocument.class.getSimpleName();
     private static final String USER_NAME = "user1";
     
-    public void setUp()
+    @Override public void setUp()
     throws Exception {
         cleanUp();
     }
@@ -89,12 +89,13 @@ public class TestDocument extends TestCase {
     private File getBlobDir(Mailbox mbox, Document doc)
     throws Exception {
         Volume vol = Volume.getCurrentMessageVolume();
-        MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mbox, doc.getId(), doc.getModifiedSequence(), vol.getId());
+        String loc = Short.toString(vol.getId());
+        MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mbox, doc.getId(), doc.getModifiedSequence(), loc);
         File blobFile = mblob.getBlob().getFile();
         return blobFile.getParentFile();
     }
     
-    public void tearDown()
+    @Override public void tearDown()
     throws Exception {
         cleanUp();
     }

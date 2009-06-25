@@ -77,7 +77,7 @@ public class BlobBuilder {
     
     private boolean useCompression(int sizeHint) throws ServiceException {
         if (disableCompression) return false;
-        Volume volume = Volume.getById(blob.getVolumeId());
+        Volume volume = Volume.getById(blob.getLocator());
         return volume.getCompressBlobs() &&
                (sizeHint <= 0 || sizeHint > volume.getCompressionThreshold());
     }
@@ -122,7 +122,7 @@ public class BlobBuilder {
         // the compression threshold. Let's uncompress it. This isn't really
         // necessary, but uncompressing results in behavior consistent with
         // earlier ZCS releases.
-        Volume volume = Volume.getById(blob.getVolumeId());
+        Volume volume = Volume.getById(blob.getLocator());
         if (blob.isCompressed() && totalBytes < volume.getCompressionThreshold()) {
             try {
                 uncompressBlob(blob);
@@ -136,7 +136,7 @@ public class BlobBuilder {
             ZimbraLog.store.debug(
                 "Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
                 blob.getFile().getAbsolutePath(), totalBytes, blob.getFile().length(),
-                blob.getVolumeId(), blob.isCompressed());
+                blob.getLocator(), blob.isCompressed());
         }
     }
 

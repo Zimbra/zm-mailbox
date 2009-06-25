@@ -112,7 +112,7 @@ public class WikiDigestFixup {
         List<MailItem> documents = mbox.getItemList(octxt, MailItem.TYPE_DOCUMENT);
         if (documents != null && documents.size() > 0)
             items.addAll(documents);
-        int len = items != null ? items.size() : 0;
+        int len = items.size();
         List<WikiDigest> list = new ArrayList<WikiDigest>(len);
         if (len > 0) {
             for (MailItem item : items) {
@@ -121,8 +121,8 @@ public class WikiDigestFixup {
                     continue;
                 int id = item.getId();
                 int rev = item.getSavedSequence();
-                short vol = item.getVolumeId();
-                MailboxBlob blob = sStore.getMailboxBlob(mbox, id, rev, vol);
+                String loc = item.getLocator();
+                MailboxBlob blob = sStore.getMailboxBlob(mbox, id, rev, loc);
                 InputStream is = null;
                 try {
                     is = sStore.getContent(blob);

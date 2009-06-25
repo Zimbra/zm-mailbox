@@ -439,7 +439,6 @@ public abstract class CalendarItem extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId  = mbox.generateIndexId(id);
         data.imapId   = id;
-        data.volumeId = -1;
         data.date     = mbox.getOperationTimestamp();
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
@@ -1640,11 +1639,11 @@ public abstract class CalendarItem extends MailItem {
             mTzMap.add(newInvite.getTimeZoneMap());
 
             // TIM: don't write the blob until the end of the function (so we only do one write for the update)
-//            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess);
+//            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, locator, isCancel, !denyPrivateAccess);
             modifiedCalItem = true;
         } else {
             // TIM: don't write the blob until the end of the function (so we only do one write for the update)
-//            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel, !denyPrivateAccess);
+//            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, locator, isCancel, !denyPrivateAccess);
         }
         
         // now remove the inviteid's from our list

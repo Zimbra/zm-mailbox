@@ -30,8 +30,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 
 /**
- * @author jhahm
- * 
  * Represents a blob in blob store incoming directory.  An incoming blob
  * does not belong to any mailbox.  When a message is delivered to a mailbox,
  * message is saved in the incoming directory and a link to it is created
@@ -42,18 +40,18 @@ public class Blob {
 
     private File mFile;
     private String mPath;
-    private short mVolumeId;
+    private String mLocator;
     private Boolean mIsCompressed = null;
     private String mDigest;
     private Integer mRawSize;
 
-    public Blob(File file, short volumeId) {
+    public Blob(File file, String locator) {
         if (file == null) {
             throw new NullPointerException("file cannot be null");
         }
         mFile = file;
         mPath = file.getAbsolutePath();
-        mVolumeId = volumeId;
+        mLocator = locator;
     }
 
     public File getFile() {
@@ -64,8 +62,8 @@ public class Blob {
     	return mPath;
     }
 
-    public short getVolumeId() {
-    	return mVolumeId;
+    public String getLocator() {
+    	return mLocator;
     }
     
     private InputStream getInputStream()
@@ -164,7 +162,7 @@ public class Blob {
         }
     }
 
-    public String toString() {
-        return String.format("Blob: { path=%s, vol=%d, isCompressed=%b }", mPath, mVolumeId, mIsCompressed);
+    @Override public String toString() {
+        return String.format("Blob: { path=%s, vol=%d, isCompressed=%b }", mPath, mLocator, mIsCompressed);
     }
 }

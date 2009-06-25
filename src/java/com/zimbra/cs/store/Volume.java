@@ -385,6 +385,14 @@ public class Volume {
         }
     }
 
+    public static Volume getById(String vid) throws ServiceException {
+        try {
+            return getById(Short.parseShort(vid));
+        } catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST("invalid volume ID", nfe);
+        }
+    }
+
     public static Volume getById(short id) throws ServiceException {
     	Volume v = null;
         Short key = new Short(id);
@@ -675,6 +683,7 @@ public class Volume {
     public short getId() { return mId; }
     public short getType() { return mType; }
     public String getName() { return mName; }
+    public String getLocator() { return Short.toString(getId()); }
     public String getRootPath() { return mRootPath; }
     public String getIncomingMsgDir() { return mIncomingMsgDir; }
     public short getMboxGroupBits() { return mMboxGroupBits; }

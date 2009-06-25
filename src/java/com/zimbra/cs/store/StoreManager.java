@@ -192,7 +192,7 @@ public abstract class StoreManager {
      * 
      * @throws ServiceException
      */
-    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, short volumeId)
+    public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
     throws ServiceException;
 
     /**
