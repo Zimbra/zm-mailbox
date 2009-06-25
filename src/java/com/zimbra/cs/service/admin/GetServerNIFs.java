@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -42,7 +43,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetServerNIFs extends AdminDocumentHandler {
     private static final Pattern ADDR_PATTERN = Pattern.compile("(addr):([0-9\\.]+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern MASK_PATTERN = Pattern.compile("(mask):([0-9\\.]+)", Pattern.CASE_INSENSITIVE);    
+    private static final Pattern MASK_PATTERN = Pattern.compile("(mask):([0-9\\.xabcdef]+)", Pattern.CASE_INSENSITIVE);    
     private static final int KEY_GROUP = 1;
     private static final int VALUE_GROUP = 2;
     
