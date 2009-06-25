@@ -223,18 +223,18 @@ extends Assert {
         return String.format("%s@%s", user, getDomain());
     }
     
-    public static void addMessageLmtp(String subject, String recipient, String sender)
+    public static boolean addMessageLmtp(String subject, String recipient, String sender)
     throws Exception {
-        addMessageLmtp(subject, new String[] { recipient }, sender);
+        return addMessageLmtp(subject, new String[] { recipient }, sender);
     }
 
-    public static void addMessageLmtp(String subject, String[] recipients, String sender)
+    public static boolean addMessageLmtp(String subject, String[] recipients, String sender)
     throws Exception {
         String message = getTestMessage(subject, recipients[0], sender, null);
-        addMessageLmtp(recipients, sender, message);
+        return addMessageLmtp(recipients, sender, message);
     }
     
-    public static void addMessageLmtp(String[] recipients, String sender, String message)
+    public static boolean addMessageLmtp(String[] recipients, String sender, String message)
     throws Exception {
         String[] recipWithDomain = new String[recipients.length];
         for (int i = 0; i < recipients.length; i++) {
@@ -243,8 +243,9 @@ extends Assert {
         Provisioning prov = Provisioning.getInstance();
         LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
-        lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, sender, "TestUtil", (long) data.length);
+        boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, sender, "TestUtil", (long) data.length);
         lmtp.close();
+        return success;
     }
     
     public static String addMessage(ZMailbox mbox, String subject)
