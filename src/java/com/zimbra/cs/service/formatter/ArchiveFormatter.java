@@ -158,8 +158,11 @@ public abstract class ArchiveFormatter extends Formatter {
                 DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
                 SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
 
-                filename = context.targetMailbox.getAccountId() + '.' +
-                    df.format(date).replace('/', '-') + sdf.format(date);
+                if (context.hasPart())
+                    filename = "attachments";
+                else
+                    filename = context.targetMailbox.getAccountId() + '.' +
+                        df.format(date).replace('/', '-') + sdf.format(date);
             } else if ((dot = filename.lastIndexOf('.')) != -1) {
                 ext = filename.substring(dot);
             }
@@ -480,14 +483,14 @@ public abstract class ArchiveFormatter extends Formatter {
                             int dot = name.lastIndexOf('.');
                             
                             if (dot != -1 && dot < name.length() - 1) {
-                                ext = name.substring(dot);
+                                ext = name.substring(dot + 1);
                                 name = name.substring(0, dot);
                             }
                         }
-                        aoe = aos.newOutputEntry(getEntryName(mi, fldr, name,
+                        aoe = aos.newOutputEntry(getEntryName(mi, "", name,
                             ext, names), MailItem.getNameForType(mi),
                             mi.getType(), mi.getDate());
-                        data = ByteUtil.readInput(mp.getInputStream(), sz, -1);
+                        data = ByteUtil.readInput(mp.getInputStream(), sz, sz * 4);
                         aoe.setSize(data.length);
                         aos.putNextEntry(aoe);
                         aos.write(data);
