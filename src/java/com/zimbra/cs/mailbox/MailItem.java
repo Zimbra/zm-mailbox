@@ -2649,13 +2649,14 @@ public abstract class MailItem implements Comparable<MailItem> {
     abstract Metadata encodeMetadata(Metadata meta);
 
     static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended) {
-        if (color.getMappedColor() != DEFAULT_COLOR)
+        if (color != null && color.getMappedColor() != DEFAULT_COLOR)
             meta.put(Metadata.FN_COLOR, color.toMetadata());
         if (version > 1)
             meta.put(Metadata.FN_VERSION, version);
-        if (extended != null)
+        if (extended != null) {
             for (Pair<String, String> mpair : extended)
                 meta.put(CUSTOM_META_PREFIX + mpair.getFirst(), mpair.getSecond());
+        }
         return meta;
     }
 
@@ -2669,55 +2670,55 @@ public abstract class MailItem implements Comparable<MailItem> {
     	private static final long RGB_INDICATOR_MASK = 0xff000000;
     	private static final long RGB_MASK           = 0x00ffffff;
         private static final long[] COLORS = {
-        	// none,  blue,     cyan,     green,    purple
-        	0x000000, 0x0000ff, 0x008284, 0x008200, 0x840084, 
+            // none,  blue,     cyan,     green,    purple
+            0x000000, 0x0000ff, 0x008284, 0x008200, 0x840084, 
             // red,   yellow,   pink,     gray      orange
-        	0xff0000, 0x848200, 0xff0084, 0x848284, 0xff8000
+            0xff0000, 0x848200, 0xff0084, 0x848284, 0xff8000
         };
         public Color(long rgb) {
-        	if ((rgb & RGB_INDICATOR_MASK) > 0)
-        		setRgb((rgb & RGB_MASK));
-        	else
-        		setColor((byte)rgb);
+            if ((rgb & RGB_INDICATOR_MASK) > 0)
+                setRgb((rgb & RGB_MASK));
+            else
+                setColor((byte)rgb);
         }
         public Color(byte c) {
-        	setColor(c);
+            setColor(c);
         }
         public long getRed() {
-        	return (mRgb >> 16) & 0xff;
+            return (mRgb >> 16) & 0xff;
         }
         public long getGreen() {
-        	return (mRgb >> 8) & 0xff;
+            return (mRgb >> 8) & 0xff;
         }
         public long getBlue() {
-        	return mRgb & 0xff;
+            return mRgb & 0xff;
         }
         public long getRgb() {
-        	return mRgb;
+            return mRgb;
         }
         public byte getMappedColor() {
-        	byte c = 0;
-        	for (long color : COLORS) {
-        		if (mRgb == color)
-        			return c;
-        		c++;
-        	}
-        	return ORANGE;
+            byte c = 0;
+            for (long color : COLORS) {
+                if (mRgb == color)
+                    return c;
+                c++;
+            }
+            return ORANGE;
         }
         public void setRgb(long rgb) {
-        	mRgb = rgb;
+            mRgb = rgb;
         }
         public void setColor(byte color) {
-        	if (color > ORANGE || color < 0)
-        		color = ORANGE;
-        	mRgb = COLORS[color];
+            if (color > ORANGE || color < 0)
+                color = ORANGE;
+            mRgb = COLORS[color];
         }
         long toMetadata() {
-        	return (mRgb | RGB_INDICATOR);
+            return (mRgb | RGB_INDICATOR);
         }
         private long mRgb;
     }
-    
+
     @SuppressWarnings("unchecked")
     void decodeMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
