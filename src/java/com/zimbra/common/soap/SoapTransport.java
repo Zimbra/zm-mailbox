@@ -265,7 +265,7 @@ public abstract class SoapTransport {
      * to reduce memory usage, a handler may call Element.detach() in ElementHandler.onEnd() to prune off processed elements
      * */
     void parseLargeSoapResponse(Reader inputReader, Map<String, ElementHandler> handlers) throws SoapFaultException {
-        SAXReader saxReader = new SAXReader();        
+        SAXReader saxReader = com.zimbra.common.soap.Element.getSAXReader();
         for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
             saxReader.addHandler(entry.getKey(), entry.getValue());
         }

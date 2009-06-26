@@ -425,16 +425,25 @@ public abstract class Element implements Cloneable {
 
     public static Element parseXML(InputStream is) throws org.dom4j.DocumentException { return parseXML(is, XMLElement.mFactory); }
     public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(getSAXReader().read(is).getRootElement(), factory);        
+        return convertDOM(getSAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);        
     }
     
     public static Element parseXML(String xml) throws org.dom4j.DocumentException { return parseXML(xml, XMLElement.mFactory); }
     public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(getSAXReader().read(new StringReader(xml)).getRootElement(), factory);
+        return convertDOM(getSAXReader(mDocumentFactory.get()).read(new StringReader(xml)).getRootElement(), factory);
     }
 
-    private static org.dom4j.io.SAXReader getSAXReader() {
-        org.dom4j.io.SAXReader saxReader = new org.dom4j.io.SAXReader(mDocumentFactory.get());
+    public static org.dom4j.io.SAXReader getSAXReader() {
+        return getSAXReader(null);
+    }
+    
+    public static org.dom4j.io.SAXReader getSAXReader(org.dom4j.DocumentFactory fact) {
+        org.dom4j.io.SAXReader saxReader;
+        if (fact != null)
+            saxReader = new org.dom4j.io.SAXReader(fact);
+        else
+            saxReader = new org.dom4j.io.SAXReader();
+            
         EntityResolver nullEntityResolver = new EntityResolver() {
             public InputSource resolveEntity (String publicId, String systemId)
             {
