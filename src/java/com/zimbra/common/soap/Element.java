@@ -20,6 +20,7 @@ package com.zimbra.common.soap;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.Writer;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.QName;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -422,14 +425,26 @@ public abstract class Element implements Cloneable {
 
     public static Element parseXML(InputStream is) throws org.dom4j.DocumentException { return parseXML(is, XMLElement.mFactory); }
     public static Element parseXML(InputStream is, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(new org.dom4j.io.SAXReader(mDocumentFactory.get()).read(is).getRootElement(), factory);
+        return convertDOM(getSAXReader().read(is).getRootElement(), factory);        
     }
-
+    
     public static Element parseXML(String xml) throws org.dom4j.DocumentException { return parseXML(xml, XMLElement.mFactory); }
     public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
-        return convertDOM(org.dom4j.DocumentHelper.parseText(xml).getRootElement(), factory);
+        return convertDOM(getSAXReader().read(new StringReader(xml)).getRootElement(), factory);
     }
 
+    private static org.dom4j.io.SAXReader getSAXReader() {
+        org.dom4j.io.SAXReader saxReader = new org.dom4j.io.SAXReader(mDocumentFactory.get());
+        EntityResolver nullEntityResolver = new EntityResolver() {
+            public InputSource resolveEntity (String publicId, String systemId)
+            {
+                return new InputSource("");
+            }            
+        };
+        saxReader.setEntityResolver(nullEntityResolver);
+        return saxReader; 
+    }
+    
     public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
     public static Element convertDOM(org.dom4j.Element d4root, ElementFactory factory) {
         Element elt = factory.createElement(d4root.getQName());
@@ -451,7 +466,7 @@ public abstract class Element implements Cloneable {
             elt.setText(content);
         return elt;
     }
-
+    
 
     public static class ContainerException extends RuntimeException {
         private static final long serialVersionUID = -5884422477180821199L;
