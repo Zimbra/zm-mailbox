@@ -438,7 +438,7 @@ public abstract class Element implements Cloneable {
         EntityResolver nullEntityResolver = new EntityResolver() {
             public InputSource resolveEntity (String publicId, String systemId)
             {
-                return new InputSource("");
+                return new InputSource(new StringReader(""));
             }            
         };
         saxReader.setEntityResolver(nullEntityResolver);
