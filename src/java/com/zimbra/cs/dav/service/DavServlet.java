@@ -570,7 +570,7 @@ public class DavServlet extends ZimbraServlet {
         case DavProtocol.STATUS_MULTI_STATUS:
         	// rewrite the <href> element in the response to point to local mountpoint.
         	try {
-        		Document response = new SAXReader().read(in);
+        		Document response = com.zimbra.common.soap.Element.getSAXReader().read(in);
         		Element top = response.getRootElement();
         		for (Object responseObj : top.elements(DavElements.E_RESPONSE)) {
         			if (!(responseObj instanceof Element))

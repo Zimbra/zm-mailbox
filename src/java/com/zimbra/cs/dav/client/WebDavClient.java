@@ -95,7 +95,7 @@ public class WebDavClient {
 			if (status >= 400)
 				throw new DavException("DAV server returned an error: "+status, status);
 			
-			Document doc = new SAXReader().read(m.getResponseBodyAsStream());
+			Document doc = com.zimbra.common.soap.Element.getSAXReader().read(m.getResponseBodyAsStream());
 			Element top = doc.getRootElement();
 			for (Object obj : top.elements(DavElements.E_RESPONSE)) {
 				if (obj instanceof Element) {

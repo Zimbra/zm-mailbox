@@ -421,7 +421,7 @@ public class ContactCSV {
     }
     
     private static void readMapping(InputStream is) throws IOException, DocumentException {
-        Element root = new org.dom4j.io.SAXReader().read(is).getRootElement();
+        Element root = com.zimbra.common.soap.Element.getSAXReader().read(is).getRootElement();
         for (Iterator elements = root.elementIterator(); elements.hasNext(); ) {
             Element elem = (Element) elements.next();
             if (elem.getQName().equals(FIELDS))

@@ -234,7 +234,7 @@ public abstract class MailItemResource extends DavResource {
 		if (configVal.length() == 0)
 			return props;
 		ByteArrayInputStream in = new ByteArrayInputStream(configVal.getBytes("UTF-8"));
-		org.dom4j.Document doc = new SAXReader().read(in);
+		org.dom4j.Document doc = com.zimbra.common.soap.Element.getSAXReader().read(in);
 		Element e = doc.getRootElement();
 		if (e == null)
 			return props;
