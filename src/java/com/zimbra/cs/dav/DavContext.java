@@ -368,7 +368,7 @@ public class DavContext {
 			return mRequestMsg;
 		try {
 			if (hasRequestMessage()) {
-				mRequestMsg = new SAXReader().read(getUpload().getInputStream());
+				mRequestMsg = com.zimbra.common.soap.Element.getSAXReader().read(getUpload().getInputStream());
 				return mRequestMsg;
 			}
 		} catch (DocumentException e) {

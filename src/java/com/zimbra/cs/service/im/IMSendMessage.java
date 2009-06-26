@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.im;
 
+import java.io.StringReader;
 import java.util.Map;
 
 import org.dom4j.DocumentException;
@@ -70,7 +71,8 @@ public class IMSendMessage extends IMDocumentHandler {
                     
                     if (xhtmlElt != null) {
                         String xhtmlText = xhtmlElt.getText();
-                        org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText("<body xmlns=\""+XHTML_NAMESPACE+"\">"+xhtmlText+"</body>").getRootElement();
+                        org.dom4j.Element parsed = 
+                            com.zimbra.common.soap.Element.getSAXReader().read(new StringReader("<body xmlns=\""+XHTML_NAMESPACE+"\">"+xhtmlText+"</body>")).getRootElement();
                         org.dom4j.Element xhtmlBody = parsed;
                         xhtmlBody.detach();
                         bodyPart = new TextPart(plainText, xhtmlBody);

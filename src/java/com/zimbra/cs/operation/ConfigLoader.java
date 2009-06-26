@@ -97,7 +97,7 @@ public class ConfigLoader {
         try {
             File cf = new File(configFile);
             if (cf.exists() && cf.canRead()) {
-                SAXReader reader = new SAXReader();
+                SAXReader reader = com.zimbra.common.soap.Element.getSAXReader();
                 Document document = reader.read(cf);
                 Element root = document.getRootElement();
 

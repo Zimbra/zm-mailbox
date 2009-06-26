@@ -207,129 +207,129 @@ public class DavServlet extends ZimbraServlet {
         Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
         CtagResponseCache ctagResponseCache = null;
         try {
-            // Are we running with cache enabled, and is this a cachable CalDAV ctag request?
+        // Are we running with cache enabled, and is this a cachable CalDAV ctag request?
     		if (ctagCacheEnabled && isCtagRequest(ctxt)) {
                 ctagResponseCache = CalendarCacheManager.getInstance().getCtagResponseCache();
                 gzipAccepted = ctxt.isGzipAccepted();
-    		    String targetUser = ctxt.getUser();
-    		    Account targetAcct = Provisioning.getInstance().get(AccountBy.name, targetUser);
-    		    boolean ownAcct = targetAcct != null && targetAcct.getId().equals(authUser.getId());
-    		    String parentPath = ctxt.getPath();
-    	        KnownUserAgent knownUA = ctxt.getKnownUserAgent();
-    	        // Use cache only when requesting own account and User-Agent and path are well-defined.
-    		    if (ownAcct && knownUA != null && parentPath != null) {
-    		        AccountKey accountKey = new AccountKey(targetAcct.getId());
-    		        AccountCtags allCtagsData = CalendarCacheManager.getInstance().getCtags(accountKey);
-    		        // We can't use cache if it doesn't have data for this user.
-    		        if (allCtagsData != null) {
-    		            boolean validRoot = true;
-                        int rootFolderId = Mailbox.ID_FOLDER_USER_ROOT;
-        		        if (!"/".equals(parentPath)) {
-        		            CtagInfo calInfoRoot = allCtagsData.getByPath(parentPath);
-        		            if (calInfoRoot != null)
-        		                rootFolderId = calInfoRoot.getId();
-        		            else
-        		                validRoot = false;
-        		        }
-        		        if (validRoot) {
-        		            // Is there a previously cached response?
+		    String targetUser = ctxt.getUser();
+		    Account targetAcct = Provisioning.getInstance().get(AccountBy.name, targetUser);
+		    boolean ownAcct = targetAcct != null && targetAcct.getId().equals(authUser.getId());
+		    String parentPath = ctxt.getPath();
+	        KnownUserAgent knownUA = ctxt.getKnownUserAgent();
+	        // Use cache only when requesting own account and User-Agent and path are well-defined.
+		    if (ownAcct && knownUA != null && parentPath != null) {
+		        AccountKey accountKey = new AccountKey(targetAcct.getId());
+		        AccountCtags allCtagsData = CalendarCacheManager.getInstance().getCtags(accountKey);
+		        // We can't use cache if it doesn't have data for this user.
+		        if (allCtagsData != null) {
+		            boolean validRoot = true;
+                    int rootFolderId = Mailbox.ID_FOLDER_USER_ROOT;
+    		        if (!"/".equals(parentPath)) {
+    		            CtagInfo calInfoRoot = allCtagsData.getByPath(parentPath);
+    		            if (calInfoRoot != null)
+    		                rootFolderId = calInfoRoot.getId();
+    		            else
+    		                validRoot = false;
+    		        }
+    		        if (validRoot) {
+    		            // Is there a previously cached response?
             		        ctagCacheKey = new CtagResponseCacheKey(targetAcct.getId(), knownUA.toString(), rootFolderId);
                             CtagResponseCacheValue ctagResponse = ctagResponseCache.get(ctagCacheKey);
-                            if (ctagResponse != null) {
-                                // Found a cached response.  Let's check if it's stale.
-                                // 1. If calendar list has been updated since, cached response is no good.
-                                String currentCalListVer = allCtagsData.getVersion();
-                                if (currentCalListVer.equals(ctagResponse.getVersion())) {
-                                    // 2. We have to examine ctags of individual calendars.
-                                    boolean cacheHit = true;
-                                    Map<Integer, String> oldCtags = ctagResponse.getCtags();
-                                    // We're good if ctags from before are unchanged.
-                                    for (Map.Entry<Integer, String> entry : oldCtags.entrySet()) {
-                                        int calFolderId = entry.getKey();
-                                        String ctag = entry.getValue();
-                                        CtagInfo calInfoCurr = allCtagsData.getById(calFolderId);
-                                        if (calInfoCurr == null) {
-                                            // Just a sanity check.  The cal list version check should have
-                                            // already taken care of added/removed calendars.
-                                            cacheHit = false;
-                                            break;
-                                        }
-                                        if (!ctag.equals(calInfoCurr.getCtag())) {
-                                            // A calendar has been modified.  Stale!
-                                            cacheHit = false;
-                                            break;
-                                        }
+                        if (ctagResponse != null) {
+                            // Found a cached response.  Let's check if it's stale.
+                            // 1. If calendar list has been updated since, cached response is no good.
+                            String currentCalListVer = allCtagsData.getVersion();
+                            if (currentCalListVer.equals(ctagResponse.getVersion())) {
+                                // 2. We have to examine ctags of individual calendars.
+                                boolean cacheHit = true;
+                                Map<Integer, String> oldCtags = ctagResponse.getCtags();
+                                // We're good if ctags from before are unchanged.
+                                for (Map.Entry<Integer, String> entry : oldCtags.entrySet()) {
+                                    int calFolderId = entry.getKey();
+                                    String ctag = entry.getValue();
+                                    CtagInfo calInfoCurr = allCtagsData.getById(calFolderId);
+                                    if (calInfoCurr == null) {
+                                        // Just a sanity check.  The cal list version check should have
+                                        // already taken care of added/removed calendars.
+                                        cacheHit = false;
+                                        break;
                                     }
-                    		        if (cacheHit) {
-                                        ZimbraLog.dav.debug("CTAG REQUEST CACHE HIT");
-                    		            // All good.  Send cached response.
-                                        ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
-                    		            HttpServletResponse response = ctxt.getResponse();
-                    		            response.setStatus(ctxt.getStatus());
-                    		            response.setContentType(DavProtocol.DAV_CONTENT_TYPE);
-                                        byte[] respData = ctagResponse.getResponseBody();
-                    		            response.setContentLength(ctagResponse.getRawLength());
-
-                    		            byte[] unzipped = null;
-                    		            if (ZimbraLog.dav.isDebugEnabled() || (ctagResponse.isGzipped() && !gzipAccepted)) {
-                    		                if (ctagResponse.isGzipped()) {
-                                                ByteArrayInputStream bais = new ByteArrayInputStream(respData);
-                                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                                GZIPInputStream gzis = null;
-                                                try {
-                                                    gzis = new GZIPInputStream(bais, respData.length);
-                                                    ByteUtil.copy(gzis, false, baos, true);
-                                                } finally {
-                                                    ByteUtil.closeStream(gzis);
-                                                }
-                                                unzipped = baos.toByteArray();
-                    		                } else {
-                    		                    unzipped = respData;
-                    		                }
-                    		                if (ZimbraLog.dav.isDebugEnabled())
-                                                ZimbraLog.dav.debug("RESPONSE:\n" + new String(unzipped, "UTF-8"));
-                    		            }
-                    		            if (!ctagResponse.isGzipped()) {
-                                            response.getOutputStream().write(respData);
-                    		            } else {
-                    		                if (gzipAccepted) {
-                                                response.addHeader(DavProtocol.HEADER_CONTENT_ENCODING, DavProtocol.ENCODING_GZIP);
-                                                response.getOutputStream().write(respData);
-                    		                } else {
-                    		                    assert(unzipped != null);
-                                                response.getOutputStream().write(unzipped);
-                    		                }
-                    		            }
-
-                    		            // Tell the context the response has been sent.
-                    		            ctxt.responseSent();
-                    		        }
+                                    if (!ctag.equals(calInfoCurr.getCtag())) {
+                                        // A calendar has been modified.  Stale!
+                                        cacheHit = false;
+                                        break;
+                                    }
                                 }
-                            }
+                		        if (cacheHit) {
+                                    ZimbraLog.dav.debug("CTAG REQUEST CACHE HIT");
+                		            // All good.  Send cached response.
+                                    ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+                		            HttpServletResponse response = ctxt.getResponse();
+                		            response.setStatus(ctxt.getStatus());
+                		            response.setContentType(DavProtocol.DAV_CONTENT_TYPE);
+                                    byte[] respData = ctagResponse.getResponseBody();
+                		            response.setContentLength(ctagResponse.getRawLength());
 
-                            if (!ctxt.isResponseSent()) {
-                                // Cache miss, or cached response is stale.  We're gonna have to generate the
-                                // response the hard way.  Capture a snapshot of current state of calendars
-                                // to attach to the response to be cached later.
+                		            byte[] unzipped = null;
+                    		            if (ZimbraLog.dav.isDebugEnabled() || (ctagResponse.isGzipped() && !gzipAccepted)) {
+                		                if (ctagResponse.isGzipped()) {
+                                            ByteArrayInputStream bais = new ByteArrayInputStream(respData);
+                                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                            GZIPInputStream gzis = null;
+                                            try {
+                                                gzis = new GZIPInputStream(bais, respData.length);
+                                                ByteUtil.copy(gzis, false, baos, true);
+                                            } finally {
+                                                ByteUtil.closeStream(gzis);
+                                            }
+                                            unzipped = baos.toByteArray();
+                		                } else {
+                		                    unzipped = respData;
+                		                }
+                		                if (ZimbraLog.dav.isDebugEnabled())
+                                            ZimbraLog.dav.debug("RESPONSE:\n" + new String(unzipped, "UTF-8"));
+                		            }
+                		            if (!ctagResponse.isGzipped()) {
+                                        response.getOutputStream().write(respData);
+                		            } else {
+                    		                if (gzipAccepted) {
+                                            response.addHeader(DavProtocol.HEADER_CONTENT_ENCODING, DavProtocol.ENCODING_GZIP);
+                                            response.getOutputStream().write(respData);
+                		                } else {
+                		                    assert(unzipped != null);
+                                            response.getOutputStream().write(unzipped);
+                		                }
+                		            }
+
+                		            // Tell the context the response has been sent.
+                		            ctxt.responseSent();
+                		        }
+                            }
+                        }
+
+                        if (!ctxt.isResponseSent()) {
+                            // Cache miss, or cached response is stale.  We're gonna have to generate the
+                            // response the hard way.  Capture a snapshot of current state of calendars
+                            // to attach to the response to be cached later.
                                 cacheThisCtagResponse = true;
                                 acctVerSnapshot = allCtagsData.getVersion();
                                 ctagsSnapshot = new HashMap<Integer, String>();
-                                Collection<CtagInfo> childCals = allCtagsData.getChildren(rootFolderId);
-                                if (rootFolderId != Mailbox.ID_FOLDER_USER_ROOT) {
-                                    CtagInfo ctagRoot = allCtagsData.getById(rootFolderId);
-                                    if (ctagRoot != null)
+                            Collection<CtagInfo> childCals = allCtagsData.getChildren(rootFolderId);
+                            if (rootFolderId != Mailbox.ID_FOLDER_USER_ROOT) {
+                                CtagInfo ctagRoot = allCtagsData.getById(rootFolderId);
+                                if (ctagRoot != null)
                                         ctagsSnapshot.put(rootFolderId, ctagRoot.getCtag());
-                                }
-                                for (CtagInfo calInfo : childCals) {
-                                    ctagsSnapshot.put(calInfo.getId(), calInfo.getCtag());
-                                }
                             }
-        		        }
+                            for (CtagInfo calInfo : childCals) {
+                                    ctagsSnapshot.put(calInfo.getId(), calInfo.getCtag());
+                            }
+                        }
     		        }
-                    if (!ctxt.isResponseSent())
-                        ZimbraLog.dav.debug("CTAG REQUEST CACHE MISS");
-    		    }
-    		}
+		        }
+                if (!ctxt.isResponseSent())
+                    ZimbraLog.dav.debug("CTAG REQUEST CACHE MISS");
+		    }
+		}
 
     		if (!ctxt.isResponseSent()) {
                 /*
@@ -379,7 +379,7 @@ public class DavServlet extends ZimbraServlet {
 				ZimbraLog.dav.info(ctxt.getUri()+" not found");
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
-			}
+	}
 			ZimbraLog.dav.error("error handling method "+method.getName(), e);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
@@ -390,54 +390,54 @@ public class DavServlet extends ZimbraServlet {
 		} finally {
 		    if (ctagCacheEnabled && cacheThisCtagResponse && ctxt.getStatus() == DavProtocol.STATUS_MULTI_STATUS) {
 		        assert(ctagCacheKey != null && acctVerSnapshot != null && !ctagsSnapshot.isEmpty());
-		        DavResponse dresp = ctxt.getDavResponse();
-                ByteArrayOutputStream baosRaw = null;
-                try {
-                    baosRaw = new ByteArrayOutputStream();
-                    dresp.writeTo(baosRaw);
-                } finally {
-                    ByteUtil.closeStream(baosRaw);
-                }
-                byte[] respData = baosRaw.toByteArray();
-                int rawLen = respData.length;
+	        DavResponse dresp = ctxt.getDavResponse();
+            ByteArrayOutputStream baosRaw = null;
+            try {
+                baosRaw = new ByteArrayOutputStream();
+                dresp.writeTo(baosRaw);
+            } finally {
+                ByteUtil.closeStream(baosRaw);
+            }
+            byte[] respData = baosRaw.toByteArray();
+            int rawLen = respData.length;
 
-                boolean forceGzip = true;
-                // Cache gzipped response if client supports it.
+            boolean forceGzip = true;
+            // Cache gzipped response if client supports it.
                 boolean responseGzipped = forceGzip || gzipAccepted;
-                if (responseGzipped) {
-                    ByteArrayOutputStream baosGzipped = new ByteArrayOutputStream();
-                    GZIPOutputStream gzos = null;
-                    try {
-                        gzos = new GZIPOutputStream(baosGzipped);
-                        gzos.write(respData);
-                    } finally {
-                        ByteUtil.closeStream(gzos);
-                    }
-                    respData = baosGzipped.toByteArray();
+            if (responseGzipped) {
+                ByteArrayOutputStream baosGzipped = new ByteArrayOutputStream();
+                GZIPOutputStream gzos = null;
+                try {
+                    gzos = new GZIPOutputStream(baosGzipped);
+                    gzos.write(respData);
+                } finally {
+                    ByteUtil.closeStream(gzos);
                 }
+                respData = baosGzipped.toByteArray();
+            }
 
-                CtagResponseCacheValue ctagCacheVal = new CtagResponseCacheValue(
+            CtagResponseCacheValue ctagCacheVal = new CtagResponseCacheValue(
 		                respData, rawLen, responseGzipped, acctVerSnapshot, ctagsSnapshot);
-		        try {
+	        try {
                     ctagResponseCache.put(ctagCacheKey, ctagCacheVal);
-                } catch (ServiceException e) {
-                    ZimbraLog.dav.warn("Unable to cache ctag response", e);
-                    // No big deal if we can't cache the response.  Just move on.
-                }
-		    }
+            } catch (ServiceException e) {
+                ZimbraLog.dav.warn("Unable to cache ctag response", e);
+                // No big deal if we can't cache the response.  Just move on.
+            }
+	    }
 
 		    ctxt.cleanup();
 		}
 	}
 	
 	public static String getDavUrl(String user) throws DavException, ServiceException {
-        Provisioning prov = Provisioning.getInstance();
+		Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
-        if (account == null)
+			if (account == null)
 			throw new DavException("unknown user "+user, HttpServletResponse.SC_NOT_FOUND, null);
         return getServiceUrl(account, DAV_PATH);
-	}
-
+		}
+		
 	@SuppressWarnings("unchecked")
     private boolean isCtagRequest(DavContext ctxt) throws DavException {
 	    String httpMethod = ctxt.getRequest().getMethod();
@@ -448,14 +448,14 @@ public class DavServlet extends ZimbraServlet {
                 return false;
             Element prop = top.element(DavElements.E_PROP);
             if (prop == null)
-                return false;
+			return false;
             Iterator iter = prop.elementIterator();
             while (iter.hasNext()) {
                 prop = (Element) iter.next();
                 if (prop.getQName().equals(DavElements.E_GETCTAG))
                     return true;
             }
-	    }
-        return false;
-    }
+        }
+        		return false;
+        	}
 }
