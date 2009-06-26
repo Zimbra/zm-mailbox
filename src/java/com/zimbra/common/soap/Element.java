@@ -58,8 +58,8 @@ public abstract class Element implements Cloneable {
     /**
      * indicating that the serialized data of this Element may be large.
      * 
-     * can be set by SOAP handlers on the response body Element if it's got a 
-     * large result.  Callsites of the toUTF8 methods can check this flag and 
+     *  can be set by SOAP handlers on the response body Element if it's got a 
+     *  large result.  Callsites of the toUTF8 methods can check this flag and 
      * use the toUTF8(Writer) method instead of uisng toUTF8() to serialize.
      */
     private boolean mIsLarge;
@@ -107,7 +107,7 @@ public abstract class Element implements Cloneable {
     /** Returns the appropriate {@link ElementFactory} for generating
      *  <tt>Element</tt>s of this <tt>Element</tt>'s type. */
     public abstract ElementFactory getFactory();
-    
+
     /** Creates a new child <tt>Element</tt> with the given name and adds it
      *  to this <tt>Element</tt>. */
     public abstract Element addElement(String name) throws ContainerException;
@@ -431,8 +431,17 @@ public abstract class Element implements Cloneable {
         return convertDOM(getSAXReader().read(new StringReader(xml)).getRootElement(), factory);
     }
 
-    private static org.dom4j.io.SAXReader getSAXReader() {
-        org.dom4j.io.SAXReader saxReader = new org.dom4j.io.SAXReader();
+    public static org.dom4j.io.SAXReader getSAXReader() {
+        return getSAXReader(null);
+    }
+    
+    public static org.dom4j.io.SAXReader getSAXReader(org.dom4j.DocumentFactory fact) {
+        org.dom4j.io.SAXReader saxReader;
+        if (fact != null)
+            saxReader = new org.dom4j.io.SAXReader(fact);
+        else
+            saxReader = new org.dom4j.io.SAXReader();
+            
         EntityResolver nullEntityResolver = new EntityResolver() {
             public InputSource resolveEntity (String publicId, String systemId)
             {
@@ -442,7 +451,7 @@ public abstract class Element implements Cloneable {
         saxReader.setEntityResolver(nullEntityResolver);
         return saxReader; 
     }
-
+    
     public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
     public static Element convertDOM(org.dom4j.Element d4root, ElementFactory factory) {
         Element elt = factory.createElement(d4root.getQName());
@@ -464,7 +473,7 @@ public abstract class Element implements Cloneable {
             elt.setText(content);
         return elt;
     }
-
+    
 
     public static class ContainerException extends RuntimeException {
         private static final long serialVersionUID = -5884422477180821199L;

@@ -166,7 +166,7 @@ public class XMLChartConfig {
     public static List<ChartSettings> load(File xmlFile)
             throws IOException, DocumentException {
         List<ChartSettings> charts = new ArrayList<ChartSettings>();
-        SAXReader reader = new SAXReader();
+        SAXReader reader = com.zimbra.common.soap.Element.getSAXReader();
         Document document = reader.read(xmlFile);
         Element chartsElem = document.getRootElement();
         if (!chartsElem.getName().equals(E_CHARTS))
