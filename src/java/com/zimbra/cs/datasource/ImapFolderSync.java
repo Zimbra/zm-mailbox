@@ -1012,7 +1012,7 @@ class ImapFolderSync {
         MessageData flagsData = flagsByUid.get(uid);
         remoteFolder.debug("Found new IMAP message with uid %d", uid);
         // Parse the message data
-        Date date = md.getInternalDate();
+        Date date = flagsData.getInternalDate();
         Long receivedDate = date != null ? date.getTime() : null;
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
         int folderId = localFolder.getId();
