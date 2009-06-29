@@ -403,7 +403,7 @@ public class Folder extends MailItem {
 
     /** Returns a copy of the ACL directly set on the folder, or <tt>null</tt>
      *  if one is not set. */
-    ACL getACL() {
+    public ACL getACL() {
         return mRights == null ? null : mRights.duplicate();
     }
 
