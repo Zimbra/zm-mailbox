@@ -63,7 +63,7 @@ public class ItemData {
             ud.type = (byte)json.getInt(Keys.type.toString());
             ud.parentId = json.getInt(Keys.parent_id.toString());
             ud.folderId = json.getInt(Keys.folder_id.toString());
-            ud.indexId = json.getString(Keys.index_id.toString());
+            ud.indexId = json.optString(Keys.index_id.toString());
             ud.imapId = json.getInt(Keys.imap_id.toString());
             ud.date = json.getInt(Keys.date.toString());
             ud.size = json.getLong(Keys.size.toString());
