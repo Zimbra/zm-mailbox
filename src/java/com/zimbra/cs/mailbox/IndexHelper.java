@@ -360,7 +360,7 @@ public class IndexHelper {
 
         if (ZimbraLog.mailbox.isInfoEnabled()) {
             long elapsed = System.currentTimeMillis() - start;
-            double itemsPerSec = (1000.0*(status.mNumProcessed-status.mNumFailed)) / elapsed;
+            String itemsPerSec = String.format("%.2f", (1000.0*(status.mNumProcessed-status.mNumFailed)) / elapsed);
             int successful = status.mNumProcessed - status.mNumFailed;
             if (ZimbraLog.mailbox.isInfoEnabled())
                 ZimbraLog.mailbox.info("Deferred Indexing: submitted "+successful+" items in "+elapsed+"ms ("+itemsPerSec+"/sec). ("+
