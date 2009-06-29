@@ -1064,6 +1064,9 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_FLAG:
                 return;
             case MailItem.TYPE_FOLDER:
+                String aclParam = context.params.get("acl");
+                boolean acl = aclParam == null || !aclParam.equals("0");
+
                 Folder f = (Folder)mi;
                 Folder oldF = null;
                 byte view = f.getDefaultView();
@@ -1080,10 +1083,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (r != Resolve.Skip) {
                         if (!f.getUrl().equals(oldF.getUrl()))
                             mbox.setFolderUrl(oc, oldF.getId(), f.getUrl());
-                        if (!f.getEffectiveACL().toString().equals(
-                            oldF.getEffectiveACL().toString()))
-                            mbox.setPermissions(oc, oldF.getId(),
-                                f.getEffectiveACL());
+                        if (acl && !f.getACL().toString().equals(
+                            oldF.getACL().toString()))
+                            mbox.setPermissions(oc, oldF.getId(), f.getACL());
                     }
                 }
                 if (oldItem == null) {
@@ -1091,6 +1093,8 @@ public abstract class ArchiveFormatter extends Formatter {
                     newItem = fldr = mbox.createFolder(oc, f.getName(),
                         fldr.getId(), f.getAttributes(), f.getDefaultView(),
                         f.getFlagBitmask(), f.getColor(), f.getUrl());
+                    if (acl)
+                        mbox.setPermissions(oc, fldr.getId(), f.getACL());
                     fmap.put(fldr.getId(), fldr);
                     fmap.put(fldr.getPath(), fldr);
                 }
@@ -1104,7 +1108,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     try {
                         oldMsg = mbox.getMessageById(oc, msg.getId());
                         if (!msg.getDigest().equals(oldMsg.getDigest()) ||
-                             oldMsg.getFolderId() != fldr.getFolderId())
+                             oldMsg.getFolderId() != fldr.getId())
                             oldMsg = null;
                     } catch (Exception e) {
                     }
