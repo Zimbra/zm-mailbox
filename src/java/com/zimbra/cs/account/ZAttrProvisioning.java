@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jjzhuang 20090617-2257 */
+    /* build: 6.0.0 pshao 20090629-1141 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -137,9 +137,10 @@ public class ZAttrProvisioning {
     }
 
     public static enum DataSourceConnectionType {
-        starttls("starttls"),
+        tls("tls"),
         ssl("ssl"),
-        cleartext("cleartext");
+        cleartext("cleartext"),
+        tls_if_available("tls_if_available");
         private String mValue;
         private DataSourceConnectionType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -149,9 +150,10 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isStarttls() { return this == starttls;}
+        public boolean isTls() { return this == tls;}
         public boolean isSsl() { return this == ssl;}
         public boolean isCleartext() { return this == cleartext;}
+        public boolean isTls_if_available() { return this == tls_if_available;}
     }
 
     public static enum DomainStatus {
@@ -1929,6 +1931,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCustomerCareTier = "zimbraCustomerCareTier";
 
     /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public static final String A_zimbraDatabaseSlowSqlThreshold = "zimbraDatabaseSlowSqlThreshold";
+
+    /**
      * properties for data source
      *
      * @since ZCS 5.0.10
@@ -1957,7 +1968,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceCalendarPollingInterval = "zimbraDataSourceCalendarPollingInterval";
 
     /**
-     * Which security layer to use for connection (cleartext, ssl, starttls)
+     * Which security layer to use for connection (cleartext, ssl, tls, or
+     * tls if available)
      */
     @ZAttr(id=425)
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";

@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jjzhuang 20090617-2257 */
+    /* build: 6.0.0 pshao 20090629-1141 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2454,6 +2454,100 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
+        return attrs;
+    }
+
+    /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * <p>Use getDatabaseSlowSqlThresholdAsString to access value as a string.
+     *
+     * @see #getDatabaseSlowSqlThresholdAsString()
+     *
+     * @return zimbraDatabaseSlowSqlThreshold in millseconds, or 2000 (2s)  if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public long getDatabaseSlowSqlThreshold() {
+        return getTimeInterval(Provisioning.A_zimbraDatabaseSlowSqlThreshold, 2000L);
+    }
+
+    /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * @return zimbraDatabaseSlowSqlThreshold, or "2s" if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public String getDatabaseSlowSqlThresholdAsString() {
+        return getAttr(Provisioning.A_zimbraDatabaseSlowSqlThreshold, "2s");
+    }
+
+    /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * @param zimbraDatabaseSlowSqlThreshold new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public void setDatabaseSlowSqlThreshold(String zimbraDatabaseSlowSqlThreshold) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, zimbraDatabaseSlowSqlThreshold);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * @param zimbraDatabaseSlowSqlThreshold new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public Map<String,Object> setDatabaseSlowSqlThreshold(String zimbraDatabaseSlowSqlThreshold, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, zimbraDatabaseSlowSqlThreshold);
+        return attrs;
+    }
+
+    /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public void unsetDatabaseSlowSqlThreshold() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SQL statements that take longer than this duration to execute will be
+     * logged to the sqltrace category in mailbox.log.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1038)
+    public Map<String,Object> unsetDatabaseSlowSqlThreshold(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDatabaseSlowSqlThreshold, "");
         return attrs;
     }
 

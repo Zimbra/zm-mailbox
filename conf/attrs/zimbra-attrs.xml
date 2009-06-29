@@ -4578,4 +4578,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>domain name of data source</desc>
 </attr>
 
+<attr id="1038" name="zimbraDatabaseSlowSqlThreshold" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA3">
+  <globalConfigValue>2s</globalConfigValue>
+  <desc>SQL statements that take longer than this duration to execute will be logged to the sqltrace category in mailbox.log.</desc>
+</attr>
+
+
 </attrs>
