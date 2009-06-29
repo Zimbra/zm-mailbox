@@ -11,7 +11,7 @@ public class FormatterServiceException extends ServiceException {
     public static final String MISMATCHED_TYPE = "formatter.MISMATCHED_TYPE";
     public static final String MISSING_BLOB = "formatter.MISSING_BLOB";
     public static final String MISSING_META = "formatter.MISSING_META";
-    public static final String MISSING_VCARD_FIELDS = "formatting.MISSING_VCARD_FIELDS";
+    public static final String MISSING_VCARD_FIELDS = "formatter.MISSING_VCARD_FIELDS";
     public static final String UNKNOWN_ERROR = "formatter.UNKNOWN_ERROR";
 
     // arguments
