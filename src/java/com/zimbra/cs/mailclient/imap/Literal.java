@@ -32,7 +32,7 @@ import java.io.FileInputStream;
 public final class Literal extends ImapData {
     private byte[] bytes;
     private final File file;
-    private final LimitInputStream stream;
+    private final InputStream stream;
     private final int size;
     private boolean tmp; // if true then file is temporary
 
@@ -57,7 +57,7 @@ public final class Literal extends ImapData {
     public Literal(InputStream is, int size) {
         bytes = null;
         file = null;
-        stream = new LimitInputStream(is, size);
+        stream = is;
         this.size = size;
     }
 
@@ -132,6 +132,13 @@ public final class Literal extends ImapData {
     }
 
     public void dispose() {
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+        }
         if (file != null && tmp) {
             file.delete();
         }

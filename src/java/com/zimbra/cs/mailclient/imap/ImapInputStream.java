@@ -17,6 +17,7 @@ package com.zimbra.cs.mailclient.imap;
 import com.zimbra.cs.mailclient.util.Io;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.util.TraceInputStream;
+import com.zimbra.cs.mailclient.util.LimitInputStream;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailException;
@@ -233,7 +234,7 @@ public final class ImapInputStream extends MailInputStream {
 
     private Literal readLiteral(int len, boolean cache) throws IOException {
         if (!cache) {
-            return new Literal(in, len);
+            return new Literal(new LimitInputStream(in, len), len);
         }
         if (len <= config.getMaxLiteralMemSize()) {
             // Cache literal data in memory

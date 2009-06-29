@@ -37,15 +37,18 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.datasource.ImapAppender;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
+import java.util.Random;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -249,6 +252,37 @@ public class TestImapClient extends TestCase {
         char delim = connection.getDelimiter();
         assertEquals(0, delim);
         createTestMailbox("Large", 10000);
+    }
+
+    public void testGMailAppend() throws Exception {
+        ImapConfig config = new ImapConfig();
+        config.setDebug(true);
+        config.setTrace(true);
+        config.setHost("imap.gmail.com");
+        config.setSecurity(MailConfig.Security.SSL);
+        config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+        config.setAuthenticationId("dacztest");
+        config.setMaxLiteralTraceSize(999999);
+        connection = new ImapConnection(config);
+        connection.connect();
+        connection.login("test1234");
+        MimeMessage mm = newTestMessage(new Random().nextInt());
+        // Append and find unique message
+        ImapAppender appender = new ImapAppender(connection, "INBOX");
+        long uid1 = appender.appendMessage(getBytes(mm), null);
+        System.out.println("XXX uid1 = " + uid1);
+        assertTrue("uid1 not found", uid1 > 0);
+        // Now append message again and make sure we can find the de-duped copy
+        long uid2 = appender.appendMessage(getBytes(mm), null);
+        assertTrue("uid2 not found", uid2 > 0);
+        assertEquals(uid1, uid2);
+        connection.close();
+    }
+
+    private byte[] getBytes(MimeMessage mm) throws MessagingException, IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        mm.writeTo(baos);
+        return baos.toByteArray();
     }
 
     private void createTestMailbox(String name, int count)
