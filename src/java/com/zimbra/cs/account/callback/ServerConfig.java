@@ -21,6 +21,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.util.JMSession;
@@ -43,6 +44,8 @@ public class ServerConfig extends AttributeCallback {
                 MessageCache.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraSmtpHostname)) {
                 JMSession.resetSmtpHosts();
+            } else if (attrName.equals(Provisioning.A_zimbraDatabaseSlowSqlThreshold)) {
+                DbPool.loadSettings();
             }
         } catch (ServiceException e) {
             ZimbraLog.account.warn("Unable to update %s.", attrName, e);

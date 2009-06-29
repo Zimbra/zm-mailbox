@@ -185,6 +185,7 @@ public class WikiDigestFixup {
     public static void main(String args[]) {
         CliUtil.toolSetup("WARN");
         sStore = StoreManager.getInstance();
+        DbPool.startup();
         Connection conn = null;
         try {
             int numFixed = 0;

@@ -169,6 +169,7 @@ public class Zimbra {
 
         checkForClasses();
 
+        DbPool.startup();
         waitForDatabase();
         
     	if (!Versions.checkVersions())

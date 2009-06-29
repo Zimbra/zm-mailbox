@@ -42,7 +42,7 @@ import com.zimbra.common.util.ZimbraLog;
 class DebugPreparedStatement implements PreparedStatement {
 
     private static final int MAX_STRING_LENGTH = 1024;
-    private static final long SLOW_QUERY_TIME = 2 * Constants.MILLIS_PER_SECOND;
+    private static long sSlowSqlThreshold = 2 * Constants.MILLIS_PER_SECOND;
     
     private String mSql;
     private PreparedStatement mStmt;
@@ -68,6 +68,11 @@ class DebugPreparedStatement implements PreparedStatement {
     DebugPreparedStatement(PreparedStatement stmt, String sql) {
         mStmt = stmt;
         mSql = sql;
+    }
+    
+    public static void setSlowSqlThreshold(long millis) {
+        ZimbraLog.sqltrace.info("Setting slow SQL threshold to %dms.", millis);
+        sSlowSqlThreshold = millis;
     }
 
     private String getSql() {
@@ -115,7 +120,7 @@ class DebugPreparedStatement implements PreparedStatement {
     
     private void log() {
         long time = System.currentTimeMillis() - mStartTime;
-        if (time > SLOW_QUERY_TIME) {
+        if (time > sSlowSqlThreshold) {
             String sql = getSql();
             ZimbraLog.sqltrace.info("Slow execution (%dms): %s", time,  sql);
         } else if (ZimbraLog.sqltrace.isDebugEnabled()) {
@@ -252,6 +257,7 @@ class DebugPreparedStatement implements PreparedStatement {
         mStmt.setAsciiStream(parameterIndex, x, length);
     }
 
+    @SuppressWarnings("deprecation")
     public void setUnicodeStream(int parameterIndex, InputStream x, int length)
     throws SQLException {
         mParams.set(parameterIndex, "<Unicode Stream>");

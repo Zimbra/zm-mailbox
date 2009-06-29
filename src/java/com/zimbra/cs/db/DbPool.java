@@ -37,6 +37,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ValueCounter;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -170,7 +171,16 @@ public class DbPool {
         Properties mDatabaseProperties;
     }
 
-    static {
+    /**
+     * Initializes the connection pool.  Applications that access the
+     * database must call this method before calling {@link DbPool#getConnection}.
+     */
+    public static void startup() {
+        if (isInitialized()) {
+            ZimbraLog.system.warn("Attempted to reinitialize the database connection pool.",
+                new Exception("DbPool.startup() callsite trace"));
+            return;
+        }
         PoolConfig pconfig = Db.getInstance().getPoolConfig();
 
         String drivers = System.getProperty("jdbc.drivers");
@@ -179,6 +189,23 @@ public class DbPool {
 
         sRootUrl = pconfig.mRootUrl;
         sLoggerRootUrl = pconfig.mLoggerUrl;
+        loadSettings();
+    }
+    
+    private static boolean isInitialized() {
+        return (sRootUrl != null);
+    }
+    
+    /**
+     * Updates cached settings, based on the latest LDAP values.
+     */
+    public static void loadSettings() {
+        try {
+            long slowThreshold = Provisioning.getInstance().getLocalServer().getDatabaseSlowSqlThreshold();
+            DebugPreparedStatement.setSlowSqlThreshold(slowThreshold);
+        } catch (ServiceException e) {
+            ZimbraLog.system.warn("Unable to set slow SQL threshold.", e);
+        }
     }
     
     private static class ZimbraConnectionFactory
@@ -250,6 +277,9 @@ public class DbPool {
     }
 
     public static Connection getConnection(Mailbox mbox) throws ServiceException {
+        if (!isInitialized()) {
+            throw ServiceException.FAILURE("Database connection pool not initialized.", null);
+        }
         long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
 
         // If the connection pool is overutilized, warn about potential leaks
