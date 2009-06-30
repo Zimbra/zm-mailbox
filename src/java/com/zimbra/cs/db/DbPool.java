@@ -173,7 +173,7 @@ public class DbPool {
      * Initializes the connection pool.  Applications that access the
      * database must call this method before calling {@link DbPool#getConnection}.
      */
-    public static void startup() {
+    public synchronized static void startup() {
         if (isInitialized()) {
             return;
         }
@@ -186,8 +186,29 @@ public class DbPool {
         sRootUrl = pconfig.mRootUrl;
         sLoggerRootUrl = pconfig.mLoggerUrl;
         sIsInitialized = true;
+        waitForDatabase();
     }
     
+    private static void waitForDatabase() {
+        Connection conn = null;
+        final int RETRY_SECONDS = 5;
+        
+        while (conn == null) {
+            try {
+                conn = DbPool.getConnection();
+            } catch (ServiceException e) {
+                ZimbraLog.misc.warn("Could not establish a connection to the database.  Retrying in %d seconds.",
+                    RETRY_SECONDS, e);
+                try {
+                    Thread.sleep(RETRY_SECONDS * 1000);
+                } catch (InterruptedException e2) {
+                }
+            }
+        }
+        
+        DbPool.quietClose(conn);
+    }
+
     private static boolean isInitialized() {
         return sIsInitialized;
     }

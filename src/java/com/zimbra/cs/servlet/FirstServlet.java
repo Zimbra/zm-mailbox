@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -90,7 +91,8 @@ public class FirstServlet extends HttpServlet {
             System.setProperty("javax.net.ssl.trustStorePassword", LC.mailboxd_truststore_password.value());
 
             SSLSocketFactoryManager.init();
-            
+
+            DbPool.startup();
             if (Provisioning.getInstance() instanceof LdapProvisioning)
                 checkLDAP();
             

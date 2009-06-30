@@ -116,26 +116,6 @@ public class Zimbra {
         checkForClass("com.zimbra.znative.IO", "zimbra-native.jar");
     }
     
-    private static void waitForDatabase() {
-        Connection conn = null;
-        final int RETRY_SECONDS = 5;
-        
-        while (conn == null) {
-            try {
-                conn = DbPool.getConnection();
-            } catch (ServiceException e) {
-                ZimbraLog.misc.warn("Could not establish a connection to the database.  Retrying in %d seconds.",
-                    RETRY_SECONDS, e);
-                try {
-                    Thread.sleep(RETRY_SECONDS * 1000);
-                } catch (InterruptedException e2) {
-                }
-            }
-        }
-        
-        DbPool.quietClose(conn);
-    }
-
     public static void startup() {
 	try {
 	    startup(true);
@@ -169,9 +149,7 @@ public class Zimbra {
 
         checkForClasses();
 
-        DbPool.startup();
         DbPool.loadSettings();
-        waitForDatabase();
         
     	if (!Versions.checkVersions())
     	    Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
