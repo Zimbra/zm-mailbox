@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalConstants;
 import com.zimbra.cs.mailbox.Contact;
 
+
 public class TestGal extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();
     private static String TEST_NAME = "test-gal";

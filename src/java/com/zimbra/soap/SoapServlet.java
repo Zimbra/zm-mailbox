@@ -300,14 +300,27 @@ public class SoapServlet extends ZimbraServlet {
         ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }
     
+    /*
+     * returns int value of soap_response_buffer_size.
+     * returns -1 if soap_response_buffer_size is not set, which means using jetty default.
+     */
+    private int chunkingBufferSize() {
+        String val = LC.soap_response_buffer_size.value();
+        if (val == null || val.length() == 0)
+            return -1;
+        else
+            return LC.soap_response_buffer_size.intValue();
+    }
+    
     private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope)
     throws IOException {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         int statusCode = soapProto.hasFault(envelope) ?
             HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
         
-        // http chunking can be disabled by setting soap_max_in_memory_buffer_size to 0
-        boolean chunkingDisabled = (LC.soap_max_in_memory_buffer_size.intValue() == 0);
+        // http chunking can be disabled by setting soap_response_buffer_size to 0
+        int chunkingBufferSize = chunkingBufferSize();
+        boolean chunkingDisabled = (chunkingBufferSize == 0);
 
         if (!chunkingDisabled) {
             // disable chunking if proto < HTTP 1.1
@@ -333,23 +346,20 @@ public class SoapServlet extends ZimbraServlet {
             resp.getOutputStream().write(soapBytes);
         } else {
             /*
-             * On DF, 0.35% of all SOAP responses were over 128K, 0.25% of
-             * all SOAP responses were over 256K, 0.018% over 512K, 0.011% over 1MB.
-             * 
-             * default for soap_max_in_memory_buffer_size is 524288 (512KB)
-             */
-            
-            /*
-             * seems jetty's threshold for chunking is around 24KB,
+             * Note, jetty's default threshold for chunking is 24KB
+             * (see http://docs.codehaus.org/display/JETTY/Configuring+Connectors),
              * i.e, no matter how small the number passed to 
              * setBufferSize is, chunking is triggered only when the 
              * actual data written to the writer is more than 24KB.  
              * 
-             * Setting soap_max_in_memory_buffer_size to a value 
+             * Setting soap_response_buffer_size to a value 
              * less than 24KB is essentially no effect.
+             * 
              */
-            int bufSize = LC.soap_max_in_memory_buffer_size.intValue();
-            resp.setBufferSize(bufSize);
+            // use jetty default if the LC key is not set
+            if (chunkingBufferSize != -1) 
+                resp.setBufferSize(chunkingBufferSize);
+            
             resp.setContentType(soapProto.getContentType());  
             resp.setStatus(statusCode);
             

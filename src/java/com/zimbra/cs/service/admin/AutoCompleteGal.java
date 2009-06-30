@@ -110,9 +110,6 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         
         ZimbraLog.gal.debug("GAL result total entries:" + result.getNumMatches());
         
-        if (isLarge(result))
-            response.setIsLarge();   
-        
         if (!(result instanceof Provisioning.VisitorSearchGalResult)) {
             for (GalContact contact : result.getMatches())
                 addContact(response, contact);
@@ -134,30 +131,5 @@ public class AutoCompleteGal extends AdminDocumentHandler {
             }
         }
     }
-    
-    /*
-     * we've got a big result
-     */
-    private static boolean isLarge(SearchGalResult result) {
-        /*
-        <cn id="uid=user1,ou=people,dc=phoebe,dc=mac">
-            <a n="workPhone">+1 650 555 1111</a>
-            <a n="objectClass">organizationalPerson</a>
-            <a n="objectClass">zimbraAccount</a>
-            <a n="objectClass">amavisAccount</a>
-            <a n="modifyTimeStamp">20080906173522Z</a>
-            <a n="createTimeStamp">20080906173432Z</a>
-            <a n="zimbraId">acc886ee-2f45-47c1-99f3-6f28703d1f13</a>
-            <a n="fullName">Demo User One</a>
-            <a n="email">user1@phoebe.mac</a>
-            <a n="lastName">user1</a>
-        </cn>
-        */
-        // average gal entry size in SOAP
-        final int GAL_ENTRY_AVG_SIZE = 600;  // bytes
-        int maxInMemSize = LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE);
-        int numEntries = result.getNumMatches();
-        
-        return numEntries * GAL_ENTRY_AVG_SIZE > maxInMemSize;
-    }
+
 }
