@@ -289,14 +289,6 @@ public abstract class Element implements Cloneable {
         toString(writer);
     }
     
-    public boolean isLarge() {
-        return mIsLarge;
-    }
-    
-    public void setIsLarge() {
-        mIsLarge = true;
-    }
-    
     public abstract String prettyPrint();
 
     /**

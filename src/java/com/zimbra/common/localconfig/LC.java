@@ -158,7 +158,7 @@ public class LC {
     
     public static final KnownKey stats_img_folder;
     
-    public static final KnownKey soap_max_in_memory_buffer_size;
+    public static final KnownKey soap_response_buffer_size;
 
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_port;
@@ -699,8 +699,10 @@ public class LC {
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
 
-        soap_max_in_memory_buffer_size = new KnownKey("soap_max_in_memory_buffer_size");
-        soap_max_in_memory_buffer_size.setDefault("524288");  // 512K
+        soap_response_buffer_size = new KnownKey("soap_response_buffer_size");
+        soap_response_buffer_size.setDefault("");
+        soap_response_buffer_size.setDoc("the size of the content buffer for sending http chunked SOAP responses." + 
+                                         "if not set, use jetty default; if set to 0, it means disable chunking.");
         
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
