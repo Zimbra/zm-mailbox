@@ -546,7 +546,7 @@ public abstract class AdminAccessControl {
             
             checkDomainStatus(account);
             
-            Boolean canAccess = handler.canAccessAccountCommon(mZsc, account);
+            Boolean canAccess = handler.canAccessAccountCommon(mZsc, account, false);
             boolean hasRight;
             if (canAccess == null)
                 hasRight = doCheckRight(account, needed);
@@ -562,7 +562,7 @@ public abstract class AdminAccessControl {
             
             checkDomainStatus(cr);
             
-            Boolean canAccess = handler.canAccessAccountCommon(mZsc, cr);
+            Boolean canAccess = handler.canAccessAccountCommon(mZsc, cr, false);
             boolean hasRight;
             if (canAccess == null)
                 hasRight = doCheckRight(cr, needed);
@@ -643,16 +643,24 @@ public abstract class AdminAccessControl {
                 AdminRight adminRight = (AdminRight)needed;
                 if (adminRight.isPresetRight())
                     return mAccessMgr.canDo(mAuthedAcct, target, (AdminRight)needed, true, false, null);
-                else if (adminRight.isAttrRight() && 
-                         adminRight.getRightType() == Right.RightType.getAttrs)
-                    return mAccessMgr.canGetAttrs(mAuthedAcct, target, ((AttrRight)needed).getAttrs(), true);
-                else
-                    throw ServiceException.FAILURE("internal error", null);
-            } else if (needed instanceof Set)
+                else if (adminRight.isAttrRight()) {
+                    if (adminRight.getRightType() == Right.RightType.getAttrs)
+                        return mAccessMgr.canGetAttrs(mAuthedAcct, target, ((AttrRight)needed).getAttrs(), true);
+                    else if (adminRight.getRightType() == Right.RightType.setAttrs)
+                        // note: this does not check for constraints
+                        return mAccessMgr.canSetAttrs(mAuthedAcct, target, ((AttrRight)needed).getAttrs(), true); 
+                }
+                throw ServiceException.FAILURE("internal error", null);
+                
+            } else if (needed instanceof Set) {
                 return mAccessMgr.canGetAttrs(mAuthedAcct, target, (Set<String>)needed, true);
-            else if (needed instanceof Map)
+            } else if (needed instanceof Map) {
+                // note: this does check for constraints
                 return mAccessMgr.canSetAttrs(mAuthedAcct, target, (Map<String, Object>)needed, true);
-            else
+            } else if (needed instanceof DynamicAttrsRight) {
+                DynamicAttrsRight dar = (DynamicAttrsRight)needed;
+                return dar.checkRight(mAccessMgr, mAuthedAcct, target);
+            } else
                 throw ServiceException.FAILURE("internal error", null);
         }
         
@@ -784,6 +792,68 @@ public abstract class AdminAccessControl {
             
         public boolean allowAttr(String attrName) {
             return mRightChecker.allowAttr(attrName);
+        }
+    }
+    
+    /**
+     * For putting together a getAttrs/setAttrs right dynamically
+     * 
+     * TODO: migrate check*Right callsites that are calling the Set/Map 
+     *       interface to use this class, instead of buidling the Set/Map at the call site.
+     *       
+     * e.g. in a handler
+     *     
+        checkAccountRight(zsc, acct, needRight());
+        
+        private SetAttrsRight needRight() {
+            SetAttrsRight sar = new SetAttrsRight();
+            sar.addAttr(Provisioning.A_zimbraAdminSavedSearches);
+            return sar;
+        }      
+     */
+    public static abstract class DynamicAttrsRight {
+        abstract boolean checkRight(AccessManager am, Account authedAcct, Entry target) throws ServiceException;
+    }
+    
+    /*
+     * dynamic get attrs right
+     */
+    public static class GetAttrsRight extends DynamicAttrsRight {
+        private Set<String> mAttrs = new HashSet<String>();
+        
+        public void addAttr(String attrName) {
+            mAttrs.add(attrName);
+        }
+        
+        boolean checkRight(AccessManager am, Account authedAcct, Entry target) throws ServiceException {
+            return am.canGetAttrs(authedAcct, target, mAttrs, true);
+        }
+    }
+    
+    /*
+     * dynamic set attrs right, no constraint checking
+     */
+    public static class SetAttrsRight extends DynamicAttrsRight {
+        private Set<String> mAttrs = new HashSet<String>();
+        
+        public void addAttr(String attrName) {
+            mAttrs.add(attrName);
+        }
+        
+        boolean checkRight(AccessManager am, Account authedAcct, Entry target) throws ServiceException {
+            return am.canSetAttrs(authedAcct, target, mAttrs, true);
+        }
+    }
+    
+    public static class SetAttrsRightWithConstraintChecking extends DynamicAttrsRight {
+        private Map<String, Object> mAttrs = new HashMap<String, Object>();
+        
+        public void addAttr(String attrName, Object attrValue) {
+            mAttrs.put(attrName, attrValue);
+        }
+        
+        boolean checkRight(AccessManager am, Account authedAcct, Entry target) throws ServiceException {
+            return am.canSetAttrs(authedAcct, target, mAttrs, true);
         }
     }
 }

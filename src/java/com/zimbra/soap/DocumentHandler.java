@@ -191,24 +191,25 @@ public abstract class DocumentHandler {
         return false;
     }
 
-    public Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target) throws ServiceException {
+    public Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target, boolean allowSelf) throws ServiceException {
         if (zsc.getAuthtokenAccountId() == null || target == null)
             return Boolean.FALSE;
-        if (target.getId().equals(zsc.getAuthtokenAccountId()))
+        
+        if (allowSelf && target.getId().equals(zsc.getAuthtokenAccountId()))
             return Boolean.TRUE;
-        else {
-            // 1. delegated auth case has been logged in SoapEngine
-            // 2. we do not want to log delegated request, where the target account is specified in 
-            //    soap context header.  Usages for that route are family mailboxes and sharing access.
-            //    we only want to log the "admin" accesses.
-            if (!zsc.getAuthToken().isDelegatedAuth() && !zsc.isDelegatedRequest()) 
-                logAuditAccess(null, zsc.getAuthtokenAccountId(), target.getId());
-        }
+        
+        // 1. delegated auth case has been logged in SoapEngine
+        // 2. we do not want to log delegated request, where the target account is specified in 
+        //    soap context header.  Usages for that route are family mailboxes and sharing access.
+        //    we only want to log the "admin" accesses.
+        if (!zsc.getAuthToken().isDelegatedAuth() && !zsc.isDelegatedRequest()) 
+            logAuditAccess(null, zsc.getAuthtokenAccountId(), target.getId());
+
         return null;
     }
 
     public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
-        Boolean canAccess = canAccessAccountCommon(zsc, target);
+        Boolean canAccess = canAccessAccountCommon(zsc, target, true);
         if (canAccess != null)
             return canAccess.booleanValue();
         return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
