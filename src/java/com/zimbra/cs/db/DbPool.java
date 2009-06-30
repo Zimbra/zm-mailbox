@@ -41,15 +41,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 
-/**
- * @author schemers
- */
 public class DbPool {
 
     private static PoolingDataSource sPoolingDataSource;
     private static String sRootUrl;
     private static String sLoggerRootUrl;
     private static GenericObjectPool sConnectionPool;
+    private static boolean sIsInitialized;
     
     private static boolean isShutdown;
 
@@ -190,12 +188,13 @@ public class DbPool {
         sRootUrl = pconfig.mRootUrl;
         sLoggerRootUrl = pconfig.mLoggerUrl;
         loadSettings();
+        sIsInitialized = true;
     }
     
     private static boolean isInitialized() {
-        return (sRootUrl != null);
+        return sIsInitialized;
     }
-    
+
     /**
      * Updates cached settings, based on the latest LDAP values.
      */
@@ -210,7 +209,7 @@ public class DbPool {
     
     private static class ZimbraConnectionFactory
     extends DriverManagerConnectionFactory {
-        private ZimbraConnectionFactory(String connectUri, Properties props) {
+        ZimbraConnectionFactory(String connectUri, Properties props) {
             super(connectUri, props);
         }
         
@@ -218,8 +217,7 @@ public class DbPool {
          * Wraps the JDBC connection from the pool with a <tt>DebugConnection</tt>,
          * which does  <tt>sqltrace</tt> logging.
          */
-        public java.sql.Connection createConnection()
-        throws SQLException {
+        @Override public java.sql.Connection createConnection() throws SQLException {
             java.sql.Connection conn = super.createConnection();
             return new DebugConnection(conn);
         }
