@@ -175,8 +175,6 @@ public class DbPool {
      */
     public static void startup() {
         if (isInitialized()) {
-            ZimbraLog.system.warn("Attempted to reinitialize the database connection pool.",
-                new Exception("DbPool.startup() callsite trace"));
             return;
         }
         PoolConfig pconfig = Db.getInstance().getPoolConfig();
@@ -187,7 +185,6 @@ public class DbPool {
 
         sRootUrl = pconfig.mRootUrl;
         sLoggerRootUrl = pconfig.mLoggerUrl;
-        loadSettings();
         sIsInitialized = true;
     }
     
