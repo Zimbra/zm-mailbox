@@ -89,6 +89,9 @@ public abstract class SieveVisitor {
     protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
+    @SuppressWarnings("unused")
+    protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props)
+    throws ServiceException { }
     
     @SuppressWarnings("unused")
     protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props)
@@ -254,6 +257,10 @@ public abstract class SieveVisitor {
             visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
             accept(node, props);
             visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
+        } else if ("invite".equals(nodeName)) {
+            visitInviteTest(node, VisitPhase.begin, props);
+            accept(node, props);
+            visitAttachmentTest(node, VisitPhase.end, props);
         } else {
             ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
             accept(node, props);

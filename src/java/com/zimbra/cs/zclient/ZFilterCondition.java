@@ -40,6 +40,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public static final String C_HEADER = "header";
     public static final String C_NOT_ATTACHMENT = "not attachment";
     public static final String C_SIZE = "size";
+    public static final String C_INVITE = "invite";
 
     public enum HeaderOp {
 
@@ -202,6 +203,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZAddressBookCondition(op, header);
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             return new ZAttachmentExistsCondition(!isNegative);
+        } else if (name.equals(MailConstants.E_INVITE_TEST)) {
+            return new ZInviteCondition(!isNegative);
         } else {
              throw ZClientException.CLIENT_ERROR("unknown filter condition: "+name, null);
         }
@@ -492,6 +495,33 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             }
             return test;
         }
+    }
 
+    public static class ZInviteCondition extends ZFilterCondition {
+        private boolean mIsInvite;
+
+        public ZInviteCondition(boolean isInvite) {
+            mIsInvite = isInvite;
+        }
+
+        public boolean isInvite() { return mIsInvite; }
+
+        public String toConditionString() {
+            return mIsInvite ? "invite exists" : "invite not_exists";
+        }
+
+        @Override
+        public String getName() {
+            return C_INVITE;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_INVITE_TEST);
+            if (!mIsInvite) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
     }
 }

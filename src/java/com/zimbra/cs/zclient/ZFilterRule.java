@@ -37,6 +37,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderExistsCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZInviteCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZSizeCondition;
 import org.json.JSONException;
 
@@ -255,6 +256,9 @@ public class ZFilterRule implements ToZJSONObject {
                     String value = args[i++];
                     conditions.add(new ZHeaderCondition(headerName, HeaderOp.fromString(op), value));
                 }
+            } else if (a.equals("invite")) {
+                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
+                conditions.add(new ZInviteCondition(args[i++].equals("exists")));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {

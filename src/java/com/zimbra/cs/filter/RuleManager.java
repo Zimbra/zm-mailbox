@@ -78,6 +78,7 @@ public class RuleManager {
             testMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
             testMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
             testMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
+            testMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to initialize mail filtering extensions.", e);
         }

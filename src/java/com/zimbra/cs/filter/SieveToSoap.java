@@ -163,6 +163,14 @@ public class SieveToSoap extends SieveVisitor {
         }
     }
 
+    @Override
+    protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props)
+    throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            addTest(MailConstants.E_INVITE_TEST, props);
+        }
+    }
+
     private String getCurrentRuleName() {
         if (mRuleNames == null || mCurrentRuleIndex >= mRuleNames.size()) {
             return null;

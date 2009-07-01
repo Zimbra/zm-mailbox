@@ -155,6 +155,8 @@ public class SoapToSieve {
                 FilterUtil.escape(header), FilterUtil.escape(folderPath));
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             snippet = "attachment";
+        } else if (name.equals(MailConstants.E_INVITE_TEST)) {
+            snippet = "invite";
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
         }

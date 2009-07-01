@@ -2507,11 +2507,12 @@ Tests:
     header="{header-name}" value="{value}"/>
   <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
   <headerExistsTest header="{header-name}" />
-  <sizeTest numberComparison="{type}" s="{size}" />
-  <dateTest dateComparison="{type}" d="{date}" />
+  <sizeTest numberComparison="{over|under}" s="{size}" />
+  <dateTest dateComparison="{before|after}" d="{date}" />
   <bodyTest value="{value}" />
   <attachmentTest />
   <addressBookTest header="{header-name}" folderPath="{folder-path}" />
+  <inviteTest />
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test
