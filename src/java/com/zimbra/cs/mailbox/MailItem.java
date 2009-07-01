@@ -1493,15 +1493,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the content from the cache
         MessageCache.purge(this);
 
-        // write the content (if any) to the store
-        Blob blob = null;
-        if (incoming != null) {
-		    StoreManager sm = StoreManager.getInstance();
-		    MailboxBlob mblob = sm.renameTo(incoming, mMailbox, mId, getSavedSequence());
-		    mMailbox.markOtherItemDirty(mblob);
-		    blob = mblob.getBlob();
-        }
-
         int size = incoming == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
@@ -1510,11 +1501,20 @@ public abstract class MailItem implements Comparable<MailItem> {
         getFolder().updateSize(0, size - mData.size);
 
         mData.setBlobDigest(incoming == null ? null : digest);
-        mData.date    = mMailbox.getOperationTimestamp();
-        mData.locator = blob == null ? null : blob.getLocator();
-        mData.imapId  = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.date   = mMailbox.getOperationTimestamp();
+        mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
+
+        // write the content (if any) to the store
+        Blob blob = null;
+        if (incoming != null) {
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mblob = sm.renameTo(incoming, mMailbox, mId, getSavedSequence());
+            mMailbox.markOtherItemDirty(mblob);
+            blob = mblob.getBlob();
+        }
         mBlob = null;
+        mData.locator = blob == null ? null : blob.getLocator();
 
         // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content);
