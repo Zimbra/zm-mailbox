@@ -408,12 +408,6 @@ public class FileBlobStore extends StoreManager {
         return new MailboxBlob(mbox, msgId, revision, new Blob(file, locator));
     }
 
-    @Override public InputStream getContent(MailboxBlob mboxBlob) throws IOException {
-        if (mboxBlob == null)
-            return null;
-        return getContent(mboxBlob.getBlob());
-    }
-
     @Override public InputStream getContent(Blob blob) throws IOException {
         if (blob == null)
             return null;

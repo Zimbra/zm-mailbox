@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -27,15 +28,24 @@ import com.zimbra.cs.util.Zimbra;
 public abstract class StoreManager {
 
     private static StoreManager sInstance;
-    static {
-        try {
-            sInstance = new FileBlobStore();
-        } catch (Throwable t) {
-            Zimbra.halt("Unable to initialize blob store", t);
-        }
-    }
 
     public static StoreManager getInstance() {
+        if (sInstance == null) {
+            synchronized (StoreManager.class) {
+                if (sInstance != null)
+                    return sInstance;
+
+                String className = LC.zimbra_class_store.value();
+                try {
+                    if (className != null && !className.equals(""))
+                        sInstance = (StoreManager) Class.forName(className).newInstance();
+                    else
+                        sInstance = new FileBlobStore();
+                } catch (Throwable t) {
+                    Zimbra.halt("unable to initialize blob store", t);
+                }
+            }
+        }
         return sInstance;
     }
 
@@ -202,8 +212,11 @@ public abstract class StoreManager {
      * @return
      * @throws IOException
      */
-    public abstract InputStream getContent(MailboxBlob mboxBlob)
-    throws IOException;
+    public InputStream getContent(MailboxBlob mboxBlob) throws IOException {
+        if (mboxBlob == null)
+            return null;
+        return getContent(mboxBlob.getBlob());
+    }
 
     /**
      * Return an InputStream of blob content.  Caller should close the
