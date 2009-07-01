@@ -36,13 +36,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
 class DebugPreparedStatement implements PreparedStatement {
 
     private static final int MAX_STRING_LENGTH = 1024;
-    private static long sSlowSqlThreshold = 2 * Constants.MILLIS_PER_SECOND;
+    private static long sSlowSqlThreshold = Long.MAX_VALUE;
     
     private String mSql;
     private PreparedStatement mStmt;
