@@ -151,6 +151,9 @@ public class ZInvite implements ToZJSONObject {
         private String mComponentNum;
         private List<ZAlarm> mAlarms;
         private String mRecurrenceIdZ;
+		private String mDescription;
+        private String mDescriptionHtml;
+        private boolean mIsNoBlob;
 
         public ZComponent() {
             mStatus = ZStatus.CONF;
@@ -249,6 +252,14 @@ public class ZInvite implements ToZJSONObject {
                     mAlarms.add(new ZAlarm(alarm));
                 }
             }
+			
+			mIsNoBlob = e.getAttributeBool(MailConstants.A_CAL_NO_BLOB, false);
+
+            Element descEl = e.getOptionalElement(MailConstants.E_CAL_DESCRIPTION);
+            mDescription = descEl != null ? descEl.getText() : null;
+
+            Element descHtmlElem = e.getOptionalElement(MailConstants.E_CAL_DESC_HTML);
+            mDescriptionHtml = descHtmlElem != null ? descHtmlElem.getText() : null;
 
         }
 
@@ -557,6 +568,30 @@ public class ZInvite implements ToZJSONObject {
         public String getRecurrenceIdZ() {
             return mRecurrenceIdZ;
         }
+		
+		public String getDescription() {
+            return mDescription;
+        }
+
+        public void setDescription(String desc) {
+            mDescription = desc;
+        }
+
+        public String getDescriptionHtml() {
+            return mDescriptionHtml;
+        }
+
+        public void setDescriptionHtml(String descHtml) {
+            mDescriptionHtml = descHtml;
+        }
+
+        public boolean getIsNoBlob() {
+            return mIsNoBlob;
+        }
+
+        public void setIsNoBlob(boolean noBlob) {
+            mIsNoBlob = noBlob;
+        }
 
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
@@ -587,6 +622,9 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("attendees", mAttendees);
             zjo.put("recurrence", mRecurrence);
             zjo.put("recurrenceId", mRecurrenceIdZ);
+			zjo.put("desc",mDescription);
+            zjo.put("deschtml",mDescriptionHtml);
+            zjo.put("noblob",mIsNoBlob);
             return zjo;
         }
 
