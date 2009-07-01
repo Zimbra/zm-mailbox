@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090615-1442 */
+    /* build: 6.0.0 pshao 20090701-1453 */
 
 
     /*
@@ -87,6 +87,356 @@ public class RightConsts {
      * add member to distribution list
      */
     public static final String RT_addDistributionListMember = "addDistributionListMember";
+
+    /**
+     * Admin Console Account Rights
+     */
+    public static final String RT_adminConsoleAccountRights = "adminConsoleAccountRights";
+
+    /**
+     * Admin Console rights for Account ACL Tab
+     */
+    public static final String RT_adminConsoleAccountsACLTabRights = "adminConsoleAccountsACLTabRights";
+
+    /**
+     * Admin Console rights for Accounts Aliases Tab
+     */
+    public static final String RT_adminConsoleAccountsAliasesTabRights = "adminConsoleAccountsAliasesTabRights";
+
+    /**
+     * Admin Console rights for AccountsContactTab
+     */
+    public static final String RT_adminConsoleAccountsContactTabRights = "adminConsoleAccountsContactTabRights";
+
+    /**
+     * Admin Console rights for Accounts Features Tab
+     */
+    public static final String RT_adminConsoleAccountsFeaturesTabRights = "adminConsoleAccountsFeaturesTabRights";
+
+    /**
+     * Admin Console rights for Accounts Forwarding Tab
+     */
+    public static final String RT_adminConsoleAccountsForwardingTabRights = "adminConsoleAccountsForwardingTabRights";
+
+    /**
+     * Admin Console rights for Accounts FreeBusyInterop Tab
+     */
+    public static final String RT_adminConsoleAccountsFreeBusyInteropTabRights = "adminConsoleAccountsFreeBusyInteropTabRights";
+
+    /**
+     * Admin Console rights for AccountsInfoTab
+     */
+    public static final String RT_adminConsoleAccountsInfoTabRights = "adminConsoleAccountsInfoTabRights";
+
+    /**
+     * Admin Console rights for Accounts MemberOf Tab
+     */
+    public static final String RT_adminConsoleAccountsMemberOfTabRights = "adminConsoleAccountsMemberOfTabRights";
+
+    /**
+     * Admin Console rights for Accounts Themes Tab
+     */
+    public static final String RT_adminConsoleAccountsThemesTabRights = "adminConsoleAccountsThemesTabRights";
+
+    /**
+     * Admin Console rights for Accounts Zimlets Tab
+     */
+    public static final String RT_adminConsoleAccountsZimletsTabRights = "adminConsoleAccountsZimletsTabRights";
+
+    /**
+     * Admin Console Alias Rights
+     */
+    public static final String RT_adminConsoleAliasRights = "adminConsoleAliasRights";
+
+    /**
+     * Admin Console rights for COS ACL Tab
+     */
+    public static final String RT_adminConsoleCOSACLTabRights = "adminConsoleCOSACLTabRights";
+
+    /**
+     * Admin Console rights for COS Advanced Tab
+     */
+    public static final String RT_adminConsoleCOSAdvancedTabRights = "adminConsoleCOSAdvancedTabRights";
+
+    /**
+     * Admin Console rights for COS General Features Tab
+     */
+    public static final String RT_adminConsoleCOSFeaturesTabRights = "adminConsoleCOSFeaturesTabRights";
+
+    /**
+     * Admin Console rights for COS General Info Tab
+     */
+    public static final String RT_adminConsoleCOSInfoTabRights = "adminConsoleCOSInfoTabRights";
+
+    /**
+     * Admin Console rights for COS Mobile Tab
+     */
+    public static final String RT_adminConsoleCOSMobileTabRights = "adminConsoleCOSMobileTabRights";
+
+    /**
+     * Admin Console rights for COS General Preferences Tab
+     */
+    public static final String RT_adminConsoleCOSPreferencesTabRights = "adminConsoleCOSPreferencesTabRights";
+
+    /**
+     * Admin Console COS Rights
+     */
+    public static final String RT_adminConsoleCOSRights = "adminConsoleCOSRights";
+
+    /**
+     * Admin Console rights for COS Server Pool Tab
+     */
+    public static final String RT_adminConsoleCOSServerPoolTabRights = "adminConsoleCOSServerPoolTabRights";
+
+    /**
+     * Admin Console rights for COS Themes Tab
+     */
+    public static final String RT_adminConsoleCOSThemesTabRights = "adminConsoleCOSThemesTabRights";
+
+    /**
+     * Admin Console rights for COS Zimlets Tab
+     */
+    public static final String RT_adminConsoleCOSZimletsTabRights = "adminConsoleCOSZimletsTabRights";
+
+    /**
+     * Admin Console rights for DL ACL Tab
+     */
+    public static final String RT_adminConsoleDLACLTabRights = "adminConsoleDLACLTabRights";
+
+    /**
+     * Admin Console rights for DL Aliases Tab
+     */
+    public static final String RT_adminConsoleDLAliasesTabRights = "adminConsoleDLAliasesTabRights";
+
+    /**
+     * Admin Console rights for DL MemberOf Tab
+     */
+    public static final String RT_adminConsoleDLMemberOfTabRights = "adminConsoleDLMemberOfTabRights";
+
+    /**
+     * Admin Console rights for DL Members Tab
+     */
+    public static final String RT_adminConsoleDLMembersTabRights = "adminConsoleDLMembersTabRights";
+
+    /**
+     * Admin Console rights for DL Notes Tab
+     */
+    public static final String RT_adminConsoleDLNotesTabRights = "adminConsoleDLNotesTabRights";
+
+    /**
+     * Admin Console DL Rights
+     */
+    public static final String RT_adminConsoleDLRights = "adminConsoleDLRights";
+
+    /**
+     * Admin Console rights for DL Shares Tab
+     */
+    public static final String RT_adminConsoleDLSharesTabRights = "adminConsoleDLSharesTabRights";
+
+    /**
+     * Admin Console rights for Domain ACL Tab
+     */
+    public static final String RT_adminConsoleDomainACLTabRights = "adminConsoleDomainACLTabRights";
+
+    /**
+     * Admin Console rights for Domain Authentication Tab
+     */
+    public static final String RT_adminConsoleDomainAuthenticationTabRights = "adminConsoleDomainAuthenticationTabRights";
+
+    /**
+     * Admin Console rights for Domain Documents Tab
+     */
+    public static final String RT_adminConsoleDomainDocumentsTabRights = "adminConsoleDomainDocumentsTabRights";
+
+    /**
+     * Admin Console rights for Domain Freebusy Tab
+     */
+    public static final String RT_adminConsoleDomainFreebusyTabRights = "adminConsoleDomainFreebusyTabRights";
+
+    /**
+     * Admin Console rights for Domain GAL Tab
+     */
+    public static final String RT_adminConsoleDomainGALTabRights = "adminConsoleDomainGALTabRights";
+
+    /**
+     * Admin Console rights for Domain Info Tab
+     */
+    public static final String RT_adminConsoleDomainInfoTabRights = "adminConsoleDomainInfoTabRights";
+
+    /**
+     * Admin Console rights for Domain Limits Tab
+     */
+    public static final String RT_adminConsoleDomainLimitsTabRights = "adminConsoleDomainLimitsTabRights";
+
+    /**
+     * Admin Console Domain Rights
+     */
+    public static final String RT_adminConsoleDomainRights = "adminConsoleDomainRights";
+
+    /**
+     * Admin Console rights for Domain Themes Tab
+     */
+    public static final String RT_adminConsoleDomainThemesTabRights = "adminConsoleDomainThemesTabRights";
+
+    /**
+     * Admin Console rights for Domain VirtualHosts Tab
+     */
+    public static final String RT_adminConsoleDomainVirtualHostsTabRights = "adminConsoleDomainVirtualHostsTabRights";
+
+    /**
+     * Admin Console rights for Domain Zimlets Tab
+     */
+    public static final String RT_adminConsoleDomainZimletsTabRights = "adminConsoleDomainZimletsTabRights";
+
+    /**
+     * Admin Console rights for Extensions ACL Tab
+     */
+    public static final String RT_adminConsoleExtensionACLTabRights = "adminConsoleExtensionACLTabRights";
+
+    /**
+     * Admin Console Extension Rights
+     */
+    public static final String RT_adminConsoleExtensionRights = "adminConsoleExtensionRights";
+
+    /**
+     * Admin Console rights for GlobalACL Tab
+     */
+    public static final String RT_adminConsoleGlobalACLTabRights = "adminConsoleGlobalACLTabRights";
+
+    /**
+     * Admin Console rights for Global AS/AV Tab
+     */
+    public static final String RT_adminConsoleGlobalASAVTabRights = "adminConsoleGlobalASAVTabRights";
+
+    /**
+     * Admin Console rights for Global Attachments Tab
+     */
+    public static final String RT_adminConsoleGlobalAttachmentsTabRights = "adminConsoleGlobalAttachmentsTabRights";
+
+    /**
+     * Admin Console rights for GlobalBackupRestore Tab
+     */
+    public static final String RT_adminConsoleGlobalBackupRestoreTabRights = "adminConsoleGlobalBackupRestoreTabRights";
+
+    /**
+     * Admin Console rights for GlobalFreebusy Tab
+     */
+    public static final String RT_adminConsoleGlobalFreebusyTabRights = "adminConsoleGlobalFreebusyTabRights";
+
+    /**
+     * Admin Console rights for GlobalHSM Tab
+     */
+    public static final String RT_adminConsoleGlobalHSMTabRights = "adminConsoleGlobalHSMTabRights";
+
+    /**
+     * Admin Console rights for Global IMAP Tab
+     */
+    public static final String RT_adminConsoleGlobalIMAPTabRights = "adminConsoleGlobalIMAPTabRights";
+
+    /**
+     * Admin Console rights for Global Info Tab
+     */
+    public static final String RT_adminConsoleGlobalInfoTabRights = "adminConsoleGlobalInfoTabRights";
+
+    /**
+     * Admin Console rights for GlobalLicense Tab
+     */
+    public static final String RT_adminConsoleGlobalLicenseTabRights = "adminConsoleGlobalLicenseTabRights";
+
+    /**
+     * Admin Console rights for Global MTA Tab
+     */
+    public static final String RT_adminConsoleGlobalMTATabRights = "adminConsoleGlobalMTATabRights";
+
+    /**
+     * Admin Console rights for Global POP Tab
+     */
+    public static final String RT_adminConsoleGlobalPOPTabRights = "adminConsoleGlobalPOPTabRights";
+
+    /**
+     * Admin Console Global Rights
+     */
+    public static final String RT_adminConsoleGlobalRights = "adminConsoleGlobalRights";
+
+    /**
+     * Admin Console rights for GlobalThemes Tab
+     */
+    public static final String RT_adminConsoleGlobalThemesTabRights = "adminConsoleGlobalThemesTabRights";
+
+    /**
+     * Admin Console Resource Rights
+     */
+    public static final String RT_adminConsoleResourceRights = "adminConsoleResourceRights";
+
+    /**
+     * Admin Console rights for Resources Contact Tab
+     */
+    public static final String RT_adminConsoleResourcesContactTabRights = "adminConsoleResourcesContactTabRights";
+
+    /**
+     * Admin Console rights for Resources Properties Tab
+     */
+    public static final String RT_adminConsoleResourcesPropertiesTabRights = "adminConsoleResourcesPropertiesTabRights";
+
+    /**
+     * Admin Console Rights and Views
+     */
+    public static final String RT_adminConsoleRights = "adminConsoleRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerACLTabRights = "adminConsoleServerACLTabRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerBackupRestoreTabRights = "adminConsoleServerBackupRestoreTabRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerIMAPTabRights = "adminConsoleServerIMAPTabRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerInfoTabRights = "adminConsoleServerInfoTabRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerMTATabRights = "adminConsoleServerMTATabRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerPOPTabRights = "adminConsoleServerPOPTabRights";
+
+    /**
+     * Admin Console Server Rights
+     */
+    public static final String RT_adminConsoleServerRights = "adminConsoleServerRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerServicesTabRights = "adminConsoleServerServicesTabRights";
+
+    /**
+     * Admin Console rights for Server ACL Tab
+     */
+    public static final String RT_adminConsoleServerVolumesTabRights = "adminConsoleServerVolumesTabRights";
+
+    /**
+     * Admin Console rights for Zimlet ACL Tab
+     */
+    public static final String RT_adminConsoleZimletACLTabRights = "adminConsoleZimletACLTabRights";
+
+    /**
+     * Admin Console Zimlet Rights
+     */
+    public static final String RT_adminConsoleZimletRights = "adminConsoleZimletRights";
 
     /**
      * login as the user as an admin. This is different from the loginAs user
@@ -252,6 +602,11 @@ public class RightConsts {
     public static final String RT_crossDomainAdmin = "crossDomainAdmin";
 
     /**
+     * rights for managing cross mailbox search tasks in admin console
+     */
+    public static final String RT_crossMailboxSearchRights = "crossMailboxSearchRights";
+
+    /**
      * delete account
      */
     public static final String RT_deleteAccount = "deleteAccount";
@@ -310,6 +665,111 @@ public class RightConsts {
      * domain admin calresource right
      */
     public static final String RT_domainAdminCalendarResourceRights = "domainAdminCalendarResourceRights";
+
+    /**
+     * Admin Console Domain Admin Account Rights
+     */
+    public static final String RT_domainAdminConsoleAccountRights = "domainAdminConsoleAccountRights";
+
+    /**
+     * Admin Console Domain Admin rights for Accounts Aliases Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsAliasesTabRights = "domainAdminConsoleAccountsAliasesTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for AccountsContactTab
+     */
+    public static final String RT_domainAdminConsoleAccountsContactTabRights = "domainAdminConsoleAccountsContactTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for Accounts Features Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsFeaturesTabRights = "domainAdminConsoleAccountsFeaturesTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for Accounts Forwarding Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsForwardingTabRights = "domainAdminConsoleAccountsForwardingTabRights";
+
+    /**
+     * Admin Console rights for Accounts FreeBusyInterop Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsFreeBusyInteropTabRights = "domainAdminConsoleAccountsFreeBusyInteropTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for AccountsInfoTab
+     */
+    public static final String RT_domainAdminConsoleAccountsInfoTabRights = "domainAdminConsoleAccountsInfoTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for Accounts MemberOf Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsMemberOfTabRights = "domainAdminConsoleAccountsMemberOfTabRights";
+
+    /**
+     * Admin Console rights for Accounts Themes Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsThemesTabRights = "domainAdminConsoleAccountsThemesTabRights";
+
+    /**
+     * Admin Console rights for Accounts Zimlets Tab
+     */
+    public static final String RT_domainAdminConsoleAccountsZimletsTabRights = "domainAdminConsoleAccountsZimletsTabRights";
+
+    /**
+     * Admin Console Domain Admin Alias Rights
+     */
+    public static final String RT_domainAdminConsoleAliasRights = "domainAdminConsoleAliasRights";
+
+    /**
+     * Admin Console Domain Admin rights for DL Aliases Tab
+     */
+    public static final String RT_domainAdminConsoleDLAliasesTabRights = "domainAdminConsoleDLAliasesTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for DL MemberOf Tab
+     */
+    public static final String RT_domainAdminConsoleDLMemberOfTabRights = "domainAdminConsoleDLMemberOfTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for DL Members Tab
+     */
+    public static final String RT_domainAdminConsoleDLMembersTabRights = "domainAdminConsoleDLMembersTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for DL Notes Tab
+     */
+    public static final String RT_domainAdminConsoleDLNotesTabRights = "domainAdminConsoleDLNotesTabRights";
+
+    /**
+     * Admin Console Domain Admin DL Rights
+     */
+    public static final String RT_domainAdminConsoleDLRights = "domainAdminConsoleDLRights";
+
+    /**
+     * Admin Console Domain Admin rights for DL Shares Tab
+     */
+    public static final String RT_domainAdminConsoleDLSharesTabRights = "domainAdminConsoleDLSharesTabRights";
+
+    /**
+     * Admin Console Domain Admin Resource Rights
+     */
+    public static final String RT_domainAdminConsoleResourceRights = "domainAdminConsoleResourceRights";
+
+    /**
+     * Admin Console Domain Admin rights for Resources Contact Tab
+     */
+    public static final String RT_domainAdminConsoleResourcesContactTabRights = "domainAdminConsoleResourcesContactTabRights";
+
+    /**
+     * Admin Console Domain Admin rights for Resources Properties Tab
+     */
+    public static final String RT_domainAdminConsoleResourcesPropertiesTabRights = "domainAdminConsoleResourcesPropertiesTabRights";
+
+    /**
+     * Admin Console Domain Admin Rights and Views
+     */
+    public static final String RT_domainAdminConsoleRights = "domainAdminConsoleRights";
 
     /**
      * domain admin cos right
@@ -673,6 +1133,291 @@ public class RightConsts {
     public static final String RT_setAccountPassword = "setAccountPassword";
 
     /**
+     * Admin Console set attr rights for Account ACL Tab
+     */
+    public static final String RT_setAdminConsoleAccountsACLTab = "setAdminConsoleAccountsACLTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Aliases Tab
+     */
+    public static final String RT_setAdminConsoleAccountsAliasesTab = "setAdminConsoleAccountsAliasesTab";
+
+    /**
+     * Admin Console set attr rights for accounts contact tab
+     */
+    public static final String RT_setAdminConsoleAccountsContactTab = "setAdminConsoleAccountsContactTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Features Tab
+     */
+    public static final String RT_setAdminConsoleAccountsFeaturesTab = "setAdminConsoleAccountsFeaturesTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Forwarding Tab
+     */
+    public static final String RT_setAdminConsoleAccountsForwardingTab = "setAdminConsoleAccountsForwardingTab";
+
+    /**
+     * Admin Console set attr rights for Accounts FreeBusyInterop Tab
+     */
+    public static final String RT_setAdminConsoleAccountsFreeBusyInteropTab = "setAdminConsoleAccountsFreeBusyInteropTab";
+
+    /**
+     * Admin Console set attr rights for accounts contact tab
+     */
+    public static final String RT_setAdminConsoleAccountsInfoTab = "setAdminConsoleAccountsInfoTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Themes Tab
+     */
+    public static final String RT_setAdminConsoleAccountsThemesTab = "setAdminConsoleAccountsThemesTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Zimlets Tab
+     */
+    public static final String RT_setAdminConsoleAccountsZimletsTab = "setAdminConsoleAccountsZimletsTab";
+
+    /**
+     * Admin Console set attr rights for COS ACL Tab
+     */
+    public static final String RT_setAdminConsoleCOSACLTab = "setAdminConsoleCOSACLTab";
+
+    /**
+     * Admin Console set attr rights for COS Advanced Tab
+     */
+    public static final String RT_setAdminConsoleCOSAdvancedTab = "setAdminConsoleCOSAdvancedTab";
+
+    /**
+     * Admin Console set attr rights for COS General Features Tab
+     */
+    public static final String RT_setAdminConsoleCOSFeaturesTab = "setAdminConsoleCOSFeaturesTab";
+
+    /**
+     * Admin Console set attr rights for COS General Info Tab
+     */
+    public static final String RT_setAdminConsoleCOSInfoTab = "setAdminConsoleCOSInfoTab";
+
+    /**
+     * Admin Console set attr rights for COS Mobile Tab
+     */
+    public static final String RT_setAdminConsoleCOSMobileTab = "setAdminConsoleCOSMobileTab";
+
+    /**
+     * Admin Console set attr rights for COS General Preferences Tab
+     */
+    public static final String RT_setAdminConsoleCOSPreferencesTab = "setAdminConsoleCOSPreferencesTab";
+
+    /**
+     * Admin Console set attr rights for COS Server Pool Tab
+     */
+    public static final String RT_setAdminConsoleCOSServerPoolTab = "setAdminConsoleCOSServerPoolTab";
+
+    /**
+     * Admin Console set attr rights for COS Themes Tab
+     */
+    public static final String RT_setAdminConsoleCOSThemesTab = "setAdminConsoleCOSThemesTab";
+
+    /**
+     * Admin Console set attr rights for COS Zimlets Tab
+     */
+    public static final String RT_setAdminConsoleCOSZimletsTab = "setAdminConsoleCOSZimletsTab";
+
+    /**
+     * Admin Console set attr rights for DL ACL Tab
+     */
+    public static final String RT_setAdminConsoleDLACLTab = "setAdminConsoleDLACLTab";
+
+    /**
+     * Admin Console set attr rights for DL Aliases Tab
+     */
+    public static final String RT_setAdminConsoleDLAliasesTab = "setAdminConsoleDLAliasesTab";
+
+    /**
+     * Admin Console set attr rights for DL Members Tab
+     */
+    public static final String RT_setAdminConsoleDLMembersTab = "setAdminConsoleDLMembersTab";
+
+    /**
+     * Admin Console set attr rights for DL Notes Tab
+     */
+    public static final String RT_setAdminConsoleDLNotesTab = "setAdminConsoleDLNotesTab";
+
+    /**
+     * Admin Console set attr rights for DL Shares Tab
+     */
+    public static final String RT_setAdminConsoleDLSharesTab = "setAdminConsoleDLSharesTab";
+
+    /**
+     * Admin Console set attr rights for Domain ACL Tab
+     */
+    public static final String RT_setAdminConsoleDomainACLTab = "setAdminConsoleDomainACLTab";
+
+    /**
+     * Admin Console set attr rights for Domain Authentication Tab
+     */
+    public static final String RT_setAdminConsoleDomainAuthenticationTab = "setAdminConsoleDomainAuthenticationTab";
+
+    /**
+     * Admin Console set attr rights for Domain Documents Tab
+     */
+    public static final String RT_setAdminConsoleDomainDocumentsTab = "setAdminConsoleDomainDocumentsTab";
+
+    /**
+     * Admin Console set attr rights for Domain Freebusy Tab
+     */
+    public static final String RT_setAdminConsoleDomainFreebusyTab = "setAdminConsoleDomainFreebusyTab";
+
+    /**
+     * Admin Console set attr rights for Domain GAL Tab
+     */
+    public static final String RT_setAdminConsoleDomainGALTab = "setAdminConsoleDomainGALTab";
+
+    /**
+     * Admin Console set attr rights for Domain Info Tab
+     */
+    public static final String RT_setAdminConsoleDomainInfoTab = "setAdminConsoleDomainInfoTab";
+
+    /**
+     * Admin Console set attr rights for Domain Limits Tab
+     */
+    public static final String RT_setAdminConsoleDomainLimitsTab = "setAdminConsoleDomainLimitsTab";
+
+    /**
+     * Admin Console set attr rights for Domain Themes Tab
+     */
+    public static final String RT_setAdminConsoleDomainThemesTab = "setAdminConsoleDomainThemesTab";
+
+    /**
+     * Admin Console set attr rights for Domain VirtualHosts Tab
+     */
+    public static final String RT_setAdminConsoleDomainVirtualHostsTab = "setAdminConsoleDomainVirtualHostsTab";
+
+    /**
+     * Admin Console set attr rights for Domain Zimlets Tab
+     */
+    public static final String RT_setAdminConsoleDomainZimletsTab = "setAdminConsoleDomainZimletsTab";
+
+    /**
+     * Admin Console set attr rights for Extensions ACL Tab
+     */
+    public static final String RT_setAdminConsoleExtensionACLTab = "setAdminConsoleExtensionACLTab";
+
+    /**
+     * Admin Console set attr rights for GlobalACL Tab
+     */
+    public static final String RT_setAdminConsoleGlobalACLTab = "setAdminConsoleGlobalACLTab";
+
+    /**
+     * Admin Console set attr rights for Global AS/AV Tab
+     */
+    public static final String RT_setAdminConsoleGlobalASAVTab = "setAdminConsoleGlobalASAVTab";
+
+    /**
+     * Admin Console set attr rights for Global Attachments Tab
+     */
+    public static final String RT_setAdminConsoleGlobalAttachmentsTab = "setAdminConsoleGlobalAttachmentsTab";
+
+    /**
+     * Admin Console view attr rights for GlobalBackupRestore Tab
+     */
+    public static final String RT_setAdminConsoleGlobalBackupRestoreTab = "setAdminConsoleGlobalBackupRestoreTab";
+
+    /**
+     * Admin Console view attr rights for GlobalFreebusy Tab
+     */
+    public static final String RT_setAdminConsoleGlobalFreebusyTab = "setAdminConsoleGlobalFreebusyTab";
+
+    /**
+     * Admin Console view attr rights for GlobalHSM Tab
+     */
+    public static final String RT_setAdminConsoleGlobalHSMTab = "setAdminConsoleGlobalHSMTab";
+
+    /**
+     * Admin Console set attr rights for Global IMAP Tab
+     */
+    public static final String RT_setAdminConsoleGlobalIMAPTab = "setAdminConsoleGlobalIMAPTab";
+
+    /**
+     * Admin Console set attr rights for Global Info Tab
+     */
+    public static final String RT_setAdminConsoleGlobalInfoTab = "setAdminConsoleGlobalInfoTab";
+
+    /**
+     * Admin Console set attr rights for GlobalLicense Tab
+     */
+    public static final String RT_setAdminConsoleGlobalLicenseTab = "setAdminConsoleGlobalLicenseTab";
+
+    /**
+     * Admin Console set attr rights for Global MTA Tab
+     */
+    public static final String RT_setAdminConsoleGlobalMTATab = "setAdminConsoleGlobalMTATab";
+
+    /**
+     * Admin Console set attr rights for Global POP Tab
+     */
+    public static final String RT_setAdminConsoleGlobalPOPTab = "setAdminConsoleGlobalPOPTab";
+
+    /**
+     * Admin Console set attr rights for GlobalThemes Tab
+     */
+    public static final String RT_setAdminConsoleGlobalThemesTab = "setAdminConsoleGlobalThemesTab";
+
+    /**
+     * Admin Console set attr rights for Resources Contact Tab
+     */
+    public static final String RT_setAdminConsoleResourcesContactTab = "setAdminConsoleResourcesContactTab";
+
+    /**
+     * Admin Console set attr rights for Resources Properties Tab
+     */
+    public static final String RT_setAdminConsoleResourcesPropertiesTab = "setAdminConsoleResourcesPropertiesTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerACLTab = "setAdminConsoleServerACLTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerBackupRestoreTab = "setAdminConsoleServerBackupRestoreTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerIMAPTab = "setAdminConsoleServerIMAPTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerInfoTab = "setAdminConsoleServerInfoTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerMTATab = "setAdminConsoleServerMTATab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerPOPTab = "setAdminConsoleServerPOPTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerServicesTab = "setAdminConsoleServerServicesTab";
+
+    /**
+     * Admin Console set attr rights for Server ACL Tab
+     */
+    public static final String RT_setAdminConsoleServerVolumesTab = "setAdminConsoleServerVolumesTab";
+
+    /**
+     * Admin Console set attr rights for Zimlet ACL Tab
+     */
+    public static final String RT_setAdminConsoleZimletACLTab = "setAdminConsoleZimletACLTab";
+
+    /**
      * save admin saved searches
      */
     public static final String RT_setAdminSavedSearch = "setAdminSavedSearch";
@@ -693,6 +1438,77 @@ public class RightConsts {
      * access manager
      */
     public static final String RT_setDomainAdminCalendarResourceAttrs = "setDomainAdminCalendarResourceAttrs";
+
+    /**
+     * Admin Console Domain Admin set attr rights for Accounts Aliases Tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsAliasesTab = "setDomainAdminConsoleAccountsAliasesTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for accounts contact tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsContactTab = "setDomainAdminConsoleAccountsContactTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for Accounts Features Tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsFeaturesTab = "setDomainAdminConsoleAccountsFeaturesTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for Accounts Forwarding Tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsForwardingTab = "setDomainAdminConsoleAccountsForwardingTab";
+
+    /**
+     * Admin Console set attr rights for Accounts FreeBusyInterop Tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsFreeBusyInteropTab = "setDomainAdminConsoleAccountsFreeBusyInteropTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for accounts contact tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsInfoTab = "setDomainAdminConsoleAccountsInfoTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Themes Tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsThemesTab = "setDomainAdminConsoleAccountsThemesTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Zimlets Tab
+     */
+    public static final String RT_setDomainAdminConsoleAccountsZimletsTab = "setDomainAdminConsoleAccountsZimletsTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for DL Aliases Tab
+     */
+    public static final String RT_setDomainAdminConsoleDLAliasesTab = "setDomainAdminConsoleDLAliasesTab";
+
+    /**
+     * Admin Console set attr rights for DL Members Tab
+     */
+    public static final String RT_setDomainAdminConsoleDLMembersTab = "setDomainAdminConsoleDLMembersTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for DL Notes Tab
+     */
+    public static final String RT_setDomainAdminConsoleDLNotesTab = "setDomainAdminConsoleDLNotesTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for DL Shares Tab
+     */
+    public static final String RT_setDomainAdminConsoleDLSharesTab = "setDomainAdminConsoleDLSharesTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for Resources Contact Tab
+     */
+    public static final String RT_setDomainAdminConsoleResourcesContactTab = "setDomainAdminConsoleResourcesContactTab";
+
+    /**
+     * Admin Console Domain Admin set attr rights for Resources Properties
+     * Tab
+     */
+    public static final String RT_setDomainAdminConsoleResourcesPropertiesTab = "setDomainAdminConsoleResourcesPropertiesTab";
 
     /**
      * distribution list attrs modifiable by domain admins for domain based
@@ -721,6 +1537,291 @@ public class RightConsts {
     public static final String RT_viewAccountAdminUI = "viewAccountAdminUI";
 
     /**
+     * Admin Console view attr rights for Account ACL Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsACLTab = "viewAdminConsoleAccountsACLTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Aliases Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsAliasesTab = "viewAdminConsoleAccountsAliasesTab";
+
+    /**
+     * Admin Console view attr rights for accounts contact tab
+     */
+    public static final String RT_viewAdminConsoleAccountsContactTab = "viewAdminConsoleAccountsContactTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Features Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsFeaturesTab = "viewAdminConsoleAccountsFeaturesTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Forwarding Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsForwardingTab = "viewAdminConsoleAccountsForwardingTab";
+
+    /**
+     * Admin Console view attr rights for Accounts FreeBusyInterop Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsFreeBusyInteropTab = "viewAdminConsoleAccountsFreeBusyInteropTab";
+
+    /**
+     * Admin Console view attr rights for accounts contact tab
+     */
+    public static final String RT_viewAdminConsoleAccountsInfoTab = "viewAdminConsoleAccountsInfoTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Themes Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsThemesTab = "viewAdminConsoleAccountsThemesTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Zimlets Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsZimletsTab = "viewAdminConsoleAccountsZimletsTab";
+
+    /**
+     * Admin Console view attr rights for COS ACL Tab
+     */
+    public static final String RT_viewAdminConsoleCOSACLTab = "viewAdminConsoleCOSACLTab";
+
+    /**
+     * Admin Console view attr rights for COS Advanced Tab
+     */
+    public static final String RT_viewAdminConsoleCOSAdvancedTab = "viewAdminConsoleCOSAdvancedTab";
+
+    /**
+     * Admin Console view attr rights for COS General Features Tab
+     */
+    public static final String RT_viewAdminConsoleCOSFeaturesTab = "viewAdminConsoleCOSFeaturesTab";
+
+    /**
+     * Admin Console view attr rights for COS General Info Tab
+     */
+    public static final String RT_viewAdminConsoleCOSInfoTab = "viewAdminConsoleCOSInfoTab";
+
+    /**
+     * Admin Console view attr rights for COS Mobile Tab
+     */
+    public static final String RT_viewAdminConsoleCOSMobileTab = "viewAdminConsoleCOSMobileTab";
+
+    /**
+     * Admin Console view attr rights for COS General Preferences Tab
+     */
+    public static final String RT_viewAdminConsoleCOSPreferencesTab = "viewAdminConsoleCOSPreferencesTab";
+
+    /**
+     * Admin Console view attr rights for COS Server Pool Tab
+     */
+    public static final String RT_viewAdminConsoleCOSServerPoolTab = "viewAdminConsoleCOSServerPoolTab";
+
+    /**
+     * Admin Console view attr rights for COS Themes Tab
+     */
+    public static final String RT_viewAdminConsoleCOSThemesTab = "viewAdminConsoleCOSThemesTab";
+
+    /**
+     * Admin Console view attr rights for COS Zimlets Tab
+     */
+    public static final String RT_viewAdminConsoleCOSZimletsTab = "viewAdminConsoleCOSZimletsTab";
+
+    /**
+     * Admin Console view attr rights for DL ACL Tab
+     */
+    public static final String RT_viewAdminConsoleDLACLTab = "viewAdminConsoleDLACLTab";
+
+    /**
+     * Admin Console view attr rights for DL Aliases Tab
+     */
+    public static final String RT_viewAdminConsoleDLAliasesTab = "viewAdminConsoleDLAliasesTab";
+
+    /**
+     * Admin Console view attr rights for DL Members Tab
+     */
+    public static final String RT_viewAdminConsoleDLMembersTab = "viewAdminConsoleDLMembersTab";
+
+    /**
+     * Admin Console view attr rights for DL Notes Tab
+     */
+    public static final String RT_viewAdminConsoleDLNotesTab = "viewAdminConsoleDLNotesTab";
+
+    /**
+     * Admin Console view attr rights for DL Shares Tab
+     */
+    public static final String RT_viewAdminConsoleDLSharesTab = "viewAdminConsoleDLSharesTab";
+
+    /**
+     * Admin Console view attr rights for Domain ACL Tab
+     */
+    public static final String RT_viewAdminConsoleDomainACLTab = "viewAdminConsoleDomainACLTab";
+
+    /**
+     * Admin Console view attr rights for Domain Authentication Tab
+     */
+    public static final String RT_viewAdminConsoleDomainAuthenticationTab = "viewAdminConsoleDomainAuthenticationTab";
+
+    /**
+     * Admin Console view attr rights for Domain Documents Tab
+     */
+    public static final String RT_viewAdminConsoleDomainDocumentsTab = "viewAdminConsoleDomainDocumentsTab";
+
+    /**
+     * Admin Console view attr rights for Domain Freebusy Tab
+     */
+    public static final String RT_viewAdminConsoleDomainFreebusyTab = "viewAdminConsoleDomainFreebusyTab";
+
+    /**
+     * Admin Console view attr rights for Domain GAL Tab
+     */
+    public static final String RT_viewAdminConsoleDomainGALTab = "viewAdminConsoleDomainGALTab";
+
+    /**
+     * Admin Console view attr rights for Domain Info Tab
+     */
+    public static final String RT_viewAdminConsoleDomainInfoTab = "viewAdminConsoleDomainInfoTab";
+
+    /**
+     * Admin Console view attr rights for Domain Limits Tab
+     */
+    public static final String RT_viewAdminConsoleDomainLimitsTab = "viewAdminConsoleDomainLimitsTab";
+
+    /**
+     * Admin Console view attr rights for Domain Themes Tab
+     */
+    public static final String RT_viewAdminConsoleDomainThemesTab = "viewAdminConsoleDomainThemesTab";
+
+    /**
+     * Admin Console view attr rights for Domain VirtualHosts Tab
+     */
+    public static final String RT_viewAdminConsoleDomainVirtualHostsTab = "viewAdminConsoleDomainVirtualHostsTab";
+
+    /**
+     * Admin Console view attr rights for Domain Zimlets Tab
+     */
+    public static final String RT_viewAdminConsoleDomainZimletsTab = "viewAdminConsoleDomainZimletsTab";
+
+    /**
+     * Admin Console view attr rights for Extensions ACL Tab
+     */
+    public static final String RT_viewAdminConsoleExtensionACLTab = "viewAdminConsoleExtensionACLTab";
+
+    /**
+     * Admin Console view attr rights for GlobalACL Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalACLTab = "viewAdminConsoleGlobalACLTab";
+
+    /**
+     * Admin Console view attr rights for Global AS/AV Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalASAVTab = "viewAdminConsoleGlobalASAVTab";
+
+    /**
+     * Admin Console view attr rights for Global Attachments Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalAttachmentsTab = "viewAdminConsoleGlobalAttachmentsTab";
+
+    /**
+     * Admin Console view attr rights for GlobalBackupRestore Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalBackupRestoreTab = "viewAdminConsoleGlobalBackupRestoreTab";
+
+    /**
+     * Admin Console view attr rights for GlobalFreebusy Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalFreebusyTab = "viewAdminConsoleGlobalFreebusyTab";
+
+    /**
+     * Admin Console view attr rights for GlobalHSM Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalHSMTab = "viewAdminConsoleGlobalHSMTab";
+
+    /**
+     * Admin Console view attr rights for Global IMAP Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalIMAPTab = "viewAdminConsoleGlobalIMAPTab";
+
+    /**
+     * Admin Console view attr rights for Global Info Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalInfoTab = "viewAdminConsoleGlobalInfoTab";
+
+    /**
+     * Admin Console view attr rights for GlobalLicense Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalLicenseTab = "viewAdminConsoleGlobalLicenseTab";
+
+    /**
+     * Admin Console view attr rights for Global MTA Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalMTATab = "viewAdminConsoleGlobalMTATab";
+
+    /**
+     * Admin Console view attr rights for Global POP Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalPOPTab = "viewAdminConsoleGlobalPOPTab";
+
+    /**
+     * Admin Console view attr rights for GlobalThemes Tab
+     */
+    public static final String RT_viewAdminConsoleGlobalThemesTab = "viewAdminConsoleGlobalThemesTab";
+
+    /**
+     * Console view attr rights for Resources Contact Tab
+     */
+    public static final String RT_viewAdminConsoleResourcesContactTab = "viewAdminConsoleResourcesContactTab";
+
+    /**
+     * Admin Console view attr rights for Resources Properties Tab
+     */
+    public static final String RT_viewAdminConsoleResourcesPropertiesTab = "viewAdminConsoleResourcesPropertiesTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerACLTab = "viewAdminConsoleServerACLTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerBackupRestoreTab = "viewAdminConsoleServerBackupRestoreTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerIMAPTab = "viewAdminConsoleServerIMAPTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerInfoTab = "viewAdminConsoleServerInfoTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerMTATab = "viewAdminConsoleServerMTATab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerPOPTab = "viewAdminConsoleServerPOPTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerServicesTab = "viewAdminConsoleServerServicesTab";
+
+    /**
+     * Admin Console view attr rights for Server ACL Tab
+     */
+    public static final String RT_viewAdminConsoleServerVolumesTab = "viewAdminConsoleServerVolumesTab";
+
+    /**
+     * Admin Console view attr rights for Zimlet ACL Tab
+     */
+    public static final String RT_viewAdminConsoleZimletACLTab = "viewAdminConsoleZimletACLTab";
+
+    /**
      * view admin saved searches
      */
     public static final String RT_viewAdminSavedSearch = "viewAdminSavedSearch";
@@ -738,6 +1839,78 @@ public class RightConsts {
      * viewDistributionListAdminUI right.
      */
     public static final String RT_viewDistributionListAdminUI = "viewDistributionListAdminUI";
+
+    /**
+     * Admin Console Domain Admin view attr rights for Accounts Aliases Tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsAliasesTab = "viewDomainAdminConsoleAccountsAliasesTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for accounts contact tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsContactTab = "viewDomainAdminConsoleAccountsContactTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for Accounts Features Tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsFeaturesTab = "viewDomainAdminConsoleAccountsFeaturesTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for Accounts Forwarding
+     * Tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsForwardingTab = "viewDomainAdminConsoleAccountsForwardingTab";
+
+    /**
+     * Admin Console view attr rights for Accounts FreeBusyInterop Tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsFreeBusyInteropTab = "viewDomainAdminConsoleAccountsFreeBusyInteropTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for accounts contact tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsInfoTab = "viewDomainAdminConsoleAccountsInfoTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Themes Tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsThemesTab = "viewDomainAdminConsoleAccountsThemesTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Zimlets Tab
+     */
+    public static final String RT_viewDomainAdminConsoleAccountsZimletsTab = "viewDomainAdminConsoleAccountsZimletsTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for DL Aliases Tab
+     */
+    public static final String RT_viewDomainAdminConsoleDLAliasesTab = "viewDomainAdminConsoleDLAliasesTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for DL Members Tab
+     */
+    public static final String RT_viewDomainAdminConsoleDLMembersTab = "viewDomainAdminConsoleDLMembersTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for DL Notes Tab
+     */
+    public static final String RT_viewDomainAdminConsoleDLNotesTab = "viewDomainAdminConsoleDLNotesTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for DL Shares Tab
+     */
+    public static final String RT_viewDomainAdminConsoleDLSharesTab = "viewDomainAdminConsoleDLSharesTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for Resources Contact Tab
+     */
+    public static final String RT_viewDomainAdminConsoleResourcesContactTab = "viewDomainAdminConsoleResourcesContactTab";
+
+    /**
+     * Admin Console Domain Admin view attr rights for Resources Properties
+     * Tab
+     */
+    public static final String RT_viewDomainAdminConsoleResourcesPropertiesTab = "viewDomainAdminConsoleResourcesPropertiesTab";
 
     /**
      * view grants on all target types

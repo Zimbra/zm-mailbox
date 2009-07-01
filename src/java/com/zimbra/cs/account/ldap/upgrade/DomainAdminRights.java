@@ -55,22 +55,7 @@ public class DomainAdminRights extends LdapUpgrade {
         "aliasListView",
         "DLListView",
         "resourceListView",
-        "saveSearch",
-        "accountsContactTab",
-        "accountsMemberOfTab",
-        "accountsAliasesTab",
-        "accountsForwardingTab",
-        "dlMembersTab",
-        "dlAliasesTab",
-        "dlMemberOfTab",
-        "dlNotesOfTab",
-        "resourcePropertiesTab",
-        "resourceContactTab",
-        
-        "domainListView",
-        "domainGeneralTab",
-        
-        "domainSkinsTab"
+        "saveSearch"
     };
 
     DomainAdminRights() throws ServiceException {
@@ -186,7 +171,7 @@ public class DomainAdminRights extends LdapUpgrade {
         //
         mProv.grantRight(TargetType.domain.getCode(), TargetBy.id, domain.getId(), 
                 GranteeType.GT_USER.getCode(), GranteeBy.id, domainAdmin.getId(), 
-                RightConsts.RT_domainAdminRights, RightModifier.RM_CAN_DELEGATE);
+                RightConsts.RT_domainAdminConsoleRights, RightModifier.RM_CAN_DELEGATE);
         
         //
         // cos rights
