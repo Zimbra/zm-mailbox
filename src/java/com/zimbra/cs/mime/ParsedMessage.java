@@ -777,7 +777,7 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns CalenarPartInfo object contaiming a ZVCalendar representing an iCalendar
+     * Returns CalenarPartInfo object containing a ZVCalendar representing an iCalendar
      * part and some additional information about the calendar part such as whether
      * the part was found inside a forwarded rfc822 message and if the part had
      * "method" parameter indicating it was an actual invite email as opposed to
