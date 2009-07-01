@@ -2290,6 +2290,24 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleGlobalRights">
+  <desc>Admin Console Global Rights</desc>
+  <rights>
+    <r n="adminConsoleGlobalInfoTabRights"/>
+    <r n="adminConsoleGlobalAttachmentsTabRights"/>
+    <r n="adminConsoleGlobalMTATabRights"/>
+    <r n="adminConsoleGlobalIMAPTabRights"/>
+    <r n="adminConsoleGlobalPOPTabRights"/>
+    <r n="adminConsoleGlobalASAVTabRights"/>
+    <r n="adminConsoleGlobalFreebusyTabRights"/>
+    <r n="adminConsoleGlobalThemesTabRights"/>
+    <r n="adminConsoleGlobalBackupRestoreTabRights"/>
+    <r n="adminConsoleGlobalACLTabRights"/>
+    <r n="adminConsoleGlobalHSMTabRights"/>
+    <r n="adminConsoleGlobalLicenseTabRights"/>
+  </rights>
+</right>
+
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
   <rights>
@@ -2302,6 +2320,7 @@
     <r n="adminConsoleServerRights"/>
     <r n="adminConsoleZimletRights"/>
     <r n="adminConsoleExtensionRights"/>
+    <r n="adminConsoleGlobalRights"/>
     <r n="setAdminSavedSearch"/>
     <r n="viewAdminSavedSearch"/>
   </rights>
