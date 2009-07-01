@@ -36,7 +36,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.datasource.CalDavDataImport;
 import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.db.DbDataSource;
@@ -58,7 +57,7 @@ public class DataSource extends AccountProperty {
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
     public enum Type {
-        pop3, imap, caldav, live, yab, rss, cal, gal;
+        pop3, imap, caldav, live, yab, rss, cal, gal, xsync;
         
         public static Type fromString(String s) throws ServiceException {
             try {

@@ -14,12 +14,14 @@
  */
 package com.zimbra.cs.datasource;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -78,6 +80,17 @@ public class DataSourceManager {
             return new GalImport(ds);
         case cal:
             return new RssImport(ds);
+        case xsync:
+        	try {
+	        	String className = LC.data_source_xsync_class.value();
+	        	if (className != null && className.length() > 0) {
+					Class cmdClass = Class.forName(className);
+					Constructor constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+					return (DataImport)constructor.newInstance(new Object[] {ds});
+	        	}
+        	} catch (Exception x) {
+        		ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
+        	}
         default:
             throw new IllegalArgumentException(
                 "Unknown data import type: " + ds.getType());
