@@ -281,6 +281,7 @@ public class MailConstants {
     public static final String E_BODY_TEST = "bodyTest";
     public static final String E_ATTACHMENT_TEST = "attachmentTest";
     public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
+    public static final String E_INVITE_TEST = "inviteTest";
     
     public static final String E_FILTER_ACTIONS = "filterActions";
     public static final String E_ACTION_KEEP = "actionKeep";
