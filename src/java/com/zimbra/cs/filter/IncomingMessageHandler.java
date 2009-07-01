@@ -22,10 +22,14 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -79,7 +83,23 @@ extends FilterHandler {
     @Override
     public ItemId fileInto(String folderPath, int flagBitmask, String tags)
     throws ServiceException {
-        return FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath, flagBitmask, tags);
+        ItemId id = FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath, flagBitmask, tags);
+        
+        // Do spam training if the user explicitly filed the message into
+        // the spam folder (bug 37164).
+        try {
+            Folder folder = mMailbox.getFolderByPath(null, folderPath);
+            if (folder.getId() == Mailbox.ID_FOLDER_SPAM && id.isLocal()) {
+                SpamHandler.getInstance().handle(null, mMailbox, id.getId(), MailItem.TYPE_MESSAGE, true);
+            }
+        } catch (NoSuchItemException e) {
+            ZimbraLog.filter.debug("Unable to do spam training for message %s because folder path %s does not exist.",
+                id, folderPath);
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Unable to do spam training for message %s.", id, e);
+        }
+        
+        return id;
     }
 
     @Override

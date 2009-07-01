@@ -313,9 +313,9 @@ public class ZimbraMailAdapter implements MailAdapter
     }
     
     /**
-     * Files the message into the given folder.  Keeps track
-     * of the folder path, to make sure we don't file to the same
-     * folder twice.
+     * Files the message into the given folder, as a result of an explicit
+     * fileinto filter action.  Keeps track of the folder path, to make
+     * sure we don't file to the same folder twice.
      */
     private void fileInto(String folderPath)
     throws ServiceException {
