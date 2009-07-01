@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090629-1141 */
+    /* build: 6.0.0 pshao 20090630-2154 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -13715,6 +13715,150 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMailForwardingAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailForwardingAddress, "");
+        return attrs;
+    }
+
+    /**
+     * max number of chars in zimbraPrefMailForwardingAddress
+     *
+     * @return zimbraMailForwardingAddressMaxLength, or 4096 if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1039)
+    public int getMailForwardingAddressMaxLength() {
+        return getIntAttr(Provisioning.A_zimbraMailForwardingAddressMaxLength, 4096);
+    }
+
+    /**
+     * max number of chars in zimbraPrefMailForwardingAddress
+     *
+     * @param zimbraMailForwardingAddressMaxLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1039)
+    public void setMailForwardingAddressMaxLength(int zimbraMailForwardingAddressMaxLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxLength, Integer.toString(zimbraMailForwardingAddressMaxLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of chars in zimbraPrefMailForwardingAddress
+     *
+     * @param zimbraMailForwardingAddressMaxLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1039)
+    public Map<String,Object> setMailForwardingAddressMaxLength(int zimbraMailForwardingAddressMaxLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxLength, Integer.toString(zimbraMailForwardingAddressMaxLength));
+        return attrs;
+    }
+
+    /**
+     * max number of chars in zimbraPrefMailForwardingAddress
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1039)
+    public void unsetMailForwardingAddressMaxLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of chars in zimbraPrefMailForwardingAddress
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1039)
+    public Map<String,Object> unsetMailForwardingAddressMaxLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxLength, "");
+        return attrs;
+    }
+
+    /**
+     * max number of email addresses in zimbraPrefMailForwardingAddress
+     *
+     * @return zimbraMailForwardingAddressMaxNumAddrs, or 100 if unset
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1040)
+    public int getMailForwardingAddressMaxNumAddrs() {
+        return getIntAttr(Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs, 100);
+    }
+
+    /**
+     * max number of email addresses in zimbraPrefMailForwardingAddress
+     *
+     * @param zimbraMailForwardingAddressMaxNumAddrs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1040)
+    public void setMailForwardingAddressMaxNumAddrs(int zimbraMailForwardingAddressMaxNumAddrs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs, Integer.toString(zimbraMailForwardingAddressMaxNumAddrs));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of email addresses in zimbraPrefMailForwardingAddress
+     *
+     * @param zimbraMailForwardingAddressMaxNumAddrs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1040)
+    public Map<String,Object> setMailForwardingAddressMaxNumAddrs(int zimbraMailForwardingAddressMaxNumAddrs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs, Integer.toString(zimbraMailForwardingAddressMaxNumAddrs));
+        return attrs;
+    }
+
+    /**
+     * max number of email addresses in zimbraPrefMailForwardingAddress
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1040)
+    public void unsetMailForwardingAddressMaxNumAddrs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max number of email addresses in zimbraPrefMailForwardingAddress
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1040)
+    public Map<String,Object> unsetMailForwardingAddressMaxNumAddrs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailForwardingAddressMaxNumAddrs, "");
         return attrs;
     }
 

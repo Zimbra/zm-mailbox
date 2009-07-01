@@ -142,11 +142,21 @@ public abstract class AttributeCallback {
                 
         if (value == null)
             svm.mMod = SingleValueMod.Mod.UNSETTING;
-        else if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
         else {
-            // we have a String
-            String s = (String)value;
+            String s = null;
+            
+            if (value instanceof String)
+                s = (String)value;
+            else if (value instanceof String[]) {
+                String[] ss = (String[])value;
+                if (ss.length == 1)
+                    s = ss[0];
+            }
+            
+            // s should be set by now
+            if (s == null)
+                throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
+                
             if ("".equals(s))
                 svm.mMod = SingleValueMod.Mod.UNSETTING;
             else {

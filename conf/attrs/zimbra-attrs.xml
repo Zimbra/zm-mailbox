@@ -1695,7 +1695,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable end-user mail forwarding features</desc>
 </attr>
 
-<attr id="343" name="zimbraPrefMailForwardingAddress" type="cs_emailp" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+<attr id="343" name="zimbraPrefMailForwardingAddress" type="cs_emailp" cardinality="single" optionalIn="account" flags="domainAdminModifiable" callback="PrefMailForwardingAddress" >
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
@@ -4583,5 +4583,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>SQL statements that take longer than this duration to execute will be logged to the sqltrace category in mailbox.log.</desc>
 </attr>
 
+<attr id="1039" name="zimbraMailForwardingAddressMaxLength" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_BETA3">
+  <defaultCOSValue>4096</defaultCOSValue>
+  <desc>max number of chars in zimbraPrefMailForwardingAddress</desc>
+</attr>
+
+<attr id="1040" name="zimbraMailForwardingAddressMaxNumAddrs" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_BETA3">
+  <defaultCOSValue>100</defaultCOSValue>
+  <desc>max number of email addresses in zimbraPrefMailForwardingAddress</desc>
+</attr>
 
 </attrs>

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090629-1141 */
+    /* build: 6.0.0 pshao 20090630-2154 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3808,6 +3808,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=12)
     public static final String A_zimbraMailForwardingAddress = "zimbraMailForwardingAddress";
+
+    /**
+     * max number of chars in zimbraPrefMailForwardingAddress
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1039)
+    public static final String A_zimbraMailForwardingAddressMaxLength = "zimbraMailForwardingAddressMaxLength";
+
+    /**
+     * max number of email addresses in zimbraPrefMailForwardingAddress
+     *
+     * @since ZCS 6.0.0_BETA3
+     */
+    @ZAttr(id=1040)
+    public static final String A_zimbraMailForwardingAddressMaxNumAddrs = "zimbraMailForwardingAddressMaxNumAddrs";
 
     /**
      * the server hosting the accounts mailbox
