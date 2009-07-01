@@ -159,9 +159,13 @@ public abstract class Db {
         // default is to do nothing
     }
 
+
     /** Returns <tt>true</tt> if the database with the given name exists. */
     abstract public boolean databaseExists(Connection conn, String dbname)
     throws ServiceException;
+
+    /** Callback executed immediately before creating a user database. */
+    void precreateDatabase(String dbname)  { }
 
     void deleteDatabaseFile(String dbname) {
         // not supported by default

@@ -287,6 +287,8 @@ public class DbMailbox {
                 return;
             }
 
+            Db.getInstance().precreateDatabase(dbname);
+
             // create the new database
             ZimbraLog.mailbox.info("Creating database " + dbname);
             Db.getInstance().registerDatabaseInterest(conn, dbname);
