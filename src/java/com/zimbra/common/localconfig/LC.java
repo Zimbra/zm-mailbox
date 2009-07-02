@@ -1098,7 +1098,7 @@ public class LC {
         zimbra_class_sslprotocolsocketfactory.setDefault("");
 
         zimlet_directory = new KnownKey("zimlet_directory");
-        zimlet_directory.setDefault("${zimbra_home}" + "zimlets-deployed");
+        zimlet_directory.setDefault("${zimbra_home}" + FS + "zimlets-deployed");
 
         zimlet_properties_directory = new KnownKey("zimlet_properties_directory");
         zimlet_properties_directory.setDefault("${zimbra_home}" + FS + "zimlets-properties");
