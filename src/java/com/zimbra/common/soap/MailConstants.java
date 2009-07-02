@@ -226,6 +226,10 @@ public class MailConstants {
     public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
     public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
     
+    // folder ACL
+    public static final QName GET_EFFECTIVE_FOLDER_PERMS_REQUEST = QName.get("GetEffectiveFolderPermsRequest", NAMESPACE);
+    public static final QName GET_EFFECTIVE_FOLDER_PERMS_RESPONSE = QName.get("GetEffectiveFolderPermsResponse", NAMESPACE);
+    
     // Yahoo Auth 
     public static final QName GET_YAHOO_COOKIE_REQUEST = QName.get("GetYahooCookieRequest", NAMESPACE);
     public static final QName GET_YAHOO_COOKIE_RESPONSE = QName.get("GetYahooCookieResponse", NAMESPACE);
