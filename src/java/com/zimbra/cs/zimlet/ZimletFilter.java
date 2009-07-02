@@ -32,6 +32,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -153,7 +154,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         }
 
         // check access
-		File devdir = new File(request.getRealPath("/zimlet/_dev"));
+		File devdir = new File(LC.zimlet_directory.value() + File.separator + ZimletUtil.ZIMLET_DEV_DIR);
         Iterator<String> iter = zimletNames.iterator();
         while (iter.hasNext()) {
             String zimletName = iter.next();

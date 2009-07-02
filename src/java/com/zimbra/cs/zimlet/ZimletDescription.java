@@ -30,6 +30,7 @@ public class ZimletDescription extends ZimletMeta {
 	public static final String ZIMLET_REGEX_EXTENSION_CLASS = "com.zimbra.cs.zimlet.handler.RegexHandler";
 	
 	private List<String> mScripts;
+	private List<String> mStyleSheets;
 	private String mContentObject;
 	private String mPanelItem;
 	private String mExtensionClass;
@@ -48,6 +49,7 @@ public class ZimletDescription extends ZimletMeta {
 	
 	protected void initialize() {
 		mScripts = new ArrayList<String>();
+		mStyleSheets = new ArrayList<String>();
 		mTargets = new ArrayList<String>();
 	}
 
@@ -60,6 +62,8 @@ public class ZimletDescription extends ZimletMeta {
 			parseServerExtension(elem);
 		} else if (elem.getName().equals(ZIMLET_TAG_SCRIPT)) {
 			parseResource(elem);
+		} else if (elem.getName().equals(ZIMLET_TAG_CSS)) {
+			parseCss(elem);
 		} else if (elem.getName().equals(ZIMLET_TAG_TARGET)) {
 			mTargets.add(elem.getText());
 		} else if (elem.getName().equals(ZIMLET_DISABLE_UI_UNDEPLOY)) {
@@ -69,6 +73,10 @@ public class ZimletDescription extends ZimletMeta {
 
 	private void parseResource(Element resource) throws ZimletException {
 		mScripts.add(resource.getText());
+	}
+
+	private void parseCss(Element css) throws ZimletException {
+		mStyleSheets.add(css.getText());
 	}
 	
 	private void parseServerExtension(Element serverExt) throws ZimletException {
@@ -110,9 +118,16 @@ public class ZimletDescription extends ZimletMeta {
 	
 	public String[] getScripts() {
 		if (mScripts.isEmpty()) {
-			return null;
+			return new String[0];
 		}
 		return mScripts.toArray(new String[0]);
+	}
+	
+	public String[] getStyleSheets() {
+		if (mStyleSheets.isEmpty()) {
+			return new String[0];
+		}
+		return mStyleSheets.toArray(new String[0]);
 	}
 	
 	public String getServerExtensionClass() {

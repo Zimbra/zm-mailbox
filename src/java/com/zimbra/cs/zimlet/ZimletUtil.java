@@ -16,6 +16,7 @@ package com.zimbra.cs.zimlet;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,10 +33,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -49,12 +54,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.ProvUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
@@ -73,7 +76,7 @@ import com.zimbra.common.soap.Element.XMLElement;
  */
 public class ZimletUtil {
 	
-	public static final String ZIMLET_BASE = "/service/zimlet";
+	public static final String ZIMLET_BASE = "/service/zimlet/res";
 	public static final String ZIMLET_DEV_DIR = "_dev";
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";
@@ -81,6 +84,7 @@ public class ZimletUtil {
 	private static int P_MAX = Integer.MAX_VALUE;
 	private static boolean sZimletsLoaded = false;
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
+	@SuppressWarnings("unchecked")
 	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
 
 	public static String[] getZimlets(Account acct) throws ServiceException {
@@ -194,6 +198,7 @@ public class ZimletUtil {
 	 * @param name of the Zimlet
 	 * @return ZimletHandler object
 	 */
+	@SuppressWarnings("unchecked")
 	public static ZimletHandler getHandler(String name) {
 		loadZimlets();
 		Class zh = (Class) sZimletHandlers.get(name);
@@ -223,6 +228,15 @@ public class ZimletUtil {
 			ZimbraLog.zimlet.warn("Unable to instantiate zimlet handler for "+name, e);
 		}
 		return null;
+	}
+	
+	public static ZimletFile getZimlet(String zimlet) {
+		ZimletFile zf = null;
+		loadZimlets();
+		zf = sZimlets.get(zimlet);
+		if (zf != null)
+			return zf;
+		return loadDevZimlets().get(zimlet);
 	}
 	
 	/**
@@ -446,7 +460,6 @@ public class ZimletUtil {
 		Zimlet z;
 		Action action = Action.INSTALL;
 		String priority = null;
-		String configString = null;
 
 		
 		// check if the zimlet already exists in LDAP.
@@ -469,9 +482,8 @@ public class ZimletUtil {
 			} else {
 				action = Action.UPGRADE;
 			}
-			// save priority and config
+			// save priority
 			priority = z.getPriority();
-			configString = z.getAttr(Provisioning.A_zimbraZimletHandlerConfig);
 		}
 		
 		// update LDAP
@@ -493,9 +505,7 @@ public class ZimletUtil {
 		}
 		
 		// install the config
-		if (configString != null) {
-			updateZimletConfig(zimletName, configString);
-		} else if (zf.hasZimletConfig()) {
+		if (zf.hasZimletConfig()) {
 			installConfig(zf.getZimletConfig());
 		}
 		
@@ -523,34 +533,38 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Installing Zimlet " + zimletName + " on this host.");
 		String zimletRoot = getZimletDir();
 		
-		// install the files
-		File zimletDir = new File(zimletRoot + File.separatorChar + zimletName);
-		if (!zimletDir.exists()) {
-			FileUtil.mkdirs(zimletDir);
-		}
-		
+		// install the jar file and properties in zimlet
 		File serviceLibDir = new File(LC.mailboxd_directory.value() + File.separator + 
 									"webapps" + File.separator + 
 									"service" + File.separator + 
 									"WEB-INF" + File.separator + 
 									"lib");
+		File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimletName);
 
-		Iterator files = zf.getAllEntries().entrySet().iterator();
+		Iterator<Map.Entry<String, ZimletFile.ZimletEntry>> files = zf.getAllEntries().entrySet().iterator();
 		while (files.hasNext()) {
-			Map.Entry f = (Map.Entry) files.next();
-			ZimletFile.ZimletEntry entry = (ZimletFile.ZimletEntry) f.getValue();
+			ZimletFile.ZimletEntry entry = files.next().getValue();
 			String fname = entry.getName();
-			File rootDir = zimletDir;
-			if (fname.endsWith("/") || fname.endsWith("\\")) {
-				continue;
-			} else if (fname.endsWith(".jar")) {
-				rootDir = serviceLibDir;
+			if (fname.endsWith(".jar")) {
+				File file = new File(serviceLibDir, fname);
+				file.getParentFile().mkdirs();
+				writeFile(entry.getContents(), file);
+			} else if (fname.endsWith(".properties")) {
+				File file = new File(propsDir, fname);
+				file.getParentFile().mkdirs();
+				writeFile(entry.getContents(), file);
 			}
-			File file = new File(rootDir, fname);
-			file.getParentFile().mkdirs();
-			writeFile(entry.getContents(), file);
 		}
 
+		// install the zimlet file
+		File zimlet = new File(zimletRoot + File.separatorChar + zimletName);
+		if (zimlet.exists())
+			deleteFile(zimlet);
+		if (zf.getFile() != null)
+			FileUtil.copy(zf.getFile(), zimlet);
+		else
+			ByteUtil.putContent(zimlet.getAbsolutePath(), zf.toByteArray());
+		
 		flushCache();
 	}
 	
@@ -602,9 +616,18 @@ public class ZimletUtil {
 		ByteUtil.copy(bais, true, fos, true);
 	}
 
+	private static void deleteFile(File f) {
+		if (f.isDirectory()) {
+			for (File sub : f.listFiles()) {
+				deleteFile(sub);
+			}
+		}
+		f.delete();
+	}
+	
 	/**
 	 * 
-	 * Delete the Zimlet from LDAP.
+	 * Delete the Zimlet from LDAP and remove the associated Zimlet files.
 	 * 
 	 * @param zimlet
 	 * @throws ZimletException
@@ -613,7 +636,6 @@ public class ZimletUtil {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
 
-		@SuppressWarnings({"unchecked"})
 		List<Cos> cos = prov.getAllCos();
 		for (Cos c : cos) {
 			try {
@@ -626,6 +648,13 @@ public class ZimletUtil {
 			prov.deleteZimlet(zimlet);
 		} catch (ServiceException se) {
 			ZimbraLog.zimlet.warn("Error deleting Zimlet " + zimlet + " in LDAP.", se);
+		}
+		
+		ZimletFile zf = sZimlets.get(zimlet);
+		if (zf != null) {
+			ZimbraLog.zimlet.info("Deleting Zimlet file "+zf.getFile().getAbsolutePath());
+			deleteFile(zf.getFile());
+			sZimlets.remove(zimlet);
 		}
 		
 		if (auth == null)
@@ -1059,6 +1088,150 @@ public class ZimletUtil {
         }
 	}
 	
+	public static void showInfo(String zimlet) throws ServiceException, ZimletException, IOException {
+		Provisioning prov = Provisioning.getInstance();
+		Zimlet z = prov.getZimlet(zimlet);
+		if (z == null)
+            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
+		List<Zimlet> plist = orderZimletsByPriority();
+		int pri = 0;
+		for (Zimlet zp : plist) {
+			if (zp.compareTo(z) == 0)
+				break;
+			pri++;
+		}
+		System.out.println("Zimlet "+z.getName());
+		System.out.println("         Version: "+z.getAttr(Provisioning.A_zimbraZimletVersion));
+		System.out.println("     Description: "+z.getDescription());
+		System.out.println("        Priority: "+pri);
+		System.out.println("         Enabled: "+(z.isEnabled() ? "true" : "false"));
+		System.out.println("Indexing Enabled: "+(z.isIndexingEnabled() ? "true" : "false"));
+		if (z.isExtension())
+			System.out.println("       Extension: true");
+		String cosList = null;
+		for (Cos cos : prov.getAllCos()) {
+			for (String zc : cos.getZimletAvailableZimlets()) {
+				if (zc.compareTo(zimlet) != 0)
+					continue;
+				if (cosList == null)
+					cosList = cos.getName();
+				else
+					cosList = cosList + ", " + cos.getName();
+				break;
+			}
+		}
+		System.out.println("Activated in COS: "+cosList);
+		System.out.println("          Config: "+z.getHandlerConfig());
+		ZimletFile zf = getZimlet(zimlet);
+		if (zf == null) {
+			System.out.println("*** Zimlet file is missing on this machine");
+		} else {
+			ZimletDescription desc = zf.getZimletDescription();
+			String val = desc.getRegexString();
+			if (val != null)
+				System.out.println("           RegEx: "+val);
+			val = desc.getContentObjectAsXML();
+			if (val != null)
+				System.out.println("  Content Object: "+val);
+			val = desc.getPanelItemAsXML();
+			if (val != null)
+				System.out.println("      Panel Item: "+val);
+			val = null;
+			for (String script : desc.getScripts()) {
+				if (val == null)
+					val = script;
+				else
+					val = val + ", " + script;
+			}
+			if (val != null)
+				System.out.println("         Scripts: "+val);
+			val = null;
+			for (String css : desc.getStyleSheets()) {
+				if (val == null)
+					val = css;
+				else
+					val = val + ", " + css;
+			}
+			if (val != null)
+				System.out.println("             CSS: "+val);
+			val = null;
+			for (String target : desc.getTargets()) {
+				if (val == null)
+					val = target;
+				else
+					val = val + ", " + target;
+			}
+			if (val != null)
+				System.out.println("         Targets: "+val);
+		}
+	}
+	
+	public static void createZip(String dirName, String descFile) throws IOException {
+		File dir = new File(dirName);
+		if (!dir.exists() || !dir.isDirectory())
+			throw new IOException("directory does not exist: "+dirName);
+		String target = descFile;
+		boolean found = false;
+		for (String f : dir.list()) {
+			if (target != null) {
+				if (target.compareTo(f) == 0) {
+					found = true;
+					break;
+				}
+			} else if (f.endsWith(".xml") && f.substring(0, f.length()-4).compareTo(dir.getName()) == 0) {
+				target = f;
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			throw new IOException("Zimlet description not found, or not named correctly.");
+		String manifest = "Manifest-Version: 1.0\nZimlet-Description-File: "+target+"\n";
+		JarOutputStream out = new JarOutputStream(new FileOutputStream(target.substring(0, target.length()-4)+".zip"), 
+				new Manifest(new ByteArrayInputStream(manifest.getBytes("UTF-8"))));
+		for (File f : dir.listFiles())
+			addZipEntry(out, f, null);
+		out.close();
+	}
+	
+	private static void addZipEntry(ZipOutputStream out, File file, String path) throws IOException {
+		String name = (path == null) ? file.getName() : path + "/" + file.getName();
+		if (file.isDirectory()) {
+			for (File f : file.listFiles())
+				addZipEntry(out, f, name);
+			return;
+		}
+		ZipEntry entry = new ZipEntry(name);
+		entry.setMethod(ZipEntry.STORED);
+		entry.setSize(file.length());
+		entry.setCompressedSize(file.length());
+        entry.setCrc(computeCRC32(file));
+		out.putNextEntry(entry);
+		ByteUtil.copy(new FileInputStream(file), true, out, false);
+		out.closeEntry();
+	}
+	
+    private static long computeCRC32(File file) throws IOException {
+        byte buf[] = new byte[32 * 1024];
+        CRC32 crc = new CRC32();
+        crc.reset();
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(file);
+            int bytesRead;
+            while ((bytesRead = fis.read(buf)) != -1) {
+                crc.update(buf, 0, bytesRead);
+            }
+            return crc.getValue();
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {}
+            }
+        }
+    }
+    
 	private static void test() {
 		String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
 		String t1 = "/service/zimlet/po";
@@ -1403,6 +1576,8 @@ public class ZimletUtil {
 	private static final int DISABLE_ZIMLET = 20;
 	private static final int LIST_PRIORITY = 21;
 	private static final int SET_PRIORITY = 22;
+	private static final int INFO = 23;
+	private static final int CREATE_ZIP = 24;
 	private static final int TEST = 99;
 	
 	private static final String INSTALL_CMD = "install";
@@ -1419,6 +1594,8 @@ public class ZimletUtil {
 	private static final String DISABLE_CMD = "disable";
 	private static final String LIST_PRIORITY_CMD = "listpriority";
 	private static final String SET_PRIORITY_CMD = "setpriority";
+	private static final String INFO_CMD = "info";
+	private static final String CREATE_ZIP_CMD = "createzip";
 	private static final String TEST_CMD = "test";
 	
 	private static Map<String,Integer> mCommands;
@@ -1443,6 +1620,8 @@ public class ZimletUtil {
 		addCommand(DISABLE_CMD, DISABLE_ZIMLET);
 		addCommand(LIST_PRIORITY_CMD, LIST_PRIORITY);
 		addCommand(SET_PRIORITY_CMD, SET_PRIORITY);
+		addCommand(INFO_CMD, INFO);
+		addCommand(CREATE_ZIP_CMD, CREATE_ZIP);
 		addCommand(TEST_CMD, TEST);
 	}
 	
@@ -1461,6 +1640,8 @@ public class ZimletUtil {
 		System.out.println("\tconfigure {config.xml} - installs the configuration");
 		System.out.println("\tlistPriority - show the current Zimlet priorities (0 high, 9 low)");
 		System.out.println("\tsetPriority {zimlet} {priority} - set Zimlet priority");
+		System.out.println("\tinfo {zimlet} - show information about zimlet");
+		System.out.println("\tcreateZip {zimlet directory} [description-file] - creates zimlet.zip from the contents in the directory");
 		System.exit(1);
 	}
 	
@@ -1564,6 +1745,12 @@ public class ZimletUtil {
 			case INSTALL_CONFIG:
 			    ZimletSoapUtil soapUtil = new ZimletSoapUtil();
 			    soapUtil.configureZimlet(ByteUtil.getContent(new File(zimlet)),localInstall);
+				break;
+			case INFO:
+				showInfo(zimlet);
+				break;
+			case CREATE_ZIP:
+				createZip(zimlet, (args.length == argPos) ? null : args[argPos]);
 				break;
 			default:
 				usage();

@@ -25,9 +25,10 @@ import java.net.MalformedURLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import com.zimbra.common.util.ByteUtil;
 
@@ -37,18 +38,14 @@ import com.zimbra.common.util.ByteUtil;
  * @author jylee
  *
  */
-public class ZimletFile implements Comparable {
+public class ZimletFile implements Comparable<ZimletFile> {
 
 	private File mBase;
 	private InputStream mBaseStream;
 	private byte[] mCopy;
 	
-	public int compareTo(Object obj) {
-		if (obj instanceof ZimletFile) {
-			ZimletFile f = (ZimletFile) obj;
-			return getZimletName().compareTo(f.getZimletName());
-		}
-		return 0;
+	public int compareTo(ZimletFile obj) {
+		return getZimletName().compareTo(obj.getZimletName());
 	}
 	
 	public static abstract class ZimletEntry {
@@ -61,6 +58,7 @@ public class ZimletFile implements Comparable {
 			return mName;
 		}
 		public abstract byte[] getContents() throws IOException;
+		public abstract InputStream getContentStream() throws IOException;
 	}
 	
 	public static class ZimletZipEntry extends ZimletEntry {
@@ -78,6 +76,9 @@ public class ZimletFile implements Comparable {
 			is.close();
 			return ret;
 		}
+		public InputStream getContentStream() throws IOException {
+			return mContainer.getInputStream(mEntry);
+		}
 	}
 	
 	public static class ZimletDirEntry extends ZimletEntry {
@@ -92,6 +93,9 @@ public class ZimletFile implements Comparable {
 			byte[] ret = ByteUtil.getContent(is, (int)mFile.length());
 			is.close();
 			return ret;
+		}
+		public InputStream getContentStream() throws IOException {
+			return new FileInputStream(mFile);
 		}
 	}
 	
@@ -112,6 +116,9 @@ public class ZimletFile implements Comparable {
 	    }
 		public byte[] getContents() throws IOException {
 			return mData;
+		}
+		public InputStream getContentStream() throws IOException {
+			return new ByteArrayInputStream(mData);
 		}
 	}
 	
@@ -153,6 +160,7 @@ public class ZimletFile implements Comparable {
 		initialize(name);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void initialize(String name) throws IOException, ZimletException {
 		if (name.endsWith(ZIP_SUFFIX)) {
 			name = name.substring(0, name.length() - 4);
@@ -163,20 +171,21 @@ public class ZimletFile implements Comparable {
 
 		if (mBaseStream != null) {
 			mCopy = ByteUtil.getContent(mBaseStream, 0);
-			ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(mCopy));
+			JarInputStream zis = new JarInputStream(new ByteArrayInputStream(mCopy));
+			Manifest mf = zis.getManifest();
+			if (mf != null) {
+				mDescFile = mf.getMainAttributes().getValue("Zimlet-Description-File");
+			}
 			ZipEntry entry = zis.getNextEntry();
 			while (entry != null) {
-				mEntries.put(entry.getName().toLowerCase(), new ZimletRawEntry(zis, entry.getName(), (int)entry.getSize()));
+				if (entry.getSize() > 0)
+					mEntries.put(entry.getName().toLowerCase(), new ZimletRawEntry(zis, entry.getName(), (int)entry.getSize()));
 				zis.closeEntry();
 				entry = zis.getNextEntry();
 			}
 			zis.close();
 		} else if (mBase.isDirectory()) {
-			File[] files = mBase.listFiles();
-			assert(files != null);
-			for (int i = 0; i < files.length; i++) {
-				mEntries.put(files[i].getName().toLowerCase(), new ZimletDirEntry(files[i]));
-			}
+			addFileEntry(mBase, "");
 		} else {
 			ZipFile zip = new ZipFile(mBase);
 			Enumeration entries = zip.entries();
@@ -188,6 +197,20 @@ public class ZimletFile implements Comparable {
 		
 		initZimletDescription();
 		mZimletName = mDesc.getName();
+	}
+	
+	private void addFileEntry(File f, String dir) {
+		File[] files = f.listFiles();
+		if (files == null)
+			return;
+		for (File file : files) {
+			String name = ((dir.length() == 0) ? "" : dir + "/") + file.getName().toLowerCase();
+			if (file.isDirectory()) {
+				addFileEntry(file, name);
+				continue;
+			}
+			mEntries.put(name, new ZimletDirEntry(file));
+		}
 	}
 	
 	private void initZimletDescription() throws IOException, ZimletException {
@@ -260,7 +283,7 @@ public class ZimletFile implements Comparable {
 		return mConfig;
 	}
 
-	public Map getAllEntries() {
+	public Map<String,ZimletEntry> getAllEntries() {
 		return mEntries;
 	}
 	
@@ -274,6 +297,10 @@ public class ZimletFile implements Comparable {
 	
 	public URL toURL() throws MalformedURLException {
 		return mBase.toURL();
+	}
+	
+	public File getFile() {
+		return mBase;
 	}
 	
 	private static String findZimlet(String zimlet) throws FileNotFoundException {

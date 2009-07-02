@@ -16,25 +16,20 @@ package com.zimbra.cs.zimlet;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
 
+@SuppressWarnings("serial")
 public class ZimletResources
         extends DiskCacheServlet {
 
@@ -78,10 +73,36 @@ public class ZimletResources
         ZimbraLog.clearContext();
 
         String uri = req.getRequestURI();
+        String pathInfo = req.getPathInfo();
+        
+        // handle requests for individual files included in zimlet in case dev=1 is set.
+        int slash = 0;
+        if (pathInfo != null) {
+        	pathInfo = pathInfo.substring(1);
+        	slash = pathInfo.indexOf('/');
+        }
+        if (slash > 0) {
+        	String zimlet = pathInfo.substring(0, slash);
+        	String file = pathInfo.substring(slash+1);
+            ZimbraLog.zimlet.debug("DEBUG: zimlet=%s, file=%s", zimlet, file);
+            try {
+            	printFile(resp, zimlet, file);
+            } catch (IOException e) {
+                ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
+        		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            } catch (ZimletException e) {
+                ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
+        		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+        	return;
+        }
+        
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
         boolean debug = req.getParameter(P_DEBUG) != null;
 
+        @SuppressWarnings("unchecked")
+        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
         String cacheId = getCacheId(req, type);
 
         if (ZimbraLog.zimlet.isDebugEnabled()) {
@@ -95,6 +116,7 @@ public class ZimletResources
 		String text = null;
         File file = !debug ? getCacheFile(cacheId) : null;
         if (file == null || !file.exists()) {
+            
             StringWriter writer = new StringWriter();
             PrintWriter printer = new PrintWriter(writer);
 
@@ -105,12 +127,8 @@ public class ZimletResources
                 ServletContext clientContext = baseContext.getContext("/zimbra/");
                 RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/res/");
 
-                List<ZimletFile> files = getZimletFiles(req, type);
-                for (ZimletFile zfile : files) {
-                    if (!zfile.isResourceFile) {
-                        continue;
-                    }
-                    HttpServletRequest wrappedReq = new RequestWrapper(req, "/res/" + zfile.zimletName);
+                for (String zimletName : zimletNames) {
+                    HttpServletRequest wrappedReq = new RequestWrapper(req, "/res/" + zimletName);
                     HttpServletResponse wrappedResp = new ResponseWrapper(resp, printer);
                     dispatcher.include(wrappedReq, wrappedResp);
                 }
@@ -118,7 +136,7 @@ public class ZimletResources
 
             // zimlet resources
             if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: generating buffer");
-            generate(req, type, printer);
+            generate(zimletNames, type, printer);
             text = writer.toString();
 
             // minimize css
@@ -217,8 +235,24 @@ public class ZimletResources
     // Private methods
     //
 
-    private void generate(HttpServletRequest req, String type, PrintWriter out)
-            throws IOException {
+	private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
+    	ZimletFile zf = ZimletUtil.getZimlet(zimletName);
+		for (ZimletFile.ZimletEntry entry : zf.getAllEntries().values()) {
+			String name = entry.getName();
+			if (name.equalsIgnoreCase(file)) {
+				resp.setStatus(HttpServletResponse.SC_OK);
+	            resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
+	            resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+	            resp.setHeader("Pragma", "no-cache");
+	            resp.setContentType(getContentType(file));
+	            ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
+				return;
+			}
+		}
+		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    }
+    
+	private void generate(Set<String> zimletNames, String type, PrintWriter out) throws IOException {
         boolean isCSS = type.equals(T_CSS);
 
         String commentStart = "/* ";
@@ -226,39 +260,47 @@ public class ZimletResources
         String commentEnd = " */";
 
         // create data buffers
-        List<ZimletFile> files = getZimletFiles(req, type);
-        for (ZimletFile file : files) {
-            String filename = file.getAbsolutePath();
-            if (file.isResourceFile) {
+        for (String zimlet : zimletNames) {
+        	ZimletFile file = ZimletUtil.getZimlet(zimlet);
+        	if (file == null) {
+                ZimbraLog.zimlet.info("error loading " + zimlet + ": zimlet not found ");
                 continue;
-            }
+        	}
 
-            out.println(commentStart);
-            out.print(commentContinue);
-            out.print("File: ");
-            // NOTE: Show entire path for easy debugging, comments are stripped in prod mode
-            out.println(filename.replaceAll("^.*/webapps/",""));
-            out.println(commentEnd);
-            out.println();
-
-            // print file
-            if (file.exists()) {
-                printFile(out, file, file.zimletName, isCSS);
-            } else {
-                out.print(commentStart);
-                out.print("Error: file doesn't exist " + filename.replaceAll("^.*/webapps/",""));
-                out.println(commentEnd);
-            }
-            out.println();
+        	try {
+            	String[] files = isCSS ? 
+            			file.getZimletDescription().getStyleSheets() :
+            			file.getZimletDescription().getScripts();
+        		for (String f : files) {
+                    // only add local files to list
+                    if (RE_REMOTE.matcher(f).matches()) {
+                        continue;
+                    }
+                    ZimletFile.ZimletEntry entry = file.getAllEntries().get(f);
+                    if (entry == null)
+                    	continue;
+                    
+                    out.println(commentStart);
+                    out.print(commentContinue);
+                    out.print("Zimlet: " + zimlet + "File: " + f);
+                    out.println(commentEnd);
+                    out.println();
+                    
+            		printFile(out, new BufferedReader(new InputStreamReader(entry.getContentStream())), zimlet, isCSS);
+                    out.println();
+        		}
+        	} catch (ZimletException e) {
+                ZimbraLog.zimlet.info("error loading " + zimlet + ": ", e);
+                continue;
+        	}
         }
         out.flush();
 
-    } // generate(HttpServletRequest,String):String
+    }
 
-    private void printFile(PrintWriter out, File file,
+    private void printFile(PrintWriter out, BufferedReader in,
                            String zimletName, boolean isCSS)
             throws IOException {
-        BufferedReader in = new BufferedReader(new FileReader(file));
         String line;
         while ((line = in.readLine()) != null) {
             if (isCSS) {
@@ -276,7 +318,7 @@ public class ZimletResources
                         String s = url.group(2);
                         Matcher remote = RE_REMOTE.matcher(s);
                         if (!remote.find()) {
-                            out.print("/service/zimlet/" + zimletName + "/");
+                            out.print("/service/zimlet/res/" + zimletName + "/");
                         }
                         out.print(s);
 
@@ -307,7 +349,8 @@ public class ZimletResources
         return contentType != null ? contentType : TYPES.get(T_PLAIN);
     }
 
-    private String getCacheId(HttpServletRequest req, String type) {
+	private String getCacheId(HttpServletRequest req, String type) {
+	    @SuppressWarnings("unchecked")
         Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
 
         StringBuilder str = new StringBuilder();
@@ -346,92 +389,9 @@ public class ZimletResources
         return req.getLocale();
     }
 
-    private List<ZimletFile> getZimletFiles(HttpServletRequest req, String type) {
-        List<ZimletFile> files = new LinkedList<ZimletFile>();
-        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
-        for (String zimletName : zimletNames) {
-            // read zimlet manifest
-			File basedir = new File(getServletContext().getRealPath("/zimlet"));
-			File dir = new File(basedir, zimletName);
-			if (!dir.exists()) {
-				basedir = new File(basedir, "_dev");
-				dir = new File(basedir, zimletName);
-			}
-            File file = new File(dir, zimletName + ".xml");
-
-
-			Document document = parseDocument(file, zimletName);
-            if (document == null) {
-                continue;
-            }
-
-            // add properties files
-            boolean isJavaScript = type.equals(T_JAVASCRIPT);
-            if (isJavaScript) {
-                files.add(new ZimletFile(zimletName, "/res/"+zimletName, true));
-            }
-
-            // add included files
-            Element root = document.getDocumentElement();
-            NodeList nodes = root.getElementsByTagName(isJavaScript ? "include" : "includeCSS");
-            int nodeCount = nodes.getLength();
-            for (int i = 0; i < nodeCount; i++) {
-                Node node = nodes.item(i);
-                String filename = getText(node).trim();
-
-                // only add local files to list
-                if (RE_REMOTE.matcher(filename).matches()) {
-                    continue;
-                }
-                files.add(new ZimletFile(zimletName, dir.getAbsolutePath() + File.separator + filename));
-            }
-        }
-        return files;
-    }
-
-    private Document parseDocument(File file, String zimletName) {
-        Document document = null;
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            document = builder.parse(file);
-        }
-        catch (Exception e) {
-            ZimbraLog.zimlet.info("error loading " + zimletName + " manifest: " + e.getMessage());
-        }
-        return document;
-    }
-
-    private static String getText(Node node) {
-        StringBuilder str = new StringBuilder();
-        Node child = node.getFirstChild();
-        while (child != null) {
-            str.append(child.getNodeValue());
-            child = child.getNextSibling();
-        }
-        return str.toString();
-    }
-
     //
     // Classes
     //
-
-    static class ZimletFile extends File {
-        public String zimletName;
-        public boolean isResourceFile;
-
-        public ZimletFile(String zimletName, String filename) {
-            super(filename);
-            this.zimletName = zimletName;
-            this.isResourceFile = false;
-        }
-
-        public ZimletFile(String zimletName, String filename, boolean isResourceFile) {
-            super(filename);
-            this.zimletName = zimletName;
-            this.isResourceFile = isResourceFile;
-        }
-    }
 
     static class RequestWrapper extends HttpServletRequestWrapper {
         private String filename;

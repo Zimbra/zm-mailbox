@@ -42,6 +42,7 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_ATTR_EXTENSION       = "extension";
 
 	public static final String ZIMLET_TAG_SCRIPT           = "include";
+	public static final String ZIMLET_TAG_CSS              = "includeCSS";
 	public static final String ZIMLET_TAG_CONTENT_OBJECT   = "contentObject";
 	public static final String ZIMLET_TAG_PANEL_ITEM       = "panelItem";
 	
@@ -120,6 +121,7 @@ public abstract class ZimletMeta {
 			mIsExtension = false;
 		}
 
+		@SuppressWarnings("unchecked")
 		Iterator iter = mTopElement.listElements().iterator();
 		while (iter.hasNext()) {
 			validateElement((Element) iter.next());
