@@ -272,6 +272,9 @@ public class CalDavDataImport extends MailItemImport {
 			int[] fidArray = new int[allFolders.size()];
 			int i = 0;
 			for (DataSourceItem f : allFolders.values()) {
+				Folder folder = mbox.getFolderById(octxt, f.itemId);
+				if (folder != null && folder.getDefaultView() != MailItem.TYPE_APPOINTMENT && folder.getDefaultView() != MailItem.TYPE_TASK)
+					continue;
 				fids.add(f.itemId);
 				fidArray[i++] = f.itemId;
 				DbDataSource.deleteAllMappingsInFolder(ds, f.itemId);
