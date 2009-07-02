@@ -460,18 +460,12 @@ public class ZimletUtil {
 		Zimlet z;
 		Action action = Action.INSTALL;
 		String priority = null;
-
+		boolean enable = true;
 		
 		// check if the zimlet already exists in LDAP.
 		z = prov.getZimlet(zimletName);
 		
 		if (z != null) {
-			// see if this zimlet needs an upgrade.
-			if (!z.isEnabled()) {
-				// leave it alone.
-				ZimbraLog.zimlet.info("Skipping upgrade of disabled Zimlet " + zimletName);
-				return;
-			}
 			Version ver = new Version(z.getAttr(Provisioning.A_zimbraZimletVersion));
 			if (zd.getVersion().compareTo(ver) < 0) {
 				ZimbraLog.zimlet.info("Zimlet " + zimletName + " being installed is of an older version.");
@@ -484,6 +478,7 @@ public class ZimletUtil {
 			}
 			// save priority
 			priority = z.getPriority();
+			enable = z.isEnabled();
 		}
 		
 		// update LDAP
@@ -512,6 +507,11 @@ public class ZimletUtil {
 		// activate
 		if (!zd.isExtension()) {
 			activateZimlet(zimletName, ZIMLET_DEFAULT_COS);
+		}
+		
+		if (!enable) {
+			// it was an upgrade of previously disabled zimlet.  leave it alone.
+			return;
 		}
 		
 		// enable
@@ -558,6 +558,7 @@ public class ZimletUtil {
 
 		// install the zimlet file
 		File zimlet = new File(zimletRoot + File.separatorChar + zimletName);
+		zimlet.getParentFile().mkdirs();
 		if (zimlet.exists())
 			deleteFile(zimlet);
 		if (zf.getFile() != null)
