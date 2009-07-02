@@ -29,78 +29,73 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class GetFolder extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { MailConstants.E_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+    @Override protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    @Override protected boolean checkMountpointProxy(Element request)  { return false; }
+    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(zsc);
-		OperationContext octxt = getOperationContext(zsc, context);
+    @Override public Element handle(Element request, Map<String, Object> context)
+    throws ServiceException, SoapFaultException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-		String parentId = DEFAULT_FOLDER_ID;
-		Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
-		if (eFolder != null) {
+        String parentId = DEFAULT_FOLDER_ID;
+        Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
+        if (eFolder != null) {
             String path = eFolder.getAttribute(MailConstants.A_PATH, null);
             if (path != null)
                 parentId = mbox.getFolderByPath(octxt, path).getId() + "";
             else
                 parentId = eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
         }
-		ItemId iid = new ItemId(parentId, zsc);
+        ItemId iid = new ItemId(parentId, zsc);
 
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
-		
+
         FolderNode rootnode = mbox.getFolderTree(octxt, iid, visible);
         OperationContextData.addGranteeNames(octxt, rootnode);
-        
-		Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
+
+        Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
-    		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
-    		if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
-    			handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
+            Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
+            if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
+                handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
         }
 
-		return response;
-	}
-	
-	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
-	    return encodeFolderNode(ifmt, octxt, parent, node, false);
-	}
+        return response;
+    }
 
-	private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey) {
-		Element eFolder;
-        if (node.mFolder != null) {
-            int fields = Change.ALL_FIELDS;  // In particular, we want Change.MODIFIED_CONFLICT included.
-            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, fields, exposeAclAccessKey);
-        } else {
+    public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
+        return encodeFolderNode(ifmt, octxt, parent, node, false);
+    }
+
+    private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey) {
+        Element eFolder;
+        if (node.mFolder != null)
+            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, ToXML.NOTIFY_FIELDS, exposeAclAccessKey);
+        else
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
-        }
 
-		for (FolderNode subNode : node.mSubfolders)
-			encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey);
+        for (FolderNode subNode : node.mSubfolders)
+            encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey);
 
-		return eFolder;
-	}
+        return eFolder;
+    }
 
 
     private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
-	throws ServiceException, SoapFaultException {
+    throws ServiceException, SoapFaultException {
         ItemId iidRemote = mpt.getTarget();
         Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
@@ -114,6 +109,4 @@ public class GetFolder extends MailDocumentHandler {
             }
         }
     }
-
-    
 }

@@ -319,6 +319,9 @@ public class ToXML {
         }
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             elem.addAttribute(MailConstants.A_REVISION, folder.getSavedSequence());
+            // this attribute ("ms") *normally* goes with MODIFIED_CONFLICT, but we need it
+            //   serialized in this case as well in order to make dav ctag caching work
+            elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, folder.getChangeDate() / 1000);
