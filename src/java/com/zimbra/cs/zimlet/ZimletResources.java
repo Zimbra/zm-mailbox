@@ -78,7 +78,10 @@ public class ZimletResources
         // handle requests for individual files included in zimlet in case dev=1 is set.
         int slash = 0;
         if (pathInfo != null) {
-        	pathInfo = pathInfo.substring(1);
+        	if (pathInfo.startsWith("/_dev"))
+        		pathInfo = pathInfo.substring(6);
+        	else
+        		pathInfo = pathInfo.substring(1);
         	slash = pathInfo.indexOf('/');
         }
         if (slash > 0) {
