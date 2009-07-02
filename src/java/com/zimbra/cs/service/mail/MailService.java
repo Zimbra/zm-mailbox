@@ -174,6 +174,9 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GRANT_PERMISSION_REQUEST, new GrantPermission());
         dispatcher.registerHandler(MailConstants.REVOKE_PERMISSION_REQUEST, new RevokePermission());
         
+        // folder ACl
+        dispatcher.registerHandler(MailConstants.GET_EFFECTIVE_FOLDER_PERMS_REQUEST, new GetEffectiveFolderPerms());
+        
         // yahoo auth
         dispatcher.registerHandler(MailConstants.GET_YAHOO_COOKIE_REQUEST, new GetYahooCookie());
         dispatcher.registerHandler(MailConstants.GET_YAHOO_AUTH_TOKEN_REQUEST, new GetYahooAuthToken());

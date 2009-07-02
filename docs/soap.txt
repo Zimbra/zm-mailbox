@@ -3139,4 +3139,16 @@ granteeType = usr | grp | guest
   if gt is guest, d must be specified, zid is ignored.
 
 <SendShareNotificationResponse/>
+
+---------------------------- 
+
+<GetEffectivePermsRequest>
+  <folder l="{folder-id}"/>]
+</GetFolderRequest>
+
+returns the effective permissions of the specified folder
+
+<GetEffectiveFolderPermsResponse>
+  <folder perm="{permissions}"/>
+</GetEffectiveFolderPermsResponse>
                        

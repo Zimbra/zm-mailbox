@@ -333,7 +333,7 @@ public class ACL {
      * @param authuser   The user to gather rights for.
      * @return A <tt>Short</tt> containing the OR'ed-together rights
      *         granted to the user, or <tt>null</tt>. */
-    Short getGrantedRights(Account authuser) throws ServiceException {
+    public Short getGrantedRights(Account authuser) throws ServiceException {
         if (mGrants.isEmpty())
             return null;
 
@@ -409,7 +409,7 @@ public class ACL {
 
     /** Encapsulates this set of {@link ACL.Grant}s as a {@link MetadataList}
      *  for serialization. */
-    MetadataList encode() {
+    public MetadataList encode() {
         MetadataList mlist = new MetadataList();
         for (Grant grant : mGrants)
             mlist.add(grant.encode());
