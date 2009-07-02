@@ -137,11 +137,26 @@ public class FolderACL {
         Account authuser = null;
         if (mOctxt != null)
             authuser = mOctxt.getAuthenticatedUser();
+        
+        /* Mailbox.getAuthenticatedAccount() says:
         // XXX if the current authenticated user is the owner, it will return null.
         // later on in Folder.checkRights(), the same assumption is used to validate
         // the access.
+         * 
+         * unfortunately we can't do the same here, because the path to here could 
+         * be not equipped with stuffing a public user in the octxt, or the octxt 
+         * can be null.  So we do it here, and our FolderACL.checkRights will *not* 
+         * make the same assumption that a nukk auth user means the owner himself.
+         * it always requirs a non-null auth user.
+         */
+        
+        /*
         if (authuser != null && authuser.getId().equals(mShareTarget.getAccountId()))
             authuser = null;
+        */  
+        if (authuser == null)
+            authuser = ACL.ANONYMOUS_ACCT;
+        
         return authuser;
     }
 
@@ -167,19 +182,6 @@ public class FolderACL {
     
     private short checkRightsRemote(short rightsNeeded) throws ServiceException {
         Account authedAcct = getAuthenticatedAccount();
-        
-        // We can't really pass a null auth user to checkRightsRemote here,
-        // because the path to here is probably not equipped with putting 
-        // the ACL.ANONYMOUS_ACCT in the octxt, and octxt can be null.
-        // But in getAuthenticatedAccount and checkRightsRemote, we want 
-        // to keep the logic as identical to their original as possible
-        // so it's easier to merge the code later.
-        // 
-        // Pass the public user if getAuthenticatedAccount returns null.
-        //
-        if (authedAcct == null)
-            authedAcct = ACL.ANONYMOUS_ACCT;
-        
         return checkRightsRemote(rightsNeeded, authedAcct, isUsingAdminPrivileges());
     }
     
@@ -189,7 +191,7 @@ public class FolderACL {
             return rightsNeeded;
         
         // the mailbox owner can do anything they want
-        if (authuser == null || authuser.getId().equals(mShareTarget.getAccountId()))
+        if (authuser.getId().equals(mShareTarget.getAccountId()))
             return rightsNeeded;
         
         // admin users (and the appropriate domain admins) can also do anything they want
@@ -323,11 +325,9 @@ public class FolderACL {
         Folder sub2 = ownerMbx.getFolderByPath(null, "/inbox/sub1/sub2");
         
         // the owner itself accessing, should have all rights
-        /* not working yet, FIXME
         doTest("user1", ownerAcct.getId(), inbox.getId(), (short)~0, ACL.RIGHT_READ, ACL.RIGHT_READ, ACL.RIGHT_ADMIN, true);
         doTest("user1", ownerAcct.getId(), sub1.getId(),  (short)~0, ACL.RIGHT_READ, ACL.RIGHT_READ, ACL.RIGHT_ADMIN, true);
         doTest("user1", ownerAcct.getId(), sub2.getId(),  (short)~0, ACL.RIGHT_READ, ACL.RIGHT_READ, ACL.RIGHT_ADMIN, true);
-        */
         
         doTest("user2", ownerAcct.getId(), inbox.getId(), (short)0,           ACL.RIGHT_WRITE, (short)0,        ACL.RIGHT_WRITE, false);
         doTest("user2", ownerAcct.getId(), sub1.getId(),  ACL.RIGHT_WRITE,    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
