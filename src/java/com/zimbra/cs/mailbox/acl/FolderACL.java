@@ -83,7 +83,7 @@ public class FolderACL {
         mOctxt = octxt;
         mShareTarget = new ShareTarget(ownerAcctId, folderId);
     }
-
+    
     /**
      * 
      * @return
@@ -118,7 +118,7 @@ public class FolderACL {
      * 
      * @see Folder.checkRights()
      */
-    public short checkRights(short rightsNeeded) throws ServiceException {
+    private short checkRights(short rightsNeeded) throws ServiceException {
         if (mShareTarget.onLocalServer())
             return checkRightsLocal(rightsNeeded);
         else
@@ -336,6 +336,6 @@ public class FolderACL {
         doTest("user3", ownerAcct.getId(), inbox.getId(), (short)0,                                   ACL.RIGHT_WRITE, (short)0,        ACL.RIGHT_WRITE, false);
         doTest("user3", ownerAcct.getId(), sub1.getId(),  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE),    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
         doTest("user3", ownerAcct.getId(), sub2.getId(),  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE),    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
-        
+       
     }
 }
