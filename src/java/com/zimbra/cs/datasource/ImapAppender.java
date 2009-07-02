@@ -22,9 +22,9 @@ import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.util.DateUtil;
+import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.FileBlobStore;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 
 import javax.mail.internet.MimeMessage;
@@ -140,8 +140,7 @@ public class ImapAppender {
         return -1;
     }
 
-    private String getSearchString(MessageInfo mi)
-        throws MessagingException, IOException {
+    private String getSearchString(MessageInfo mi) throws MessagingException {
         Formatter fmt = new Formatter();
         fmt.format("SENTON \"%s\"", DateUtil.toImapDateTime(mi.mm.getSentDate()));
         String subj = mi.mm.getSubject();
@@ -230,13 +229,13 @@ public class ImapAppender {
         Date date;
 
         MessageInfo(Message msg) throws ServiceException {
-            final Blob blob = msg.getBlob().getBlob();
+            final MailboxBlob mblob = msg.getBlob();
             data = new Data() {
                 public InputStream getInputStream() throws IOException {
-                    return FileBlobStore.getInstance().getContent(blob);
+                    return StoreManager.getInstance().getContent(mblob);
                 }
                 public int getSize() throws IOException {
-                    return blob.getRawSize();
+                    return mblob.getBlob().getRawSize();
                 }
             };
             mm = msg.getMimeMessage(false);

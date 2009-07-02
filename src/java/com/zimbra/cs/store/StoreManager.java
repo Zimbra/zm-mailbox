@@ -148,18 +148,32 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
-	 * Create a link in destMbox mailbox with message ID of destMsgId that
-	 * points to srcBlob.
-	 * @param src
-	 * @param destMbox
+     * Create a link in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * @param src
+     * @param destMbox
      * @param destMsgId mail_item.id value for message in destMbox
      * @param destRevision mail_item.mod_content value for message in destMbox
-	 * @return MailboxBlob object representing the linked blob
+     * @return MailboxBlob object representing the linked blob
      * @throws IOException
      * @throws ServiceException
      */
     public abstract MailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
-	throws IOException, ServiceException;
+    throws IOException, ServiceException;
+
+    /**
+     * Create a link in destMbox mailbox with message ID of destMsgId that
+     * points to srcBlob.
+     * @param src
+     * @param destMbox
+     * @param destMsgId mail_item.id value for message in destMbox
+     * @param destRevision mail_item.mod_content value for message in destMbox
+     * @return MailboxBlob object representing the linked blob
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    throws IOException, ServiceException;
 
     /**
      * Rename a blob to a blob in mailbox directory.
@@ -212,11 +226,7 @@ public abstract class StoreManager {
      * @return
      * @throws IOException
      */
-    public InputStream getContent(MailboxBlob mboxBlob) throws IOException {
-        if (mboxBlob == null)
-            return null;
-        return getContent(mboxBlob.getBlob());
-    }
+    public abstract InputStream getContent(MailboxBlob mboxBlob) throws IOException;
 
     /**
      * Return an InputStream of blob content.  Caller should close the

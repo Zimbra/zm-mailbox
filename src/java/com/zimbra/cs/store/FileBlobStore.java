@@ -138,8 +138,7 @@ public class FileBlobStore extends StoreManager {
         return new BlobBuilder(blob);
     }
 
-    @Override public Blob storeIncoming(InputStream in, int sizeHint,
-            StorageCallback callback, boolean storeAsIs)
+    @Override public Blob storeIncoming(InputStream in, int sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
         Volume volume = Volume.getCurrentMessageVolume();
 
@@ -274,6 +273,11 @@ public class FileBlobStore extends StoreManager {
         return new MailboxBlob(destMbox, destMsgId, destRevision, newBlob);
     }
 
+    @Override public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    throws IOException, ServiceException {
+        return link(src.getBlob(), destMbox, destMsgId, destRevision);
+    }
+
     @Override public MailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = Volume.getCurrentMessageVolume();
@@ -406,6 +410,12 @@ public class FileBlobStore extends StoreManager {
         if (file == null)
             return null;
         return new MailboxBlob(mbox, msgId, revision, new Blob(file, locator));
+    }
+
+    @Override public InputStream getContent(MailboxBlob mboxBlob) throws IOException {
+        if (mboxBlob == null)
+            return null;
+        return getContent(mboxBlob.getBlob());
     }
 
     @Override public InputStream getContent(Blob blob) throws IOException {

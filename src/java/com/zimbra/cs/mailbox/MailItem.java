@@ -1940,7 +1940,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
             StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
+            MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
             locator = mblob.getBlob().getLocator();
         }
@@ -2022,7 +2022,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
             StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.link(srcMblob.getBlob(), mMailbox, copyId, mMailbox.getOperationChangeID());
+            MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
             locator = mblob.getBlob().getLocator();
         }
@@ -2203,7 +2203,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             if (oldblob != null) {
                 try {
-                    StoreManager.getInstance().link(oldblob.getBlob(), mMailbox, mId, getSavedSequence());
+                    StoreManager.getInstance().link(oldblob, mMailbox, mId, getSavedSequence());
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not copy blob for renamed document", ioe);
                 }
