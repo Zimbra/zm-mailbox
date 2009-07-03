@@ -11,16 +11,17 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 
 /*
@@ -175,16 +176,24 @@ public class FolderACL {
      * check rights locally the normal way
      */
     private short checkRightsLocal(short rightsNeeded) throws ServiceException {
+        // assert that we must have a authed user, or else Mailbox.getAuthenticatedAccount would return null,
+        // which will give all permissions in Folder.checkRights.
+        // It should not happen, just making sure.
+        if (mOctxt == null || mOctxt.getAuthenticatedUser() == null)
+            return 0;
+        
         Mailbox ownerMbx = MailboxManager.getInstance().getMailboxByAccountId(mShareTarget.getAccountId(), false);
         short hasRights = ownerMbx.getEffectivePermissions(mOctxt, mShareTarget.getFolderId(), MailItem.TYPE_FOLDER);
         return (short)(hasRights & rightsNeeded);
     }
     
     private short checkRightsRemote(short rightsNeeded) throws ServiceException {
-        Account authedAcct = getAuthenticatedAccount();
-        return checkRightsRemote(rightsNeeded, authedAcct, isUsingAdminPrivileges());
+        return checkRightsRemote(rightsNeeded, getAuthenticatedAccount(), isUsingAdminPrivileges());
     }
     
+    /*
+     * merge with Folder.checkRights?
+     */
     private short checkRightsRemote(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         
         if (rightsNeeded == 0)
@@ -230,8 +239,13 @@ public class FolderACL {
         String url = URLUtil.getSoapURL(server, false);
         SoapHttpTransport transport = new SoapHttpTransport(url);
         
-        if (mOctxt != null && mOctxt.getAuthToken() != null)
-            transport.setAuthToken(mOctxt.getAuthToken().toZAuthToken());
+        AuthToken authToken = null;
+        if (mOctxt != null)
+            authToken = mOctxt.getAuthToken();
+        if (authToken == null)
+            authToken = AuthProvider.getAuthToken(ACL.ANONYMOUS_ACCT);
+        transport.setAuthToken(authToken.toZAuthToken());
+        transport.setTargetAcctId(mShareTarget.getAccountId());
         
         Short perms = null;
         try {
@@ -249,93 +263,5 @@ public class FolderACL {
         
         return perms;
     }
-    
-    private static String formatRights(short rights) {
-        return ACL.rightsToString(rights) + "(" + rights + ")";
-    }
-    
-    /*
-     * To test remote: hardcode ShareTarget.onLocalServer() to return false.
-     *                 make sure you change it back after testing
-     */
-    private static void doTest(String authedAcctName, String ownerAcctId, int targetFolderId,
-            short expectedEffectivePermissions, 
-            short needRightsForCheckRightsTest, short expectedCheckRights,
-            short needRightsForCanAccessTest, boolean expectedCanAccess) throws ServiceException {
-        
-        Account authedAcct = Provisioning.getInstance().get(AccountBy.name, authedAcctName);
-        OperationContext octxt = new OperationContext(authedAcct);
-        FolderACL folderAcl = new FolderACL(octxt, ownerAcctId, targetFolderId);
-        
-        short effectivePermissions = folderAcl.getEffectivePermissions();
-        short checkRights = folderAcl.checkRights(needRightsForCheckRightsTest);
-        boolean canAccess = folderAcl.canAccess(needRightsForCanAccessTest);
-        
-        String result = "***FAILED***";
-        
-        // mask out the create folder right, it is an internal right, which is returned 
-        // by getEffectivePermissions if owner is on local server but not returned if 
-        // the owner is remote.
-        //
-        // The diff is not a real bug and can be ignored
-        short actual = effectivePermissions;
-        short expected = expectedEffectivePermissions;
-        if (actual == -1)
-            actual = ACL.stringToRights(ACL.rightsToString(actual));
-        if (expected == -1)
-            expected = ACL.stringToRights(ACL.rightsToString(expected));
-        
-        if (actual == expected &&
-            checkRights == expectedCheckRights &&
-            canAccess == expectedCanAccess) {
-            result = "";
-        }
-        System.out.println();
-        System.out.println("authedAcctName=" + authedAcctName + "  targetFolderId=" + targetFolderId + " " + result);
-        System.out.println("    effectivePermissions: " + formatRights(effectivePermissions) + " (expected: " + formatRights(expectedEffectivePermissions) + ")");
-        System.out.println("    checkRights:          " + formatRights(checkRights)          + " (expected: " + formatRights(expectedCheckRights) + ")");
-        System.out.println("    canAccess:            " + canAccess                          + " (expected: " + expectedCanAccess + ")");
-    }
-    
-    public static void main(String[] args) throws ServiceException {
-        
-        com.zimbra.cs.db.DbPool.startup();
-        com.zimbra.cs.memcached.MemcachedConnector.startup();
-        /*
-         * setup owner(user1) folders and grants with zmmailbox or webclient:
-         * 
-         * /inbox/sub1       share with user2 with w right
-         *                   share with user3 with rw rights
-         *                   
-         * /inbox/sub1/sub2  should inherit grants from sub1
-         * 
-         * zmmailbox -z -m user1 cf /inbox/sub1
-         * zmmailbox -z -m user1 cf /inbox/sub1/sub2
-         * zmmailbox -z -m user1 mfg /inbox/sub1 account user2 w
-         * zmmailbox -z -m user1 mfg /inbox/sub1 account user3 rw
-         * 
-         * To setup memcached:
-         * zmprov mcf zimbraMemcachedClientServerList 'localhost:11211'
-         * /opt/zimbra/memcached/bin/memcached -vv       
-         */
-        Account ownerAcct = Provisioning.getInstance().get(AccountBy.name, "user1");
-        Mailbox ownerMbx = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
-        Folder inbox = ownerMbx.getFolderByPath(null, "/inbox");
-        Folder sub1 = ownerMbx.getFolderByPath(null, "/inbox/sub1");
-        Folder sub2 = ownerMbx.getFolderByPath(null, "/inbox/sub1/sub2");
-        
-        // the owner itself accessing, should have all rights
-        doTest("user1", ownerAcct.getId(), inbox.getId(), (short)~0, ACL.RIGHT_READ, ACL.RIGHT_READ, ACL.RIGHT_ADMIN, true);
-        doTest("user1", ownerAcct.getId(), sub1.getId(),  (short)~0, ACL.RIGHT_READ, ACL.RIGHT_READ, ACL.RIGHT_ADMIN, true);
-        doTest("user1", ownerAcct.getId(), sub2.getId(),  (short)~0, ACL.RIGHT_READ, ACL.RIGHT_READ, ACL.RIGHT_ADMIN, true);
-        
-        doTest("user2", ownerAcct.getId(), inbox.getId(), (short)0,           ACL.RIGHT_WRITE, (short)0,        ACL.RIGHT_WRITE, false);
-        doTest("user2", ownerAcct.getId(), sub1.getId(),  ACL.RIGHT_WRITE,    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
-        doTest("user2", ownerAcct.getId(), sub2.getId(),  ACL.RIGHT_WRITE,    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
 
-        doTest("user3", ownerAcct.getId(), inbox.getId(), (short)0,                                   ACL.RIGHT_WRITE, (short)0,        ACL.RIGHT_WRITE, false);
-        doTest("user3", ownerAcct.getId(), sub1.getId(),  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE),    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
-        doTest("user3", ownerAcct.getId(), sub2.getId(),  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE),    ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, ACL.RIGHT_WRITE, true);
-       
-    }
 }
