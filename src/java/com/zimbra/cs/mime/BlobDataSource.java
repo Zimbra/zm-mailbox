@@ -30,18 +30,11 @@ import javax.activation.DataSource;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
-
-/**
- * @author schemers
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
 public class BlobDataSource implements DataSource {
 
     private MailboxBlob mBlob;
     private String mContentType;
-    
+
     /**
      * @param blob
      */
@@ -50,16 +43,14 @@ public class BlobDataSource implements DataSource {
     }
 
     public BlobDataSource(MailboxBlob blob, String ct) {
-    	this(blob);
-    	mContentType = ct;
+        this(blob);
+        mContentType = ct;
     }
-    /* (non-Javadoc)
-     * @see javax.activation.DataSource#getContentType()
-     */
+
     public String getContentType() {
-    	if (mContentType != null)
-    		return mContentType;
-        return mBlob.getMimeType();  // MailboxBlob.getMimeType() always returns message/rfc822
+        if (mContentType != null)
+            return mContentType;
+        return "message/rfc822";
     }
 
     /**
@@ -70,20 +61,14 @@ public class BlobDataSource implements DataSource {
      * @throws IOException
      */
     public InputStream getInputStream() throws IOException {
-    	return StoreManager.getInstance().getContent(mBlob);
+        return StoreManager.getInstance().getContent(mBlob);
     }
 
-    /* (non-Javadoc)
-     * @see javax.activation.DataSource#getName()
-     */
     public String getName() {
         // TODO should we just return null?
         return mBlob.toString();
     }
 
-    /* (non-Javadoc)
-     * @see javax.activation.DataSource#getOutputStream()
-     */
     public OutputStream getOutputStream() throws IOException {
         throw new UnsupportedOperationException();
     }

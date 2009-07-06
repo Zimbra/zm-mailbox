@@ -6676,12 +6676,12 @@ public class Mailbox {
             // delete any blobs associated with items deleted from db/index
             StoreManager sm = StoreManager.getInstance();
             if (deletes != null && deletes.blobs != null) {
-                for (MailboxBlob blob : deletes.blobs) {
+                for (MailboxBlob mblob : deletes.blobs) {
                     try {
-                        if (blob != null)
-                            sm.delete(blob);
+                        if (mblob != null)
+                            sm.delete(mblob);
                     } catch (IOException e) {
-                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
+                        ZimbraLog.mailbox.warn("could not delete blob " + mblob + " during commit");
                     }
                 }
             }
@@ -6753,7 +6753,7 @@ public class Mailbox {
                     try {
                         sm.delete(mblob);
                     } catch (IOException e) {
-                        ZimbraLog.mailbox.warn("could not delete blob " + mblob.getPath() + " during rollback");
+                        ZimbraLog.mailbox.warn("could not delete blob " + mblob + " during rollback");
                     }
                 } else if (obj instanceof Blob) {
                     Blob blob = (Blob) obj;

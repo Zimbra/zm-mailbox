@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -18,31 +18,32 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.store.Blob;
 
 public class MailboxBlob {
 
-    private int mMsgId;
-    private int mRevision;
-
     private Mailbox mMailbox;
     private Blob mBlob;
-    private String mMimeType;
 
-    //	public MailboxBlob(Mailbox mbox, int msgId, Blob blob) {
-    //      this(mbox, msgId, 0, blob);
-    //  }
-    public MailboxBlob(Mailbox mbox, int msgId, int revision, Blob blob) {
-        mMsgId = msgId;
+    private int mItemId;
+    private int mRevision;
+
+    public MailboxBlob(Mailbox mbox, int itemId, int revision, Blob blob) {
+        mItemId = itemId;
         mRevision = revision;
         mMailbox = mbox;
         mBlob = blob;
-        mMimeType = Mime.CT_MESSAGE_RFC822;
     }
 
-    public int getMessageId() {
-        return mMsgId;
+    public MailboxBlob(MailItem item, Blob blob) {
+        mItemId = item.getId();
+        mRevision = item.getSavedSequence();
+        mMailbox = item.getMailbox();
+        mBlob = blob;
+    }
+
+    public int getItemId() {
+        return mItemId;
     }
 
     public int getRevision() {
@@ -57,25 +58,11 @@ public class MailboxBlob {
         return mBlob;   
     }
 
-    public String getPath() {
-        return mBlob.getPath();
-    }
-
     public String getLocator() {
         return mBlob.getLocator();
     }
 
-    public String getMimeType() {
-        return mMimeType;
-    }
-
     @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("MailboxBlob: {");
-        sb.append("mailbox=").append(mMailbox.getId());
-        sb.append(", message=").append(mMsgId);
-        sb.append(", path=").append(getPath());
-        sb.append("}");
-        return sb.toString();
+        return mMailbox.getId() + ":" + mItemId + ":" + mRevision + "[" + getLocator() + "]";
     }
 }

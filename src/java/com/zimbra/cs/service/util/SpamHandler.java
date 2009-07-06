@@ -159,7 +159,7 @@ public class SpamHandler {
         MailboxBlob blob = msg.getBlob();
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setDataHandler(new DataHandler(new BlobDataSource(blob)));
-        mbp.setHeader("Content-Type", blob.getMimeType());
+        mbp.setHeader("Content-Type", Mime.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mmp.addBodyPart(mbp);
         
