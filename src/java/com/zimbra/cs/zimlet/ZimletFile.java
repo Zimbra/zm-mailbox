@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -283,8 +284,12 @@ public class ZimletFile implements Comparable<ZimletFile> {
 		return mConfig;
 	}
 
-	public Map<String,ZimletEntry> getAllEntries() {
-		return mEntries;
+	public ZimletEntry getEntry(String name) {
+		return mEntries.get(name.toLowerCase());
+	}
+	
+	public Collection<ZimletEntry> getAllEntries() {
+		return mEntries.values();
 	}
 	
 	public String getZimletName() {

@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -541,9 +540,7 @@ public class ZimletUtil {
 									"lib");
 		File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimletName);
 
-		Iterator<Map.Entry<String, ZimletFile.ZimletEntry>> files = zf.getAllEntries().entrySet().iterator();
-		while (files.hasNext()) {
-			ZimletFile.ZimletEntry entry = files.next().getValue();
+		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
 			String fname = entry.getName();
 			if (fname.endsWith(".jar")) {
 				File file = new File(serviceLibDir, fname);

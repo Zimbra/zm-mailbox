@@ -240,7 +240,7 @@ public class ZimletResources
 
 	private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
     	ZimletFile zf = ZimletUtil.getZimlet(zimletName);
-		for (ZimletFile.ZimletEntry entry : zf.getAllEntries().values()) {
+		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
 			String name = entry.getName();
 			if (name.equalsIgnoreCase(file)) {
 				resp.setStatus(HttpServletResponse.SC_OK);
@@ -279,7 +279,7 @@ public class ZimletResources
                     if (RE_REMOTE.matcher(f).matches()) {
                         continue;
                     }
-                    ZimletFile.ZimletEntry entry = file.getAllEntries().get(f);
+                    ZimletFile.ZimletEntry entry = file.getEntry(f);
                     if (entry == null)
                     	continue;
                     
