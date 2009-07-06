@@ -45,31 +45,41 @@ public class TestFolderACLCache extends TestCase {
      * 
      * To test all scenarios, after reset-the-world:
      * 
-     * 1. ==> run the test
-     *    This tests the local host case.
-     * 
-     * 2. modify FolderACL.ShareTarget.onLocalServer() to 
-     *    boolean onLocalServer() throws ServiceException {
+     * 1. Test the case when memcached is not configured/running.
+     *    (A) just run the test
+     *            This tests the case when the effective permissions
+     *            are computed locally.
+     *                
+     *    (B) modify FolderACL.ShareTarget.onLocalServer() to 
+     *     boolean onLocalServer() throws ServiceException {
      *       // return Provisioning.onLocalServer(mOwnerAcct);
      *       return false;
      *     } 
      *     ==> run the test
-     *     This tests the remote host case, with memcached off.
-     *     
-     * 3. zmprov mcf zimbraMemcachedClientServerList 'localhost:11211'
+     *     This tests the GetEffectiveFolderPerms soap.
+     * 
+     * 2. Test the case when memcached is configured/running. 
+     *    zmprov mcf zimbraMemcachedClientServerList 'localhost:11211'
+     *    (restart server)
      *    /opt/zimbra/memcached/bin/memcached -vv
      *    ==> run the test
-     *    This tests the remote host case, with memcached on.
      */
     
     String OWNER_ACCT_ID;
+    Account USER1;
+    Account USER2;
+    Account USER3;
+    
     int INBOX_FID;
     int SUB1_FID;
     int SUB2_FID;
     int SUB3_FID;
     
     public void setUp() throws Exception {
-        Account ownerAcct = Provisioning.getInstance().get(AccountBy.name, "user1");
+        
+        Provisioning prov = Provisioning.getInstance();
+        
+        Account ownerAcct = prov.get(AccountBy.name, "user1");
         ZMailbox ownerMbx = TestUtil.getZMailbox(ownerAcct.getName());
         
         ZFolder inbox = ownerMbx.getFolderByPath("inbox");
@@ -95,6 +105,10 @@ public class TestFolderACLCache extends TestCase {
         }
         
         OWNER_ACCT_ID = ownerAcct.getId();
+        USER1 = prov.get(AccountBy.name, "user1");
+        USER2 = prov.get(AccountBy.name, "user2");
+        USER3 = prov.get(AccountBy.name, "user3");
+        
         INBOX_FID = Integer.valueOf(inbox.getId());
         SUB1_FID = Integer.valueOf(sub1.getId());
         SUB2_FID = Integer.valueOf(sub2.getId());
@@ -110,17 +124,16 @@ public class TestFolderACLCache extends TestCase {
      *                 make sure you change it back after testing
      */
     private void doTest(
-            String authedAcctName, String ownerAcctId, int targetFolderId,
+            Account authedAcct, String ownerAcctId, int targetFolderId,
             short expectedEffectivePermissions, 
             short needRightsForCanAccessTest, boolean expectedCanAccess) throws ServiceException {
         
-        Account authedAcct = null;
-        if (authedAcctName != null)
-            authedAcct = Provisioning.getInstance().get(AccountBy.name, authedAcctName);
+        OperationContext octxt;
+        if (authedAcct == null)
+            octxt = null;
         else
-            authedAcct = ACL.ANONYMOUS_ACCT;
+            octxt = new OperationContext(authedAcct);
         
-        OperationContext octxt = new OperationContext(authedAcct);
         FolderACL folderAcl = new FolderACL(octxt, ownerAcctId, targetFolderId);
         
         short effectivePermissions = folderAcl.getEffectivePermissions();
@@ -153,38 +166,47 @@ public class TestFolderACLCache extends TestCase {
     }
     
     public void testPublicUser() throws Exception {
-        doTest(null,    OWNER_ACCT_ID, INBOX_FID, (short)0,       ACL.RIGHT_READ, false);
-        doTest(null,    OWNER_ACCT_ID, SUB1_FID,  (short)0,       ACL.RIGHT_READ, false);
-        doTest(null,    OWNER_ACCT_ID, SUB2_FID,  (short)0,       ACL.RIGHT_READ, false);
+        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, INBOX_FID, (short)0,       ACL.RIGHT_READ, false);
+        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB1_FID,  (short)0,       ACL.RIGHT_READ, false);
+        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB2_FID,  (short)0,       ACL.RIGHT_READ, false);
         
-        doTest(null,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
-        doTest(null,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
+        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
+        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
+    }
+    
+    public void testOwner() throws Exception {
+        // pass a null authed account
+        // the owner itself accessing, should have all rights
+        doTest(null, OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
+        doTest(null, OWNER_ACCT_ID, SUB1_FID,  (short)~0, (short)~0, true);
+        doTest(null, OWNER_ACCT_ID, SUB2_FID,  (short)~0, (short)~0, true);
+        doTest(null, OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
     }
     
     public void testUser1() throws Exception {
         // the owner itself accessing, should have all rights
-        doTest("user1", OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
-        doTest("user1", OWNER_ACCT_ID, SUB1_FID,  (short)~0, (short)~0, true);
-        doTest("user1", OWNER_ACCT_ID, SUB2_FID,  (short)~0, (short)~0, true);
-        doTest("user1", OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
+        doTest(USER1, OWNER_ACCT_ID, INBOX_FID, (short)~0, (short)~0, true);
+        doTest(USER1, OWNER_ACCT_ID, SUB1_FID,  (short)~0, (short)~0, true);
+        doTest(USER1, OWNER_ACCT_ID, SUB2_FID,  (short)~0, (short)~0, true);
+        doTest(USER1, OWNER_ACCT_ID, SUB3_FID,  (short)~0, (short)~0, true);
     }
     
     public void testUser2() throws Exception {
-        doTest("user2", OWNER_ACCT_ID, INBOX_FID, (short)0,         ACL.RIGHT_WRITE, false);
-        doTest("user2", OWNER_ACCT_ID, SUB1_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
-        doTest("user2", OWNER_ACCT_ID, SUB2_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
+        doTest(USER2, OWNER_ACCT_ID, INBOX_FID, (short)0,         ACL.RIGHT_WRITE, false);
+        doTest(USER2, OWNER_ACCT_ID, SUB1_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
+        doTest(USER2, OWNER_ACCT_ID, SUB2_FID,  ACL.RIGHT_WRITE,  ACL.RIGHT_WRITE, true);
         
-        doTest("user2", OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
-        doTest("user2", OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
+        doTest(USER2, OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
+        doTest(USER2, OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
    }
     
     public void testUser3() throws Exception {
-        doTest("user3", OWNER_ACCT_ID, INBOX_FID, (short)0,                                ACL.RIGHT_WRITE, false);
-        doTest("user3", OWNER_ACCT_ID, SUB1_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
-        doTest("user3", OWNER_ACCT_ID, SUB2_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
+        doTest(USER3, OWNER_ACCT_ID, INBOX_FID, (short)0,                                ACL.RIGHT_WRITE, false);
+        doTest(USER3, OWNER_ACCT_ID, SUB1_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
+        doTest(USER3, OWNER_ACCT_ID, SUB2_FID,  (short)(ACL.RIGHT_READ|ACL.RIGHT_WRITE), ACL.RIGHT_WRITE, true);
         
-        doTest("user3", OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
-        doTest("user3", OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
+        doTest(USER3, OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
+        doTest(USER3, OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
     }
     
     public static void main(String[] args) throws ServiceException {

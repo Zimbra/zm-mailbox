@@ -18,6 +18,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -120,10 +121,7 @@ public class FolderACL {
      * @see Folder.checkRights()
      */
     private short checkRights(short rightsNeeded) throws ServiceException {
-        if (mShareTarget.onLocalServer())
-            return checkRightsLocal(rightsNeeded);
-        else
-            return checkRightsRemote(rightsNeeded);
+        return checkRights(rightsNeeded, getAuthenticatedAccount(), isUsingAdminPrivileges());
     }
     
     /**
@@ -138,26 +136,11 @@ public class FolderACL {
         Account authuser = null;
         if (mOctxt != null)
             authuser = mOctxt.getAuthenticatedUser();
-        
-        /* Mailbox.getAuthenticatedAccount() says:
         // XXX if the current authenticated user is the owner, it will return null.
         // later on in Folder.checkRights(), the same assumption is used to validate
         // the access.
-         * 
-         * unfortunately we can't do the same here, because the path to here could 
-         * be not equipped with stuffing a public user in the octxt, or the octxt 
-         * can be null.  So we do it here, and our FolderACL.checkRights will *not* 
-         * make the same assumption that a nukk auth user means the owner himself.
-         * it always requirs a non-null auth user.
-         */
-        
-        /*
         if (authuser != null && authuser.getId().equals(mShareTarget.getAccountId()))
             authuser = null;
-        */  
-        if (authuser == null)
-            authuser = ACL.ANONYMOUS_ACCT;
-        
         return authuser;
     }
 
@@ -173,34 +156,16 @@ public class FolderACL {
     }
     
     /*
-     * check rights locally the normal way
-     */
-    private short checkRightsLocal(short rightsNeeded) throws ServiceException {
-        // assert that we must have a authed user, or else Mailbox.getAuthenticatedAccount would return null,
-        // which will give all permissions in Folder.checkRights.
-        // It should not happen, just making sure.
-        if (mOctxt == null || mOctxt.getAuthenticatedUser() == null)
-            return 0;
-        
-        Mailbox ownerMbx = MailboxManager.getInstance().getMailboxByAccountId(mShareTarget.getAccountId(), false);
-        short hasRights = ownerMbx.getEffectivePermissions(mOctxt, mShareTarget.getFolderId(), MailItem.TYPE_FOLDER);
-        return (short)(hasRights & rightsNeeded);
-    }
-    
-    private short checkRightsRemote(short rightsNeeded) throws ServiceException {
-        return checkRightsRemote(rightsNeeded, getAuthenticatedAccount(), isUsingAdminPrivileges());
-    }
-    
-    /*
      * merge with Folder.checkRights?
      */
-    private short checkRightsRemote(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
+    private short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         
         if (rightsNeeded == 0)
             return rightsNeeded;
         
+        // XXX: in getAuthenticatedAccount, authuser is set to null if authuser == owner.
         // the mailbox owner can do anything they want
-        if (authuser.getId().equals(mShareTarget.getAccountId()))
+        if (authuser == null || authuser.getId().equals(mShareTarget.getAccountId()))
             return rightsNeeded;
         
         // admin users (and the appropriate domain admins) can also do anything they want
@@ -229,7 +194,34 @@ public class FolderACL {
         return EffectiveACLCache.get(mShareTarget.getAccountId(), mShareTarget.getFolderId());
     }
 
+    /*
+     * if we are here, has had a cache miss
+     */
     private Short getEffectivePermissionsFromServer() throws ServiceException {
+        if (mShareTarget.onLocalServer())
+            return getEffectivePermissionsLocal();
+        else
+            return getEffectivePermissionsRemote();
+    }
+    
+    private Short getEffectivePermissionsLocal() throws ServiceException {
+        Mailbox ownerMbx = MailboxManager.getInstance().getMailboxByAccountId(mShareTarget.getAccountId(), false);
+        Folder folder = ownerMbx.getFolderById(null, mShareTarget.getFolderId());
+        return getEffectivePermissionsLocal(mOctxt, ownerMbx, folder);
+    }
+    
+    public static Short getEffectivePermissionsLocal(OperationContext octxt, Mailbox ownerMbx, Folder folder) throws ServiceException {
+        
+        // cache the effective folder ACL in memcached - independent of the authed user
+        ACL acl = folder.getEffectiveACL();
+        EffectiveACLCache.set(folder.getAccount().getId(), folder.getId(), acl);
+        
+        // return the effective permission - auth user dependent
+        return ownerMbx.getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);
+    }
+    
+    private Short getEffectivePermissionsRemote() throws ServiceException {
+        
         Element request = new XMLElement(MailConstants.GET_EFFECTIVE_FOLDER_PERMS_REQUEST);
         
         ItemId iid = new ItemId(mShareTarget.getAccountId(), mShareTarget.getFolderId());
