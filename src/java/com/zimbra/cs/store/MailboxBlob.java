@@ -30,14 +30,14 @@ public class MailboxBlob {
     private int mItemId;
     private int mRevision;
 
-    public MailboxBlob(Mailbox mbox, int itemId, int revision, Blob blob) {
+    MailboxBlob(Mailbox mbox, int itemId, int revision, Blob blob) {
         mItemId = itemId;
         mRevision = revision;
         mMailbox = mbox;
         mBlob = blob;
     }
 
-    public MailboxBlob(MailItem item, Blob blob) {
+    MailboxBlob(MailItem item, Blob blob) {
         mItemId = item.getId();
         mRevision = item.getSavedSequence();
         mMailbox = item.getMailbox();
