@@ -672,7 +672,7 @@
             <fileset dir="${build.dir}/attrs"/>
         </copy>
         <copy todir="${dist.dir}/conf/rights" overwrite="true">
-            <fileset dir="${config.dir}/rights"/>
+            <fileset dir="${config.dir}/rights" includes="*.xml"/>
         </copy>
         <fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**"/>
 
@@ -1837,13 +1837,15 @@
 		<sleep seconds="2"/>
 		
 		<!-- copy from source to dist -->
-        <copy todir="${dist.dir}/conf/rights" overwrite="true">
-            <fileset dir="${config.dir}/rights"/>
+        <echo>Copying right definition files from ${config.dir}/rights to ${dist.dir}/conf/rights</echo>
+		<copy todir="${dist.dir}/conf/rights" overwrite="true">
+            <fileset dir="${config.dir}/rights" includes="*.xml"/>
         </copy>
 		
 		<!-- copy from dist to zimbra home -->
+        <echo>Copying right definition files from ${dist.dir}/conf/rights to ${zimbra.home.dir}/conf/rights</echo>
         <copy todir="${zimbra.home.dir}/conf/rights" overwrite="true">
-            <fileset dir="${dist.dir}/conf/rights"/>
+            <fileset dir="${dist.dir}/conf/rights" includes="*.xml"/>
         </copy>
 		
 		<antcall target="start-webserver"/>
