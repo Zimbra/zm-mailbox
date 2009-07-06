@@ -99,7 +99,7 @@ public class FirstServlet extends HttpServlet {
             try {
                 RightManager.getInstance();
             } catch (ServiceException e) {
-                Util.halt("cannot initialize RightManager" + e.getMessage());
+                Util.halt("cannot initialize RightManager", e);
             }
     		
             synchronized (mInitializedCondition) {
