@@ -223,10 +223,10 @@ public class FileBlobStore extends StoreManager {
         return blob;
     }
 
-    @Override public MailboxBlob copy(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
+    @Override public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = Volume.getCurrentMessageVolume();
-        return copy(src, destMbox, destMsgId, destRevision, volume);
+        return copy(src.getBlob(), destMbox, destMsgId, destRevision, volume);
     }
 
     public MailboxBlob copy(Blob src, Mailbox destMbox, int destMsgId, int destRevision, short destVolumeId)

@@ -143,7 +143,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob copy(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException;
 
     /**
