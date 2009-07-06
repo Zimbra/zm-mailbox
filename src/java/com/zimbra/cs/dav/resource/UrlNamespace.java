@@ -461,6 +461,10 @@ public class UrlNamespace {
 				(f.getId() == Mailbox.ID_FOLDER_CALENDAR ||
 				 f.getId() == Mailbox.ID_FOLDER_TASKS))
 			return new Collection(ctxt, f);
+		if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT && !ctxt.getAuthAccount().isFeatureCalendarEnabled())
+			return new Collection(ctxt, f);
+		if (f.getDefaultView() == MailItem.TYPE_TASK && !ctxt.getAuthAccount().isFeatureTasksEnabled())
+			return new Collection(ctxt, f);
 		return new CalendarCollection(ctxt, f);
 	}
 	
