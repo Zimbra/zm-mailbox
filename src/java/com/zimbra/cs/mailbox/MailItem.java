@@ -1449,14 +1449,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         getFolder().updateUIDNEXT();
     }
     
-    final Blob setContent(byte[] data, String digest, Object content)
+    final MailboxBlob setContent(byte[] data, String digest, Object content)
     throws ServiceException, IOException {
         InputStream dataStream = (data == null ? null : new ByteArrayInputStream(data));
         int dataLength = (data == null ? 0 : data.length);
         return setContent(dataStream, dataLength, digest, content);
     }
 
-    final Blob setContent(InputStream dataStream, int dataLength, String digest, Object content)
+    final MailboxBlob setContent(InputStream dataStream, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
         Blob incoming = null;
         if (dataStream != null)
@@ -1464,7 +1464,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         return setContent(incoming, dataLength, digest, content);
     }
 
-    Blob setContent(Blob incoming, int dataLength, String digest, Object content)
+    MailboxBlob setContent(Blob incoming, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
         addRevision(false);
 
@@ -1519,7 +1519,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content);
 
-        return mblob == null ? null : mblob.getBlob();
+        return mblob;
     }
 
     @SuppressWarnings("unused")

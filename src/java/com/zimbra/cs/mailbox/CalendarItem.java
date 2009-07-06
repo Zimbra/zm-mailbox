@@ -71,7 +71,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
@@ -1913,7 +1913,7 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
-    private Blob storeUpdatedBlob(MimeMessage mm) throws ServiceException, IOException {
+    private MailboxBlob storeUpdatedBlob(MimeMessage mm) throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
         byte[] data = pm.getRawData();
         if (data == null)
@@ -1943,7 +1943,7 @@ public abstract class CalendarItem extends MailItem {
      * @param firstInvite
      * @throws ServiceException
      */
-    private Blob createBlob(ParsedMessage invPm, Invite firstInvite)
+    private MailboxBlob createBlob(ParsedMessage invPm, Invite firstInvite)
     throws ServiceException {
         // Create blob only if there's an attachment or DESCRIPTION is too big to be stored in metadata.
         if (!firstInvite.hasAttachment() && (invPm == null || firstInvite.descInMeta()))

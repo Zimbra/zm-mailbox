@@ -4585,8 +4585,8 @@ public class Mailbox {
 
             // update the content and increment the revision number
             in = pm.getRawInputStream();
-            Blob blob = msg.setContent(in, size, digest, pm);
-            redoRecorder.setMessageBodyInfo(blob.getFile());
+            MailboxBlob mblob = msg.setContent(in, size, digest, pm);
+            redoRecorder.setMessageBodyInfo(mblob.getBlob().getFile());
 
             queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
                 
@@ -6091,8 +6091,8 @@ public class Mailbox {
             else
                 throw MailServiceException.INVALID_TYPE(type);
 
-            Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
-            redoRecorder.setMessageBodyInfo(blob.getFile());
+            MailboxBlob mblob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
+            redoRecorder.setMessageBodyInfo(mblob.getBlob().getFile());
 
             queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
             success = true;
@@ -6127,13 +6127,13 @@ public class Mailbox {
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
             Document doc = getDocumentById(docId);
-            Blob blob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
+            MailboxBlob mblob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
 
             redoRecorder.setDocument(pd);
             redoRecorder.setDocId(docId);
             redoRecorder.setItemType(doc.getType());
             // TODO: simplify the redoRecorder by not subclassing from CreateMessage
-            redoRecorder.setMessageBodyInfo(blob.getFile());
+            redoRecorder.setMessageBodyInfo(mblob.getBlob().getFile());
 
             queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
 
@@ -6247,8 +6247,8 @@ public class Mailbox {
             redoRecorder.setImapId(imapID);
 
             // update the content and increment the revision number
-            Blob blob = chat.setContent(data, digest, pm);
-            redoRecorder.setMessageBodyInfo(data, blob.getPath());
+            MailboxBlob mblob = chat.setContent(data, digest, pm);
+            redoRecorder.setMessageBodyInfo(data, mblob.getBlob().getPath());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
             queueForIndexing(chat, true, docList);
