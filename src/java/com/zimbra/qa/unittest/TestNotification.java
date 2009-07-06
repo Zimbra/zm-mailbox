@@ -207,7 +207,7 @@ extends TestCase {
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraPrefSaveToSent, LdapUtil.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-send-1";
         TestUtil.sendMessage(tappedMbox, INTERCEPTOR_NAME, subject);
-        tappedMsg = TestUtil.getMessage(tappedMbox, "in:sent subject:\"" + subject + "\"");
+        tappedMsg = TestUtil.waitForMessage(tappedMbox, "in:sent subject:\"" + subject + "\"");
         interceptMsg = TestUtil.waitForMessage(interceptorMbox, "subject:intercepted subject:\"" + subject + "\"");
         verifyInterceptMessage(interceptMsg, "add message", "Sent", Integer.toString(Mailbox.ID_FOLDER_SENT));
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
@@ -223,7 +223,7 @@ extends TestCase {
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_TRUE);
         subject = NAME_PREFIX + " testIntercept-headers-only";
         TestUtil.sendMessage(interceptorMbox, TAPPED_NAME, subject);
-        tappedMsg = TestUtil.getMessage(tappedMbox, "in:inbox subject:\"" + subject + "\"");
+        tappedMsg = TestUtil.waitForMessage(tappedMbox, "in:inbox subject:\"" + subject + "\"");
         interceptMsg = TestUtil.waitForMessage(interceptorMbox, "subject:intercepted subject:\"" + subject + "\"");
         verifyInterceptMessage(interceptMsg, "add message", "Inbox", Integer.toString(Mailbox.ID_FOLDER_INBOX));
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
