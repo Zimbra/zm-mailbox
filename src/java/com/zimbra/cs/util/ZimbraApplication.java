@@ -44,6 +44,10 @@ public class ZimbraApplication {
 	public String getId() {
 		return "zimbra";
 	}
+	
+	public String getInstallId() {
+	    return "zimbra";
+	}
 
 	public boolean supports(String className) {
 		return true;
