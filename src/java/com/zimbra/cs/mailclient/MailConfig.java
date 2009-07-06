@@ -64,6 +64,7 @@ public abstract class MailConfig {
      * @param host the mail server host
      */
     protected MailConfig(String host) {
+        this();
         this.host = host;
     }
 
@@ -115,6 +116,9 @@ public abstract class MailConfig {
     }
 
     public void setSecurity(Security security) {
+        if (security == null) {
+            throw new NullPointerException();
+        }
         this.security = security;
     }
 
@@ -160,6 +164,9 @@ public abstract class MailConfig {
      * @param id the authentication id
      */
     public void setAuthenticationId(String id) {
+        if (id == null) {
+            throw new NullPointerException();
+        }
         authenticationId = id;
     }
 
@@ -358,6 +365,9 @@ public abstract class MailConfig {
      * @param ps the trace output stream
      */
     public void setTraceStream(PrintStream ps) {
+        if (ps == null) {
+            throw new NullPointerException();
+        }
         traceOut = ps;
     }
 

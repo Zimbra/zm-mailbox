@@ -21,6 +21,10 @@ import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Mailbox;
+import com.zimbra.cs.mailclient.imap.ImapRequest;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.ResponseText;
 import com.zimbra.cs.mailclient.util.DateUtil;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Message;
@@ -46,29 +50,17 @@ import java.text.ParseException;
 public class ImapAppender {
     private final ImapConnection connection;
     private final String mailbox;
-    private boolean findUids;
+    private boolean hasAppendUid;
     private MailDateFormat mdf;
 
-
-    public static long appendMessage(ImapConnection connection, String mailbox,
-                                     Message msg) throws IOException, ServiceException {
-        ImapAppender appender = new ImapAppender(connection, mailbox);
-        appender.setFindUids(false);
-        return appender.appendMessage(msg);
-    }
-    
     public ImapAppender(ImapConnection connection, String mailbox) {
         this.connection = connection;
         this.mailbox = mailbox;
-        findUids = !connection.hasUidPlus();
+        hasAppendUid = connection.hasUidPlus();
     }
 
-    public void setFindUids(boolean find) {
-        findUids = find;
-    }
-
-    public void setHaveAppendUids(boolean appendUids) {
-        findUids = !appendUids;
+    public void setHasAppendUid(boolean hasAppendUid) {
+        this.hasAppendUid = hasAppendUid;
     }
 
     public long appendMessage(Message msg) throws IOException, ServiceException {
@@ -87,7 +79,7 @@ public class ImapAppender {
         InputStream is = mi.data.getInputStream();
         Literal lit = new Literal(is, mi.data.getSize());
         try {
-            return findUids ? appendSlow(mi, lit) : append(mi, lit);
+            return hasAppendUid ? append(mi, lit) : appendSlow(mi, lit);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Parsing error", e);
         } finally {
@@ -95,9 +87,34 @@ public class ImapAppender {
         }
     }
 
-    private long append(MessageInfo mi, Literal lit) throws IOException {
-        AppendResult res = connection.append(mailbox, mi.flags, mi.date, lit);
-        return res != null ? res.getUid() : -1;
+    private static Data getData(final File file) {
+        return new Data() {
+            public InputStream getInputStream() throws IOException {
+                return new FileInputStream(file);
+            }
+            public int getSize() {
+                return (int) file.length();
+            }
+        };
+    }
+    
+    private long append(MessageInfo mi, Literal data) throws IOException {
+        ImapRequest req = connection.newRequest(CAtom.APPEND, new MailboxName(mailbox));
+        if (mi.flags != null) {
+            req.addParam(mi.flags);
+        }
+        if (mi.date != null) {
+            req.addParam(mi.date);
+        }
+        req.addParam(data);
+        ResponseText rt = req.sendCheckStatus().getResponseText();
+        if (rt != null && rt.getCCode() == CAtom.APPENDUID) {
+            AppendResult ar = (AppendResult) rt.getData();
+            if (ar.getUid() > 0) {
+                return ar.getUid();
+            }
+        }
+        throw req.failed("APPENDUID supported but UID missing from result");
     }
 
     // Slow APPEND for servers lacking APPENDUID (UIDPLUS) capability
@@ -199,17 +216,7 @@ public class ImapAppender {
     private long getUidNext() throws IOException {
         return connection.status(mailbox, "UIDNEXT").getUidNext();
     }
-    
-    private static Data getData(final File file) {
-        return new Data() {
-            public InputStream getInputStream() throws IOException {
-                return new FileInputStream(file);
-            }
-            public int getSize() {
-                return (int) file.length();
-            }
-        };
-    }
+
 
     private static Data getData(final byte[] b) {
         return new Data() {

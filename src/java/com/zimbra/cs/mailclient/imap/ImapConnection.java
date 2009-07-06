@@ -216,8 +216,7 @@ public final class ImapConnection extends MailConnection {
         req.addParam(data);
         ImapResponse res = req.sendCheckStatus();
         ResponseText rt = res.getResponseText();
-        return rt.getCCode() == CAtom.APPENDUID ?
-            (AppendResult) rt.getData() : null;
+        return rt.getCCode() == CAtom.APPENDUID ? (AppendResult) rt.getData() : null;
     }
 
     public void expunge() throws IOException {
