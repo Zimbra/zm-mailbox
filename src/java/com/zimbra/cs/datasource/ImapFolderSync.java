@@ -390,7 +390,7 @@ class ImapFolderSync {
     public void finishSync() throws ServiceException, IOException {
         if (!completed) return;
         if (newMsgIds != null && !newMsgIds.isEmpty()) {
-            appendNewMessages(newMsgIds);
+            appendMsgs(newMsgIds);
         }
         if (syncState != null) {
             ds.putSyncState(localFolder.getId(), syncState);
@@ -511,7 +511,7 @@ class ImapFolderSync {
             localFolder.getId(), localPath, remotePath, uidValidity);
     }                                                        
 
-    private void appendNewMessages(List<Integer> itemIds)
+    private void appendMsgs(List<Integer> itemIds)
         throws ServiceException, IOException {
         remoteFolder.info("Appending %d message(s) to remote IMAP folder", itemIds.size());
         ImapAppender appender = new ImapAppender(connection, remoteFolder.getPath());
@@ -527,13 +527,22 @@ class ImapFolderSync {
             }
             remoteFolder.debug("Appending new message with item id %d", id);
             // Bug 27924: delete tracker from source folder if it exists
-            ImapMessage tracker = getMsgTracker(id);
-            if (tracker != null) {
-                tracker.delete();
+            ImapMessage msgTracker = getMsgTracker(id);
+            if (msgTracker != null) {
+                msgTracker.delete();
             }
             try {
                 long uid = appender.appendMessage(msg);
-                storeImapMessage(uid, id, msg.getFlagBitmask());
+                try {
+                    msgTracker = tracker.getMessage(uid);
+                    if (msgTracker.getItemId() != id) {
+                        // Another track associated with same remote message
+                        // because of deduping. Delete deplicate local message
+                        localFolder.deleteMessage(id);
+                    }
+                } catch (MailServiceException.NoSuchItemException e) {
+                    storeImapMessage(uid, id, msg.getFlagBitmask());
+                }
             } catch (Exception e) {
                 syncMessageFailed(id, "Append message failed", e);
             }
