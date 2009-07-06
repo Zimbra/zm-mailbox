@@ -269,7 +269,7 @@ public class FileBlobStore extends StoreManager {
         String destVolumeId = Short.toString(destVolume.getId());
         Blob newBlob = new Blob(dest, destVolumeId);
         newBlob.setCompressed(destCompressed);
-        return new MailboxBlob(destMbox, destMsgId, destRevision, newBlob);
+        return new MailboxBlob(destMbox, destMsgId, destRevision, destVolumeId, newBlob);
     }
 
     @Override public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
@@ -336,7 +336,7 @@ public class FileBlobStore extends StoreManager {
                     " newpath=" + destPath);
         }
 
-        return new MailboxBlob(destMbox, destMsgId, destRevision, new Blob(dest, destLocator));
+        return new MailboxBlob(destMbox, destMsgId, destRevision, destLocator, new Blob(dest, destLocator));
     }
 
     @Override public MailboxBlob renameTo(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
@@ -374,7 +374,8 @@ public class FileBlobStore extends StoreManager {
                     " newpath=" + destPath);
         }
 
-        return new MailboxBlob(destMbox, destMsgId, destRevision, new Blob(destFile, volume.getLocator()));
+        String destLocator = volume.getLocator();
+        return new MailboxBlob(destMbox, destMsgId, destRevision, destLocator, new Blob(destFile, destLocator));
     }
 
     @Override public boolean delete(MailboxBlob mboxBlob) throws IOException {
@@ -408,7 +409,7 @@ public class FileBlobStore extends StoreManager {
         File file = getBlobFile(mbox, msgId, revision, locator, true);
         if (file == null)
             return null;
-        return new MailboxBlob(mbox, msgId, revision, new Blob(file, locator));
+        return new MailboxBlob(mbox, msgId, revision, locator, new Blob(file, locator));
     }
 
     @Override public InputStream getContent(MailboxBlob mboxBlob) throws IOException {

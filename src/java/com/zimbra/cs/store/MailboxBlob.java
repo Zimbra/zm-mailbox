@@ -29,11 +29,13 @@ public class MailboxBlob {
 
     private int mItemId;
     private int mRevision;
+    private String mLocator;
 
-    MailboxBlob(Mailbox mbox, int itemId, int revision, Blob blob) {
+    MailboxBlob(Mailbox mbox, int itemId, int revision, String locator, Blob blob) {
         mItemId = itemId;
         mRevision = revision;
         mMailbox = mbox;
+        mLocator = locator;
         mBlob = blob;
     }
 
@@ -52,16 +54,16 @@ public class MailboxBlob {
         return mRevision;
     }
 
+    public String getLocator() {
+        return mLocator;
+    }
+
     public Mailbox getMailbox() {
         return mMailbox;
     }
 
     public Blob getBlob() {
         return mBlob;   
-    }
-
-    public String getLocator() {
-        return mBlob.getLocator();
     }
 
     @Override public String toString() {

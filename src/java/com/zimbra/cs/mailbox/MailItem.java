@@ -1507,20 +1507,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         mData.contentChanged(mMailbox);
 
         // write the content (if any) to the store
-        Blob blob = null;
+        MailboxBlob mblob = null;
         if (incoming != null) {
             StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.renameTo(incoming, mMailbox, mId, getSavedSequence());
+            mblob = sm.renameTo(incoming, mMailbox, mId, getSavedSequence());
             mMailbox.markOtherItemDirty(mblob);
-            blob = mblob.getBlob();
         }
         mBlob = null;
-        mData.locator = blob == null ? null : blob.getLocator();
+        mData.locator = mblob == null ? null : mblob.getLocator();
 
         // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content);
 
-        return blob;
+        return mblob == null ? null : mblob.getBlob();
     }
 
     @SuppressWarnings("unused")
@@ -1943,7 +1942,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
-            locator = mblob.getBlob().getLocator();
+            locator = mblob.getLocator();
         }
 
         UnderlyingData data = mData.duplicate(copyId, folder.getId(), locator);
@@ -2025,7 +2024,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
-            locator = mblob.getBlob().getLocator();
+            locator = mblob.getLocator();
         }
 
         UnderlyingData data = mData.duplicate(copyId, target.getId(), locator);

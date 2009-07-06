@@ -402,7 +402,7 @@ public class Message extends MailItem {
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = mbox.generateIndexId(id);
-        data.locator     = mblob == null ? null : mblob.getBlob().getLocator();
+        data.locator     = mblob == null ? null : mblob.getLocator();
         data.imapId      = id;
         data.date        = (int) (date / 1000);
         data.size        = msgSize;
