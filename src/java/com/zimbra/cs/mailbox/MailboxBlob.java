@@ -61,6 +61,10 @@ public class MailboxBlob {
         return mBlob.getPath();
     }
 
+    public String getLocator() {
+        return mBlob.getLocator();
+    }
+
     public String getMimeType() {
         return mMimeType;
     }

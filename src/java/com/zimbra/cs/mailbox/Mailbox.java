@@ -4510,18 +4510,15 @@ public class Mailbox {
     throws IOException, ServiceException {
         Blob blob = null;
         ParsedMessage pm = null;
-        
         try {
             blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
             pm = new ParsedMessage(blob.getFile(), receivedDate, attachmentsIndexingEnabled());
             return saveDraft(octxt, pm, id, origId, replyType, identityId);
         } finally {
-            if (blob != null) {
-                StoreManager.getInstance().delete(blob);
-            }
-            if (pm != null) {
+            if (pm != null)
                 ByteUtil.closeStream(pm.getBlobInputStream());
-            }
+            if (blob != null)
+                StoreManager.getInstance().delete(blob);
         }
     }
     
@@ -4593,7 +4590,7 @@ public class Mailbox {
             queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
                 
             success = true;
-            
+
             try {
                 Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "save draft", msg.getFolder());
             } catch (ServiceException e) {
@@ -5395,10 +5392,19 @@ public class Mailbox {
     }
 
     public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
-        return createContactInternal(octxt, pc.analyze(this), folderId, tags);
+        Blob incoming = null;
+        if (pc.hasAttachment()) {
+            try {
+                // store blob before taking Mailbox lock
+                incoming = StoreManager.getInstance().storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("could not save contact blob", ioe);
+            }
+        }
+        return createContactInternal(octxt, pc.analyze(this), folderId, tags, incoming);
     }
 
-    private synchronized Contact createContactInternal(OperationContext octxt, ParsedContact pc, int folderId, String tags)
+    private synchronized Contact createContactInternal(OperationContext octxt, ParsedContact pc, int folderId, String tags, Blob incoming)
     throws ServiceException {
         CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
@@ -5408,7 +5414,7 @@ public class Mailbox {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (ServiceException e) {
-                ZimbraLog.index_add.info("Caught exception analyzing new contact in folder "+folderId+".  Contact will not be indexed.", e);
+                ZimbraLog.index_add.info("Caught exception analyzing new contact in folder " + folderId + "; contact will not be indexed", e);
                 indexData = Collections.emptyList();
             }
         }
@@ -5422,21 +5428,18 @@ public class Mailbox {
             int contactId = getNextItemId(isRedo ? redoPlayer.getContactId() : ID_AUTO_INCREMENT);
             redoRecorder.setContactId(contactId);
             
-            int flags = 0;
-
-            Blob blob = null;
+            MailboxBlob mblob = null;
             if (pc.hasAttachment()) {
                 try {
-                    StoreManager sm = StoreManager.getInstance();
-                    blob = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
-                    MailboxBlob mblob = sm.renameTo(blob, this, contactId, getOperationChangeID());
+                    mblob = StoreManager.getInstance().renameTo(incoming, this, contactId, getOperationChangeID());
                     markOtherItemDirty(mblob);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
             }
 
-            Contact con = Contact.create(contactId, getFolderById(folderId), blob, pc, flags, tags, null);
+            int flags = 0;
+            Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, tags, null);
 
             queueForIndexing(con, false, deferIndexing ? null : indexData);
 
@@ -5448,20 +5451,26 @@ public class Mailbox {
     }
 
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
-        modifyContactInternal(octxt, contactId, pc.analyze(this));
-    }
-
-    public void modifyContactInternal(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
         ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
+
         pc.analyze(this);
-        
+        Blob blob = null;
+        if (pc.hasAttachment()) {
+            try {
+                // store blob before taking Mailbox lock
+                blob = StoreManager.getInstance().storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("could not save contact blob", ioe);
+            }
+        }
+
         List<org.apache.lucene.document.Document> indexData = null;
         boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
         if (!deferIndexing) {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (Exception e) {
-                ZimbraLog.index_add.info("Caught exception analyzing contact "+contactId+".  Contact will not be indexed.", e);
+                ZimbraLog.index_add.info("caught exception analyzing contact " + contactId + "; contact will not be indexed", e);
                 indexData = new ArrayList<org.apache.lucene.document.Document>();
             }
         }
@@ -5474,9 +5483,10 @@ public class Mailbox {
                 Contact con = getContactById(contactId);
                 if (!checkItemChangeID(con))
                     throw MailServiceException.MODIFY_CONFLICT();
-                
+
                 try {
-                    con.setContent(pc.getContentStream(), (int) pc.getSize(), pc.getDigest(), pc);
+                    // setContent() calls reanalyze(), which also updates the contact fields even when there is no blob
+                    con.setContent(blob, (int) pc.getSize(), pc.getDigest(), pc);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
@@ -6153,10 +6163,14 @@ public class Mailbox {
 
         byte[] data;
         String digest;
-        int msgSize;
-        data = pm.getRawData();  
-        digest = pm.getRawDigest();  
-        msgSize = pm.getRawSize();
+        int size;
+        try {
+            data = pm.getRawData();
+            digest = pm.getRawDigest();
+            size = pm.getRawSize();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to get chat message properties", e);
+        }
 
         mIndexHelper.maybeIndexDeferredItems();
         boolean deferIndexing = !indexImmediately();
@@ -6167,7 +6181,7 @@ public class Mailbox {
         }
 
         synchronized (this) {
-            CreateChat redoRecorder = new CreateChat(mId, digest, msgSize, folderId, flags, tagsStr);
+            CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
             Blob blob = null;
             
             boolean success = false;
@@ -6186,7 +6200,7 @@ public class Mailbox {
                 MailboxBlob mblob = sm.link(blob, this, itemId, getOperationChangeID());
                 markOtherItemDirty(mblob);
 
-                Chat chat = Chat.create(itemId, getFolderById(folderId), pm, mblob, msgSize, digest, false, flags, tags);
+                Chat chat = Chat.create(itemId, getFolderById(folderId), pm, mblob, size, digest, false, flags, tags);
                 redoRecorder.setMessageId(chat.getId());
                 
                 queueForIndexing(chat, false, docList);
@@ -6202,9 +6216,13 @@ public class Mailbox {
         byte[] data;
         String digest;
         int size;
-        data = pm.getRawData();  
-        digest = pm.getRawDigest();  
-        size = pm.getRawSize();
+        try {
+            data = pm.getRawData();
+            digest = pm.getRawDigest();
+            size = pm.getRawSize();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to get chat message properties", e);
+        }
 
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
         List<org.apache.lucene.document.Document> docList = null;

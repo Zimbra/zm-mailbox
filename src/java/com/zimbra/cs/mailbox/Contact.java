@@ -47,11 +47,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.Blob;
 
-/**
- * @author dkarp
- */
 public class Contact extends MailItem {
 
     /** "File as" setting: &nbsp;<tt>Last, First</tt> */
@@ -665,7 +661,7 @@ public class Contact extends MailItem {
      * 
      * @param id      The id for the new contact.
      * @param folder  The {@link Folder} to create the contact in.
-     * @param blob    The on-disk blob containing contact attachments.
+     * @param mblob   The stored blob containing contact attachments.
      * @param pc      The contact's fields and values, plus attachments.
      * @param flags   Initial flagset
      * @param tags    A serialized version of all {@link Tag}s to apply.
@@ -679,7 +675,7 @@ public class Contact extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see #canContain(byte) */
-    static Contact create(int id, Folder folder, Blob blob, ParsedContact pc, int flags, String tags, CustomMetadata custom)
+    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, String tags, CustomMetadata custom)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -696,7 +692,7 @@ public class Contact extends MailItem {
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = mbox.generateIndexId(id);
         data.imapId      = id;
-        data.locator     = blob == null ? null : blob.getLocator();
+        data.locator     = mblob == null ? null : mblob.getLocator();
         data.setBlobDigest(pc.getDigest());
         data.size        = pc.getSize();
         data.date        = mbox.getOperationTimestamp();

@@ -76,10 +76,10 @@ public class ParsedContact {
     /**
      * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
      */
-    public ParsedContact(Map<String, ? extends Object> fields, byte[] blob) throws ServiceException {
+    public ParsedContact(Map<String, ? extends Object> fields, byte[] content) throws ServiceException {
         InputStream in = null;
-        if (blob != null) {
-            in = new SharedByteArrayInputStream(blob);
+        if (content != null) {
+            in = new SharedByteArrayInputStream(content);
         }
         init(fields, in);
     }
