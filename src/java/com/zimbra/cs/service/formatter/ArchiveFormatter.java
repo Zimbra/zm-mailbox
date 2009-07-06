@@ -764,8 +764,15 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private void addError(List<ServiceException> errs, ServiceException ex) {
+        StringBuilder s = new StringBuilder(ex.getLocalizedMessage());
+        
         errs.add(ex);
-        ZimbraLog.misc.info(ex.getMessage());
+        if (ex.getArgs() != null) {
+            s.append(':');
+            for (ServiceException.Argument arg : ex.getArgs())
+                s.append(' ').append(arg.mName).append('=').append(arg.mValue);
+        }
+        ZimbraLog.misc.warn(s);
     }
 
     private Folder createParent(Context context, Map<Object, Folder> fmap,

@@ -49,7 +49,9 @@ public class TarFormatter extends ArchiveFormatter {
         public void close() throws IOException { is.close(); }
         public InputStream getInputStream() { return is; }
         public ArchiveInputEntry getNextEntry() throws IOException {
-            return new TarArchiveInputEntry(is);
+            TarArchiveInputEntry taie = new TarArchiveInputEntry(is);
+            
+            return taie.entry == null ? null : taie;
         }
         public int read(byte[] buf, int offset, int len) throws IOException {
             return is.read(buf, offset, len);

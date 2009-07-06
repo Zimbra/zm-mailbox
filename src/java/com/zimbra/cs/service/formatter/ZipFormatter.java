@@ -53,7 +53,9 @@ public class ZipFormatter extends ArchiveFormatter {
         public void close() throws IOException { is.close(); }
         public InputStream getInputStream() { return is; }
         public ArchiveInputEntry getNextEntry() throws IOException {
-            return new ZipArchiveInputEntry(is);
+            ZipArchiveInputEntry zaie = new ZipArchiveInputEntry(is);
+            
+            return zaie.entry == null ? null : zaie;
         }
         public int read(byte[] buf, int offset, int len) throws IOException {
             return is.read(buf, offset, len);
