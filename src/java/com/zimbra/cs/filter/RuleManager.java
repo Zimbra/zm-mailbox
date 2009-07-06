@@ -62,29 +62,41 @@ public class RuleManager {
      */
     private static final String FILTER_RULES_CACHE_KEY =
         StringUtil.getSimpleClassName(RuleManager.class.getName()) + ".FILTER_RULES_CACHE";
+    
+    private static ConfigurationManager sConfigurationManager;
+    private static SieveFactory sSieveFactory;
 
     static {
         // Initialize custom jSieve extensions
         try {
+            sConfigurationManager = new ConfigurationManager();
+            
             @SuppressWarnings("unchecked")
-            Map<String, String> commandMap = ConfigurationManager.getInstance().getCommandMap();
+            Map<String, String> commandMap = sConfigurationManager.getCommandMap();
             commandMap.put("disabled_if", com.zimbra.cs.filter.jsieve.DisabledIf.class.getName());
             commandMap.put("tag", com.zimbra.cs.filter.jsieve.Tag.class.getName());
             commandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
+            commandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
             
             @SuppressWarnings("unchecked")
-            Map<String, String> testMap = ConfigurationManager.getInstance().getTestMap();
+            Map<String, String> testMap = sConfigurationManager.getTestMap();
             testMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());
             testMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
             testMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
             testMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
             testMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
+            
+            sSieveFactory = sConfigurationManager.build();
         } catch (SieveException e) {
             ZimbraLog.filter.error("Unable to initialize mail filtering extensions.", e);
         }
     }
     
     private RuleManager() {
+    }
+    
+    public static SieveFactory getSieveFactory() {
+        return sSieveFactory;
     }
 
     /**
@@ -103,9 +115,8 @@ public class RuleManager {
         }
         try {
             Node node = parse(script);
-            SieveFactory sieveFactory = SieveFactory.getInstance();
             // evaluate against dummy mail adapter to catch more errors
-            sieveFactory.evaluate(new DummyMailAdapter(), node);
+            sSieveFactory.evaluate(new DummyMailAdapter(), node);
             // save 
             Map<String, Object> attrs = new HashMap<String, Object>();
             attrs.put(Provisioning.A_zimbraMailSieveScript, script);
@@ -334,7 +345,7 @@ public class RuleManager {
             }
             
             if (applyRules) {
-                SieveFactory.getInstance().evaluate(mailAdapter, node);
+                sSieveFactory.evaluate(mailAdapter, node);
                 // multiple fileinto may result in multiple copies of the messages in different folders
                 addedMessageIds = mailAdapter.getAddedMessageIds(); 
             }
@@ -362,7 +373,7 @@ public class RuleManager {
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mbox, handler);
         
         try {
-            SieveFactory.getInstance().evaluate(mailAdapter, node);
+            sSieveFactory.evaluate(mailAdapter, node);
         } catch (SieveException e) {
             throw ServiceException.FAILURE("Unable to evaluate script", e);
         }
@@ -380,7 +391,7 @@ public class RuleManager {
         } catch (UnsupportedEncodingException e) {
             throw new ParseException(e.getMessage());
         }
-        Node node = SieveFactory.getInstance().parse(sin);
+        Node node = sSieveFactory.parse(sin);
         return node;
     }
 

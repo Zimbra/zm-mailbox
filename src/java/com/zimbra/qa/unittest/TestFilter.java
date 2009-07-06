@@ -24,7 +24,6 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.parser.generated.Node;
 
 import com.zimbra.common.mime.MimeMessage;
@@ -350,7 +349,7 @@ extends TestCase {
         assertNotNull(script);
         assertTrue(script.length() > 0);
         List<String> ruleNames = RuleManager.getRuleNames(script);
-        Node node = SieveFactory.getInstance().parse(new FileInputStream(scriptPath));
+        Node node = RuleManager.getSieveFactory().parse(new FileInputStream(scriptPath));
         
         // Convert from Sieve to SOAP and back again. 
         SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);

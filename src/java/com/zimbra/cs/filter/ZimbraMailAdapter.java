@@ -182,8 +182,7 @@ public class ZimbraMailAdapter implements MailAdapter
             // Handle explicit and implicit delivery actions
             for (Action action : deliveryActions) {
                 if (action instanceof ActionKeep) {
-                    CommandStateManager state = CommandStateManager.getInstance();
-                    if (state.isImplicitKeep()) {
+                    if (((ActionKeep) action).isImplicit()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
                         doDefaultFiling();
