@@ -26,8 +26,8 @@ import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.ResponseText;
 import com.zimbra.cs.mailclient.util.DateUtil;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 

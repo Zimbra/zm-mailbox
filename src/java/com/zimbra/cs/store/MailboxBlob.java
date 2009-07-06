@@ -16,8 +16,10 @@
 /*
  * Created on 2004. 10. 12.
  */
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.store;
 
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
 
 public class MailboxBlob {

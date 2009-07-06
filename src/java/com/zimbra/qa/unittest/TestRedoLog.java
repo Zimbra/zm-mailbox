@@ -27,13 +27,12 @@ import com.zimbra.common.util.DevNullOutputStream;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.redolog.RedoPlayer;
 import com.zimbra.cs.redolog.util.RedoLogVerify;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
-
 
 /**
  * Tests redolog operations

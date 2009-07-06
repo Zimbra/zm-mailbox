@@ -27,7 +27,7 @@ import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
-import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
 public class BlobDataSource implements DataSource {

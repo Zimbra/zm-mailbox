@@ -21,6 +21,7 @@ package com.zimbra.cs.mailbox;
 import java.util.List;
 
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.MailboxBlob;
 
 /**
  * @author jhahm

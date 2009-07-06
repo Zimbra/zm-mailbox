@@ -54,6 +54,7 @@ import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;

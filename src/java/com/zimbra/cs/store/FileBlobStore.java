@@ -42,7 +42,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.znative.IO;
 
 public class FileBlobStore extends StoreManager {

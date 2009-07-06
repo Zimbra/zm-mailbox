@@ -25,8 +25,8 @@ import junit.framework.TestCase;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mime.ParsedDocument;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 

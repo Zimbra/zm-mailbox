@@ -30,7 +30,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -39,7 +39,6 @@ import com.zimbra.common.util.CliUtil;
 /**
  * Migration utility to fix the mail_item.blob_digest database column
  * for Wiki items (bug 9693)
- *
  */
 public class WikiDigestFixup {
 

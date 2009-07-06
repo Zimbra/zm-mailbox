@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.MailboxBlob;
 
 public class Contact extends MailItem {
 

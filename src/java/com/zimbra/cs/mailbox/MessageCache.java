@@ -34,17 +34,16 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
 
-/**
- * @author dkarp
- */
 public class MessageCache {
 
     private static final Log sLog = LogFactory.getLog(MessageCache.class);
     
     private static final class CacheNode {
+        CacheNode()  { }
         MimeMessage message;
         MimeMessage expanded;
     }

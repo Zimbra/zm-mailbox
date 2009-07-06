@@ -16,6 +16,7 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.store.MailboxBlob;
 
 public class Chat extends Message {
 
