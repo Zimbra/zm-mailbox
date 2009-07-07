@@ -81,6 +81,15 @@ public class TestUtilCode extends TestCase
                 expected, actual);
     }
 
+    public void testFillTemplateWithBraces() {
+        String template = "Beginning ${VAR} { end }";
+        Map<String, String> vars = new HashMap<String, String>();
+        vars.put("VAR", "middle");
+        String result = StringUtil.fillTemplate(template, vars);
+        String expected = "Beginning middle { end }";
+        assertEquals(expected, result);
+    }
+    
     public void testJoin() {
         List<String> list = new ArrayList<String>();
         list.add("a");
@@ -106,7 +115,7 @@ public class TestUtilCode extends TestCase
 
     public void testValueCounter()
     throws Exception {
-        ValueCounter vc = new ValueCounter();
+        ValueCounter<String> vc = new ValueCounter<String>();
         vc.increment("one");
         vc.increment("two");
         vc.increment("two");
