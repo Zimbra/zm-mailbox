@@ -3095,7 +3095,8 @@ public class ProvUtil implements HttpDebugListener {
             String indent = "    ";
             for (String attr : attrs) {
                 AttributeInfo ai = am.getAttributeInfo(attr);
-                System.out.println(attr);
+                String attrName = ai.getName();  // camel case name
+                System.out.println(attrName);
                 /* for tracking progress of bug 26161
                 System.out.format("%-48s %-25s %s\n", attr, 
                         DescribeArgs.Field.print(DescribeArgs.Field.requiresRestart, ai),
