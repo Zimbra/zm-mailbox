@@ -2503,8 +2503,6 @@ zimbra_noop_max_timeout)
 
 Tests:
 
-  <addressTest part="{all | local | domain}" stringComparison="{type}"
-    header="{header-name}" value="{value}"/>
   <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
   <headerExistsTest header="{header-name}" />
   <sizeTest numberComparison="{over|under}" s="{size}" />
