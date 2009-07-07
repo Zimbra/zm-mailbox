@@ -65,8 +65,11 @@ public class DataSourceManager {
         	DataImport di = newDataImport(ds);
         	di.test();
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
+            resetErrorStatusIfNecessary(ds);
         } catch (ServiceException x) {
         	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
+        	String error = generateErrorMessage(x);
+        	setErrorStatus(ds, error);
             throw x;
         }        
     }
