@@ -4545,50 +4545,50 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="1031" name="zimbraMtaBlockedExtensionWarnAdmin" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta" since="6.0.0_BETA3">
+<attr id="1031" name="zimbraMtaBlockedExtensionWarnAdmin" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta" since="6.0.0_RC1">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to email admin on detection of attachment with blocked extension</desc>
 </attr>
 
-<attr id="1032" name="zimbraMtaBlockedExtensionWarnRecipient" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta" since="6.0.0_BETA3">
+<attr id="1032" name="zimbraMtaBlockedExtensionWarnRecipient" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta" since="6.0.0_RC1">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to email recipient on detection of attachment with blocked extension</desc>
 </attr>
 
-<attr id="1033" name="zimbraDataSourceMaxTraceSize" type="integer" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="6.0.0_BETA3">
+<attr id="1033" name="zimbraDataSourceMaxTraceSize" type="integer" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="6.0.0_RC1">
   <desc>Message content data exceeding this size will not be included in IMAP trace file</desc>
 </attr>
 
-<attr id="1034" name="zimbraMailFileDescriptorCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA3">
+<attr id="1034" name="zimbraMailFileDescriptorCacheSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_RC1">
   <globalConfigValue>1000</globalConfigValue>
   <desc>Maximum number of file descriptors that are opened for accessing message content.</desc>
 </attr>
 
-<attr id="1035" name="zimbraMailFileDescriptorBufferSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA3">
+<attr id="1035" name="zimbraMailFileDescriptorBufferSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_RC1">
   <globalConfigValue>4096</globalConfigValue>
   <desc>Number of bytes to buffer in memory per file descriptor in the cache.  Larger values result in fewer disk reads, but increase memory consumption.</desc>
 </attr>
 
-<attr id="1036" name="zimbraPrefAdminConsoleWarnOnExit" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA3">
+<attr id="1036" name="zimbraPrefAdminConsoleWarnOnExit" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_RC1">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to display a warning when users try to navigate away from the admin console</desc>
 </attr>
 
-<attr id="1037" name="zimbraDataSourceDomain" type="string" max="128" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="6.0.0_BETA3">
+<attr id="1037" name="zimbraDataSourceDomain" type="string" max="128" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="6.0.0_RC1">
   <desc>domain name of data source</desc>
 </attr>
 
-<attr id="1038" name="zimbraDatabaseSlowSqlThreshold" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA3">
+<attr id="1038" name="zimbraDatabaseSlowSqlThreshold" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_RC1">
   <globalConfigValue>2s</globalConfigValue>
   <desc>SQL statements that take longer than this duration to execute will be logged to the sqltrace category in mailbox.log.</desc>
 </attr>
 
-<attr id="1039" name="zimbraMailForwardingAddressMaxLength" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_BETA3">
+<attr id="1039" name="zimbraMailForwardingAddressMaxLength" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_RC1">
   <defaultCOSValue>4096</defaultCOSValue>
   <desc>max number of chars in zimbraPrefMailForwardingAddress</desc>
 </attr>
 
-<attr id="1040" name="zimbraMailForwardingAddressMaxNumAddrs" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_BETA3">
+<attr id="1040" name="zimbraMailForwardingAddressMaxNumAddrs" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.0_RC1">
   <defaultCOSValue>100</defaultCOSValue>
   <desc>max number of email addresses in zimbraPrefMailForwardingAddress</desc>
 </attr>

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090706-2335 */
+    /* build: 6.0.0 pshao 20090706-2339 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1934,7 +1934,7 @@ public class ZAttrProvisioning {
      * SQL statements that take longer than this duration to execute will be
      * logged to the sqltrace category in mailbox.log.
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public static final String A_zimbraDatabaseSlowSqlThreshold = "zimbraDatabaseSlowSqlThreshold";
@@ -1977,7 +1977,7 @@ public class ZAttrProvisioning {
     /**
      * domain name of data source
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1037)
     public static final String A_zimbraDataSourceDomain = "zimbraDataSourceDomain";
@@ -2093,7 +2093,7 @@ public class ZAttrProvisioning {
      * Message content data exceeding this size will not be included in IMAP
      * trace file
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1033)
     public static final String A_zimbraDataSourceMaxTraceSize = "zimbraDataSourceMaxTraceSize";
@@ -3789,7 +3789,7 @@ public class ZAttrProvisioning {
      * Larger values result in fewer disk reads, but increase memory
      * consumption.
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1035)
     public static final String A_zimbraMailFileDescriptorBufferSize = "zimbraMailFileDescriptorBufferSize";
@@ -3798,7 +3798,7 @@ public class ZAttrProvisioning {
      * Maximum number of file descriptors that are opened for accessing
      * message content.
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1034)
     public static final String A_zimbraMailFileDescriptorCacheSize = "zimbraMailFileDescriptorCacheSize";
@@ -3812,7 +3812,7 @@ public class ZAttrProvisioning {
     /**
      * max number of chars in zimbraPrefMailForwardingAddress
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1039)
     public static final String A_zimbraMailForwardingAddressMaxLength = "zimbraMailForwardingAddressMaxLength";
@@ -3820,7 +3820,7 @@ public class ZAttrProvisioning {
     /**
      * max number of email addresses in zimbraPrefMailForwardingAddress
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1040)
     public static final String A_zimbraMailForwardingAddressMaxNumAddrs = "zimbraMailForwardingAddressMaxNumAddrs";
@@ -4375,7 +4375,7 @@ public class ZAttrProvisioning {
      * Whether to email admin on detection of attachment with blocked
      * extension
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1031)
     public static final String A_zimbraMtaBlockedExtensionWarnAdmin = "zimbraMtaBlockedExtensionWarnAdmin";
@@ -4384,7 +4384,7 @@ public class ZAttrProvisioning {
      * Whether to email recipient on detection of attachment with blocked
      * extension
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1032)
     public static final String A_zimbraMtaBlockedExtensionWarnRecipient = "zimbraMtaBlockedExtensionWarnRecipient";
@@ -4894,7 +4894,7 @@ public class ZAttrProvisioning {
      * whether to display a warning when users try to navigate away from the
      * admin console
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1036)
     public static final String A_zimbraPrefAdminConsoleWarnOnExit = "zimbraPrefAdminConsoleWarnOnExit";

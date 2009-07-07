@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090706-2335 */
+    /* build: 6.0.0 pshao 20090706-2339 */
 
     /**
      * RFC2256: descriptive information
@@ -5176,7 +5176,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraDatabaseSlowSqlThreshold in millseconds, or 2000 (2s)  if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public long getDatabaseSlowSqlThreshold() {
@@ -5189,7 +5189,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraDatabaseSlowSqlThreshold, or "2s" if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public String getDatabaseSlowSqlThresholdAsString() {
@@ -5203,7 +5203,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraDatabaseSlowSqlThreshold new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public void setDatabaseSlowSqlThreshold(String zimbraDatabaseSlowSqlThreshold) throws com.zimbra.common.service.ServiceException {
@@ -5220,7 +5220,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public Map<String,Object> setDatabaseSlowSqlThreshold(String zimbraDatabaseSlowSqlThreshold, Map<String,Object> attrs) {
@@ -5235,7 +5235,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public void unsetDatabaseSlowSqlThreshold() throws com.zimbra.common.service.ServiceException {
@@ -5251,7 +5251,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1038)
     public Map<String,Object> unsetDatabaseSlowSqlThreshold(Map<String,Object> attrs) {
@@ -10937,7 +10937,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraMailFileDescriptorBufferSize, or 4096 if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1035)
     public int getMailFileDescriptorBufferSize() {
@@ -10952,7 +10952,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraMailFileDescriptorBufferSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1035)
     public void setMailFileDescriptorBufferSize(int zimbraMailFileDescriptorBufferSize) throws com.zimbra.common.service.ServiceException {
@@ -10970,7 +10970,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1035)
     public Map<String,Object> setMailFileDescriptorBufferSize(int zimbraMailFileDescriptorBufferSize, Map<String,Object> attrs) {
@@ -10986,7 +10986,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1035)
     public void unsetMailFileDescriptorBufferSize() throws com.zimbra.common.service.ServiceException {
@@ -11003,7 +11003,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1035)
     public Map<String,Object> unsetMailFileDescriptorBufferSize(Map<String,Object> attrs) {
@@ -11018,7 +11018,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraMailFileDescriptorCacheSize, or 1000 if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1034)
     public int getMailFileDescriptorCacheSize() {
@@ -11032,7 +11032,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraMailFileDescriptorCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1034)
     public void setMailFileDescriptorCacheSize(int zimbraMailFileDescriptorCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -11049,7 +11049,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1034)
     public Map<String,Object> setMailFileDescriptorCacheSize(int zimbraMailFileDescriptorCacheSize, Map<String,Object> attrs) {
@@ -11064,7 +11064,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1034)
     public void unsetMailFileDescriptorCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -11080,7 +11080,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1034)
     public Map<String,Object> unsetMailFileDescriptorCacheSize(Map<String,Object> attrs) {
@@ -13981,7 +13981,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraMtaBlockedExtensionWarnAdmin, or true if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1031)
     public boolean isMtaBlockedExtensionWarnAdmin() {
@@ -13995,7 +13995,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraMtaBlockedExtensionWarnAdmin new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1031)
     public void setMtaBlockedExtensionWarnAdmin(boolean zimbraMtaBlockedExtensionWarnAdmin) throws com.zimbra.common.service.ServiceException {
@@ -14012,7 +14012,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1031)
     public Map<String,Object> setMtaBlockedExtensionWarnAdmin(boolean zimbraMtaBlockedExtensionWarnAdmin, Map<String,Object> attrs) {
@@ -14027,7 +14027,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1031)
     public void unsetMtaBlockedExtensionWarnAdmin() throws com.zimbra.common.service.ServiceException {
@@ -14043,7 +14043,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1031)
     public Map<String,Object> unsetMtaBlockedExtensionWarnAdmin(Map<String,Object> attrs) {
@@ -14058,7 +14058,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraMtaBlockedExtensionWarnRecipient, or true if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1032)
     public boolean isMtaBlockedExtensionWarnRecipient() {
@@ -14072,7 +14072,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraMtaBlockedExtensionWarnRecipient new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1032)
     public void setMtaBlockedExtensionWarnRecipient(boolean zimbraMtaBlockedExtensionWarnRecipient) throws com.zimbra.common.service.ServiceException {
@@ -14089,7 +14089,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1032)
     public Map<String,Object> setMtaBlockedExtensionWarnRecipient(boolean zimbraMtaBlockedExtensionWarnRecipient, Map<String,Object> attrs) {
@@ -14104,7 +14104,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1032)
     public void unsetMtaBlockedExtensionWarnRecipient() throws com.zimbra.common.service.ServiceException {
@@ -14120,7 +14120,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1032)
     public Map<String,Object> unsetMtaBlockedExtensionWarnRecipient(Map<String,Object> attrs) {

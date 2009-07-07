@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090706-2335 */
+    /* build: 6.0.0 pshao 20090706-2339 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9088,7 +9088,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMailForwardingAddressMaxLength, or 4096 if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1039)
     public int getMailForwardingAddressMaxLength() {
@@ -9101,7 +9101,7 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraMailForwardingAddressMaxLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1039)
     public void setMailForwardingAddressMaxLength(int zimbraMailForwardingAddressMaxLength) throws com.zimbra.common.service.ServiceException {
@@ -9117,7 +9117,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1039)
     public Map<String,Object> setMailForwardingAddressMaxLength(int zimbraMailForwardingAddressMaxLength, Map<String,Object> attrs) {
@@ -9131,7 +9131,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1039)
     public void unsetMailForwardingAddressMaxLength() throws com.zimbra.common.service.ServiceException {
@@ -9146,7 +9146,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1039)
     public Map<String,Object> unsetMailForwardingAddressMaxLength(Map<String,Object> attrs) {
@@ -9160,7 +9160,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMailForwardingAddressMaxNumAddrs, or 100 if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1040)
     public int getMailForwardingAddressMaxNumAddrs() {
@@ -9173,7 +9173,7 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraMailForwardingAddressMaxNumAddrs new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1040)
     public void setMailForwardingAddressMaxNumAddrs(int zimbraMailForwardingAddressMaxNumAddrs) throws com.zimbra.common.service.ServiceException {
@@ -9189,7 +9189,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1040)
     public Map<String,Object> setMailForwardingAddressMaxNumAddrs(int zimbraMailForwardingAddressMaxNumAddrs, Map<String,Object> attrs) {
@@ -9203,7 +9203,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1040)
     public void unsetMailForwardingAddressMaxNumAddrs() throws com.zimbra.common.service.ServiceException {
@@ -9218,7 +9218,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1040)
     public Map<String,Object> unsetMailForwardingAddressMaxNumAddrs(Map<String,Object> attrs) {
@@ -12877,7 +12877,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @return zimbraPrefAdminConsoleWarnOnExit, or true if unset
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1036)
     public boolean isPrefAdminConsoleWarnOnExit() {
@@ -12891,7 +12891,7 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraPrefAdminConsoleWarnOnExit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1036)
     public void setPrefAdminConsoleWarnOnExit(boolean zimbraPrefAdminConsoleWarnOnExit) throws com.zimbra.common.service.ServiceException {
@@ -12908,7 +12908,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1036)
     public Map<String,Object> setPrefAdminConsoleWarnOnExit(boolean zimbraPrefAdminConsoleWarnOnExit, Map<String,Object> attrs) {
@@ -12923,7 +12923,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1036)
     public void unsetPrefAdminConsoleWarnOnExit() throws com.zimbra.common.service.ServiceException {
@@ -12939,7 +12939,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA3
+     * @since ZCS 6.0.0_RC1
      */
     @ZAttr(id=1036)
     public Map<String,Object> unsetPrefAdminConsoleWarnOnExit(Map<String,Object> attrs) {
