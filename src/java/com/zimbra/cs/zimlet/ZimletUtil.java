@@ -75,7 +75,7 @@ import com.zimbra.common.soap.Element.XMLElement;
  */
 public class ZimletUtil {
 	
-	public static final String ZIMLET_BASE = "/service/zimlet/res";
+	public static final String ZIMLET_BASE = "/service/zimlet";
 	public static final String ZIMLET_DEV_DIR = "_dev";
 	public static final String ZIMLET_ALLOWED_DOMAINS = "allowedDomains";
 	public static final String ZIMLET_DEFAULT_COS = "default";

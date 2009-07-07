@@ -364,7 +364,7 @@
 
   <servlet-mapping>
     <servlet-name>ZimletResources</servlet-name>
-    <url-pattern>/zimlet/res/*</url-pattern>
+    <url-pattern>/zimlet/*</url-pattern>
   </servlet-mapping>
 
   <!-- HTTPSBEGIN

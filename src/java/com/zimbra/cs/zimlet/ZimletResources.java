@@ -37,6 +37,8 @@ public class ZimletResources
     // Constants
     //
 
+	public static final String RESOURCE_PATH = "/res/";
+	
     private static final String COMPRESSED_EXT = ".zgz";
 
     private static final String P_DEBUG = "debug";
@@ -75,38 +77,47 @@ public class ZimletResources
         String uri = req.getRequestURI();
         String pathInfo = req.getPathInfo();
         
-        // handle requests for individual files included in zimlet in case dev=1 is set.
-        int slash = 0;
-        if (pathInfo != null) {
-        	if (pathInfo.startsWith("/_dev"))
-        		pathInfo = pathInfo.substring(6);
-        	else
-        		pathInfo = pathInfo.substring(1);
-        	slash = pathInfo.indexOf('/');
+        if (pathInfo == null) {
+    		resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    		return;
         }
-        if (slash > 0) {
-        	String zimlet = pathInfo.substring(0, slash);
-        	String file = pathInfo.substring(slash+1);
-            ZimbraLog.zimlet.debug("DEBUG: zimlet=%s, file=%s", zimlet, file);
-            try {
-            	printFile(resp, zimlet, file);
-            } catch (IOException e) {
-                ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
-        		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            } catch (ZimletException e) {
-                ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
-        		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        
+        @SuppressWarnings("unchecked")
+        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
+
+        if (!pathInfo.startsWith(RESOURCE_PATH)) {
+            // handle requests for individual files included in zimlet in case dev=1 is set.
+            if (pathInfo.startsWith("/_dev"))
+            	pathInfo = pathInfo.substring(6);
+            else
+            	pathInfo = pathInfo.substring(1);
+            int slash = pathInfo.indexOf('/');
+            if (slash > 0) {
+            	String zimlet = pathInfo.substring(0, slash);
+            	String file = pathInfo.substring(slash+1);
+            	if (!zimletNames.contains(zimlet)) {
+            		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            		return;
+            	}
+                ZimbraLog.zimlet.debug("DEBUG: zimlet=%s, file=%s", zimlet, file);
+                try {
+                	printFile(resp, zimlet, file);
+                } catch (IOException e) {
+                    ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
+            		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } catch (ZimletException e) {
+                    ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
+            		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                }
+            	return;
             }
-        	return;
         }
         
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
         boolean debug = req.getParameter(P_DEBUG) != null;
 
-        @SuppressWarnings("unchecked")
-        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
-        String cacheId = getCacheId(req, type);
+        String cacheId = getCacheId(req, type, zimletNames);
 
         if (ZimbraLog.zimlet.isDebugEnabled()) {
             ZimbraLog.zimlet.debug("DEBUG: uri=" + uri);
@@ -240,19 +251,23 @@ public class ZimletResources
 
 	private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
     	ZimletFile zf = ZimletUtil.getZimlet(zimletName);
-		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
-			String name = entry.getName();
-			if (name.equalsIgnoreCase(file)) {
-				resp.setStatus(HttpServletResponse.SC_OK);
-	            resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
-	            resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-	            resp.setHeader("Pragma", "no-cache");
-	            resp.setContentType(getContentType(file));
-	            ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
-				return;
-			}
-		}
-		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    	if (zf == null) {
+            ZimbraLog.zimlet.warn("zimlet file not found for: %s", zimletName);
+    		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    		return;
+    	}
+    	ZimletFile.ZimletEntry entry = zf.getEntry(file);
+    	if (entry == null) {
+            ZimbraLog.zimlet.warn("requested file not found for zimlet: %s (%s)", zimletName, file);
+    		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    		return;
+    	}
+    	resp.setStatus(HttpServletResponse.SC_OK);
+    	resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
+    	resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    	resp.setHeader("Pragma", "no-cache");
+    	resp.setContentType(getContentType(file));
+    	ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
     }
     
 	private void generate(Set<String> zimletNames, String type, PrintWriter out) throws IOException {
@@ -266,7 +281,7 @@ public class ZimletResources
         for (String zimlet : zimletNames) {
         	ZimletFile file = ZimletUtil.getZimlet(zimlet);
         	if (file == null) {
-                ZimbraLog.zimlet.info("error loading " + zimlet + ": zimlet not found ");
+                ZimbraLog.zimlet.warn("error loading " + zimlet + ": zimlet not found ");
                 continue;
         	}
 
@@ -293,7 +308,7 @@ public class ZimletResources
                     out.println();
         		}
         	} catch (ZimletException e) {
-                ZimbraLog.zimlet.info("error loading " + zimlet + ": ", e);
+                ZimbraLog.zimlet.error("error loading " + zimlet + ": ", e);
                 continue;
         	}
         }
@@ -352,10 +367,7 @@ public class ZimletResources
         return contentType != null ? contentType : TYPES.get(T_PLAIN);
     }
 
-	private String getCacheId(HttpServletRequest req, String type) {
-	    @SuppressWarnings("unchecked")
-        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
-
+	private String getCacheId(HttpServletRequest req, String type, Set<String> zimletNames) {
         StringBuilder str = new StringBuilder();
         str.append(getLocale(req).toString());
         str.append(":");
