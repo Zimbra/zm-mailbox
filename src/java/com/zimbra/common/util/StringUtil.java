@@ -376,18 +376,16 @@ public class StringUtil {
     // Pattern.DOTALL is required in case one of the values in the map has a newline
     // in it.
     private static Pattern templatePattern =
-        Pattern.compile("(.*)\\$\\{([^\\)]+)\\}(.*)", Pattern.DOTALL);
+        Pattern.compile("(.*)\\$\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
     
     /**
      * Substitutes all occurrences of the specified values into a template.  Keys
      * for the values are specified in the template as <code>${KEY_NAME}</code>.
      * @param template the template
-     * @param vars a <code>Map</code> filled with keys and values.  The keys must
-     * be <code>String</code>s. 
+     * @param vars a <code>Map</code> filled with keys and values.
      * @return the template with substituted values
      */
-    public static String fillTemplate(String template, Map vars)
-    {
+    public static String fillTemplate(String template, Map<String, ? extends Object> vars) {
         if (template == null) {
             return null;
         }
