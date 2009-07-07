@@ -20,6 +20,9 @@ import java.io.StringWriter;
 
 public class SystemUtil {
 
+    public static final boolean ON_WINDOWS = System.getProperty("os.name").toLowerCase().startsWith("win");
+
+
     public static String getStackTrace() {
         return getStackTrace(new Throwable());
     }
