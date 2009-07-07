@@ -65,6 +65,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String TYPE_ACCOUNT = "account";
     private static final String TYPE_IM = "im";
     private static final String TYPE_MOBILE = "mobile";
+    private static final String TYPE_OFFLINE = "offline";
     
     static {
         // Namespaces
@@ -73,6 +74,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         sTypeToNamespace.put(TYPE_ACCOUNT, Namespace.get("urn:zimbraAccount"));
         sTypeToNamespace.put(TYPE_IM, Namespace.get("urn:zimbraIM"));
         sTypeToNamespace.put(TYPE_MOBILE, Namespace.get("urn:zimbraSync"));
+        sTypeToNamespace.put(TYPE_OFFLINE, Namespace.get("urn:zimbraOffline"));
     }
     
     private Group mOptions;
@@ -156,7 +158,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         // Types option
         Set<String> validTypes = new HashSet<String>();
-        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin"); validTypes.add("im"); validTypes.add("mobile");
+        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin"); validTypes.add("im"); validTypes.add("mobile"); validTypes.add("offline");
         Argument typeArg = abuilder
             .withName("type").withValidator(new EnumValidator(validTypes))
             .withMinimum(1).withMaximum(1).create();
