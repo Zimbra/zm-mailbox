@@ -1,3 +1,4 @@
+//depot/FRANKLIN/ZimbraServer/src/java/com/zimbra/cs/datasource/DataSourceManager.java#20 - edit change 161848 (ktext)
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * 
@@ -65,11 +66,8 @@ public class DataSourceManager {
         	DataImport di = newDataImport(ds);
         	di.test();
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
-            resetErrorStatusIfNecessary(ds);
         } catch (ServiceException x) {
         	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
-        	String error = generateErrorMessage(x);
-        	setErrorStatus(ds, error);
             throw x;
         }        
     }
