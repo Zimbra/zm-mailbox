@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -4106,10 +4107,9 @@ public class Mailbox {
     throws IOException, ServiceException {
         Blob incomingBlob = null;
         ParsedMessage pm = null;
-        if (deliveryCtxt == null) {
+        if (deliveryCtxt == null)
             deliveryCtxt = new DeliveryContext();
-        }
-        
+
         try {
             InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
             incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
@@ -4122,12 +4122,10 @@ public class Mailbox {
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
                 customData, deliveryCtxt);
         } finally {
-            if (incomingBlob != null) {
-                StoreManager.getInstance().delete(incomingBlob);
-            }
-            if (pm != null) {
+            if (pm != null)
                 ByteUtil.closeStream(pm.getBlobInputStream());
-            }
+            if (incomingBlob != null)
+                StoreManager.getInstance().quietDelete(incomingBlob);
         }
     }
 
@@ -4193,9 +4191,8 @@ public class Mailbox {
             msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
                 rcptEmail, null, customData, deliveryCtxt);
         } finally {
-            if (deleteIncoming) {
-                StoreManager.getInstance().delete(deliveryCtxt.getIncomingBlob());
-            }
+            if (deleteIncoming)
+                StoreManager.getInstance().quietDelete(deliveryCtxt.getIncomingBlob());
         }
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
@@ -4519,7 +4516,7 @@ public class Mailbox {
             if (pm != null)
                 ByteUtil.closeStream(pm.getBlobInputStream());
             if (blob != null)
-                StoreManager.getInstance().delete(blob);
+                StoreManager.getInstance().quietDelete(blob);
         }
     }
     
@@ -4552,7 +4549,7 @@ public class Mailbox {
                     ID_AUTO_INCREMENT, ":API:", dinfo, null, ctxt);
             } finally {
                 ByteUtil.closeStream(in);
-                StoreManager.getInstance().delete(blob);
+                StoreManager.getInstance().quietDelete(blob);
             }
         } else {
             return saveDraftInternal(octxt, pm, id);
@@ -5402,7 +5399,12 @@ public class Mailbox {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
             }
         }
-        return createContactInternal(octxt, pc.analyze(this), folderId, tags, incoming);
+
+        try {
+            return createContactInternal(octxt, pc.analyze(this), folderId, tags, incoming);
+        } finally {
+            StoreManager.getInstance().quietDelete(incoming);
+        }
     }
 
     private synchronized Contact createContactInternal(OperationContext octxt, ParsedContact pc, int folderId, String tags, Blob incoming)
@@ -5496,6 +5498,7 @@ public class Mailbox {
                 success = true;
             } finally {
                 endTransaction(success);
+                StoreManager.getInstance().quietDelete(blob);
             }
         }
     }
@@ -6162,11 +6165,9 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
 
-        byte[] data;
         String digest;
         int size;
         try {
-            data = pm.getRawData();
             digest = pm.getRawDigest();
             size = pm.getRawSize();
         } catch (IOException e) {
@@ -6181,44 +6182,46 @@ public class Mailbox {
             docList = pm.getLuceneDocuments();
         }
 
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
+
         synchronized (this) {
             CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
-            Blob blob = null;
-            
+
             boolean success = false;
             try {
                 beginTransaction("createChat", octxt, redoRecorder);
+
                 CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
-                
+                redoRecorder.setMessageBodyInfo(blob.getFile());
+                markOtherItemDirty(blob);
+
                 long tags = Tag.tagsToBitmask(tagsStr);
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-
-                StoreManager sm = StoreManager.getInstance();
-                blob = sm.storeIncoming(data, digest);
-                redoRecorder.setMessageBodyInfo(data, blob.getPath());
-                markOtherItemDirty(blob);
 
                 MailboxBlob mblob = sm.link(blob, this, itemId, getOperationChangeID());
                 markOtherItemDirty(mblob);
 
                 Chat chat = Chat.create(itemId, getFolderById(folderId), pm, mblob, size, digest, false, flags, tags);
                 redoRecorder.setMessageId(chat.getId());
-                
+
                 queueForIndexing(chat, false, docList);
                 success = true;
                 return chat;
             } finally {
                 endTransaction(success);
+                sm.quietDelete(blob);
             }
         }
     }
 
-    public synchronized Chat updateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
-        byte[] data;
+    public Chat updateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
+        if (pm == null)
+            throw ServiceException.INVALID_REQUEST("null ParsedMessage when updating chat " + id + " in mailbox " + mId, null);
+
         String digest;
         int size;
         try {
-            data = pm.getRawData();
             digest = pm.getRawDigest();
             size = pm.getRawSize();
         } catch (IOException e) {
@@ -6230,33 +6233,48 @@ public class Mailbox {
         if (!deferIndexing)
             docList = pm.getLuceneDocuments();
 
-        SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
-        boolean success = false;
-        try {
-            beginTransaction("saveChat", octxt, redoRecorder);
-            SaveChat redoPlayer = (SaveChat) mCurrentChange.getRedoPlayer();
-            Chat chat = (Chat) getItemById(id, MailItem.TYPE_CHAT);
-            
-            if (!chat.isMutable()) 
-                throw MailServiceException.IMMUTABLE_OBJECT(id);
-            if (!checkItemChangeID(chat))
-                throw MailServiceException.MODIFY_CONFLICT();
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
 
-            // content changed, so we're obliged to change the IMAP uid
-            int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
-            redoRecorder.setImapId(imapID);
+        synchronized (this) {
+            SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
+            InputStream redoStream = null;
 
-            // update the content and increment the revision number
-            MailboxBlob mblob = chat.setContent(data, digest, pm);
-            redoRecorder.setMessageBodyInfo(data, mblob.getBlob().getPath());
+            boolean success = false;
+            try {
+                beginTransaction("saveChat", octxt, redoRecorder);
 
-            // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            queueForIndexing(chat, true, docList);
+                // can't load the redoPlayer with the incoming File because setContent() may rename it out from under us
+                SaveChat redoPlayer = (SaveChat) mCurrentChange.getRedoPlayer();
+                redoStream = new FileInputStream(blob.getFile());
+                redoRecorder.setMessageBodyInfo(redoStream, size);
 
-            success = true;
-            return chat;
-        } finally {
-            endTransaction(success);
+                Chat chat = (Chat) getItemById(id, MailItem.TYPE_CHAT);
+
+                if (!chat.isMutable()) 
+                    throw MailServiceException.IMMUTABLE_OBJECT(id);
+                if (!checkItemChangeID(chat))
+                    throw MailServiceException.MODIFY_CONFLICT();
+
+                // content changed, so we're obliged to change the IMAP uid
+                int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
+                redoRecorder.setImapId(imapID);
+
+                // update the content and increment the revision number
+                MailboxBlob mblob = chat.setContent(blob, size, digest, pm);
+                markOtherItemDirty(mblob);
+
+                // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
+                queueForIndexing(chat, true, docList);
+
+                success = true;
+                return chat;
+            } finally {
+                endTransaction(success);
+
+                ByteUtil.closeStream(redoStream);
+                sm.quietDelete(blob);
+            }
         }
     }
 
@@ -6677,14 +6695,8 @@ public class Mailbox {
             // delete any blobs associated with items deleted from db/index
             StoreManager sm = StoreManager.getInstance();
             if (deletes != null && deletes.blobs != null) {
-                for (MailboxBlob mblob : deletes.blobs) {
-                    try {
-                        if (mblob != null)
-                            sm.delete(mblob);
-                    } catch (IOException e) {
-                        ZimbraLog.mailbox.warn("could not delete blob " + mblob + " during commit");
-                    }
-                }
+                for (MailboxBlob mblob : deletes.blobs)
+                    sm.quietDelete(mblob);
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
@@ -6750,20 +6762,10 @@ public class Mailbox {
             StoreManager sm = StoreManager.getInstance();
             for (Object obj : change.mOtherDirtyStuff) {
                 if (obj instanceof MailboxBlob) {
-                    MailboxBlob mblob = (MailboxBlob) obj;
-                    try {
-                        sm.delete(mblob);
-                    } catch (IOException e) {
-                        ZimbraLog.mailbox.warn("could not delete blob " + mblob + " during rollback");
-                    }
+                    sm.quietDelete((MailboxBlob) obj);
                 } else if (obj instanceof Blob) {
-                    Blob blob = (Blob) obj;
-                    try {
-                        sm.delete(blob);
-                    } catch (IOException e) {
-                        ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during rollback");
-                    }
-                } else if (obj instanceof String && obj != null) {
+                    sm.quietDelete((Blob) obj);
+                } else if (obj instanceof String) {
                     mConvHashes.remove(obj);
                 }
             }

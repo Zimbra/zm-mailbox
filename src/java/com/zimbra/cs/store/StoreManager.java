@@ -21,6 +21,7 @@ import java.io.InputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.Zimbra;
 
@@ -190,11 +191,29 @@ public abstract class StoreManager {
     /**
      * Deletes a blob from store.  If blob doesn't exist, no exception is
      * thrown and false is returned.
-     * @param blob
+     * @param mblob
      * @return true if blob was actually deleted
      * @throws IOException
      */
-    public abstract boolean delete(MailboxBlob blob) throws IOException;
+    public abstract boolean delete(MailboxBlob mblob) throws IOException;
+
+    /**
+     * Deletes a blob from store.  If blob doesn't exist, no exception is
+     * thrown and false is returned.
+     * @param mblob
+     * @return true if blob was actually deleted
+     */
+    public boolean quietDelete(MailboxBlob mblob) {
+        if (mblob == null)
+            return true;
+
+        try {
+            return delete(mblob);
+        } catch (IOException ioe) {
+            ZimbraLog.store.warn("could not delete blob " + mblob);
+            return false;
+        }
+    }
 
     /**
      * Deletes a blob from incoming directory.  If blob doesn't exist, no exception is
@@ -204,6 +223,24 @@ public abstract class StoreManager {
      * @throws IOException
      */
     public abstract boolean delete(Blob blob) throws IOException;
+
+    /**
+     * Deletes a blob from incoming directory.  If blob doesn't exist, no exception is
+     * thrown and false is returned.
+     * @param blobFile
+     * @return true if blob was actually deleted
+     */
+    public boolean quietDelete(Blob blob) {
+        if (blob == null)
+            return true;
+
+        try {
+            return delete(blob);
+        } catch (IOException ioe) {
+            ZimbraLog.store.warn("could not delete blob " + blob.getPath());
+            return false;
+        }
+    }
 
     /**
      * Find the MailboxBlob in mailbox mbox with matching message ID.

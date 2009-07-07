@@ -211,12 +211,12 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return mPath;
     }
 
-    public void setMessageBodyInfo(byte[] data, String path) {
+    public void setMessageBodyInfo(InputStream dataStream, long size) {
         mMsgBodyType = MSGBODY_INLINE;
-        mData = new RedoableOpData(data);
-        mPath = path;
+        mData = new RedoableOpData(dataStream, (int) size);
+        mPath = ":streamed:";
     }
-    
+
     public void setMessageBodyInfo(File dataFile) {
         mMsgBodyType = MSGBODY_INLINE;
         mData = new RedoableOpData(dataFile);
