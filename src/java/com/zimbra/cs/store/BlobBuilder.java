@@ -48,9 +48,17 @@ public class BlobBuilder {
     public void setSizeHint(int sizeHint) {
         this.sizeHint = sizeHint;
     }
-    
-    public void disableCompression(boolean disableCompression) {
-        this.disableCompression = disableCompression;
+
+    int getTotalBytes() {
+        return totalBytes;
+    }
+
+    public void disableCompression(boolean disable) {
+        this.disableCompression = disable;
+    }
+
+    boolean isCompressionDisabled() {
+        return disableCompression;
     }
 
     public void init() throws IOException, ServiceException {
@@ -75,18 +83,16 @@ public class BlobBuilder {
         }
     }
     
-    private boolean useCompression(int sizeHint) throws ServiceException {
-        if (disableCompression) return false;
-        Volume volume = Volume.getById(blob.getLocator());
-        return volume.getCompressBlobs() &&
-               (sizeHint <= 0 || sizeHint > volume.getCompressionThreshold());
+    @SuppressWarnings("unused")
+    boolean useCompression(int size) throws ServiceException {
+        return false;
     }
 
     public void update(byte[] b, int off, int len)
-        throws IOException, ServiceException {
-        if (finished) {
+    throws IOException, ServiceException {
+        if (finished)
             throw new IllegalStateException("Blob builder is finished");
-        }
+
         if (out == null) {
             init(); // First time initialization
         }
@@ -100,6 +106,7 @@ public class BlobBuilder {
         totalBytes += len;
     }
 
+    @SuppressWarnings("unused")
     public void finish() throws IOException, ServiceException {
         if (finished) return;
         try {
@@ -117,30 +124,22 @@ public class BlobBuilder {
         // Set the blob's digest and size.
         blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
         blob.setRawSize(totalBytes);
-        
-        // If sizeHint wasn't given we may have compressed a blob that was under
-        // the compression threshold. Let's uncompress it. This isn't really
-        // necessary, but uncompressing results in behavior consistent with
-        // earlier ZCS releases.
-        Volume volume = Volume.getById(blob.getLocator());
-        if (blob.isCompressed() && totalBytes < volume.getCompressionThreshold()) {
-            try {
-                uncompressBlob(blob);
-            } catch (IOException e) {
-                dispose();
-                throw e;
-            }
-        }
 
-        if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug(
-                "Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
-                blob.getFile().getAbsolutePath(), totalBytes, blob.getFile().length(),
-                blob.getLocator(), blob.isCompressed());
-        }
+        if (ZimbraLog.store.isDebugEnabled())
+            ZimbraLog.store.debug("stored " + this);
     }
 
-    private static void uncompressBlob(Blob blob) throws IOException {
+    @Override public String toString() {
+        File file = blob.getFile();
+
+        String compressed = "???";
+        try {
+            compressed = Boolean.toString(blob.isCompressed());
+        } catch (IOException ioe) { }
+        return file.getAbsolutePath() + ": data size=" + totalBytes + ", file size=" + file.length() + ", isCompressed=" + compressed;
+    }
+
+    static void uncompressBlob(Blob blob) throws IOException {
         File file = blob.getFile();
         File tmp = File.createTempFile(file.getName(), ".unzip.tmp", file.getParentFile());
         InputStream is = null;
@@ -165,9 +164,8 @@ public class BlobBuilder {
     }
 
     public Blob getBlob() {
-        if (!finished) {
+        if (!finished)
             throw new IllegalStateException("Blob builder not finished");
-        }
         return blob;
     }
 
@@ -180,10 +178,8 @@ public class BlobBuilder {
         finished = true;
         ByteUtil.closeStream(out);
         File file = blob.getFile();
-        if (file.exists()) {
+        if (file.exists())
             file.delete();
-        }
         blob = null;
     }
-
 }

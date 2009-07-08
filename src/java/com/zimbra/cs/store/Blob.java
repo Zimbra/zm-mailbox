@@ -40,18 +40,16 @@ public class Blob {
 
     private File mFile;
     private String mPath;
-    private String mLocator;
     private Boolean mIsCompressed = null;
     private String mDigest;
     private Integer mRawSize;
 
-    public Blob(File file, String locator) {
-        if (file == null) {
+    Blob(File file) {
+        if (file == null)
             throw new NullPointerException("file cannot be null");
-        }
+
         mFile = file;
         mPath = file.getAbsolutePath();
-        mLocator = locator;
     }
 
     public File getFile() {
@@ -61,36 +59,27 @@ public class Blob {
     public String getPath() {
     	return mPath;
     }
-
-    public String getLocator() {
-    	return mLocator;
-    }
     
     private InputStream getInputStream()
     throws IOException {
         InputStream in = new FileInputStream(mFile);
-        if (isCompressed()) {
+        if (isCompressed())
             in = new GZIPInputStream(in);
-        }
         return in;
     }
     
-    public boolean isCompressed()
-    throws IOException {
-        if (mIsCompressed == null) {
+    public boolean isCompressed() throws IOException {
+        if (mIsCompressed == null)
             mIsCompressed = FileUtil.isGzipped(mFile);
-        }
         return mIsCompressed;
     }
     
     /**
      * Returns the SHA1 digest of this blob's uncompressed data, encoded in base64.
      */
-    public String getDigest()
-    throws IOException {
-        if (mDigest == null) {
+    public String getDigest() throws IOException {
+        if (mDigest == null)
             initializeSizeAndDigest();
-        }
         return mDigest;
     }
     
@@ -98,20 +87,17 @@ public class Blob {
      * Returns the size of the blob's data.  If the blob is compressed,
      * returns the uncompressed size.
      */
-    public int getRawSize()
-    throws IOException {
+    public int getRawSize() throws IOException {
         if (mRawSize == null) {
-            if (!isCompressed()) {
+            if (!isCompressed())
                 mRawSize = (int) mFile.length();
-            } else {
+            else
                 initializeSizeAndDigest();
-            }
         }
     	return mRawSize;
     }
     
-    private void initializeSizeAndDigest()
-    throws IOException {
+    private void initializeSizeAndDigest() throws IOException {
         InputStream in = null;
         try {
             // Get the stream using the local method.  FileBlobStore.getContent()
@@ -137,22 +123,25 @@ public class Blob {
         }
     }
     
-    public void setCompressed(boolean isCompressed) {
+    public Blob setCompressed(boolean isCompressed) {
         mIsCompressed = isCompressed;
+        return this;
     }
 
-    public void setDigest(String digest) {
+    public Blob setDigest(String digest) {
         mDigest = digest;
+        return this;
     }
     
-    public void setRawSize(int rawSize) {
+    public Blob setRawSize(int rawSize) {
     	mRawSize = rawSize;
+        return this;
     }
     
     public boolean renameTo(String path) {
-        if (mPath.equals(path)) {
+        if (mPath.equals(path))
             return false;
-        }
+
         File newFile = new File(path);
         if (mFile.renameTo(newFile)) {
             mPath = path;
@@ -163,6 +152,6 @@ public class Blob {
     }
 
     @Override public String toString() {
-        return String.format("Blob: { path=%s, vol=%d, isCompressed=%b }", mPath, mLocator, mIsCompressed);
+        return "Blob: { path=" + mPath + ", size=" + mRawSize + ", compressed=" + mIsCompressed + " }";
     }
 }

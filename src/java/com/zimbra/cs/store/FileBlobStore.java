@@ -127,14 +127,13 @@ public class FileBlobStore extends StoreManager {
 
         File f = new File(sb.toString());
         ensureParentDirExists(f);
-        String volumeId = Short.toString(volume.getId());
-        return new Blob(f, volumeId);
+        return new VolumeBlob(f, volume.getId());
     }
 
     @Override public BlobBuilder getBlobBuilder()
     throws IOException, ServiceException {
         Blob blob = getUniqueIncomingBlob();
-        return new BlobBuilder(blob);
+        return new VolumeBlobBuilder(blob);
     }
 
     @Override public Blob storeIncoming(InputStream in, int sizeHint, StorageCallback callback, boolean storeAsIs)
@@ -242,7 +241,7 @@ public class FileBlobStore extends StoreManager {
     private MailboxBlob copy(Blob src, Mailbox destMbox, int destMsgId, int destRevision, Volume destVolume)
     throws IOException, ServiceException {
         String srcPath = src.getPath();
-        File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolume.getLocator(), false);
+        File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolume.getId(), false);
         String destPath = dest.getAbsolutePath();
         ensureParentDirExists(dest);
 
@@ -270,10 +269,9 @@ public class FileBlobStore extends StoreManager {
                     " newpath=" + destPath);
         }
 
-        String destVolumeId = Short.toString(destVolume.getId());
-        Blob newBlob = new Blob(dest, destVolumeId);
+        Blob newBlob = new VolumeBlob(dest, destVolume.getId());
         newBlob.setCompressed(destCompressed);
-        return new MailboxBlob(destMbox, destMsgId, destRevision, destVolumeId, newBlob);
+        return new MailboxBlob(destMbox, destMsgId, destRevision, destVolume.getLocator(), newBlob);
     }
 
     @Override public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
@@ -290,13 +288,12 @@ public class FileBlobStore extends StoreManager {
 
     public MailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision, short destVolumeId)
     throws IOException, ServiceException {
-        String destLocator = Short.toString(destVolumeId);
-        File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destLocator, false);
+        File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolumeId, false);
         String srcPath = src.getPath();
         String destPath = dest.getAbsolutePath();
         ensureParentDirExists(dest);
 
-        short srcVolumeId = Short.parseShort(src.getLocator());
+        short srcVolumeId = ((VolumeBlob) src).getVolumeId();
         if (srcVolumeId == destVolumeId) {
             try {
                 IO.link(srcPath, destPath);
@@ -341,7 +338,8 @@ public class FileBlobStore extends StoreManager {
                     " newpath=" + destPath);
         }
 
-        return new MailboxBlob(destMbox, destMsgId, destRevision, destLocator, new Blob(dest, destLocator));
+        String destLocator = Short.toString(destVolumeId);
+        return new MailboxBlob(destMbox, destMsgId, destRevision, destLocator, new VolumeBlob(dest, destVolumeId));
     }
 
     @Override public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
@@ -349,12 +347,13 @@ public class FileBlobStore extends StoreManager {
         Volume volume = Volume.getCurrentMessageVolume();
         Blob blob = src.getLocalBlob();
         File srcFile = blob.getFile();
-        File destFile = getMailboxBlobFile(destMbox, destMsgId, destRevision, volume.getLocator(), false);
         String srcPath = srcFile.getAbsolutePath();
+
+        File destFile = getMailboxBlobFile(destMbox, destMsgId, destRevision, volume.getId(), false);
         String destPath = destFile.getAbsolutePath();
         ensureParentDirExists(destFile);
 
-        short srcVolumeId = Short.parseShort(blob.getLocator());
+        short srcVolumeId = ((VolumeBlob) blob).getVolumeId();
         if (srcVolumeId == volume.getId()) {
             boolean renamed = srcFile.renameTo(destFile);
             if (sOnWindows) {
@@ -380,8 +379,7 @@ public class FileBlobStore extends StoreManager {
                     " newpath=" + destPath);
         }
 
-        String destLocator = volume.getLocator();
-        return new MailboxBlob(destMbox, destMsgId, destRevision, destLocator, new Blob(destFile, destLocator));
+        return new MailboxBlob(destMbox, destMsgId, destRevision, volume.getLocator(), new VolumeBlob(destFile, volume.getId()));
     }
 
     @Override public boolean delete(MailboxBlob mboxBlob) throws IOException {
@@ -412,10 +410,11 @@ public class FileBlobStore extends StoreManager {
 
     @Override public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
     throws ServiceException {
-        File file = getMailboxBlobFile(mbox, msgId, revision, locator, true);
+        short volumeId = Short.parseShort(locator);
+        File file = getMailboxBlobFile(mbox, msgId, revision, volumeId, true);
         if (file == null)
             return null;
-        return new MailboxBlob(mbox, msgId, revision, locator, new Blob(file, locator));
+        return new MailboxBlob(mbox, msgId, revision, locator, new VolumeBlob(file, volumeId));
     }
 
     @Override public InputStream getContent(MailboxBlob mboxBlob) throws IOException {
@@ -438,17 +437,17 @@ public class FileBlobStore extends StoreManager {
         return true;
     }
 
-    private File getMailboxBlobFile(Mailbox mbox, int msgId, int revision, String locator, boolean check)
+    private File getMailboxBlobFile(Mailbox mbox, int msgId, int revision, short volumeId, boolean check)
     throws ServiceException {
-        File file = new File(getBlobPath(mbox, msgId, revision, locator));
+        File file = new File(getBlobPath(mbox, msgId, revision, volumeId));
         if (check && !file.exists())
-            file = new File(getBlobPath(mbox, msgId, -1, locator));
+            file = new File(getBlobPath(mbox, msgId, -1, volumeId));
         return (!check || file.exists() ? file : null);
     }
 
-    private static String getBlobPath(Mailbox mbox, int msgId, int revision, String locator)
+    private static String getBlobPath(Mailbox mbox, int msgId, int revision, short volumeId)
     throws ServiceException {
-        Volume vol = Volume.getById(locator);
+        Volume vol = Volume.getById(volumeId);
         String path = vol.getBlobDir(mbox.getId(), msgId);
         int buflen = path.length() + 15;
         if (revision >= 0)
