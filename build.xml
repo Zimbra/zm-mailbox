@@ -485,6 +485,7 @@
             <src refid="all.java.path"/>
         </javac>
         <antcall target="db-versions-init"/>
+    	<antcall target="validate-rights"/>
     </target>
 
     <target name="jar" depends="compile">
@@ -1873,6 +1874,13 @@
 		<antcall target="zmprov">
             <param name="args" value="ca ${admin-name} test123 zimbraIsAdminAccount TRUE"/>
         </antcall>
+    </target>
+	
+    <target name="validate-rights">
+        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+            <arg line="-a validate -i conf/rights"/>
+        </java>
     </target>
 	
     <target name="zmprov">

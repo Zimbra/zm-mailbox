@@ -648,9 +648,12 @@ public class RightManager {
             CommandLine cl = parseArgs(args);
         
             if (!cl.hasOption('a')) usage("no action specified");
-            if (!cl.hasOption('r')) usage("no regenerate file specified");
-            
             String action = cl.getOptionValue('a');
+            
+            if (!"validate".equals(action)) {
+                if (!cl.hasOption('r')) usage("no regenerate file specified");
+            }
+            
             String regenFile = cl.getOptionValue('r');
             
             String inputDir = null;
@@ -670,6 +673,9 @@ public class RightManager {
             else if ("genDomainAdminSetAttrsRights".equals(action)) {
                 String templateFile = cl.getOptionValue('t');
                 genDomainAdminSetAttrsRights(regenFile, templateFile);
+            } else if ("validate".equals(action)) {
+                // do nothing, all we need is that new RightManager(inputDir) works,
+                // which is done above.
             } else
                 usage("invalid action");
         }
