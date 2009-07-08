@@ -23,7 +23,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
-import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
@@ -34,7 +33,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -48,6 +46,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 
 /**
  * @author jhahm
@@ -161,6 +160,8 @@ public class Zimbra {
         } catch (Throwable t) {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
+
+        Volume.reloadVolumes();
 
         ZimbraHttpConnectionManager.startReaperThread();
         

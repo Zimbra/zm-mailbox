@@ -32,7 +32,6 @@ import com.zimbra.cs.redolog.op.DeleteVolume;
 import com.zimbra.cs.redolog.op.ModifyVolume;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
-import com.zimbra.cs.util.Zimbra;
 
 public class Volume {
 
@@ -61,14 +60,6 @@ public class Volume {
     private static Volume sCurrMsgVolume;
     private static Volume sCurrSecondaryMsgVolume;
     private static Volume sCurrIndexVolume;
-
-    static {
-        try {
-            reloadVolumes();
-        } catch (ServiceException e) {
-            Zimbra.halt("Unable to load volumes info", e);
-        }
-    }
 
     public static void reloadVolumes() throws ServiceException {
         synchronized (DbMailbox.getSynchronizer()) {
