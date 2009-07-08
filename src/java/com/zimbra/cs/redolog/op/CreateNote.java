@@ -20,6 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -32,7 +33,7 @@ public class CreateNote extends RedoableOp {
     private int mId;
     private int mFolderId;
     private String mContent;
-    private byte mColor;
+    private long mColor;
     private Note.Rectangle mBounds;
 
     public CreateNote() {
@@ -41,12 +42,12 @@ public class CreateNote extends RedoableOp {
     }
 
     public CreateNote(long mailboxId, int folderId,
-                      String content, byte color, Note.Rectangle bounds) {
+                      String content, MailItem.Color color, Note.Rectangle bounds) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
         mContent = content != null ? content : "";
-        mColor = color;
+        mColor = color.getRgb();
         mBounds = bounds;
     }
 
@@ -77,7 +78,8 @@ public class CreateNote extends RedoableOp {
         out.writeInt(mFolderId);
         out.writeShort((short) -1);
         out.writeUTF(mContent);
-        out.writeByte(mColor);
+        // mColor from byte to long in Version 1.27
+        out.writeLong(mColor);
         out.writeInt(mBounds.x);
         out.writeInt(mBounds.y);
         out.writeInt(mBounds.width);
@@ -89,7 +91,10 @@ public class CreateNote extends RedoableOp {
         mFolderId = in.readInt();
         in.readShort();
         mContent = in.readUTF();
-        mColor = in.readByte();
+        if (getVersion().atLeast(1, 27))
+            mColor = in.readLong();
+        else
+            mColor = in.readByte();
         int x = in.readInt();
         int y = in.readInt();
         int w = in.readInt();
@@ -102,7 +107,7 @@ public class CreateNote extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createNote(getOperationContext(), mContent, mBounds, mColor, mFolderId);
+            mailbox.createNote(getOperationContext(), mContent, mBounds, new MailItem.Color(mColor), mFolderId);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

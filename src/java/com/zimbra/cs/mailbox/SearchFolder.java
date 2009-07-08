@@ -108,7 +108,7 @@ public class SearchFolder extends Folder {
      * @see #validateItemName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, byte color, CustomMetadata custom)
+    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, Color color, CustomMetadata custom)
     throws ServiceException {
         if (parent == null || !parent.canContain(TYPE_SEARCHFOLDER))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -132,7 +132,7 @@ public class SearchFolder extends Folder {
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, query, types, sort);
+        data.metadata    = encodeMetadata(color, 1, custom, query, types, sort);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
             name, data.id, parent.getId(), parent.getName());

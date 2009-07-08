@@ -1382,13 +1382,13 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
-    void setColor(long color) throws ServiceException {
+    void setColor(Color color) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
-        if (color == mRGBColor.getRgb())
+        if (color.equals(mRGBColor))
             return;
         markItemModified(Change.MODIFIED_COLOR);
-        mRGBColor.setRgb(color);
+        mRGBColor.set(color);
         saveMetadata();
     }
     
@@ -2714,6 +2714,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             }
             return ORANGE;
         }
+        public void set(Color that) {
+            this.mRgb = that.mRgb;
+        }
         public void setRgb(long rgb) {
             mRgb = rgb;
         }
@@ -2726,6 +2729,15 @@ public abstract class MailItem implements Comparable<MailItem> {
             return (mRgb | RGB_INDICATOR);
         }
         private long mRgb;
+        
+        public static long toRgb(byte c) {
+            if (c > ORANGE || c < 0)
+                return COLORS[ORANGE];
+            return COLORS[c];
+        }
+        public boolean equals(Color that) {
+            return this.mRgb == that.mRgb;
+        }
     }
 
     @SuppressWarnings("unchecked")

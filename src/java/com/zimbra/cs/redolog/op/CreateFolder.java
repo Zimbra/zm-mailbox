@@ -16,6 +16,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -29,24 +30,24 @@ public class CreateFolder extends RedoableOp {
     private byte mAttrs;
     private byte mDefaultView;
     private int mFlags;
-    private byte mColor;
+    private long mColor;
     private String mUrl;
     private int mFolderId;
 
     public CreateFolder()  { }
 
-    public CreateFolder(long mailboxId, String name, int parentId, byte view, int flags, byte color, String url) {
+    public CreateFolder(long mailboxId, String name, int parentId, byte view, int flags, MailItem.Color color, String url) {
     	this(mailboxId, name, parentId, (byte)0, view, flags, color, url);
     }
     
-    public CreateFolder(long mailboxId, String name, int parentId, byte attrs, byte view, int flags, byte color, String url) {
+    public CreateFolder(long mailboxId, String name, int parentId, byte attrs, byte view, int flags, MailItem.Color color, String url) {
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
         mParentId = parentId;
         mAttrs = attrs;
         mDefaultView = view;
         mFlags = flags;
-        mColor = color;
+        mColor = color.getRgb();
         mUrl = url == null ? "" : url;
     }
 
@@ -81,7 +82,8 @@ public class CreateFolder extends RedoableOp {
         if (getVersion().atLeast(1, 19)) out.writeByte(mAttrs);
         out.writeByte(mDefaultView);
         out.writeInt(mFlags);
-        out.writeByte(mColor);
+        // mColor from byte to long in Version 1.27
+        out.writeLong(mColor);
         out.writeUTF(mUrl);
         out.writeInt(mFolderId);
     }
@@ -93,7 +95,10 @@ public class CreateFolder extends RedoableOp {
         if (getVersion().atLeast(1, 19)) mAttrs = in.readByte();
         mDefaultView = in.readByte();
         mFlags = in.readInt();
-        mColor = in.readByte();
+        if (getVersion().atLeast(1, 27))
+            mColor = in.readLong();
+        else
+            mColor = in.readByte();
         mUrl = in.readUTF();
         mFolderId = in.readInt();
     }
@@ -104,7 +109,7 @@ public class CreateFolder extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, mDefaultView, mFlags, mColor, mUrl);
+            mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, mDefaultView, mFlags, new MailItem.Color(mColor), mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

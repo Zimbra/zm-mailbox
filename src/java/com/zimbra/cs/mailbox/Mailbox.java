@@ -4652,6 +4652,10 @@ public class Mailbox {
         setColor(octxt, new int[] { itemId }, type, color);
     }
     public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, byte color) throws ServiceException {
+    	setColor(octxt, itemIds, type, new MailItem.Color(color));
+    }
+    	
+    public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, MailItem.Color color) throws ServiceException {
         ColorItem redoRecorder = new ColorItem(mId, itemIds, type, color);
 
         boolean success = false;
@@ -5247,6 +5251,9 @@ public class Mailbox {
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
+        return createTag(octxt, name, new MailItem.Color(color));
+    }
+    public synchronized Tag createTag(OperationContext octxt, String name, MailItem.Color color) throws ServiceException {
         name = StringUtil.stripControlCharacters(name);
         if (name == null || name.equals(""))
             throw ServiceException.INVALID_REQUEST("tag must have a name", null);
@@ -5271,7 +5278,7 @@ public class Mailbox {
                     throw MailServiceException.TOO_MANY_TAGS();
             }
 
-            Tag tag = Tag.create(this, tagId, name, new MailItem.Color(color));
+            Tag tag = Tag.create(this, tagId, name, color);
             redoRecorder.setTagId(tagId);
             success = true;
             return tag;
@@ -5281,6 +5288,10 @@ public class Mailbox {
     }
 
     public synchronized Note createNote(OperationContext octxt, String content, Rectangle location, byte color, int folderId)
+    throws ServiceException {
+        return createNote(octxt, content, location, new MailItem.Color(color), folderId);
+    }
+    public synchronized Note createNote(OperationContext octxt, String content, Rectangle location, MailItem.Color color, int folderId)
     throws ServiceException {
         content = StringUtil.stripControlCharacters(content);
         if (content == null || content.equals(""))
@@ -5300,7 +5311,7 @@ public class Mailbox {
                 noteId = getNextItemId(redoPlayer.getNoteId());
             redoRecorder.setNoteId(noteId);
 
-            Note note = Note.create(noteId, getFolderById(folderId), content, location, new MailItem.Color(color), null);
+            Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
 
             queueForIndexing(note, false, null);
             success = true;
@@ -5497,6 +5508,11 @@ public class Mailbox {
 
     public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
+        return createFolder(octxt, name, parentId, attrs, defaultView, flags, new MailItem.Color(color), url);
+    }
+    
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, byte defaultView, int flags, MailItem.Color color, String url)
+    throws ServiceException {
         CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url);
 
         boolean success = false;
@@ -5505,7 +5521,7 @@ public class Mailbox {
             CreateFolder redoPlayer = (CreateFolder) mCurrentChange.getRedoPlayer();
 
             int folderId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getFolderId());
-            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, new MailItem.Color(color), url, null);
+            Folder folder = Folder.create(folderId, this, getFolderById(parentId), name, attrs, defaultView, flags, color, url, null);
             redoRecorder.setFolderId(folder.getId());
             success = true;
             updateRssDataSource(folder);
@@ -5541,6 +5557,11 @@ public class Mailbox {
      */
     public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, byte color, String url)
     throws ServiceException {
+        return createFolder(octxt, path, attrs, defaultView, flags, new MailItem.Color(color), url);
+    }
+    
+    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, MailItem.Color color, String url)
+    throws ServiceException {
         if (path == null)
             throw ServiceException.FAILURE("null path passed to Mailbox.createFolderPath", null);
         if (!path.startsWith("/"))
@@ -5570,7 +5591,7 @@ public class Mailbox {
                 Folder subfolder = folder.findSubfolder(parts[i]);
                 if (subfolder == null)
                     subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0,
-                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, new MailItem.Color(color), last ? url : null, null);
+                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, color, last ? url : null, null);
                 else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
                 else if (last)
@@ -5865,6 +5886,11 @@ public class Mailbox {
 
     public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, byte color)
     throws ServiceException {
+        return createSearchFolder(octxt, folderId, name, query, types, sort, new MailItem.Color(color));
+    }
+    
+    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, MailItem.Color color)
+    throws ServiceException {
         CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, color);
 
         boolean success = false;
@@ -5903,6 +5929,12 @@ public class Mailbox {
     public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
                                                     String ownerId, int remoteId, byte view, int flags, byte color)
     throws ServiceException {
+        return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new MailItem.Color(color));
+    }
+    
+    public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
+                                                    String ownerId, int remoteId, byte view, int flags, MailItem.Color color)
+    throws ServiceException {
         CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color);
 
         boolean success = false;
@@ -5911,7 +5943,7 @@ public class Mailbox {
             CreateMountpoint redoPlayer = (CreateMountpoint) mCurrentChange.getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
-            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, new MailItem.Color(color), null);
+            Mountpoint mpt = Mountpoint.create(mptId, getFolderById(folderId), name, ownerId, remoteId, view, flags, color, null);
             redoRecorder.setId(mpt.getId());
             success = true;
             return mpt;

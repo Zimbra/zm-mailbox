@@ -20,6 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -30,18 +31,18 @@ public class CreateTag extends RedoableOp {
 
     private int mTagId;
     private String mName;
-    private byte mColor;
+    private long mColor;
 
     public CreateTag() {
         mTagId = UNKNOWN_ID;
         mColor = 0;
     }
 
-    public CreateTag(long mailboxId, String name, byte color) {
+    public CreateTag(long mailboxId, String name, MailItem.Color color) {
         setMailboxId(mailboxId);
         mTagId = UNKNOWN_ID;
         mName = name != null ? name : "";
-        mColor = color;
+        mColor = color.getRgb();
     }
 
     public int getTagId() {
@@ -65,13 +66,17 @@ public class CreateTag extends RedoableOp {
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mTagId);
         out.writeUTF(mName);
-        out.writeByte(mColor);
+        // mColor from byte to long in Version 1.27
+        out.writeLong(mColor);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mTagId = in.readInt();
         mName = in.readUTF();
-        mColor = in.readByte();
+        if (getVersion().atLeast(1, 27))
+            mColor = in.readLong();
+        else
+            mColor = in.readByte();
     }
 
     @Override public void redo() throws Exception {
@@ -79,7 +84,7 @@ public class CreateTag extends RedoableOp {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mbox.createTag(getOperationContext(), mName, mColor);
+            mbox.createTag(getOperationContext(), mName, new MailItem.Color(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

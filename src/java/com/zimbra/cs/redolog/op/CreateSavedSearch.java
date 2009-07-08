@@ -20,6 +20,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -34,13 +35,13 @@ public class CreateSavedSearch extends RedoableOp {
     private String mTypes;
     private String mSort;
     private int mFolderId;
-    private byte mColor;
+    private long mColor;
 
     public CreateSavedSearch() {
         mSearchId = UNKNOWN_ID;
     }
 
-    public CreateSavedSearch(long mailboxId, int folderId, String name, String query, String types, String sort, byte color) {
+    public CreateSavedSearch(long mailboxId, int folderId, String name, String query, String types, String sort, MailItem.Color color) {
         setMailboxId(mailboxId);
         mSearchId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -48,7 +49,7 @@ public class CreateSavedSearch extends RedoableOp {
         mTypes = types != null ? query : "";
         mSort = sort != null ? query : "";
         mFolderId = folderId;
-        mColor = color;
+        mColor = color.getRgb();
     }
 
     public int getSearchId() {
@@ -78,7 +79,8 @@ public class CreateSavedSearch extends RedoableOp {
         out.writeUTF(mTypes);
         out.writeUTF(mSort);
         out.writeInt(mFolderId);
-        out.writeByte(mColor);
+        // mColor from byte to long in Version 1.27
+        out.writeLong(mColor);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
@@ -88,7 +90,10 @@ public class CreateSavedSearch extends RedoableOp {
         mTypes = in.readUTF();
         mSort = in.readUTF();
         mFolderId = in.readInt();
-        mColor = in.readByte();
+        if (getVersion().atLeast(1, 27))
+            mColor = in.readLong();
+        else
+            mColor = in.readByte();
     }
 
     @Override public void redo() throws Exception {
@@ -96,7 +101,7 @@ public class CreateSavedSearch extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createSearchFolder(getOperationContext(), mFolderId, mName, mQuery, mTypes, mSort, mColor);
+            mailbox.createSearchFolder(getOperationContext(), mFolderId, mName, mQuery, mTypes, mSort, new MailItem.Color(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

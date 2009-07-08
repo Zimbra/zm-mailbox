@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -34,14 +35,14 @@ public class CreateMountpoint extends RedoableOp {
     private int mRemoteId;
     private byte mDefaultView;
     private int mFlags;
-    private byte mColor;
+    private long mColor;
 
     public CreateMountpoint() {
         mId = UNKNOWN_ID;
     }
 
     public CreateMountpoint(long mailboxId, int folderId, String name, String ownerId, int remoteId,
-                            byte view, int flags, byte color) {
+                            byte view, int flags, MailItem.Color color) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -50,7 +51,7 @@ public class CreateMountpoint extends RedoableOp {
         mRemoteId = remoteId;
         mDefaultView = view;
         mFlags = flags;
-        mColor = color;
+        mColor = color.getRgb();
     }
 
     public int getId() {
@@ -81,7 +82,8 @@ public class CreateMountpoint extends RedoableOp {
         out.writeInt(mFolderId);
         out.writeByte(mDefaultView);
         out.writeInt(mFlags);
-        out.writeByte(mColor);
+        // mColor from byte to long in Version 1.27
+        out.writeLong(mColor);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
@@ -92,7 +94,10 @@ public class CreateMountpoint extends RedoableOp {
         mFolderId = in.readInt();
         mDefaultView = in.readByte();
         mFlags = in.readInt();
-        mColor = in.readByte();
+        if (getVersion().atLeast(1, 27))
+            mColor = in.readLong();
+        else
+            mColor = in.readByte();
     }
 
     @Override public void redo() throws Exception {
@@ -100,7 +105,7 @@ public class CreateMountpoint extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mDefaultView, mFlags, mColor);
+            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mDefaultView, mFlags, new MailItem.Color(mColor));
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 if (mLog.isInfoEnabled())

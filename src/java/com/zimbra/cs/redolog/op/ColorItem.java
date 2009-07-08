@@ -20,6 +20,7 @@ package com.zimbra.cs.redolog.op;
 import java.io.IOException;
 import java.util.Arrays;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -29,15 +30,15 @@ public class ColorItem extends RedoableOp {
 
     private int[] mIds;
     private byte mType;
-    private byte mColor;
+    private long mColor;
 
     public ColorItem() { }
 
-    public ColorItem(long mailboxId, int[] ids, byte type, byte color) {
+    public ColorItem(long mailboxId, int[] ids, byte type, MailItem.Color color) {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;
-        mColor = color;
+        mColor = color.getRgb();
     }
 
     @Override public int getOpCode() {
@@ -53,7 +54,8 @@ public class ColorItem extends RedoableOp {
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(-1);
         out.writeByte(mType);
-        out.writeByte(mColor);
+        // mColor from byte to long in Version 1.27
+        out.writeLong(mColor);
         out.writeInt(mIds == null ? 0 : mIds.length);
         if (mIds != null) {
             for (int i = 0; i < mIds.length; i++)
@@ -66,7 +68,10 @@ public class ColorItem extends RedoableOp {
         if (id > 0)
             mIds = new int[] { id };
         mType = in.readByte();
-        mColor = in.readByte();
+        if (getVersion().atLeast(1, 27))
+            mColor = in.readLong();
+        else
+            mColor = in.readByte();
         if (id <= 0) {
             mIds = new int[in.readInt()];
             for (int i = 0; i < mIds.length; i++)
@@ -77,6 +82,6 @@ public class ColorItem extends RedoableOp {
     @Override public void redo() throws Exception {
         long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mailbox.setColor(getOperationContext(), mIds, mType, mColor);
+        mailbox.setColor(getOperationContext(), mIds, mType, new MailItem.Color(mColor));
     }
 }
