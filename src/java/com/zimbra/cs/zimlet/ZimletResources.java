@@ -336,7 +336,7 @@ public class ZimletResources
                         String s = url.group(2);
                         Matcher remote = RE_REMOTE.matcher(s);
                         if (!remote.find()) {
-                            out.print("/service/zimlet/res/" + zimletName + "/");
+                            out.print(ZimletUtil.ZIMLET_BASE + "/" + zimletName + "/");
                         }
                         out.print(s);
 
