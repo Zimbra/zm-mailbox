@@ -214,7 +214,7 @@ public class FolderACL {
         
         // cache the effective folder ACL in memcached - independent of the authed user
         ACL acl = folder.getEffectiveACL();
-        EffectiveACLCache.set(folder.getAccount().getId(), folder.getId(), acl);
+        EffectiveACLCache.put(folder.getAccount().getId(), folder.getId(), acl);
         
         // return the effective permission - auth user dependent
         return ownerMbx.getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);

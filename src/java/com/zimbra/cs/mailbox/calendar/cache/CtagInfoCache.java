@@ -224,14 +224,7 @@ public class CtagInfoCache {
         if (mods.created != null) {
             for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
-                if (item instanceof Folder) {
-                    Folder folder = (Folder) item;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
-                        CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToInvalidate.add(key);
-                    }
-                } else if (item instanceof Message) {
+                if (item instanceof Message) {
                     Message msg = (Message) item;
                     if (msg.hasCalendarItemInfos() && msg.getFolderId() == inboxFolder) {
                         CalendarKey key = new CalendarKey(msg.getMailbox().getAccountId(), inboxFolder);
