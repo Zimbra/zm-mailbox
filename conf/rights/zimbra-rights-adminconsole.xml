@@ -2290,6 +2290,14 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleSavedSearchRights">
+  <desc>Admin Console Extension Rights</desc>
+  <rights>
+    <r n="setAdminSavedSearch"/>
+    <r n="viewAdminSavedSearch"/>
+  </rights>
+</right>
+
 <right type="combo" name="adminConsoleGlobalRights">
   <desc>Admin Console Global Rights</desc>
   <rights>
@@ -2321,8 +2329,7 @@
     <r n="adminConsoleZimletRights"/>
     <r n="adminConsoleExtensionRights"/>
     <r n="adminConsoleGlobalRights"/>
-    <r n="setAdminSavedSearch"/>
-    <r n="viewAdminSavedSearch"/>
+    <r n="adminConsoleSavedSearchRights"/>
   </rights>
 </right>
 

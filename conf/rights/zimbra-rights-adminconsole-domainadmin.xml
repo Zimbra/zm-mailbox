@@ -740,6 +740,14 @@
   </rights>
 </right>
 
+<right type="combo" name="domainAdminConsoleSavedSearchRights">
+  <desc>Admin Console Domain Admin Resource Rights</desc>
+  <rights>
+    <r n="setAdminSavedSearch"/>
+    <r n="viewAdminSavedSearch"/>
+  </rights>
+</right>
+
 <right type="combo" name="domainAdminConsoleRights">
   <desc>Admin Console Domain Admin Rights and Views</desc>
   <rights>
@@ -747,8 +755,7 @@
     <r n="domainAdminConsoleAliasRights"/>
     <r n="domainAdminConsoleDLRights"/>
     <r n="domainAdminConsoleResourceRights"/>
-    <r n="setAdminSavedSearch"/>
-    <r n="viewAdminSavedSearch"/>
+    <r n="domainAdminSavedSearchRights"/>
     <!-- <r n="domainAdminDomainRights"/> -->
   </rights>
 </right>
