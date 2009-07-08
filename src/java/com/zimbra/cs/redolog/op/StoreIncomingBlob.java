@@ -109,8 +109,12 @@ public class StoreIncomingBlob extends RedoableOp {
         if (getVersion().atLeast(1, 0)) {
             if (mMailboxIdList != null) {
                 out.writeInt(mMailboxIdList.size());
-                for (Long mboxId : mMailboxIdList)
-                    out.writeInt(mboxId.intValue());
+                for (Long mboxId : mMailboxIdList) {
+                    if (getVersion().atLeast(1, 26))
+                        out.writeLong(mboxId.longValue());
+                    else
+                        out.writeInt(mboxId.intValue());
+                }
             } else {
                 out.writeInt(0);
             }
