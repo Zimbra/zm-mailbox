@@ -755,7 +755,7 @@
     <r n="domainAdminConsoleAliasRights"/>
     <r n="domainAdminConsoleDLRights"/>
     <r n="domainAdminConsoleResourceRights"/>
-    <r n="domainAdminSavedSearchRights"/>
+    <r n="domainAdminConsoleSavedSearchRights"/>
     <!-- <r n="domainAdminDomainRights"/> -->
   </rights>
 </right>
