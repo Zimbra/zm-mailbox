@@ -46,11 +46,8 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 
 /**
- * @author jhahm
- *
  * Class that encapsulates the initialization and shutdown of services needed
  * by any process that adds mail items.  Services under control include redo
  * logging and indexing.
@@ -161,7 +158,7 @@ public class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
-        Volume.reloadVolumes();
+        // volume initialization moved into store manager startup
 
         ZimbraHttpConnectionManager.startReaperThread();
         

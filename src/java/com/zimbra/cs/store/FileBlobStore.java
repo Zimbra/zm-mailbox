@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -35,8 +34,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -51,21 +48,13 @@ public class FileBlobStore extends StoreManager {
     private UncompressedFileCache<String> mUncompressedFileCache;
     private FileDescriptorCache mFileDescriptorCache;
 
-    private UniqueFileNameGenerator mUniqueFilenameGenerator;
-
-    FileBlobStore() throws Exception {
-        mUniqueFilenameGenerator = new UniqueFileNameGenerator();
-    }
-
     public FileDescriptorCache getFileDescriptorCache() {
         return mFileDescriptorCache;
     }
 
-    @Override public void startup()
-    throws IOException, ServiceException {
-        long sweepMaxAgeMS = LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
-        mSweeper = new IncomingDirectorySweeper(SWEEP_INTERVAL_MS, sweepMaxAgeMS);
-        mSweeper.start();
+    @Override public void startup() throws IOException, ServiceException {
+        Volume.reloadVolumes();
+        IncomingDirectory.startSweeper();
 
         // Initialize file uncompressed file cache and file descriptor cache.
         String uncompressedPath = LC.zimbra_tmp_directory.value() + "/uncompressed";
@@ -79,12 +68,7 @@ public class FileBlobStore extends StoreManager {
     }
 
     @Override public void shutdown() {
-        if (mSweeper != null) {
-            mSweeper.signalShutdown();
-            try {
-                mSweeper.join();
-            } catch (InterruptedException e) {}
-        }
+        IncomingDirectory.stopSweeper();
     }
 
     private static boolean onWindows() {
@@ -118,14 +102,12 @@ public class FileBlobStore extends StoreManager {
         store.mFileDescriptorCache.setMaxSize(fileDescriptorCacheSize);
     }
 
-    private Blob getUniqueIncomingBlob() throws IOException {
+    private Blob getUniqueIncomingBlob() throws IOException, ServiceException {
         Volume volume = Volume.getCurrentMessageVolume();
-        String incomingDir = volume.getIncomingMsgDir();
-        String fname = mUniqueFilenameGenerator.getFilename();
-        StringBuilder sb = new StringBuilder(incomingDir.length() + 1 + fname.length());
-        sb.append(incomingDir).append(File.separator).append(fname);
-
-        File f = new File(sb.toString());
+        IncomingDirectory incdir = volume.getIncomingDirectory();
+        if (incdir == null)
+            throw ServiceException.FAILURE("storing blob to volume without incoming directory: " + volume.getName(), null);
+        File f = incdir.getNewIncomingFile();
         ensureParentDirExists(f);
         return new VolumeBlob(f, volume.getId());
     }
@@ -469,147 +451,5 @@ public class FileBlobStore extends StoreManager {
     private static void ensureParentDirExists(File file) throws IOException {
         File dir = file.getParentFile();
         ensureDirExists(dir);
-    }
-
-
-
-    private static class UniqueFileNameGenerator {
-        private long mTime;
-        private long mSeq;
-
-        public UniqueFileNameGenerator() {
-            reset();
-        }
-
-        private void reset() {
-            mTime = System.currentTimeMillis();
-            mSeq = 0;
-        }
-
-        public String getFilename() {
-            long time, seq;
-            synchronized (this) {
-                if (mSeq >= 1000) {
-                    reset();
-                }
-                time = mTime;
-                seq = mSeq++;
-            }
-            StringBuffer sb = new StringBuffer();
-            sb.append(time).append("-").append(seq).append(".msg");
-            return sb.toString();
-        }
-    }
-
-
-    private static final long SWEEP_INTERVAL_MS = 60 * 1000;  // 1 minute
-
-    private IncomingDirectorySweeper mSweeper;
-
-    private static class IncomingDirectorySweeper extends Thread {
-        private Log sLog = LogFactory.getLog(IncomingDirectorySweeper.class);
-
-        private boolean mShutdown = false;
-        private long mSweepIntervalMS;
-        private long mMaxAgeMS;
-
-        public IncomingDirectorySweeper(long sweepIntervalMS,
-                long maxAgeMS) {
-            super("IncomingDirectorySweeper");
-            setDaemon(true);
-            mSweepIntervalMS = sweepIntervalMS;
-            mMaxAgeMS = maxAgeMS;
-        }
-
-        public synchronized void signalShutdown() {
-            mShutdown = true;
-            wakeup();
-        }
-
-        public synchronized void wakeup() {
-            notify();
-        }
-
-        @Override public void run() {
-            sLog.info(getName() + " thread starting");
-
-            boolean shutdown = false;
-            long startTime = System.currentTimeMillis();
-
-            while (!shutdown) {
-                // Sleep until next scheduled wake-up time, or until notified.
-                synchronized (this) {
-                    if (!mShutdown) {
-                        long now = System.currentTimeMillis();
-                        long until = startTime + mSweepIntervalMS;
-                        if (until > now) {
-                            try {
-                                wait(until - now);
-                            } catch (InterruptedException e) {}
-                        }
-                    }
-                    shutdown = mShutdown;
-                    if (shutdown) break;
-                }
-
-                int numDeleted = 0;
-                startTime = System.currentTimeMillis();
-
-                // Delete old files in incoming directory of each volume.
-                List<Volume> allVolumes = Volume.getAll();
-                for (Volume volume : allVolumes) {
-                    short volType = volume.getType();
-                    if (volType != Volume.TYPE_MESSAGE &&
-                            volType != Volume.TYPE_MESSAGE_SECONDARY)
-                        continue;
-                    File directory = new File(volume.getIncomingMsgDir());
-                    if (!directory.exists()) continue;
-                    File[] files = directory.listFiles();
-                    if (files == null) continue;
-                    for (int i = 0; i < files.length; i++) {
-                        // Check for shutdown after every 100 files.
-                        if (i % 100 == 0) {
-                            synchronized (this) {
-                                shutdown = mShutdown;
-                            }
-                            if (shutdown) break;
-                        }
-
-                        File file = files[i];
-                        if (file.isDirectory()) continue;
-                        long lastMod = file.lastModified();
-                        // lastModified() returns 0L if file doesn't exist (i.e. deleted by another thread
-                        // after this thread did directory.listFiles())
-                        if (lastMod > 0L) {
-                            long age = startTime - lastMod;
-                            if (age >= mMaxAgeMS) {
-                                boolean deleted = file.delete();
-                                if (!deleted) {
-                                    // Let's warn only if delete failure wasn't caused by file having been
-                                    // deleted by someone else already.
-                                    if (file.exists())
-                                        sLog.warn("Sweeper unable to delete " + file.getAbsolutePath());
-                                } else if (sLog.isDebugEnabled()) {
-                                    sLog.debug("Sweeper deleted " +
-                                            file.getAbsolutePath());
-                                    numDeleted++;
-                                }
-                            }
-                        }
-                    }
-                    synchronized (this) {
-                        shutdown = mShutdown;
-                    }
-                    if (shutdown) break;
-                }
-
-                long elapsed = System.currentTimeMillis() - startTime;
-
-                sLog.debug("Incoming directory sweep deleted " + numDeleted +
-                        " files in " + elapsed + "ms");
-            }
-
-            sLog.info(getName() + " thread exiting");
-        }
     }
 }

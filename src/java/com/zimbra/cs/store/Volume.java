@@ -17,6 +17,7 @@ package com.zimbra.cs.store;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -91,12 +92,24 @@ public class Volume {
                     sCurrMsgVolume = currMsgVol;
                     sCurrSecondaryMsgVolume = currSecondaryMsgVol;
                     sCurrIndexVolume = currIndexVol;
+                    updateSweptDirectories();
                 }
             } finally {
                 if (conn != null)
                     DbPool.quietClose(conn);
             }
         }
+    }
+
+    private static void updateSweptDirectories() {
+        Collection<Volume> volumes = sVolumeMap.values();
+        List<IncomingDirectory> incdirs = new ArrayList<IncomingDirectory>(volumes.size());
+        for (Volume vol : volumes) {
+            IncomingDirectory inc = vol.getIncomingDirectory();
+            if (inc != null)
+                incdirs.add(inc);
+        }
+        IncomingDirectory.setSweptDirectories(incdirs);
     }
 
     public static void validateID(long id)
@@ -232,6 +245,7 @@ public class Volume {
                 if (success) {
                     synchronized (sVolumeGuard) {
                         sVolumeMap.put(key, vol);
+                        updateSweptDirectories();
                     }
                 }
             }
@@ -310,6 +324,7 @@ public class Volume {
                     Short key = new Short(id);
                     synchronized (sVolumeGuard) {
                         sVolumeMap.put(key, vol);
+                        updateSweptDirectories();
                     }
                 }
             }
@@ -352,6 +367,7 @@ public class Volume {
 
             // Remove from map now.
             vol = sVolumeMap.remove(key);
+            updateSweptDirectories();
         }
 
         synchronized (DbMailbox.getSynchronizer()) {
@@ -370,6 +386,7 @@ public class Volume {
                     // Ran into database error.  Undo map entry removal.
                     synchronized (sVolumeGuard) {
                         sVolumeMap.put(key, vol);
+                        updateSweptDirectories();
                     }
                 }
             }
@@ -635,6 +652,7 @@ public class Volume {
     private String mName;
     private String mRootPath;  // root of the volume
     private String mIncomingMsgDir;
+    private IncomingDirectory mIncoming;
 
     private short mMboxGroupBits;
     private short mMboxBits;
@@ -655,6 +673,8 @@ public class Volume {
         mName = name;
         mRootPath = rootPath;
         mIncomingMsgDir = mRootPath + File.separator + INCOMING_DIR;
+        if (type == TYPE_MESSAGE || type == TYPE_MESSAGE_SECONDARY)
+            mIncoming = new IncomingDirectory(mIncomingMsgDir);
 
         mMboxGroupBits = mboxGroupBits;
         mMboxBits = mboxBits;
@@ -677,6 +697,7 @@ public class Volume {
     public String getLocator() { return Short.toString(getId()); }
     public String getRootPath() { return mRootPath; }
     public String getIncomingMsgDir() { return mIncomingMsgDir; }
+    public IncomingDirectory getIncomingDirectory() { return mIncoming; }
     public short getMboxGroupBits() { return mMboxGroupBits; }
     public short getMboxBits() { return mMboxBits; }
     public short getFileGroupBits() { return mFileGroupBits; }
