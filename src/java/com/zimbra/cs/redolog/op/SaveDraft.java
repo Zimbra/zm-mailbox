@@ -22,18 +22,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
 
 public class SaveDraft extends CreateMessage {
 
     private int mImapId;           // new IMAP id for this message
 
-    public SaveDraft() {
-    }
+    public SaveDraft()  { }
 
     public SaveDraft(long mailboxId, int draftId, String digest, int msgSize) {
         super(mailboxId, ":API:", false, digest, msgSize, -1, true, 0, null);
@@ -67,23 +69,23 @@ public class SaveDraft extends CreateMessage {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        InputStream in = null;
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = null;
+        InputStream in = null;
         try {
             in = mData.getInputStream();
-            if (mData.getLength() != mMsgSize) {
+            if (mData.getLength() != mMsgSize)
                 in = new GZIPInputStream(in);
-            }
-            mbox.saveDraft(getOperationContext(), in, mMsgSize, getTimestamp(), getMessageId(), null, null, null);
-        } catch (MailServiceException e) {
-            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                mLog.info("Draft " + getMessageId() + " is already in mailbox " + mboxId);
-                return;
-            } else {
-                throw e;
-            }
+
+            blob = sm.storeIncoming(in, mMsgSize, null);
+            ParsedMessage pm = new ParsedMessage(blob.getFile(), getTimestamp(), mbox.attachmentsIndexingEnabled());
+
+            mbox.saveDraft(getOperationContext(), pm, getMessageId());
+        } finally {
+            ByteUtil.closeStream(in);
+            sm.quietDelete(blob);
         }
     }
 }

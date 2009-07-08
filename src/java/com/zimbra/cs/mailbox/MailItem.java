@@ -51,6 +51,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 
 public abstract class MailItem implements Comparable<MailItem> {
@@ -1459,13 +1460,16 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     final MailboxBlob setContent(InputStream dataStream, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
-        Blob incoming = null;
-        if (dataStream != null)
-            incoming = StoreManager.getInstance().storeIncoming(dataStream, dataLength, null);
-        return setContent(incoming, dataLength, digest, content);
+        StagedBlob staged = null;
+        if (dataStream != null) {
+            StoreManager sm = StoreManager.getInstance();
+            Blob incoming = sm.storeIncoming(dataStream, dataLength, null);
+            staged = sm.stage(incoming, mMailbox);
+        }
+        return setContent(staged, dataLength, digest, content);
     }
 
-    MailboxBlob setContent(Blob incoming, int dataLength, String digest, Object content)
+    MailboxBlob setContent(StagedBlob staged, int dataLength, String digest, Object content)
     throws ServiceException, IOException {
         addRevision(false);
 
@@ -1495,27 +1499,27 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the content from the cache
         MessageCache.purge(this);
 
-        int size = incoming == null ? 0 : dataLength;
+        int size = staged == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
             mData.size = size;
         }
         getFolder().updateSize(0, size - mData.size);
 
-        mData.setBlobDigest(incoming == null ? null : digest);
+        mData.setBlobDigest(staged == null ? null : digest);
         mData.date   = mMailbox.getOperationTimestamp();
         mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
 
         // write the content (if any) to the store
         MailboxBlob mblob = null;
-        if (incoming != null) {
+        if (staged != null) {
             StoreManager sm = StoreManager.getInstance();
             // under windows, a rename will fail if the incoming file is open
             if (SystemUtil.ON_WINDOWS)
-                mblob = sm.link(incoming, mMailbox, mId, getSavedSequence());
+                mblob = sm.link(staged, mMailbox, mId, getSavedSequence());
             else
-                mblob = sm.renameTo(incoming, mMailbox, mId, getSavedSequence());
+                mblob = sm.renameTo(staged, mMailbox, mId, getSavedSequence());
             mMailbox.markOtherItemDirty(mblob);
         }
         mBlob = null;

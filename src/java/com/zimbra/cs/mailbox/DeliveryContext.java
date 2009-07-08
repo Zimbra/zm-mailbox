@@ -24,8 +24,6 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
 
 /**
- * @author jhahm
- * 
  * Class that facilitates blob file sharing when delivering a message to
  * multiple recipients or when a message is copied upon delivery to one
  * or more folders within the same mailbox due to filter rules.
@@ -73,16 +71,18 @@ public class DeliveryContext {
         return mIncomingBlob;
     }
     
-    public void setIncomingBlob(Blob blob) {
+    public DeliveryContext setIncomingBlob(Blob blob) {
         mIncomingBlob = blob;
+        return this;
     }
     
     public MailboxBlob getMailboxBlob() {
     	return mMailboxBlob;
     }
 
-    public void setMailboxBlob(MailboxBlob mailboxBlob) {
+    public DeliveryContext setMailboxBlob(MailboxBlob mailboxBlob) {
     	mMailboxBlob = mailboxBlob;
+        return this;
     }
 
     /**

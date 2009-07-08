@@ -133,6 +133,8 @@ public abstract class StoreManager {
         return storeIncoming(new ByteArrayInputStream(data), data.length, null, storeAsIs);
     }
 
+    public abstract StagedBlob stage(Blob blob, Mailbox mbox);
+
     /**
      * Create a copy in destMbox mailbox with message ID of destMsgId that
      * points to srcBlob.
@@ -158,7 +160,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException;
 
     /**
@@ -185,7 +187,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract MailboxBlob renameTo(Blob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public abstract MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException;
 
     /**

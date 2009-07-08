@@ -120,6 +120,7 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -4105,33 +4106,37 @@ public class Mailbox {
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
-        Blob incomingBlob = null;
+        Blob incoming = null;
         ParsedMessage pm = null;
         if (deliveryCtxt == null)
             deliveryCtxt = new DeliveryContext();
 
         try {
             InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
-            incomingBlob = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
+            incoming = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
             if (callback.getData() != null) {
                 pm = new ParsedMessage(callback.getData(), receivedDate, attachmentsIndexingEnabled());
             } else {
-                pm = new ParsedMessage(incomingBlob.getFile(), receivedDate, attachmentsIndexingEnabled());
+                pm = new ParsedMessage(incoming.getFile(), receivedDate, attachmentsIndexingEnabled());
             }
-            deliveryCtxt.setIncomingBlob(incomingBlob);
+            deliveryCtxt.setIncomingBlob(incoming);
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
                 customData, deliveryCtxt);
         } finally {
-            if (pm != null)
-                ByteUtil.closeStream(pm.getBlobInputStream());
-            if (incomingBlob != null)
-                StoreManager.getInstance().quietDelete(incomingBlob);
+            StoreManager.getInstance().quietDelete(incoming);
         }
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, DeliveryContext deliveryCtxt)
+    throws IOException, ServiceException {
+        return addMessage(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, customData, deliveryCtxt);
+    }
+
+    private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
+                              int flags, String tagStr, int conversationId, String rcptEmail,
+                              Message.DraftInfo dinfo, CustomMetadata customData, DeliveryContext deliveryCtxt)
     throws IOException, ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
         // make sure the message has been analyzed before taking the Mailbox lock
@@ -4169,16 +4174,18 @@ public class Mailbox {
         }
 
         // Store the incoming blob if necessary.
-        if (deliveryCtxt == null) {
+        if (deliveryCtxt == null)
             deliveryCtxt = new DeliveryContext();
-        }
+
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = deliveryCtxt.getIncomingBlob() ;
         boolean deleteIncoming = false;
-        if (deliveryCtxt.getIncomingBlob() == null) {
+
+        if (blob == null) {
             InputStream in = null;
-            Blob blob = null;
             try {
                 in = pm.getRawInputStream();
-                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null);
+                blob = sm.storeIncoming(in, pm.getRawSize(), null);
             } finally {
                 ByteUtil.closeStream(in);
             }
@@ -4186,10 +4193,12 @@ public class Mailbox {
             deleteIncoming = true;
         }
 
+        StagedBlob staged = sm.stage(blob, this);
+
         Message msg = null;
         try {
             msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
-                rcptEmail, null, customData, deliveryCtxt);
+                rcptEmail, dinfo, customData, deliveryCtxt, staged);
         } finally {
             if (deleteIncoming)
                 StoreManager.getInstance().quietDelete(deliveryCtxt.getIncomingBlob());
@@ -4201,7 +4210,7 @@ public class Mailbox {
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                                                     int flags, String tagStr, int conversationId, String rcptEmail,
                                                     Message.DraftInfo dinfo, CustomMetadata customData,
-                                                    DeliveryContext deliveryCtxt)
+                                                    DeliveryContext deliveryCtxt, StagedBlob staged)
     throws IOException, ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
@@ -4216,9 +4225,8 @@ public class Mailbox {
         boolean isRedo = redoPlayer != null;
         
         Blob blob = deliveryCtxt.getIncomingBlob();
-        if (blob == null) {
+        if (blob == null)
             throw ServiceException.FAILURE("Incoming blob not found.", null);
-        }
 
         // quick check to make sure we don't deliver 5 copies of the same message
         String msgidHeader = pm.getMessageID();
@@ -4350,7 +4358,7 @@ public class Mailbox {
 
             // step 4: link to existing blob
             StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.link(blob, this, messageId, getOperationChangeID());
+            MailboxBlob mblob = sm.link(staged, this, messageId, getOperationChangeID());
             markOtherItemDirty(mblob);
             
             if (deliveryCtxt.getMailboxBlob() == null) {
@@ -4503,102 +4511,77 @@ public class Mailbox {
         return conv;
     }
     
-    public Message saveDraft(OperationContext octxt, InputStream in, int sizeHint,
-                             Long receivedDate, int id, String origId, String replyType, String identityId)
-    throws IOException, ServiceException {
-        Blob blob = null;
-        ParsedMessage pm = null;
-        try {
-            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
-            pm = new ParsedMessage(blob.getFile(), receivedDate, attachmentsIndexingEnabled());
-            return saveDraft(octxt, pm, id, origId, replyType, identityId);
-        } finally {
-            if (pm != null)
-                ByteUtil.closeStream(pm.getBlobInputStream());
-            if (blob != null)
-                StoreManager.getInstance().quietDelete(blob);
-        }
-    }
-    
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         return saveDraft(octxt, pm, id, null, null, null);
     }
 
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType, String identityId)
     throws IOException, ServiceException {
+        if (id == ID_AUTO_INCREMENT) {
+            // special-case saving a new draft
+            Message.DraftInfo dinfo = null;
+            if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")))
+                dinfo = new Message.DraftInfo(replyType, origId, identityId);
+            
+            return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
+                              null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);
+        }
+
         mIndexHelper.maybeIndexDeferredItems();
-        
+
         // make sure the message has been analyzed before taking the Mailbox lock
         if (indexImmediately())
             pm.analyzeFully();
 
-        // special-case saving a new draft
-        if (id == ID_AUTO_INCREMENT) {
-            Message.DraftInfo dinfo = null;
-            if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")))
-                dinfo = new Message.DraftInfo(replyType, origId, identityId);
-
-            Blob blob = null;
-            InputStream in = null;
-            try {
-                in = pm.getRawInputStream();
-                blob = StoreManager.getInstance().storeIncoming(in, pm.getRawSize(), null);
-                DeliveryContext ctxt = new DeliveryContext();
-                ctxt.setIncomingBlob(blob);
-                return addMessageInternal(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME, null,
-                    ID_AUTO_INCREMENT, ":API:", dinfo, null, ctxt);
-            } finally {
-                ByteUtil.closeStream(in);
-                StoreManager.getInstance().quietDelete(blob);
-            }
-        } else {
-            return saveDraftInternal(octxt, pm, id);
-        }
-    }
-
-    private synchronized Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         String digest = pm.getRawDigest();
         int size = pm.getRawSize();
-        
-        SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
-        boolean success = false;
-        
+
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
-        InputStream in = null;
-            
-        try {
-            beginTransaction("saveDraft", octxt, redoRecorder);
-            SaveDraft redoPlayer = (SaveDraft) mCurrentChange.getRedoPlayer();
 
-            Message msg = getMessageById(id);
-            if (!msg.isTagged(Flag.ID_FLAG_DRAFT))
-                throw MailServiceException.IMMUTABLE_OBJECT(id);
-            if (!checkItemChangeID(msg))
-                throw MailServiceException.MODIFY_CONFLICT();
+        StoreManager sm = StoreManager.getInstance();
+        Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
+        StagedBlob staged = sm.stage(blob, this);
 
-            // content changed, so we're obliged to change the IMAP uid
-            int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
-            redoRecorder.setImapId(imapID);
+        synchronized (this) {
+            SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
+            InputStream redoStream = null;
 
-            // update the content and increment the revision number
-            in = pm.getRawInputStream();
-            MailboxBlob mblob = msg.setContent(in, size, digest, pm);
-            redoRecorder.setMessageBodyInfo(mblob.getBlob().getFile());
-
-            queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
-                
-            success = true;
-
+            boolean success = false;
             try {
-                Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "save draft", msg.getFolder());
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
+                beginTransaction("saveDraft", octxt, redoRecorder);
+                SaveDraft redoPlayer = (SaveDraft) mCurrentChange.getRedoPlayer();
+
+                Message msg = getMessageById(id);
+                if (!msg.isTagged(Flag.ID_FLAG_DRAFT))
+                    throw MailServiceException.IMMUTABLE_OBJECT(id);
+                if (!checkItemChangeID(msg))
+                    throw MailServiceException.MODIFY_CONFLICT();
+
+                // content changed, so we're obliged to change the IMAP uid
+                int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
+                redoRecorder.setImapId(imapID);
+                redoStream = new FileInputStream(blob.getFile());
+                redoRecorder.setMessageBodyInfo(redoStream, size);
+
+                // update the content and increment the revision number
+                msg.setContent(staged, size, digest, pm);
+
+                queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
+
+                success = true;
+
+                try {
+                    Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "save draft", msg.getFolder());
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
+                }
+
+                return msg;
+            } finally {
+                endTransaction(success);
+
+                ByteUtil.closeStream(redoStream);
             }
-            
-            return msg;
-        } finally {
-            ByteUtil.closeStream(in);
-            endTransaction(success);
         }
     }
 
@@ -5390,27 +5373,6 @@ public class Mailbox {
     }
 
     public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
-        Blob incoming = null;
-        if (pc.hasAttachment()) {
-            try {
-                // store blob before taking Mailbox lock
-                incoming = StoreManager.getInstance().storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
-            } catch (IOException ioe) {
-                throw ServiceException.FAILURE("could not save contact blob", ioe);
-            }
-        }
-
-        try {
-            return createContactInternal(octxt, pc.analyze(this), folderId, tags, incoming);
-        } finally {
-            StoreManager.getInstance().quietDelete(incoming);
-        }
-    }
-
-    private synchronized Contact createContactInternal(OperationContext octxt, ParsedContact pc, int folderId, String tags, Blob incoming)
-    throws ServiceException {
-        CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
-
         boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
         List<org.apache.lucene.document.Document> indexData = null;
         if (!deferIndexing) {
@@ -5421,47 +5383,66 @@ public class Mailbox {
                 indexData = Collections.emptyList();
             }
         }
-        
-        boolean success = false;
-        try {
-            beginTransaction("createContact", octxt, redoRecorder);
-            CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
-            boolean isRedo = redoPlayer != null;
 
-            int contactId = getNextItemId(isRedo ? redoPlayer.getContactId() : ID_AUTO_INCREMENT);
-            redoRecorder.setContactId(contactId);
-            
-            MailboxBlob mblob = null;
-            if (pc.hasAttachment()) {
-                try {
-                    mblob = StoreManager.getInstance().renameTo(incoming, this, contactId, getOperationChangeID());
-                    markOtherItemDirty(mblob);
-                } catch (IOException ioe) {
-                    throw ServiceException.FAILURE("could not save contact blob", ioe);
-                }
+        StagedBlob staged = null;
+        if (pc.hasAttachment()) {
+            try {
+                // store blob before taking Mailbox lock
+                StoreManager sm = StoreManager.getInstance();
+                Blob incoming = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
+                staged = sm.stage(incoming, this);
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("could not save contact blob", ioe);
             }
+        }
 
-            int flags = 0;
-            Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, tags, null);
+        synchronized (this) {
+            CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
-            queueForIndexing(con, false, deferIndexing ? null : indexData);
+            boolean success = false;
+            try {
+                beginTransaction("createContact", octxt, redoRecorder);
+                CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
+                boolean isRedo = redoPlayer != null;
 
-            success = true;
-            return con;
-        } finally {
-            endTransaction(success);
+                int contactId = getNextItemId(isRedo ? redoPlayer.getContactId() : ID_AUTO_INCREMENT);
+                redoRecorder.setContactId(contactId);
+
+                MailboxBlob mblob = null;
+                if (pc.hasAttachment()) {
+                    try {
+                        mblob = StoreManager.getInstance().renameTo(staged, this, contactId, getOperationChangeID());
+                        markOtherItemDirty(mblob);
+                    } catch (IOException ioe) {
+                        throw ServiceException.FAILURE("could not save contact blob", ioe);
+                    }
+                }
+
+                int flags = 0;
+                Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, tags, null);
+
+                queueForIndexing(con, false, deferIndexing ? null : indexData);
+
+                success = true;
+                return con;
+            } finally {
+                endTransaction(success);
+
+                if (staged != null)
+                    StoreManager.getInstance().quietDelete(staged.getLocalBlob());
+            }
         }
     }
 
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
-        ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
-
         pc.analyze(this);
-        Blob blob = null;
+        StagedBlob staged = null;
         if (pc.hasAttachment()) {
             try {
                 // store blob before taking Mailbox lock
-                blob = StoreManager.getInstance().storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
+                StoreManager sm = StoreManager.getInstance();
+                Blob blob = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
+                staged = sm.stage(blob, this);
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
             }
@@ -5479,6 +5460,8 @@ public class Mailbox {
         }
         
         synchronized (this) {
+            ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
+
             boolean success = false;
             try {
                 beginTransaction("modifyContact", octxt, redoRecorder);
@@ -5489,7 +5472,7 @@ public class Mailbox {
 
                 try {
                     // setContent() calls reanalyze(), which also updates the contact fields even when there is no blob
-                    con.setContent(blob, (int) pc.getSize(), pc.getDigest(), pc);
+                    con.setContent(staged, (int) pc.getSize(), pc.getDigest(), pc);
                 } catch (IOException ioe) {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
@@ -5498,7 +5481,8 @@ public class Mailbox {
                 success = true;
             } finally {
                 endTransaction(success);
-                StoreManager.getInstance().quietDelete(blob);
+                if (staged != null)
+                    StoreManager.getInstance().quietDelete(staged.getLocalBlob());
             }
         }
     }
@@ -6073,37 +6057,48 @@ public class Mailbox {
         }
     }
 
-    public synchronized Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
+    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
     throws ServiceException {
-        SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
-        boolean success = false;
-        try {
-            beginTransaction("createDoc", octxt, redoRecorder);
-            redoRecorder.setDocument(pd);
-            redoRecorder.setItemType(type);
-            
-            SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
-            int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            redoRecorder.setMessageId(itemId);
+        StagedBlob staged = StoreManager.getInstance().stage(pd.getBlob(), this);
 
-            Document doc;
-            if (type == MailItem.TYPE_DOCUMENT)
-                doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
-            else if (type == MailItem.TYPE_WIKI)
-                doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
-            else
-                throw MailServiceException.INVALID_TYPE(type);
+        synchronized (this) {
+            SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
+            InputStream redoStream = null;
 
-            MailboxBlob mblob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
-            redoRecorder.setMessageBodyInfo(mblob.getBlob().getFile());
+            boolean success = false;
+            try {
+                beginTransaction("createDoc", octxt, redoRecorder);
 
-            queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
-            success = true;
-            return doc;
-        } catch (IOException ioe) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-        } finally {
-            endTransaction(success);
+                SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
+                int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+
+                Document doc;
+                if (type == MailItem.TYPE_DOCUMENT)
+                    doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
+                else if (type == MailItem.TYPE_WIKI)
+                    doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
+                else
+                    throw MailServiceException.INVALID_TYPE(type);
+
+                redoRecorder.setMessageId(itemId);
+                redoRecorder.setDocument(pd);
+                redoRecorder.setItemType(type);
+                redoStream = new FileInputStream(pd.getBlob().getFile());
+                redoRecorder.setMessageBodyInfo(redoStream, pd.getSize());
+
+                doc.setContent(staged, pd.getSize(), pd.getDigest(), pd);
+
+                queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
+
+                success = true;
+                return doc;
+            } catch (IOException ioe) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+            } finally {
+                endTransaction(success);
+
+                ByteUtil.closeStream(redoStream);
+            }
         }
     }
 
@@ -6119,33 +6114,43 @@ public class Mailbox {
         }
     }
 
-    public synchronized Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
+    public Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
     throws ServiceException {
-        AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
-        
         boolean deferIndexing = !indexImmediately() || pd.hasTemporaryAnalysisFailure();
-        
-        boolean success = false;
-        try {
-            beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
-            Document doc = getDocumentById(docId);
-            MailboxBlob mblob = doc.setContent(pd.getBlob(), pd.getSize(), pd.getDigest(), pd);
+        StagedBlob staged = StoreManager.getInstance().stage(pd.getBlob(), this);
 
-            redoRecorder.setDocument(pd);
-            redoRecorder.setDocId(docId);
-            redoRecorder.setItemType(doc.getType());
-            // TODO: simplify the redoRecorder by not subclassing from CreateMessage
-            redoRecorder.setMessageBodyInfo(mblob.getBlob().getFile());
+        synchronized (this) {
+            AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
+            InputStream redoStream = null;
 
-            queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
+            boolean success = false;
+            try {
+                beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
-            success = true;
-            return doc;
-        } catch (IOException ioe) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
-        } finally {
-            endTransaction(success);
+                Document doc = getDocumentById(docId);
+
+                redoRecorder.setDocument(pd);
+                redoRecorder.setDocId(docId);
+                redoRecorder.setItemType(doc.getType());
+                // TODO: simplify the redoRecorder by not subclassing from CreateMessage
+                // can't load the redoRecorder with the incoming File because setContent() may rename it out from under us
+                redoStream = new FileInputStream(pd.getBlob().getFile());
+                redoRecorder.setMessageBodyInfo(redoStream, pd.getSize());
+
+                doc.setContent(staged, pd.getSize(), pd.getDigest(), pd);
+
+                queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
+
+                success = true;
+                return doc;
+            } catch (IOException ioe) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+            } finally {
+                endTransaction(success);
+
+                ByteUtil.closeStream(redoStream);
+            }
         }
     }
 
@@ -6183,7 +6188,8 @@ public class Mailbox {
         }
 
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
+        Blob incoming = sm.storeIncoming(pm.getRawInputStream(), size, null);
+        StagedBlob staged = sm.stage(incoming, this);
 
         synchronized (this) {
             CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
@@ -6193,13 +6199,13 @@ public class Mailbox {
                 beginTransaction("createChat", octxt, redoRecorder);
 
                 CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
-                redoRecorder.setMessageBodyInfo(blob.getFile());
-                markOtherItemDirty(blob);
+                redoRecorder.setMessageBodyInfo(incoming.getFile());
+                markOtherItemDirty(incoming);
 
                 long tags = Tag.tagsToBitmask(tagsStr);
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
 
-                MailboxBlob mblob = sm.link(blob, this, itemId, getOperationChangeID());
+                MailboxBlob mblob = sm.link(staged, this, itemId, getOperationChangeID());
                 markOtherItemDirty(mblob);
 
                 Chat chat = Chat.create(itemId, getFolderById(folderId), pm, mblob, size, digest, false, flags, tags);
@@ -6210,7 +6216,7 @@ public class Mailbox {
                 return chat;
             } finally {
                 endTransaction(success);
-                sm.quietDelete(blob);
+                sm.quietDelete(incoming);
             }
         }
     }
@@ -6235,6 +6241,7 @@ public class Mailbox {
 
         StoreManager sm = StoreManager.getInstance();
         Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
+        StagedBlob staged = sm.stage(blob, this);
 
         synchronized (this) {
             SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
@@ -6244,8 +6251,9 @@ public class Mailbox {
             try {
                 beginTransaction("saveChat", octxt, redoRecorder);
 
-                // can't load the redoPlayer with the incoming File because setContent() may rename it out from under us
                 SaveChat redoPlayer = (SaveChat) mCurrentChange.getRedoPlayer();
+
+                // can't load the redoRecorder with the incoming File because setContent() may rename it out from under us
                 redoStream = new FileInputStream(blob.getFile());
                 redoRecorder.setMessageBodyInfo(redoStream, size);
 
@@ -6261,8 +6269,7 @@ public class Mailbox {
                 redoRecorder.setImapId(imapID);
 
                 // update the content and increment the revision number
-                MailboxBlob mblob = chat.setContent(blob, size, digest, pm);
-                markOtherItemDirty(mblob);
+                chat.setContent(staged, size, digest, pm);
 
                 // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
                 queueForIndexing(chat, true, docList);
