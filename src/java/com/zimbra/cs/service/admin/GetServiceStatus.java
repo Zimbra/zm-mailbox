@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -81,6 +82,20 @@ public class GetServiceStatus extends AdminDocumentHandler {
             }
         }
         if (loggerEnabled) {
+            HashSet<ServiceStatus> serviceStatus = new HashSet<ServiceStatus>();
+            List<Server> servers = prov.getAllServers();
+            for (Server s : servers) {
+                String[] srvs = s.getMultiAttr(Provisioning.A_zimbraServiceEnabled);
+                for (String service : srvs) {
+                    ServiceStatus st = new ServiceStatus();
+                    st.server = s.getName();
+                    st.service = service;
+                    st.time = Long.toString(System.currentTimeMillis() / 1000);
+                    st.status = "0";
+                    serviceStatus.add(st);
+                }
+                
+            }
             BufferedReader in = null;
             try {
                 ProcessBuilder pb = new ProcessBuilder(ZMRRDFETCH, "-f", ZMSTATUSLOG_CSV);
@@ -108,6 +123,10 @@ public class GetServiceStatus extends AdminDocumentHandler {
                             new StringReader(currentWriter.toString())));
                 List<ServiceStatus> status = ServiceStatus.parseData(hostStatus);
                 for (ServiceStatus stat : status) {
+                    serviceStatus.remove(stat);
+                    serviceStatus.add(stat);
+                }
+                for (ServiceStatus stat : serviceStatus) {
                     if (!checkRights(zsc, stat.server)) {
                         ZimbraLog.misc.info("skipping server " + stat.server + ", has not right to get service status");
                         continue;
@@ -137,6 +156,18 @@ public class GetServiceStatus extends AdminDocumentHandler {
         String time;    // seconds since epoch
         String status;  // "1" or "0"
         
+        @Override public int hashCode() {
+            return server.hashCode();
+        }
+        
+        @Override public boolean equals(Object other) {
+            boolean eq = false;
+            if (other instanceof ServiceStatus) {
+                ServiceStatus o = (ServiceStatus) other;
+                eq = server.equals(o.server) && service.equals(o.service);
+            }
+            return eq;
+        }
         static List<ServiceStatus> parseData(Map<String,CsvReader> data)
         throws IOException {
             List<ServiceStatus> results = new ArrayList<ServiceStatus>();
