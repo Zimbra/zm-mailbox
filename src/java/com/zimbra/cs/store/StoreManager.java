@@ -134,7 +134,7 @@ public abstract class StoreManager {
         return storeIncoming(new ByteArrayInputStream(data), data.length, null, storeAsIs);
     }
 
-    public abstract StagedBlob stage(Blob blob, Mailbox mbox);
+    public abstract StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException;
 
     /**
      * Create a copy in destMbox mailbox with message ID of destMsgId that

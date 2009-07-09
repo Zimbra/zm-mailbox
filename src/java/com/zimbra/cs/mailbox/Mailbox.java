@@ -6078,19 +6078,20 @@ public class Mailbox {
         return createDocument(octxt, folderId, filename, mimeType, author, data, MailItem.TYPE_DOCUMENT);
     }
     	
-    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, InputStream data, byte type)
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author,
+                                   InputStream data, byte type)
     throws ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author);
             return createDocument(octxt, folderId, pd, type);
-        } catch (IOException e) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error writing document blob", ioe);
         }
     }
 
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
-    throws ServiceException {
+    throws IOException, ServiceException {
         StagedBlob staged = StoreManager.getInstance().stage(pd.getBlob(), this);
 
         synchronized (this) {
@@ -6125,7 +6126,7 @@ public class Mailbox {
                 success = true;
                 return doc;
             } catch (IOException ioe) {
-                throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+                throw ServiceException.FAILURE("error writing document blob", ioe);
             } finally {
                 endTransaction(success);
 
@@ -6141,13 +6142,13 @@ public class Mailbox {
         try {
             ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author);
             return addDocumentRevision(octxt, docId, pd);
-        } catch (IOException e) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error writing document blob", ioe);
         }
     }
 
     public Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
-    throws ServiceException {
+    throws IOException, ServiceException {
         boolean deferIndexing = !indexImmediately() || pd.hasTemporaryAnalysisFailure();
 
         StagedBlob staged = StoreManager.getInstance().stage(pd.getBlob(), this);
@@ -6177,7 +6178,7 @@ public class Mailbox {
                 success = true;
                 return doc;
             } catch (IOException ioe) {
-                throw MailServiceException.MESSAGE_PARSE_ERROR(ioe);
+                throw ServiceException.FAILURE("error writing document blob", ioe);
             } finally {
                 endTransaction(success);
 
