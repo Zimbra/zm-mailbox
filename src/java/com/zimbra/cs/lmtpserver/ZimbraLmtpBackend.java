@@ -496,11 +496,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     // Update the MimeMessage with the blob that's stored inside the mailbox,
                     // since the incoming blob will be deleted.
                     BlobInputStream bis = mimeSource.getBlobInputStream();
-                    Blob mailboxBlob = mboxBlob.getBlob();
+                    Blob mailboxBlob = mboxBlob.getLocalBlob();
                     bis.fileMoved(mailboxBlob.getFile());
                     MessageCache.cacheMessage(blob.getDigest(), mimeSource.getOriginalMessage(), mimeSource.getMimeMessage());
                 } catch (IOException e) {
-                    ZimbraLog.lmtp.warn("Unable to cache message for %s", mboxBlob.getBlob().getFile().getPath(), e);
+                    ZimbraLog.lmtp.warn("Unable to cache message for %s", mboxBlob.getLocalBlob().getFile().getPath(), e);
                 }
             }
         } finally {

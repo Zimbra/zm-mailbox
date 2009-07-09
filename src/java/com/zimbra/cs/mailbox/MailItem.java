@@ -907,7 +907,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * */
     public synchronized MailboxBlob getBlob() throws ServiceException {
         if (mBlob == null && getDigest() != null) {
-            mBlob = StoreManager.getInstance().getMailboxBlob(mMailbox, mId, mData.modContent, mData.locator);
+            mBlob = StoreManager.getInstance().getMailboxBlob(this);
             if (mBlob == null)
                 throw MailServiceException.NO_SUCH_BLOB(mMailbox.getId(), mId, mData.modContent);
         }

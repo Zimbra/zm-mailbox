@@ -242,7 +242,7 @@ public class ImapAppender {
                     return StoreManager.getInstance().getContent(mblob);
                 }
                 public int getSize() throws IOException {
-                    return mblob.getBlob().getRawSize();
+                    return (int) mblob.getSize();
                 }
             };
             mm = msg.getMimeMessage(false);

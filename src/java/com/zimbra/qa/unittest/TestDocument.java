@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 
 public class TestDocument extends TestCase {
 
@@ -88,10 +87,8 @@ public class TestDocument extends TestCase {
     
     private File getBlobDir(Mailbox mbox, Document doc)
     throws Exception {
-        Volume vol = Volume.getCurrentMessageVolume();
-        String loc = Short.toString(vol.getId());
-        MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(mbox, doc.getId(), doc.getModifiedSequence(), loc);
-        File blobFile = mblob.getBlob().getFile();
+        MailboxBlob mblob = StoreManager.getInstance().getMailboxBlob(doc);
+        File blobFile = mblob.getLocalBlob().getFile();
         return blobFile.getParentFile();
     }
     

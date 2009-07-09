@@ -119,9 +119,7 @@ public class WikiDigestFixup {
                 if (item.getSize() > Integer.MAX_VALUE)
                     continue;
                 int id = item.getId();
-                int rev = item.getSavedSequence();
-                String loc = item.getLocator();
-                MailboxBlob blob = sStore.getMailboxBlob(mbox, id, rev, loc);
+                MailboxBlob blob = sStore.getMailboxBlob(item);
                 InputStream is = null;
                 try {
                     is = sStore.getContent(blob);

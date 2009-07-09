@@ -22,6 +22,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.Zimbra;
 
@@ -256,6 +257,21 @@ public abstract class StoreManager {
      */
     public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
     throws ServiceException;
+
+    /**
+     * Find the stored MailboxBlob for the given Mailitem.
+     * @param item An item already deposited in its Mailbox.
+     * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
+     * does not exist
+     * 
+     * @throws ServiceException
+     */
+    public MailboxBlob getMailboxBlob(MailItem item) throws ServiceException {
+        MailboxBlob mblob = getMailboxBlob(item.getMailbox(), item.getId(), item.getSavedSequence(), item.getLocator());
+        if (mblob != null)
+            mblob.setDigest(item.getDigest()).setSize(item.getSize());
+        return mblob;
+    }
 
     /**
      * Return an InputStream of blob content.  Caller should close the

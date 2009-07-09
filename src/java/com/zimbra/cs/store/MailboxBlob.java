@@ -18,32 +18,26 @@
  */
 package com.zimbra.cs.store;
 
-import com.zimbra.cs.mailbox.MailItem;
+import java.io.IOException;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
 
-public class MailboxBlob {
+public abstract class MailboxBlob {
 
     private Mailbox mMailbox;
-    private Blob mBlob;
 
     private int mItemId;
     private int mRevision;
     private String mLocator;
+    protected Long mSize;
+    protected String mDigest;
 
-    MailboxBlob(Mailbox mbox, int itemId, int revision, String locator, Blob blob) {
+    protected MailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
+        mMailbox = mbox;
         mItemId = itemId;
         mRevision = revision;
-        mMailbox = mbox;
         mLocator = locator;
-        mBlob = blob;
-    }
-
-    MailboxBlob(MailItem item, Blob blob) {
-        mItemId = item.getId();
-        mRevision = item.getSavedSequence();
-        mMailbox = item.getMailbox();
-        mBlob = blob;
     }
 
     public int getItemId() {
@@ -58,13 +52,25 @@ public class MailboxBlob {
         return mLocator;
     }
 
+    abstract public String getDigest() throws IOException;
+
+    protected MailboxBlob setDigest(String digest) {
+        mDigest = digest;
+        return this;
+    }
+
+    abstract public long getSize() throws IOException;
+
+    protected MailboxBlob setSize(long size) {
+        mSize = size;
+        return this;
+    }
+
     public Mailbox getMailbox() {
         return mMailbox;
     }
 
-    public Blob getBlob() {
-        return mBlob;   
-    }
+    abstract public Blob getLocalBlob() throws IOException;
 
     @Override public String toString() {
         return mMailbox.getId() + ":" + mItemId + ":" + mRevision + "[" + getLocator() + "]";
