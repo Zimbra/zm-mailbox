@@ -75,7 +75,7 @@ public class BlobBuilder {
 
         FileOutputStream fos = new FileOutputStream(blob.getFile());
         fc = fos.getChannel();
-        if (!useCompression(sizeHint)) {
+        if (useCompression(sizeHint)) {
             try {
                 out = new GZIPOutputStream(fos);
             } catch (IOException e) {
