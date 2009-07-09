@@ -528,6 +528,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mRGBColor.getMappedColor();
     }
 
+    /** Returns the item's color represented in RGB. */
+    public Color getRgbColor() {
+        return mRGBColor;
+    }
+    
     /** Returns the item's name.  If the item doesn't have a name (e.g.
      *  messages, contacts, appointments), returns <tt>""</tt>.
      *  If not <tt>""</tt>, this name should be unique across all item
@@ -2693,14 +2698,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         public Color(byte c) {
             setColor(c);
         }
-        public long getRed() {
-            return (mRgb >> 16) & 0xff;
+        public byte getRed() {
+            return (byte)((mRgb >> 16) & 0xff);
         }
-        public long getGreen() {
-            return (mRgb >> 8) & 0xff;
+        public byte getGreen() {
+            return (byte)((mRgb >> 8) & 0xff);
         }
-        public long getBlue() {
-            return mRgb & 0xff;
+        public byte getBlue() {
+            return (byte)(mRgb & 0xff);
         }
         public long getRgb() {
             return mRgb;

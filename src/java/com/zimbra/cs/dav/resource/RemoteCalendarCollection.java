@@ -50,7 +50,7 @@ public class RemoteCalendarCollection extends RemoteCollection {
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		
-		setProperty(DavElements.E_CALENDAR_COLOR, COLOR_MAP[mColor]);
+        addProperty(getIcalColorProperty());
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);

@@ -105,7 +105,7 @@ public class CalendarCollection extends Collection {
 		mCtag = CtagInfo.makeCtag(f);
 		setProperty(DavElements.E_GETCTAG, mCtag);
 		
-		setProperty(DavElements.E_CALENDAR_COLOR, COLOR_MAP[mColor]);
+        addProperty(getIcalColorProperty());
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);

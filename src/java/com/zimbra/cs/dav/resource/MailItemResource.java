@@ -31,7 +31,6 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
-import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
@@ -65,7 +64,7 @@ public abstract class MailItemResource extends DavResource {
 	protected int  mFolderId;
 	protected int  mId;
 	protected byte mType;
-	protected byte mColor;
+	protected MailItem.Color mColor;
 	protected String mEtag;
 	protected String mSubject;
 	protected String mPath;
@@ -120,9 +119,7 @@ public abstract class MailItemResource extends DavResource {
 		setProperty(DavElements.P_GETETAG, mEtag);
 		if (mModifiedDate > 0)
             setLastModifiedDate(mModifiedDate);
-		mColor = item.getColor();
-		if (mColor >= COLOR_MAP.length)
-			mColor = 0;
+		mColor = item.getRgbColor();
 		setProperty(DavElements.E_DISPLAYNAME, item.getName());
 		addProperty(Acl.getPrincipalUrl(this));
 	}
@@ -427,4 +424,30 @@ public abstract class MailItemResource extends DavResource {
 		}
 		return aces;
 	}
+    
+    private static char[] HEX = {
+        '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'          
+    };
+    
+    protected MailItem.Color parseIcalColorProperty(String color) {
+        if (color.length() != 7 || !color.startsWith("#"))
+            return MailItem.DEFAULT_COLOR_RGB;
+        long rgb = 0;
+        return MailItem.DEFAULT_COLOR_RGB;
+    }
+    
+    protected ResourceProperty getIcalColorProperty() {
+        ResourceProperty color = new ResourceProperty(DavElements.E_CALENDAR_COLOR);
+        StringBuilder buf = new StringBuilder("#");
+        toHex(mColor.getRed(), buf);
+        toHex(mColor.getGreen(), buf);
+        toHex(mColor.getBlue(), buf);
+        buf.append("FF");
+        return color;
+    }
+    
+    protected void toHex(byte num, StringBuilder buf) {
+        buf.append(HEX[(num >> 8) & 0xf]).append(HEX[num & 0xf]);
+    }
 }
