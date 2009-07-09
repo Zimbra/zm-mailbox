@@ -128,7 +128,7 @@ public class SyncToken implements Cloneable, Comparable {
                 return -1;
             else return (this.mOffsetInNext - other.mOffsetInNext);
         } else 
-            return 0;
+            return diff;
     }
     
     public static class Tester extends TestCase {
