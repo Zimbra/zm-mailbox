@@ -485,7 +485,6 @@
             <src refid="all.java.path"/>
         </javac>
         <antcall target="db-versions-init"/>
-    	<antcall target="validate-rights"/>
     </target>
 
     <target name="jar" depends="compile">
