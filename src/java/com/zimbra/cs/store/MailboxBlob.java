@@ -52,14 +52,22 @@ public abstract class MailboxBlob {
         return mLocator;
     }
 
-    abstract public String getDigest() throws IOException;
+    public String getDigest() throws IOException {
+        if (mDigest == null)
+            mDigest = getLocalBlob().getDigest();
+        return mDigest;
+    }
 
     protected MailboxBlob setDigest(String digest) {
         mDigest = digest;
         return this;
     }
 
-    abstract public long getSize() throws IOException;
+    public long getSize() throws IOException {
+        if (mSize == null)
+            mSize = new Long(getLocalBlob().getRawSize());
+        return mSize;
+    }
 
     protected MailboxBlob setSize(long size) {
         mSize = size;

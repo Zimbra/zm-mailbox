@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.store;
 
-import java.io.IOException;
-
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class VolumeMailboxBlob extends MailboxBlob {
@@ -24,18 +22,6 @@ public class VolumeMailboxBlob extends MailboxBlob {
     protected VolumeMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, Blob blob) {
         super(mbox, itemId, revision, locator);
         mBlob = blob;
-    }
-
-    @Override public String getDigest() throws IOException {
-        if (mDigest == null)
-            mDigest = mBlob.getDigest();
-        return mDigest;
-    }
-
-    @Override public long getSize() throws IOException {
-        if (mSize == null)
-            mSize = new Long(mBlob.getRawSize());
-        return mSize;
     }
 
     @Override public Blob getLocalBlob() {
