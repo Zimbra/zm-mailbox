@@ -1,8 +1,8 @@
 package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.common.service.ServiceException;
@@ -24,7 +24,7 @@ public class MessageContent {
     private MessageContent() {}
     
     private void readContent(InputStream is, int sizeHint) throws IOException, ServiceException {
-        if (sizeHint < FileBlobStore.getDiskStreamingThreshold()) {
+        if (sizeHint < StorageCallback.getDiskStreamingThreshold()) {
             data = readBytes(is, sizeHint);
         } else {
             blob = StoreManager.getInstance().storeIncoming(is, sizeHint, null);
@@ -58,7 +58,7 @@ public class MessageContent {
     private byte[] readBytes(InputStream is, int size) throws IOException {
         // Return original byte array and avoid copy if possible
         ByteArrayOutputStream baos = new ByteArrayOutputStream(size) {
-            public byte[] toByteArray() {
+            @Override public byte[] toByteArray() {
                 return buf.length == count ? buf : super.toByteArray();
             }
         };

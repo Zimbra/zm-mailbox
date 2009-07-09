@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -37,7 +38,7 @@ import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.FileBlobStore;
+import com.zimbra.cs.store.StorageCallback;
 
 public class CreateMessage extends RedoableOp
 implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
@@ -348,9 +349,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mMsgBodyType = in.readByte();
         if (mMsgBodyType == MSGBODY_INLINE) {
             int dataLength = in.readInt();
-            // mData must be the last thing deserialized.  See comments in
-            // serializeData().
-            if (dataLength <= FileBlobStore.getDiskStreamingThreshold()) {
+            boolean inMemory = false;
+            try {
+                inMemory = dataLength <= StorageCallback.getDiskStreamingThreshold();
+            } catch (ServiceException e) {}
+
+            // mData must be the last thing deserialized.  See comments in serializeData()
+            if (inMemory) {
                 byte[] data = new byte[dataLength];
                 in.readFully(data, 0, dataLength);
                 mData = new RedoableOpData(data);

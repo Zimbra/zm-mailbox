@@ -118,9 +118,9 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
+import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -4112,7 +4112,7 @@ public class Mailbox {
             deliveryCtxt = new DeliveryContext();
 
         try {
-            InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
+            InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, StorageCallback.getDiskStreamingThreshold());
             incoming = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
             if (callback.getData() != null) {
                 pm = new ParsedMessage(callback.getData(), receivedDate, attachmentsIndexingEnabled());

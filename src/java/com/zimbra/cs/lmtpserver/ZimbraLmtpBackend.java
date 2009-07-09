@@ -49,8 +49,8 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 
@@ -247,7 +247,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
         try {
             // Store the incoming blob.
-            InMemoryDataCallback imc = new InMemoryDataCallback(sizeHint, FileBlobStore.getDiskStreamingThreshold());
+            InMemoryDataCallback imc = new InMemoryDataCallback(sizeHint, StorageCallback.getDiskStreamingThreshold());
             blob = StoreManager.getInstance().storeIncoming(in, sizeHint, imc);
             data = imc.getData();
 
