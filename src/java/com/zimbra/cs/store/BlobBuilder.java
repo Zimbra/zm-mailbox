@@ -23,50 +23,56 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.io.FileInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.channels.FileChannel;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.GZIPInputStream;
 
 public class BlobBuilder {
-    private Blob blob;
+    protected Blob blob;
     private int sizeHint;
     private boolean disableCompression;
+    private StorageCallback storageCallback;
     private MessageDigest digest;
     private OutputStream out;
     private FileChannel fc;
     private int totalBytes;
     private boolean finished;
 
-    BlobBuilder(Blob blob) {
-        this.blob = blob;
+    BlobBuilder(Blob targetBlob) {
+        this.blob = targetBlob;
     }
 
-    public void setSizeHint(int sizeHint) {
-        this.sizeHint = sizeHint;
+    public BlobBuilder setSizeHint(int size) {
+        this.sizeHint = size;
+        return this;
     }
 
     int getTotalBytes() {
         return totalBytes;
     }
 
-    public void disableCompression(boolean disable) {
+    public BlobBuilder setStorageCallback(StorageCallback callback) {
+        this.storageCallback = callback;
+        return this;
+    }
+
+    public BlobBuilder disableCompression(boolean disable) {
         this.disableCompression = disable;
+        return this;
     }
 
     boolean isCompressionDisabled() {
         return disableCompression;
     }
 
-    public void init() throws IOException, ServiceException {
+    public BlobBuilder init() throws IOException, ServiceException {
         try {
             digest = MessageDigest.getInstance("SHA1");
         } catch (NoSuchAlgorithmException e) {
             throw ServiceException.FAILURE("SHA1 digest not found", e);
         }
+
         FileOutputStream fos = new FileOutputStream(blob.getFile());
         fc = fos.getChannel();
         if (!useCompression(sizeHint)) {
@@ -81,8 +87,10 @@ public class BlobBuilder {
             out = fos;
             blob.setCompressed(false);
         }
+
+        return this;
     }
-    
+
     @SuppressWarnings("unused")
     boolean useCompression(int size) throws ServiceException {
         return false;
@@ -93,22 +101,28 @@ public class BlobBuilder {
         if (finished)
             throw new IllegalStateException("Blob builder is finished");
 
-        if (out == null) {
-            init(); // First time initialization
-        }
-        digest.update(b, off, len);
+        // first time initialization
+        if (out == null)
+            init();
+
         try {
             out.write(b, off, len);
+            if (storageCallback != null)
+                storageCallback.wrote(blob, b, off, len);
+
+            digest.update(b, off, len);
+            totalBytes += len;
         } catch (IOException e) {
             dispose();
             throw e;
         }
-        totalBytes += len;
     }
 
     @SuppressWarnings("unused")
-    public void finish() throws IOException, ServiceException {
-        if (finished) return;
+    public Blob finish() throws IOException, ServiceException {
+        if (finished)
+            return blob;
+
         try {
             if (!DebugConfig.disableMessageStoreFsync) {
                 out.flush();
@@ -121,12 +135,15 @@ public class BlobBuilder {
             ByteUtil.closeStream(out);
         }
 
-        // Set the blob's digest and size.
+        // set the blob's digest and size
         blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
         blob.setRawSize(totalBytes);
 
         if (ZimbraLog.store.isDebugEnabled())
             ZimbraLog.store.debug("stored " + this);
+
+        finished = true;
+        return blob;
     }
 
     @Override public String toString() {
@@ -137,30 +154,6 @@ public class BlobBuilder {
             compressed = Boolean.toString(blob.isCompressed());
         } catch (IOException ioe) { }
         return file.getAbsolutePath() + ": data size=" + totalBytes + ", file size=" + file.length() + ", isCompressed=" + compressed;
-    }
-
-    static void uncompressBlob(Blob blob) throws IOException {
-        File file = blob.getFile();
-        File tmp = File.createTempFile(file.getName(), ".unzip.tmp", file.getParentFile());
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = new GZIPInputStream(new FileInputStream(file));
-            os = new FileOutputStream(tmp);
-            ByteUtil.copy(is, false, os, false);
-        } finally {
-            ByteUtil.closeStream(is);
-            ByteUtil.closeStream(os);
-        }
-        if (!file.delete()) {
-            throw new IOException("Unable to delete file: " + file.getAbsolutePath());
-        }
-        if (!tmp.renameTo(file)) {
-            throw new IOException(
-                String.format("Unable to rename '%s' to '%s'",
-                              tmp.getAbsolutePath(), file.getAbsolutePath()));
-        }
-        blob.setCompressed(false);
     }
 
     public Blob getBlob() {

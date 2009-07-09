@@ -19,20 +19,11 @@
 package com.zimbra.cs.store;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -82,8 +73,8 @@ public class FileBlobStore extends StoreManager {
         return sDiskStreamingThreshold;
     }
 
-    public static void loadSettings()
-    throws ServiceException {
+    @SuppressWarnings("static-access")
+    public static void loadSettings() throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer(); 
         sDiskStreamingThreshold = server.getMailDiskStreamingThreshold();
         int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
@@ -120,91 +111,18 @@ public class FileBlobStore extends StoreManager {
 
     @Override public Blob storeIncoming(InputStream in, int sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
-        Volume volume = Volume.getCurrentMessageVolume();
+        BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).disableCompression(storeAsIs).setStorageCallback(callback).init();
 
-        Blob blob = getUniqueIncomingBlob();
-        File file = blob.getFile();
+        byte[] buffer = new byte[BUFLEN];
+        int numRead;
+        while ((numRead = in.read(buffer)) >= 0)
+            builder.update(buffer, 0, numRead);
 
-        // Initialize streams and digest calculator.
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw ServiceException.FAILURE("", e);
-        }
-
-        DigestInputStream digestStream = new DigestInputStream(in, digest);
-        FileOutputStream fos = null;
-        OutputStream out = null;
-        boolean compress =
-            !storeAsIs && volume.getCompressBlobs() &&
-            (sizeHint > volume.getCompressionThreshold() || sizeHint <= 0);
-        int numRead = -1;
-        int totalRead = 0;
-
-        try {
-            fos = new FileOutputStream(file);
-            out = fos;
-
-            if (compress) {
-                out = new GZIPOutputStream(fos);
-                blob.setCompressed(true);
-            }
-
-            // Write to the file.
-            byte[] buffer = new byte[BUFLEN];
-            while ((numRead = digestStream.read(buffer)) >= 0) {
-                out.write(buffer, 0, numRead);
-                if (callback != null) {
-                    callback.wrote(blob, buffer, numRead);
-                }
-                totalRead += numRead;
-            }
-            if (!DebugConfig.disableMessageStoreFsync) {
-                out.flush();
-                fos.getChannel().force(true);
-            }
-        } finally {
-            ByteUtil.closeStream(out);
-        }
-
-        // Set the blob's digest and size.
-        blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
-        blob.setRawSize(totalRead);
-
-        // If sizeHint wasn't given we may have compressed a blob that was under the compression
-        // threshold.  Let's uncompress it.  This isn't really necessary, but uncompressing results
-        // in behavior consistent with earlier ZCS releases.
-        if (compress && totalRead <= volume.getCompressionThreshold()) {
-            File temp = File.createTempFile(file.getName(), ".unzip.tmp", file.getParentFile());
-            InputStream fin = null;
-            OutputStream fout = null;
-            try {
-                fin = new GZIPInputStream(new FileInputStream(file));
-                fout = new FileOutputStream(temp);
-                ByteUtil.copy(fin, false, fout, false);
-            } finally {
-                ByteUtil.closeStream(fin);
-                ByteUtil.closeStream(fout);
-            }
-            boolean deleted = file.delete();
-            if (!deleted)
-                throw new IOException("Unable to delete temp file " + file.getAbsolutePath());
-            String srcPath = temp.getAbsolutePath();
-            boolean renamed = temp.renameTo(file);
-            if (!renamed)
-                throw new IOException("Unable to rename " + srcPath + " to " + file.getAbsolutePath());
-            blob.setCompressed(false);
-        }
-
-        if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("Stored blob: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
-                    totalRead, file.length(), volume.getId(), blob.isCompressed());
-        }
-        return blob;
+        return builder.finish();
     }
 
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) {
+        // mailbox store is on the same volume as incoming directory, so no need to stage the blob
         return new StagedBlob(blob);
     }
 

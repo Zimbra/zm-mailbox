@@ -26,7 +26,7 @@ import com.zimbra.cs.store.StorageCallback;
  * of the blob data in memory, when the blob on disk is compressed.
  * Does not store data for blobs that are not compressed on disk. 
  */
-public class CompressedBlobReader implements StorageCallback {
+public class CompressedBlobReader extends StorageCallback {
 
     private static final int MAX_INITIAL_BUFFER_SIZE = 10 * 1024 * 1024;
     private ByteArrayOutputStream mBuffer = null;
@@ -44,7 +44,7 @@ public class CompressedBlobReader implements StorageCallback {
         mSizeHint = sizeHint;
     }
 
-    public void wrote(Blob blob, byte[] data, int numBytes)
+    @Override public void wrote(Blob blob, byte[] data, int offset, int numBytes)
     throws IOException {
         if (!mIsInitialized) {
             mIsCompressed = blob.isCompressed();
@@ -59,9 +59,8 @@ public class CompressedBlobReader implements StorageCallback {
             mIsInitialized = true;
         }
         
-        if (mBuffer != null) {
-            mBuffer.write(data, 0, numBytes);
-        }
+        if (mBuffer != null)
+            mBuffer.write(data, offset, numBytes);
     }
     
     /**

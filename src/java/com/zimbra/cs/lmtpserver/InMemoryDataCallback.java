@@ -23,7 +23,7 @@ import com.zimbra.cs.store.StorageCallback;
 /**
  * Reads stored data into memory up to the specified threshold.
  */
-public class InMemoryDataCallback implements StorageCallback {
+public class InMemoryDataCallback extends StorageCallback {
     
     private int mMaxBytes;
     private ByteArrayOutputStream mBuffer;
@@ -41,12 +41,11 @@ public class InMemoryDataCallback implements StorageCallback {
         mMaxBytes = maxBytes;
     }
     
-    public void wrote(Blob blob, byte[] data, int numBytes) {
+    @Override public void wrote(Blob blob, byte[] data, int offset, int numBytes) {
         if (mBuffer != null) {
-            mBuffer.write(data, 0, numBytes);
-            if (mBuffer.size() > mMaxBytes) {
+            mBuffer.write(data, offset, numBytes);
+            if (mBuffer.size() > mMaxBytes)
                 mBuffer = null;
-            }
         }
     }
 

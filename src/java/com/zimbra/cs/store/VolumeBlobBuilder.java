@@ -14,9 +14,16 @@
  */
 package com.zimbra.cs.store;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 
 public class VolumeBlobBuilder extends BlobBuilder {
 
@@ -25,7 +32,7 @@ public class VolumeBlobBuilder extends BlobBuilder {
     }
 
     private short getVolumeId() {
-        return ((VolumeBlob) super.getBlob()).getVolumeId();
+        return ((VolumeBlob) blob).getVolumeId();
     }
 
     @Override boolean useCompression(int size) throws ServiceException {
@@ -37,14 +44,16 @@ public class VolumeBlobBuilder extends BlobBuilder {
                (size <= 0 || size > volume.getCompressionThreshold());
     }
 
-    @Override public void finish() throws IOException, ServiceException {
+    @Override public Blob finish() throws IOException, ServiceException {
+        if (isFinished())
+            return blob;
+
         super.finish();
 
         // If sizeHint wasn't given we may have compressed a blob that was under
         // the compression threshold. Let's uncompress it. This isn't really
         // necessary, but uncompressing results in behavior consistent with
         // earlier ZCS releases.
-        Blob blob = getBlob();
         Volume volume = Volume.getById(getVolumeId());
         if (blob.isCompressed() && getTotalBytes() < volume.getCompressionThreshold()) {
             try {
@@ -54,6 +63,32 @@ public class VolumeBlobBuilder extends BlobBuilder {
                 throw e;
             }
         }
+
+        return blob;
+    }
+
+    static void uncompressBlob(Blob blob) throws IOException {
+        File file = blob.getFile();
+        File tmp = File.createTempFile(file.getName(), ".unzip.tmp", file.getParentFile());
+        InputStream is = null;
+        OutputStream os = null;
+        try {
+            is = new GZIPInputStream(new FileInputStream(file));
+            os = new FileOutputStream(tmp);
+            ByteUtil.copy(is, false, os, false);
+        } finally {
+            ByteUtil.closeStream(is);
+            ByteUtil.closeStream(os);
+        }
+        if (!file.delete()) {
+            throw new IOException("Unable to delete file: " + file.getAbsolutePath());
+        }
+        if (!tmp.renameTo(file)) {
+            throw new IOException(
+                String.format("Unable to rename '%s' to '%s'",
+                              tmp.getAbsolutePath(), file.getAbsolutePath()));
+        }
+        blob.setCompressed(false);
     }
 
     @Override public String toString() {

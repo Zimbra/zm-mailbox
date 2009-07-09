@@ -16,7 +16,12 @@ package com.zimbra.cs.store;
 
 import java.io.IOException;
 
-public interface StorageCallback {
+public abstract class StorageCallback {
 
-    public void wrote(Blob blob, byte[] data, int numBytes) throws IOException;
+    public void wrote(Blob blob, byte[] data, int numBytes) throws IOException {
+        wrote(blob, data, 0, numBytes);
+    }
+
+    public abstract void wrote(Blob blob, byte[] data, int offset, int numBytes) throws IOException;
+
 }
