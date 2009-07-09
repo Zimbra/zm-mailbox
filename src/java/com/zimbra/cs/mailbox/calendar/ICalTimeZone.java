@@ -270,7 +270,7 @@ public class ICalTimeZone extends SimpleTimeZone {
                 if (tz != null) {
                     return tz;
                 } else if (!hasDef) {
-                    ZimbraLog.calendar.warn("Unknown time zone \"" + tzid + "\" in metadata; using UTC instead");
+                    ZimbraLog.calendar.debug("Unknown time zone \"" + tzid + "\" in metadata; using UTC instead");
                     return sUTC.cloneWithNewTZID(tzid);
                 }
             }

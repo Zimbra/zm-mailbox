@@ -64,7 +64,7 @@ public abstract class MimeVisitor {
      *  but instead are executed every time the message is accessed. */
     public static void registerConverter(Class<? extends MimeVisitor> vclass) {
         if (vclass != null) {
-            ZimbraLog.lmtp.info("Registering MIME converter: %s", vclass.getName());
+            ZimbraLog.lmtp.debug("Registering MIME converter: %s", vclass.getName());
             sMimeConverters.add(vclass);
         }
     }
@@ -72,7 +72,7 @@ public abstract class MimeVisitor {
     /** Removes a <tt>MimeVisitor</tt> from the list of converters. */
     public static void unregisterConverter(Class<? extends MimeVisitor> vclass) {
         if (vclass != null) {
-            ZimbraLog.lmtp.info("Unregistering MIME converter: %s", vclass.getName());
+            ZimbraLog.lmtp.debug("Unregistering MIME converter: %s", vclass.getName());
             sMimeConverters.remove(vclass);
         }
     }
@@ -93,7 +93,7 @@ public abstract class MimeVisitor {
      *  message is saved to disk or sent via SMTP. */
     public static void registerMutator(Class<? extends MimeVisitor> vclass) {
         if (vclass != null) {
-            ZimbraLog.lmtp.info("Registering MIME mutator: %s", vclass.getName());
+            ZimbraLog.lmtp.debug("Registering MIME mutator: %s", vclass.getName());
             sMimeMutators.add(vclass);
         }
     }
@@ -101,7 +101,7 @@ public abstract class MimeVisitor {
     /** Removes a <tt>MimeVisitor</tt> from the list of mutators. */
     public static void unregisterMutator(Class<? extends MimeVisitor> vclass) {
         if (vclass != null) {
-            ZimbraLog.lmtp.info("Unregistering MIME mutator: %s", vclass.getName());
+            ZimbraLog.lmtp.debug("Unregistering MIME mutator: %s", vclass.getName());
             sMimeMutators.remove(vclass);
         }
     }
