@@ -22,6 +22,7 @@ import com.zimbra.cs.servlet.DiskCacheServlet;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
@@ -55,6 +56,7 @@ public class ZimletResources
     static {
         TYPES.put("css", "text/css");
         TYPES.put("js", "text/javascript");
+        TYPES.put("xsl", "application/xslt+xml");
         TYPES.put("plain", "text/plain");
     }
 
@@ -249,6 +251,8 @@ public class ZimletResources
     // Private methods
     //
 
+    private static MimetypesFileTypeMap sFileTypeMap = new MimetypesFileTypeMap();
+    
 	private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
     	ZimletFile zf = ZimletUtil.getZimlet(zimletName);
     	if (zf == null) {
@@ -266,7 +270,15 @@ public class ZimletResources
     	resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
     	resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
     	resp.setHeader("Pragma", "no-cache");
-    	resp.setContentType(getContentType(file));
+        String contentType = null;
+    	int dot = file.lastIndexOf('.');
+    	if (dot > 0)
+    	    contentType = TYPES.get(file.substring(dot + 1));
+    	if (contentType == null)
+    	    contentType = sFileTypeMap.getContentType(file);
+        ZimbraLog.zimlet.debug("%s: %s", file, contentType);
+    	if (contentType != null)
+            resp.setContentType(contentType);
     	ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
     }
     
