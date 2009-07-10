@@ -439,183 +439,68 @@ Depending on the context, there are three aspects of targets that need to be dea
       The lists are tentative, they can certainly change during the development cycles of the delegate admin
       project, and afterwards as the product evolves.
 
-3.5.1 account/calendar resource:
-          - getAccount                         : get all account attributes
-          - modifyAccount                      : modify all account attributes
-          - listAccount                        : see account in GetAllAccounts/SearchDirectoryResponse
-          
-          - renameAccount                      : rename account
-          - deleteAccount                      : delete account
-          
-          - addAccountAlias                    : add alias to account
-          - removeAccountAlias                 : remove alias from account
-          
-          - getMailboxDump                     : get mailbox dump for legal intercept
-          - moveMailbox                        : move mailbox from one server to another
-          - reindexMailbox                     : reindex mailbox
-          - viewEmail                          : view the account's email
-          
-          - backupAccount                      : backup account
-          - restoreAccount                     : restore account from backup
-          
-          - setAccountPassword                 : set account password
-          
-          - configureQuota                     : configure quota
-          - configureFeature                   : enable/disable features
-          - configurePasswordRule              : configure password rules
-          - configureLoginPolicy               : configure login/lockout policies
-          - configureZimlet                    : configure available zimlets
-          - configureTheme                     : configure available themes(skins)
-          
+3.5.1 account:
+          see output of: zmprov gar account
 
 3.5.2 calendar resource:
-          - getCalendarResource                : get all calendar resource attributes
-          - modifyCalendarResource             : modify all calendar resource attributes
-          - listCalendarResource               : see calendar resource in GetAllCalendarResources/SearchDirectoryResponse
-          
-          - renameCalendarResource             : rename calendar resource
-          - deleteCalendarResource             : delete calendar resource
-          
-          - addCalendarResourceAlias           : add alias to calendar resource
-          - removeCalendarResourceAlias        : remove alias from calendar resource
-
-          - getMailboxDump                     : get mailbox dump for legal intercept
-          - moveMailbox                        : move mailbox from one server to another
-          - reindexMailbox                     : reindex mailbox
-          - viewEmail                          : view the calendar resource's email
-          
-          - backupCalendarResource             : backup calendar resource
-          - restoreCalendarResource            : restore calendar resource from backup
-          
-          - setCalendarResourcePassword        : set calendar resource password
-
+          see output of: zmprov gar calresource
 
 3.5.3 cos
-          - getCos                             : get all cos attributes
-          - modifyCos                          : modify all cos attributes
-          - listCos                            : see cos in GetAllCos/SearchDirectoryResponse
-          
-          - renameCos                          : rename cos
-          - deleteCos                          : delete cos
-          
-          - assignCos                          : assign the cos (to domains or accounts)
-           
-          - configureQuota                     : configure quota
-          - configureFeature                   : enable/disable features
-          - configurePasswordRule              : configure password rules
-          - configureLoginPolicy               : configure login/lockout policies
-          - configureZimlet                    : configure available zimlets
-          - configureTheme                     : configure available themes(skins)
+          see output of: zmprov gar cos
 
     
 3.5.4 distribution list
-          - All rights for account/calendar resource
-                When account/calendar resource rights are specified on a DL entry, the ACEs are 
+          see output of: zmprov gar dl
+          
+          Notes: 
+              - All rights for account/calendar resource can also be granted on distribution list targets.
+                When account/calendar resource rights are granted on a DL entry, the ACEs are 
                 interpreted as "apply to all direct or indirect account/calendar resource members 
-                of this distribution list".  Also see "(C) scope of targets" under "2. About Targets".
+                of this distribution list".  
                 
-          - getDistributionList               : get all distribution list attributes
-          - modifyDistributionList            : modify all distribution list attributes
-          - listDistributionList              : see distribution list in GetAllDistributionList/SearchDirectoryResponse
-          
-          - renameDistributionList            : rename distribution list
-          - deleteDistributionList            : delete distribution list
-          
-          - addDistributionListAlias          : add alias to distribution list
-          - removeDistributionListAlias       : remove alias from distribution list
-          
-          - addDistributionListMember         : add member to distribution list
-          - removeDistributionListMember      : remove member from distribution list
+              - Also see "(C) scope of targets" under "2. About Targets".
     
 
 3.5.5 domain
-          - All rights for account/calendar resource
-                When account/calendar resources rights are specified on a domain entry, the ACEs are 
+          see output of: zmprov gar domain
+          
+          Notes: 
+              - All rights for account/calendar resource can also be granted on domain targets.
+                When account/calendar resources rights are granted on a domain entry, the ACEs are 
                 interpreted as "apply to all accounts/calendar resources in this domain"
-          - All rights for distribution list
-                When distribution list rights are specified on a domain entry, the ACEs are interpreted 
-                as "apply to all distribution lists in this domain"
-          Also see "(C) scope of targets" under "2. About Targets".      
                 
-          - getDomain                         : get all domain attributes
-          - modifyDomain                      : modify all domain attributes
-          - listDomain                        : see domain in GetAllDomains/SearchDirectoryResponse
+              - All rights for distribution list can also be granted on domain targets.
+                When distribution list rights are granted on a domain entry, the ACEs are interpreted 
+                as "apply to all distribution lists in this domain"
           
-          - renameDomain                      : rename domain
-          - deleteDomain                      : delete domain
-          
-          - createSubDomain                   : create sub domain
-          
-          - crossMailboxSearch                : run search mail (CMBS) functionality
-           
-          - createAccount                     : create account in the domain
-          - createCalendarResource            : create calendar resource in the domain
-          - createDistributionList            : create distribution list in the domain
-          - createAlias                       : create alias in this domain
-          - deleteAlias                       : delete alias in this domain (do we need this?)
-          
-          - configureExternalGAL              : configure external GAL
-          - configureExternaAuth              : configure external auth
-          - configureZimbraNotebookAccount    : setAttr zimbraNotebookAccount
-          
-          - crossDomainAdmin                  : the "cross domain admin" right
-                                                (see 3.6 The crossDomainAdmin Right)
-    
->>>>> OPEN-ISSUE-1          
-          Should we consider domain hierarchy like we do for DLs? 
-          i.e. if G is allowed to createAccount in company.com, does G automatically have 
-               right to createAccount in support.company.com and sales.company.com?
-               
-          we probably should not.     
-<<<<<
+              - Also see "(C) scope of targets" under "2. About Targets".      
+                
+              - See "3.6 The crossDomainAdmin Right" for the crossDomainAdmin right.
 
 
 3.5.6 global config
-          - getGlobalConfig                  : get all global config attributes
-          - modifyGlobalConfig               : modify all global config attributes
+          see output of: zmprov gar config
 
 
-3.5.7 global grant          
-          - all right for all other targets
+3.5.7 global grant
+          see output of: zmprov gar global
           
-          and
-          - createCos                        : create cos
-          - createTopDomain                  : create top level domain
-          - createServer                     : create server
-          - createZimlet                     : create zimlet
-
+          Notes:
+              - All rights for all other targets can also be granted on the global grant targets.     
+                When any rights are granted on a global grant entry, the ACEs are 
+                interpreted as "apply to all entries" onthe system.
+                e.g. If you grant a createAccount(which is a domain ight) right to adminA on the 
+                     global grant entry, it means adminA can createAccount in all domains on the 
+                     system.
 
 3.5.8 server
-          - getServer                        : get all server attributes
-          - modifyServer                     : modify all server attributes
-          - listServer                       : see server in GetAllServers/SearchDirectoryResponse
-          
-          - deleteServer                     : delete server
-          
-          - deployAdminExtension             : deploy admin extensions
-          - editAdminExtension               : edit admin extensions
-          - removeAdminExtension             : remove admin extensions
-          
-          - viewMailQueue                    : view mail queues
-          - manageMailQueue                  : take actions on mail queues
-          - manageCertificate                : manage certificates
-          - deployZimlets                    : deploy zimlets
+          see output of: zmprov gar server
 
-          - configureMTA                     : configure MTA
-          - configurePOP3                    : configure POP3
-          - configureIMAP                    : configure IMAP
-          - configurePOPProxy                : configure POP3 proxy
-          - configureIMAPProxy               : configure IMAP proxy
-          - configureVolumes                 : configure volumes
-          - configureServiceEnabled          : configure services enabled
+3.5.9 xmpp components
+          see output of: zmprov gar xmppcomponent
 
-
-3.5.9 zimlet
-          - getZimlet                        : get all zimlet attributes
-          - modifyZimlet                     : modify all zimlet attributes
-          - listZimlet                       : see zimlet in GetAllZimlets
-          
-          - deleteZimlet                     : delete zimlet
+3.5.10 zimlet
+          see output of: zmprov gar zimlet
 
 
 
@@ -1114,22 +999,21 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 
 See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
 
-7.1 Granting/Revoking/Checking/Getting Rights on a Target
+7.1 Granting and Revoking Rights on a Target
     
-7.1.1 GrantRightRequest
+    - GrantRightRequest
       Grant right on a target.
 
-7.1.2 RevokeRightRequest
+    - RevokeRightRequest
       Revoke right previously granted on a target.
 
-7.1.3 CheckRightRequest
+
+7.2 Checking Rights and Getting Grants on a Target
+
+    - CheckRightRequest
       Check if a principal has the specified right on target.
     
-7.1.4 GetGrantsRequest
-      Returns all grants on the specified target entry.
-      The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
-      
-7.1.5 GetEffectiveRightsRequest
+    - GetEffectiveRightsRequest
       Returns all *effective* rights the authenticated admin has on the specified target entry.
     
       Effective rights are the rights the admin is actually allowed.  It is the net result of 
@@ -1139,8 +1023,16 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
       The result can help the admin console decide on what tabs to display after a target 
       is selected.  For example, after user1 is selected, if the admin does not have right 
       to setPassword, it should probably hide or gray out the setPassword tab.
+    
+    - GetAllEffectiveRightsRequest
+      Like GetEffectiveRightsRequest, but this call returns effective rights on all targets 
+      onthe system, not just a specific target. 
+    
+    - GetGrantsRequest
+      Returns all grants on the specified target entry.
+      The authenticated admin must have an effective "viewGrants" (TBD) system right on the specified target.
              
-7.1.6 GetCreateObjectAttrsRequest
+    - GetCreateObjectAttrsRequest
       
       Returns attributes, with defaults and constratints if any,  that can be set by the authed admin when an 
       object is created.
@@ -1152,12 +1044,12 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
       The result can help the admin console decide on what tabs/attributes to display for creating objects.
     
 
-7.2 Get/GetAll Right Definition
+7.3 Get/GetAll Right Definition
 
-7.2.1 GetRightRequest
+    - GetRightRequest
       Get definition for a right.
     
-7.2.2 GetAllRights
+    - GetAllRights
       Get all system defined rights
       
 
@@ -1182,121 +1074,23 @@ See ZimbraServer/docs/soap-right.txt for SOAP requests and response.
 
 
 ========================================
-9. zimbraAdminConsoleUIComponents
+9. Admin console
 ========================================
 
-9.1 zimbraAdminConsoleUIComponents is a multi-value attribute on admin accounts and admin groups. It is used to define
-the available UI components for the authed admin in admin console.
+Admin console will only display/enable the UI components that are:
 
-9.2 The following UI components are currently available in the admin console:
+(1) Allowed to the authenticated admin baesd on the effective rights granted to the 
+    admin and/or to an admin group the admin belongs.
+and
+(2) Enabled by zimbraAdminConsoleUIComponents
+    zimbraAdminConsoleUIComponents is a multi-value attribute on account and distributuon list.
+    Admin console will only enable views/tabs that are listed in zimbraAdminConsoleUIComponents.
+    UI components not listed in zimbraAdminConsoleUIComponents will be disabled, even when the 
+    authed admin has enough rights for the tasks.
 
-9.2.1 Overview Panel Items' View
-- accountListView
-- aliasListView
-- DLListView
-- resourceListView
-- COSListView
-- serverListView
-- zimletListView
-- adminZimletListView
-- globalConfigView
-- rightListView (admin ext)
-- globalPermissionView (admin ext)
-- globalServerStatusView
-- globalServerStatisticsView
-- mailQueueView
-- backupsView (admin ext)
-- crossMailboxSearchView (admin ext)
-- certsView (admin ext)
-- saveSearch
 
-9.2.2  Account Item View
-- accountsGeneralTab (always enabled)
-- accountsContactTab
-- accountsMemberOfTab
-- accountsPrefsTab
-- accountsFeaturesTab
-- accountsAliasesTab
-- accountsForwardingTab
-- accountsInteropTab
-- accountsSkinTab
-- accountsZimletTab
-- accountsAdvancedTab
-- accountsPermissionTab (admin ext)
+TODO: document the list of all admin console UI components.
 
-9.2.3 Distribution List Item View
-- dlMembersTab (always enabled)
-- dlNotesOfTab
-- dlMemberOfTab
-- dlAliasesTab
-- dlSharesTab
-- dlPermissionTab (admin ext)
-
-9.2.4 Resource Item View
-- resourcePropertiesTab (always enabled)
-- resourceContactTab
-- resourcePermissionTab (admin ext)
-
-9.2.5 COS Item View
-- cosGeneralTab (always enabled)
-- cosFeatureTab
-- cosPreferenceTab
-- cosThemeTab
-- cosZimletTab
-- cosServerPoolTab
-- cosAdvancedTab
-- cosPermissionTab (admin ext)
-
-9.2.6 Domain Item View
-- domainGeneralTab (always enabled)
-- domainGALTab
-- domainAuthTab
-- domainVirtualHostTab
-- domainWikiTab
-- domainInteropTab
-- domainZimletsTab
-- domainSkinsTab
-- domainAccountLimitsTab (admin ext)
-- domainPermissionTab (admin ext)
-
-9.2.7 Server Item View
-- serverGeneralTab  (always enabled)
-- serverServiceTab
-- serverMTATab
-- serverIMAPTab
-- serverPopTab
-- serverVolumeTab
-- serverHSMTab (admin ext)
-- serverPermissionTab (admin ext)
-
-9.2.8 Zimlet Item View
-- zimletPermissionTab (admin ext)
-
-9.2.9 Global Config Viw
-- configGeneralTab (always enabled)
-- configAttachmentTab
-- configMTATab
-- configIMAPTab
-- configPOPTab
-- configAntiSpamVirusTab
-- configInteropTab
-- configThemesTab
-- configPermissionTab (admin ext)
-- configHSMTab (admin ext)
-- configLicenseTab (admin ext)
-
-9.2.10 Global Server Statistics View
-- globalServerStatsMsgCountTab
-- globalServerStatsMsgVolTab
-- globalServerStatsASAVTab
-
-9.2.11 Individual Server Statistics View
-- perServerStatsMsgCountTab
-- perServerStatsMsgVolTab
-- perServerStatsASAVTab
-- perServerStatsDiskTab
-- perServerSessionTab
-- perServerStatsQuotaTab
 
 ========================================
 10. Backward Compatibility and Migration
@@ -1363,43 +1157,7 @@ the available UI components for the authed admin in admin console.
              - do GetZimlet on any zimlet.
              e.g.
                 zmprov grr global usr domainadmin@test.com domainAdminZimletRights
-
-       (3) enable UIs for the domain admin, the following zimbraAdminConsoleUIComponents
-           should be set for regular domain admin:
-
-             zimbraAdminConsoleUIComponents: accountListView
-             zimbraAdminConsoleUIComponents: aliasListView
-             zimbraAdminConsoleUIComponents: DLListView
-             zimbraAdminConsoleUIComponents: resourceListView
-             zimbraAdminConsoleUIComponents: saveSearch
-             zimbraAdminConsoleUIComponents: accountsContactTab
-             zimbraAdminConsoleUIComponents: accountsMemberOfTab
-             zimbraAdminConsoleUIComponents: accountsAliasesTab
-             zimbraAdminConsoleUIComponents: accountsForwardingTab
-             zimbraAdminConsoleUIComponents: dlMembersTab
-             zimbraAdminConsoleUIComponents: dlAliasesTab
-             zimbraAdminConsoleUIComponents: dlMemberOfTab
-             zimbraAdminConsoleUIComponents: dlNotesOfTab
-             zimbraAdminConsoleUIComponents: resourcePropertiesTab
-             zimbraAdminConsoleUIComponents: resourceContactTab
-
-            Since 5.0, some domain admin has the ability to view the domain information.
-            When either of the following attributes are set:
-
-            zimbraAdminConsoleCatchAllAddressEnabled
-            zimbraAdminConsoleCatchAllAddressEnabled
-            zimbraAdminConsoleSkinEnabled
-            zimbraAdminConsoleDNSCheckEnabled
-            zimbraAdminConsoleLDAPAuthEnabled
-
-            The upgrade script should add the following UIComponents for domain admin:
-            zimbraAdminConsoleUIComponents: domainListView
-            zimbraAdminConsoleUIComponents: domainGeneralTab
-
-            If zimbraAdminConsoleSkinEnabled is TRUE, the following should also be set:
-            zimbraAdminConsoleUIComponents: domainSkinsTab
-
-            
+           
 
 10.3 Reference and Documentations
 
