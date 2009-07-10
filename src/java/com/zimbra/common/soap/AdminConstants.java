@@ -389,6 +389,10 @@ public class AdminConstants {
     
     public static final QName SYNC_GAL_ACCOUNT_REQUEST = QName.get("SyncGalAccountRequest", NAMESPACE);
     public static final QName SYNC_GAL_ACCOUNT_RESPONSE = QName.get("SyncGalAccountResponse", NAMESPACE);
+
+    // memcached
+    public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("ReloadMemcachedClientConfigRequest", NAMESPACE);
+    public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("ReloadMemcachedClientConfigResponse", NAMESPACE);
     
     // DumpSessions
     public static final String E_SESSION = "session";
