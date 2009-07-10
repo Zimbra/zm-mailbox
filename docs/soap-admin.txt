@@ -2370,3 +2370,13 @@ Notes:
 <DeleteGalSyncAccountResponse/>
 
 Remove its zimbraGalAccountId from the domain, then deletes the account.
+
+----------------------------
+ 
+<ReloadMemcachedClientConfigRequest/>
+
+<ReloadMemcachedClientConfigResponse/>
+
+Reloads the memcached client configuration on this server.  Memcached client layer
+is reinitialized accordingly.  Call this command after updating memcached server list,
+for example.

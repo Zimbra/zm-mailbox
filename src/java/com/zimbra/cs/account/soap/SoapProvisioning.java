@@ -2249,7 +2249,12 @@ public class SoapProvisioning extends Provisioning {
         invoke(req);
     }
     
-    
+    @Override
+    public void reloadMemcachedClientConfig() throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST);
+        invoke(req);
+    }
+
     @Override
     public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
             Account ownerAcct, String folderIdOrPath) throws ServiceException {

@@ -1866,6 +1866,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void purgeAccountCalendarCache(String accountId) throws ServiceException {
         // do nothing by default
     }
+
+    public void reloadMemcachedClientConfig() throws ServiceException {
+        // do nothing by default
+    }
     
     public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
             Account ownerAcct, String folderIdOrPath) throws ServiceException {
