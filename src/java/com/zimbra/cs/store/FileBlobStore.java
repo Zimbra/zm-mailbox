@@ -27,58 +27,25 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.znative.IO;
 
 public class FileBlobStore extends StoreManager {
 
-    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
-
-    private UncompressedFileCache<String> mUncompressedFileCache;
-    private FileDescriptorCache mFileDescriptorCache;
-
-    public FileDescriptorCache getFileDescriptorCache() {
-        return mFileDescriptorCache;
-    }
-
     @Override public void startup() throws IOException, ServiceException {
         Volume.reloadVolumes();
         IncomingDirectory.startSweeper();
 
-        // Initialize file uncompressed file cache and file descriptor cache.
-        String uncompressedPath = LC.zimbra_tmp_directory.value() + "/uncompressed";
+        // initialize file uncompressed file cache and file descriptor cache
+        String uncompressedPath = LC.zimbra_tmp_directory.value() + File.separator + "uncompressed";
         FileUtil.ensureDirExists(uncompressedPath);
-        mUncompressedFileCache = new UncompressedFileCache<String>(uncompressedPath);
-        mFileDescriptorCache = new FileDescriptorCache(mUncompressedFileCache);
-
-        loadSettings();
-        mUncompressedFileCache.startup();
-
+        UncompressedFileCache<String> ufcache = new UncompressedFileCache<String>(uncompressedPath).startup();
+        BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufcache).loadSettings());
     }
 
     @Override public void shutdown() {
         IncomingDirectory.stopSweeper();
-    }
-
-    @SuppressWarnings("static-access")
-    public static void loadSettings() throws ServiceException {
-        Server server = Provisioning.getInstance().getLocalServer(); 
-        int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
-        long uncompressedMaxBytes = server.getMailUncompressedCacheMaxBytes();
-        int fileDescriptorCacheSize = server.getMailFileDescriptorCacheSize();
-
-        ZimbraLog.store.info("Loading %s settings: %s=%d, %s=%d, %s=%d.", FileBlobStore.class.getSimpleName(),
-                Provisioning.A_zimbraMailUncompressedCacheMaxFiles, uncompressedMaxFiles,
-                Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes,
-                Provisioning.A_zimbraMailFileDescriptorCacheSize, fileDescriptorCacheSize);
-
-        FileBlobStore store = (FileBlobStore) getInstance();
-        store.mUncompressedFileCache.setMaxBytes(uncompressedMaxBytes);
-        store.mUncompressedFileCache.setMaxFiles(uncompressedMaxFiles);
-        store.mFileDescriptorCache.setMaxSize(fileDescriptorCacheSize);
     }
 
     private Blob getUniqueIncomingBlob() throws IOException, ServiceException {
@@ -96,6 +63,8 @@ public class FileBlobStore extends StoreManager {
         Blob blob = getUniqueIncomingBlob();
         return new VolumeBlobBuilder(blob);
     }
+
+    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
 
     @Override public Blob storeIncoming(InputStream in, int sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {

@@ -23,7 +23,8 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.mailbox.MessageCache;
-import com.zimbra.cs.store.FileBlobStore;
+import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -35,11 +36,12 @@ public class ServerConfig extends AttributeCallback {
     public void postModify(Map context, String attrName, Entry entry,
                            boolean isCreate) {
         try {
-            if (attrName.equals(Provisioning.A_zimbraMailDiskStreamingThreshold) ||
-                attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxBytes) ||
+            if (attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxBytes) ||
                 attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxFiles) ||
                 attrName.equals(Provisioning.A_zimbraMailFileDescriptorCacheSize)) {
-                FileBlobStore.loadSettings();
+                BlobInputStream.getFileDescriptorCache().loadSettings();
+            } else if (attrName.equals(Provisioning.A_zimbraMailDiskStreamingThreshold)) {
+                StorageCallback.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraMessageCacheSize)) {
                 MessageCache.loadSettings();
             } else if (attrName.equals(Provisioning.A_zimbraSmtpHostname)) {

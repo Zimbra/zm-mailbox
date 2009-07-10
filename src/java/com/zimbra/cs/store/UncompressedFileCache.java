@@ -90,14 +90,12 @@ public class UncompressedFileCache<K> {
      * Initializes the cache and deletes any existing files.  Call this method before
      * using the cache.
      */
-    public synchronized void startup()
+    public synchronized UncompressedFileCache<K> startup()
     throws IOException {
-        if (!mCacheDir.exists()) {
-            throw new IOException(String.format("%s does not exist.", mCacheDir));
-        }
-        if (!mCacheDir.isDirectory()) {
-            throw new IOException(String.format("%s is not a directory", mCacheDir));
-        }
+        if (!mCacheDir.exists())
+            throw new IOException("uncompressed file cache folder does not exist: " + mCacheDir);
+        if (!mCacheDir.isDirectory())
+            throw new IOException("uncompressed file cache folder is not a directory: " + mCacheDir);
         
         // Create the file cache with default LinkedHashMap values, but sorted by last access time.
         mKeyToDigest = new LinkedHashMap<K, String>(16, 0.75f, true);
@@ -106,15 +104,17 @@ public class UncompressedFileCache<K> {
         // Clear out the cache on disk.
         for (File file : mCacheDir.listFiles()) {
             sLog.debug("Deleting %s.", file.getPath());
-            if (!file.delete()) {
-                ZimbraLog.store.warn("Unable to delete %s from the uncompressed file cache.", file.getPath());
-            }
+            if (!file.delete())
+                ZimbraLog.store.warn("unable to delete " + file.getPath() + " from uncompressed file cache");
         }
+
+        return this;
     }
 
     private class UncompressedFile {
         String digest;
         File file;
+        UncompressedFile()  { }
     }
     
     /**

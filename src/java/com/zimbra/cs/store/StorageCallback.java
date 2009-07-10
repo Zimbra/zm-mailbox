@@ -25,12 +25,16 @@ public abstract class StorageCallback {
     private static Integer sDiskStreamingThreshold;
 
     public static int getDiskStreamingThreshold() throws ServiceException {
-        if (sDiskStreamingThreshold == null) {
-            Server server = Provisioning.getInstance().getLocalServer(); 
-            sDiskStreamingThreshold = server.getMailDiskStreamingThreshold();
-        }
+        if (sDiskStreamingThreshold == null)
+            loadSettings();
         return sDiskStreamingThreshold;
     }
+
+    public static void loadSettings() throws ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer(); 
+        sDiskStreamingThreshold = server.getMailDiskStreamingThreshold();
+    }
+
 
     public void wrote(Blob blob, byte[] data, int numBytes) throws IOException {
         wrote(blob, data, 0, numBytes);

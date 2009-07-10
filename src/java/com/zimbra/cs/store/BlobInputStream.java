@@ -26,7 +26,7 @@ import com.zimbra.common.util.LogFactory;
 public class BlobInputStream extends InputStream
 implements SharedInputStream {
     
-    private Log sLog = LogFactory.getLog(BlobInputStream.class);
+    private static final Log sLog = LogFactory.getLog(BlobInputStream.class);
 
     /**
      * The file that stores the content of this stream.  Only the parent
@@ -61,9 +61,9 @@ implements SharedInputStream {
      * End index of this stream (exclusive).
      */
     private long mEnd;
-    
+
     private BlobInputStream mRoot;
-    
+
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
      */
@@ -131,9 +131,15 @@ implements SharedInputStream {
         sLog.debug("Created %s: file=%s, length=%d, uncompressed length=%d, start=%d, end=%d, parent=%s, mStart=%d, mEnd=%d.",
             this, file.getPath(), file.length(), dataLength, start, end, parent, mStart, mEnd);
     }
-    
-    private FileDescriptorCache getFileDescriptorCache() {
-        return ((FileBlobStore) StoreManager.getInstance()).getFileDescriptorCache();
+
+    private static FileDescriptorCache mFileDescriptorCache;
+
+    static void setFileDescriptorCache(FileDescriptorCache fdcache) {
+        mFileDescriptorCache = fdcache;
+    }
+
+    public static FileDescriptorCache getFileDescriptorCache() {
+        return mFileDescriptorCache;
     }
     
     /**

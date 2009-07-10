@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 
@@ -45,10 +46,18 @@ public abstract class HttpStoreManager extends StoreManager {
     protected abstract String getGetUrl(Mailbox mbox, String locator);
     protected abstract String getDeleteUrl(Mailbox mbox, String locator);
 
-    @Override public void startup() {
+    @Override public void startup() throws IOException, ServiceException {
+        ZimbraLog.store.info("starting up store " + this.getClass().getName());
+
         FileUtil.mkdirs(new File(mIncoming.getPath()));
         IncomingDirectory.setSweptDirectories(mIncoming);
         IncomingDirectory.startSweeper();
+
+        // initialize file uncompressed file cache and file descriptor cache
+        String uncompressedPath = LC.zimbra_tmp_directory.value() + File.separator + "uncompressed";
+        FileUtil.ensureDirExists(uncompressedPath);
+        UncompressedFileCache<String> ufcache = new UncompressedFileCache<String>(uncompressedPath).startup();
+        BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufcache).loadSettings());
     }
 
     @Override public void shutdown() {

@@ -23,8 +23,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.localconfig.DebugConfig;
 
 /**
@@ -44,19 +47,38 @@ public class FileDescriptorCache
         mUncompressedFileCache = uncompressedCache;
     }
     
+    UncompressedFileCache<String> getUncompressedFileCache() {
+        return mUncompressedFileCache;
+    }
+    
     public synchronized FileDescriptorCache setMaxSize(int maxSize) {
-        if (maxSize < 0) {
-            String msg = String.format("maxSize value of %d is invalid.  Must be at least 0.", maxSize);
-            throw new IllegalArgumentException(msg);
-        }
+        if (maxSize < 0)
+            throw new IllegalArgumentException("maxSize value of " + maxSize + " is invalid (must be at least 0)");
+
         mMaxSize = maxSize;
         pruneIfNecessary();
         return this;
     }
+
+    @SuppressWarnings("static-access")
+    public FileDescriptorCache loadSettings() throws ServiceException {
+        Server server = Provisioning.getInstance().getLocalServer(); 
+        int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
+        long uncompressedMaxBytes = server.getMailUncompressedCacheMaxBytes();
+        int fileDescriptorCacheSize = server.getMailFileDescriptorCacheSize();
     
-    UncompressedFileCache<String> getUncompressedFileCache() {
-        return mUncompressedFileCache;
+        ZimbraLog.store.info("Loading FileDescriptorCache settings: %s=%d, %s=%d, %s=%d.",
+                Provisioning.A_zimbraMailUncompressedCacheMaxFiles, uncompressedMaxFiles,
+                Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes,
+                Provisioning.A_zimbraMailFileDescriptorCacheSize, fileDescriptorCacheSize);
+
+        setMaxSize(fileDescriptorCacheSize);
+        mUncompressedFileCache.setMaxBytes(uncompressedMaxBytes);
+        mUncompressedFileCache.setMaxFiles(uncompressedMaxFiles);
+
+        return this;
     }
+
 
     /**
      * Reads one byte from the specified file.
@@ -104,7 +126,7 @@ public class FileDescriptorCache
                 ZimbraLog.store.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
                 sharedFile = mUncompressedFileCache.get(path, new File(path), !DebugConfig.disableMessageStoreFsync);
             } else {
-                ZimbraLog.store.debug("Opening new file descriptor for %s.", path);
+                ZimbraLog.store.debug("opening new file descriptor for " + path);
                 sharedFile = new SharedFile(file);
             }
             synchronized (this) {
@@ -132,11 +154,11 @@ public class FileDescriptorCache
         SharedFile file = mCache.remove(path); 
         
         if (file != null) {
-            ZimbraLog.store.debug("Closing file descriptor for %s.", path);
+            ZimbraLog.store.debug("closing file descriptor for " + path);
             try {
                 file.close();
             } catch (IOException e) {
-                ZimbraLog.store.warn("Unable to close file descriptor for %s.", path, e);
+                ZimbraLog.store.warn("unable to close file descriptor for " + path, e);
             }
         }
     }
@@ -146,9 +168,9 @@ public class FileDescriptorCache
     }
     
     private synchronized void pruneIfNecessary() {
-        if (mCache.size() <= mMaxSize) {
+        if (mCache.size() <= mMaxSize)
             return;
-        }
+
         Iterator<Map.Entry<String, SharedFile>> iEntries = mCache.entrySet().iterator();
         while (iEntries.hasNext() && mCache.size() > mMaxSize) {
             Map.Entry<String, SharedFile> mapEntry = iEntries.next();
@@ -157,10 +179,10 @@ public class FileDescriptorCache
             iEntries.remove();
             
             try {
-                ZimbraLog.store.debug("Closing file descriptor for %s.", path);
+                ZimbraLog.store.debug("closing file descriptor for " + path);
                 file.close();
             } catch (IOException e) {
-                ZimbraLog.store.warn("Unable to close file descriptor for %s.", path, e);
+                ZimbraLog.store.warn("unable to close file descriptor for " + path, e);
             }
         }
     }

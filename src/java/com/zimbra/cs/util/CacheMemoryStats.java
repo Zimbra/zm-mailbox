@@ -23,6 +23,7 @@ import com.zimbra.cs.instrument.JavaAgent;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
 
@@ -90,7 +91,7 @@ public final class CacheMemoryStats implements RealtimeStatsCallback {
         if (hasJavaAgent) {
             if (blobStore != null) {
                 toRet.put(FD_CACHE_SIZE,
-                        JavaAgent.deeplyInspectObjectSize(blobStore.getFileDescriptorCache()));
+                        JavaAgent.deeplyInspectObjectSize(BlobInputStream.getFileDescriptorCache()));
             }
             toRet.put(MESSAGE_CACHE_SIZE,
                     JavaAgent.deeplyInspectObjectSize(MessageCache.getBackingMap()));
@@ -102,7 +103,7 @@ public final class CacheMemoryStats implements RealtimeStatsCallback {
         } else {
             if (blobStore != null) {
                 toRet.put(FD_CACHE_SIZE,
-                        blobStore.getFileDescriptorCache().size());
+                        BlobInputStream.getFileDescriptorCache().size());
             }
             toRet.put(MESSAGE_CACHE_SIZE,
                     MessageCache.getBackingMap().size());
