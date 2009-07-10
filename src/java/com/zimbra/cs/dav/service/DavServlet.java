@@ -36,7 +36,6 @@ import org.apache.commons.httpclient.HttpState;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -519,10 +518,10 @@ public class DavServlet extends ZimbraServlet {
 		// make sure the target account exists.
 		Account acct = prov.getAccountById(target.getAccountId());
 		if (acct == null)
-			throw new DavException("account not found: "+target.getAccountId(), HttpServletResponse.SC_NOT_FOUND);
+		    return false;
 		Server server = prov.getServer(acct);
 		if (server == null)
-			throw new DavException("server not found for account: "+acct.getName(), HttpServletResponse.SC_NOT_FOUND);
+            return false;
 
 		// get the path to the target mail item
         AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
@@ -533,7 +532,7 @@ public class DavServlet extends ZimbraServlet {
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
         ZFolder f = zmbx.getFolderById("" + target.toString());
         if (f == null)
-			throw new DavException("folder not found: "+target, HttpServletResponse.SC_NOT_FOUND);
+            return false;
         String path = f.getPath();
     	String newPrefix = URLUtil.urlEscape(DAV_PATH + "/" + acct.getName() + f.getPath());
 

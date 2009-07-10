@@ -15,6 +15,7 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -72,7 +73,7 @@ public class RemoteCollection extends Collection {
     
     @Override
     public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
-        throw new DavException("request should be proxied", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return Collections.emptyList();
     }
     
     @Override

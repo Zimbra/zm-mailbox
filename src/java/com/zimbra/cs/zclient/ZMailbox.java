@@ -2345,7 +2345,9 @@ public class ZMailbox implements ToZJSONObject {
         populateFolderCache();
         if (!path.startsWith(ZMailbox.PATH_SEPARATOR))
             path = ZMailbox.PATH_SEPARATOR + path;
-        return getUserRoot().getSubFolderByPath(path.substring(1));
+        if (mUserRoot == null)
+            return null;
+        return mUserRoot.getSubFolderByPath(path.substring(1));
     }
 
     public ZFolder getInbox() throws ServiceException { return getFolderById(ZFolder.ID_INBOX); }
