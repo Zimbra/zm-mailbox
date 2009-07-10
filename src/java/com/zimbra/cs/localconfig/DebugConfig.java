@@ -174,7 +174,7 @@ public class DebugConfig {
         forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
     }
 
-    private static boolean booleanValue(String key, boolean defaultValue) {
+    protected static boolean booleanValue(String key, boolean defaultValue) {
         String val = LC.get(key);
         if (val.length() < 1)
             return defaultValue;

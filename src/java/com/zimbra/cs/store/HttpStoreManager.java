@@ -38,8 +38,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 
 public abstract class HttpStoreManager extends StoreManager {
-    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
-
     private IncomingDirectory mIncoming = new IncomingDirectory(LC.zimbra_store_directory.value() + File.separator + "incoming");
 
     protected abstract String getPostUrl(Mailbox mbox);
@@ -76,7 +74,7 @@ public abstract class HttpStoreManager extends StoreManager {
         GetMethod get = new GetMethod(getGetUrl(mblob.getMailbox(), mblob.getLocator()));
         int statusCode = client.executeMethod(get);
         if (statusCode != HttpStatus.SC_OK)
-            throw new IOException("unexpected return code during blob DELETE: " + get.getStatusText());
+            throw new IOException("unexpected return code during blob GET: " + get.getStatusText());
         return new UserServlet.HttpInputStream(get);
     }
 
@@ -88,6 +86,8 @@ public abstract class HttpStoreManager extends StoreManager {
     throws ServiceException {
         return new HttpMailboxBlob(mbox, msgId, revision, locator);
     }
+
+    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
 
     @Override public Blob storeIncoming(InputStream data, int sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
@@ -101,7 +101,7 @@ public abstract class HttpStoreManager extends StoreManager {
         return builder.finish();
     }
 
-    protected abstract String getStagedLocator(PostMethod post) throws ServiceException;
+    protected abstract String getStagedLocator(PostMethod post) throws ServiceException, IOException;
 
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
