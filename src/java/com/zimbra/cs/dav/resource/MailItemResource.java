@@ -274,11 +274,13 @@ public abstract class MailItemResource extends DavResource {
 					(mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT)) {
 				// change color
 				String colorStr = e.getText();
+				MailItem.Color color = new MailItem.Color(colorStr.substring(0, 7));
 				byte col = (byte) COLOR_LIST.indexOf(colorStr);
-				if (col < 0) col = 0;
+				if (col >= 0)
+				    color.setColor(col);
 				try {
 					Mailbox mbox = getMailbox(ctxt);
-					mbox.setColor(ctxt.getOperationContext(), mId, mType, col);
+					mbox.setColor(ctxt.getOperationContext(), new int[] { mId }, mType, color);
 				} catch (ServiceException se) {
 					ctxt.getResponseProp().addPropError(DavElements.E_CALENDAR_COLOR, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
 				}
@@ -425,29 +427,24 @@ public abstract class MailItemResource extends DavResource {
 		return aces;
 	}
     
-    private static char[] HEX = {
-        '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'          
-    };
-    
-    protected MailItem.Color parseIcalColorProperty(String color) {
-        if (color.length() != 7 || !color.startsWith("#"))
-            return MailItem.DEFAULT_COLOR_RGB;
-        long rgb = 0;
-        return MailItem.DEFAULT_COLOR_RGB;
-    }
-    
     protected ResourceProperty getIcalColorProperty() {
+        /*
+        if (mDeadProps != null) {
+            Element e = mDeadProps.get(DavElements.E_CALENDAR_COLOR);
+            if (e != null)
+                return new ResourceProperty(e);
+        }
+         */
         ResourceProperty color = new ResourceProperty(DavElements.E_CALENDAR_COLOR);
-        StringBuilder buf = new StringBuilder("#");
-        toHex(mColor.getRed(), buf);
-        toHex(mColor.getGreen(), buf);
-        toHex(mColor.getBlue(), buf);
-        buf.append("FF");
+        if (mColor.getRgb() == 0x0)
+            // if no color is set use the default color
+            color.setStringValue(DEFAULT_COLOR);
+        else if (mColor.hasMapping())
+            // if it's a mapped color use iCal's native color
+            color.setStringValue(COLOR_MAP[mColor.getMappedColor()]);
+        else
+            // use rgb value.
+            color.setStringValue(mColor.toString() + "FF");
         return color;
-    }
-    
-    protected void toHex(byte num, StringBuilder buf) {
-        buf.append(HEX[(num >> 8) & 0xf]).append(HEX[num & 0xf]);
     }
 }

@@ -2698,6 +2698,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         public Color(byte c) {
             setColor(c);
         }
+        public Color(String color) {
+        	// string representation of color.  e.g. #00008B, #F0F8FF, etc
+        	setColor(color);
+        }
         public byte getRed() {
             return (byte)((mRgb >> 16) & 0xff);
         }
@@ -2719,6 +2723,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             }
             return ORANGE;
         }
+        public boolean hasMapping() {
+            for (long color : COLORS) {
+                if (mRgb == color)
+                    return true;
+            }
+            return false;
+        }
         public void set(Color that) {
             this.mRgb = that.mRgb;
         }
@@ -2730,18 +2741,33 @@ public abstract class MailItem implements Comparable<MailItem> {
                 color = ORANGE;
             mRgb = COLORS[color];
         }
+        public void setColor(String color) {
+            if (color.length() == 7)
+                color = color.substring(1);
+            if (color.length() == 6) {
+                mRgb = 
+                    Integer.parseInt(color.substring(0, 2), 16) << 16 |
+                    Integer.parseInt(color.substring(2, 4), 16) << 8 |
+                    Integer.parseInt(color.substring(4), 16);
+            }
+        }
         long toMetadata() {
             return (mRgb | RGB_INDICATOR);
         }
+        
         private long mRgb;
         
-        public static long toRgb(byte c) {
-            if (c > ORANGE || c < 0)
-                return COLORS[ORANGE];
-            return COLORS[c];
+        public boolean equals(Object that) {
+        	if (that instanceof Color)
+        		return this.mRgb == ((Color)that).mRgb;
+        	return false;
         }
-        public boolean equals(Color that) {
-            return this.mRgb == that.mRgb;
+        public String toString() {
+            String rgb = Long.toHexString(mRgb);
+            int padding = 6 - rgb.length();
+            for (int i = 0; i < padding; i++)
+                rgb = "0" + rgb;
+            return "#" + rgb;
         }
     }
 
