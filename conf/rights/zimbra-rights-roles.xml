@@ -24,5 +24,16 @@
   </rights>
 </right>
       
-
+<right type="combo" name="mailQueueRights">
+  <desc>rights for managing Mail Queue in admin console</desc>
+  <rights>
+    <r n="manageMailQueue"/>
+    <r n="listServer"/>
+    <r n="get.server.description"/>
+    <r n="get.server.zimbraServiceEnabled"/>
+    <r n="get.server.zimbraServiceInstalled"/>
+    <r n="get.server.zimbraServiceHostname"/>
+    <r n="get.server.zimbraId"/>
+  </rights>
+</right>
 </rights>
