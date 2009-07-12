@@ -27,6 +27,7 @@ public class TraceInputStream extends InputStream {
     private String prefix = PREFIX;
     private boolean enabled = true;
     private boolean eol = true;
+    private boolean closed;
 
     private static final String PREFIX = "S: ";
     
@@ -50,18 +51,16 @@ public class TraceInputStream extends InputStream {
     public boolean isEnabled() {
         return enabled;
     }
-    
+
     public boolean suspendTrace(String msg) {
-        if (enabled) {
-            if (msg != null) {
-                if (eol) traceOut.print(prefix);
-                traceOut.print(msg);
-                eol = msg.endsWith("\n");
-            }
-            enabled = false;
-            return true;
+        if (closed || !enabled) return false;
+        if (msg != null) {
+            if (eol) traceOut.print(prefix);
+            traceOut.print(msg);
+            eol = msg.endsWith("\n");
         }
-        return false;
+        enabled = false;
+        return true;
     }
 
     public void resumeTrace() {
@@ -70,6 +69,7 @@ public class TraceInputStream extends InputStream {
     
     @Override
     public int read() throws IOException {
+        checkClosed();
         int b = in.read();
         if (b != -1 && enabled) {
             if (eol) traceOut.print(prefix);
@@ -81,6 +81,7 @@ public class TraceInputStream extends InputStream {
 
     @Override
     public int read(byte[] buf, int off, int len) throws IOException {
+        checkClosed();
         if (!enabled) {
             return in.read(buf, off, len);
         }
@@ -100,10 +101,11 @@ public class TraceInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        if (traceOut != null) {
-            traceOut.close();
+        if (!closed) {
+            traceOut.flush();
+            in.close();
+            closed = true;
         }
-        in.close();
     }
     
     private void printByte(byte b) {
@@ -115,6 +117,12 @@ public class TraceInputStream extends InputStream {
             break;
         default:
             traceOut.print(Ascii.pp(b));
+        }
+    }
+    
+    private void checkClosed() throws IOException {
+        if (closed) {
+            throw new IOException("Stream is closed");
         }
     }
 }

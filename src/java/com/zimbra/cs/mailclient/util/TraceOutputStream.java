@@ -27,6 +27,7 @@ public class TraceOutputStream extends OutputStream {
     private String prefix = PREFIX;
     private boolean enabled = true;
     private boolean eol = true;
+    private boolean closed;
 
     private static final String PREFIX = "C: ";
     
@@ -52,7 +53,7 @@ public class TraceOutputStream extends OutputStream {
     }
     
     public boolean suspendTrace(String msg) {
-        if (!enabled) return false;
+        if (closed || !enabled) return false;
         if (msg != null) {
             if (eol) traceOut.print(prefix);
             traceOut.print(msg);
@@ -68,6 +69,7 @@ public class TraceOutputStream extends OutputStream {
     
     @Override
     public void write(int b) throws IOException {
+        checkClosed();
         out.write(b);
         if (enabled) {
             if (eol) traceOut.print(prefix);
@@ -78,6 +80,7 @@ public class TraceOutputStream extends OutputStream {
 
     @Override
     public void write(byte[] buf, int off, int len) throws IOException {
+        checkClosed();
         if (enabled) {
             while (--len >= 0) write(buf[off++]);
         } else {
@@ -87,6 +90,7 @@ public class TraceOutputStream extends OutputStream {
 
     @Override
     public void flush() throws IOException {
+        checkClosed();
         out.flush();
         if (enabled) {
             traceOut.flush();
@@ -95,10 +99,11 @@ public class TraceOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        if (traceOut != null) {
-            traceOut.close();
+        if (!closed) {
+            traceOut.flush();
+            out.close();
+            closed = true;
         }
-        out.close();
     }
     
     private void printByte(byte b) {
@@ -110,6 +115,12 @@ public class TraceOutputStream extends OutputStream {
             break;
         default:
             traceOut.print(Ascii.pp(b));
+        }
+    }
+
+    private void checkClosed() throws IOException {
+        if (closed) {
+            throw new IOException("Stream is closed");
         }
     }
 }
