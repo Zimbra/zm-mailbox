@@ -110,22 +110,9 @@ public class RemoteFolder {
         ResponseText rt = req.sendCheckStatus().getResponseText();
         if (rt.getCCode() == CAtom.COPYUID) {
             CopyResult cr = (CopyResult) rt.getData();
-            if (cr != null) {
-                // Bug 36373: If Yahoo COPYUID result is 0 then assume that
-                // the message no longer exists.
-                if ("0".equals(cr.getFromUids()) && ImapUtil.isYahoo(connection)) {
-                    return null;
-                }
-                if (seq.equals(cr.getFromUids())) {
-                    // Validate destination UID and return result
-                    try {
-                        if (Long.parseLong(cr.getToUids()) > 0) {
-                            return cr;
-                        }
-                    } catch (Exception e) {
-                    }
-                }
-                throw req.failed("Invalid COPYUID result");
+            // Bug 36373: If COPYUID result 0 then assume that message no longer exists.
+            if (cr != null && cr.getToUids()[0] != 0) {
+                return cr;
             }
         }
         return null; // Message not found

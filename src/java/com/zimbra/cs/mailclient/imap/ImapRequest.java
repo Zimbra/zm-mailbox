@@ -50,16 +50,16 @@ public class ImapRequest {
         }
     }
 
-    public void addParam(Object data) {
-        if (data == null) {
+    public void addParam(Object param) {
+        if (param == null) {
             throw new NullPointerException();
         }
         if (params == null) {
             params = new ArrayList<Object>();
         }
-        params.add(data);
+        params.add(param);
     }
-
+    
     public void setResponseHandler(ResponseHandler handler) {
         this.responseHandler = handler;
     }
@@ -174,6 +174,8 @@ public class ImapRequest {
             out.write('(');
             writeList(out, (List) data);
             out.write(')');
+        } else if (data instanceof AppendMessage) {
+            writeList(out, ((AppendMessage) data).getData());
         } else {
             writeData(out, data.toString());
         }

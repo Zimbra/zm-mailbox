@@ -15,6 +15,11 @@
 
 package com.zimbra.qa.unittest;
 
+import org.junit.*;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
+import static org.junit.Assert.*;
+
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
@@ -31,14 +36,15 @@ import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
+import com.zimbra.cs.mailclient.imap.ImapUtil;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailConfig;
+import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.datasource.ImapAppender;
-import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.io.File;
@@ -57,7 +63,7 @@ import org.apache.log4j.Level;
 import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
 
-public class TestImapClient extends TestCase {
+public class TestImapClient {
     private ImapConfig config;
     private ImapConnection connection;
 
@@ -84,7 +90,8 @@ public class TestImapClient extends TestCase {
         Logger.getRootLogger().setLevel(Level.INFO);
         LOG.setLevel(Level.DEBUG);
     }
-    
+
+    @After
     public void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
@@ -93,21 +100,25 @@ public class TestImapClient extends TestCase {
         connection = null;
     }
 
+    @Test
     public void testLogin() throws Exception {
         connect();
         connection.login(PASS);
     }
 
+    @Test
     public void testSSLLogin() throws Exception {
         connect(MailConfig.Security.SSL);
         connection.login(PASS);
     }
 
+    @Test
     public void testStartTls() throws Exception {
         connect(MailConfig.Security.TLS);
         connection.login(PASS);
     }
 
+    @Test
     public void testPlainAuth() throws Exception {
         try {
         connect();
@@ -117,6 +128,7 @@ public class TestImapClient extends TestCase {
         }
     }
 
+    @Test
     public void testBadAuth() throws Exception {
         connect();
         try {
@@ -127,6 +139,7 @@ public class TestImapClient extends TestCase {
         throw new Exception("Expected auth failure");
     }
 
+    @Test
     public void testSelect() throws Exception {
         login();
         Mailbox mb = connection.getMailbox();
@@ -136,6 +149,7 @@ public class TestImapClient extends TestCase {
         assertTrue(mb.getUidNext() > 0);
     }
 
+    @Test
     public void testList() throws Exception {
         login();
         List<ListData> lds = connection.list("", "*");
@@ -146,6 +160,7 @@ public class TestImapClient extends TestCase {
         }
     }
 
+    @Test
     public void testAppend() throws Exception {
         login();
         Mailbox mb = connection.select("INBOX");
@@ -167,6 +182,7 @@ public class TestImapClient extends TestCase {
         assertEquals(1, parts.length);
     }
 
+    @Test
     public void testDelete() throws Exception {
         login();
         Mailbox mb = connection.select("INBOX");
@@ -184,6 +200,7 @@ public class TestImapClient extends TestCase {
         assertEquals(exists, mb.getExists());
     }
 
+    @Test
     public void testFetch() throws Exception {
         connect();
         login();
@@ -224,6 +241,7 @@ public class TestImapClient extends TestCase {
         assertEquals(0, count.longValue());
     }
 
+    @Test
     public void testID() throws Exception {
         IDInfo id = new IDInfo();
         id.setName("foo");
@@ -237,6 +255,7 @@ public class TestImapClient extends TestCase {
         assertEquals(id1, id2);
     }
 
+    @Test
     public void testYahoo() throws Exception {
         ImapConfig config = new ImapConfig();
         config.setDebug(true);
@@ -254,6 +273,7 @@ public class TestImapClient extends TestCase {
         createTestMailbox("Large", 10000);
     }
 
+    @Test
     public void testGMailAppend() throws Exception {
         ImapConfig config = new ImapConfig();
         config.setDebug(true);
@@ -279,6 +299,26 @@ public class TestImapClient extends TestCase {
         connection.close();
     }
 
+    @Test
+    public void testParseUidSet() {
+        long[] seq = new long[] { 1, 2, 3, 4, 5 };
+        assertArrayEquals(seq, ImapUtil.parseUidSet("1,2,3,4,5"));
+        assertArrayEquals(seq, ImapUtil.parseUidSet("1,2:4,5"));
+        assertArrayEquals(seq, ImapUtil.parseUidSet("4:1,5"));
+        try {
+            ImapUtil.parseUidSet("4::1,4");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            ImapUtil.parseUidSet("");
+            fail();
+        } catch (IllegalArgumentException e) {}
+        try {
+            ImapUtil.parseUidSet("1,,2");
+            fail();
+        } catch (IllegalArgumentException e) {}
+    }
+    
     private byte[] getBytes(MimeMessage mm) throws MessagingException, IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         mm.writeTo(baos);
@@ -436,7 +476,15 @@ public class TestImapClient extends TestCase {
         return config;
     }
 
-    public static void main(String[] args) throws Exception {
-        new TestImapClient().testFetch();
+    public static void main(String... args) throws Exception {
+        JUnitCore junit = new JUnitCore();
+        if (args.length > 0) {
+            for (String test : args) {
+                String method = String.format("test%C%s", test.charAt(0), test.substring(1));
+                junit.run(Request.method(TestImap.class, method));
+            }
+        } else {
+            junit.run(TestImap.class);
+        }
     }
 }

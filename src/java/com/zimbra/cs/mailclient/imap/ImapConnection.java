@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
@@ -210,10 +212,19 @@ public final class ImapConnection extends MailConnection {
 
     public AppendResult append(String mbox, Flags flags, Date date, Literal data)
         throws IOException {
+        return append(mbox, new AppendMessage(flags, date, data));
+    }
+
+    public AppendResult append(String mbox, AppendMessage... msgs) throws IOException {
+        return append(mbox, Arrays.asList(msgs));
+    }
+    
+    public AppendResult append(String mbox, Collection<AppendMessage> msgs)
+        throws IOException {
         ImapRequest req = newRequest(CAtom.APPEND, new MailboxName(mbox));
-        if (flags != null) req.addParam(flags);
-        if (date != null) req.addParam(date);
-        req.addParam(data);
+        for (AppendMessage msg : msgs) {
+            req.addParam(msg);
+        }
         ImapResponse res = req.sendCheckStatus();
         ResponseText rt = res.getResponseText();
         return rt.getCCode() == CAtom.APPENDUID ? (AppendResult) rt.getData() : null;

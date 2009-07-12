@@ -511,8 +511,7 @@ class ImapFolderSync {
             localFolder.getId(), localPath, remotePath, uidValidity);
     }                                                        
 
-    private void appendMsgs(List<Integer> itemIds)
-        throws ServiceException, IOException {
+    private void appendMsgs(List<Integer> itemIds) throws ServiceException, IOException {
         remoteFolder.info("Appending %d message(s) to remote IMAP folder", itemIds.size());
         ImapAppender appender = new ImapAppender(connection, remoteFolder.getPath());
         for (int id : itemIds) {
@@ -972,7 +971,7 @@ class ImapFolderSync {
         }
         // Delete original message tracker and create new one
         msgTracker.delete();
-        long uid = Long.parseLong(cr.getToUids());
+        long uid = cr.getToUids()[0];
         msgTracker = new ImapMessage(ds, fid, msg.getId(), msgTracker.getFlags(), uid);
         msgTracker.add();
         // This bit of ugliness is to make sure we update target folder sync state
