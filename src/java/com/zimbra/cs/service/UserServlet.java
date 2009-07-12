@@ -1270,6 +1270,11 @@ public class UserServlet extends ZimbraServlet {
         return getRemoteResource(authToken, url).getSecond();
     }
 
+    public static HttpInputStream getRemoteContentAsStream(AuthToken authToken, Account target, String folder, Map<String,String> params) throws ServiceException, IOException {
+        String url = getRemoteUrl(target, folder, params);
+        return getRemoteResourceAsStream(authToken.toZAuthToken(), url, null, 0, null, null).getSecond();
+    }
+
     private static String getRemoteUrl(Account target, String folder, Map<String, String> params) throws ServiceException {
         if (folder == null) {
             folder = "";

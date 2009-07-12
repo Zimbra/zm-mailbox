@@ -99,7 +99,7 @@ import java.util.regex.Pattern;
 abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
-    enum ImapExtension { CONDSTORE, QRESYNC };
+    enum ImapExtension { CONDSTORE, QRESYNC }
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 

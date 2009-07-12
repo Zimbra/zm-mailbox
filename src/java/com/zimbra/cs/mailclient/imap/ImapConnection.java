@@ -528,7 +528,7 @@ public final class ImapConnection extends MailConnection {
 
     // Exception thrown if we get an unexpected response to literal data
     private static class LiteralException extends IOException {
-        ImapResponse res;
+        final ImapResponse res;
         LiteralException(ImapResponse res) {
             this.res = res;
         }

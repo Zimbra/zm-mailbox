@@ -56,11 +56,10 @@ public class TcpImapRequest extends ImapRequest {
 
         if (mParts.size() == 1 && !isMaxRequestSizeExceeded()) {
             // check for "LOGIN" command and elide if necessary
-            int space = line.indexOf(' ') + 1;
-            if (space > 1 && space < line.length() - 7)
-                mUnlogged = line.substring(space, space + 6).equalsIgnoreCase("LOGIN ");
-            if (mUnlogged)
-                logline = line.substring(0, space + 6) + "...";
+            mUnlogged = "LOGIN".equalsIgnoreCase(getCommand(line));
+            if (mUnlogged) {
+                logline = line.substring(0, line.indexOf(' ') + 7) + "...";
+            }
         }
         if (ZimbraLog.imap.isDebugEnabled())
             ZimbraLog.imap.debug("C: " + logline);
@@ -69,10 +68,12 @@ public class TcpImapRequest extends ImapRequest {
         if (line.endsWith("+}") && extensionEnabled("LITERAL+")) {
             int openBrace = line.lastIndexOf('{', line.length() - 3);
             if (openBrace >= 0) {
-                long size = -1;
+                long size;
                 try {
                     size = Long.parseLong(line.substring(openBrace + 1, line.length() - 2));
-                } catch (NumberFormatException nfe) { }
+                } catch (NumberFormatException nfe) {
+                    size = -1;
+                }
                 if (size >= 0) {
                     incrementSize(size);
                     mLiteral = size;
@@ -87,6 +88,17 @@ public class TcpImapRequest extends ImapRequest {
         }
     }
 
+    private String getCommand(String requestLine) {
+        int i = requestLine.indexOf(' ') + 1;
+        if (i > 0) {
+            int j = requestLine.indexOf(' ', i);
+            if (j > 0) {
+                return requestLine.substring(i, j);
+            }
+        }
+        return null;
+    }
+    
     private void continueLiteral() throws IOException, ImapParseException {
         if (isMaxRequestSizeExceeded()) {
             long skipped = mStream.skip(mLiteral);
@@ -111,7 +123,7 @@ public class TcpImapRequest extends ImapRequest {
             throw new ImapContinuationException(false);
         mLiteral = -1;
     }
-    
+
     private byte[] getCurrentBuffer() throws ImapParseException {
         Object part = mParts.get(mIndex);
         if (!(part instanceof byte[]))
