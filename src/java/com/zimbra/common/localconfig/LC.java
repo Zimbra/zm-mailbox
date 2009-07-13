@@ -159,6 +159,7 @@ public class LC {
     public static final KnownKey stats_img_folder;
     
     public static final KnownKey soap_response_buffer_size;
+    public static final KnownKey soap_response_chunked_transfer_encoding_disabled;
 
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_port;
@@ -704,8 +705,11 @@ public class LC {
 
         soap_response_buffer_size = new KnownKey("soap_response_buffer_size");
         soap_response_buffer_size.setDefault("");
-        soap_response_buffer_size.setDoc("the size of the content buffer for sending http chunked SOAP responses." + 
-                                         "if not set, use jetty default; if set to 0, it means disable chunking.");
+        soap_response_buffer_size.setDoc("the size of the content buffer for sending SOAP http responses." + 
+                                         "if not set, use jetty default.");
+        
+        soap_response_chunked_transfer_encoding_disabled = new KnownKey("soap_response_chunked_transfer_encoding_disabled");
+        soap_response_chunked_transfer_encoding_disabled.setDefault("false");
         
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
