@@ -20,20 +20,38 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class HttpMailboxBlob extends MailboxBlob {
-
     protected HttpMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
         super(mbox, itemId, revision, locator);
     }
 
     @Override public Blob getLocalBlob() throws IOException {
         StoreManager sm = StoreManager.getInstance();
-        try {
-            Blob blob = sm.storeIncoming(sm.getContent(this), mSize == null ? -1 : mSize.intValue(), null);
-            setDigest(blob.getDigest());
-            setSize(blob.getRawSize());
+
+        LocalBlobCache blobcache = ((HttpStoreManager) sm).getBlobCache();
+        Blob blob = blobcache.get(this);
+        if (blob != null)
             return blob;
+
+        try {
+            blob = sm.storeIncoming(sm.getContent(this), mSize == null ? -1 : mSize.intValue(), null);
+            setSize(blob.getRawSize());
+            if (mDigest != null)
+                setDigest(blob.getDigest());
+            return blobcache.cache(this, blob);
         } catch (ServiceException e) {
             throw new IOException("fetching local blob: " + e);
         }
+    }
+
+    @Override public int hashCode() {
+        return getLocator().hashCode();
+    }
+
+    @Override public boolean equals(Object other) {
+        if (this == other)
+            return true;
+        if (!(other instanceof HttpMailboxBlob))
+            return false;
+        return getLocator().equals(((HttpMailboxBlob) other).getLocator());
     }
 }

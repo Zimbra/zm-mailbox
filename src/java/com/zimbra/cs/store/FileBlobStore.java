@@ -283,7 +283,7 @@ public class FileBlobStore extends StoreManager {
     @Override public InputStream getContent(Blob blob) throws IOException {
         if (blob == null)
             return null;
-        return new BlobInputStream(blob.getFile());
+        return new BlobInputStream(blob);
     }
 
     @Override public boolean deleteStore(Mailbox mbox)

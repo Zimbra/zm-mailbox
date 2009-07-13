@@ -38,7 +38,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 
 public abstract class HttpStoreManager extends StoreManager {
-    private IncomingDirectory mIncoming = new IncomingDirectory(LC.zimbra_store_directory.value() + File.separator + "incoming");
+    private final IncomingDirectory mIncoming = new IncomingDirectory(LC.zimbra_store_directory.value() + File.separator + "incoming");
+    private final LocalBlobCache mLocalCache = new LocalBlobCache(LC.zimbra_tmp_directory.value() + File.separator + "blobs");
 
     protected abstract String getPostUrl(Mailbox mbox);
     protected abstract String getGetUrl(Mailbox mbox, String locator);
@@ -47,6 +48,7 @@ public abstract class HttpStoreManager extends StoreManager {
     @Override public void startup() throws IOException, ServiceException {
         ZimbraLog.store.info("starting up store " + this.getClass().getName());
 
+        // set up sweeping for the incoming blob directory
         FileUtil.mkdirs(new File(mIncoming.getPath()));
         IncomingDirectory.setSweptDirectories(mIncoming);
         IncomingDirectory.startSweeper();
@@ -56,10 +58,17 @@ public abstract class HttpStoreManager extends StoreManager {
         FileUtil.ensureDirExists(uncompressedPath);
         UncompressedFileCache<String> ufcache = new UncompressedFileCache<String>(uncompressedPath).startup();
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufcache).loadSettings());
+
+        // create a local cache for downloading remote blobs
+        mLocalCache.startup();
     }
 
     @Override public void shutdown() {
         IncomingDirectory.stopSweeper();
+    }
+
+    LocalBlobCache getBlobCache() {
+        return mLocalCache;
     }
 
     @Override public BlobBuilder getBlobBuilder() throws IOException, ServiceException {
@@ -70,6 +79,11 @@ public abstract class HttpStoreManager extends StoreManager {
         if (mblob == null)
             return null;
 
+        // check the local cache before doing a GET
+        Blob blob = mLocalCache.get(mblob);
+        if (blob != null)
+            return getContent(blob);
+
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getGetUrl(mblob.getMailbox(), mblob.getLocator()));
         int statusCode = client.executeMethod(get);
@@ -79,7 +93,7 @@ public abstract class HttpStoreManager extends StoreManager {
     }
 
     @Override public InputStream getContent(Blob blob) throws IOException {
-        return new FileInputStream(blob.getFile());
+        return new BlobInputStream(blob);
     }
 
     @Override public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
@@ -101,7 +115,7 @@ public abstract class HttpStoreManager extends StoreManager {
         return builder.finish();
     }
 
-    protected abstract String getStagedLocator(PostMethod post) throws ServiceException, IOException;
+    protected abstract StagedBlob getStagedBlob(PostMethod post, Blob local) throws ServiceException, IOException;
 
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
@@ -113,8 +127,7 @@ public abstract class HttpStoreManager extends StoreManager {
             int statusCode = client.executeMethod(post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
-            String locator = getStagedLocator(post);
-            return new HttpStagedBlob(blob, locator);
+            return getStagedBlob(post, blob);
         } finally {
             ByteUtil.closeStream(is);
             post.releaseConnection();

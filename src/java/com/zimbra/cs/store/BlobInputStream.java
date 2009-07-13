@@ -65,6 +65,14 @@ implements SharedInputStream {
     private BlobInputStream mRoot;
 
     /**
+     * Constructs a <tt>BlobInputStream</tt> that reads an entire blob.
+     */
+    public BlobInputStream(Blob blob)
+    throws IOException {
+        this(blob.getFile(), null, null, null);
+    }
+
+    /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
      */
     public BlobInputStream(File file)

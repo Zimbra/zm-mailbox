@@ -34,6 +34,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
@@ -41,43 +42,38 @@ import com.zimbra.cs.util.JMSession;
 public class MessageCache {
 
     private static final Log sLog = LogFactory.getLog(MessageCache.class);
-    
+
     private static final class CacheNode {
         CacheNode()  { }
         MimeMessage message;
         MimeMessage expanded;
     }
 
+    /** Cache mapping message digest to the corresponding message structure. */
     private static Map<String, CacheNode> sCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
-    
-    /**
-     * statistics-related method, should not be used for anything other than stats collection
-     */
-    public static Map<String,CacheNode> getBackingMap() {
-        return Collections.unmodifiableMap(sCache);
-    }
+    /** Maximum number of items in {@link #sCache}. */
     private static int sMaxCacheSize;
-    static {
-        try {
-            loadSettings();
-        } catch (ServiceException e) {
-            throw new RuntimeException(e);
+    
+        static {
+            try {
+                loadSettings();
+            } catch (ServiceException e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
-    
-    public static void loadSettings()
-    throws ServiceException {
+
+    public static void loadSettings() throws ServiceException {
         sMaxCacheSize = Provisioning.getInstance().getLocalServer().getMessageCacheSize();
-        ZimbraLog.cache.info("Setting message cache size to %d.", sMaxCacheSize);
+        ZimbraLog.cache.info("setting message cache size to " + sMaxCacheSize);
     }
-    
+
     /** Returns the number of messages in the cache. */
     public static int getSize() {
         synchronized (sCache) {
             return sCache.size();
         }
     }
-    
+
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
@@ -88,7 +84,7 @@ public class MessageCache {
             purge(item.getDigest());
         }
     }
-    
+
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
@@ -104,7 +100,7 @@ public class MessageCache {
             purge(digest);
         }
     }
-    
+
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
@@ -199,12 +195,21 @@ public class MessageCache {
             return cnode.message;
         }
     }
-    
+
+    /** For remote stores, we allow JavaMail to stream message content to
+     *  a memory buffer when the messages are sufficiently small.  (For
+     *  local stores, all cached messages are backed by disk.) */
+    private static final int MESSAGE_CACHE_DISK_STREAMING_THRESHOLD = 4096;
+
     static InputStream fetchFromStore(MailItem item) throws ServiceException, IOException {
-        MailboxBlob msgBlob = item.getBlob();
-        if (msgBlob == null)
+        MailboxBlob mblob = item.getBlob();
+        if (mblob == null)
             throw ServiceException.FAILURE("missing blob for id: " + item.getId() + ", change: " + item.getModifiedSequence(), null);
-        return StoreManager.getInstance().getContent(msgBlob);
+
+        if (item.getSize() < MESSAGE_CACHE_DISK_STREAMING_THRESHOLD)
+            return StoreManager.getInstance().getContent(mblob);
+        else
+            return new BlobInputStream(mblob.getLocalBlob());
     }
 
     /**
@@ -236,5 +241,11 @@ public class MessageCache {
                 }
             }
         }
+    }
+
+    /** Statistics-related method, should not be used for anything other
+     *  than stats collection. */
+    public static Map<String,CacheNode> getBackingMap() {
+        return Collections.unmodifiableMap(sCache);
     }
 }

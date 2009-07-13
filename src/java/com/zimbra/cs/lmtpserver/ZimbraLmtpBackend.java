@@ -487,20 +487,19 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             // If this message is being streamed from disk, cache it
             ParsedMessage mimeSource = pmAttachIndex;
-            if (mimeSource == null) {
+            if (mimeSource == null)
                 mimeSource = pmNoAttachIndex;
-            }
-            MailboxBlob mboxBlob = sharedDeliveryCtxt.getMailboxBlob();
-            if (mboxBlob != null && mimeSource != null && mimeSource.isStreamedFromDisk()) {
+            MailboxBlob mblob = sharedDeliveryCtxt.getMailboxBlob();
+            if (mblob != null && mimeSource != null && mimeSource.isStreamedFromDisk()) {
                 try {
                     // Update the MimeMessage with the blob that's stored inside the mailbox,
                     // since the incoming blob will be deleted.
                     BlobInputStream bis = mimeSource.getBlobInputStream();
-                    Blob mailboxBlob = mboxBlob.getLocalBlob();
-                    bis.fileMoved(mailboxBlob.getFile());
-                    MessageCache.cacheMessage(blob.getDigest(), mimeSource.getOriginalMessage(), mimeSource.getMimeMessage());
+                    Blob storedBlob = mblob.getLocalBlob();
+                    bis.fileMoved(storedBlob.getFile());
+                    MessageCache.cacheMessage(mblob.getDigest(), mimeSource.getOriginalMessage(), mimeSource.getMimeMessage());
                 } catch (IOException e) {
-                    ZimbraLog.lmtp.warn("Unable to cache message for %s", mboxBlob.getLocalBlob().getFile().getPath(), e);
+                    ZimbraLog.lmtp.warn("Unable to cache message for " + mblob, e);
                 }
             }
         } finally {
