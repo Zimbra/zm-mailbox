@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -43,7 +42,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -76,8 +74,134 @@ public class MailSender {
 
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
+
+    private Boolean mSaveToSent;
+    private Collection<InternetAddress> mSaveContacts;
+    private Collection<Upload> mUploads;
+    private ItemId mOriginalMessageId;
+    private String mReplyType;
+    private Identity mIdentity;
+    private boolean mIgnoreFailedAddresses = false;
+    private boolean mReplyToSender = false;
+    private boolean mSkipSendAsCheck = false;
+    private List<String> mSmtpHosts = new ArrayList<String>();
+    private Session mSession;
+    private boolean mTrackBadHosts = true;
     
     public MailSender()  { }
+    
+    /**
+     * Specifies the contacts to save in the <tt>Emailed Contacts</tt> folder.
+     * @param savedContacts contacts or <tt>null</tt> 
+     */
+    public MailSender setSaveContacts(Collection<InternetAddress> saveContacts) {
+        mSaveContacts = saveContacts;
+        return this;
+    }
+    
+    /**
+     * Specifies the uploads to attach to the outgoing message.
+     * @param uploads the uploads or <tt>null</tt>
+     */
+    public MailSender setUploads(Collection<Upload> uploads) {
+        mUploads = uploads;
+        return this;
+    }
+
+    /**
+     * Specifies the original message id when replying or forwarding.
+     */
+    public MailSender setOriginalMessageId(ItemId id) {
+        mOriginalMessageId = id;
+        return this;
+    }
+
+    /**
+     * Specifies the reply type: {@link #MSGTYPE_REPLY}, {@link #MSGTYPE_FORWARD}
+     * or <tt>null</tt> if this is not a reply.  If the reply type is specified,
+     * we set the {@link Flag#ID_FLAG_FORWARDED} or {@link Flag#ID_FLAG_REPLIED}
+     * flag on the original message.
+     */
+    public MailSender setReplyType(String replyType) {
+        mReplyType = replyType;
+        return this;
+    }
+
+    /**
+     * Specifies the identity to use, or <tt>null</tt> for the default identity.
+     */
+    public MailSender setIdentity(Identity identity) {
+        mIdentity = identity;
+        return this;
+    }
+
+    /**
+     * @param ignore if <tt>true</tt>, don't throw a {@link SendFailedException}
+     * when a message send fails.  The default is <tt>false</tt>.
+     */
+    public MailSender setIgnoreFailedAddresses(boolean ignore) {
+        mIgnoreFailedAddresses = ignore;
+        return this;
+    }
+    
+    /**
+     * @param replyToSender if <tt>true</tt>, set the <tt>Reply-To<tt>
+     * header to the same value as the <tt>Sender</tt> header.  The
+     * default is <tt>false</tt>.
+     */
+    public MailSender setReplyToSender(boolean replyToSender) {
+        mReplyToSender = replyToSender;
+        return this;
+    }
+    
+    /**
+     * @param skip if <tt>true</tt>, don't confirm that the user can send
+     * the message from the specified address.  The default is <tt>false</tt>.
+     */
+    public MailSender setSkipSendAsCheck(boolean skip) {
+        mSkipSendAsCheck = skip;
+        return this;
+    }
+
+    /**
+     * @param saveToSent if <tt>true</tt>, save the message to the user's
+     * <tt>Sent</tt> folder after sending.  The default is the account's
+     * <tt>zimbraPrefSaveToSent</tt> attribute value.
+     */
+    public MailSender setSaveToSent(boolean saveToSent) {
+        mSaveToSent = saveToSent;
+        return this;
+    }
+
+    /**
+     * Sets the SMTP hosts that will be tried if the connection to the default
+     * host in the JavaMail session fails.  Hosts will be tried in the order
+     * specified by the <tt>Collection</tt>.
+     */
+    public MailSender setSmtpHosts(Collection<String> hosts) {
+        mSmtpHosts.clear();
+        mSmtpHosts.addAll(hosts);
+        return this;
+    }
+    
+    /**
+     * If <tt>true</tt>, calls {@link JMSession#markSmtpHostBad(String)} when
+     * a connection to an SMTP host fails.  The default is <tt>true</tt>.
+     */
+    public MailSender setTrackBadHosts(boolean track) {
+        mTrackBadHosts = track;
+        return this;
+    }
+
+    /**
+     * Sets an alternate JavaMail <tt>Session</tt> that will be used to send
+     * the message.  The default behavior is to use the <tt>Session<tt> from
+     * the {@link MimeMessage}.
+     */
+    public MailSender setSession(Session session) {
+        mSession = session;
+        return this;
+    }
 
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
@@ -97,25 +221,7 @@ public class MailSender {
     }
 
     /**
-     * Send MimeMessage out as an email.
-     * @param octxt operation context
-     * @param mbox mailbox
-     * @param mm the outgoing message
-     * @param newContacts contacts to add, or <tt>null</tt>
-     * @param uploads uploads to attach, or <tt>null</tt>
-     * @param origMsgId if replying or forwarding, item ID of original message
-     * @param replyType {@link #MSGTYPE_REPLY} if this is a reply, {@link #MSGTYPE_FORWARD}
-     *     if this is a forward, or <tt>null</tt>
-     * @param identityId the id of the identity to send as, or <tt>null</tt> to use the default
-     * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
-     *                              some addresses fail (no error is returned!)
-     * @param replyToSender if true and if setting Sender header, set Reply-To
-     *                      header to the same address, otherwise don't set
-     *                      Reply-To, letting the recipient MUA choose to whom
-     *                      to send reply
-     * 
-     * @return the id of the copy in the first saved folder, or <tt>null</tt>
-     * @throws ServiceException
+     * Sets member variables and sends the message.
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
@@ -128,12 +234,8 @@ public class MailSender {
         Identity identity = null;
         if (identityId != null)
             identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
-        if (identity == null)
-            identity = Provisioning.getInstance().getDefaultIdentity(authuser); 
 
-        boolean saveToSent = authuser.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
-
-        return sendMimeMessage(octxt, mbox, saveToSent, mm, newContacts, uploads, origMsgId, replyType, identity,
+        return sendMimeMessage(octxt, mbox, null, mm, newContacts, uploads, origMsgId, replyType, identity,
                                ignoreFailedAddresses, replyToSender);
     }
 
@@ -160,41 +262,29 @@ public class MailSender {
         }
     }
 
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
-                                  List<InternetAddress> saveContacts, List<Upload> uploads,
+    /**
+     * Sets member variables and sends the message.
+     */
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
+                                  Collection<InternetAddress> saveContacts, Collection<Upload> uploads,
                                   ItemId origMsgId, String replyType, Identity identity,
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
-        return sendMimeMessage(octxt, mbox, saveToSent, mm, saveContacts, uploads, origMsgId, replyType,
-                               identity, ignoreFailedAddresses, replyToSender, false);
+        mSaveToSent = saveToSent;
+        mSaveContacts = saveContacts;
+        mUploads = uploads;
+        mOriginalMessageId = origMsgId;
+        mReplyType = replyType;
+        mIdentity = identity;
+        mIgnoreFailedAddresses = ignoreFailedAddresses;
+        mReplyToSender = replyToSender;
+        return sendMimeMessage(octxt, mbox, mm);
     }
+    
     /**
-     * Send MimeMessage out as an email.
-     * @param octxt operation context
-     * @param mbox mailbox
-     * @param mm the outgoing message
-     * @param saveContacts contacts to save in Emailed Contacts folder, or <tt>null</tt>
-     * @param uploads uploads to attach, or <tt>null</tt>
-     * @param origMsgId if replying or forwarding, item ID of original message
-     * @param replyType {@link #MSGTYPE_REPLY} if this is a reply, {@link #MSGTYPE_FORWARD}
-     *     if this is a forward, or <tt>null</tt>
-     * @param identity the identity to send as, or <tt>null</tt> to use the default
-     * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
-     *                              some addresses fail (no error is returned!)
-     * @param replyToSender if true and if setting Sender header, set Reply-To
-     *                      header to the same address, otherwise don't set
-     *                      Reply-To, letting the recipient MUA choose to whom
-     *                      to send reply
-     * @param skipSendAsCheck if true, skip the check that disallows From address that's not explicitly allowed
-     * 
-     * @return the id of the copy in the first saved folder, or <tt>null</tt>
-     * @throws ServiceException
+     * Sends a message.
      */
-    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
-                                  List<InternetAddress> saveContacts, List<Upload> uploads,
-                                  ItemId origMsgId, String replyType, Identity identity,
-                                  boolean ignoreFailedAddresses, boolean replyToSender,
-                                  boolean skipSendAsCheck)
+    public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm)
     throws ServiceException {
         try {
             Account acct = mbox.getAccount();
@@ -204,13 +294,17 @@ public class MailSender {
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
 
+            if (mSaveToSent == null) {
+                mSaveToSent = authuser.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
+            }
+
             // slot the message in the parent's conversation if subjects match
             int convId = Mailbox.ID_AUTO_INCREMENT;
-            if (origMsgId != null && !isDelegatedRequest && origMsgId.belongsTo(mbox))
-                convId = mbox.getConversationIdFromReferent(mm, origMsgId.getId());
+            if (mOriginalMessageId != null && !isDelegatedRequest && mOriginalMessageId.belongsTo(mbox))
+                convId = mbox.getConversationIdFromReferent(mm, mOriginalMessageId.getId());
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, replyToSender, skipSendAsCheck);
+            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, mReplyToSender, mSkipSendAsCheck);
 
             // run any pre-send/pre-save MIME mutators
             try {
@@ -223,7 +317,7 @@ public class MailSender {
 
             // don't save if the message doesn't actually get *sent*
             boolean hasRecipients = (mm.getAllRecipients() != null);
-            saveToSent &= hasRecipients;
+            mSaveToSent &= hasRecipients;
 
             // #0 is the authenticated user's, #1 is the send-as user's
             RollbackData[] rollback = new RollbackData[2];
@@ -231,9 +325,9 @@ public class MailSender {
 
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
-            if (saveToSent) {
-                if (identity == null)
-                    identity = Provisioning.getInstance().getDefaultIdentity(authuser);
+            if (mSaveToSent) {
+                if (mIdentity == null)
+                    mIdentity = Provisioning.getInstance().getDefaultIdentity(authuser);
 
                 // figure out where to save the save-to-sent copy
                 if (authMailbox == null)
@@ -245,7 +339,7 @@ public class MailSender {
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mboxSave.attachmentsIndexingEnabled());
 
                     // save it to the requested folder
-                    int sentFolderId = getSentFolderId(mboxSave, identity);
+                    int sentFolderId = getSentFolderId(mboxSave, mIdentity);
                     Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
                     rollback[0] = new RollbackData(msg);
                 } else if (authMailbox instanceof ZMailbox) {
@@ -253,7 +347,7 @@ public class MailSender {
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
 
                     // save it to the requested folder
-                    String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
+                    String sentFolder = mIdentity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
                     String msgId = zmbxSave.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), true);
                     rollback[0] = new RollbackData(zmbxSave, authuser, msgId);
                 }
@@ -273,16 +367,14 @@ public class MailSender {
                 rollback[1] = new RollbackData(msg);
             }
 
-            // Apply SMTP session settings from the account and domain.  We do this here
-            // because we can't assume that the callsite passed in the domain when creating
-            // the FixedMimeMessage.
-            if (mm instanceof FixedMimeMessage) {
-                ((FixedMimeMessage) mm).setSession(JMSession.getSmtpSession(acct));
+            if (mm instanceof FixedMimeMessage && mSession != null) {
+                ZimbraLog.smtp.debug("Setting alternate Session on the FixedMimeMessage.");
+                ((FixedMimeMessage) mm).setSession(mSession);
             }
-            logMessage(mm, origMsgId, uploads, replyType);
+            logMessage(mm, mOriginalMessageId, mUploads, mReplyType);
 
             // actually send the message via SMTP
-            Collection<Address> sentAddresses = sendMessage(mbox, mm, ignoreFailedAddresses, rollback);
+            Collection<Address> sentAddresses = sendMessage(mbox, mm, mIgnoreFailedAddresses, rollback);
 
             if (!sentAddresses.isEmpty() && octxt != null) {
             	try {
@@ -297,7 +389,7 @@ public class MailSender {
             }
             
             // Send intercept if save-to-sent didn't do it already.
-            if (!saveToSent) {
+            if (!mSaveToSent) {
                 try {
                     Notification.getInstance().interceptIfNecessary(mbox, mm, "send message", null);
                 } catch (ServiceException e) {
@@ -306,12 +398,12 @@ public class MailSender {
             }
 
             // check if this is a reply, and if so flag the msg appropriately
-            if (origMsgId != null && !isDelegatedRequest && origMsgId.belongsTo(mbox)) {
+            if (mOriginalMessageId != null && !isDelegatedRequest && mOriginalMessageId.belongsTo(mbox)) {
                 try {
-                    if (MSGTYPE_REPLY.equals(replyType))
-                        mbox.alterTag(octxt, origMsgId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
-                    else if (MSGTYPE_FORWARD.equals(replyType))
-                        mbox.alterTag(octxt, origMsgId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
+                    if (MSGTYPE_REPLY.equals(mReplyType))
+                        mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
+                    else if (MSGTYPE_FORWARD.equals(mReplyType))
+                        mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
                 } catch (ServiceException e) {
                     // this is not an error case:
                     //   - the original message may be gone when accepting/declining an appointment
@@ -321,14 +413,14 @@ public class MailSender {
 
 
             // we can now purge the uploaded attachments
-            if (uploads != null)
-                FileUploadServlet.deleteUploads(uploads);
+            if (mUploads != null)
+                FileUploadServlet.deleteUploads(mUploads);
 
             // save contacts explicitly requested by the client to the personal address book
-            if (false && saveContacts != null && !saveContacts.isEmpty()) {
+            if (false && mSaveContacts != null && !mSaveContacts.isEmpty()) {
                 if (authMailbox == null)
                     authMailbox = getAuthenticatedMailbox(octxt, authuser, isAdminRequest);
-                saveNewContacts(saveContacts, octxt, authMailbox);
+                saveNewContacts(mSaveContacts, octxt, authMailbox);
             }
 
             return (rollback[0] != null ? rollback[0].msgId : null);
@@ -391,7 +483,7 @@ public class MailSender {
         }
     }
 
-    private void logMessage(MimeMessage mm, ItemId origMsgId, List<Upload> uploads, String replyType) {
+    private void logMessage(MimeMessage mm, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
             StringBuilder msg = new StringBuilder("Sending message to MTA at ")
@@ -577,34 +669,30 @@ public class MailSender {
     }
     
     /**
+     * Called when the connection to the initial SMTP host failed.
      * Updates the <tt>mail.smtp.host</tt> property on the given message with a new
-     * SMTP host.  Removes the bad host from the SMTP hostname cache, so that the
-     * host is not retried for 60 seconds.
+     * SMTP host.
      * 
-     * @return the new hostname
+     * @throws MessagingException the original exception if an alternate host is not available
+     * @return the new SMTP host
      */
     private String updateSmtpHost(FixedMimeMessage mm, Mailbox mbox, MessagingException originalException)
     throws MessagingException {
         Session session = mm.getSession();
         String badHost = session.getProperty("mail.smtp.host");
-        JMSession.markSmtpHostBad(badHost);
-        String smtpHost = null;
-        
-        try {
-            Domain domain = Provisioning.getInstance().getDomain(mbox.getAccount());
-            smtpHost = JMSession.getRandomSmtpHost(domain);
-        } catch (ServiceException e) {
-            ZimbraLog.smtp.error("Unable to update SMTP host.", e);
-            throw originalException;
+
+        mSmtpHosts.remove(badHost);
+        if (mTrackBadHosts) {
+            JMSession.markSmtpHostBad(badHost);
         }
-        
-        if (smtpHost == null) {
+        if (mSmtpHosts.isEmpty()) {
             ZimbraLog.smtp.error("No alternate SMTP host available.");
             throw originalException;
         }
         
-        session.getProperties().setProperty("mail.smtp.host", smtpHost);
-        return smtpHost;
+        String newHost = mSmtpHosts.remove(0);
+        session.getProperties().setProperty("mail.smtp.host", newHost);
+        return newHost;
     }
 
 

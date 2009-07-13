@@ -18,10 +18,12 @@ package com.zimbra.cs.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -158,7 +160,7 @@ public class JMSession {
      * @param server the server
      * @param domain the domain, or <tt>null</tt> to use server settings
      */
-    public static String getRandomSmtpHost(Domain domain)
+    private static String getRandomSmtpHost(Domain domain)
     throws ServiceException {
         String[] hosts = getSmtpHostsFromLdap(domain);
         if (hosts.length == 0) {
@@ -189,6 +191,21 @@ public class JMSession {
             }
         }
         return null;
+    }
+    
+    /**
+     * Returns a new set that contains all SMTP hosts, not including
+     * hosts that were marked as bad with {@link #markSmtpHostBad}.
+     */
+    public static Set<String> getSmtpHosts(Domain domain)
+    throws ServiceException {
+        Set<String> hosts = new HashSet<String>();
+        for (String host : getSmtpHostsFromLdap(domain)) {
+            if (!sBadSmtpHosts.containsKey(host)) {
+                hosts.add(host);
+            }
+        }
+        return hosts;
     }
     
     /**

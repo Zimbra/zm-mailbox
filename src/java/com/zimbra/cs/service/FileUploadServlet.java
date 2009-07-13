@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -259,7 +260,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    public static void deleteUploads(List<Upload> uploads) {
+    public static void deleteUploads(Collection<Upload> uploads) {
         if (uploads != null && !uploads.isEmpty()) {
             for (Upload up : uploads)
                 deleteUpload(up);

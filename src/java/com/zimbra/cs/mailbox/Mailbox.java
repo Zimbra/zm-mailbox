@@ -28,6 +28,7 @@ import java.lang.ref.SoftReference;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.map.LRUMap;
@@ -47,6 +48,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -123,6 +125,7 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
@@ -495,8 +498,29 @@ public class Mailbox {
 
     /** Returns a {@link MailSender} object that can be used to send mail,
      *  save a copy to the Sent folder, etc. */
-    public MailSender getMailSender() {
-        return new MailSender();
+    public MailSender getMailSender() throws ServiceException {
+        MailSender sender = new MailSender();
+        sender.setTrackBadHosts(true);
+        Account account = getAccount();
+        try {
+            // Get the SMTP session properties from the account's domain.
+            // We do this here because we can't guarantee that the account
+            // or domain was known at the time the MimeMessage was created.
+            sender.setSession(JMSession.getSmtpSession(account));
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to get SMTP session for " + account, e);
+        }
+        Domain domain = Provisioning.getInstance().getDomain(account);
+        
+        // Set the SMTP host list in random order.
+        List<String> hosts = new ArrayList<String>();
+        hosts.addAll(JMSession.getSmtpHosts(domain));
+        if (hosts.size() > 1) {
+            Collections.shuffle(hosts);
+        }
+        sender.setSmtpHosts(hosts);
+        
+        return sender;
     }
 
 
