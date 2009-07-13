@@ -1510,6 +1510,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
 
+    /**
+     * Returns the <tt>Identity</tt>, or <tt>null</tt> if an identity with the given
+     * key does not exist.
+     */
     public abstract Identity get(Account account, IdentityBy keyType, String key) throws ServiceException;
 
     // signatures
