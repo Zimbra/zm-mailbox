@@ -300,14 +300,10 @@ public class SoapServlet extends ZimbraServlet {
         ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }
     
-    /*
-     * returns int value of soap_response_buffer_size.
-     * returns -1 if soap_response_buffer_size is not set, which means using jetty default.
-     */
-    private int chunkingBufferSize() {
+    private int soapResponseBufferSize() {
         String val = LC.soap_response_buffer_size.value();
         if (val == null || val.length() == 0)
-            return -1;
+            return -1; // will be using jetty default
         else
             return LC.soap_response_buffer_size.intValue();
     }
@@ -318,9 +314,7 @@ public class SoapServlet extends ZimbraServlet {
         int statusCode = soapProto.hasFault(envelope) ?
             HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
         
-        // http chunking can be disabled by setting soap_response_buffer_size to 0
-        int chunkingBufferSize = chunkingBufferSize();
-        boolean chunkingDisabled = (chunkingBufferSize == 0);
+        boolean chunkingDisabled = LC.soap_response_chunked_transfer_encoding_disabled.booleanValue();
 
         if (!chunkingDisabled) {
             // disable chunking if proto < HTTP 1.1
@@ -334,35 +328,23 @@ public class SoapServlet extends ZimbraServlet {
             }
         }
         
+        // use jetty default if the LC key is not set
+        int responseBufferSize = soapResponseBufferSize();
+        if (responseBufferSize != -1) 
+            resp.setBufferSize(responseBufferSize);
+        
+        resp.setContentType(soapProto.getContentType());  
+        resp.setStatus(statusCode);
+        
         if (chunkingDisabled) {
             /*
              * serialize the envelope to a byte array and send the response with Content-Length header.
              */
             byte[] soapBytes = envelope.toUTF8();
-            resp.setContentType(soapProto.getContentType());
-            resp.setBufferSize(soapBytes.length + 2048);
+            // resp.setBufferSize(soapBytes.length + 2048);
             resp.setContentLength(soapBytes.length);
-            resp.setStatus(statusCode);
             resp.getOutputStream().write(soapBytes);
         } else {
-            /*
-             * Note, jetty's default threshold for chunking is 24KB
-             * (see http://docs.codehaus.org/display/JETTY/Configuring+Connectors),
-             * i.e, no matter how small the number passed to 
-             * setBufferSize is, chunking is triggered only when the 
-             * actual data written to the writer is more than 24KB.  
-             * 
-             * Setting soap_response_buffer_size to a value 
-             * less than 24KB is essentially no effect.
-             * 
-             */
-            // use jetty default if the LC key is not set
-            if (chunkingBufferSize != -1) 
-                resp.setBufferSize(chunkingBufferSize);
-            
-            resp.setContentType(soapProto.getContentType());  
-            resp.setStatus(statusCode);
-            
             Writer writer = resp.getWriter();
             envelope.toUTF8(writer);
         }
