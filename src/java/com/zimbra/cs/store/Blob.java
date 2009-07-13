@@ -145,6 +145,7 @@ public class Blob {
         File newFile = new File(path);
         if (mFile.renameTo(newFile)) {
             mPath = path;
+            mFile = newFile;
             return true;
         } else {
             return false;
