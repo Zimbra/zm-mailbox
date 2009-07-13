@@ -618,6 +618,7 @@
     <a n="zimbraLocale"/>
     <a n="zimbraCalResMaxNumConflictsAllowed"/>
     <a n="zimbraCalResMaxPercentConflictsAllowed"/>
+    <a n="zimbraPrefCalendarForwardInvitesTo"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleResourcesPropertiesTab" type="getAttrs" targetType="calresource">
