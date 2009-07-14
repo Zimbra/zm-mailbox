@@ -89,10 +89,17 @@ public class ZimletResources
 
         if (!pathInfo.startsWith(RESOURCE_PATH)) {
             // handle requests for individual files included in zimlet in case dev=1 is set.
-            if (pathInfo.startsWith("/_dev"))
+            if (pathInfo.endsWith(".jsp")) {
+                // jsp files are deployed in zimbra webapp now.
+                ServletContext targetContext = getServletConfig().getServletContext().getContext("/zimbra");
+                RequestDispatcher dispatcher = targetContext.getRequestDispatcher("/zimlet" + pathInfo);
+                dispatcher.forward(req, resp);
+                return;
+            } else if (pathInfo.startsWith("/_dev")) {
             	pathInfo = pathInfo.substring(6);
-            else
-            	pathInfo = pathInfo.substring(1);
+            } else {
+                pathInfo = pathInfo.substring(1);
+            }
             int slash = pathInfo.indexOf('/');
             if (slash > 0) {
             	String zimlet = pathInfo.substring(0, slash);

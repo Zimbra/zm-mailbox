@@ -539,6 +539,11 @@ public class ZimletUtil {
 									"WEB-INF" + File.separator + 
 									"lib");
 		File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimletName);
+        File jspDir = new File(LC.mailboxd_directory.value() + File.separator +
+                                    "webapps" + File.separator + 
+                                    "zimbra" + File.separator +
+                                    "zimlet" + File.separator +
+                                    zimletName);
 
 		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
 			String fname = entry.getName();
@@ -550,6 +555,10 @@ public class ZimletUtil {
 				File file = new File(propsDir, fname);
 				file.getParentFile().mkdirs();
 				writeFile(entry.getContents(), file);
+            } else if (fname.endsWith(".jsp")) {
+                File file = new File(jspDir, fname);
+                file.getParentFile().mkdirs();
+                writeFile(entry.getContents(), file);
 			}
 		}
 
@@ -655,6 +664,22 @@ public class ZimletUtil {
 			sZimlets.remove(zimlet);
 		}
 		
+        File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimlet);
+        if (propsDir.exists()) {
+            ZimbraLog.zimlet.info("Deleting Zimlet property files "+propsDir.getAbsolutePath());
+            deleteFile(propsDir);
+        }
+        
+        File jspDir = new File(LC.mailboxd_directory.value() + File.separator +
+                "webapps" + File.separator + 
+                "zimbra" + File.separator +
+                "zimlet" + File.separator +
+                zimlet);
+        if (jspDir.exists()) {
+            ZimbraLog.zimlet.info("Deleting Zimlet jsp files "+jspDir.getAbsolutePath());
+            deleteFile(jspDir);
+        }
+        
 		if (auth == null)
 			return;
 		
