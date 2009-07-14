@@ -245,6 +245,9 @@ public class DataSourceManager {
      */
     public static void updateSchedule(String accountId, String dsId)
     throws ServiceException {
+        if (!LC.data_source_scheduling_enabled.booleanValue()) {
+            return;
+        }
         ZimbraLog.datasource.debug("Updating schedule for account %s, data source %s", accountId, dsId);
         
         // Look up account and data source

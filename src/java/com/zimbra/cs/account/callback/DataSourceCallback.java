@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
@@ -69,6 +70,10 @@ public class DataSourceCallback extends AttributeCallback {
             // No old value, so nothing to do.  Creation is handled in postModify().
             return;
         }
+        if (!LC.data_source_scheduling_enabled.booleanValue()) {
+            return;
+        }
+        
         if (INTERVAL_ATTRS.contains(attrName)) {
             context.put(KEY_INTERVAL_CHANGED, willIntervalChange(attrName, attrValue, entry));
         } else if (attrName.equals(Provisioning.A_zimbraDataSourceEnabled)) {
@@ -106,6 +111,9 @@ public class DataSourceCallback extends AttributeCallback {
         // Don't do anything unless inside the server
         if (!Zimbra.started())
             return;
+        if (!LC.data_source_scheduling_enabled.booleanValue()) {
+            return;
+        }
         
         // Don't do anything if the interval didn't change
         Boolean intervalChanged = isCreate || (Boolean) context.get(KEY_INTERVAL_CHANGED);
