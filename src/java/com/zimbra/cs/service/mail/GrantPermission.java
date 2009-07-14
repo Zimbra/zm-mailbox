@@ -56,7 +56,6 @@ public class GrantPermission extends MailDocumentHandler {
             aces.add(ace);
         }
 
-        // TODO, change to Provisioning.grantPermission?
         List<ZimbraACE> granted = RightUtil.grantRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {

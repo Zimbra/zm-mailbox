@@ -172,6 +172,7 @@ public class DomainAccessManager extends AccessManager {
             return true;    
         }
     }
+    
     /* ===========================================================================================
      * ACL based access methods
      * 
@@ -181,18 +182,18 @@ public class DomainAccessManager extends AccessManager {
      * ===========================================================================================
      */
     @Override
-    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return defaultGrant;
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin) {
+        return false;
     }
     
     @Override
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return defaultGrant;
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin) {
+        return false;
     }
     
     @Override
-    public boolean canDo(String grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return defaultGrant;
+    public boolean canDo(String grantee, Entry target, Right rightNeeded, boolean asAdmin) {
+        return false;
     }
 
     @Override

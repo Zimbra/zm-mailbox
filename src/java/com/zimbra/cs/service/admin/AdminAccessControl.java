@@ -642,7 +642,7 @@ public abstract class AdminAccessControl {
             if (needed instanceof AdminRight) {
                 AdminRight adminRight = (AdminRight)needed;
                 if (adminRight.isPresetRight())
-                    return mAccessMgr.canDo(mAuthedAcct, target, (AdminRight)needed, true, false, null);
+                    return mAccessMgr.canDo(mAuthedAcct, target, (AdminRight)needed, true, null);
                 else if (adminRight.isAttrRight()) {
                     if (adminRight.getRightType() == Right.RightType.getAttrs)
                         return mAccessMgr.canGetAttrs(mAuthedAcct, target, ((AttrRight)needed).getAttrs(), true);

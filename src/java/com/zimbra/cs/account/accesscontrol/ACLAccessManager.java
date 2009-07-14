@@ -53,8 +53,7 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canAccessAccount(AuthToken at, Account target,
-            boolean asAdmin) throws ServiceException {
+    public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
          
         checkDomainStatus(target);
         
@@ -62,20 +61,18 @@ public class ACLAccessManager extends AccessManager {
             return true;
         
         if (asAdmin)
-            return canDo(at, target, Admin.R_adminLoginAs, asAdmin, false);
+            return canDo(at, target, Admin.R_adminLoginAs, asAdmin);
         else
-            return canDo(at, target, User.R_loginAs, asAdmin, false);
+            return canDo(at, target, User.R_loginAs, asAdmin);
     }
 
     @Override
-    public boolean canAccessAccount(AuthToken at, Account target)
-            throws ServiceException {
+    public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
         return canAccessAccount(at, target, true);
     }
 
     @Override
-    public boolean canAccessAccount(Account credentials, Account target,
-            boolean asAdmin) throws ServiceException {
+    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException {
         
         checkDomainStatus(target);
         
@@ -83,27 +80,24 @@ public class ACLAccessManager extends AccessManager {
             return true;
         
         if (asAdmin)
-            return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin, false);
+            return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin);
         else
-            return canDo(credentials, target, User.R_loginAs, asAdmin, false);
+            return canDo(credentials, target, User.R_loginAs, asAdmin);
     }
 
     @Override
-    public boolean canAccessAccount(Account credentials, Account target)
-            throws ServiceException {
+    public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
         return canAccessAccount(credentials, target, true);
     }
 
     @Override
-    public boolean canAccessCos(AuthToken at, Cos cos)
-            throws ServiceException {
+    public boolean canAccessCos(AuthToken at, Cos cos) throws ServiceException {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean canAccessDomain(AuthToken at, String domainName)
-            throws ServiceException {
+    public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {
         // TODO Auto-generated method stub
         // return false;
         
@@ -111,8 +105,7 @@ public class ACLAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canAccessDomain(AuthToken at, Domain domain)
-            throws ServiceException {
+    public boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException {
         // TODO Auto-generated method stub
         // return false;
         
@@ -120,8 +113,7 @@ public class ACLAccessManager extends AccessManager {
     }
 
     @Override
-    public boolean canAccessEmail(AuthToken at, String email)
-            throws ServiceException {
+    public boolean canAccessEmail(AuthToken at, String email) throws ServiceException {
         // TODO Auto-generated method stub
         // return false;
         throw ServiceException.FAILURE("internal error", null);  // should never be called
@@ -136,10 +128,9 @@ public class ACLAccessManager extends AccessManager {
     /**
      * User right entrance - do not throw
      */
-    public boolean canDo(Account grantee, Entry target, Right rightNeeded, 
-            boolean asAdmin, boolean defaultGrant) {
+    public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin) {
         try {
-            return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+            return canDo(grantee, target, rightNeeded, asAdmin, null);
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("right denied", e);
             return false;
@@ -150,10 +141,9 @@ public class ACLAccessManager extends AccessManager {
     /**
      * User right entrance - do not throw
      */
-    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, 
-            boolean asAdmin, boolean defaultGrant) {
+    public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin) {
         try {
-            return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant, null);
+            return canDo(grantee, target, rightNeeded, asAdmin, null);
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("right denied", e);
             return false;
@@ -164,10 +154,9 @@ public class ACLAccessManager extends AccessManager {
     /**
      * User right entrance - do not throw
      */
-    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, 
-            boolean asAdmin, boolean defaultGrant) {
+    public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin) {
         try {
-            return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant, null);
+            return canDo(granteeEmail, target, rightNeeded, asAdmin, null);
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("right denied", e);
             return false;
@@ -176,7 +165,7 @@ public class ACLAccessManager extends AccessManager {
     
     @Override
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, 
-            boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
+            boolean asAdmin, ViaGrant via) throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, rightNeeded);
@@ -191,12 +180,12 @@ public class ACLAccessManager extends AccessManager {
                 return false;
         }
         
-        return checkPresetRight(grantee, target, rightNeeded, false, asAdmin, defaultGrant, via);
+        return checkPresetRight(grantee, target, rightNeeded, false, asAdmin, via);
     }
     
     @Override
     public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, 
-            boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
+            boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
             Account granteeAcct;
             if (grantee == null) {
@@ -213,7 +202,7 @@ public class ACLAccessManager extends AccessManager {
                     return false;
             }
             
-            return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
+            return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " +
                                    "grantee=" + grantee.getAccountId() +
@@ -227,7 +216,7 @@ public class ACLAccessManager extends AccessManager {
 
     @Override
     public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, 
-            boolean asAdmin, boolean defaultGrant, ViaGrant via) throws ServiceException {
+            boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
             Account granteeAcct = null;
             
@@ -240,7 +229,7 @@ public class ACLAccessManager extends AccessManager {
                     return false;
             }
             
-            return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant, via);
+            return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("ACL checking failed: " + 
                                    "grantee=" + granteeEmail + 
@@ -253,8 +242,7 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
-    throws ServiceException {
+    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, null);
@@ -290,8 +278,7 @@ public class ACLAccessManager extends AccessManager {
     
     @Override
     // this API does not check constraints
-    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
-    throws ServiceException {
+    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = checkHardRules(grantee, asAdmin, target, null);
@@ -302,15 +289,13 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) 
-    throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
         return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
     }
     
     @Override
     // this API does check constraints
-    public boolean canSetAttrs(Account granteeAcct, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) 
-    throws ServiceException {
+    public boolean canSetAttrs(Account granteeAcct, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = checkHardRules(granteeAcct, asAdmin, target, null);
@@ -323,8 +308,7 @@ public class ACLAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) 
-    throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
     }
     
@@ -377,7 +361,7 @@ public class ACLAccessManager extends AccessManager {
         
         boolean allowed = false;
         if (rightNeeded.isPresetRight()) {
-            allowed = checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, asAdmin, false, viaGrant);
+            allowed = checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, asAdmin, viaGrant);
         
         } else if (rightNeeded.isAttrRight()) {
             AttrRight attrRight = (AttrRight)rightNeeded;
@@ -410,7 +394,7 @@ public class ACLAccessManager extends AccessManager {
     // all user and admin preset rights go through here 
     private boolean checkPresetRight(Account grantee, Entry target, 
                                      Right rightNeeded, boolean canDelegateNeeded, 
-                                     boolean asAdmin, boolean defaultGrant, ViaGrant via) {
+                                     boolean asAdmin, ViaGrant via) {
         try {
             if (grantee == null) {
                 if (canDelegateNeeded)
@@ -450,9 +434,6 @@ public class ACLAccessManager extends AccessManager {
                 Boolean defaultValue = rightNeeded.getDefault();
                 if (defaultValue != null)
                     return defaultValue.booleanValue();
-                
-                // no configured default, return default requested by the callsite
-                return defaultGrant;
             }
                 
         } catch (ServiceException e) {

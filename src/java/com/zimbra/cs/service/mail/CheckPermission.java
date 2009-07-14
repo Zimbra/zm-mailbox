@@ -74,7 +74,7 @@ public class CheckPermission extends MailDocumentHandler {
         }
         
         for (UserRight right : rights) {
-            if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), entry, right, false, false))
+            if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), entry, right, false))
                 return returnResponse(zsc, false);
         }
             

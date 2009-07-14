@@ -565,7 +565,7 @@ public class MailSender {
         // we need to set the Sender to the authenticated user for delegated sends by non-admins
         boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
         boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
-        boolean canSendAs = !isDelegatedRequest || AccessManager.getInstance().canDo(authuser, acct, User.R_sendAs, isAdminRequest, false);
+        boolean canSendAs = !isDelegatedRequest || AccessManager.getInstance().canDo(authuser, acct, User.R_sendAs, isAdminRequest);
 
         InternetAddress sender = null;
         if (skipSendAsCheck) {

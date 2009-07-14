@@ -173,9 +173,9 @@ public abstract class AccessManager {
      * user right entrances
      * ====================
      */
-    public abstract boolean canDo(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canDo(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
-    public abstract boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canDo(Account grantee,     Entry target, Right rightNeeded, boolean asAdmin);
+    public abstract boolean canDo(AuthToken grantee,   Entry target, Right rightNeeded, boolean asAdmin);
+    public abstract boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin);
     
     
     /* 
@@ -198,18 +198,18 @@ public abstract class AccessManager {
     }
     
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, 
-            boolean defaultGrant, ViaGrant viaGrant) throws ServiceException {
-        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
+            ViaGrant viaGrant) throws ServiceException {
+        return canDo(grantee, target, rightNeeded, asAdmin);
     }
     
     public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, boolean asAdmin, 
-            boolean defaultGrant, ViaGrant viaGrant) throws ServiceException {
-        return canDo(grantee, target, rightNeeded, asAdmin, defaultGrant);
+            ViaGrant viaGrant) throws ServiceException {
+        return canDo(grantee, target, rightNeeded, asAdmin);
     }
     
     public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, boolean asAdmin, 
-            boolean defaultGrant, ViaGrant viaGrant) throws ServiceException {
-        return canDo(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
+            ViaGrant viaGrant) throws ServiceException {
+        return canDo(granteeEmail, target, rightNeeded, asAdmin);
     }
     
 

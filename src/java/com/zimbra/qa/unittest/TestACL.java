@@ -621,30 +621,26 @@ public abstract class TestACL extends TestCase {
     }
 
     /*
-     * verify we always get the expected result, regardless what the default value is
+     * verify we always get the expected result
      * This test does NOT use the admin privileges 
      * 
      * This is for testing target entry with some ACL.
      */
     protected void verify(Account grantee, Entry target, Right right, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
-        verify(grantee, target, right, AS_USER, ALLOW, expected, expectedVia);
-        verify(grantee, target, right, AS_USER, DENY, expected, expectedVia);
+        verify(grantee, target, right, AS_USER, expected, expectedVia);
+    }
+    
+    protected void verifyDefinedDefault(Account grantee, Entry target, Right right) throws Exception {
+        if (right == User.R_invite || right == User.R_viewFreeBusy)
+            verify(grantee, target, right, AS_USER, ALLOW, null);
+        else
+            verify(grantee, target, right, AS_USER, DENY, null);
+
     }
     
     /*
-     * verify we always get the expected result, regardless what the default value is
+     * TODO: deprecate this thing.
      * 
-     * This is for testing target entry with some ACL.
-     */
-    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
-        // 1. pass allow as the default value, result should not be affected by the default value
-        verify(grantee, target, right, asAdmin, ALLOW, expected, expectedVia);
-        
-        // 2. pass deny as the default value, result should not be affected by the default value
-        verify(grantee, target, right, asAdmin, DENY, expected, expectedVia);
-    }
-    
-    /*
      * verify that the result IS the default value
      * 
      * This is for testing target entry without any ACL.
@@ -684,24 +680,24 @@ public abstract class TestACL extends TestCase {
     /*
      * verify expected result
      */
-    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny defaultValue, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
+    protected void verify(Account grantee, Entry target, Right right, AsAdmin asAdmin, AllowOrDeny expected, ViaGrant expectedVia) throws Exception {
         boolean result;
         
         // Account interface
         ViaGrant via = (expectedVia==null)?null:new ViaGrant();
-        result = mAM.canDo(grantee==null?null:grantee, target, right, asAdmin.yes(), defaultValue.allow(), via);
+        result = mAM.canDo(grantee==null?null:grantee, target, right, asAdmin.yes(), via);
         assertEquals(expected.allow(), result);
         assertEquals(expectedVia, via);
         
         // AuthToken interface
         via = (expectedVia==null)?null:new ViaGrant();
-        result = mAM.canDo(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin.yes(), defaultValue.allow(), via);
+        result = mAM.canDo(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin.yes(), via);
         assertEquals(expected.allow(), result);
         assertEquals(expectedVia, via);
         
         // String interface
         via = (expectedVia==null)?null:new ViaGrant();
-        result = mAM.canDo(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), defaultValue.allow(), via);
+        result = mAM.canDo(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), via);
         if (grantee instanceof ACL.GuestAccount && ((ACL.GuestAccount)grantee).getAccessKey() != null) {
             // string interface always return denied for key grantee unless there is a pub grant
             // skip the test for now, unless we want to pass yet another parameter to this method
@@ -757,7 +753,7 @@ public abstract class TestACL extends TestCase {
      */
     protected List<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
         /*
-         * make sure all rights are sure right, tests written earlier could still be using 
+         * make sure all rights are user right, tests written earlier could still be using 
          * this to grant
          */
         for (ZimbraACE ace : aces) {

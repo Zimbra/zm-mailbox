@@ -55,7 +55,7 @@ public class LocalFreeBusyProvider {
 	        Account authAcct, boolean asAdmin, Mailbox mbox, String name, long start, long end, int folder, Appointment exAppt)
     throws ServiceException {
         AccessManager accessMgr = AccessManager.getInstance();
-        boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), User.R_viewFreeBusy, asAdmin, true);
+        boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), User.R_viewFreeBusy, asAdmin);
 
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 

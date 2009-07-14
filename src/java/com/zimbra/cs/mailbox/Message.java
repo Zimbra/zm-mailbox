@@ -480,19 +480,18 @@ public class Message extends MailItem {
                 String senderEmail;
                 Account senderAcct = null;
                 boolean onBehalfOf = false;
-                boolean allowInviteIfNoAceDefined = true;
                 boolean canInvite;
                 AccessManager accessMgr = AccessManager.getInstance();
                 if (octxt != null && octxt.getAuthenticatedUser() != null) {
                     onBehalfOf = octxt.isDelegatedRequest(getMailbox());
                     senderAcct = octxt.getAuthenticatedUser();
                     senderEmail = senderAcct.getName();
-                    canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canDo(senderAcct, acct, User.R_invite, octxt.isUsingAdminPrivileges());
                 } else {
                     senderEmail = pm.getSenderEmail(false);
                     if (senderEmail != null)
                         senderAcct = Provisioning.getInstance().get(AccountBy.name, senderEmail);
-                    canInvite = accessMgr.canDo(senderEmail, acct, User.R_invite, false, allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canDo(senderEmail, acct, User.R_invite, false);
                 }
                 if (!canInvite) {
                     Invite invite = invites.get(0);

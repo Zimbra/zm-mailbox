@@ -55,6 +55,7 @@ public class TestACLGrantee extends TestACL {
      * ======================
      */
     
+   
     /*
      * test Zimbra user grantee
      */
@@ -146,9 +147,11 @@ public class TestACLGrantee extends TestACL {
         // external usr should not be allowed
         verify(guest, target, User.R_viewFreeBusy, DENY, null);
         
-        // non granted right should honor callsite default
-        verifyDefault(zimbra, target, User.R_invite);
-        verifyDefault(guest, target, User.R_invite);
+        // non granted right should honor defined default
+        verifyDefinedDefault(zimbra, target, User.R_invite);
+        verifyDefinedDefault(guest, target, User.R_invite);
+        verifyDefinedDefault(zimbra, target, User.R_sendAs);
+        verifyDefinedDefault(guest, target, User.R_sendAs);
     }
     
     /*
@@ -426,8 +429,8 @@ public class TestACLGrantee extends TestACL {
     
     /*
      * test target with no ACL for the requested right but does have ACL for some other rights.
-     * should return caller default for the right that does not have any ACL (bug 30241), 
-     * should allow/disallow for the rights according to the ACE.
+     * should return defined default for the right that does not have any ACL (bug 30241), 
+     * should allow/disallow for the rights according to the ACL.
      */
     public void testDefaultWithNonEmptyACL() throws Exception {
         String testName = getName();
@@ -440,7 +443,8 @@ public class TestACLGrantee extends TestACL {
         Account anon = anonAccount();
         
         Right rightGranted = User.R_viewFreeBusy;
-        Right rightNotGranted = User.R_invite;
+        Right rightNotGrantedDefaultAllowed = User.R_invite;
+        Right rightNotGrantedDefaultDenied = User.R_sendAs;
         
         /*
          * setup targets
@@ -452,16 +456,21 @@ public class TestACLGrantee extends TestACL {
         
         TestViaGrant via;
         
-        // verify callsite default is honored for not granted right
-        verifyDefault(zimbraUser, target, rightNotGranted);
-        verifyDefault(guest, target, rightNotGranted);
-        verifyDefault(anon, target, rightNotGranted);
+        // verify defined default is honored for not granted right
+        verifyDefinedDefault(zimbraUser, target, rightNotGrantedDefaultAllowed);
+        verifyDefinedDefault(guest, target, rightNotGrantedDefaultAllowed);
+        verifyDefinedDefault(anon, target, rightNotGrantedDefaultAllowed);
+
+        verifyDefinedDefault(zimbraUser, target, rightNotGrantedDefaultDenied);
+        verifyDefinedDefault(guest, target, rightNotGrantedDefaultDenied);
+        verifyDefinedDefault(anon, target, rightNotGrantedDefaultDenied);
+        
         
         // verify granted right is properly processed
         via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, zimbraUser.getName(), rightGranted, POSITIVE);
         verify(zimbraUser, target, rightGranted, ALLOW, via);
-        
         verify(guest, target, rightGranted, DENY, null);
+        verify(anon, target, rightGranted, DENY, null);
     }    
     
     public void testGrantConflict() throws Exception {
