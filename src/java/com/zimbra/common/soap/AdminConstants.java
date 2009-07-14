@@ -393,7 +393,9 @@ public class AdminConstants {
     // memcached
     public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("ReloadMemcachedClientConfigRequest", NAMESPACE);
     public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("ReloadMemcachedClientConfigResponse", NAMESPACE);
-    
+    public static final QName GET_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("GetMemcachedClientConfigRequest", NAMESPACE);
+    public static final QName GET_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("GetMemcachedClientConfigResponse", NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -669,4 +671,11 @@ public class AdminConstants {
     public static final String A_FULLSYNC = "fullSync";
     public static final String A_RESET    = "reset";
     public static final String A_HAS_KEYWORD = "hasKeyword";
+
+    // memcached client
+    public static final String A_MEMCACHED_CLIENT_CONFIG_SERVER_LIST = "serverList";
+    public static final String A_MEMCACHED_CLIENT_CONFIG_HASH_ALGORITHM = "hashAlgorithm";
+    public static final String A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL = "binaryProtocol";
+    public static final String A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS = "defaultExpirySeconds";
+    public static final String A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS = "defaultTimeoutMillis";
 }
