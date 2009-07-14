@@ -14,13 +14,11 @@
  */
 package com.zimbra.cs.store;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -92,7 +90,7 @@ public abstract class StoreManager {
      * and blob size is over the compression threshold and storeAsIs is false.
      * @param data
      * @param sizeHint used for determining whether data should be compressed
-     * @param digest
+     * @param callback
      * @param storeAsIs if true, store the blob as is even if volume supports compression
      * @return
      * @throws IOException
@@ -102,38 +100,15 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
-     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
-     * and blob size is over the compression threshold.
-     * @param data
-     * @param digest
+     * Stage an incoming <code>Blob</code> (see {@link #storeIncoming}) to an
+     * appropriate place for subsequent storage in a <code>Mailbox</code> via
+     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     * @param blob
+     * @param mbox
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(byte[] data, String digest)
-    throws IOException, ServiceException {
-        return storeIncoming(data, digest, false);
-    }
-
-    /**
-     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
-     * and blob size is over the compression threshold and storeAsIs is false.
-     * @param data
-     * @param digest
-     * @param storeAsIs if true, store the blob as is even if volume supports compression
-     * @return
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public Blob storeIncoming(byte[] data, String digest, boolean storeAsIs)
-    throws IOException, ServiceException {
-        // Prevent bogus digest values.
-        if (!ByteUtil.isValidDigest(digest))
-            throw ServiceException.FAILURE("Invalid blob digest \"" + digest + "\"", null);
-
-        return storeIncoming(new ByteArrayInputStream(data), data.length, null, storeAsIs);
-    }
-
     public abstract StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException;
 
     /**
