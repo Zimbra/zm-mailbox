@@ -63,7 +63,13 @@ public class ItemData {
             ud.type = (byte)json.getInt(Keys.type.toString());
             ud.parentId = json.getInt(Keys.parent_id.toString());
             ud.folderId = json.getInt(Keys.folder_id.toString());
-            ud.indexId = json.optString(Keys.index_id.toString());
+            /*
+             * indexId changed to an optional string from a mandatory int which
+             * breaks sync with 5.0 clients 
+            
+             * ud.indexId = json.optString(Keys.index_id.toString());
+             */
+            ud.indexId = null;
             ud.imapId = json.getInt(Keys.imap_id.toString());
             ud.date = json.getInt(Keys.date.toString());
             ud.size = json.getLong(Keys.size.toString());
