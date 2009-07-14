@@ -78,11 +78,18 @@ public class DataSourceCallback extends AttributeCallback {
         context.put(KEY_INTERVAL_CHANGED, (lNewInterval != lOldInterval));
     }
 
+    @SuppressWarnings("unchecked")
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-        if (!Provisioning.A_zimbraDataSourcePollingInterval.equals(attrName)) {
-            return;
+        if (Provisioning.A_zimbraDataSourcePollingInterval.equals(attrName)) {
+            postModifyPollingInterval(context, attrName, entry, isCreate);
+        } else if (entry instanceof DataSource) {
+            // Reset error status on any attribute changes (bug 39050).
+            DataSourceManager.resetErrorStatus((DataSource) entry);
         }
-        
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void postModifyPollingInterval(Map context, String attrName, Entry entry, boolean isCreate) {
         // Don't do anything if the interval didn't change
         Boolean intervalChanged = (Boolean) context.get(KEY_INTERVAL_CHANGED);
         if (intervalChanged == null) {
