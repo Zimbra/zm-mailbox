@@ -100,6 +100,21 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
+     * Stage an incoming <code>InputStream</code> to an
+     * appropriate place for subsequent storage in a <code>Mailbox</code> via
+     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     * @param data
+     * @param actualSize
+     * @param callback
+     * @param mbox
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract StagedBlob stage(InputStream data, int actualSize, StorageCallback callback, Mailbox mbox)
+    throws IOException, ServiceException;
+
+    /**
      * Stage an incoming <code>Blob</code> (see {@link #storeIncoming}) to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.

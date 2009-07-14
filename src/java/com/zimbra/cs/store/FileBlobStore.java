@@ -78,6 +78,13 @@ public class FileBlobStore extends StoreManager {
         return builder.finish();
     }
 
+    @Override public StagedBlob stage(InputStream in, int actualSize, StorageCallback callback, Mailbox mbox)
+    throws IOException, ServiceException {
+        // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
+        Blob blob = storeIncoming(in, actualSize, callback);
+        return new StagedBlob(blob);
+    }
+
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) {
         // mailbox store is on the same volume as incoming directory, so no need to stage the blob
         return new StagedBlob(blob);

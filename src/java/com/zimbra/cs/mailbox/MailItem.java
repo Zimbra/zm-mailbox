@@ -49,7 +49,6 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
@@ -924,14 +923,14 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see #getMimeMessage()
      * @see #getContent() */
     public InputStream getContentStream() throws ServiceException {
-        if (getDigest() == null) {
+        if (getDigest() == null)
             return null;
-        }
+
         try {
-            MailboxBlob msgBlob = getBlob();
-            if (msgBlob == null)
+            MailboxBlob mblob = getBlob();
+            if (mblob == null)
                 throw ServiceException.FAILURE("missing blob for id: " + getId() + ", change: " + getModifiedSequence(), null);
-            return StoreManager.getInstance().getContent(msgBlob);
+            return StoreManager.getInstance().getContent(mblob);
         } catch (IOException e) {
             String msg = String.format("Unable to get content for %s %d", getClass().getSimpleName(), getId());
             throw ServiceException.FAILURE(msg, e);
@@ -1455,23 +1454,16 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         getFolder().updateUIDNEXT();
     }
-    
+
+    @Deprecated
     final MailboxBlob setContent(byte[] data, String digest, Object content)
     throws ServiceException, IOException {
-        InputStream dataStream = (data == null ? null : new ByteArrayInputStream(data));
-        int dataLength = (data == null ? 0 : data.length);
-        return setContent(dataStream, dataLength, digest, content);
-    }
+        if (data == null)
+            return setContent(null, 0, digest, content);
 
-    final MailboxBlob setContent(InputStream dataStream, int dataLength, String digest, Object content)
-    throws ServiceException, IOException {
-        StagedBlob staged = null;
-        if (dataStream != null) {
-            StoreManager sm = StoreManager.getInstance();
-            Blob incoming = sm.storeIncoming(dataStream, dataLength, null);
-            staged = sm.stage(incoming, mMailbox);
-        }
-        return setContent(staged, dataLength, digest, content);
+        StagedBlob staged = StoreManager.getInstance().stage(new ByteArrayInputStream(data), data.length, null, mMailbox);
+        mMailbox.markOtherItemDirty(staged);
+        return setContent(staged, data.length, digest, content);
     }
 
     MailboxBlob setContent(StagedBlob staged, int dataLength, String digest, Object content)
@@ -2699,8 +2691,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             setColor(c);
         }
         public Color(String color) {
-        	// string representation of color.  e.g. #00008B, #F0F8FF, etc
-        	setColor(color);
+            // string representation of color.  e.g. #00008B, #F0F8FF, etc
+            setColor(color);
         }
         public byte getRed() {
             return (byte)((mRgb >> 16) & 0xff);
@@ -2754,15 +2746,15 @@ public abstract class MailItem implements Comparable<MailItem> {
         long toMetadata() {
             return (mRgb | RGB_INDICATOR);
         }
-        
+
         private long mRgb;
-        
-        public boolean equals(Object that) {
-        	if (that instanceof Color)
-        		return this.mRgb == ((Color)that).mRgb;
-        	return false;
+
+        @Override public boolean equals(Object that) {
+            if (that instanceof Color)
+                return this.mRgb == ((Color)that).mRgb;
+            return false;
         }
-        public String toString() {
+        @Override public String toString() {
             String rgb = Long.toHexString(mRgb);
             int padding = 6 - rgb.length();
             for (int i = 0; i < padding; i++)

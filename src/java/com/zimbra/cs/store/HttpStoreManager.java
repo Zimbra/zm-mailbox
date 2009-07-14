@@ -17,7 +17,6 @@
 package com.zimbra.cs.store;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -115,35 +114,62 @@ public abstract class HttpStoreManager extends StoreManager {
         return builder.finish();
     }
 
-    protected abstract StagedBlob getStagedBlob(PostMethod post, Blob local) throws ServiceException, IOException;
+    @Override public StagedBlob stage(InputStream in, int actualSize, StorageCallback callback, Mailbox mbox)
+    throws IOException, ServiceException {
+        // just stream straight to the remote http server if we can
+        if (actualSize >= 0 && callback == null)
+            return stage(in, actualSize, mbox, null);
+
+        // for some reason, we need to route through the local filesystem
+        Blob blob = storeIncoming(in, actualSize, callback);
+        try {
+            return stage(blob, mbox);
+        } finally {
+            quietDelete(blob);
+        }
+    }
 
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
+        InputStream is = new BlobInputStream(blob);
+        try {
+            return stage(is, blob.getRawSize(), mbox, blob);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
+    }
+
+    protected abstract StagedBlob getStagedBlob(PostMethod post, Blob local) throws ServiceException, IOException;
+
+    protected StagedBlob stage(InputStream in, long sizeHint, Mailbox mbox, Blob blob)
+    throws IOException, ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         PostMethod post = new PostMethod(getPostUrl(mbox));
-        File file = blob.getFile();
-        InputStream is = new FileInputStream(file);
         try {
-            post.setRequestEntity(new InputStreamRequestEntity(is, file.length(), "application/octet-stream"));
+            post.setRequestEntity(new InputStreamRequestEntity(in, sizeHint, "application/octet-stream"));
             int statusCode = client.executeMethod(post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
             return getStagedBlob(post, blob);
         } finally {
-            ByteUtil.closeStream(is);
             post.releaseConnection();
         }
     }
 
     @Override public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        return link(src, destMbox, destMsgId, destRevision);
     }
 
     @Override public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
+        // default implementation is a GET fed directly into a POST
+        InputStream is = getContent(src);
+        try {
+            StagedBlob staged = stage(is, src.getSize(), destMbox, null);
+            return link(staged, destMbox, destMsgId, destRevision);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
     }
 
     @Override public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision)

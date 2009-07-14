@@ -4562,9 +4562,15 @@ public class Mailbox {
 
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
 
+        // write the draft content directly to the mailbox's blob staging area
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
-        StagedBlob staged = sm.stage(blob, this);
+        StagedBlob staged;
+        InputStream is = pm.getRawInputStream();
+        try {
+            staged = sm.stage(is, size, null, this);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
 
         synchronized (this) {
             SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
@@ -4584,7 +4590,7 @@ public class Mailbox {
                 // content changed, so we're obliged to change the IMAP uid
                 int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
                 redoRecorder.setImapId(imapID);
-                redoStream = new FileInputStream(blob.getFile());
+                redoStream = pm.getRawInputStream();
                 redoRecorder.setMessageBodyInfo(redoStream, size);
 
                 // update the content and increment the revision number
@@ -5419,15 +5425,17 @@ public class Mailbox {
             }
         }
 
+        StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
+            // write the contact content directly to the mailbox's blob staging area
+            InputStream is = null;
             try {
-                // store blob before taking Mailbox lock
-                StoreManager sm = StoreManager.getInstance();
-                Blob incoming = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
-                staged = sm.stage(incoming, this);
+                staged = sm.stage(is = pc.getContentStream(), (int) pc.getSize(), null, this);
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
+            } finally {
+                ByteUtil.closeStream(is);
             }
         }
 
@@ -5446,7 +5454,7 @@ public class Mailbox {
                 MailboxBlob mblob = null;
                 if (pc.hasAttachment()) {
                     try {
-                        mblob = StoreManager.getInstance().renameTo(staged, this, contactId, getOperationChangeID());
+                        mblob = sm.renameTo(staged, this, contactId, getOperationChangeID());
                         markOtherItemDirty(mblob);
                     } catch (IOException ioe) {
                         throw ServiceException.FAILURE("could not save contact blob", ioe);
@@ -5462,26 +5470,12 @@ public class Mailbox {
                 return con;
             } finally {
                 endTransaction(success);
-
-                if (staged != null)
-                    StoreManager.getInstance().quietDelete(staged.getLocalBlob());
             }
         }
     }
 
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
         pc.analyze(this);
-        StagedBlob staged = null;
-        if (pc.hasAttachment()) {
-            try {
-                // store blob before taking Mailbox lock
-                StoreManager sm = StoreManager.getInstance();
-                Blob blob = sm.storeIncoming(pc.getContentStream(), (int) pc.getSize(), null);
-                staged = sm.stage(blob, this);
-            } catch (IOException ioe) {
-                throw ServiceException.FAILURE("could not save contact blob", ioe);
-            }
-        }
 
         List<org.apache.lucene.document.Document> indexData = null;
         boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
@@ -5491,6 +5485,20 @@ public class Mailbox {
             } catch (Exception e) {
                 ZimbraLog.index_add.info("caught exception analyzing contact " + contactId + "; contact will not be indexed", e);
                 indexData = new ArrayList<org.apache.lucene.document.Document>();
+            }
+        }
+
+        StoreManager sm = StoreManager.getInstance();
+        StagedBlob staged = null;
+        if (pc.hasAttachment()) {
+            // write the contact content directly to the mailbox's blob staging area
+            InputStream is = null;
+            try {
+                staged = sm.stage(is = pc.getContentStream(), (int) pc.getSize(), null, this);
+            } catch (IOException ioe) {
+                throw ServiceException.FAILURE("could not save contact blob", ioe);
+            } finally {
+                ByteUtil.closeStream(is);
             }
         }
         
@@ -5516,8 +5524,6 @@ public class Mailbox {
                 success = true;
             } finally {
                 endTransaction(success);
-                if (staged != null)
-                    StoreManager.getInstance().quietDelete(staged.getLocalBlob());
             }
         }
     }
@@ -6244,20 +6250,26 @@ public class Mailbox {
             docList = pm.getLuceneDocuments();
         }
 
+        // write the chat content directly to the mailbox's blob staging area
         StoreManager sm = StoreManager.getInstance();
-        Blob incoming = sm.storeIncoming(pm.getRawInputStream(), size, null);
-        StagedBlob staged = sm.stage(incoming, this);
+        StagedBlob staged;
+        InputStream is = pm.getRawInputStream();
+        try {
+            staged = sm.stage(is, size, null, this);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
 
         synchronized (this) {
             CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
+            InputStream redoStream = pm.getRawInputStream();
 
             boolean success = false;
             try {
                 beginTransaction("createChat", octxt, redoRecorder);
 
                 CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
-                redoRecorder.setMessageBodyInfo(incoming.getFile());
-                markOtherItemDirty(incoming);
+                redoRecorder.setMessageBodyInfo(redoStream, size);
 
                 long tags = Tag.tagsToBitmask(tagsStr);
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
@@ -6273,7 +6285,8 @@ public class Mailbox {
                 return chat;
             } finally {
                 endTransaction(success);
-                sm.quietDelete(incoming);
+
+                ByteUtil.closeStream(redoStream);
             }
         }
     }
@@ -6296,9 +6309,15 @@ public class Mailbox {
         if (!deferIndexing)
             docList = pm.getLuceneDocuments();
 
+        // write the chat content directly to the mailbox's blob staging area
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(pm.getRawInputStream(), size, null);
-        StagedBlob staged = sm.stage(blob, this);
+        StagedBlob staged;
+        InputStream is = pm.getRawInputStream();
+        try {
+            staged = sm.stage(is, size, null, this);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
 
         synchronized (this) {
             SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
@@ -6311,7 +6330,7 @@ public class Mailbox {
                 SaveChat redoPlayer = (SaveChat) mCurrentChange.getRedoPlayer();
 
                 // can't load the redoRecorder with the incoming File because setContent() may rename it out from under us
-                redoStream = new FileInputStream(blob.getFile());
+                redoStream = pm.getRawInputStream();
                 redoRecorder.setMessageBodyInfo(redoStream, size);
 
                 Chat chat = (Chat) getItemById(id, MailItem.TYPE_CHAT);
@@ -6337,7 +6356,6 @@ public class Mailbox {
                 endTransaction(success);
 
                 ByteUtil.closeStream(redoStream);
-                sm.quietDelete(blob);
             }
         }
     }

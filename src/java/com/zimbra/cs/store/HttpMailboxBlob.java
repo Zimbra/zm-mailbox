@@ -15,8 +15,10 @@
 package com.zimbra.cs.store;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public class HttpMailboxBlob extends MailboxBlob {
@@ -32,14 +34,17 @@ public class HttpMailboxBlob extends MailboxBlob {
         if (blob != null)
             return blob;
 
+        InputStream is = sm.getContent(this);
         try {
-            blob = sm.storeIncoming(sm.getContent(this), mSize == null ? -1 : mSize.intValue(), null);
+            blob = sm.storeIncoming(is, mSize == null ? -1 : mSize.intValue(), null);
             setSize(blob.getRawSize());
             if (mDigest != null)
                 setDigest(blob.getDigest());
             return blobcache.cache(this, blob);
         } catch (ServiceException e) {
             throw new IOException("fetching local blob: " + e);
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
 
