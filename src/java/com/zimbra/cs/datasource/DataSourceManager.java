@@ -166,7 +166,7 @@ public class DataSourceManager {
             ZimbraLog.datasource.info("Importing data for data source '%s'", ds.getName());
             newDataImport(ds).importData(folderIds, fullSync);
             success = true;
-            resetErrorStatusIfNecessary(ds);
+            resetErrorStatus(ds);
         } catch (ServiceException x) {
             error = generateErrorMessage(x);
             setErrorStatus(ds, error);
@@ -183,7 +183,7 @@ public class DataSourceManager {
         return;
     }
     
-    private static void resetErrorStatusIfNecessary(DataSource ds) {
+    public static void resetErrorStatus(DataSource ds) {
         if (ds.getAttr(Provisioning.A_zimbraDataSourceFailingSince) != null ||
             ds.getAttr(Provisioning.A_zimbraDataSourceLastError) != null) {
             Map<String, Object> attrs = new HashMap<String, Object>();

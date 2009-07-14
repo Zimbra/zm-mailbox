@@ -111,10 +111,17 @@ public class DataSourceCallback extends AttributeCallback {
         // Don't do anything unless inside the server
         if (!Zimbra.started())
             return;
-        if (!LC.data_source_scheduling_enabled.booleanValue()) {
-            return;
+        if (Provisioning.A_zimbraDataSourcePollingInterval.equals(attrName) &&
+            LC.data_source_scheduling_enabled.booleanValue()) {
+            postModifyPollingInterval(context, attrName, entry, isCreate);
+        } else if (entry instanceof DataSource) {
+            // Reset error status on any attribute changes (bug 39050).
+            DataSourceManager.resetErrorStatus((DataSource) entry);
         }
-        
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void postModifyPollingInterval(Map context, String attrName, Entry entry, boolean isCreate) {
         // Don't do anything if the interval didn't change
         Boolean intervalChanged = isCreate || (Boolean) context.get(KEY_INTERVAL_CHANGED);
         if (intervalChanged == null || !intervalChanged) {
