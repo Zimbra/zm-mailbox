@@ -2380,3 +2380,17 @@ Remove its zimbraGalAccountId from the domain, then deletes the account.
 Reloads the memcached client configuration on this server.  Memcached client layer
 is reinitialized accordingly.  Call this command after updating memcached server list,
 for example.
+
+----------------------------
+ 
+<GetMemcachedClientConfigRequest/>
+
+<GetMemcachedClientConfigResponse
+  serverList="..."             // comma-separated list of host:port for memcached servers
+  hashAlgorithm="..."          // KETAMA_HASH, etc.
+  binaryProtocol="1|0"         // whether memcached binary protocol is in use
+  defaultExpirySeconds="..."   // default entry expiry in seconds
+  defaultTimeoutMillis="..."   // default timeout in milliseconds
+/>
+
+Returns the memcached client configuration on a mailbox server.

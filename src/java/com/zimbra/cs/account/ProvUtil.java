@@ -40,6 +40,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import net.spy.memcached.HashAlgorithm;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -56,6 +58,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -90,6 +93,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
@@ -433,6 +437,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         RELOAD_MEMCACHED_CLIENT_CONFIG("reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
+        GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
         UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3);
@@ -1018,6 +1023,9 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case RELOAD_MEMCACHED_CLIENT_CONFIG:
             doReloadMemcachedClientConfig(args);
+            break;
+        case GET_MEMCACHED_CLIENT_CONFIG:
+            doGetMemcachedClientConfig(args);
             break;
         case SOAP:
             // HACK FOR NOW
@@ -3262,37 +3270,43 @@ public class ProvUtil implements HttpDebugListener {
         System.out.println();
     }
 
-    private void doReloadMemcachedClientConfig(String[] args) throws ServiceException {
-        List<String> hostnames = new ArrayList<String>();
-        List<Integer> ports = new ArrayList<Integer>();
+    private List<Pair<String /* hostname */, Integer /* port */>> getMailboxServersFromArgs(String[] args)
+    throws ServiceException {
+        List<Pair<String, Integer>> entries = new ArrayList<Pair<String, Integer>>();
         if (args.length == 2 && "all".equalsIgnoreCase(args[1])) {
             // Get all mailbox servers.
             List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
             for (Server svr : servers) {
-                hostnames.add(svr.getAttr(Provisioning.A_zimbraServiceHostname));
-                ports.add((int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort));
+                String host = svr.getAttr(Provisioning.A_zimbraServiceHostname);
+                int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort);
+                Pair<String, Integer> entry = new Pair<String, Integer>(host, port);
+                entries.add(entry);
             }
         } else {
             // Only named servers.
             for (int i = 1; i < args.length; ++i) {
                 String arg = args[i];
                 if (mServer.equalsIgnoreCase(arg)) {
-                    hostnames.add(mServer);
-                    ports.add(mPort);
+                    entries.add(new Pair<String, Integer>(mServer, mPort));
                 } else {
                     Server svr = mProv.getServerByServiceHostname(arg);
                     if (svr == null)
                         throw AccountServiceException.NO_SUCH_SERVER(arg);
                     // TODO: Verify svr has mailbox service enabled.
-                    hostnames.add(arg);
-                    ports.add((int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort));
+                    int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort);
+                    entries.add(new Pair<String, Integer>(arg, port));
                 }
             }
         }
+        return entries;
+    }
+
+    private void doReloadMemcachedClientConfig(String[] args) throws ServiceException {
+        List<Pair<String, Integer>> servers = getMailboxServersFromArgs(args);
         // Send command to each server.
-        for (int i = 0; i < hostnames.size(); ++i) {
-            String hostname = hostnames.get(i);
-            int port = ports.get(i);
+        for (Pair<String, Integer> server : servers) {
+            String hostname = server.getFirst();
+            int port = server.getSecond();
             if (mVerbose)
                 System.out.print("Updating " + hostname + " ... ");
             boolean success = false;
@@ -3320,6 +3334,65 @@ public class ProvUtil implements HttpDebugListener {
                 if (mVerbose && success)
                     System.out.println("ok");
             }
+        }
+    }
+
+    private void doGetMemcachedClientConfig(String[] args) throws ServiceException {
+        List<Pair<String, Integer>> servers = getMailboxServersFromArgs(args);
+        // Send command to each server.
+        int longestHostname = 0;
+        for (Pair<String, Integer> server : servers) {
+            String hostname = server.getFirst();
+            longestHostname = Math.max(longestHostname, hostname.length());
+        }
+        String hostnameFormat = String.format("%%-%ds", longestHostname);
+        boolean consistent = true;
+        String prevConf = null;
+        for (Pair<String, Integer> server : servers) {
+            String hostname = server.getFirst();
+            int port = server.getSecond();
+            try {
+                SoapProvisioning sp = new SoapProvisioning();
+                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + ZimbraServlet.ADMIN_SERVICE_URI);
+                if (mDebug != SoapDebugLevel.none)
+                    sp.soapSetHttpTransportDebugListener(this);
+                if (mAccount != null && mPassword != null)
+                    sp.soapAdminAuthenticate(mAccount, mPassword);
+                else if (mAuthToken != null)
+                    sp.soapAdminAuthenticate(mAuthToken);
+                else
+                    sp.soapZimbraAdminAuthenticate();
+                MemcachedClientConfig config = sp.getMemcachedClientConfig();
+                String serverList = config.serverList != null ? config.serverList : "none";
+                if (mVerbose) {
+                    System.out.printf(hostnameFormat + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n",
+                                      hostname, serverList, config.hashAlgorithm,
+                                      config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
+                } else if (config.serverList != null) {
+                    if (HashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
+                        // Don't print the default hash algorithm to keep the output clutter-free.
+                        System.out.printf(hostnameFormat + " => %s\n", hostname, serverList);
+                    } else {
+                        System.out.printf(hostnameFormat + " => %s (%S)\n", hostname, serverList, config.hashAlgorithm);
+                    }
+                } else {
+                    System.out.printf(hostnameFormat + " => none\n", hostname);
+                }
+
+                String listAndAlgo = serverList + "/" + config.hashAlgorithm;
+                if (prevConf == null) {
+                    prevConf = listAndAlgo;
+                } else if (!prevConf.equals(listAndAlgo)) {
+                    consistent = false;
+                }
+            } catch (ServiceException e) {
+                System.out.printf(hostnameFormat + " => ERROR: unable to get configuration\n", hostname);
+                if (mVerbose)
+                    e.printStackTrace(System.out);
+            }
+        }
+        if (!consistent) {
+            System.out.println("Inconsistency detected!");
         }
     }
 

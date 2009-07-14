@@ -2255,6 +2255,26 @@ public class SoapProvisioning extends Provisioning {
         invoke(req);
     }
 
+    public class MemcachedClientConfig {
+        public String serverList;
+        public String hashAlgorithm;
+        public boolean binaryProtocol;
+        public int defaultExpirySeconds;
+        public long defaultTimeoutMillis;
+    }
+
+    public MemcachedClientConfig getMemcachedClientConfig() throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_MEMCACHED_CLIENT_CONFIG_REQUEST);
+        Element resp = invoke(req);
+        MemcachedClientConfig config = new MemcachedClientConfig();
+        config.serverList = resp.getAttribute(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_SERVER_LIST, null);
+        config.hashAlgorithm = resp.getAttribute(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_HASH_ALGORITHM, null);
+        config.binaryProtocol = resp.getAttributeBool(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL, false);
+        config.defaultExpirySeconds = (int) resp.getAttributeLong(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS, 0);
+        config.defaultTimeoutMillis = resp.getAttributeLong(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS, 0);
+        return config;
+    }
+
     @Override
     public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
             Account ownerAcct, String folderIdOrPath) throws ServiceException {

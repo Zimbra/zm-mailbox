@@ -238,6 +238,7 @@ public class AdminService implements DocumentService {
 
         // memcached
         dispatcher.registerHandler(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST, new ReloadMemcachedClientConfig());
+        dispatcher.registerHandler(AdminConstants.GET_MEMCACHED_CLIENT_CONFIG_REQUEST, new GetMemcachedClientConfig());
     }
 
     /**
