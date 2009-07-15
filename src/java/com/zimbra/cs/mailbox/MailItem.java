@@ -1470,7 +1470,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    MailboxBlob setContent(StagedBlob staged, int dataLength, String digest, Object content)
+    MailboxBlob setContent(StagedBlob staged, long dataLength, String digest, Object content)
     throws ServiceException, IOException {
         addRevision(false);
 
@@ -1500,7 +1500,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the content from the cache
         MessageCache.purge(this);
 
-        int size = staged == null ? 0 : dataLength;
+        long size = staged == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
             mData.size = size;
