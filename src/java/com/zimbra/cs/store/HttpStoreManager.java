@@ -118,7 +118,7 @@ public abstract class HttpStoreManager extends StoreManager {
     throws IOException, ServiceException {
         // just stream straight to the remote http server if we can
         if (actualSize >= 0 && callback == null)
-            return stage(in, actualSize, mbox, null);
+            return stage(in, actualSize, mbox);
 
         // for some reason, we need to route through the local filesystem
         Blob blob = storeIncoming(in, actualSize, callback);
@@ -132,24 +132,24 @@ public abstract class HttpStoreManager extends StoreManager {
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
         InputStream is = new BlobInputStream(blob);
         try {
-            return stage(is, blob.getRawSize(), mbox, blob);
+            return stage(is, blob.getRawSize(), mbox);
         } finally {
             ByteUtil.closeStream(is);
         }
     }
 
-    protected abstract StagedBlob getStagedBlob(PostMethod post, Blob local) throws ServiceException, IOException;
+    protected abstract StagedBlob getStagedBlob(PostMethod post) throws ServiceException, IOException;
 
-    protected StagedBlob stage(InputStream in, long sizeHint, Mailbox mbox, Blob blob)
+    protected StagedBlob stage(InputStream in, long actualSize, Mailbox mbox)
     throws IOException, ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         PostMethod post = new PostMethod(getPostUrl(mbox));
         try {
-            post.setRequestEntity(new InputStreamRequestEntity(in, sizeHint, "application/octet-stream"));
+            post.setRequestEntity(new InputStreamRequestEntity(in, actualSize, "application/octet-stream"));
             int statusCode = client.executeMethod(post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
-            return getStagedBlob(post, blob);
+            return getStagedBlob(post);
         } finally {
             post.releaseConnection();
         }
@@ -165,7 +165,7 @@ public abstract class HttpStoreManager extends StoreManager {
         // default implementation is a GET fed directly into a POST
         InputStream is = getContent(src);
         try {
-            StagedBlob staged = stage(is, src.getSize(), destMbox, null);
+            StagedBlob staged = stage(is, src.getSize(), destMbox);
             return link(staged, destMbox, destMsgId, destRevision);
         } finally {
             ByteUtil.closeStream(is);

@@ -1,6 +1,5 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009 Zimbra, Inc.
  * 
@@ -11,21 +10,19 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.store;
 
+public class VolumeStagedBlob extends StagedBlob {
+    private Blob mLocalBlob;
 
-public class HttpStagedBlob extends StagedBlob {
-    private String mLocator;
-
-    HttpStagedBlob(String locator) {
+    VolumeStagedBlob(Blob blob) {
         super();
-        mLocator = locator;
+        mLocalBlob = blob;
     }
 
-    String getLocator() {
-        return mLocator;
+    public Blob getLocalBlob() {
+        return mLocalBlob;
     }
 }

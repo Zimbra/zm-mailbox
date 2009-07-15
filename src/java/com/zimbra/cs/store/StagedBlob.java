@@ -30,13 +30,4 @@ package com.zimbra.cs.store;
  *  involve making a local copy of the original <code>Blob</code> or
  *  even pushing it out into the cloud. */
 public class StagedBlob {
-    private Blob mLocalBlob;
-
-    StagedBlob(Blob blob) {
-        mLocalBlob = blob;
-    }
-
-    public Blob getLocalBlob() {
-        return mLocalBlob;
-    }
 }

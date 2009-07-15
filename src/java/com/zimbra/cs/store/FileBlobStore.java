@@ -82,12 +82,12 @@ public class FileBlobStore extends StoreManager {
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
         Blob blob = storeIncoming(in, actualSize, callback);
-        return new StagedBlob(blob);
+        return new VolumeStagedBlob(blob);
     }
 
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) {
         // mailbox store is on the same volume as incoming directory, so no need to stage the blob
-        return new StagedBlob(blob);
+        return new VolumeStagedBlob(blob);
     }
 
     @Override public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
@@ -147,7 +147,8 @@ public class FileBlobStore extends StoreManager {
     @Override public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = Volume.getCurrentMessageVolume();
-        return link(src.getLocalBlob(), destMbox, destMsgId, destRevision, volume.getId());
+        Blob blob = ((VolumeStagedBlob) src).getLocalBlob();
+        return link(blob, destMbox, destMsgId, destRevision, volume.getId());
     }
 
     public MailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision, short destVolumeId)
@@ -209,7 +210,7 @@ public class FileBlobStore extends StoreManager {
     @Override public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         Volume volume = Volume.getCurrentMessageVolume();
-        Blob blob = src.getLocalBlob();
+        Blob blob = ((VolumeStagedBlob) src).getLocalBlob();
         File srcFile = blob.getFile();
         String srcPath = srcFile.getAbsolutePath();
 
