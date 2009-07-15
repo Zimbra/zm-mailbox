@@ -81,7 +81,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(InputStream data, int sizeHint, StorageCallback callback)
+    public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback)
     throws IOException, ServiceException {
         return storeIncoming(data, sizeHint, callback, false);
     }
@@ -97,7 +97,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, int sizeHint, StorageCallback callback, boolean storeAsIs)
+    public abstract Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException;
 
     /**
@@ -112,7 +112,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract StagedBlob stage(InputStream data, int actualSize, StorageCallback callback, Mailbox mbox)
+    public abstract StagedBlob stage(InputStream data, long actualSize, StorageCallback callback, Mailbox mbox)
     throws IOException, ServiceException;
 
     /**

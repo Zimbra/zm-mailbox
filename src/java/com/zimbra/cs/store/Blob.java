@@ -42,7 +42,7 @@ public class Blob {
     private String mPath;
     private Boolean mIsCompressed = null;
     private String mDigest;
-    private Integer mRawSize;
+    private Long mRawSize;
 
     protected Blob(File file) {
         if (file == null)
@@ -87,10 +87,10 @@ public class Blob {
      * Returns the size of the blob's data.  If the blob is compressed,
      * returns the uncompressed size.
      */
-    public int getRawSize() throws IOException {
+    public long getRawSize() throws IOException {
         if (mRawSize == null) {
             if (!isCompressed())
-                mRawSize = (int) mFile.length();
+                mRawSize = mFile.length();
             else
                 initializeSizeAndDigest();
         }
@@ -106,7 +106,7 @@ public class Blob {
             MessageDigest md = MessageDigest.getInstance("SHA1");
             byte[] buffer = new byte[1024];
             int numBytes;
-            int totalBytes = 0;
+            long totalBytes = 0;
             while ((numBytes = in.read(buffer)) >= 0) {
                 md.update(buffer, 0, numBytes);
                 totalBytes += numBytes;
@@ -133,7 +133,7 @@ public class Blob {
         return this;
     }
     
-    public Blob setRawSize(int rawSize) {
+    public Blob setRawSize(long rawSize) {
     	mRawSize = rawSize;
         return this;
     }

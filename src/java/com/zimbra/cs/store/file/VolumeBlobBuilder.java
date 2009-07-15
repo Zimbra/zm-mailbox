@@ -37,7 +37,7 @@ public class VolumeBlobBuilder extends BlobBuilder {
         return ((VolumeBlob) blob).getVolumeId();
     }
 
-    @Override protected boolean useCompression(int size) throws ServiceException {
+    @Override protected boolean useCompression(long size) throws ServiceException {
         if (isCompressionDisabled())
             return false;
 

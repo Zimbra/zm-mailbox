@@ -67,7 +67,7 @@ public class FileBlobStore extends StoreManager {
 
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
 
-    @Override public Blob storeIncoming(InputStream in, int sizeHint, StorageCallback callback, boolean storeAsIs)
+    @Override public Blob storeIncoming(InputStream in, long sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
         BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).disableCompression(storeAsIs).setStorageCallback(callback).init();
 
@@ -79,7 +79,7 @@ public class FileBlobStore extends StoreManager {
         return builder.finish();
     }
 
-    @Override public StagedBlob stage(InputStream in, int actualSize, StorageCallback callback, Mailbox mbox)
+    @Override public StagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
         Blob blob = storeIncoming(in, actualSize, callback);

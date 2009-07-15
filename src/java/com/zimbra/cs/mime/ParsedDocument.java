@@ -62,7 +62,7 @@ public class ParsedDocument {
     public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
         mBlob = blob;
-        mSize = blob.getRawSize();
+        mSize = (int) blob.getRawSize();
         mDigest = blob.getDigest();
         mContentType = ctype;
         mFilename = filename;

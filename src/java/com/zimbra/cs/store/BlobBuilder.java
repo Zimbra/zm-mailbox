@@ -30,25 +30,25 @@ import java.util.zip.GZIPOutputStream;
 
 public class BlobBuilder {
     protected Blob blob;
-    private int sizeHint;
+    private long sizeHint;
     private boolean disableCompression;
     private StorageCallback storageCallback;
     private MessageDigest digest;
     private OutputStream out;
     private FileChannel fc;
-    private int totalBytes;
+    private long totalBytes;
     private boolean finished;
 
     protected BlobBuilder(Blob targetBlob) {
         this.blob = targetBlob;
     }
 
-    public BlobBuilder setSizeHint(int size) {
+    public BlobBuilder setSizeHint(long size) {
         this.sizeHint = size;
         return this;
     }
 
-    protected int getTotalBytes() {
+    protected long getTotalBytes() {
         return totalBytes;
     }
 
@@ -92,7 +92,7 @@ public class BlobBuilder {
     }
 
     @SuppressWarnings("unused")
-    protected boolean useCompression(int size) throws ServiceException {
+    protected boolean useCompression(long size) throws ServiceException {
         return false;
     }
 

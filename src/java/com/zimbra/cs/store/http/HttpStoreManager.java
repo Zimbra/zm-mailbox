@@ -113,7 +113,7 @@ public abstract class HttpStoreManager extends StoreManager {
 
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
 
-    @Override public Blob storeIncoming(InputStream data, int sizeHint, StorageCallback callback, boolean storeAsIs)
+    @Override public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
         BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).disableCompression(storeAsIs).setStorageCallback(callback).init();
 
@@ -125,7 +125,7 @@ public abstract class HttpStoreManager extends StoreManager {
         return builder.finish();
     }
 
-    @Override public StagedBlob stage(InputStream in, int actualSize, StorageCallback callback, Mailbox mbox)
+    @Override public StagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
     throws IOException, ServiceException {
         // just stream straight to the remote http server if we can
         if (actualSize >= 0 && callback == null)
