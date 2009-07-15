@@ -1220,7 +1220,7 @@ public class LC {
         zimbra_class_accessmanager = new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.accesscontrol.ACLAccessManager");
         zimbra_class_mboxmanager = new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager");
         zimbra_class_database = new KnownKey("zimbra_class_database", "com.zimbra.cs.db.MySQL");
-        zimbra_class_store = new KnownKey("zimbra_class_store", "com.zimbra.cs.store.FileBlobStore");
+        zimbra_class_store = new KnownKey("zimbra_class_store", "com.zimbra.cs.store.file.FileBlobStore");
         zimbra_class_application = new KnownKey("zimbra_class_application", "com.zimbra.cs.util.ZimbraApplication");
         zimbra_class_rulerewriterfactory = new KnownKey("zimbra_class_rulerewriterfactory", "com.zimbra.cs.filter.RuleRewriterFactory");
         
