@@ -523,6 +523,8 @@ public class CalSummaryCache {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(targetAcctId);
         Folder folder = mbox.getFolderById(octxt, folderId);  // ACL check occurs here.
+        // All subsequent mailbox access is done as owner to avoid permission errors.
+        OperationContext ownerOctxt = new OperationContext(targetAcct);
         boolean worldReadable = isWorldReadable(mbox, folder);
         int currentModSeq = folder.getImapMODSEQ();
 
@@ -619,7 +621,7 @@ public class CalSummaryCache {
             if (defaultRange == null)
                 defaultRange = Util.getMonthsRange(System.currentTimeMillis(),
                                                    sRangeMonthFrom, sRangeNumMonths);
-            calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
+            calData = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType,
                                               defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
             synchronized (mSummaryCache) {
                 if (mLRUCapacity > 0) {
@@ -655,7 +657,7 @@ public class CalSummaryCache {
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            retval = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
+            retval = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
         }
 
         // hit/miss tracking
