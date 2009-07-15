@@ -91,6 +91,7 @@
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraFeatureMailForwardingInFiltersEnabled"/>
     <a n="zimbraFeatureMailUpsellURL"/>
+    <a n="zimbraFeatureMobileSyncEnabled"/>
     <a n="zimbraFeatureVoiceUpsellURL"/>
     <a n="zimbraForeignPrincipal"/>
     <a n="zimbraFreebusyLocalMailboxNotActive"/>
@@ -142,6 +143,7 @@
     <a n="zimbraPasswordMustChange"/>
     <a n="zimbraPop3Enabled"/>
     <a n="zimbraPortalName"/>
+    <a n="zimbraPrefAdminConsoleWarnOnExit"/>
     <a n="zimbraPrefAdvancedClientEnforceMinDisplay"/>
     <a n="zimbraPrefAppleIcalDelegationEnabled"/>
     <a n="zimbraPrefAutoAddAddressEnabled"/>
