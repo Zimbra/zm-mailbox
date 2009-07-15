@@ -517,13 +517,13 @@ public class CalSummaryCache {
 
         // Look up from memcached.
         CalSummaryKey key = new CalSummaryKey(targetAcctId, folderId);
-        CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
-        if (calData != null) {
-            ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
-            ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
+            CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
+            if (calData != null) {
+                ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
+                ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
             result.data = calData;
             return result;
-        }
+            }
         // If not found in memcached and account is not on local server, we're done.
         if (!targetAcctOnLocalServer)
             return null;
@@ -534,25 +534,27 @@ public class CalSummaryCache {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(targetAcctId);
         Folder folder = mbox.getFolderById(octxt, folderId);  // ACL check occurs here.
+        // All subsequent mailbox access is done as owner to avoid permission errors.
+        OperationContext ownerOctxt = new OperationContext(targetAcct);
         int currentModSeq = folder.getImapMODSEQ();
 
         // Lookup from heap LRU.
-        synchronized (mSummaryCache) {
-            if (mLRUCapacity > 0) {
-                calData = mSummaryCache.get(key);
-                lruSize = mSummaryCache.size();
+            synchronized (mSummaryCache) {
+                if (mLRUCapacity > 0) {
+                    calData = mSummaryCache.get(key);
+                    lruSize = mSummaryCache.size();
+                }
             }
-        }
-        if (calData != null) {
-            // Sanity check: Cached data can't be newer than the backend data.
-            if (calData.getModSeq() > currentModSeq) {
-                calData = null;
-            } else {
-                dataFrom = CacheLevel.Memory;
-                // Data loaded from heap LRU supports incremental update for stale items.
-                incrementalUpdate = sMaxStaleItems > 0;
+            if (calData != null) {
+                // Sanity check: Cached data can't be newer than the backend data.
+                if (calData.getModSeq() > currentModSeq) {
+                    calData = null;
+                } else {
+                    dataFrom = CacheLevel.Memory;
+                    // Data loaded from heap LRU supports incremental update for stale items.
+                    incrementalUpdate = sMaxStaleItems > 0;
+                }
             }
-        }
 
         if (calData == null) {
             // Load from file.
@@ -607,7 +609,7 @@ public class CalSummaryCache {
             if (defaultRange == null)
                 defaultRange = Util.getMonthsRange(System.currentTimeMillis(),
                                                    sRangeMonthFrom, sRangeNumMonths);
-            calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
+            calData = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType,
                                               defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
             synchronized (mSummaryCache) {
                 if (mLRUCapacity > 0) {
@@ -628,7 +630,7 @@ public class CalSummaryCache {
 
         // Put data in memcached if it didn't come from memcached.
         if (!CacheLevel.Memcached.equals(dataFrom))
-            mMemcachedCache.put(key, calData);
+                mMemcachedCache.put(key, calData);
 
         if (rangeStart >= calData.getRangeStart() && rangeEnd <= calData.getRangeEnd()) {
             // Requested range is within cached range.
@@ -640,7 +642,7 @@ public class CalSummaryCache {
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            result.data = reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
+            result.data = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
         }
 
         // hit/miss tracking
