@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,10 +38,12 @@ import org.apache.commons.cli2.builder.GroupBuilder;
 import org.apache.commons.cli2.commandline.Parser;
 import org.apache.commons.cli2.util.HelpFormatter;
 import org.apache.commons.cli2.validation.EnumValidator;
+import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
@@ -300,7 +301,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     }
     
     private void adminAuth()
-    throws Exception {
+    throws ServiceException, IOException {
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
         transport.setDebugListener(this);
         
@@ -316,15 +317,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mOut.println("Sending admin auth request to " + mUrl);
         }
         
-        try {
-            response = transport.invoke(auth, false, !mUseSession, null);
-        } catch (SoapFaultException e) {
-            System.err.format("Authentication error: %s\n", e.getMessage());
-            System.exit(1);
-        } catch (ConnectException e) {
-            System.err.format("Unable to connect to %s: %s\n", mUrl, e.getMessage());
-            System.exit(1);
-        }
+        response = transport.invoke(auth, false, !mUseSession, null);
         mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
         transport.setAuthToken(mAuthToken);
         
@@ -333,11 +326,9 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             Element getInfo = mFactory.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
             Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
-            try {
-                response = transport.invoke(getInfo, false, !mUseSession, null);
-            } catch (SoapFaultException e) {
-                System.err.format("Cannot access account: %s\n", e.getMessage());
-                System.exit(1);
+            response = transport.invoke(getInfo, false, !mUseSession, null);
+            if (mVerbose > 0) {
+                mOut.println(response.prettyPrint());
             }
             mUrl = response.getElement(AdminConstants.E_SOAP_URL).getText();
             
@@ -345,17 +336,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
             account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
-            try {
-                response = transport.invoke(delegateAuth, false, !mUseSession, null);
-            } catch (SoapFaultException e) {
-                System.err.format("Cannot do delegate auth: %s\n", e.getMessage());
-            }
+            response = transport.invoke(delegateAuth, false, !mUseSession, null);
             mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         }
     }
     
     private void mailboxAuth()
-    throws Exception {
+    throws ServiceException, IOException {
         if (mVerbose > 0) {
             mOut.println("Sending auth request to " + mUrl);
         }
@@ -372,21 +359,15 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         // Authenticate and get auth token
         Element response = null;
         
-        try {
-            response = transport.invoke(auth, false, !mUseSession, null);
+        response = transport.invoke(auth, false, !mUseSession, null);
+        if (mVerbose > 0) {
             mOut.println(response.prettyPrint());
-        } catch (SoapFaultException e) {
-            System.err.println("Authentication error: " + e.getMessage());
-            System.exit(1);
-        } catch (ConnectException e) {
-            System.err.format("Unable to connect to %s: %s\n", mUrl, e.getMessage());
-            System.exit(1);
         }
         mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
     }
     
     private void run()
-    throws Exception {
+    throws ServiceException, IOException, DocumentException {
         // Assemble SOAP request.
         Element element = null;
         InputStream in = null;
@@ -455,12 +436,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             transport.setTargetAcctName(mTargetAccountName);
         }
         Element response = null;
-        try {
-            response = transport.invoke(request, false, !mUseSession, null);
-        } catch (SoapFaultException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        }
+        response = transport.invoke(request, false, !mUseSession, null);
 
         // Select result.
         List<Element> results = null;
@@ -521,8 +497,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
      * for the root
      * @param path an XPath-like path of elements and attributes
      */
-    private Element processPath(Element start, String path)
-    throws Exception {
+    private Element processPath(Element start, String path) {
         String value = null;
         
         // Parse out value, if it's specified.
@@ -562,6 +537,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         return element;
     }
     
+    private static String formatServiceException(ServiceException e) {
+        Throwable cause = e.getCause();
+        return "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
+            (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");  
+    }
+    
     public static void main(String[] args) {
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("zmsoap", null);
@@ -570,9 +551,18 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         try {
             app.run();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ServiceException e) {
+            System.err.println(formatServiceException(e));
+            if (app.mVerbose > 0) {
+                e.printStackTrace(System.err);
+            }
             System.exit(1);
+        } catch (Exception e) {
+            if (app.mVerbose > 0) {
+                e.printStackTrace(System.err);
+            } else {
+                System.err.println(e);
+            }
         }
     }
 }
