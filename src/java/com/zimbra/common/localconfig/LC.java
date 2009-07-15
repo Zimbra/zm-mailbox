@@ -506,6 +506,8 @@ public class LC {
     
     public static final KnownKey data_source_scheduling_enabled;
     
+    public static final KnownKey notes_enabled;
+    
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1463,6 +1465,8 @@ public class LC {
         freebusy_exchange_cn3 = new KnownKey("freebusy_exchange_cn3");
         
         data_source_scheduling_enabled = new KnownKey("data_source_scheduling_enabled", "true");
+        
+        notes_enabled = new KnownKey("notes_enabled", "false");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
