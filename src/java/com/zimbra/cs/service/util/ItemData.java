@@ -107,6 +107,7 @@ public class ItemData {
                 put(Keys.parent_id.toString(), ud.parentId).
                 put(Keys.folder_id.toString(), ud.folderId).
                 // put(Keys.index_id.toString(), ud.indexId).
+                put(Keys.index_id.toString(), 0).
                 put(Keys.imap_id.toString(), ud.imapId).
                 put(Keys.date.toString(), ud.date).
                 put(Keys.size.toString(), ud.size).
