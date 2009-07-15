@@ -312,15 +312,16 @@ public class UrlNamespace {
 	    }
 	}
 	
-	public static void addToRenamedResource(String path, DavResource rsc) {
+	public static void addToRenamedResource(String user, String path, DavResource rsc) {
 		synchronized (sRenamedResourceMap) {
-			sRenamedResourceMap.put(path.toLowerCase(), rsc);
+			sRenamedResourceMap.put(new Pair<String,String>(user, path.toLowerCase()), rsc);
 		}
 	}
-	public static DavResource checkRenamedResource(String path) {
+	public static DavResource checkRenamedResource(String user, String path) {
+	    Pair<String,String> key = new Pair<String,String>(user, path.toLowerCase());
         synchronized (sRenamedResourceMap) {
-        	if (sRenamedResourceMap.containsKey(path.toLowerCase()))
-        		return (DavResource)sRenamedResourceMap.get(path.toLowerCase());
+        	if (sRenamedResourceMap.containsKey(key))
+        		return (DavResource)sRenamedResourceMap.get(key);
         }
         return null;
 	}
@@ -341,7 +342,7 @@ public class UrlNamespace {
         Mailbox.OperationContext octxt = ctxt.getOperationContext();
         MailItem item = null;
         
-        DavResource rs = checkRenamedResource(path);
+        DavResource rs = checkRenamedResource(user, path);
         if (rs != null)
         	return rs;
         

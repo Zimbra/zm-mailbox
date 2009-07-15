@@ -150,7 +150,7 @@ public class ScheduleInbox extends CalendarCollection {
 			Folder f = folders.remove(path);
 			if (f == null) {
 				// check for recently renamed folders
-				DavResource rs = UrlNamespace.checkRenamedResource(path);
+				DavResource rs = UrlNamespace.checkRenamedResource(getOwner(), path);
 				if (rs == null || !rs.isCollection())
 					throw new DavException("folder not found "+url, DavProtocol.STATUS_FAILED_DEPENDENCY);
 				f = mbox.getFolderById(ctxt.getOperationContext(), ((MailItemResource)rs).getId());
