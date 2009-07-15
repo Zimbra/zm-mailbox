@@ -481,8 +481,13 @@ public class CalSummaryCache {
 
     private static enum CacheLevel { Memory, Memcached, File, Miss }
 
+    public class CalendarDataResult {
+        public CalendarData data;
+        public boolean allowPrivateAccess;  // whether caller has permission to view private data
+    }
+
     // get summary for all appts/tasks in a calendar folder
-    public CalendarData getCalendarSummary(OperationContext octxt, String targetAcctId, int folderId,
+    public CalendarDataResult getCalendarSummary(OperationContext octxt, String targetAcctId, int folderId,
     									   byte itemType, long rangeStart, long rangeEnd,
     									   boolean computeSubRange)
     throws ServiceException {
@@ -494,28 +499,37 @@ public class CalSummaryCache {
             return null;
         boolean targetAcctOnLocalServer = Provisioning.onLocalServer(targetAcct);
 
+        CalendarDataResult result = new CalendarDataResult();
+
         if (!LC.calendar_cache_enabled.booleanValue()) {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
             if (!targetAcctOnLocalServer)
                 return null;
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(targetAcctId);
-            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
+            Folder folder = mbox.getFolderById(octxt, folderId);
+            Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : null;
+            boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+            result.allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
+            result.data = reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
+            return result;
         }
 
+        // Look up from memcached.
         CalSummaryKey key = new CalSummaryKey(targetAcctId, folderId);
-        if (!targetAcctOnLocalServer) {
-            // If a remote account, check memcached only.
-            CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
-            if (calData != null) {
-                ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
-                ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
-            } else {
-                ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
-                ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
-            }
-            return calData;
+        CalendarData calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
+        if (calData != null) {
+            ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(1);
+            ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(1);
+            result.data = calData;
+            // Only public shared calendars will result in memcached hit.  Public shared calendars imply
+            // private permission.
+            result.allowPrivateAccess = true;
+            return result;
         }
+        // If not found in memcached and account is not on local server, we're done.
+        if (!targetAcctOnLocalServer)
+            return null;
 
         int lruSize = 0;
         CacheLevel dataFrom = CacheLevel.Memory;
@@ -523,33 +537,15 @@ public class CalSummaryCache {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(targetAcctId);
         Folder folder = mbox.getFolderById(octxt, folderId);  // ACL check occurs here.
+        Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : null;
+        boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+        result.allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
         // All subsequent mailbox access is done as owner to avoid permission errors.
         OperationContext ownerOctxt = new OperationContext(targetAcct);
         boolean worldReadable = isWorldReadable(mbox, folder);
         int currentModSeq = folder.getImapMODSEQ();
 
-        CalendarData calData = null;
-        if (worldReadable) {
-            // Get from memcached.
-            calData = mMemcachedCache.getForRange(key, rangeStart, rangeEnd);
-            if (calData != null) {
-                dataFrom = CacheLevel.Memcached;
-                // If data is up to date, add to LRU.
-                if (calData.getModSeq() == currentModSeq) {
-                    if (mLRUCapacity > 0) {
-                        synchronized (mSummaryCache) {
-                            mSummaryCache.put(key, calData);
-                            lruSize = mSummaryCache.size();
-                        }
-                    }
-                } else {
-                    // Data loaded from memcached doesn't have stale items list.  It can't be refreshed incrementally.
-                    incrementalUpdate = false;
-                }
-            }
-        }
-
-        if (calData == null) {
+        // Lookup from heap LRU.
             synchronized (mSummaryCache) {
                 if (mLRUCapacity > 0) {
                     calData = mSummaryCache.get(key);
@@ -566,7 +562,6 @@ public class CalSummaryCache {
                     incrementalUpdate = sMaxStaleItems > 0;
                 }
             }
-        }
 
         if (calData == null) {
             // Load from file.
@@ -646,18 +641,17 @@ public class CalSummaryCache {
                 mMemcachedCache.put(key, calData);
         }
 
-        CalendarData retval;
         if (rangeStart >= calData.getRangeStart() && rangeEnd <= calData.getRangeEnd()) {
             // Requested range is within cached range.
             if (computeSubRange) {
-                retval = calData.getSubRange(rangeStart, rangeEnd);
+                result.data = calData.getSubRange(rangeStart, rangeEnd);
             } else {
-                retval = calData;
+                result.data = calData;
             }
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            retval = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
+            result.data = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
         }
 
         // hit/miss tracking
@@ -681,7 +675,7 @@ public class CalSummaryCache {
         }
         ZimbraPerf.COUNTER_CALENDAR_CACHE_LRU_SIZE.increment(lruSize);
 
-        return retval;
+        return result;
     }
 
     private void invalidateSummary(Mailbox mbox, int folderId) {

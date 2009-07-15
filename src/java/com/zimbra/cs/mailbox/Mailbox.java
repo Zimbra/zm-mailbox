@@ -95,7 +95,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -1612,9 +1612,9 @@ public class Mailbox {
                 DbMailbox.clearMailboxContent(this);
                 DbMailbox.deleteMailbox(conn, this);
 
-                // Remove all data related to this mailbox from calendar cache, so the data doesn't
+                // Remove all data related to this mailbox from memcached, so the data doesn't
                 // get used by another user later by mistake if/when mailbox id gets reused.
-                CalendarCacheManager.getInstance().purgeMailbox(this);
+                MemcachedCacheManager.purgeMailbox(this);
 
                 success = true;
             } finally {
@@ -3403,7 +3403,7 @@ public class Mailbox {
     }
 
 
-    public synchronized CalendarData getCalendarSummaryForRange(OperationContext octxt, int folderId, byte itemType, long start, long end)
+    public synchronized CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, byte itemType, long start, long end)
     throws ServiceException {
         Folder folder = getFolderById(folderId);
         if (!folder.canAccess(ACL.RIGHT_READ))
@@ -3412,14 +3412,14 @@ public class Mailbox {
             getCalendarSummary(octxt, getAccountId(), folderId, itemType, start, end, true);
     }
 
-    public synchronized List<CalendarData> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
+    public synchronized List<CalendarDataResult> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
     throws ServiceException {
         boolean success = false;
         try {
             // folder cache is populated in beginTransaction...
             beginTransaction("getAllCalendarsSummaryForRange", octxt);
             success = true;
-            List<CalendarData> list = new ArrayList<CalendarData>();
+            List<CalendarDataResult> list = new ArrayList<CalendarDataResult>();
             for (Folder folder : listAllFolders()) {
                 if (folder.inTrash() || folder.inSpam())
                     continue;
@@ -3430,10 +3430,10 @@ public class Mailbox {
                     continue;
                 if (!folder.canAccess(ACL.RIGHT_READ))
                     continue;
-                CalendarData calData = CalendarCacheManager.getInstance().getSummaryCache().
+                CalendarDataResult result = CalendarCacheManager.getInstance().getSummaryCache().
                     getCalendarSummary(octxt, getAccountId(), folder.getId(), itemType, start, end, true);
-                if (calData != null)
-                    list.add(calData);
+                if (result != null)
+                    list.add(result);
             }
             return list;
         } finally {
@@ -7288,7 +7288,7 @@ public class Mailbox {
             }
         }
         if (dirty != null)
-            CalendarCacheManager.getInstance().notifyCommittedChanges(dirty, mData.lastChangeId);
+            MemcachedCacheManager.notifyCommittedChanges(dirty, mData.lastChangeId);
     }
 
     private void rollbackCache(MailboxChange change) {

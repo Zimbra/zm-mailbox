@@ -176,7 +176,6 @@ public class Zimbra {
         }
 
         MemcachedConnector.startup();
-        CalendarCacheManager.getInstance().startup();
         MailboxManager.getInstance();
 
         ZimbraApplication app = ZimbraApplication.getInstance();
@@ -303,7 +302,6 @@ public class Zimbra {
         if (app.supports(ExtensionUtil.class.getName()))
         	ExtensionUtil.destroyAll();
 
-        CalendarCacheManager.getInstance().shutdown();
         MemcachedConnector.shutdown();
         MailboxManager.getInstance().shutdown();
 

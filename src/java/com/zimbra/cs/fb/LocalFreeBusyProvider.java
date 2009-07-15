@@ -36,10 +36,10 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.FullInstanceData;
 import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 
 public class LocalFreeBusyProvider {
 
@@ -74,22 +74,22 @@ public class LocalFreeBusyProvider {
 
         IntervalList intervals = new IntervalList(start, end);
 
-        List<CalendarData> calDataList;
+        List<CalendarDataResult> calDataResultList;
         if (folder == FreeBusyQuery.CALENDAR_FOLDER_ALL) {
-            calDataList = mbox.getAllCalendarsSummaryForRange(null, MailItem.TYPE_APPOINTMENT, start, end);
+            calDataResultList = mbox.getAllCalendarsSummaryForRange(null, MailItem.TYPE_APPOINTMENT, start, end);
         } else {
-            calDataList = new ArrayList<CalendarData>(1);
-            calDataList.add(mbox.getCalendarSummaryForRange(null, folder, MailItem.TYPE_APPOINTMENT, start, end));
+            calDataResultList = new ArrayList<CalendarDataResult>(1);
+            calDataResultList.add(mbox.getCalendarSummaryForRange(null, folder, MailItem.TYPE_APPOINTMENT, start, end));
         }
-        for (CalendarData calData : calDataList) {
-            int folderId = calData.getFolderId();
+        for (CalendarDataResult result : calDataResultList) {
+            int folderId = result.data.getFolderId();
             Folder f = mbox.getFolderById(null, folderId);
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
                 continue;
             // Free/busy must be allowed by folder or at account-level.
             if (!CalendarItem.allowFreeBusyAccess(f, authAcct, asAdmin) && !accountAceAllowed)
                 continue;
-            for (Iterator<CalendarItemData> iter = calData.calendarItemIterator(); iter.hasNext(); ) {
+            for (Iterator<CalendarItemData> iter = result.data.calendarItemIterator(); iter.hasNext(); ) {
                 CalendarItemData appt = iter.next();
                 int apptId = appt.getCalItemId();
                 if (apptId == exApptId)

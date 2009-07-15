@@ -51,7 +51,6 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -64,6 +63,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
@@ -500,50 +500,53 @@ public class Search extends MailDocumentHandler  {
             groupByServer(ItemId.groupFoldersByAccount(octxt, mbox, folderIids));
 
         // Look up in calendar cache first.
-        CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
-        long rangeStart = params.getCalItemExpandStart();
-        long rangeEnd = params.getCalItemExpandEnd();
-        for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
-             serverIter.hasNext(); ) {
-            Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
-            Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
-            // for each account
-            for (Iterator<Map.Entry<String, List<Integer>>> acctIter = accountFolders.entrySet().iterator();
-                 acctIter.hasNext(); ) {
-                Map.Entry<String, List<Integer>> acctEntry = acctIter.next();
-                String acctId = acctEntry.getKey();
-                List<Integer> folderIds = acctEntry.getValue();
-                ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
-                // for each folder
-                for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
-                    int folderId = iterFolderId.next();
-                    try {
-                        CalendarData calData = calCache.getCalendarSummary(octxt, acctId, folderId, itemType, rangeStart, rangeEnd, true);
-                        if (calData != null) {
-                            // Found data in cache.
+        if (LC.calendar_cache_enabled.booleanValue()) {
+            CalSummaryCache calCache = CalendarCacheManager.getInstance().getSummaryCache();
+            long rangeStart = params.getCalItemExpandStart();
+            long rangeEnd = params.getCalItemExpandEnd();
+            for (Iterator<Map.Entry<Server, Map<String, List<Integer>>>> serverIter = groupedByServer.entrySet().iterator();
+                 serverIter.hasNext(); ) {
+                Map.Entry<Server, Map<String, List<Integer>>> serverMapEntry = serverIter.next();
+                Map<String, List<Integer>> accountFolders = serverMapEntry.getValue();
+                // for each account
+                for (Iterator<Map.Entry<String, List<Integer>>> acctIter = accountFolders.entrySet().iterator();
+                     acctIter.hasNext(); ) {
+                    Map.Entry<String, List<Integer>> acctEntry = acctIter.next();
+                    String acctId = acctEntry.getKey();
+                    List<Integer> folderIds = acctEntry.getValue();
+                    ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+                    // for each folder
+                    for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
+                        int folderId = iterFolderId.next();
+                        try {
+                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId, itemType, rangeStart, rangeEnd, true);
+                            if (result != null) {
+                                // Found data in cache.
+                                iterFolderId.remove();
+                                addCalendarDataToResponse(parent, octxt, zsc, authAcct, ifmt, result.data, result.allowPrivateAccess);
+                            }
+                        } catch (ServiceException e) {
+                            String ecode = e.getCode();
+                            if (ecode.equals(ServiceException.PERM_DENIED)) {
+                                // share permission was revoked
+                                ZimbraLog.calendar.warn(
+                                        "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
+                            } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
+                                // shared calendar folder was deleted by the owner
+                                ZimbraLog.calendar.warn(
+                                        "Ignoring deleted calendar folder " + ifmt.formatItemId(folderId));
+                            } else {
+                                throw e;
+                            }
                             iterFolderId.remove();
-                            addCalendarDataToResponse(parent, octxt, zsc, authAcct, ifmt, calData, true);
-                        }
-                    } catch (ServiceException e) {
-                        String ecode = e.getCode();
-                        if (ecode.equals(ServiceException.PERM_DENIED)) {
-                            // share permission was revoked
-                            ZimbraLog.calendar.warn(
-                                    "Ignoring permission error during calendar search of folder " + ifmt.formatItemId(folderId), e);
-                        } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
-                            // shared calendar folder was deleted by the owner
-                            ZimbraLog.calendar.warn(
-                                    "Ignoring deleted calendar folder " + ifmt.formatItemId(folderId));
-                        } else {
-                            throw e;
                         }
                     }
+                    if (folderIds.isEmpty())
+                        acctIter.remove();
                 }
-                if (folderIds.isEmpty())
-                    acctIter.remove();
+                if (accountFolders.isEmpty())
+                    serverIter.remove();
             }
-            if (accountFolders.isEmpty())
-                serverIter.remove();
         }
 
         // For any remaining calendars, we have to get the data the hard way.
@@ -594,12 +597,9 @@ public class Search extends MailDocumentHandler  {
         long rangeEnd = params.getCalItemExpandEnd();
         for (int folderId : folderIds) {
             try {
-                CalendarData calData = targetMbox.getCalendarSummaryForRange(octxt, folderId, itemType, rangeStart, rangeEnd);
-                if (calData != null) {
-                    Folder folder = targetMbox.getFolderById(octxt, folderId);
-                    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, octxt.isUsingAdminPrivileges());
-                    addCalendarDataToResponse(parent, octxt, zsc, authAcct, ifmt, calData, allowPrivateAccess);
-                }
+                CalendarDataResult result = targetMbox.getCalendarSummaryForRange(octxt, folderId, itemType, rangeStart, rangeEnd);
+                if (result != null)
+                    addCalendarDataToResponse(parent, octxt, zsc, authAcct, ifmt, result.data, result.allowPrivateAccess);
             } catch (ServiceException e) {
                 String ecode = e.getCode();
                 if (ecode.equals(ServiceException.PERM_DENIED)) {

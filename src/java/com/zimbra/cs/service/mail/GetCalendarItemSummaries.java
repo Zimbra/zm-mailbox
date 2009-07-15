@@ -35,7 +35,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -49,8 +48,8 @@ import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
-import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -451,36 +450,31 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
         if (LC.calendar_cache_enabled.booleanValue()) {
             ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-            boolean asAdmin = octxt.isUsingAdminPrivileges();
             int folderId = iidFolder.getId();
             if (folderId != Mailbox.ID_AUTO_INCREMENT) {
-                Folder folder = mbox.getFolderById(octxt, folderId);
-                boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
-                CalendarData calData = mbox.getCalendarSummaryForRange(
+                CalendarDataResult result = mbox.getCalendarSummaryForRange(
                         octxt, folderId, getItemType(), rangeStart, rangeEnd);
-                if (calData != null) {
-    	            for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+                if (result != null) {
+    	            for (Iterator<CalendarItemData> itemIter = result.data.calendarItemIterator(); itemIter.hasNext(); ) {
     	            	CalendarItemData calItemData = itemIter.next();
                         int numInstances = calItemData.getNumInstances();
                         if (numInstances > 0) {
                             Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                    zsc, ifmt, calItemData, allowPrivateAccess, true);
+                                    zsc, ifmt, calItemData, result.allowPrivateAccess, true);
                             response.addElement(calItemElem);
                         }
     	            }
                 }
             } else {
-                List<CalendarData> calDataList = mbox.getAllCalendarsSummaryForRange(
+                List<CalendarDataResult> calDataResultList = mbox.getAllCalendarsSummaryForRange(
                         octxt, getItemType(), rangeStart, rangeEnd);
-                for (CalendarData calData : calDataList) {
-                    Folder folder = mbox.getFolderById(octxt, calData.getFolderId());
-                    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
-                    for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+                for (CalendarDataResult result : calDataResultList) {
+                    for (Iterator<CalendarItemData> itemIter = result.data.calendarItemIterator(); itemIter.hasNext(); ) {
                         CalendarItemData calItemData = itemIter.next();
                         int numInstances = calItemData.getNumInstances();
                         if (numInstances > 0) {
                             Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                    zsc, ifmt, calItemData, allowPrivateAccess, true);
+                                    zsc, ifmt, calItemData, result.allowPrivateAccess, true);
                             response.addElement(calItemElem);
                         }
                     }

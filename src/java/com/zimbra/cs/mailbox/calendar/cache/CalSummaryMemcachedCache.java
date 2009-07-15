@@ -101,19 +101,6 @@ public class CalSummaryMemcachedCache {
 
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
         Set<CalSummaryKey> keysToInvalidate = new HashSet<CalSummaryKey>();
-        if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
-                if (item instanceof Folder) {
-                    Folder folder = (Folder) item;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
-                        CalSummaryKey key = new CalSummaryKey(folder.getMailbox().getAccountId(), folder.getId());
-                        keysToInvalidate.add(key);
-                    }
-                }
-            }
-        }
         if (mods.modified != null) {
             for (Map.Entry<ModificationKey, Change> entry : mods.modified.entrySet()) {
                 Change change = entry.getValue();

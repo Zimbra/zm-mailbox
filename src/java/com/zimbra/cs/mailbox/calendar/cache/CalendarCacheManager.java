@@ -53,12 +53,6 @@ public class CalendarCacheManager {
         mSummaryCache = new CalSummaryCache(summaryLRUSize);
     }
 
-    public void startup() {
-    }
-
-    public void shutdown() {
-    }
-
     public void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (mSummaryCacheEnabled)
             mSummaryCache.notifyCommittedChanges(mods, changeId);
