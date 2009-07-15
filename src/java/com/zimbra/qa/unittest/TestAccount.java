@@ -33,7 +33,7 @@ import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.store.file.Volume;
 
 
 /**

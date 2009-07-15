@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.http;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +20,10 @@ import java.io.InputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.LocalBlobCache;
+import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StoreManager;
 
 public class HttpMailboxBlob extends MailboxBlob {
     protected HttpMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {

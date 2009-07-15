@@ -16,7 +16,7 @@
 /*
  * Created on 2004. 10. 13.
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.file;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +29,7 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.*;
 import com.zimbra.znative.IO;
 
 public class FileBlobStore extends StoreManager {

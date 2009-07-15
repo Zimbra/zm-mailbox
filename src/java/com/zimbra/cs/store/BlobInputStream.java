@@ -142,7 +142,7 @@ implements SharedInputStream {
 
     private static FileDescriptorCache mFileDescriptorCache;
 
-    static void setFileDescriptorCache(FileDescriptorCache fdcache) {
+    public static void setFileDescriptorCache(FileDescriptorCache fdcache) {
         mFileDescriptorCache = fdcache;
     }
 

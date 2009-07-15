@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.file;
 
 import java.io.IOException;
 import java.util.HashMap;

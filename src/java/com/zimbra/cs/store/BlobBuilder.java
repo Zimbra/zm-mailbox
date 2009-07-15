@@ -39,7 +39,7 @@ public class BlobBuilder {
     private int totalBytes;
     private boolean finished;
 
-    BlobBuilder(Blob targetBlob) {
+    protected BlobBuilder(Blob targetBlob) {
         this.blob = targetBlob;
     }
 
@@ -48,7 +48,7 @@ public class BlobBuilder {
         return this;
     }
 
-    int getTotalBytes() {
+    protected int getTotalBytes() {
         return totalBytes;
     }
 
@@ -62,7 +62,7 @@ public class BlobBuilder {
         return this;
     }
 
-    boolean isCompressionDisabled() {
+    protected boolean isCompressionDisabled() {
         return disableCompression;
     }
 
@@ -92,7 +92,7 @@ public class BlobBuilder {
     }
 
     @SuppressWarnings("unused")
-    boolean useCompression(int size) throws ServiceException {
+    protected boolean useCompression(int size) throws ServiceException {
         return false;
     }
 

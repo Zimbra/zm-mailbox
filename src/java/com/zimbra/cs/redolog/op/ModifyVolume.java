@@ -19,7 +19,7 @@ import java.io.IOException;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.store.file.Volume;
 
 public class ModifyVolume extends RedoableOp {
 

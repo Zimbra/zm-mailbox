@@ -43,7 +43,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.store.file.Volume;
 
 public class MetadataDump {
 

@@ -29,8 +29,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.store.Volume;
-import com.zimbra.cs.store.VolumeServiceException;
+import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.store.file.VolumeServiceException;
 
 /**
  * @author jhahm

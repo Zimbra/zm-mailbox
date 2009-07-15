@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.file;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,18 +24,20 @@ import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BlobBuilder;
 
 public class VolumeBlobBuilder extends BlobBuilder {
 
-    VolumeBlobBuilder(Blob blob) {
-        super(blob);
+    VolumeBlobBuilder(Blob targetBlob) {
+        super(targetBlob);
     }
 
     private short getVolumeId() {
         return ((VolumeBlob) blob).getVolumeId();
     }
 
-    @Override boolean useCompression(int size) throws ServiceException {
+    @Override protected boolean useCompression(int size) throws ServiceException {
         if (isCompressionDisabled())
             return false;
 

@@ -28,12 +28,12 @@ public class IncomingDirectory {
     private String mPath;
     private UniqueFileNameGenerator mNameGenerator;
 
-    IncomingDirectory(String path) {
+    public IncomingDirectory(String path) {
         mPath = path;
         mNameGenerator = new UniqueFileNameGenerator();
     }
 
-    String getPath() {
+    public String getPath() {
         return mPath;
     }
 
@@ -41,7 +41,7 @@ public class IncomingDirectory {
         mPath = path;
     }
 
-    File getNewIncomingFile() {
+    public File getNewIncomingFile() {
         return new File(mPath + File.separator + mNameGenerator.getFilename());
     }
 

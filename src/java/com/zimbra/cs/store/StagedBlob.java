@@ -34,11 +34,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 public class StagedBlob {
     private Mailbox mMailbox;
 
-    StagedBlob(Mailbox mbox) {
+    protected StagedBlob(Mailbox mbox) {
         mMailbox = mbox;
     }
 
-    Mailbox getMailbox() {
+    public Mailbox getMailbox() {
         return mMailbox;
     }
 }

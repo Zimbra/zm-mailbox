@@ -14,15 +14,16 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.http;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.store.StagedBlob;
 
 public class HttpStagedBlob extends StagedBlob {
     private String mLocator;
     private boolean mIsInserted;
 
-    HttpStagedBlob(Mailbox mbox, String locator) {
+    protected HttpStagedBlob(Mailbox mbox, String locator) {
         super(mbox);
         mLocator = locator;
     }

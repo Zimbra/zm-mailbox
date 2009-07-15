@@ -44,7 +44,7 @@ public class Blob {
     private String mDigest;
     private Integer mRawSize;
 
-    Blob(File file) {
+    protected Blob(File file) {
         if (file == null)
             throw new NullPointerException("file cannot be null");
 

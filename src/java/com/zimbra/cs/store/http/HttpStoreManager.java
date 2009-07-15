@@ -14,7 +14,7 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.http;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +35,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.store.*;
 
 public abstract class HttpStoreManager extends StoreManager {
     private final IncomingDirectory mIncoming = new IncomingDirectory(LC.zimbra_store_directory.value() + File.separator + "incoming");
@@ -70,8 +71,18 @@ public abstract class HttpStoreManager extends StoreManager {
         return mLocalCache;
     }
 
+    /** Private subclass to get around Blob constructor visibility issues. */
+    private static class HttpBlob extends Blob {
+        HttpBlob(File incoming)  { super(incoming); }
+    }
+
+    /** Private subclass to get around BlobBuilder constructor visibility issues. */
+    private static class HttpBlobBuilder extends BlobBuilder {
+        HttpBlobBuilder(Blob targetBlob)  { super(targetBlob); }
+    }
+
     @Override public BlobBuilder getBlobBuilder() throws IOException, ServiceException {
-        return new BlobBuilder(new Blob(mIncoming.getNewIncomingFile()));
+        return new HttpBlobBuilder(new HttpBlob(mIncoming.getNewIncomingFile()));
     }
 
     @Override public InputStream getContent(MailboxBlob mblob) throws IOException {

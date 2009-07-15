@@ -19,8 +19,8 @@ import java.io.IOException;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.Volume;
-import com.zimbra.cs.store.VolumeServiceException;
+import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.store.file.VolumeServiceException;
 
 public class CreateVolume extends RedoableOp {
 

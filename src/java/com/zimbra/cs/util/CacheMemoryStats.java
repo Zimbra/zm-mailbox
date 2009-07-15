@@ -24,8 +24,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.file.FileBlobStore;
 
 /**
  * Real-time poller for cache memory size statistics

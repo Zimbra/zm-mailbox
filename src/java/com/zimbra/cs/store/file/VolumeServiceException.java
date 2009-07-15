@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.file;
 
 import com.zimbra.common.service.ServiceException;
 

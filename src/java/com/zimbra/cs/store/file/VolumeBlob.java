@@ -12,9 +12,11 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.file;
 
 import java.io.File;
+
+import com.zimbra.cs.store.Blob;
 
 class VolumeBlob extends Blob {
     private short mVolumeId;

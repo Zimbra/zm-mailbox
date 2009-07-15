@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.store;
+package com.zimbra.cs.store.file;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,6 +33,7 @@ import com.zimbra.cs.redolog.op.DeleteVolume;
 import com.zimbra.cs.redolog.op.ModifyVolume;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.SetCurrentVolume;
+import com.zimbra.cs.store.IncomingDirectory;
 
 public class Volume {
 
