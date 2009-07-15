@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.store;
 
+import com.zimbra.cs.mailbox.Mailbox;
+
 /** This class represents blob data that has been "staged" to a place
  *  appropriate for the <code>Mailbox</code> it is in the process of
  *  being added to.  Data is first added to the local filesystem as a
@@ -30,4 +32,13 @@ package com.zimbra.cs.store;
  *  involve making a local copy of the original <code>Blob</code> or
  *  even pushing it out into the cloud. */
 public class StagedBlob {
+    private Mailbox mMailbox;
+
+    StagedBlob(Mailbox mbox) {
+        mMailbox = mbox;
+    }
+
+    Mailbox getMailbox() {
+        return mMailbox;
+    }
 }

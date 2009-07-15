@@ -1400,12 +1400,12 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  the supplied color is treated as an opaque byte.  Note than even
      *  "immutable" items can have their color changed.
      * 
-     * @deprecated
      * @param color  The item's new color.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
+    @Deprecated
     void setColor(byte color) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
@@ -1461,9 +1461,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (data == null)
             return setContent(null, 0, digest, content);
 
-        StagedBlob staged = StoreManager.getInstance().stage(new ByteArrayInputStream(data), data.length, null, mMailbox);
-        mMailbox.markOtherItemDirty(staged);
-        return setContent(staged, data.length, digest, content);
+        StoreManager sm = StoreManager.getInstance();
+        StagedBlob staged = sm.stage(new ByteArrayInputStream(data), data.length, null, mMailbox);
+        try {
+            return setContent(staged, data.length, digest, content);
+        } finally {
+            sm.quietDelete(staged);
+        }
     }
 
     MailboxBlob setContent(StagedBlob staged, int dataLength, String digest, Object content)

@@ -14,15 +14,27 @@
  */
 package com.zimbra.cs.store;
 
+import com.zimbra.cs.mailbox.Mailbox;
+
 public class VolumeStagedBlob extends StagedBlob {
     private Blob mLocalBlob;
+    private boolean mWasStagedDirectly;
 
-    VolumeStagedBlob(Blob blob) {
-        super();
+    VolumeStagedBlob(Mailbox mbox, Blob blob) {
+        super(mbox);
         mLocalBlob = blob;
     }
 
     public Blob getLocalBlob() {
         return mLocalBlob;
+    }
+
+    VolumeStagedBlob markStagedDirectly() {
+        mWasStagedDirectly = true;
+        return this;
+    }
+
+    boolean wasStagedDirectly() {
+        return mWasStagedDirectly;
     }
 }

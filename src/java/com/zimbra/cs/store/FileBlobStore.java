@@ -82,12 +82,12 @@ public class FileBlobStore extends StoreManager {
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
         Blob blob = storeIncoming(in, actualSize, callback);
-        return new VolumeStagedBlob(blob);
+        return new VolumeStagedBlob(mbox, blob).markStagedDirectly();
     }
 
     @Override public StagedBlob stage(Blob blob, Mailbox mbox) {
         // mailbox store is on the same volume as incoming directory, so no need to stage the blob
-        return new VolumeStagedBlob(blob);
+        return new VolumeStagedBlob(mbox, blob);
     }
 
     @Override public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
@@ -247,10 +247,19 @@ public class FileBlobStore extends StoreManager {
         return new VolumeMailboxBlob(destMbox, destMsgId, destRevision, volume.getLocator(), new VolumeBlob(destFile, volume.getId()));
     }
 
-    @Override public boolean delete(MailboxBlob mboxBlob) throws IOException {
-        if (mboxBlob == null)
+    @Override public boolean delete(MailboxBlob mblob) throws IOException {
+        if (mblob == null)
             return false;
-        return deleteFile(mboxBlob.getLocalBlob().getFile());
+        return deleteFile(mblob.getLocalBlob().getFile());
+    }
+
+    @Override public boolean delete(StagedBlob staged) throws IOException {
+        VolumeStagedBlob vsb = (VolumeStagedBlob) staged;
+        // we only delete a staged blob if the caller never saw it as an incoming blob
+        //  (this prevents killing the incoming blob in a multi-user delivery, for instance)
+        if (staged == null || !vsb.wasStagedDirectly())
+            return false;
+        return deleteFile(vsb.getLocalBlob().getFile());
     }
 
     @Override public boolean delete(Blob blob) throws IOException {

@@ -16,16 +16,27 @@
  */
 package com.zimbra.cs.store;
 
+import com.zimbra.cs.mailbox.Mailbox;
 
 public class HttpStagedBlob extends StagedBlob {
     private String mLocator;
+    private boolean mIsInserted;
 
-    HttpStagedBlob(String locator) {
-        super();
+    HttpStagedBlob(Mailbox mbox, String locator) {
+        super(mbox);
         mLocator = locator;
     }
 
     String getLocator() {
         return mLocator;
+    }
+
+    HttpStagedBlob markInserted() {
+        mIsInserted = true;
+        return this;
+    }
+
+    boolean isInserted() {
+        return mIsInserted;
     }
 }

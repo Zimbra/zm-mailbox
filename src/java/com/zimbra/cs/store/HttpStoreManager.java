@@ -138,7 +138,7 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    protected abstract StagedBlob getStagedBlob(PostMethod post) throws ServiceException, IOException;
+    protected abstract StagedBlob getStagedBlob(PostMethod post, Mailbox mbox) throws ServiceException, IOException;
 
     protected StagedBlob stage(InputStream in, long actualSize, Mailbox mbox)
     throws IOException, ServiceException {
@@ -149,7 +149,7 @@ public abstract class HttpStoreManager extends StoreManager {
             int statusCode = client.executeMethod(post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
-            return getStagedBlob(post);
+            return getStagedBlob(post, mbox);
         } finally {
             post.releaseConnection();
         }
@@ -175,23 +175,34 @@ public abstract class HttpStoreManager extends StoreManager {
     @Override public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         // link is a noop
-        String locator = ((HttpStagedBlob) staged).getLocator();
-        return new HttpMailboxBlob(destMbox, destMsgId, destRevision, locator);
+        return renameTo(staged, destMbox, destMsgId, destRevision);
     }
 
     @Override public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         // rename is a noop
-        String locator = ((HttpStagedBlob) staged).getLocator();
-        return new HttpMailboxBlob(destMbox, destMsgId, destRevision, locator);
+        HttpStagedBlob hsb = (HttpStagedBlob) staged;
+        hsb.markInserted();
+        return new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getLocator());
     }
 
     @Override public boolean delete(MailboxBlob mblob) throws IOException {
         if (mblob == null)
             return true;
+        return delete(mblob.getMailbox(), mblob.getLocator());
+    }
 
+    @Override public boolean delete(StagedBlob staged) throws IOException {
+        HttpStagedBlob hsb = (HttpStagedBlob) staged;
+        // we only delete a staged blob if it hasn't already been added to the mailbox 
+        if (hsb == null || hsb.isInserted())
+            return true;
+        return delete(hsb.getMailbox(), hsb.getLocator());
+    }
+
+    private boolean delete(Mailbox mbox, String locator) throws IOException {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        DeleteMethod delete = new DeleteMethod(getDeleteUrl(mblob.getMailbox(), mblob.getLocator()));
+        DeleteMethod delete = new DeleteMethod(getDeleteUrl(mbox, locator));
         try {
             int statusCode = client.executeMethod(delete);
             switch (statusCode) {

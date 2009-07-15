@@ -4145,7 +4145,7 @@ public class Mailbox {
             }
             deliveryCtxt.setIncomingBlob(incoming);
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
-                customData, deliveryCtxt);
+                              customData, deliveryCtxt);
         } finally {
             StoreManager.getInstance().quietDelete(incoming);
         }
@@ -4202,7 +4202,7 @@ public class Mailbox {
             deliveryCtxt = new DeliveryContext();
 
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = deliveryCtxt.getIncomingBlob() ;
+        Blob blob = deliveryCtxt.getIncomingBlob();
         boolean deleteIncoming = false;
 
         if (blob == null) {
@@ -4222,10 +4222,11 @@ public class Mailbox {
         Message msg = null;
         try {
             msg = addMessageInternal(octxt, pm, folderId, noICal, flags, tagStr, conversationId,
-                rcptEmail, dinfo, customData, deliveryCtxt, staged);
+                                     rcptEmail, dinfo, customData, deliveryCtxt, staged);
         } finally {
             if (deleteIncoming)
-                StoreManager.getInstance().quietDelete(deliveryCtxt.getIncomingBlob());
+                sm.quietDelete(deliveryCtxt.getIncomingBlob());
+            sm.quietDelete(staged);
         }
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
@@ -4611,6 +4612,7 @@ public class Mailbox {
                 endTransaction(success);
 
                 ByteUtil.closeStream(redoStream);
+                sm.quietDelete(staged);
             }
         }
     }
@@ -5470,6 +5472,8 @@ public class Mailbox {
                 return con;
             } finally {
                 endTransaction(success);
+
+                sm.quietDelete(staged);
             }
         }
     }
@@ -5524,6 +5528,8 @@ public class Mailbox {
                 success = true;
             } finally {
                 endTransaction(success);
+
+                sm.quietDelete(staged);
             }
         }
     }
@@ -6122,7 +6128,8 @@ public class Mailbox {
 
     public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
     throws IOException, ServiceException {
-        StagedBlob staged = StoreManager.getInstance().stage(pd.getBlob(), this);
+        StoreManager sm = StoreManager.getInstance();
+        StagedBlob staged = sm.stage(pd.getBlob(), this);
 
         synchronized (this) {
             SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
@@ -6161,6 +6168,7 @@ public class Mailbox {
                 endTransaction(success);
 
                 ByteUtil.closeStream(redoStream);
+                sm.quietDelete(staged);
             }
         }
     }
@@ -6181,7 +6189,8 @@ public class Mailbox {
     throws IOException, ServiceException {
         boolean deferIndexing = !indexImmediately() || pd.hasTemporaryAnalysisFailure();
 
-        StagedBlob staged = StoreManager.getInstance().stage(pd.getBlob(), this);
+        StoreManager sm = StoreManager.getInstance();
+        StagedBlob staged = sm.stage(pd.getBlob(), this);
 
         synchronized (this) {
             AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
@@ -6213,6 +6222,7 @@ public class Mailbox {
                 endTransaction(success);
 
                 ByteUtil.closeStream(redoStream);
+                sm.quietDelete(staged);
             }
         }
     }
@@ -6262,13 +6272,14 @@ public class Mailbox {
 
         synchronized (this) {
             CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
-            InputStream redoStream = pm.getRawInputStream();
+            InputStream redoStream = null;
 
             boolean success = false;
             try {
                 beginTransaction("createChat", octxt, redoRecorder);
 
                 CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
+                redoStream = pm.getRawInputStream();
                 redoRecorder.setMessageBodyInfo(redoStream, size);
 
                 long tags = Tag.tagsToBitmask(tagsStr);
@@ -6287,6 +6298,7 @@ public class Mailbox {
                 endTransaction(success);
 
                 ByteUtil.closeStream(redoStream);
+                sm.quietDelete(staged);
             }
         }
     }
@@ -6356,6 +6368,7 @@ public class Mailbox {
                 endTransaction(success);
 
                 ByteUtil.closeStream(redoStream);
+                sm.quietDelete(staged);
             }
         }
     }

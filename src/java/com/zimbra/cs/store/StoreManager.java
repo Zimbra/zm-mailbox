@@ -182,33 +182,6 @@ public abstract class StoreManager {
     throws IOException, ServiceException;
 
     /**
-     * Deletes a blob from store.  If blob doesn't exist, no exception is
-     * thrown and false is returned.
-     * @param mblob
-     * @return true if blob was actually deleted
-     * @throws IOException
-     */
-    public abstract boolean delete(MailboxBlob mblob) throws IOException;
-
-    /**
-     * Deletes a blob from store.  If blob doesn't exist, no exception is
-     * thrown and false is returned.
-     * @param mblob
-     * @return true if blob was actually deleted
-     */
-    public boolean quietDelete(MailboxBlob mblob) {
-        if (mblob == null)
-            return true;
-
-        try {
-            return delete(mblob);
-        } catch (IOException ioe) {
-            ZimbraLog.store.warn("could not delete blob " + mblob);
-            return false;
-        }
-    }
-
-    /**
      * Deletes a blob from incoming directory.  If blob doesn't exist, no exception is
      * thrown and false is returned.
      * @param blobFile
@@ -231,6 +204,60 @@ public abstract class StoreManager {
             return delete(blob);
         } catch (IOException ioe) {
             ZimbraLog.store.warn("could not delete blob " + blob.getPath());
+            return false;
+        }
+    }
+
+    /**
+     * Deletes a blob staged to the target mailbox.  If blob doesn't exist, no exception is
+     * thrown and false is returned.
+     * @param staged
+     * @return true if blob was actually deleted
+     * @throws IOException
+     */
+    public abstract boolean delete(StagedBlob staged) throws IOException;
+
+    /**
+     * Deletes a blob staged to the target mailbox.  If blob doesn't exist, no exception is
+     * thrown and false is returned.
+     * @param staged
+     * @return true if blob was actually deleted
+     */
+    public boolean quietDelete(StagedBlob staged) {
+        if (staged == null)
+            return true;
+
+        try {
+            return delete(staged);
+        } catch (IOException ioe) {
+            ZimbraLog.store.warn("could not delete staged blob " + staged);
+            return false;
+        }
+    }
+
+    /**
+     * Deletes a blob from store.  If blob doesn't exist, no exception is
+     * thrown and false is returned.
+     * @param mblob
+     * @return true if blob was actually deleted
+     * @throws IOException
+     */
+    public abstract boolean delete(MailboxBlob mblob) throws IOException;
+
+    /**
+     * Deletes a blob from store.  If blob doesn't exist, no exception is
+     * thrown and false is returned.
+     * @param mblob
+     * @return true if blob was actually deleted
+     */
+    public boolean quietDelete(MailboxBlob mblob) {
+        if (mblob == null)
+            return true;
+
+        try {
+            return delete(mblob);
+        } catch (IOException ioe) {
+            ZimbraLog.store.warn("could not delete blob " + mblob);
             return false;
         }
     }
