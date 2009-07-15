@@ -390,7 +390,7 @@ public class Log {
         if (mAccountLoggers.size() == 0) {
             return mLogger;
         }
-        for (String accountName : ZimbraLog.getAccountNamesForThread()) {
+        for (String accountName : ZimbraLog.getAccountNamesFromContext()) {
             Logger logger = mAccountLoggers.get(accountName);
             if (logger != null) {
                 return logger;

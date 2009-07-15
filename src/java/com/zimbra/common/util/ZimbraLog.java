@@ -368,26 +368,31 @@ public class ZimbraLog {
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
     
     /**
-     * Keeps track of the account associated with the current thread, for
-     * per-user logging settings. 
+     * Returns a new <tt>Set</tt> that contains the values of
+     * {@link #C_NAME} and {@link #C_ANAME} if they are set.
      */
-    private static ThreadLocal<Set<String>> sAccountNames = new ThreadLocal<Set<String>>();
-
-    static Set<String> getAccountNamesForThread() {
-        Set<String> accountNames = sAccountNames.get();
-        if (accountNames == null) {
-            accountNames = new HashSet<String>();
-            sAccountNames.set(accountNames);
+    public static Set<String> getAccountNamesFromContext() {
+        Map<String, String> contextMap = sContextMap.get();
+        if (contextMap == null) {
+            return Collections.emptySet();
         }
-        return accountNames;
+        
+        String name = contextMap.get(C_NAME);
+        String aname = contextMap.get(C_ANAME);
+        if (name == null && aname == null) {
+            return Collections.emptySet();
+        }
+        
+        Set<String> names = new HashSet<String>();
+        if (name != null) {
+            names.add(name);
+        }
+        if (aname != null) {
+            names.add(aname);
+        }
+        return names;
     }
     
-    private static void addAccountForThread(String accountName) {
-        if (accountName != null) {
-            getAccountNamesForThread().add(accountName);
-        }
-    }
-
     private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
     private static final ThreadLocal<String> sContextString = new ThreadLocal<String>();
     
@@ -455,9 +460,6 @@ public class ZimbraLog {
     public static void addToContext(String key, String value) {
         if (key == null || CONTEXT_FILTER.contains(key))
             return;
-        if (key.equals(C_NAME) || key.equals(C_ANAME)) {
-            addAccountForThread(value);
-        }
 
         Map<String, String> contextMap = sContextMap.get();
         boolean contextChanged = false;
@@ -644,10 +646,6 @@ public class ZimbraLog {
         if (contextMap != null) {
             contextMap.clear();
         }
-        Set<String> accountNames = sAccountNames.get();
-        if (accountNames != null) {
-            accountNames.clear();
-        }
         sContextString.remove();
     }
 
@@ -729,6 +727,7 @@ public class ZimbraLog {
      * @param strings
      * @return
      */
+    @SuppressWarnings("unchecked")
     public static String encodeAttrs(String[] args, Map extraArgs) {
         StringBuffer sb = new StringBuffer();
         boolean needSpace = false;
