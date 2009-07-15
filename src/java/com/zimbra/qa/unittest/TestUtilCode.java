@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -271,11 +272,23 @@ public class TestUtilCode extends TestCase
      * Makes sure that {@link ZimbraLog#addAccountNameToContext} can be called
      * with a <tt>null</tt> value.  See bug 26997 for details.
      */
-    public void testAccountLogger()
+    public void testAccountLoggerNullAccountName()
     throws Exception {
         ZimbraLog.addAccountNameToContext(null);
         ZimbraLog.test.addAccountLogger(TestUtil.getAddress("user1"), Log.Level.info);
         ZimbraLog.test.debug("Testing addAccountNameToContext(null).");
+    }
+    
+    public void testAccountLoggerMultipleAccountNames()
+    throws Exception {
+        String address1 = TestUtil.getAddress("user1");
+        String address2 = TestUtil.getAddress("user2");
+        
+        ZimbraLog.addAccountNameToContext(address1);
+        ZimbraLog.addAccountNameToContext(address2);
+        Set<String> names = ZimbraLog.getAccountNamesFromContext();
+        assertEquals(1, names.size());
+        assertTrue(names.contains(address2));
     }
     
     /**
