@@ -263,8 +263,8 @@ public abstract class MailItemResource extends DavResource {
 					Mailbox mbox = getMailbox(ctxt);
 					mbox.rename(ctxt.getOperationContext(), mId, mType, val, mFolderId);
 					setProperty(DavElements.P_DISPLAYNAME, val);
-					UrlNamespace.addToRenamedResource(uri, this);
-					UrlNamespace.addToRenamedResource(uri.substring(0, uri.length()-1), this);
+					UrlNamespace.addToRenamedResource(getOwner(), uri, this);
+					UrlNamespace.addToRenamedResource(getOwner(), uri.substring(0, uri.length()-1), this);
 				} catch (ServiceException se) {
 					ctxt.getResponseProp().addPropError(DavElements.E_DISPLAYNAME, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
 				}

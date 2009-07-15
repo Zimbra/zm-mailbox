@@ -24,6 +24,7 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -283,15 +284,16 @@ public class UrlNamespace {
     
 	private static LRUMap sRenamedResourceMap = new LRUMap(100);
 	
-	public static void addToRenamedResource(String path, DavResource rsc) {
+	public static void addToRenamedResource(String user, String path, DavResource rsc) {
 		synchronized (sRenamedResourceMap) {
-			sRenamedResourceMap.put(path.toLowerCase(), rsc);
+			sRenamedResourceMap.put(new Pair<String,String>(user, path.toLowerCase()), rsc);
 		}
 	}
-	public static DavResource checkRenamedResource(String path) {
+	public static DavResource checkRenamedResource(String user, String path) {
+	    Pair<String,String> key = new Pair<String,String>(user, path.toLowerCase());
         synchronized (sRenamedResourceMap) {
-        	if (sRenamedResourceMap.containsKey(path.toLowerCase()))
-        		return (DavResource)sRenamedResourceMap.get(path.toLowerCase());
+        	if (sRenamedResourceMap.containsKey(key))
+        		return (DavResource)sRenamedResourceMap.get(key);
         }
         return null;
 	}
@@ -312,7 +314,7 @@ public class UrlNamespace {
         OperationContext octxt = ctxt.getOperationContext();
         MailItem item = null;
         
-        DavResource rs = checkRenamedResource(path);
+        DavResource rs = checkRenamedResource(user, path);
         if (rs != null)
         	return rs;
         
