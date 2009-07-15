@@ -210,7 +210,9 @@ public class DavServlet extends ZimbraServlet {
         if (ctxt.hasRequestMessage() && ZimbraLog.dav.isDebugEnabled()) {
             try {
                 ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(ctxt.getUpload().getInputStream(), -1, 2048), "UTF-8"));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                ZimbraLog.dav.debug("ouch", e);
+            }
         }
 
         CacheStates cache = null;
@@ -224,8 +226,6 @@ public class DavServlet extends ZimbraServlet {
     			if (!ctxt.isResponseSent())
     				resp.setStatus(ctxt.getStatus());
     		}
-			long t1 = System.currentTimeMillis();
-			ZimbraLog.dav.info("DavServlet operation "+method.getName()+" to "+req.getPathInfo()+" (depth: "+ctxt.getDepth().name()+") finished in "+(t1-t0)+"ms");
 		} catch (DavException e) {
 			if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
 					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
@@ -239,11 +239,15 @@ public class DavServlet extends ZimbraServlet {
 					resp.setStatus(e.getStatus());
 					if (e.hasErrorMessage())
 						e.writeErrorMsg(resp.getOutputStream());
+	                ZimbraLog.dav.info("sending http error %d because: %s", e.getStatus(), e.getMessage());
+	                if (e.getCause() != null)
+	                    ZimbraLog.dav.debug("exception: ", e.getCause());
 				} else {
 					ZimbraLog.dav.error("error handling method "+method.getName(), e);
 					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				}
 			} catch (IllegalStateException ise) {
+                ZimbraLog.dav.debug("can't write error msg", ise);
 			}
 		} catch (ServiceException e) {
 			if (e instanceof MailServiceException.NoSuchItemException) {
@@ -259,6 +263,8 @@ public class DavServlet extends ZimbraServlet {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} catch (Exception ex) {}
 		} finally {
+            long t1 = System.currentTimeMillis();
+            ZimbraLog.dav.info("DavServlet operation "+method.getName()+" to "+req.getPathInfo()+" (depth: "+ctxt.getDepth().name()+") finished in "+(t1-t0)+"ms");
 			cacheCleanUp(ctxt, cache);
 		    ctxt.cleanup();
 		}
