@@ -241,6 +241,12 @@ public abstract class TestACL extends TestCase {
             // TODO Auto-generated method stub
             return false;
         }
+        
+        @Override
+        public boolean isDelegatedAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
 
         @Override
         public boolean isExpired() {

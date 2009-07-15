@@ -89,7 +89,7 @@ public final class AuthenticatorUtil {
             return null;
 
         // if necessary, check that the authenticated user can authorize as the target user
-        Account targetAcct = authorize(authAccount, username, at.isAdmin() || at.isDomainAdmin());
+        Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));
         if (targetAcct != null)
             prov.accountAuthed(authAccount);
         return targetAcct;

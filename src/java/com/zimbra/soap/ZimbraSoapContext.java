@@ -362,7 +362,7 @@ public class ZimbraSoapContext {
     }
 
     public boolean isUsingAdminPrivileges() {
-        return mAuthToken != null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin());
+        return mAuthToken != null && AuthToken.isAnyAdmin(mAuthToken);
     }
 
     public ZimbraSoapContext disableNotifications() {

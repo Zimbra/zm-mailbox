@@ -897,7 +897,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public boolean isUsingAdminPrivileges() {
-            return authToken != null && (authToken.isAdmin() || authToken.isDomainAdmin());
+            return authToken != null && AuthToken.isAnyAdmin(authToken);
         }
 
         public Servlet getServlet() { return servlet; }

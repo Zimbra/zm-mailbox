@@ -862,26 +862,7 @@ public class RightCommand {
         return RightManager.getInstance().getRight(rightName);
     }
     
-    /*
-     * master switch to disable non-stable code
-     * return false before check into p4
-     * 
-     * remove when all is well
-     * 
-     * TODOs:
-     * 4. check all callsites of AuthToken.isAdmin() to call AccessManager.isGlobalAdmin()
-     * 7. check all rights in zimbra-rights.xml ar used or still need to be used
-     *   
-     * For domain admin login:
-     */
-    private static boolean READY() {
-        return true;
-    }
-    
     private static void verifyAccessManager() throws ServiceException {
-        if (!READY())
-            return;
-        
         if (!(AccessManager.getInstance() instanceof ACLAccessManager))
             throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + 
                     AccessManager.getInstance().getClass().getCanonicalName() +
@@ -1131,8 +1112,6 @@ public class RightCommand {
          * if authedAcct==null, the call site is LdapProvisioning, treat it as a 
          * system admin and skip this check.
          */
-        if (!READY())
-            return;
         
         if (authedAcct != null) {
             AccessManager am = AccessManager.getInstance();

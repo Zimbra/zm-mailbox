@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -41,7 +42,7 @@ public class SearchGal extends AccountDocumentHandler {
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         
-        if (!zsc.getAuthToken().isAdmin() && !zsc.getAuthToken().isDomainAdmin()) {
+        if (!AuthToken.isAnyAdmin(zsc.getAuthToken())) {
             if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled, false))
                 throw ServiceException.PERM_DENIED("cannot search GAL");
         }

@@ -168,7 +168,7 @@ public class FolderACL {
         if (authuser == null || authuser.getId().equals(mShareTarget.getAccountId()))
             return rightsNeeded;
         
-        // admin users (and the appropriate domain admins) can also do anything they want
+        // check admin access
         if (AccessManager.getInstance().canAccessAccount(authuser, mShareTarget.getAccount(), asAdmin))
             return rightsNeeded;
         

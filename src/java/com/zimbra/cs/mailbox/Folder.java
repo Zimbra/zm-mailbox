@@ -295,7 +295,7 @@ public class Folder extends MailItem {
         // the mailbox owner can do anything they want
         if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
             return rightsNeeded;
-        // admin users (and the appropriate domain admins) can also do anything they want
+        // check admin access
         if (AccessManager.getInstance().canAccessAccount(authuser, getAccount(), asAdmin))
             return rightsNeeded;
         // check the ACLs to see if access has been explicitly granted

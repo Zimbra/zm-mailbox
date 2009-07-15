@@ -64,7 +64,7 @@ public class OperationContext {
     public OperationContext(AuthToken auth) throws ServiceException {
         authToken = auth;
         String accountId = auth.getAccountId();
-        isAdmin = auth.isAdmin() || auth.isDomainAdmin();
+        isAdmin = AuthToken.isAnyAdmin(auth);
         authuser = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
         if (authuser == null || !auth.isZimbraUser()) {
             if (auth.getDigest() != null || auth.getAccessKey() != null)

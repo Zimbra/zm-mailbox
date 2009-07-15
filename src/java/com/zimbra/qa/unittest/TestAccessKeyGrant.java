@@ -242,6 +242,12 @@ public class TestAccessKeyGrant extends TestCase {
             // TODO Auto-generated method stub
             return false;
         }
+        
+        @Override
+        public boolean isDelegatedAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
 
         @Override
         public boolean isExpired() {

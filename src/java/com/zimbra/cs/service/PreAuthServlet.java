@@ -117,7 +117,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 setCookieAndRedirect(req, resp, authToken);
             } else if (rawAuthToken != null) {
                 // see if we need a redirect to the correct server
-                boolean isAdmin = authToken != null && (authToken.isDomainAdmin() || authToken.isAdmin());
+                boolean isAdmin = authToken != null && AuthToken.isAnyAdmin(authToken);
                 Account acct = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
                 if (isAdmin || !needReferral(acct, referMode)) {
                     setCookieAndRedirect(req, resp, authToken);
@@ -244,7 +244,7 @@ public class PreAuthServlet extends ZimbraServlet {
     private static final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
 
     private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ServiceException {
-        boolean isAdmin = authToken.isDomainAdmin() || authToken.isAdmin();
+        boolean isAdmin = AuthToken.isAnyAdmin(authToken);
         boolean secureCookie = req.getScheme().equals("https");
         authToken.encode(resp, isAdmin, secureCookie);
 

@@ -48,6 +48,10 @@ public abstract class AuthToken {
         return ByteUtil.getDigest(buf.toString().getBytes());
     }
     
+    public static boolean isAnyAdmin(AuthToken authToken) {
+        return authToken.isAdmin() || authToken.isDomainAdmin() || authToken.isDelegatedAdmin(); 
+    }
+    
     public abstract String toString();
     
     public abstract String getAccountId() ;
@@ -62,9 +66,7 @@ public abstract class AuthToken {
 
     public abstract boolean isDomainAdmin();
     
-    public boolean isDelegatedAdmin() {
-        return false;
-    }
+    public abstract boolean isDelegatedAdmin();
     
     public abstract boolean isZimbraUser();
 
