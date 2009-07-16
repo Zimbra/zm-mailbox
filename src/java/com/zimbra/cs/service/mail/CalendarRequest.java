@@ -332,7 +332,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             os = null;
 
             is = new FileInputStream(tempMmFile);
-            csd.mMm = new MimeMessage(JMSession.getSession(), is);
+            csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
         } catch (IOException e) {
             if (tempMmFile != null)
                 tempMmFile.delete();

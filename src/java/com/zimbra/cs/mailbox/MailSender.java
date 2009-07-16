@@ -486,10 +486,14 @@ public class MailSender {
     private void logMessage(MimeMessage mm, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
-            StringBuilder msg = new StringBuilder("Sending message to MTA at ")
-                .append(getSmtpHost(mm)).append(", port ").append(getSmtpPort(mm)).append(": ");
+            StringBuilder msg = new StringBuilder("Sending message");
+            if (mm instanceof FixedMimeMessage) {
+                Session session = ((FixedMimeMessage) mm).getSession();
+                msg.append(String.format(" to MTA at %s, port %s",
+                    session.getProperty("mail.smtp.host"), session.getProperty("mail.smtp.port")));
+            }
             try {
-                msg.append("Message-ID=" + mm.getMessageID());
+                msg.append(": Message-ID=" + mm.getMessageID());
             } catch (MessagingException e) {
                 msg.append(e);
             }
@@ -503,22 +507,6 @@ public class MailSender {
         }
     }
     
-    private String getSmtpHost(MimeMessage mm) {
-        String host = "<unknown>";
-        if (mm instanceof FixedMimeMessage) {
-            host = ((FixedMimeMessage) mm).getSession().getProperty("mail.smtp.host");
-        }
-        return host;
-    }
-    
-    private String getSmtpPort(MimeMessage mm) {
-        String port = "<unknown>";
-        if (mm instanceof FixedMimeMessage) {
-            port = ((FixedMimeMessage) mm).getSession().getProperty("mail.smtp.port");
-        }
-        return port;
-    }
-
     public static final String X_ORIGINATING_IP = "X-Originating-IP";
     private static final String X_MAILER = "X-Mailer";
     public static final String X_AUTHENTICATED_USER = "X-Authenticated-User"; 
