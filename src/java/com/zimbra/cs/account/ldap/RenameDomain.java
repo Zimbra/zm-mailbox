@@ -33,11 +33,16 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 
 class RenameDomain {
@@ -47,7 +52,8 @@ class RenameDomain {
     private ZimbraLdapContext mZlc;
     private LdapProvisioning mProv;
     private Domain mOldDomain;
-    private String mOldDomainId; // save old domain id because we still need it after the old domain is deleted
+    private String mOldDomainId;   // save old domain id because we still need it after the old domain is deleted
+    private String mOldDomainName; // save old domain name because we still need it after the old domain is deleted
     private String mNewDomainName;
     
     RenameDomain(ZimbraLdapContext zlc, LdapProvisioning prov, Domain oldDomain, String newDomainName) {
@@ -55,18 +61,18 @@ class RenameDomain {
         mProv = prov;
         mOldDomain = oldDomain;
         mOldDomainId = mOldDomain.getId();
+        mOldDomainName = mOldDomain.getName();
         mNewDomainName = newDomainName;
     }
     
     private RenameDomainVisitor getVisitor(RenamePhase phase) {
-        return new RenameDomainVisitor(mZlc, mProv, mOldDomain.getName(), mNewDomainName, phase);
+        return new RenameDomainVisitor(mZlc, mProv, mOldDomainName, mNewDomainName, phase);
     }
         
     
     public void execute() throws ServiceException {
-        String oldDomainName = mOldDomain.getName();
            
-        debug("Renaming domain %s(%s) to %s", oldDomainName, mOldDomainId, mNewDomainName);
+        debug("Renaming domain %s(%s) to %s", mOldDomainName, mOldDomainId, mNewDomainName);
         
         RenameInfo renameInfo = beginRenameDomain();
         RenamePhase startingPhase = renameInfo.phase();
@@ -124,20 +130,25 @@ class RenameDomain {
         /*
          * 3. Delete the old domain
          */ 
-        debug("Deleting old domain %s(%s)", mOldDomain.getName(), mOldDomainId);
+        debug("Deleting old domain %s(%s)", mOldDomainName, mOldDomainId);
         mProv.deleteDomain(mOldDomainId);
         
         /*
-         * 4. activate the new domain
+         * 4. Modify system accounts that had been renamed
+         */
+        updateGlobalSystemAccounts();
+        
+        /*
+         * 5. activate the new domain
          *    - restore zimbraId to the id of the old domain on the new domain
          *    - activate/enable the new domain
          */
         endRenameDomain(newDomain, mOldDomainId);
         
         /*
-         * 5. flush account cache on all servers
+         * 6. flush account cache on all servers
          */
-        mProv.flushCacheOnAllServers(CacheEntryType.account);
+        flushCacheOnAllServers(CacheEntryType.account);
     }
     
     public static enum RenamePhase {
@@ -262,24 +273,23 @@ class RenameDomain {
     }
     
     private RenameInfo beginRenameDomain() throws ServiceException {
-        String oldDomainName = mOldDomain.getName();
         
         // see if the domain is currently shutdown and/or being renamed
         boolean domainIsShutdown = mOldDomain.isShutdown();
         RenameInfo renameInfo = RenameInfo.load(mOldDomain, true);
         
         if (domainIsShutdown && renameInfo == null)
-            throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " is shutdown without rename domain info", null);
+            throw ServiceException.INVALID_REQUEST("domain " + mOldDomainName + " is shutdown without rename domain info", null);
         
         if (renameInfo != null && !renameInfo.destDomainName().equals(mNewDomainName))
-            throw ServiceException.INVALID_REQUEST("domain " + oldDomainName + " was being renamed to " + renameInfo.destDomainName() + 
+            throw ServiceException.INVALID_REQUEST("domain " + mOldDomainName + " was being renamed to " + renameInfo.destDomainName() + 
                                                    " it cannot be renamed to " + mNewDomainName + " until the previous rename is finished", null);
       
         // okay, this is either a new rename or a restart of a previous rename that did not finish   
         
         // mark domain shutdown and rejecting mails
         // mProv.modifyDomainStatus(mOldDomain, Provisioning.DOMAIN_STATUS_SHUTDOWN);
-        debug("Locking old domain %s(%s)", mOldDomain.getName(), mOldDomain.getId());
+        debug("Locking old domain %s(%s)", mOldDomainName, mOldDomainId);
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
@@ -296,11 +306,12 @@ class RenameDomain {
             phase = renameInfo.phase();
         }
         
-        mProv.flushCacheOnAllServers(CacheEntryType.domain);
+        flushCacheOnAllServers(CacheEntryType.domain);
         
         return renameInfo;
     }
    
+    
 
     private Domain createNewDomain() throws ServiceException {
         
@@ -319,6 +330,14 @@ class RenameDomain {
         // will the new domain get a new create timestamp? or should it inherit the 
         // old domain's timestamp?  use new timestamp seems more right.
         domainAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
+        
+        // domain level system accounts should be updated to use the new domain name
+        String curNotebookAcctName = (String)domainAttrs.get(Provisioning.A_zimbraNotebookAccount);
+        String newNotebookAcctName = getNewAddress(curNotebookAcctName);
+        if (curNotebookAcctName != null && newNotebookAcctName != null) {
+            domainAttrs.remove(Provisioning.A_zimbraNotebookAccount);
+            domainAttrs.put(Provisioning.A_zimbraNotebookAccount, newNotebookAcctName);
+        }
         
         // the new domain is created shutdown and rejecting mails
         domainAttrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
@@ -344,16 +363,16 @@ class RenameDomain {
                     throw ServiceException.INVALID_REQUEST("domain " + mNewDomainName + " already exists", null);
                 }
                 
-                if (!renameInfo.srcDomainName().equals(mOldDomain.getName()))
+                if (!renameInfo.srcDomainName().equals(mOldDomainName))
                     throw ServiceException.INVALID_REQUEST("domain " + mNewDomainName + " was being renamed from " + renameInfo.srcDomainName() + 
-                            " it cannot be renamed from " + mOldDomain.getName() + " until the previous rename is finished" , null);
+                            " it cannot be renamed from " + mOldDomainName + " until the previous rename is finished" , null);
                 return newDomain;  // all is well
             } else
                 throw e;
                 
         } 
         
-        RenameInfo renameInfo = new RenameInfo(mOldDomain.getName(), null, null);
+        RenameInfo renameInfo = new RenameInfo(mOldDomainName, null, null);
         renameInfo.write(mProv, newDomain);
         return newDomain;
     }
@@ -366,8 +385,6 @@ class RenameDomain {
         
         debug("endRenameDomain domain=%s(%s), domainId=%s", domain.getName(), domain.getId(), domainId==null?"null":domainId);
         
-        String curId = domain.getId();
-        
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         if (domainId != null)
             attrs.put(Provisioning.A_zimbraId, domainId);
@@ -376,7 +393,7 @@ class RenameDomain {
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
         mProv.modifyAttrsInternal(domain, mZlc, attrs);  // skip callback
         
-        mProv.flushCacheOnAllServers(CacheEntryType.domain);
+        flushCacheOnAllServers(CacheEntryType.domain);
     }
     
     static class RenameDomainVisitor implements NamedEntry.Visitor {
@@ -674,7 +691,8 @@ class RenameDomain {
             try {
                 targetEntry = mProv.searchAliasTarget(alias, false);
             } catch (ServiceException e) {
-                warn(e, "handleForeignAlias", "target entry not found for alias" + "alias=[%s], target=[%s]", alias.getName(), targetEntry.getName());
+                warn(e, "handleForeignAlias", "target entry not found for alias" + "alias=[%s], target=[%s]", 
+                        alias.getName(), alias.getAttr(Provisioning.A_zimbraAliasTargetId));
                 return;
             }
             
@@ -780,8 +798,84 @@ class RenameDomain {
 
     }
     
-    private static void warn(Object o) {
-        sRenameDomainLog.warn(o);
+    /*
+     * Given an address, return the new address to be in the new domain 
+     * if domain of the old address is the same as the old domain name.
+     * 
+     * Return null if addr:
+     *     - is null
+     *     - cannot be parsed
+     *     - does not contain the old domain name
+     */
+    private String getNewAddress(String addr) {
+                
+        if (addr != null) {
+            String[] parts = EmailUtil.getLocalPartAndDomain(addr);
+            if (parts == null) {
+                warn("getNewAccountName", "encountered invalid address", "addr=[%s]", addr);
+                return null;
+            }
+            
+            String localPart = parts[0];
+            String domain = parts[1];
+            if (!domain.equals(mOldDomainName))
+                return null;
+            
+            return localPart + "@" + mNewDomainName; 
+        }
+        return null;
+    }
+        
+    private void updateGlobalSystemAccount(Config config, String attrName, Map<String, Object> attrMap) {
+        String curAddr = config.getAttr(attrName);
+        String newAddr = getNewAddress(curAddr);
+        if (curAddr != null && newAddr != null)
+            attrMap.put(attrName, newAddr);
+    }
+    
+    // TODO: should modify FlushCache to take more than one entry types, so that we can also flsuh the 
+    // global config cache in the same request when we flush accounts.
+    private void updateGlobalSystemAccounts() {
+        try {
+            Config config = mProv.getConfig();
+            
+            HashMap<String, Object> attrMap = new HashMap<String, Object>();
+            updateGlobalSystemAccount(config, Provisioning.A_zimbraNotebookAccount, attrMap);
+            updateGlobalSystemAccount(config, Provisioning.A_zimbraSpamIsSpamAccount, attrMap);
+            updateGlobalSystemAccount(config, Provisioning.A_zimbraSpamIsNotSpamAccount, attrMap);
+            
+            mProv.modifyAttrs(config, attrMap);
+            flushCacheOnAllServers(CacheEntryType.config);
+            
+        } catch (ServiceException e) {
+            // just log it an continue
+            warn("failed to update system accounts on global config", e);
+        }
+    }
+    
+    private void flushCacheOnAllServers(CacheEntryType type) throws ServiceException {
+        SoapProvisioning soapProv = new SoapProvisioning();
+        String adminUrl = null;
+        
+        for (Server server : mProv.getAllServers(Provisioning.SERVICE_MAILBOX)) {
+            
+            try {
+                adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
+            } catch (ServiceException e) {
+                warn(e, "flushCacheOnAllServers", "", "type=[%s]", type);
+                continue; 
+            }
+            
+            soapProv.soapSetURI(adminUrl);
+            
+            try {
+                soapProv.soapZimbraAdminAuthenticate();
+                soapProv.flushCache(type, null);
+                
+            } catch (ServiceException e) {
+                warn(e, "flushCacheOnAllServers", "", "type=[%s] server=[%s]", type, server.getName());
+            }
+        }
     }
     
     private static void warn(Object o, Throwable t) {

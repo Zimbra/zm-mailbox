@@ -5824,36 +5824,6 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.FAILURE("not a ldap entry", null);
     }
     
-    void flushCacheOnAllServers(CacheEntryType type) throws ServiceException {
-        SoapProvisioning soapProv = new SoapProvisioning();
-        String adminUrl = null;
-        
-        for (Server server : getAllServers(Provisioning.SERVICE_MAILBOX)) {
-            
-            try {
-                adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("domain cache not flushed on server: " + e.getMessage());
-                continue; 
-            }
-            
-            soapProv.soapSetURI(adminUrl);
-            
-            try {
-                soapProv.soapZimbraAdminAuthenticate();
-                if (type == CacheEntryType.account)
-                    soapProv.flushCache(CacheEntryType.account, null);
-                else if (type == CacheEntryType.domain)
-                    soapProv.flushCache(CacheEntryType.domain, null);
-                else
-                    assert(false);
-                
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("flushDomainCacheOnAllServers: domain cache not flushed on server " + server.getName(), e);
-            }
-        }
-    }
-    
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
         
