@@ -293,7 +293,7 @@ public class MailboxManager {
         if (mailboxKey != null) {
             if (DebugConfig.mockMultiserverInstall)
                 verifyCorrectHost(accountId);
-            return getMailboxById(mailboxKey.intValue(), fetchMode, false);
+            return getMailboxById(mailboxKey, fetchMode, false);
         } else if (fetchMode != FetchMode.AUTOCREATE) {
             return null;
         }
@@ -304,7 +304,7 @@ public class MailboxManager {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
         }
         if (mailboxKey != null)
-            return getMailboxById(mailboxKey.intValue(), fetchMode, false);
+            return getMailboxById(mailboxKey, fetchMode, false);
         else
             return createMailbox(null, account);
     }
@@ -710,7 +710,7 @@ public class MailboxManager {
             // check to make sure the mailbox doesn't already exist
             Long mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
             if (mailboxKey != null)
-                return getMailboxById(mailboxKey.intValue());
+                return getMailboxById(mailboxKey);
 
             // didn't have the mailbox in the database; need to create one now
             CreateMailbox redoRecorder = new CreateMailbox(account.getId());

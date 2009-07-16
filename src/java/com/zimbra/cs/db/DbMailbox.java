@@ -695,7 +695,7 @@ public class DbMailbox {
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             mbd.id            = mailboxId;
             mbd.accountId     = rs.getString(pos++);
-            mbd.schemaGroupId = rs.getInt(pos++);
+            mbd.schemaGroupId = rs.getLong(pos++);
             mbd.size          = rs.getLong(pos++);
             if (rs.wasNull())
                 mbd.size = -1;
