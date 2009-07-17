@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -286,16 +287,26 @@ public class UrlNamespace {
 	
 	public static void addToRenamedResource(String user, String path, DavResource rsc) {
 		synchronized (sRenamedResourceMap) {
-			sRenamedResourceMap.put(new Pair<String,String>(user, path.toLowerCase()), rsc);
+			sRenamedResourceMap.put(new Pair<String,String>(user, path.toLowerCase()),
+			                        new Pair<DavResource,Long>(rsc, System.currentTimeMillis()));
 		}
 	}
 	public static DavResource checkRenamedResource(String user, String path) {
 	    Pair<String,String> key = new Pair<String,String>(user, path.toLowerCase());
-        synchronized (sRenamedResourceMap) {
-        	if (sRenamedResourceMap.containsKey(key))
-        		return (DavResource)sRenamedResourceMap.get(key);
-        }
-        return null;
+	    DavResource rsc = null;
+	    synchronized (sRenamedResourceMap) {
+	        @SuppressWarnings("unchecked")
+	        Pair<DavResource,Long> item = (Pair<DavResource,Long>)sRenamedResourceMap.get(key);
+	        if (item != null) {
+	            long age = System.currentTimeMillis() - item.getSecond();
+	            // keep a short TTL of 15 minutes.
+	            if (age > 15 * Constants.MILLIS_PER_MINUTE)
+	                sRenamedResourceMap.remove(key);
+	            else
+	                rsc = item.getFirst();
+	        }
+	    }
+	    return rsc;
 	}
     private static DavResource getMailItemResource(DavContext ctxt, String user, String path) throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
@@ -314,10 +325,6 @@ public class UrlNamespace {
         OperationContext octxt = ctxt.getOperationContext();
         MailItem item = null;
         
-        DavResource rs = checkRenamedResource(user, path);
-        if (rs != null)
-        	return rs;
-        
         // simple case.  root folder or if id is specified.
         if (path.equals("/"))
             item = mbox.getFolderByPath(octxt, "/");
@@ -327,10 +334,16 @@ public class UrlNamespace {
         if (item != null)
             return getResourceFromMailItem(ctxt, item);
         
+        // check for named items (folders, documents)
         try {
             return getResourceFromMailItem(ctxt, mbox.getItemByPath(octxt, path));
         } catch (MailServiceException.NoSuchItemException e) {
         }
+
+        // check if the this is renamed folder.
+        DavResource rs = checkRenamedResource(user, path);
+        if (rs != null)
+            return rs;
         
         // look up the item from path
         if (path.endsWith("/"))
