@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -131,12 +132,14 @@ class RenameDomain {
          * 3. Delete the old domain
          */ 
         debug("Deleting old domain %s(%s)", mOldDomainName, mOldDomainId);
+        // save zimbraDefaultDomainName because deleteDomain will erase it if it is the old domain
+        String curDefaultDomain = mProv.getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName);
         mProv.deleteDomain(mOldDomainId);
         
         /*
          * 4. Modify system accounts that had been renamed
          */
-        updateGlobalSystemAccounts();
+        updateGlobalConfigSettings(curDefaultDomain);
         
         /*
          * 5. activate the new domain
@@ -825,9 +828,27 @@ class RenameDomain {
         }
         return null;
     }
+    
+    /*
+     * Given a domain name, return the new domain name if the given domain
+     * name is the old domain name.
+     * 
+     * Return null if domainName:
+     *     - is null
+     *     - does not contain the old domain name
+     */
+    private String getNewDomain(String domainName) {
+        if (domainName != null) {
+            if (!domainName.equals(mOldDomainName))
+                return null;
+            
+            return mNewDomainName; 
+        }
+        return null;
+    }
         
-    private void updateGlobalSystemAccount(Config config, String attrName, Map<String, Object> attrMap) {
-        String curAddr = config.getAttr(attrName);
+    private void updateSystemAccount(Entry entry, String attrName, Map<String, Object> attrMap) {
+        String curAddr = entry.getAttr(attrName);
         String newAddr = getNewAddress(curAddr);
         if (curAddr != null && newAddr != null)
             attrMap.put(attrName, newAddr);
@@ -835,14 +856,19 @@ class RenameDomain {
     
     // TODO: should modify FlushCache to take more than one entry types, so that we can also flsuh the 
     // global config cache in the same request when we flush accounts.
-    private void updateGlobalSystemAccounts() {
+    private void updateGlobalConfigSettings(String curDefaultDomainName) {
+        
         try {
             Config config = mProv.getConfig();
             
             HashMap<String, Object> attrMap = new HashMap<String, Object>();
-            updateGlobalSystemAccount(config, Provisioning.A_zimbraNotebookAccount, attrMap);
-            updateGlobalSystemAccount(config, Provisioning.A_zimbraSpamIsSpamAccount, attrMap);
-            updateGlobalSystemAccount(config, Provisioning.A_zimbraSpamIsNotSpamAccount, attrMap);
+            updateSystemAccount(config, Provisioning.A_zimbraNotebookAccount, attrMap);
+            updateSystemAccount(config, Provisioning.A_zimbraSpamIsSpamAccount, attrMap);
+            updateSystemAccount(config, Provisioning.A_zimbraSpamIsNotSpamAccount, attrMap);
+            
+            String newDomainName = getNewDomain(curDefaultDomainName);
+            if (curDefaultDomainName != null && newDomainName != null)
+                attrMap.put(Provisioning.A_zimbraDefaultDomainName, newDomainName);
             
             mProv.modifyAttrs(config, attrMap);
             flushCacheOnAllServers(CacheEntryType.config);
