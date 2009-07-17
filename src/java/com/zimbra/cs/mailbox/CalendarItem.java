@@ -2456,9 +2456,11 @@ public abstract class CalendarItem extends MailItem {
                 // reply.  If there was one, we would have found ti and returned from the method already
                 // and would not be here.
                 //
-                // If there was no series reply or the invite is not local-only, get the data out of the
-                // attendee info in the invite definition.
-                if (defaultAt != null && inv.isLocalOnly())
+                // If the invite is not local-only and is for an exception instance (meaning it was published
+                // by organizer), do not use the default series reply.  Get the partstat from the attendee
+                // info in the invite.  The default series reply only applies to instances expanded from
+                // the recurrence rule.
+                if (defaultAt != null && (!inv.hasRecurId() || inv.isLocalOnly()))
                     return defaultAt;
                 else
                     return inv.getMatchingAttendee(acct);
@@ -2628,6 +2630,18 @@ public abstract class CalendarItem extends MailItem {
     void modifyPartStat(Account acctOrNull, RecurId recurId, String cnStr, String addressStr, String cutypeStr, String roleStr,
             String partStatStr, Boolean needsReply, int seqNo, long dtStamp) throws ServiceException {
         mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
+        if (addressStr != null) {
+            Invite inv = getInvite(recurId);
+            if (inv != null) {
+                ZAttendee at;
+                if (acctOrNull != null)
+                    at = inv.getMatchingAttendee(acctOrNull);
+                else
+                    at = inv.getMatchingAttendee(addressStr);
+                if (at != null)
+                    at.setPartStat(partStatStr);
+            }
+        }
         saveMetadata();
     }
     
