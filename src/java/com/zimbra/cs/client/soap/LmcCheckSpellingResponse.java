@@ -21,7 +21,7 @@ import java.util.Map;
 
 
 public class LmcCheckSpellingResponse extends LmcSoapResponse {
-    private Map mMisspelled = new HashMap();
+    private Map<String, String[]> mMisspelled = new HashMap<String, String[]>();
     private boolean mIsAvailable;
     
     public LmcCheckSpellingResponse(boolean isAvailable) {
@@ -47,7 +47,7 @@ public class LmcCheckSpellingResponse extends LmcSoapResponse {
         mMisspelled.put(word, suggestions);
     }
     
-    public Iterator getMisspelledWordsIterator() {
+    public Iterator<String> getMisspelledWordsIterator() {
         return mMisspelled.keySet().iterator();
     }
     
@@ -58,6 +58,6 @@ public class LmcCheckSpellingResponse extends LmcSoapResponse {
      * check service is not available.
      */
     public String[] getSuggestions(String word) {
-        return (String[]) mMisspelled.get(word);
+        return mMisspelled.get(word);
     }
 }

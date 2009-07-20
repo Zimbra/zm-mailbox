@@ -20,18 +20,18 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.util.RemoteServerRequest;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -51,7 +51,7 @@ public class CheckSpelling extends MailDocumentHandler {
         Server localServer = prov.getLocalServer();
         String[] urls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
         if (ArrayUtil.isEmpty(urls)) {
-            sLog.warn("No value specified for %s", Provisioning.A_zimbraSpellCheckURL);
+            sLog.info("Unable to check spelling.  No value specified for %s", Provisioning.A_zimbraSpellCheckURL);
             return unavailable(response);
         }
 
@@ -63,15 +63,25 @@ public class CheckSpelling extends MailDocumentHandler {
             return response;
         }
         
-        // Check spelling
+        // Get the dictionary name from either (1) the request,
+        // (2) zimbraPrefSpellDictionary or (3) the account's locale.
+        String dictionary = request.getAttribute(MailConstants.A_DICTIONARY, null);
+        if (dictionary == null) {
+            Account account = getRequestedAccount(zc);
+            dictionary = account.getPrefSpellDictionary();
+            if (dictionary == null) {
+                dictionary = account.getLocale().toString();
+            }
+        }
+        
         Map<String, String> params = null;        
         for (int i = 0; i < urls.length; i++) {
             RemoteServerRequest req = new RemoteServerRequest();
             req.addParameter("text", text);
+            req.addParameter("dictionary", dictionary);
             String url = urls[i];
             try {
-                if (sLog.isDebugEnabled())
-                    sLog.debug("Checking spelling: url=%s, text=%s", url, text);
+                sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s", url, dictionary, text);
                 req.invoke(url);
                 params = req.getResponseParameters();
                 break; // Successful request.  No need to check the other servers.
@@ -82,7 +92,7 @@ public class CheckSpelling extends MailDocumentHandler {
 
         // Check for errors
         if (params == null) {
-            sLog.warn("Unable to check spelling.  No params returned.");
+            sLog.warn("Unable to check spelling.  No params returned from the spell server.");
             return unavailable(response);
         }
         if (params.containsKey("error")) {

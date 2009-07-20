@@ -2536,7 +2536,7 @@ size values are in bytes (no suffix), kilobytes (50K), megabytes (50M) or gigaby
 flag values: flagged, read
 date values are in seconds since epoch, and are truncated to the day. Hours, minutes,
   and seconds are ignored.
-index is an integer, used to maintain the order of filter tests and actions. 
+index is an integer, used to maintain the order of filter tests and actions.
  
 ---------------------------
 
@@ -2565,7 +2565,19 @@ Synchronization:
 
 ---------------------------
 
-<CheckSpellingRequest>
+<GetSpellDictionariesRequest>
+
+<GetSpellDictionariesResponse>
+  <dictionary>en_US</dictionary>
+  ...
+</GetSpellDictionariesResponse>
+
+Returns the list of dictionaries that can be used for spell
+checking.
+
+---------------------------
+
+<CheckSpellingRequest [dictionary="{name}"]>
     [text to spell check]
 </CheckSpellingRequest>
 
@@ -2576,6 +2588,10 @@ Synchronization:
 Suggested words are listed in decreasing order of their match score.
 The "available" attribute specifies whether the server-side spell checking
 interface is available or not.
+
+{name} : the optional name of the aspell dictionary that will be used to
+check spelling.  If not specified, the the dictionary will be either
+zimbraPrefSpellDictionary or the account's locale, in that order.
 
 ---------------------------
 
@@ -2601,7 +2617,7 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
 Returns intersection of all translated locales installed on the server and the list specified in zimbraAvailableLocale.  
 The locale list in the response is sorted by display name (name attribute).
 
-{locale-id} : lcoale id. e.g. en_US
+{locale-id} : locale id. e.g. en_US
 {locale-name-in-preferred-locale} : locale name in the preferred locale
                 For example, if the locale is fr_CA and the preferred locale is en_US, name will contain "French (Canada)"; 
                 if the locale is en_US and the preferred locale is fr_CA, name will contain "anglais (Etats-Unis)"

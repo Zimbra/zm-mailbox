@@ -147,6 +147,7 @@ public class MailService implements DocumentService {
 
         // spell check
         dispatcher.registerHandler(MailConstants.CHECK_SPELLING_REQUEST, new CheckSpelling());
+        dispatcher.registerHandler(MailConstants.GET_SPELL_DICTIONARIES_REQUEST, new GetSpellDictionaries());
 
         // TODO: move to a different service.
         // wiki

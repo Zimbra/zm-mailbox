@@ -16,23 +16,30 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcCheckSpellingRequest;
 import com.zimbra.cs.client.soap.LmcCheckSpellingResponse;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * @author bburtin
  */
 public class TestSpellCheck extends TestCase {
-    private static String USER_NAME = "user1";
-
-    private static String sText =
+    private static final String USER_NAME = "user1";
+    
+    private static final String TEXT =
         "On a cycle the fram is gone. You're completely in cotnact with it all.\n" +
         "You're in the scene, not just watching it anymore, and the sense of presence\n" +
         "is overwhelming. That concrete whizing by five inches below your foot is the\n" +
@@ -41,12 +48,17 @@ public class TestSpellCheck extends TestCase {
         "whole thing, the whole experience, is nevr removed from immediate\n" +
         "consciousness.";
         
-    public void testCheckSpelling() throws Exception {
-        ZimbraLog.test.debug("testCheckSpelling");
+    private String[] mOriginalDictionaries;
+    
+    public void setUp()
+    throws Exception {
+        mOriginalDictionaries = Provisioning.getInstance().getLocalServer().getSpellAvailableDictionary();
+    }
 
+    public void testCheckSpelling() throws Exception {
         // Send the request
         LmcSession session = TestUtil.getSoapSession(USER_NAME);
-        LmcCheckSpellingRequest req = new LmcCheckSpellingRequest(sText);
+        LmcCheckSpellingRequest req = new LmcCheckSpellingRequest(TEXT);
         req.setSession(session);
         LmcCheckSpellingResponse response =
             (LmcCheckSpellingResponse)req.invoke(TestUtil.getSoapUrl());
@@ -58,10 +70,10 @@ public class TestSpellCheck extends TestCase {
         }
         
         // Verify the response
-        Map map = new HashMap();
-        Iterator i = response.getMisspelledWordsIterator();
+        Map<String, String[]> map = new HashMap<String, String[]>();
+        Iterator<String> i = response.getMisspelledWordsIterator();
         while (i.hasNext()) {
-            String word = (String)i.next();
+            String word = i.next();
             map.put(word, response.getSuggestions(word));
         }
         
@@ -71,5 +83,43 @@ public class TestSpellCheck extends TestCase {
         assertTrue("whizing", response.getSuggestions("whizing").length > 0);
         assertTrue("nevr", response.getSuggestions("nevr").length > 0);
         ZimbraLog.test.debug("Successfully tested spell checking");
+    }
+    
+    /**
+     * Confirms that <tt>GetSpellDictionaries</tt> returns the current list of
+     * dictionaries from <tt>zimbraSpellAvailableDictionary</tt>.
+     */
+    public void testGetDictionaries()
+    throws Exception {
+        Server server = Provisioning.getInstance().getLocalServer();
+        server.setSpellAvailableDictionary(new String[] { "dict1", "dict2" });
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        Element request = new Element.XMLElement(MailConstants.GET_SPELL_DICTIONARIES_REQUEST);
+        Element response = mbox.invoke(request);
+        
+        // Compare results.
+        Set<String> expected = new HashSet<String>();
+        expected.add("dict1");
+        expected.add("dict2");
+        
+        Set<String> actual = new HashSet<String>();
+        for (Element eDict : response.listElements(MailConstants.E_DICTIONARY)) {
+            actual.add(eDict.getText());
+        }
+        
+        assertEquals(2, actual.size());
+        actual.removeAll(expected);
+        assertEquals(0, actual.size());
+    }
+    
+    public void tearDown()
+    throws Exception {
+        Provisioning.getInstance().getLocalServer().setSpellAvailableDictionary(mOriginalDictionaries);
+    }
+
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestSpellCheck.class);
     }
 }
