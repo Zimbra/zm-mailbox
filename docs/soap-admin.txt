@@ -83,7 +83,7 @@ Access: domain admin sufficient
  if {apply-cos} is 1, then COS rules apply and unset attrs on an account will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the account will be returned
-
+ 
 Access: domain admin sufficient
 
    note: this request is by default proxied to the account's home server
@@ -499,7 +499,7 @@ Notes:
  if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the domain will be returned
-
+ 
 -----------------------------
 
 <GetDomainInfoRequest [applyConfig="{apply-config}"]>
@@ -697,7 +697,7 @@ by "serviceHostname" will return the server that has zimbraServiceHostname set t
  if {apply-config} is 1, then certain unset attrs on a server will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the server will be returned
-
+ 
 -----------------------------
 
 You can get all servers defined in the system or you can get all
@@ -783,15 +783,15 @@ Notes:
 </GetServerAggregateStatsResponse>
 
 {date-time} format is number of seconds in 1970, utc time.
-
+  
 -----------------------------
 <GetServiceStatusRequest/>
 
 <GetServiceStatusResponse>
-<status server="..." service="..." t="{date-time}">{value}</status>*
+  <status server="..." service="..." t="{date-time}">{value}</status>*
 </GetServiceStatusResponse>
 
-{date-time} format is number of seconds in 1970, utc time.
+{date-time}               format is number of seconds in 1970, utc time.
 
 -----------------------------
 
@@ -1140,7 +1140,7 @@ Notes:
 
     more-flag = true if more accounts left to return
     total = total number of distribution lists (not affected by limit/offset)
-
+    
 Access: domain admin sufficient
 
 -----------------------------
@@ -1577,7 +1577,7 @@ Access: domain admin sufficient
  if {apply-cos} is 1, then COS rules apply and unset attrs on the calendar resource will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the calendar resource will be returned
-
+ 
 Access: domain admin sufficient
 
 -----------------------------
@@ -2151,14 +2151,14 @@ e.g.
 {target-type} = account|calresource|cos|distributionlist|domain|server  
 
     Check if principal has the specified right on target.
- 
+
 <CheckPermissionResponse/>
 
     A successful return means the principal is allowed for the specified right on the 
     target object.  If ServerException.PERM_DENIED is thrown, it indicates either 
     the authed user does not have privilege to run this SOAP command, 
     or the principal dose not have the specified right on the target object.
-  
+
 -----------------------------
 
 <PurgeAccountCalendarCacheRequest id="{value-of-zimbraId}"/>
@@ -2170,4 +2170,12 @@ Access: domain admin sufficient
    Purge the calendar cache for an account.
    note: this request is by default proxied to the account's home server
 
------------------------------
+----------------------------------------
+ 
+<ReloadMemcachedClientConfigRequest/>
+
+<ReloadMemcachedClientConfigResponse/>
+
+Reloads the memcached client configuration on this server.  Memcached client layer
+is reinitialized accordingly.  Call this command after updating memcached server list,
+for example.

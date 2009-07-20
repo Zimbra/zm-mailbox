@@ -60,8 +60,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.CountAccountResult;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -76,9 +74,9 @@ public class SoapProvisioning extends Provisioning {
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
-    
+
     public SoapProvisioning() {
-        
+
     }
 
     /**
@@ -112,7 +110,7 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport != null && retryCount >= 0)
             mTransport.setRetryCount(retryCount);
     }
-    
+
     public void soapSetTransportDebugListener(DebugListener listener) {
         mDebugListener = listener;
         if (mTransport != null)
@@ -122,7 +120,7 @@ public class SoapProvisioning extends Provisioning {
     public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
-    
+
     public void setAuthToken(ZAuthToken authToken) {
         mAuthToken = authToken;
         if (mTransport != null)
@@ -131,11 +129,11 @@ public class SoapProvisioning extends Provisioning {
 
     /**
      * used to authenticate via admin AuthRequest. can only be called after setting the URI with setURI.
-     * 
+     *
      * @param name
      * @param password
      * @throws ServiceException
-     * @throws IOException 
+     * @throws IOException
      */
     public void soapAdminAuthenticate(String name, String password) throws ServiceException {
        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
@@ -148,7 +146,7 @@ public class SoapProvisioning extends Provisioning {
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
        mTransport.setAuthToken(mAuthToken);
     }
-    
+
     public void soapAdminAuthenticate(ZAuthToken zat) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
         XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
@@ -163,8 +161,8 @@ public class SoapProvisioning extends Provisioning {
 
     /**
      * auth as zimbra admin (over SOAP) using password from localconfig. Can only be called after
-     * setting the URI with setUI. 
-     * 
+     * setting the URI with setUI.
+     *
      * @throws ServiceException
      * @throws IOException
      */
@@ -179,15 +177,15 @@ public class SoapProvisioning extends Provisioning {
             return mTransport.getURI();
         }
     }
-    
+
     private void checkTransport() throws ServiceException {
         if (mTransport == null)
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
-    
+
     public synchronized Element invoke(Element request) throws ServiceException {
         checkTransport();
-        
+
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
@@ -199,7 +197,7 @@ public class SoapProvisioning extends Provisioning {
 
     protected synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
         checkTransport();
-        
+
         String oldTarget = mTransport.getTargetAcctId();
         try {
             mTransport.setTargetAcctId(targetId);
@@ -212,10 +210,10 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setTargetAcctId(oldTarget);
         }
     }
-    
+
     synchronized Element invoke(Element request, String serverName) throws ServiceException {
         checkTransport();
-        
+
         String oldUri = soapGetURI();
         String newUri = URLUtil.getAdminURL(serverName);
         boolean diff = !oldUri.equals(newUri);        
@@ -234,7 +232,7 @@ public class SoapProvisioning extends Provisioning {
     static Map<String, Object> getAttrs(Element e) throws ServiceException {
         return getAttrs(e, AdminConstants.A_N);
     }
-    
+
     static Map<String, Object> getAttrs(Element e, String nameAttr) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Element a : e.listElements(AdminConstants.E_A)) {
@@ -245,7 +243,7 @@ public class SoapProvisioning extends Provisioning {
 
     public static void addAttrElements(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
         if (attrs == null) return;
-        
+
         for (Entry entry : attrs.entrySet()) {
             String key = (String) entry.getKey();
             Object value = entry.getValue();
@@ -255,15 +253,15 @@ public class SoapProvisioning extends Provisioning {
                 a.setText((String)value);
             } else if (value instanceof String[]) {
                 String[] values = (String[]) value;
-                for (String v: values) {
-                    Element  a = req.addElement(AdminConstants.E_A);
-                    a.addAttribute(AdminConstants.A_N, key);
-                    a.setText((String)v);                    
-                }
+                    for (String v: values) {
+                        Element  a = req.addElement(AdminConstants.E_A);
+                        a.addAttribute(AdminConstants.A_N, key);
+                        a.setText((String)v);
+                    }
             } else {
                 throw ZClientException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
             }
-        }        
+        }
     }
 
     @Override
@@ -281,12 +279,12 @@ public class SoapProvisioning extends Provisioning {
         XMLElement req = new XMLElement(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(dl.getId());
         req.addElement(AdminConstants.E_ALIAS).setText(alias);
-        invoke(req); 
+        invoke(req);
         reload(dl);
     }
 
     @Override
-    public void authAccount(Account acct, String password, AuthContext.Protocol  proto)
+    public void authAccount(Account acct, String password, AuthContext.Protocol proto)
             throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element a = req.addElement(AccountConstants.E_ACCOUNT);
@@ -295,9 +293,9 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AccountConstants.E_PASSWORD).setText(password);
         invoke(req);
     }
-    
+
     @Override
-    public void authAccount(Account acct, String password, AuthContext.Protocol  proto, Map<String, Object> context) 
+    public void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> context)
             throws ServiceException {
 	authAccount(acct, password, proto);
     }
@@ -316,8 +314,8 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs) 
-        throws ServiceException 
+    public Account createAccount(String emailAddress, String password, Map<String, Object> attrs)
+        throws ServiceException
     {
         XMLElement req = new XMLElement(AdminConstants.CREATE_ACCOUNT_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(emailAddress);
@@ -344,7 +342,7 @@ public class SoapProvisioning extends Provisioning {
         addAttrElements(req, attrs);
         return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
     }
-    
+
     @Override
     public Cos copyCos(String srcCosId, String destCosName)
             throws ServiceException {
@@ -401,14 +399,14 @@ public class SoapProvisioning extends Provisioning {
     public void deleteCalendarResource(String zimbraId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_CALENDAR_RESOURCE_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);        
+        invoke(req);
     }
 
     @Override
     public void deleteCos(String zimbraId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_COS_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);                
+        invoke(req);
     }
 
     @Override
@@ -422,7 +420,7 @@ public class SoapProvisioning extends Provisioning {
     public void deleteDomain(String zimbraId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_DOMAIN_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(zimbraId);
-        invoke(req);                        
+        invoke(req);
     }
 
     @Override
@@ -439,7 +437,7 @@ public class SoapProvisioning extends Provisioning {
     public void deleteZimlet(String name) throws ServiceException {
         throw new UnsupportedOperationException();
     }
-    
+
     public static class DelegateAuthResponse {
         private ZAuthToken mAuthToken;
         private long mExpires;
@@ -456,16 +454,16 @@ public class SoapProvisioning extends Provisioning {
         public ZAuthToken getAuthToken() {
             return mAuthToken;
         }
-        
+
         public long getExpires() {
             return mExpires;
         }
-        
+
         public long getLifetime() {
             return mLifetime;
         }
     }
-    
+
     public DelegateAuthResponse delegateAuth(AccountBy keyType, String key, int durationSeconds) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELEGATE_AUTH_REQUEST);
         req.addAttribute(AdminConstants.A_DURATION, durationSeconds);
@@ -661,15 +659,15 @@ public class SoapProvisioning extends Provisioning {
         for (Element eAccountLogger : resp.listElements(AdminConstants.E_ACCOUNT_LOGGER)) {
             Element eLogger = eAccountLogger.getElement(AdminConstants.E_LOGGER);
             
-            String accountName = eAccountLogger.getAttribute(AdminConstants.A_NAME);
-            String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
-            Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
-            
-            if (!result.containsKey(accountName)) {
-                result.put(accountName, new ArrayList<AccountLogger>());
+                String accountName = eAccountLogger.getAttribute(AdminConstants.A_NAME);
+                String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
+                Level level = Level.valueOf(eLogger.getAttribute(AdminConstants.A_LEVEL));
+
+                if (!result.containsKey(accountName)) {
+                    result.put(accountName, new ArrayList<AccountLogger>());
+                }
+                result.get(accountName).add(new AccountLogger(category, accountName, level));
             }
-            result.get(accountName).add(new AccountLogger(category, accountName, level));
-        }
         return result;
     }
 
@@ -1492,7 +1490,7 @@ public class SoapProvisioning extends Provisioning {
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_IDENTITY);
         return new SoapIdentity(account, response);
     }
-
+    
     @Override
     public void deleteIdentity(Account account, String identityName) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.DELETE_IDENTITY_REQUEST);
@@ -1581,7 +1579,7 @@ public class SoapProvisioning extends Provisioning {
     public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public void deleteDataSource(Account account, String dataSourceId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_DATA_SOURCE_REQUEST);
@@ -1632,7 +1630,7 @@ public class SoapProvisioning extends Provisioning {
             
         }
     }
-
+    
     @Override
     public Identity get(Account account, IdentityBy keyType, String key) throws ServiceException {
         // TOOD: more efficient version and/or caching on account?
@@ -1721,6 +1719,12 @@ public class SoapProvisioning extends Provisioning {
     public void purgeAccountCalendarCache(String accountId) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST);
         req.addAttribute(AdminConstants.A_ID, accountId);
+        invoke(req);
+    }
+    
+    @Override
+    public void reloadMemcachedClientConfig() throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST);
         invoke(req);
     }
 

@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -290,6 +291,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.SERVER, 0, 0),
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
+        RELOAD_MEMCACHED_CLIENT_CONFIG("reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
         UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3);
@@ -814,6 +816,9 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_ALL_MEMCACHED_SERVERS:
             doGetAllMemcachedServers(args);
+            break;
+        case RELOAD_MEMCACHED_CLIENT_CONFIG:
+            doReloadMemcachedClientConfig(args);
             break;
         case SOAP:
             // HACK FOR NOW
@@ -2333,7 +2338,66 @@ public class ProvUtil implements DebugListener {
         }
         System.out.println();
     }
-    
+
+    private void doReloadMemcachedClientConfig(String[] args) throws ServiceException {
+        List<String> hostnames = new ArrayList<String>();
+        List<Integer> ports = new ArrayList<Integer>();
+        if (args.length == 2 && "all".equalsIgnoreCase(args[1])) {
+            // Get all mailbox servers.
+            List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
+            for (Server svr : servers) {
+                hostnames.add(svr.getAttr(Provisioning.A_zimbraServiceHostname));
+                ports.add((int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort));
+            }
+        } else {
+            // Only named servers.
+            for (int i = 1; i < args.length; ++i) {
+                String arg = args[i];
+                if (mServer.equalsIgnoreCase(arg)) {
+                    hostnames.add(mServer);
+                    ports.add(mPort);
+                } else {
+                    Server svr = mProv.get(ServerBy.serviceHostname, arg);
+                    if (svr == null)
+                        throw AccountServiceException.NO_SUCH_SERVER(arg);
+                    // TODO: Verify svr has mailbox service enabled.
+                    hostnames.add(arg);
+                    ports.add((int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort));
+                }
+            }
+        }
+        // Send command to each server.
+        for (int i = 0; i < hostnames.size(); ++i) {
+            String hostname = hostnames.get(i);
+            int port = ports.get(i);
+            if (mVerbose)
+                System.out.print("Updating " + hostname + " ... ");
+            boolean success = false;
+            try {
+                SoapProvisioning sp = new SoapProvisioning();
+                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + ZimbraServlet.ADMIN_SERVICE_URI);
+                if (mAccount != null && mPassword != null)
+                    sp.soapAdminAuthenticate(mAccount, mPassword);
+                else if (mAuthToken != null)
+                    sp.soapAdminAuthenticate(mAuthToken);
+                else
+                    sp.soapZimbraAdminAuthenticate();
+                sp.reloadMemcachedClientConfig();
+                success = true;
+            } catch (ServiceException e) {
+                if (mVerbose) {
+                    System.out.println("fail");
+                    e.printStackTrace(System.out);
+                } else {
+                    System.out.println("Error updating " + hostname + ": " + e.getMessage());
+                }
+            } finally {
+                if (mVerbose && success)
+                    System.out.println("ok");
+            }
+        }
+    }
+
     private void doGetServer(String[] args) throws ServiceException {
         boolean applyDefault = true;
                 

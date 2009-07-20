@@ -211,6 +211,9 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.ADMIN_DESTROY_WAIT_SET_REQUEST, new AdminDestroyWaitSetRequest());
         dispatcher.registerHandler(AdminConstants.QUERY_WAIT_SET_REQUEST, new QueryWaitSet());
         
+
+        // memcached
+        dispatcher.registerHandler(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST, new ReloadMemcachedClientConfig());
     }
 
     /**

@@ -232,7 +232,7 @@ public abstract class Provisioning {
      * aliased object name. The dn that an alias points to
      */
     public static final String A_aliasedObjectName = "aliasedObjectName";
-    
+
     /**
      * Organizational Unit
      */
@@ -247,7 +247,7 @@ public abstract class Provisioning {
      * The (unique) user id. For example: schemers, smith, etc. Used as the RDN.
      */
     public static final String A_uid = "uid";
-    
+
     /**
      * description
      */
@@ -1063,7 +1063,7 @@ public abstract class Provisioning {
     
     public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
     // public static final String DEFAULT_SIGNATURE_NAME = "DEFAULT";
-    
+
     /**
      * delete appointment invite (from our inbox) when we've replied to it?
      * TODO add to schema! 
@@ -1638,7 +1638,7 @@ public abstract class Provisioning {
     public boolean idIsUUID() {
         return true;
     }
-
+    
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -1775,7 +1775,7 @@ public abstract class Provisioning {
     }
     
     /**
-     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
+     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list.
      * @throws ServiceException
      */
     public abstract Set<String> getDistributionLists(Account acct) throws ServiceException; 
@@ -1838,7 +1838,7 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
-    
+
     /**
      * deletes the specified account, removing the account and all email aliases.
      * does not remove any mailbox associated with the account.
@@ -1877,7 +1877,7 @@ public abstract class Provisioning {
      * @throws ServiceException if the key is malformed
      */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
-    
+
     /**
      * Looks up an account by the specified key.
      * 
@@ -2018,7 +2018,7 @@ public abstract class Provisioning {
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto) throws ServiceException;
     
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
-
+    
     public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, 
                                         String preAuth,
                                         boolean admin,
@@ -2103,9 +2103,9 @@ public abstract class Provisioning {
     }
     
     public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
-    
-    public abstract List<Domain> getAllDomains()  throws ServiceException;
 
+    public abstract List<Domain> getAllDomains()  throws ServiceException;
+    
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 
     public abstract Cos createCos(String name, Map<String, Object> attrs) throws ServiceException;
@@ -2132,11 +2132,11 @@ public abstract class Provisioning {
     public abstract Cos get(CosBy keyType, String key) throws ServiceException;
 
     public abstract List<Cos> getAllCos()  throws ServiceException;
-    
+
     public abstract void deleteCos(String zimbraId) throws ServiceException;
-    
+
     public abstract Server getLocalServer() throws ServiceException;
-    
+
     public static boolean onLocalServer(Account account) throws ServiceException {
         String target    = account.getAttr(Provisioning.A_zimbraMailHost);
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
@@ -2149,7 +2149,7 @@ public abstract class Provisioning {
 
         // case must match protocol
         id, name, serviceHostname;
-        
+
         public static ServerBy fromString(String s) throws ServiceException {
             try {
                 return ServerBy.valueOf(s);
@@ -2157,24 +2157,24 @@ public abstract class Provisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
-    
+
     }
-    
+
     public abstract Server get(ServerBy keyName, String key) throws ServiceException;
 
     public abstract List<Server> getAllServers()  throws ServiceException;
 
     public abstract List<Server> getAllServers(String service)  throws ServiceException;
-    
+
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
     public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
 
     public static enum DistributionListBy {
-        
+
         // case must match protocol
         id, name;
-        
+
         public static DistributionListBy fromString(String s) throws ServiceException {
             try {
                 return DistributionListBy.valueOf(s);
@@ -2182,32 +2182,32 @@ public abstract class Provisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
-    
+
     }
-    
+
     public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
-    
+
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
 
     public abstract void addAlias(DistributionList dl, String alias) throws ServiceException;
-    
+
     public abstract void removeAlias(DistributionList dl, String alias) throws ServiceException;
 
     public abstract void renameDistributionList(String zimbraId, String newName) throws ServiceException;
-    
+
     public abstract Zimlet getZimlet(String name) throws ServiceException;
-    
+
     public abstract List<Zimlet> listAllZimlets() throws ServiceException;
-    
+
     public abstract Zimlet createZimlet(String name, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract void deleteZimlet(String name) throws ServiceException;
-    
+
     public static enum ZimletBy {
-        
+
         // case must match protocol
         id, name;
-        
+
         public static ZimletBy fromString(String s) throws ServiceException {
             try {
                 return ZimletBy.valueOf(s);
@@ -2215,13 +2215,13 @@ public abstract class Provisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
-    
+
     }
-    
+
     /**
      * Creates the specified calendar resource. The A_zimbraId and A_uid attributes are automatically
      * created and should not be passed in.
-     * 
+     *
      * For example:
      * <pre>
      * HashMap attrs  = new HashMap();
@@ -2229,7 +2229,7 @@ public abstract class Provisioning {
      * attrs.put(Provisioning.A_zimbraCalResAutoRespondEnabled, "TRUE");
      * prov.createCalendarResource("room-1001@domain.com", attrs);
      * </pre>
-     * 
+     *
      * @param emailAddress email address (domain must already exist) of calendar resource being created.
      * @param attrs other initial attributes
      * @return
@@ -2253,11 +2253,11 @@ public abstract class Provisioning {
      */
     public abstract void renameCalendarResource(String zimbraId, String newName) throws ServiceException;
 
-    public static enum CalendarResourceBy { 
+    public static enum CalendarResourceBy {
 
         // case must match protocol
         id, foreignPrincipal, name;
-        
+
         public static CalendarResourceBy fromString(String s) throws ServiceException {
             try {
                 return CalendarResourceBy.valueOf(s);
@@ -2265,9 +2265,9 @@ public abstract class Provisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
-    
+
     }
-    
+
     public abstract CalendarResource get(CalendarResourceBy keyType, String key) throws ServiceException;
     public CalendarResource get(CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         return get(keyType, key);
@@ -2292,7 +2292,7 @@ public abstract class Provisioning {
         }
         return lc;
     }
-    
+
     private static Locale getEntryLocale(Entry entry) {
         return getEntryLocale(entry, A_zimbraLocale);
     }
@@ -2357,9 +2357,9 @@ public abstract class Provisioning {
     }
 
     public abstract List getAllAccounts(Domain d) throws ServiceException;
-    
+
     public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
-    
+
     public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract List getAllCalendarResources(Domain d) throws ServiceException;
@@ -2369,7 +2369,7 @@ public abstract class Provisioning {
     public abstract void getAllCalendarResources(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract List getAllDistributionLists(Domain d) throws ServiceException;
-    
+
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included.
@@ -2378,14 +2378,14 @@ public abstract class Provisioning {
      * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+    public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
 
     public static class SearchOptions {
         // pseudo attr name for target name
-        // honored only for Alias entries 
+        // honored only for Alias entries
         public static final String SORT_BY_TARGET_NAME = "targetName";
-        
+
         private Domain mDomain;
         private String mBase;
         private String mQuery;
@@ -2395,7 +2395,7 @@ public abstract class Provisioning {
         private int mFlags;
         private int mMaxResults;
         private boolean mConvertIDNToAscii;
-        
+
 
         public Domain getDomain() {
             return mDomain;
@@ -2404,7 +2404,7 @@ public abstract class Provisioning {
         public void setDomain(Domain domain) {
             mDomain = domain;
         }
-        
+
         public String getBase() {
             return mBase;
         }
@@ -2460,27 +2460,27 @@ public abstract class Provisioning {
         public void setMaxResults(int maxResults) {
             mMaxResults = maxResults;
         }
-        
+
         public boolean getConvertIDNToAscii() {
             return mConvertIDNToAscii;
         }
-        
+
         public void setConvertIDNToAscii(boolean convertIDNToAscii) {
             mConvertIDNToAscii = convertIDNToAscii;
         }
     }
 
     public abstract List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException;
-    
+
     public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
         return searchDirectory(options);
     }
-    
+
     public enum GalMode {
         zimbra, // only use internal
         ldap,   // only use exteranl gal
         both;   // use both gals (combine results)
-         
+
         public static GalMode fromString(String s) throws ServiceException {
             try {
                 if (s == null)
@@ -2493,98 +2493,98 @@ public abstract class Provisioning {
     }
 
     public static class SearchGalResult {
-        
+
          private String mToken;
          private boolean mHadMore; // for auto-complete only
          private List<GalContact> mMatches;
- 
+
         /*
          * for auto-complete and search only
-         * 
+         *
          * The Ajax client backtracks on GAL results assuming the results of a more
-         * specific key is the subset of a more generic key, and it checks cached 
-         * results instead of issuing another SOAP request to the server.    
+         * specific key is the subset of a more generic key, and it checks cached
+         * results instead of issuing another SOAP request to the server.
          * If search key was tokenized with AND or OR, this cannot be assumed.
          */
-        private String mTokenizeKey; 
-        
+        private String mTokenizeKey;
+
         public static SearchGalResult newSearchGalResult(GalContact.Visitor visitor) {
             if (visitor == null)
                 return new SearchGalResult();
             else
                 return new VisitorSearchGalResult(visitor);
         }
-        
+
         private SearchGalResult() {
             mMatches = new ArrayList<GalContact>();
         }
-        
+
         public String getToken() {
             return mToken;
         }
-        
+
         public void setToken(String token) {
             mToken = token;
         }
-        
+
         public boolean getHadMore() {
             return mHadMore;
         }
-        
+
         public void setHadMore(boolean hadMore) {
             mHadMore = hadMore;
         }
-        
+
         public String getTokenizeKey() {
             return mTokenizeKey;
         }
-        
+
         public void setTokenizeKey(String tokenizeKey) {
             mTokenizeKey = tokenizeKey;
         }
-        
+
         public List<GalContact> getMatches() throws ServiceException {
             return mMatches;
         }
-        
+
         public int getNumMatches() {
             return mMatches.size();
         }
-        
+
         public void addMatch(GalContact gc) {
             mMatches.add(gc);
         }
-        
+
         public void addMatches(SearchGalResult result) throws ServiceException {
             mMatches.addAll(result.getMatches());
         }
     }
-    
+
     public static class VisitorSearchGalResult extends SearchGalResult {
         private GalContact.Visitor mVisitor;
-        private int mNumMatches; // keep track of num matches 
-        
+        private int mNumMatches; // keep track of num matches
+
         private VisitorSearchGalResult(GalContact.Visitor visitor) {
             mVisitor = visitor;
         }
-        
+
         public List<GalContact> getMatches() throws ServiceException {
             throw ServiceException.FAILURE("getMatches not supported for VisitorSearchGalResult", null);
         }
-        
+
         public int getNumMatches() {
             return mNumMatches;
         }
-        
+
         public void addMatch(GalContact gc) {
             mVisitor.visit(gc);
             mNumMatches++;
         }
-        
+
         public void addMatches(SearchGalResult result) throws ServiceException {
             if (!(result instanceof VisitorSearchGalResult))
                 throw ServiceException.FAILURE("cannot addMatches with non VisitorSearchGalResult", null);
-            
+
             mNumMatches += result.getNumMatches();
         }
 
@@ -2594,15 +2594,15 @@ public abstract class Provisioning {
      * @param d domain
      * @param query LDAP search query
      * @param type address type to search
-     * @param token return entries created/modified after timestamp 
+     * @param token return entries created/modified after timestamp
      * @return List of GalContact objects
      * @throws ServiceException
      */
     public abstract SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException;
-    
+
     /**
      * Interface that invokes the visitor object for each match, instead of adding matches to the SearchGalResult.
-     *  
+     *
      * @param d
      * @param query
      * @param type
@@ -2615,10 +2615,10 @@ public abstract class Provisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
-    
+
     /**
      * Interface for CalDAV.  it needs to always search in Zimbra only, regardless of zimbraGalMode configured on the domain.
-     * 
+     *
      * @param d domain
      * @param query LDAP search query
      * @param type address type to search
@@ -2630,10 +2630,10 @@ public abstract class Provisioning {
     public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, GalMode mode, String token) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
 
     /**
-     * 
+     *
      * @param query LDAP search query
      * @param type address type to auto complete
      * @param limit max number to return
@@ -2659,14 +2659,14 @@ public abstract class Provisioning {
     throws ServiceException;
 
     public abstract void addMembers(DistributionList list, String[] members) throws ServiceException;
-    
+
     public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
- 
+
     // identities
     public static enum IdentityBy {
-        
+
         id, name;
-        
+
         public static IdentityBy fromString(String s) throws ServiceException {
             try {
                 return IdentityBy.valueOf(s);
@@ -2675,28 +2675,28 @@ public abstract class Provisioning {
             }
         }
     }
-    
+
     public Identity getDefaultIdentity(Account account) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         Set<String> identityAttrs = AttributeManager.getInstance().getAttrsInClass(AttributeClass.identity);
-        
+
         for (String name : identityAttrs) {
             String value = account.getAttr(name, null);
-            if (value != null) attrs.put(name, value);            
+            if (value != null) attrs.put(name, value);
         }
         if (attrs.get(A_zimbraPrefIdentityName) == null)
             attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
 
         String fromAddress = (String) attrs.get(A_zimbraPrefFromAddress);
         String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
-        
-        if (fromAddress == null || fromDisplay == null) { 
+
+        if (fromAddress == null || fromDisplay == null) {
             InternetAddress ia = AccountUtil.getFriendlyEmailAddress(account);
             if (fromAddress == null) attrs.put(A_zimbraPrefFromAddress, ia.getAddress());
             if (fromDisplay == null) attrs.put(A_zimbraPrefFromDisplay, ia.getPersonal());
         }
         attrs.put(A_zimbraPrefIdentityId, account.getId());
-        
+
         /*
          *   In 4.0 we had a boolean setting zimbraPrefForwardReplyInOriginalFormat, In 4.5,
          *   that has been obsoleted in favor of zimbraPrefForwardReplyFormat which is an
@@ -2706,9 +2706,9 @@ public abstract class Provisioning {
          */
         if (attrs.get(A_zimbraPrefForwardReplyFormat) == null) {
             boolean forwardReplyInOriginalFormat = account.getBooleanAttr(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat, false);
-            if (forwardReplyInOriginalFormat) {     
+            if (forwardReplyInOriginalFormat) {
                 attrs.put(A_zimbraPrefForwardReplyFormat, MAIL_FORWARDREPLY_FORMAT_SAME);
-            } else {  
+            } else {
                 String composeFormat = account.getAttr(Provisioning.A_zimbraPrefComposeFormat, null);
                 if (composeFormat == null)
                     attrs.put(A_zimbraPrefForwardReplyFormat, MAIL_FORMAT_TEXT);
@@ -2718,22 +2718,22 @@ public abstract class Provisioning {
         }
         return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs);        
     }
-    
-    public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
 
+    public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
+    
     public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
-    
+
     public abstract List<Identity> getAllIdentities(Account account) throws ServiceException;
-    
+
     public abstract Identity get(Account account, IdentityBy keyType, String key) throws ServiceException;
-    
+
     // signatures
     public static enum SignatureBy {
-        
+
         id, name;
-        
+
         public static SignatureBy fromString(String s) throws ServiceException {
             try {
                 return SignatureBy.valueOf(s);
@@ -2742,22 +2742,22 @@ public abstract class Provisioning {
             }
         }
     }
-    
+
     public abstract Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract void deleteSignature(Account account, String signatureId) throws ServiceException;
-    
+
     public abstract List<Signature> getAllSignatures(Account account) throws ServiceException;
-    
+
     public abstract Signature get(Account account, SignatureBy keyType, String key) throws ServiceException;
-    
+
     // data sources
     public static enum DataSourceBy {
-        
+
         id, name;
-        
+
         public static DataSourceBy fromString(String s) throws ServiceException {
             try {
                 return DataSourceBy.valueOf(s);
@@ -2766,29 +2766,29 @@ public abstract class Provisioning {
             }
         }
     }
-    
+
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
     
     public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract void deleteDataSource(Account account, String dataSourceId) throws ServiceException;
-    
+
     public abstract List<DataSource> getAllDataSources(Account account) throws ServiceException;
-    
+
     /**
      * Looks up a data source by the specified key.
-     * 
+     *
      * @return the <code>DataSource</code>, or <code>null</code> if no <code>DataSource</code>
      * with the given key exists.
      * @throws ServiceException if the key is malformed
      */
     public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
-    
+
     public Account getFromCache(AccountBy keyType, String key) throws ServiceException {
         return null;
-    }
-    
+            }
+        
     public static enum CacheEntryType {
         account,
         config,
@@ -2931,6 +2931,9 @@ public abstract class Provisioning {
     }
 
     public void purgeAccountCalendarCache(String accountId) throws ServiceException {
+        // do nothing by default
+    }
+    public void reloadMemcachedClientConfig() throws ServiceException {
         // do nothing by default
     }
 }
