@@ -15,10 +15,6 @@
 
 package com.zimbra.cs.memcached;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
-
 import net.spy.memcached.HashAlgorithm;
 
 import com.zimbra.common.service.ServiceException;
@@ -66,8 +62,7 @@ public class MemcachedConnector {
         String hashAlgorithm = server.getAttr(Provisioning.A_zimbraMemcachedClientHashAlgorithm, HashAlgorithm.KETAMA_HASH.toString());
         int expirySeconds = (int) server.getLongAttr(Provisioning.A_zimbraMemcachedClientExpirySeconds, 86400);
         long timeoutMillis = server.getLongAttr(Provisioning.A_zimbraMemcachedClientTimeoutMillis, 10000);
-        List<InetSocketAddress> serverAddrs = getServerAddresses(serverList);
-        sTheClient.connect(serverAddrs, useBinaryProtocol, hashAlgorithm, expirySeconds, timeoutMillis);
+        sTheClient.connect(serverList, useBinaryProtocol, hashAlgorithm, expirySeconds, timeoutMillis);
     }
 
     /**
@@ -76,14 +71,5 @@ public class MemcachedConnector {
      */
     public static void shutdown() throws ServiceException {
         sTheClient.disconnect(30000);
-    }
-
-    private static List<InetSocketAddress> getServerAddresses(String[] servers) {
-        List<InetSocketAddress> serverAddrs;
-        if (servers != null && servers.length > 0)
-            serverAddrs = ZimbraMemcachedClient.parseServerList(servers);
-        else
-            serverAddrs = new ArrayList<InetSocketAddress>(0);
-        return serverAddrs;
     }
 }
