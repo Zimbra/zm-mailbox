@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090706-2339 */
+    /* build: 6.0.0 pshao 20090720-1036 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -28737,6 +28737,83 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefSkin(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSkin, "");
+        return attrs;
+    }
+
+    /**
+     * The name of the dictionary used for spell checking. If not set, the
+     * locale is used.
+     *
+     * @return zimbraPrefSpellDictionary, or null if unset
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1041)
+    public String getPrefSpellDictionary() {
+        return getAttr(Provisioning.A_zimbraPrefSpellDictionary, null);
+    }
+
+    /**
+     * The name of the dictionary used for spell checking. If not set, the
+     * locale is used.
+     *
+     * @param zimbraPrefSpellDictionary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1041)
+    public void setPrefSpellDictionary(String zimbraPrefSpellDictionary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellDictionary, zimbraPrefSpellDictionary);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the dictionary used for spell checking. If not set, the
+     * locale is used.
+     *
+     * @param zimbraPrefSpellDictionary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1041)
+    public Map<String,Object> setPrefSpellDictionary(String zimbraPrefSpellDictionary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellDictionary, zimbraPrefSpellDictionary);
+        return attrs;
+    }
+
+    /**
+     * The name of the dictionary used for spell checking. If not set, the
+     * locale is used.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1041)
+    public void unsetPrefSpellDictionary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellDictionary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the dictionary used for spell checking. If not set, the
+     * locale is used.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1041)
+    public Map<String,Object> unsetPrefSpellDictionary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellDictionary, "");
         return attrs;
     }
 

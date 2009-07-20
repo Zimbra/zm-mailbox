@@ -4593,4 +4593,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>max number of email addresses in zimbraPrefMailForwardingAddress</desc>
 </attr>
 
+<attr id="1041" name="zimbraPrefSpellDictionary" type="string" max="64" cardinality="single" optionalIn="account,cos," flags="accountInherited,domainAdminModifiable" since="6.0.0_GA">
+  <desc>The name of the dictionary used for spell checking.  If not set, the locale is used.</desc>
+</attr>
+
+<attr id="1042" name="zimbraSpellAvailableDictionary" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_GA">
+  <globalConfigValue>en_US</globalConfigValue>
+  <desc>The list of available dictionaries that can be used for spell checking.</desc>
+</attr>
+
 </attrs>

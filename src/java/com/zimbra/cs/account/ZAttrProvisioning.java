@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090706-2339 */
+    /* build: 6.0.0 pshao 20090720-1036 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5849,6 +5849,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefSkin = "zimbraPrefSkin";
 
     /**
+     * The name of the dictionary used for spell checking. If not set, the
+     * locale is used.
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1041)
+    public static final String A_zimbraPrefSpellDictionary = "zimbraPrefSpellDictionary";
+
+    /**
      * whether standard client should operate in accessibility Mode
      *
      * @since ZCS 6.0.0_BETA1
@@ -6883,6 +6892,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=204)
     public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public static final String A_zimbraSpellAvailableDictionary = "zimbraSpellAvailableDictionary";
 
     /**
      * URL of the server running the spell checking service. Multi-valued

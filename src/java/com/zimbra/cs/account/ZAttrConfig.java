@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090706-2339 */
+    /* build: 6.0.0 pshao 20090720-1036 */
 
     /**
      * RFC2256: descriptive information
@@ -25743,6 +25743,149 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSpamTagPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpamTagPercent, "");
+        return attrs;
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @return zimbraSpellAvailableDictionary, or empty array if unset
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public String[] getSpellAvailableDictionary() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraSpellAvailableDictionary); return value.length > 0 ? value : new String[] {"en_US"};
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param zimbraSpellAvailableDictionary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public void setSpellAvailableDictionary(String[] zimbraSpellAvailableDictionary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpellAvailableDictionary, zimbraSpellAvailableDictionary);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param zimbraSpellAvailableDictionary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public Map<String,Object> setSpellAvailableDictionary(String[] zimbraSpellAvailableDictionary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpellAvailableDictionary, zimbraSpellAvailableDictionary);
+        return attrs;
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param zimbraSpellAvailableDictionary new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public void addSpellAvailableDictionary(String zimbraSpellAvailableDictionary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSpellAvailableDictionary, zimbraSpellAvailableDictionary);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param zimbraSpellAvailableDictionary new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public Map<String,Object> addSpellAvailableDictionary(String zimbraSpellAvailableDictionary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSpellAvailableDictionary, zimbraSpellAvailableDictionary);
+        return attrs;
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param zimbraSpellAvailableDictionary existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public void removeSpellAvailableDictionary(String zimbraSpellAvailableDictionary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSpellAvailableDictionary, zimbraSpellAvailableDictionary);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param zimbraSpellAvailableDictionary existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public Map<String,Object> removeSpellAvailableDictionary(String zimbraSpellAvailableDictionary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSpellAvailableDictionary, zimbraSpellAvailableDictionary);
+        return attrs;
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public void unsetSpellAvailableDictionary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpellAvailableDictionary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The list of available dictionaries that can be used for spell
+     * checking.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1042)
+    public Map<String,Object> unsetSpellAvailableDictionary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpellAvailableDictionary, "");
         return attrs;
     }
 
