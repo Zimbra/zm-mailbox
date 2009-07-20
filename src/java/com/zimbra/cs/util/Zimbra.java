@@ -121,7 +121,6 @@ public class Zimbra {
     }
 
     public static void startupCLI() throws ServiceException {
-        DbPool.startup();
         startup(false);
     }
 

@@ -44,6 +44,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.redolog.RedoPlayer;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.logger.FileHeader;
@@ -384,6 +385,7 @@ public class PlaybackUtil {
         if (consoleAppender != null)
             rootLogger.removeAppender(consoleAppender);
 
+        DbPool.startup();
         Zimbra.startupCLI();
     }
     
