@@ -174,6 +174,9 @@ public class MailConstants {
     public static final QName CHECK_RECUR_CONFLICTS_REQUEST = QName.get("CheckRecurConflictsRequest", NAMESPACE);
 
     // spell checking
+    public static final QName GET_SPELL_DICTIONARIES_REQUEST = QName.get("GetSpellDictionariesRequest", NAMESPACE);
+    public static final QName GET_SPELL_DICTIONARIES_RESPONSE = QName.get("GetSpellDictionariesResponse", NAMESPACE);
+    
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
     public static final QName CHECK_SPELLING_RESPONSE = QName.get("CheckSpellingResponse", NAMESPACE);
 
@@ -663,6 +666,8 @@ public class MailConstants {
     public static final String E_MISSPELLED = "misspelled";
     public static final String A_WORD = "word";
     public static final String A_SUGGESTIONS = "suggestions";
+    public static final String E_DICTIONARY = "dictionary";
+    public static final String A_DICTIONARY = "dictionary";
 
     // data sources
     public static final String E_DS = "dsrc";
