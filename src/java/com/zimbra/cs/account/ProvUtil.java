@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import net.spy.memcached.HashAlgorithm;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -49,6 +51,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -68,6 +71,7 @@ import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
@@ -126,7 +130,7 @@ public class ProvUtil implements DebugListener {
         }
         mUseLdap = false;
     }
-
+    
     private void usage() {
         usage(null);
     }
@@ -174,7 +178,7 @@ public class ProvUtil implements DebugListener {
         CONFIG("help on config-related commands"),
         COS("help on COS-related commands"), 
         DOMAIN("help on domain-related commands"), 
-        LIST("help on distribution list-related commands"), 
+        LIST("help on distribution list-related commands"),
         MISC("help on misc commands"),
         MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
@@ -189,10 +193,10 @@ public class ProvUtil implements DebugListener {
         Category(String desc) {
             mDesc = desc;
         }
-    }
-    
-    public enum Command {
+            }
         
+    public enum Command {
+    
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.MISC, 3, 5),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
@@ -212,7 +216,7 @@ public class ProvUtil implements DebugListener {
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
-        CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
+        CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
@@ -252,7 +256,7 @@ public class ProvUtil implements DebugListener {
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
-        GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
+        GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -292,6 +296,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         RELOAD_MEMCACHED_CLIENT_CONFIG("reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
+        GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg", "{domain} [{token}]", Category.MISC, 1, 2),
         UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3);
@@ -483,7 +488,7 @@ public class ProvUtil implements DebugListener {
             break;                                                
         case CREATE_SERVER:
             System.out.println(mProv.createServer(args[1], getMap(args, 2)).getId());
-            break;            
+            break;
         case EXIT:
             System.exit(0);
             break;
@@ -608,7 +613,7 @@ public class ProvUtil implements DebugListener {
             break; 
         case MODIFY_SERVER:
             mProv.modifyAttrs(lookupServer(args[1]), getMap(args, 2), true);            
-            break;            
+            break;
         case DELETE_ACCOUNT:
             doDeleteAccount(args);
             break;
@@ -628,7 +633,7 @@ public class ProvUtil implements DebugListener {
         case DELETE_DATA_SOURCE:
             account = lookupAccount(args[1]);
             mProv.deleteDataSource(account, lookupDataSourceId(account, args[2]));
-            break;                        
+            break;     
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
             break;
@@ -761,7 +766,7 @@ public class ProvUtil implements DebugListener {
             break;
         case SEARCH_CALENDAR_RESOURCES:
             doSearchCalendarResources(args);
-            break;
+            break;    
         case INIT_NOTEBOOK:
             initNotebook(args);
             break;
@@ -819,6 +824,9 @@ public class ProvUtil implements DebugListener {
             break;
         case RELOAD_MEMCACHED_CLIENT_CONFIG:
             doReloadMemcachedClientConfig(args);
+            break;
+        case GET_MEMCACHED_CLIENT_CONFIG:
+            doGetMemcachedClientConfig(args);
             break;
         case SOAP:
             // HACK FOR NOW
@@ -1165,7 +1173,7 @@ public class ProvUtil implements DebugListener {
                     System.out.println(entry.getName());                        
             }
         };
-         prov.getAllAccounts(domain, server, visitor);
+        prov.getAllAccounts(domain, server, visitor);
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
@@ -1270,8 +1278,8 @@ public class ProvUtil implements DebugListener {
 		boolean isSortAscending = (sortAscending != null) ? "1".equalsIgnoreCase(sortAscending) : true;    
 
         String attrsStr = (String)attrs.get("attrs");
-		String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
-
+        String[] attrsToGet = attrsStr == null ? null : attrsStr.split(",");
+		
         String typesStr = (String) attrs.get("types");
         int flags = Provisioning.SA_ACCOUNT_FLAG|Provisioning.SA_ALIAS_FLAG|Provisioning.SA_DISTRIBUTION_LIST_FLAG|Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         
@@ -1504,7 +1512,7 @@ public class ProvUtil implements DebugListener {
         Map<String, Object> attrs = alias.getAttrs();
         dumpAttrs(attrs, null);        
     }
-
+    
     private void doGetAllServers(String[] args) throws ServiceException {
         boolean verbose = false;
         boolean applyDefault = true;
@@ -1561,7 +1569,7 @@ public class ProvUtil implements DebugListener {
         dumpAttrs(attrs, attrNames);
         System.out.println();
     }
-
+    
     private void dumpAccount(Account account, boolean expandCos, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+account.getName());
         Map<String, Object> attrs = account.getAttrs(expandCos);
@@ -1607,10 +1615,10 @@ public class ProvUtil implements DebugListener {
                 if (value instanceof String[]) {
                     String sv[] = (String[]) value;
                     for (String aSv : sv) {
-                        printOutput(name + ": " + aSv);
+                            printOutput(name + ": " + aSv);
                     }
-                } else if (value instanceof String){
-                    printOutput(name+": "+value);
+                } else if (value instanceof String) {
+                        printOutput(name+": "+value);
                 }
             }
         }
@@ -1898,7 +1906,7 @@ public class ProvUtil implements DebugListener {
         else
             return c;
     }
-
+    
     private Server lookupServer(String key) throws ServiceException {
         return lookupServer(key, true);
     }
@@ -2339,37 +2347,43 @@ public class ProvUtil implements DebugListener {
         System.out.println();
     }
 
-    private void doReloadMemcachedClientConfig(String[] args) throws ServiceException {
-        List<String> hostnames = new ArrayList<String>();
-        List<Integer> ports = new ArrayList<Integer>();
+    private List<Pair<String /* hostname */, Integer /* port */>> getMailboxServersFromArgs(String[] args)
+    throws ServiceException {
+        List<Pair<String, Integer>> entries = new ArrayList<Pair<String, Integer>>();
         if (args.length == 2 && "all".equalsIgnoreCase(args[1])) {
             // Get all mailbox servers.
             List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
             for (Server svr : servers) {
-                hostnames.add(svr.getAttr(Provisioning.A_zimbraServiceHostname));
-                ports.add((int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort));
+                String host = svr.getAttr(Provisioning.A_zimbraServiceHostname);
+                int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort);
+                Pair<String, Integer> entry = new Pair<String, Integer>(host, port);
+                entries.add(entry);
             }
         } else {
             // Only named servers.
             for (int i = 1; i < args.length; ++i) {
                 String arg = args[i];
                 if (mServer.equalsIgnoreCase(arg)) {
-                    hostnames.add(mServer);
-                    ports.add(mPort);
+                    entries.add(new Pair<String, Integer>(mServer, mPort));
                 } else {
                     Server svr = mProv.get(ServerBy.serviceHostname, arg);
                     if (svr == null)
                         throw AccountServiceException.NO_SUCH_SERVER(arg);
                     // TODO: Verify svr has mailbox service enabled.
-                    hostnames.add(arg);
-                    ports.add((int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort));
+                    int port = (int) svr.getLongAttr(Provisioning.A_zimbraAdminPort, (long) mPort);
+                    entries.add(new Pair<String, Integer>(arg, port));
                 }
             }
         }
+        return entries;
+    }
+
+    private void doReloadMemcachedClientConfig(String[] args) throws ServiceException {
+        List<Pair<String, Integer>> servers = getMailboxServersFromArgs(args);
         // Send command to each server.
-        for (int i = 0; i < hostnames.size(); ++i) {
-            String hostname = hostnames.get(i);
-            int port = ports.get(i);
+        for (Pair<String, Integer> server : servers) {
+            String hostname = server.getFirst();
+            int port = server.getSecond();
             if (mVerbose)
                 System.out.print("Updating " + hostname + " ... ");
             boolean success = false;
@@ -2395,6 +2409,63 @@ public class ProvUtil implements DebugListener {
                 if (mVerbose && success)
                     System.out.println("ok");
             }
+        }
+    }
+
+    private void doGetMemcachedClientConfig(String[] args) throws ServiceException {
+        List<Pair<String, Integer>> servers = getMailboxServersFromArgs(args);
+        // Send command to each server.
+        int longestHostname = 0;
+        for (Pair<String, Integer> server : servers) {
+            String hostname = server.getFirst();
+            longestHostname = Math.max(longestHostname, hostname.length());
+        }
+        String hostnameFormat = String.format("%%-%ds", longestHostname);
+        boolean consistent = true;
+        String prevConf = null;
+        for (Pair<String, Integer> server : servers) {
+            String hostname = server.getFirst();
+            int port = server.getSecond();
+            try {
+                SoapProvisioning sp = new SoapProvisioning();
+                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + ZimbraServlet.ADMIN_SERVICE_URI);
+                if (mAccount != null && mPassword != null)
+                    sp.soapAdminAuthenticate(mAccount, mPassword);
+                else if (mAuthToken != null)
+                    sp.soapAdminAuthenticate(mAuthToken);
+                else
+                    sp.soapZimbraAdminAuthenticate();
+                MemcachedClientConfig config = sp.getMemcachedClientConfig();
+                String serverList = config.serverList != null ? config.serverList : "none";
+                if (mVerbose) {
+                    System.out.printf(hostnameFormat + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n",
+                                      hostname, serverList, config.hashAlgorithm,
+                                      config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
+                } else if (config.serverList != null) {
+                    if (HashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
+                        // Don't print the default hash algorithm to keep the output clutter-free.
+                        System.out.printf(hostnameFormat + " => %s\n", hostname, serverList);
+                    } else {
+                        System.out.printf(hostnameFormat + " => %s (%S)\n", hostname, serverList, config.hashAlgorithm);
+                    }
+                } else {
+                    System.out.printf(hostnameFormat + " => none\n", hostname);
+                }
+
+                String listAndAlgo = serverList + "/" + config.hashAlgorithm;
+                if (prevConf == null) {
+                    prevConf = listAndAlgo;
+                } else if (!prevConf.equals(listAndAlgo)) {
+                    consistent = false;
+                }
+            } catch (ServiceException e) {
+                System.out.printf(hostnameFormat + " => ERROR: unable to get configuration\n", hostname);
+                if (mVerbose)
+                    e.printStackTrace(System.out);
+            }
+        }
+        if (!consistent) {
+            System.out.println("Inconsistency detected!");
         }
     }
 
@@ -2495,15 +2566,15 @@ public class ProvUtil implements DebugListener {
         System.out.println(envelope.prettyPrint());
         System.out.printf("=============================== (%d msecs)\n", end-mSendStart);
         
-    }
-
+        }
+        
     public void sendSoapMessage(Element envelope) {
         mSendStart = System.currentTimeMillis();
         System.out.println("========== SOAP SEND ==========");
         System.out.println(envelope.prettyPrint());
         System.out.println("===============================");
     }
-
+    
     
     void throwSoapOnly() throws ServiceException {
         throw ServiceException.INVALID_REQUEST(ERR_VIA_SOAP_ONLY, null);

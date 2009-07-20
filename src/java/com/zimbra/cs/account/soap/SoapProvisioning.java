@@ -323,7 +323,7 @@ public class SoapProvisioning extends Provisioning {
         addAttrElements(req, attrs);
         return new SoapAccount(invoke(req).getElement(AdminConstants.E_ACCOUNT));
     }
-
+    
     @Override
     public CalendarResource createCalendarResource(String emailAddress, String password,
             Map<String, Object> attrs) throws ServiceException {
@@ -1726,6 +1726,26 @@ public class SoapProvisioning extends Provisioning {
     public void reloadMemcachedClientConfig() throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST);
         invoke(req);
+    }
+
+    public class MemcachedClientConfig {
+        public String serverList;
+        public String hashAlgorithm;
+        public boolean binaryProtocol;
+        public int defaultExpirySeconds;
+        public long defaultTimeoutMillis;
+    }
+
+    public MemcachedClientConfig getMemcachedClientConfig() throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_MEMCACHED_CLIENT_CONFIG_REQUEST);
+        Element resp = invoke(req);
+        MemcachedClientConfig config = new MemcachedClientConfig();
+        config.serverList = resp.getAttribute(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_SERVER_LIST, null);
+        config.hashAlgorithm = resp.getAttribute(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_HASH_ALGORITHM, null);
+        config.binaryProtocol = resp.getAttributeBool(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL, false);
+        config.defaultExpirySeconds = (int) resp.getAttributeLong(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS, 0);
+        config.defaultTimeoutMillis = resp.getAttributeLong(AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS, 0);
+        return config;
     }
 
     public static void main(String[] args) throws Exception {
