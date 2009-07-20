@@ -76,7 +76,7 @@ public class AdminConstants {
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get("DeleteDomainResponse", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get("GetAllDomainsRequest", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get("GetAllDomainsResponse", NAMESPACE);
-
+    
     public static final QName CREATE_COS_REQUEST = QName.get("CreateCosRequest", NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get("CreateCosResponse", NAMESPACE);
     public static final QName COPY_COS_REQUEST = QName.get("CopyCosRequest", NAMESPACE);
@@ -302,7 +302,7 @@ public class AdminConstants {
 
     public static final QName COUNT_ACCOUNT_REQUEST = QName.get("CountAccountRequest", NAMESPACE);
     public static final QName COUNT_ACCOUNT_RESPONSE = QName.get("CountAccountResponse", NAMESPACE);
-
+    
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
@@ -338,6 +338,10 @@ public class AdminConstants {
     public static final QName ADMIN_DESTROY_WAIT_SET_RESPONSE = QName.get("AdminDestroyWaitSetResponse", NAMESPACE);
     public static final QName QUERY_WAIT_SET_REQUEST = QName.get("QueryWaitSetRequest", NAMESPACE);
     public static final QName QUERY_WAIT_SET_RESPONSE = QName.get("QueryWaitSetResponse", NAMESPACE);
+    
+    // memcached
+    public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("ReloadMemcachedClientConfigRequest", NAMESPACE);
+    public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("ReloadMemcachedClientConfigResponse", NAMESPACE);
     
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -477,7 +481,7 @@ public class AdminConstants {
     public static final String A_TIME = "time";
     public static final String A_TYPES = "types";
     public static final String A_NUM_TABLES = "numTables";
-
+    
     public static final String A_NUM_EXECUTED = "numExecuted";
     public static final String A_NUM_SUCCEEDED= "numSucceeded";
     public static final String A_NUM_FAILED = "numFailed";
@@ -562,7 +566,7 @@ public class AdminConstants {
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     
-
+    
     public static final String E_WAITSET = "waitSet";
     
     //extension targets
