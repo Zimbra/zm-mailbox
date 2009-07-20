@@ -424,8 +424,7 @@ public abstract class SoapCLI {
     
     public static ZAuthToken getZAuthToken(CommandLine cl) throws ServiceException, ParseException, IOException {
         if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
-            String msg = String.format(
-                    "-%s option cannot be used when -%s option is used",
+            String msg = String.format("cannot specify both %s and %s options",
                     SoapCLI.O_AUTHTOKEN, SoapCLI.O_AUTHTOKENFILE);
             throw new ParseException(msg);
         }
