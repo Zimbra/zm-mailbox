@@ -75,6 +75,9 @@ public class ZimbraMemcachedClient {
     private MemcachedClient mMCDClient;
     private int mDefaultExpiry;  // in seconds
     private long mDefaultTimeout;  // in millis
+    private String mServerList;  // used for config reporting only
+    private String mHashAlgorithm;
+    private boolean mBinaryProtocolEnabled;
 
     /**
      * Constructs a memcached client.  Call connect() before using this.
@@ -90,6 +93,12 @@ public class ZimbraMemcachedClient {
             return mMCDClient != null;
         }
     }
+
+    public synchronized String getServerList()             { return mServerList; }
+    public synchronized String getHashAlgorithm()          { return mHashAlgorithm; }
+    public synchronized boolean getBinaryProtocolEnabled() { return mBinaryProtocolEnabled; }
+    public synchronized int getDefaultExpirySeconds()      { return mDefaultExpiry; }
+    public synchronized long getDefaultTimeoutMillis()     { return mDefaultTimeout; }
 
     /**
      * Connects/reconnects the memcached client with server list, protocol and hashing algorithm.
@@ -113,6 +122,7 @@ public class ZimbraMemcachedClient {
         int bufSize = DefaultConnectionFactory.DEFAULT_READ_BUFFER_SIZE;
 
         MemcachedClient client = null;
+        StringBuilder serverList = new StringBuilder();
         if (servers != null && servers.size() > 0) {
             ConnectionFactory cf;
             if (useBinaryProtocol)
@@ -127,6 +137,12 @@ public class ZimbraMemcachedClient {
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Unable to initialize memcached client", e);
             }
+
+            for (InetSocketAddress saddr : servers) {
+                if (serverList.length() > 0)
+                    serverList.append(", ");
+                serverList.append(saddr.getHostName()).append(":").append(saddr.getPort());
+            }
         }
         MemcachedClient oldClient = null;
         synchronized (this) {
@@ -134,6 +150,9 @@ public class ZimbraMemcachedClient {
             mMCDClient = client;
             mDefaultExpiry = defaultExpiry;
             mDefaultTimeout = defaultTimeout;
+            mServerList = serverList.length() > 0 ? serverList.toString() : null;
+            mHashAlgorithm = hashAlgo.toString();
+            mBinaryProtocolEnabled = useBinaryProtocol;
         }
         // New client is ready for use by other threads at this point.
         if (oldClient != null)
