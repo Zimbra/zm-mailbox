@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -109,8 +110,8 @@ public class ZimbraMemcachedClient {
      * @param defaultTimeout in milliseconds
      * @throws ServiceException
      */
-    public void connect(List<InetSocketAddress> servers, boolean useBinaryProtocol, String hashAlgorithm,
-                          int defaultExpiry, long defaultTimeout)
+    public void connect(String[] servers, boolean useBinaryProtocol, String hashAlgorithm,
+                        int defaultExpiry, long defaultTimeout)
     throws ServiceException {
         HashAlgorithm hashAlgo = HashAlgorithm.KETAMA_HASH;
         if (hashAlgorithm != null && hashAlgorithm.length() > 0) {
@@ -123,25 +124,31 @@ public class ZimbraMemcachedClient {
 
         MemcachedClient client = null;
         StringBuilder serverList = new StringBuilder();
-        if (servers != null && servers.size() > 0) {
+        if (servers != null && servers.length > 0) {
+            // Eliminate duplicates and sort case-insensitively.  This negates operator error
+            // configuring server list with inconsistent order on different memcached clients.
+            TreeSet<String> tset = new TreeSet<String>();  // TreeSet provides deduping and sorting.
+            for (int i = 0; i < servers.length; ++i) {
+                tset.add(servers[i].toLowerCase());
+            }
+            for (String s : tset) {
+                if (serverList.length() > 0)
+                    serverList.append(", ");
+                serverList.append(s);
+            }
+            List<InetSocketAddress> serverAddrs = parseServerList(tset.toArray(new String[0]));
             ConnectionFactory cf;
             if (useBinaryProtocol)
                 cf = new BinaryConnectionFactory(qLen, bufSize, hashAlgo);
             else
                 cf = new DefaultConnectionFactory(qLen, bufSize, hashAlgo);
             try {
-                client = new MemcachedClient(cf, servers);
+                client = new MemcachedClient(cf, serverAddrs);
                 boolean added = client.addObserver(new ConnObserver());
                 if (!added)
                     ZimbraLog.misc.error("Unable to add connection observer to memcached client");
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Unable to initialize memcached client", e);
-            }
-
-            for (InetSocketAddress saddr : servers) {
-                if (serverList.length() > 0)
-                    serverList.append(", ");
-                serverList.append(saddr.getHostName()).append(":").append(saddr.getPort());
             }
         }
         MemcachedClient oldClient = null;
@@ -198,7 +205,7 @@ public class ZimbraMemcachedClient {
      * @param serverList
      * @return
      */
-    public static List<InetSocketAddress> parseServerList(String[] servers) {
+    private static List<InetSocketAddress> parseServerList(String[] servers) {
         if (servers != null) {
             List<InetSocketAddress> addrs = new ArrayList<InetSocketAddress>(servers.length);
             for (String server : servers) {
@@ -230,21 +237,6 @@ public class ZimbraMemcachedClient {
                 }
             }
             return addrs;
-        } else {
-            return new ArrayList<InetSocketAddress>(0);
-        }
-    }
-
-    /**
-     * Parse a server list string.  Values are delimited by a sequence of commas and/or whitespace chars.
-     * Each server value is hostname:port or just hostname.  Default port is 11211.
-     * @param serverList
-     * @return
-     */
-    public static List<InetSocketAddress> parseServerList(String serverList) {
-        if (serverList != null) {
-            String[] servers = serverList.split("[\\s,]+");
-            return parseServerList(servers);
         } else {
             return new ArrayList<InetSocketAddress>(0);
         }
@@ -899,7 +891,7 @@ public class ZimbraMemcachedClient {
 
         public void test() throws Exception {
             ZimbraMemcachedClient client = new ZimbraMemcachedClient();
-            List<InetSocketAddress> servers = ZimbraMemcachedClient.parseServerList("localhost:11211");
+            String servers[] = { "localhost:11211" };
             client.connect(servers, false, null, 3600, 5000);
             try {
                 int reps = 100;
