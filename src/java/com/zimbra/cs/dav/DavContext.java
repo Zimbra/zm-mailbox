@@ -15,7 +15,6 @@
 package com.zimbra.cs.dav;
 
 import java.io.IOException;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -341,12 +340,10 @@ public class DavContext {
 	
 	public FileUploadServlet.Upload getUpload() throws DavException, IOException {
 		if (mUpload == null) {
-			String name = getItem();
+			String name = null;
 			String ctype = getRequest().getContentType();
 			if (ctype == null)
-				ctype = URLConnection.getFileNameMap().getContentTypeFor(name);
-			if (ctype == null)
-				ctype = DavProtocol.DEFAULT_CONTENT_TYPE;
+				name = getItem();
 			try {
 				mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId());
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());

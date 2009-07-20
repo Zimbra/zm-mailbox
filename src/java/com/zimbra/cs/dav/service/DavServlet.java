@@ -70,6 +70,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheK
 import com.zimbra.cs.mailbox.calendar.cache.CtagResponseCache.CtagResponseCacheValue;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
@@ -207,9 +208,12 @@ public class DavServlet extends ZimbraServlet {
 		}
 
         long t0 = System.currentTimeMillis();
-        if (ctxt.hasRequestMessage() && ZimbraLog.dav.isDebugEnabled()) {
+        if (ZimbraLog.dav.isDebugEnabled()) {
             try {
-                ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(ctxt.getUpload().getInputStream(), -1, 2048), "UTF-8"));
+                Upload upload = ctxt.getUpload();
+                if (upload.getSize() > 0 && upload.getContentType().startsWith("text")) {
+                    ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(upload.getInputStream(), -1, 2048), "UTF-8"));
+                }
             } catch (Exception e) {
                 ZimbraLog.dav.debug("ouch", e);
             }
