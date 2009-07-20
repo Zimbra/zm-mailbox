@@ -125,8 +125,10 @@ public class FileUploadServlet extends ZimbraServlet {
                 contentType = MimeDetect.getMimeDetect().detect(name);
                 
                 // 2. use content type supplied by the browser
-                if (contentType == null)
-                    contentType = file.getContentType();
+                if (contentType == null) {
+                    if (file.getContentType().equals("text/xml"))
+                        contentType = file.getContentType();
+                }
                 
                 // 3.  detect by magic
                 if (contentType == null) {
