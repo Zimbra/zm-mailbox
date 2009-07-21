@@ -16,8 +16,8 @@
 package com.zimbra.cs.mina;
 
 import com.zimbra.common.util.ZimbraLog;
-import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
@@ -28,59 +28,59 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 import java.io.IOException;
 
+import static com.zimbra.cs.mina.Constants.*;
+
 /*
- * MINA protocol codec factory. Decodes new MinaRequests' as they are received
- * by a connection then passed them to the appropriate MinaHandler.
+ * MINA protocol codec factory. Decodes request bytes and then passes complete
+ * request to MINA handler.
  */
 class MinaCodecFactory implements ProtocolCodecFactory {
     private MinaServer mServer;
 
-    private static final String MINA_REQUEST = "MinaRequest";
-    
     MinaCodecFactory(MinaServer server) {
         mServer = server;
     }
 
     public ProtocolEncoder getEncoder() {
-        return new Encoder();
+        return new ProtocolEncoderAdapter() {
+            public void encode(IoSession session, Object msg, ProtocolEncoderOutput out) {
+                out.write((ByteBuffer) msg);
+            }
+        };
     }
 
     public ProtocolDecoder getDecoder() {
-        return new Decoder();
-    }
-
-    private class Encoder extends ProtocolEncoderAdapter {
-        public void encode(IoSession session, Object msg,
-                           ProtocolEncoderOutput out) {
-            out.write((ByteBuffer) msg);
-        }
-    }
-
-    private class Decoder extends ProtocolDecoderAdapter {
-        public void decode(IoSession session,
-                           org.apache.mina.common.ByteBuffer in,
-                           ProtocolDecoderOutput out) throws IOException {
-            java.nio.ByteBuffer bb = in.buf();
-            while (bb.hasRemaining()) {
-                MinaRequest req = (MinaRequest) session.getAttribute(MINA_REQUEST);
-                if (req == null) {
-                    req = mServer.createRequest(MinaIoHandler.getHandler(session));
-                    session.setAttribute(MINA_REQUEST, req);
-                }
-                try {
-                    req.parse(bb);
-                } catch (IllegalArgumentException e) {
-                    // Drop bad request
-                    ZimbraLog.imap.debug("Dropping bad request", e.getCause());
-                    session.setAttribute(MINA_REQUEST, null);
-                    break;
-                }
-                if (!req.isComplete()) break;
-                out.write(req);
-                session.setAttribute(MINA_REQUEST, null);
+        return new ProtocolDecoderAdapter() {
+            public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out)
+                throws IOException {
+                decodeBytes(session, in, out);
             }
-        }
+        };
     }
 
+    private void decodeBytes(IoSession session, ByteBuffer in, ProtocolDecoderOutput out)
+        throws IOException {
+        java.nio.ByteBuffer bb = in.buf();
+        while (bb.hasRemaining()) {
+            MinaRequest req = (MinaRequest) session.getAttribute(MINA_REQUEST_ATTR);
+            if (req == null) {
+                MinaHandler handler = (MinaHandler) session.getAttribute(MINA_HANDLER_ATTR);
+                assert handler != null;
+                req = mServer.createRequest(handler);
+                session.setAttribute(MINA_REQUEST_ATTR, req);
+            }
+            try {
+                req.parse(bb);
+            } catch (IllegalArgumentException e) {
+                // Drop bad request
+                ZimbraLog.imap.debug("Dropping bad request", e.getCause());
+                session.removeAttribute(MINA_REQUEST_ATTR);
+                break;
+            }
+            if (!req.isComplete()) break;
+            out.write(req);
+            session.removeAttribute(MINA_REQUEST_ATTR);
+        }
+    }
 
 }

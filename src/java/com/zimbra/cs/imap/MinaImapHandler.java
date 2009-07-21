@@ -22,6 +22,7 @@ import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.Constants;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import org.apache.mina.common.IdleStatus;
@@ -74,8 +75,9 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     public void requestReceived(MinaRequest req) throws IOException {
-        assert(req instanceof MinaImapRequest);
         MinaImapRequest imapReq = (MinaImapRequest) req;
+
+        setUpLogContext(mSession.getRemoteAddress().toString());
         
         if (imapReq.isMaxRequestSizeExceeded()) {
             handleParseException(new ImapParseException(imapReq.getTag(), "TOOBIG", "request too long", false));
@@ -83,17 +85,6 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
 
         ImapFolder i4selected = mSelectedFolder;
-        Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
-        String origRemoteIp = getOrigRemoteIpAddr();
-
-        if (mCredentials != null)
-            ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
-        if (mbox != null)
-            ZimbraLog.addMboxToContext(mbox.getId());
-        if (origRemoteIp != null)
-            ZimbraLog.addOrigIpToContext(origRemoteIp);
-        ZimbraLog.addIpToContext(mSession.getRemoteAddress().toString());
-
         if (i4selected != null)
             i4selected.updateAccessTime();
 
@@ -102,6 +93,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             if (!processRequest(imapReq))
                 dropConnection();
         } finally {
+            imapReq.cleanup();
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
@@ -169,9 +161,12 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void cleanup() {
+        MinaImapRequest req = (MinaImapRequest)
+            mSession.getAttribute(Constants.MINA_REQUEST_ATTR);
+        if (req != null) req.cleanup();
         try {
             unsetSelectedFolder(false);
-        } catch (Exception e) { }
+        } catch (Exception e) {}
     }
     
     public void connectionIdle() {

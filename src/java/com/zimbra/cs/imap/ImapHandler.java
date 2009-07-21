@@ -45,13 +45,11 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.AuthenticatorUtil;
@@ -62,17 +60,13 @@ import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -146,6 +140,21 @@ abstract class ImapHandler extends ProtocolHandler {
     protected void setUserAgent(String ua)  { mUserAgent = ua; }
 
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
+
+    protected void setUpLogContext(String remoteAddress) {
+        ZimbraLog.clearContext();
+        ImapFolder i4selected = mSelectedFolder;
+        Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
+        String origRemoteIp = getOrigRemoteIpAddr();
+
+        if (mCredentials != null)
+            ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
+        if (mbox != null)
+            ZimbraLog.addMboxToContext(mbox.getId());
+        if (origRemoteIp != null)
+            ZimbraLog.addOrigIpToContext(origRemoteIp);
+        ZimbraLog.addIpToContext(remoteAddress);
+    }
 
     protected void handleParseException(ImapParseException e) throws IOException {
         String message = (e.mCode == null ? "" : '[' + e.mCode + "] ") + e.getMessage();
@@ -289,33 +298,11 @@ abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doAUTHENTICATE(tag, mechanism, response);
                     } else if (command.equals("APPEND")) {
-                        List<Append> appends = new ArrayList<Append>(1);
-                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        List<AppendMessage> appends = new ArrayList<AppendMessage>(1);
+                        req.skipSpace();
+                        ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         do {
-                            List<String> flags = null;  Date date = null;
-                            req.skipSpace();
-                            if (req.peekChar() == '(') {
-                                flags = req.readFlags();  req.skipSpace();
-                            }
-                            if (req.peekChar() == '"') {
-                                date = req.readDate(true, true);  req.skipSpace();
-                            }
-                            if ((req.peekChar() == 'c' || req.peekChar() == 'C') && extensionEnabled("CATENATE")) {
-                                List<Object> parts = new LinkedList<Object>();
-                                req.skipAtom("CATENATE");  req.skipSpace();  req.skipChar('(');
-                                while (req.peekChar() != ')') {
-                                    if (!parts.isEmpty())
-                                        req.skipSpace();
-                                    String type = req.readATOM();  req.skipSpace();
-                                    if (type.equals("TEXT"))      parts.add(req.readLiteral());
-                                    else if (type.equals("URL"))  parts.add(new ImapURL(tag, this, req.readAstring()));
-                                    else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
-                                }
-                                req.skipChar(')');
-                                appends.add(new Append(flags, date, parts));
-                            } else {
-                                appends.add(new Append(flags, date, req.readLiteral8()));
-                            }
+                            appends.add(AppendMessage.parse(this, tag, req));
                         } while (!req.eof() && extensionEnabled("MULTIAPPEND"));
                         checkEOF(tag, req);
                         return doAPPEND(tag, path, appends);
@@ -860,7 +847,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return e.getCode().equals(MailServiceException.MAINTENANCE) ? STOP_PROCESSING : CONTINUE_PROCESSING;
     }
 
-    private OperationContext getContext() throws ServiceException {
+    OperationContext getContext() throws ServiceException {
         if (!isAuthenticated())
             throw ServiceException.AUTH_REQUIRED();
         return mCredentials.getContext().setSession(mSelectedFolder);
@@ -1252,7 +1239,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         ImapFolder i4folder = null;
-        boolean writable = command.equals("SELECT");
+        boolean writable;
         List<String> permflags = Collections.emptyList();
         try {
             Object mboxobj = path.getOwnerMailbox();
@@ -2037,26 +2024,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private static class Append {
-        Date mDate;
-
-        List<Object> mParts;
-        byte[] mContent;
-
-        List<String> mFlagNames;
-        int flags = Flag.BITMASK_UNREAD;
-        long tags = 0;
-        short sflags = 0;
-
-        Append(List<String> flagNames, Date date, byte[] content) {
-            mFlagNames = flagNames;  mDate = date;  mContent = content;
-        }
-        Append(List<String> flagNames, Date date, List<Object> parts) {
-            mFlagNames = flagNames;  mDate = date;  mParts = parts;
-        }
-    }
-
-    boolean doAPPEND(String tag, ImapPath path, List<Append> appends) throws IOException, ImapParseException {
+    boolean doAPPEND(String tag, ImapPath path, List<AppendMessage> appends) throws IOException, ImapParseException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -2076,77 +2044,15 @@ abstract class ImapHandler extends ProtocolHandler {
                 ImapFlagCache flagset = ImapFlagCache.getSystemFlags(mboxobj instanceof Mailbox ? (Mailbox) mboxobj : mCredentials.getMailbox());
                 ImapFlagCache tagset = mboxobj instanceof Mailbox ? new ImapFlagCache((Mailbox) mboxobj, getContext()) : new ImapFlagCache();
 
-                for (Append append : appends) {
-                    if (append.mFlagNames != null && !append.mFlagNames.isEmpty()) {
-                        for (String name : append.mFlagNames) {
-                            ImapFlag i4flag = flagset.getByName(name);
-                            if (i4flag != null && !i4flag.mListed)
-                                i4flag = null;
-                            else if (i4flag == null && !name.startsWith("\\"))
-                                i4flag = tagset.getByName(name);
-                            if (i4flag == null)
-                                i4flag = tagset.createTag(getContext(), name, newTags);
-
-                            if (i4flag != null) {
-                                if (!i4flag.mPermanent)               append.sflags |= i4flag.mBitmask;
-                                else if (Tag.validateId(i4flag.mId))  append.tags |= i4flag.mBitmask;
-                                else if (i4flag.mPositive)            append.flags |= i4flag.mBitmask;
-                                else                                  append.flags &= ~i4flag.mBitmask;
-                            }
-                        }
-                    }
-                    append.mFlagNames = null;
+                for (AppendMessage append : appends) {
+                    append.checkFlags(flagset, tagset, newTags);
                 }
             }
 
-            for (Append append : appends) {
-                if (append.mContent == null) {
-                    // translate CATENATE (...) directives into the resulting byte array
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    int size = 0;
-                    for (Object part : append.mParts) {
-                        byte[] buffer;
-                        if (part instanceof byte[])
-                            buffer = (byte[]) part;
-                        else
-                            buffer = ((ImapURL) part).getContent(this, mCredentials, tag);
-
-                        size += buffer.length;
-                        if (size > mConfig.getMaxRequestSize())
-                            throw new ImapParseException(tag, "TOOBIG", "request too long", false);
-                        baos.write(buffer);
-                    }
-                    append.mContent = baos.toByteArray();
-                    append.mParts = null;
-                }
-
-                // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
-                if (append.mDate == null && mCredentials.isHackEnabled(EnabledHack.THUNDERBIRD)) {
-                    try {
-                        // inefficient, but must be done before creating the ParsedMessage
-                        append.mDate = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(append.mContent)).getSentDate();
-                    } catch (MessagingException e) { }
-                }
-
-                // server uses UNIX time, so range-check specified date (is there a better place for this?)
-                if (append.mDate != null && append.mDate.getTime() > Integer.MAX_VALUE * 1000L) {
-                    ZimbraLog.imap.info("APPEND failed: date out of range");
-                    sendNO(tag, "APPEND failed: date out of range");
-                    return CONTINUE_PROCESSING;
-                }
-
-                if (mboxobj instanceof Mailbox) {
-                    int id = append((Mailbox) mboxobj, (Folder) folderobj, append);
-                    if (id > 0)
-                        createdIds.add(id);
-                } else {
-                    ZMailbox zmbx = (ZMailbox) mboxobj;
-                    ZFolder zfolder = (ZFolder) folderobj;
-
-                    String id = zmbx.addMessage(zfolder.getId(), Flag.bitmaskToFlags(append.flags), null, append.mDate.getTime(), append.mContent, true);
-                    createdIds.add(new ItemId(id, mCredentials.getAccountId()).getId());
-                }
-                append.mContent = null;
+            for (AppendMessage append : appends) {
+                int id = append.storeContent(mboxobj, folderobj);
+                if (id > 0)
+                    createdIds.add(id);
             }
 
             int uvv = (folderobj instanceof Folder ? ImapFolder.getUIDValidity((Folder) folderobj) : ImapFolder.getUIDValidity((ZFolder) folderobj));
@@ -2178,31 +2084,6 @@ abstract class ImapHandler extends ProtocolHandler {
         sendNotifications(true, false);
         sendOK(tag, (appendHint == null ? "" : appendHint.toString()) + "APPEND completed");
         return CONTINUE_PROCESSING;
-    }
-
-    int append(Mailbox mbox, Folder folder, Append append) throws ServiceException {
-        try {
-            boolean idxAttach = mbox.attachmentsIndexingEnabled();
-            ParsedMessage pm = append.mDate != null ? new ParsedMessage(append.mContent, append.mDate.getTime(), idxAttach) :
-                new ParsedMessage(append.mContent, idxAttach);
-            try {
-                if (!pm.getSender().equals("")) {
-                    InternetAddress ia = new InternetAddress(pm.getSender());
-                    if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))
-                        append.flags |= Flag.BITMASK_FROM_ME;
-                }
-            } catch (Exception e) { }
-            
-            Message msg = mbox.addMessage(getContext(), pm, folder.getId(), true, append.flags, Tag.bitmaskToTags(append.tags));
-            if (msg != null && append.sflags != 0 && getState() == ImapHandler.State.SELECTED) {
-                ImapMessage i4msg = getSelectedFolder().getById(msg.getId());
-                if (i4msg != null)
-                    i4msg.setSessionFlags(append.sflags, getSelectedFolder());
-            }
-            return msg == null ? -1 : msg.getId();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE(e.toString(), e);
-        }
     }
 
     private void deleteTags(List<Tag> ltags) {
@@ -2345,8 +2226,7 @@ abstract class ImapHandler extends ProtocolHandler {
     private static final String IMAP_DELETE_RIGHTS = "xted";
     private static final String IMAP_ADMIN_RIGHTS  = "a";
 
-    /** Returns whether all of a set of <tt>linked</tt> RFC 4314 rights is
-     *  contained within a string. */
+    // Returns whether all of a set of <tt>linked</tt> RFC 4314 rights is contained within a string.
     private boolean allRightsPresent(final String i4rights, final String linked) {
         for (int i = 0; i < linked.length(); i++)
             if (i4rights.indexOf(linked.charAt(i)) == -1)
@@ -2402,7 +2282,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
             // figure out who's being granted permissions
             String granteeId = null;
-            byte granteeType = 0;
+            byte granteeType;
             if (principal.equals("anyone")) {
                 granteeId = ACL.GUID_AUTHUSER;  granteeType = ACL.GRANTEE_AUTHUSER;
             } else {
@@ -2422,7 +2302,7 @@ abstract class ImapHandler extends ProtocolHandler {
             }
 
             // figure out the rights already granted on the folder
-            short oldRights = 0, newRights = 0;
+            short oldRights = 0, newRights;
             Object folderobj = path.getFolder();
             if (folderobj instanceof Folder) {
                 ACL acl = ((Folder) folderobj).getEffectiveACL();
@@ -2611,11 +2491,10 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    /** The set of rights required to create a new subfolder in ZCS. */
+    /* The set of rights required to create a new subfolder in ZCS. */
     private short SUBFOLDER_RIGHTS = ACL.RIGHT_INSERT | ACL.RIGHT_READ;
 
-    /** Converts a Zimbra rights bitmask to an RFC 4314-compatible rights
-     *  string. */
+    /* Converts a Zimbra rights bitmask to an RFC 4314-compatible rights string */
     private String exportRights(short rights) {
         StringBuilder imapRights = new StringBuilder(12);
         if ((rights & ACL.RIGHT_READ) == ACL.RIGHT_READ)      imapRights.append("lr");
@@ -2627,9 +2506,9 @@ abstract class ImapHandler extends ProtocolHandler {
         return imapRights.length() == 0 ? "\"\"" : imapRights.toString();
     }
 
-    /** All the supported IMAP rights, concatenated together into a single string. */
+    /* All the supported IMAP rights, concatenated together into a single string. */
     private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS + IMAP_INSERT_RIGHTS + IMAP_DELETE_RIGHTS + IMAP_ADMIN_RIGHTS;
-    /** All the supported IMAP rights, with <tt>linked</tt> sets of rights
+    /* All the supported IMAP rights, with <tt>linked</tt> sets of rights
      *  grouped together and the groups delimited by spaces. */
     private static final String IMAP_DELIMITED_RIGHTS = IMAP_READ_RIGHTS + ' ' + IMAP_WRITE_RIGHTS + ' ' + IMAP_INSERT_RIGHTS + ' ' + IMAP_DELETE_RIGHTS + ' ' + IMAP_ADMIN_RIGHTS;
 
@@ -2773,7 +2652,7 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         String command = (byUID ? "UID EXPUNGE" : "EXPUNGE");
-        boolean expunged = false;
+        boolean expunged;
         try {
             if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
                 throw ServiceException.PERM_DENIED("you do not have permission to delete messages from this folder");
@@ -2897,7 +2776,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
         boolean unsorted = sort == SortBy.NONE;
-        Collection<ImapMessage> hits = null;
+        Collection<ImapMessage> hits;
         int modseq = 0;
 
         try {
@@ -3256,7 +3135,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
                 MailItem item = null;
-                MimeMessage mm = null;
+                MimeMessage mm;
 
                 result.print("* " + i4msg.sequence + " FETCH (");
 
@@ -3580,9 +3459,9 @@ abstract class ImapHandler extends ProtocolHandler {
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
 
             Object mboxobj = path.getOwnerMailbox();
-            ItemId iidTarget = null;
+            ItemId iidTarget;
             boolean sameMailbox = false;
-            int uvv = -1;
+            int uvv;
 
             // check target folder permissions before attempting the copy
             if (mboxobj instanceof Mailbox) {
@@ -3697,20 +3576,6 @@ abstract class ImapHandler extends ProtocolHandler {
     	sendOK(tag, copyuid + command + " completed");
         return CONTINUE_PROCESSING;
     }
-
-    private void deleteMessages(List<MailItem> messages) {
-        if (messages == null || messages.isEmpty())
-            return;
-
-        for (MailItem item : messages) {
-            try {
-                item.getMailbox().delete(getContext(), item, null);
-            } catch (ServiceException e) {
-                ZimbraLog.imap.warn("could not roll back creation of message", e);
-            }
-        }
-    }
-
 
     public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
         ImapProxy proxy = mProxy;

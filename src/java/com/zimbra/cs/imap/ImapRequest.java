@@ -49,31 +49,30 @@ abstract class ImapRequest {
     private static final boolean[] SEQUENCE_CHARS = new boolean[128];
     private static final boolean[] BASE64_CHARS   = new boolean[128];
     private static final boolean[] SEARCH_CHARS   = new boolean[128];
-        static {
-            for (int i = 0x21; i < 0x7F; i++)
-                if (i != '(' && i != ')' && i != '{' && i != '%' && i != '*' && i != '"' && i != '\\')
-                    SEARCH_CHARS[i] = FETCH_CHARS[i] = PATTERN_CHARS[i] = ASTRING_CHARS[i] = ATOM_CHARS[i] = TAG_CHARS[i] = true;
-            ATOM_CHARS[']'] = false;
-            TAG_CHARS['+']  = false;
-            PATTERN_CHARS['%'] = PATTERN_CHARS['*'] = true;
-            FETCH_CHARS['['] = false;
-            SEARCH_CHARS['*'] = true;
+    static {
+        for (int i = 0x21; i < 0x7F; i++)
+            if (i != '(' && i != ')' && i != '{' && i != '%' && i != '*' && i != '"' && i != '\\')
+                SEARCH_CHARS[i] = FETCH_CHARS[i] = PATTERN_CHARS[i] = ASTRING_CHARS[i] = ATOM_CHARS[i] = TAG_CHARS[i] = true;
+        ATOM_CHARS[']'] = false;
+        TAG_CHARS['+']  = false;
+        PATTERN_CHARS['%'] = PATTERN_CHARS['*'] = true;
+        FETCH_CHARS['['] = false;
+        SEARCH_CHARS['*'] = true;
 
-            for (int i = 'a'; i <= 'z'; i++)
-                BASE64_CHARS[i] = true;
-            for (int i = 'A'; i <= 'Z'; i++)
-                BASE64_CHARS[i] = true;
-            for (int i = '0'; i <= '9'; i++)
-                BASE64_CHARS[i] = NUMBER_CHARS[i] = SEQUENCE_CHARS[i] = true;
-            SEQUENCE_CHARS['*'] = SEQUENCE_CHARS[':'] = SEQUENCE_CHARS[','] = SEQUENCE_CHARS['$'] = true;
-            BASE64_CHARS['+'] = BASE64_CHARS['/'] = true;
-        }
-
+        for (int i = 'a'; i <= 'z'; i++)
+            BASE64_CHARS[i] = true;
+        for (int i = 'A'; i <= 'Z'; i++)
+            BASE64_CHARS[i] = true;
+        for (int i = '0'; i <= '9'; i++)
+            BASE64_CHARS[i] = NUMBER_CHARS[i] = SEQUENCE_CHARS[i] = true;
+        SEQUENCE_CHARS['*'] = SEQUENCE_CHARS[':'] = SEQUENCE_CHARS[','] = SEQUENCE_CHARS['$'] = true;
+        BASE64_CHARS['+'] = BASE64_CHARS['/'] = true;
+    }
 
     final ImapHandler mHandler;
 
     String mTag;
-    List<Object> mParts = new ArrayList<Object>();
+    List<Part> mParts = new ArrayList<Part>();
     int mIndex, mOffset;
     private long mSize;
     private boolean mMaxRequestSizeExceeded;
@@ -102,34 +101,110 @@ abstract class ImapRequest {
         return mHandler.getConfig().getMaxRequestSize();
     }
 
-    void addPart(Object obj) {
-        assert obj instanceof String || obj instanceof byte[];
+    protected abstract class Part {
+        abstract int size();
+        abstract byte[] getBytes() throws IOException;
+        boolean isString() { return false; }
+        boolean isLiteral() { return false; }
+        abstract String getString() throws ImapParseException;
+        abstract Literal getLiteral() throws ImapParseException;
+        void cleanup() {}
+    }
+
+    private class StringPart extends Part {
+        private String str;
+
+        StringPart(String s) { str = s; }
+
+        int size() { return str.length(); }
+        byte[] getBytes() { return str.getBytes(); }
+        boolean isString() { return true; }
+        String getString() { return str; }
+        public String toString() { return str; }
+
+        Literal getLiteral() throws ImapParseException {
+            throw new ImapParseException(mTag, "not inside literal");
+        }
+    }
+
+    private class LiteralPart extends Part {
+        private Literal lit;
+
+        LiteralPart(Literal l) { lit = l; }
+
+        int size() { return lit.size(); }
+        byte[] getBytes() throws IOException { return lit.getBytes(); }
+        boolean isLiteral() { return true; }
+        Literal getLiteral() { return lit; }
+        void cleanup() { lit.cleanup(); }
+
+        public String getString() throws ImapParseException {
+            throw new ImapParseException(mTag, "not inside string");
+        }
+
+        public String toString() {
+            try {
+                return new String(lit.getBytes(), "US-ASCII");
+            } catch (IOException e) {
+                return "???";
+            }
+        }
+    }
+
+    void addPart(Literal literal) {
+        addPart(new LiteralPart(literal));
+    }
+
+    void addPart(String str) {
+        addPart(new StringPart(str));
+    }
+        
+    private void addPart(Part part) {
         // Do not add any more parts if we have exceeded the maximum request
         // size. The exception is if this is the first part (request line) so
         // we can recover the tag when sending an error response.
         if (!isMaxRequestSizeExceeded() || mParts.size() == 0) {
-            mParts.add(obj);
+            mParts.add(part);
         }
     }
 
+    void cleanup() {
+        for (Part part : mParts) {
+            part.cleanup();
+        }
+        mParts.clear();
+    }
+    
+    protected boolean isCommand(String cmd) throws ImapParseException {
+        return mParts.size() > 0 &&
+               cmd.equalsIgnoreCase(getCommand(mParts.get(0).getString()));
+    }
+
+    protected String getCommand(String requestLine) {
+        int i = requestLine.indexOf(' ') + 1;
+        if (i > 0) {
+            int j = requestLine.indexOf(' ', i);
+            if (j > 0) {
+                return requestLine.substring(i, j);
+            }
+        }
+        return null;
+    }
+    
     String getCurrentLine() throws ImapParseException {
-        Object part = mParts.get(mIndex);
-        if (!(part instanceof String))
-            throw new ImapParseException(mTag, "should not be inside literal");
-        return (String) part;
+        return mParts.get(mIndex).getString();
     }
 
     boolean isMaxRequestSizeExceeded() {
         return mMaxRequestSizeExceeded;
     }
 
-    byte[] toByteArray() {
+    byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        for (Object part : mParts) {
-            boolean isLiteral = part instanceof byte[];
-            byte[] content = isLiteral ? (byte[]) part : part.toString().getBytes();
+        for (Part part : mParts) {
+            byte[] content = part.getBytes();
             baos.write(content, 0, content.length);
-            if (!isLiteral)
+            if (part.isString())
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
         }
         return baos.toByteArray();
@@ -147,18 +222,16 @@ abstract class ImapRequest {
         return mTag;
     }
 
-    /** Returns whether the specified IMAP extension is enabled for this
-     *  session.
+    /* Returns whether the specified IMAP extension is enabled for this session.
      * @see ImapHandler#extensionEnabled(String) */
     boolean extensionEnabled(String extension) {
         return mHandler == null || mHandler.extensionEnabled(extension);
     }
 
-    /** Records the "tag" for the request.  This tag will later be used to
-     *  indicate that the server has finished processing the request.
-     *  It may also be used when generating a parse exception. */
+    /* Records the "tag" for the request.  This tag will later be used to
+     * indicate that the server has finished processing the request.
+     * It may also be used when generating a parse exception. */
     void setTag(String tag)  { mTag = tag; }
-
 
     String readContent(boolean[] acceptable) throws ImapParseException {
         return readContent(acceptable, false);
@@ -181,19 +254,17 @@ abstract class ImapRequest {
     }
 
 
-    /** Returns whether the read position is at the very end of the request. */
-    boolean eof()  { return peekChar() == -1; }
+    /* Returns whether the read position is at the very end of the request. */
+    boolean eof() {
+        return mIndex >= mParts.size() || mOffset >= mParts.get(mIndex).size();
+    }
 
-    /** Returns the character at the read position, or -1 if we're at the end
-     *  of a literal or of a line. */
-    int peekChar() {
-        if (mIndex >= mParts.size())
-            return -1;
-        Object part = mParts.get(mIndex);
-        if (part instanceof String)
-            return (mOffset >= ((String) part).length()) ? -1 : ((String) part).charAt(mOffset);
-        else
-            return (mOffset >= ((byte[]) part).length) ? -1 : ((byte[]) part)[mOffset];
+    /* Returns the character at the read position, or -1 if we're at the end
+     * of a literal or of a line. */
+    int peekChar() throws ImapParseException {
+        if (mIndex >= mParts.size()) return -1;
+        String str = mParts.get(mIndex).getString();
+        return mOffset < str.length() ? str.charAt(mOffset) : -1;
     }
 
     String peekATOM() {
@@ -210,11 +281,11 @@ abstract class ImapRequest {
     void skipSpace() throws ImapParseException { skipChar(' '); }
 
     void skipChar(char c) throws ImapParseException {
-        Object part = mParts.get(mIndex);
-        if (!(part instanceof String) || mOffset >= ((String) part).length()) {
+        String str = mParts.get(mIndex).getString();
+        if (mOffset >= str.length()) {
             throw new ImapParseException(mTag, "unexpected end of line; expected '" + c + "'");
         }
-        char got = ((String) part).charAt(mOffset);
+        char got = str.charAt(mOffset);
         if (got == c) mOffset++;
         else throw new ImapParseException(mTag, "wrong character; expected '" + c + "' but got '" + got + "'");
     }                                       
@@ -257,17 +328,17 @@ abstract class ImapRequest {
         throw new ImapParseException(mTag, "unexpected end of line in quoted string");
     }
 
-    abstract byte[] readLiteral() throws IOException, ImapParseException;
+    abstract Literal readLiteral() throws IOException, ImapParseException;
 
     private String readLiteral(String charset) throws IOException, ImapParseException {
         try {
-            return new String(readLiteral(), charset);
+            return new String(readLiteral().getBytes(), charset);
         } catch (UnsupportedEncodingException e) {
             throw new ImapParseException(mTag, "BADCHARSET", "could not convert string to charset \"" + charset + '"', true);
         }
     }
 
-    byte[] readLiteral8() throws IOException, ImapParseException {
+    Literal readLiteral8() throws IOException, ImapParseException {
         if (peekChar() == '~' && extensionEnabled("BINARY"))
             skipChar('~');
         return readLiteral();
@@ -338,7 +409,6 @@ abstract class ImapRequest {
         }
     }
 
-
     byte[] readBase64(boolean skipEquals) throws ImapParseException {
         // in some cases, "=" means to just return null and be done with it
         if (skipEquals && peekChar() == '=') {
@@ -358,7 +428,6 @@ abstract class ImapRequest {
             throw new ImapParseException(mTag, "invalid base64-encoded content");
         }
     }
-
 
     String readSequence(boolean specialsOK) throws ImapParseException {
         return validateSequence(readContent(SEQUENCE_CHARS), specialsOK);
@@ -401,8 +470,6 @@ abstract class ImapRequest {
         return value;
     }
 
-
-
     String readFolder() throws IOException, ImapParseException {
         return readFolder(false);
     }
@@ -420,7 +487,6 @@ abstract class ImapRequest {
             return raw;
         }
     }
-
 
     private static Set<String> SYSTEM_FLAGS = new HashSet<String>(Arrays.asList("ANSWERED", "FLAGGED", "DELETED", "SEEN", "DRAFT"));
 
@@ -563,7 +629,6 @@ abstract class ImapRequest {
         return params;
     }
 
-
     int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapParseException {
         boolean list = peekChar() == '(';
         int attributes = 0;
@@ -664,7 +729,6 @@ abstract class ImapRequest {
         return pspec;
     }
 
-
     private static final Map<String, String> NEGATED_SEARCH = new HashMap<String, String>();
         static {
             NEGATED_SEARCH.put("ANSWERED",   "UNANSWERED");
@@ -705,7 +769,7 @@ abstract class ImapRequest {
             }
             nots = 0;
 
-            ImapSearch child = null;
+            ImapSearch child;
             if (key.equals("ALL"))              child = new AllSearch();
             else if (key.equals("ANSWERED"))    child = new FlagSearch("\\Answered");
             else if (key.equals("DELETED"))     child = new FlagSearch("\\Deleted");

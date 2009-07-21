@@ -18,6 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.store.file.FileBlobStore;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,7 +32,8 @@ import java.util.zip.GZIPOutputStream;
 public class BlobBuilder {
     protected Blob blob;
     private long sizeHint;
-    private boolean disableCompression;
+    protected boolean disableCompression;
+    private boolean disableDigest;
     private StorageCallback storageCallback;
     private MessageDigest digest;
     private OutputStream out;
@@ -48,7 +50,11 @@ public class BlobBuilder {
         return this;
     }
 
-    protected long getTotalBytes() {
+    public long getSizeHint() {
+        return sizeHint;
+    }
+    
+    public long getTotalBytes() {
         return totalBytes;
     }
 
@@ -62,17 +68,20 @@ public class BlobBuilder {
         return this;
     }
 
-    protected boolean isCompressionDisabled() {
-        return disableCompression;
+    public BlobBuilder disableDigest(boolean disable) {
+        this.disableDigest = disable;
+        return this;
     }
 
     public BlobBuilder init() throws IOException, ServiceException {
-        try {
-            digest = MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw ServiceException.FAILURE("SHA1 digest not found", e);
+        if (!disableDigest) {
+            try {
+                digest = MessageDigest.getInstance("SHA1");
+            } catch (NoSuchAlgorithmException e) {
+                throw ServiceException.FAILURE("SHA1 digest not found", e);
+            }
         }
-
+        
         FileOutputStream fos = new FileOutputStream(blob.getFile());
         fc = fos.getChannel();
         if (useCompression(sizeHint)) {
@@ -91,34 +100,43 @@ public class BlobBuilder {
         return this;
     }
 
-    @SuppressWarnings("unused")
     protected boolean useCompression(long size) throws ServiceException {
         return false;
     }
 
-    public void update(byte[] b, int off, int len)
-    throws IOException, ServiceException {
+    public BlobBuilder append(byte[] b, int off, int len) throws IOException {
         if (finished)
-            throw new IllegalStateException("Blob builder is finished");
+            throw new IllegalStateException("BlobBuilder is finished");
 
-        // first time initialization
-        if (out == null)
-            init();
+        checkInitialized();
 
         try {
             out.write(b, off, len);
             if (storageCallback != null)
                 storageCallback.wrote(blob, b, off, len);
-
-            digest.update(b, off, len);
+            if (digest != null) {
+                digest.update(b, off, len);
+            }
             totalBytes += len;
         } catch (IOException e) {
             dispose();
             throw e;
         }
+
+        return this;
     }
 
-    @SuppressWarnings("unused")
+    private void checkInitialized() throws IOException {
+        if (out == null) {
+            try {
+                init();
+            } catch (Exception e) {
+                throw (IOException) new IOException(
+                    "Unable to initialize BlobBuilder").initCause(e);
+            }
+        }
+    }
+
     public Blob finish() throws IOException, ServiceException {
         if (finished)
             return blob;
@@ -136,7 +154,9 @@ public class BlobBuilder {
         }
 
         // set the blob's digest and size
-        blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
+        if (digest != null) {
+            blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
+        }
         blob.setRawSize(totalBytes);
 
         if (ZimbraLog.store.isDebugEnabled())
@@ -168,11 +188,11 @@ public class BlobBuilder {
 
     // Clean up and dispose of blob file
     public void dispose() {
-        finished = true;
-        ByteUtil.closeStream(out);
-        File file = blob.getFile();
-        if (file.exists())
-            file.delete();
-        blob = null;
+        if (blob != null) {
+            finished = true;
+            ByteUtil.closeStream(out);
+            FileBlobStore.getInstance().quietDelete(blob);
+            blob = null;
+        }
     }
 }

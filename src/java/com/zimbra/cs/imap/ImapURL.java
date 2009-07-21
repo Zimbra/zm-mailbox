@@ -174,22 +174,20 @@ class ImapURL {
         public ParserImapRequest(String tag, String section) {
             super(null);
             mTag = tag;
-            mParts = Arrays.asList((Object) section);
+            addPart(section);
         }
 
-        private byte[] getNextBuffer() throws ImapParseException {
+        private Literal getNextBuffer() throws ImapParseException {
             if ((mIndex + 1) >= mParts.size()) {
                 throw new ImapParseException(mTag, "no next literal");
             }
-            Object part = mParts.get(mIndex + 1);
-            if (!(part instanceof byte[]))
-                throw new ImapParseException(mTag, "in string next not literal");
+            Literal literal = mParts.get(mIndex + 1).getLiteral();
             mIndex += 2;
             mOffset = 0;
-            return (byte[]) part;
+            return literal;
         }
 
-        byte[] readLiteral() throws ImapParseException {
+        Literal readLiteral() throws ImapParseException {
             return getNextBuffer();
         }
     }

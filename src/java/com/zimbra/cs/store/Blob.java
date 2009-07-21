@@ -60,8 +60,7 @@ public class Blob {
     	return mPath;
     }
     
-    private InputStream getInputStream()
-    throws IOException {
+    public InputStream getInputStream() throws IOException {
         InputStream in = new FileInputStream(mFile);
         if (isCompressed())
             in = new GZIPInputStream(in);

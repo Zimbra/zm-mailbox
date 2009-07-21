@@ -20,13 +20,12 @@ import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaRequest;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 public class MinaImapRequest extends ImapRequest implements MinaRequest {
-    private LineBuffer mLine;   // Command line
-    private ByteBuffer mBuffer; // Buffer for literal data
     private State mState;       // Current request state
+    private LineBuffer mLine;   // Command line
+    private Literal mLiteral;   // Current literal data
     private int mLiteralCount;  // Remaining byte count for current literal
     private boolean mBlocking;  // Current literal is blocking continuation
 
@@ -43,17 +42,20 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
 
     public void parse(ByteBuffer bb) throws IOException {
         try {
-            while (mState != State.COMPLETE && bb.hasRemaining()) {
+            while (bb.hasRemaining()) {
                 switch (mState) {
-                    case COMMAND:
-                        parseLine(bb);
-                        break;
-                    case LITERAL:
-                        parseLiteral(bb);
-                        break;
+                case COMMAND:
+                    parseCommand(bb);
+                    continue;
+                case LITERAL:
+                    parseLiteral(bb);
+                    continue;
+                case COMPLETE:
+                    return;
                 }
             }
         } catch (ImapParseException e) {
+            cleanup();
             mHandler.handleParseException(e);
             throw new IllegalArgumentException("Bad request line", e);
         }
@@ -64,36 +66,36 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
     }
 
     private void parseLiteral(ByteBuffer bb) throws IOException, ImapParseException {
-        int n = Math.min(mLiteralCount, bb.remaining());
-        if (!isMaxRequestSizeExceeded()) {
-            mBuffer.put((ByteBuffer) bb.slice().limit(n));
+        if (isMaxRequestSizeExceeded()) {
+            mLiteralCount -= Math.min(mLiteralCount, bb.remaining());
+        } else {
+            mLiteralCount -= mLiteral.put(bb);
         }
-        bb.position(bb.position() + n);
-        mLiteralCount -= n;
         if (mLiteralCount == 0) {
+            assert mLiteral.remaining() == 0;
             if (!isMaxRequestSizeExceeded()) {
-                addPart(mBuffer.array());
+                addPart(mLiteral);
             }
-            mBuffer = null;
+            mLiteral = null;
             mState = State.COMMAND;
-        } else if (mBlocking) {
-            sendContinuation();
         }
     }
 
-    private void parseLine(ByteBuffer bb)
-            throws IOException, ImapParseException {
-        if (mLine == null) mLine = new LineBuffer();
+    private void parseCommand(ByteBuffer bb) throws IOException, ImapParseException {
+        if (mLine == null) {
+            mLine = new LineBuffer();
+        }
         mLine.parse(bb);
-        if (!mLine.isComplete()) return;
-        String line = mLine.toString();
-        mLine = null;
-        incrementSize(line.length());
-        addPart(line);
-        parseLine(line);
+        if (mLine.isComplete()) {
+            String line = mLine.toString();
+            mLine = null;
+            incrementSize(line.length());
+            addPart(line);
+            parseCommand(line);
+        }
     }
 
-    private void parseLine(String line) throws IOException, ImapParseException {
+    private void parseCommand(String line) throws IOException, ImapParseException {
         int i;
         if (!line.endsWith("}") || (i = line.lastIndexOf('{')) == -1) {
             mState = State.COMPLETE;
@@ -112,7 +114,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
         }
         incrementSize(mLiteralCount);
         if (!isMaxRequestSizeExceeded()) {
-            mBuffer = ByteBuffer.allocate(mLiteralCount);
+            mLiteral = Literal.newInstance(mLiteralCount, false /*isCommand("APPEND")*/);
         }
         if (mBlocking) {
             sendContinuation();
@@ -140,34 +142,22 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
         return result;
     }
 
-    public byte[] readLiteral() throws ImapParseException {
+    public Literal readLiteral() throws ImapParseException {
         skipChar('{');
         if (mIndex + 1 >= mParts.size()) {
             throw new ImapParseException(mTag, "no next literal");
         }
-        Object part = mParts.get(mIndex + 1);
-        if (!(part instanceof byte[]))
-            throw new ImapParseException(mTag, "in string next not literal");
+        Part part = mParts.get(mIndex + 1);
         mIndex += 2;
         mOffset = 0;
-        return (byte[]) part;
+        return part.getLiteral();
     }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        for (Object part : mParts) {
-            if (part instanceof String) {
-                sb.append(part).append("\r\n");
-            } else if (part instanceof byte[]) {
-                byte[] b = (byte[]) part;
-                try {
-                    sb.append(new String(b, "US-ASCII"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new InternalError();
-                }
-            } else {
-                throw new AssertionError();
-            }
+        StringBuilder sb = new StringBuilder();
+        for (Part part : mParts) {
+            sb.append(part);
+            if (part.isString()) sb.append("\r\n");
         }
         return sb.toString();
     }

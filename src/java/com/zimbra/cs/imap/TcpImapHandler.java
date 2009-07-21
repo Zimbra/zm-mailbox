@@ -33,7 +33,7 @@ import java.net.SocketException;
 class TcpImapHandler extends ImapHandler {
     private TcpServerInputStream mInputStream;
     private String         mRemoteAddress;
-    private TcpImapRequest mIncompleteRequest = null;
+    private TcpImapRequest mRequest;
 
     TcpImapHandler(ImapServer server) {
         super(server);
@@ -72,72 +72,63 @@ class TcpImapHandler extends ImapHandler {
     }
 
     @Override protected boolean processCommand() throws IOException {
-        TcpImapRequest req = null;
-        boolean keepGoing = CONTINUE_PROCESSING;
-        ZimbraLog.clearContext();
+        // FIXME: throw an exception instead?
+        if (mInputStream == null)
+            return STOP_PROCESSING;
+        
+        setUpLogContext(mRemoteAddress);
+
+        if (mRequest == null)
+            mRequest = new TcpImapRequest(mInputStream, this);
 
         try {
-            // FIXME: throw an exception instead?
-            if (mInputStream == null)
-                return STOP_PROCESSING;
-
-            ImapFolder i4selected = mSelectedFolder;
-            Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
-            String origRemoteIp = getOrigRemoteIpAddr();
-
-            if (mCredentials != null)
-                ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
-            if (mbox != null)
-                ZimbraLog.addMboxToContext(mbox.getId());
-            if (origRemoteIp != null)
-                ZimbraLog.addOrigIpToContext(origRemoteIp);
-            ZimbraLog.addIpToContext(mRemoteAddress);
-
-            req = mIncompleteRequest;
-            if (req == null)
-                req = new TcpImapRequest(mInputStream, this);
-            req.continuation();
-
-            if (req.isMaxRequestSizeExceeded()) {
-                setIdle(false);
-                mIncompleteRequest = null;
-                handleParseException(new ImapParseException(req.getTag(), "TOOBIG", "request too long", false));
-                return CONTINUE_PROCESSING;
+            mRequest.continuation();
+            if (mRequest.isMaxRequestSizeExceeded()) {
+                setIdle(false); // FIXME Why for only this error?
+                throw new ImapParseException(
+                    mRequest.getTag(), "TOOBIG", "request too long", false);
             }
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
-
             // check account status before executing command
-            if (!checkAccountStatus())
+            if (!checkAccountStatus()) {
                 return STOP_PROCESSING;
-
+            }
+            boolean keepGoing;
             if (mAuthenticator != null && !mAuthenticator.isComplete())
-                keepGoing = continueAuthentication(req);
+                keepGoing = continueAuthentication(mRequest);
             else
-                keepGoing = executeRequest(req);
+                keepGoing = executeRequest(mRequest);
+            // FIXME Shouldn't we do these before executing the request??
             setIdle(false);
-            mIncompleteRequest = null;
-
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
+            clearRequest();
+            return keepGoing;
         } catch (TcpImapRequest.ImapContinuationException ice) {
-            mIncompleteRequest = (TcpImapRequest) req.rewind();
+            mRequest.rewind();
             if (ice.sendContinuation)
                 sendContinuation("send literal data");
+            return CONTINUE_PROCESSING;
         } catch (TcpImapRequest.ImapTerminatedException ite) {
-            mIncompleteRequest = null;
-            keepGoing = STOP_PROCESSING;
+            return STOP_PROCESSING;
         } catch (ImapParseException ipe) {
-            mIncompleteRequest = null;
+            clearRequest();
             handleParseException(ipe);
+            return CONTINUE_PROCESSING;
         } finally {
             ZimbraLog.clearContext();
         }
-
-        return keepGoing;
     }
 
+    private void clearRequest() {
+        if (mRequest != null) {
+            mRequest.cleanup();
+            mRequest = null;
+        }
+    }
+    
     @Override boolean doSTARTTLS(String tag) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return CONTINUE_PROCESSING;
@@ -159,8 +150,9 @@ class TcpImapHandler extends ImapHandler {
 
         return CONTINUE_PROCESSING;
     }
-
+    
     @Override protected void dropConnection(boolean sendBanner) {
+        clearRequest();
         try {
             unsetSelectedFolder(false);
         } catch (Exception e) { }

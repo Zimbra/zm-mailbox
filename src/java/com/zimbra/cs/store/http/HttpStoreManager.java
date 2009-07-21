@@ -120,7 +120,7 @@ public abstract class HttpStoreManager extends StoreManager {
         byte[] buffer = new byte[BUFLEN];
         int numRead;
         while ((numRead = data.read(buffer)) >= 0)
-            builder.update(buffer, 0, numRead);
+            builder.append(buffer, 0, numRead);
 
         return builder.finish();
     }

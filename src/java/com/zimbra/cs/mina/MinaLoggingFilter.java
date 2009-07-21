@@ -157,7 +157,7 @@ class MinaLoggingFilter extends IoFilterAdapter {
     private void debug(IoSession session, String msg) {
         if (mLog.isDebugEnabled()) {
             ZimbraLog.addIpToContext(session.getRemoteAddress().toString());
-            mLog.info(msg);
+            mLog.debug(msg);
         }
     }
 }

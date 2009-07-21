@@ -21,7 +21,7 @@ import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
 
-import com.zimbra.common.util.ZimbraLog;
+import static com.zimbra.cs.mina.Constants.*;
 
 /**
  * Handler for MINA I/O events. Responsible for notifying the connection's
@@ -31,14 +31,12 @@ import com.zimbra.common.util.ZimbraLog;
 class MinaIoHandler implements IoHandler {
     private MinaServer mServer;
 
-    private static final String PROTOCOL_HANDLER = "ProtocolHandler";
-
     MinaIoHandler(MinaServer server) {
         this.mServer = server;
     }
 
     public void sessionCreated(IoSession session) throws IOException {
-        session.setAttribute(PROTOCOL_HANDLER, mServer.createHandler(session));
+        session.setAttribute(MINA_HANDLER_ATTR, mServer.createHandler(session));
     }
 
     public void sessionOpened(IoSession session) throws IOException {
@@ -49,19 +47,15 @@ class MinaIoHandler implements IoHandler {
         getHandler(session).connectionClosed();
     }
 
-    public void sessionIdle(IoSession session, IdleStatus status)
-            throws IOException{
+    public void sessionIdle(IoSession session, IdleStatus status) throws IOException{
         getHandler(session).connectionIdle();
     }
 
-    public void messageReceived(IoSession session, Object msg)
-            throws IOException {
-        assert msg instanceof MinaRequest;
+    public void messageReceived(IoSession session, Object msg) throws IOException {
         getHandler(session).requestReceived((MinaRequest) msg);
     }
 
-    public void exceptionCaught(IoSession session, Throwable e)
-            throws IOException {
+    public void exceptionCaught(IoSession session, Throwable e) throws IOException {
         getHandler(session).connectionClosed();
     }
 
@@ -69,7 +63,7 @@ class MinaIoHandler implements IoHandler {
         // Nothing to do here...
     }
 
-    public static MinaHandler getHandler(IoSession session) {
-        return (MinaHandler) session.getAttribute(PROTOCOL_HANDLER);
+    private static MinaHandler getHandler(IoSession session) {
+        return (MinaHandler) session.getAttribute(MINA_HANDLER_ATTR);
     }
 }

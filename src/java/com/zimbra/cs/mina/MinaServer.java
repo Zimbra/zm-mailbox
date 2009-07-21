@@ -46,6 +46,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.zimbra.cs.mina.Constants.*;
+
 /**
  * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new
  * MINA request and connection handler instances.
@@ -260,7 +262,7 @@ public abstract class MinaServer implements Server {
         List<MinaHandler> handlers = new ArrayList<MinaHandler>();
         for (IoSession session : mSocketAcceptor.getManagedSessions(addr)) {
             getLog().info("Closing session = " + session);
-            MinaHandler handler = MinaIoHandler.getHandler(session);
+            MinaHandler handler = (MinaHandler) session.getAttribute(MINA_HANDLER_ATTR);
             if (handler != null) handlers.add(handler);
         }
         // Wait up to grace seconds to close active handlers

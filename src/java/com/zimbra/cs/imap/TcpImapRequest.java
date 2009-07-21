@@ -36,7 +36,7 @@ public class TcpImapRequest extends ImapRequest {
 
     TcpImapRequest(String line, ImapHandler handler) {
         super(handler);
-        mParts.add(line);
+        addPart(line);
     }
 
     TcpImapRequest(TcpServerInputStream tsis, ImapHandler handler) {
@@ -56,11 +56,12 @@ public class TcpImapRequest extends ImapRequest {
 
         if (mParts.size() == 1 && !isMaxRequestSizeExceeded()) {
             // check for "LOGIN" command and elide if necessary
-            mUnlogged = "LOGIN".equalsIgnoreCase(getCommand(line));
+            mUnlogged = isCommand("LOGIN");
             if (mUnlogged) {
                 logline = line.substring(0, line.indexOf(' ') + 7) + "...";
             }
         }
+        
         if (ZimbraLog.imap.isDebugEnabled())
             ZimbraLog.imap.debug("C: " + logline);
 
@@ -88,17 +89,6 @@ public class TcpImapRequest extends ImapRequest {
         }
     }
 
-    private String getCommand(String requestLine) {
-        int i = requestLine.indexOf(' ') + 1;
-        if (i > 0) {
-            int j = requestLine.indexOf(' ', i);
-            if (j > 0) {
-                return requestLine.substring(i, j);
-            }
-        }
-        return null;
-    }
-    
     private void continueLiteral() throws IOException, ImapParseException {
         if (isMaxRequestSizeExceeded()) {
             long skipped = mStream.skip(mLiteral);
@@ -107,16 +97,20 @@ public class TcpImapRequest extends ImapRequest {
             mLiteral -= skipped;
         } else {
             assert mLiteral < getMaxRequestSize();
-            int size = (int) mLiteral;
-            Object part = mParts.get(mParts.size() - 1);
-            byte[] buffer = (part instanceof byte[] ? (byte[]) part : new byte[size]);
-            if (buffer != part)
-                mParts.add(buffer);
-            int read = mStream.read(buffer, buffer.length - size, size);
+            Part part = mParts.get(mParts.size() - 1);
+            Literal literal;
+            if (part.isLiteral()) {
+                literal = part.getLiteral();
+            } else {
+                literal = Literal.newInstance((int) mLiteral, isCommand("APPEND"));
+                addPart(literal);
+            }
+            int read = literal.copy(mStream);
             if (read == -1)
                 throw new ImapTerminatedException();
+            // TODO How to log literal data now...
             if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
-                ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - size, read)));
+                ZimbraLog.imap.debug("C: {" + read + "}");
             mLiteral -= read;
         }
         if (mLiteral > 0)
@@ -124,14 +118,11 @@ public class TcpImapRequest extends ImapRequest {
         mLiteral = -1;
     }
 
-    private byte[] getCurrentBuffer() throws ImapParseException {
-        Object part = mParts.get(mIndex);
-        if (!(part instanceof byte[]))
-            throw new ImapParseException(mTag, "not inside literal");
-        return (byte[]) part;
+    private Literal getCurrentBuffer() throws ImapParseException {
+        return mParts.get(mIndex).getLiteral();
     }
 
-    byte[] readLiteral() throws IOException, ImapParseException {
+    protected Literal readLiteral() throws IOException, ImapParseException {
         boolean blocking = true;
         skipChar('{');
         long length = Long.parseLong(readNumber());
@@ -144,7 +135,8 @@ public class TcpImapRequest extends ImapRequest {
         if (getCurrentLine().length() != mOffset)
             throw new ImapParseException(mTag, "extra characters after literal declaration");
 
-        if (mIndex == mParts.size() - 1 || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
+        boolean lastPart = (mIndex == mParts.size() - 1);
+        if (lastPart || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
             if (mLiteral == -1) {
                 incrementSize(length);
                 mLiteral = length;
@@ -152,13 +144,12 @@ public class TcpImapRequest extends ImapRequest {
             if (!blocking && mStream.available() >= mLiteral)
                 continuation();
             else
-                throw new ImapContinuationException(blocking && mIndex == mParts.size() - 1);
+                throw new ImapContinuationException(blocking && lastPart);
         }
         mIndex++;
-        byte[] result = getCurrentBuffer();
+        Literal result = getCurrentBuffer();
         mIndex++;
         mOffset = 0;
         return result;
     }
-
 }

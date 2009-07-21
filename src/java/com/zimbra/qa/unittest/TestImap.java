@@ -16,8 +16,7 @@
 package com.zimbra.qa.unittest;
 
 import org.junit.*;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Request;
+import org.junit.runner.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.cs.mailclient.imap.ImapConnection;
@@ -27,14 +26,13 @@ import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
+import com.zimbra.cs.mailclient.imap.Flags;
 
-import javax.mail.internet.MimeMessage;
-import javax.mail.MessagingException;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.File;
 import java.io.FileWriter;
+import java.sql.Date;
 
 /**
  * IMAP server tests.
@@ -62,14 +60,26 @@ public class TestImap {
     @Test
     public void testAppend() throws Exception {
         assertTrue(connection.hasCapability("UIDPLUS"));
-        Literal msg = bigMessage(2*1024*1024);
+        Flags flags = Flags.fromSpec("afs");
+        Date date = new Date(System.currentTimeMillis());
+        Literal msg = message(100000);
         try {
-            AppendResult res = connection.append("INBOX", null, null, msg);
+            AppendResult res = connection.append("INBOX", flags, date, msg);
             assertNotNull(res);
-            assertTrue("invalid uid", res.getUid() > 0);
+            byte[] b = fetchBody(res.getUid());
+            assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
             msg.dispose();
         }
+    }
+
+    @Test
+    public void testAppendNoLiteralPlus() throws Exception {
+        withLiteralPlus(false, new RunnableTest() {
+            public void run() throws Exception {
+                testAppend();
+            }
+        });
     }
 
     @Test
@@ -78,8 +88,8 @@ public class TestImap {
         assertTrue(connection.hasCapability("UIDPLUS"));
         String msg1 = simpleMessage("test message");
         AppendResult res1 = connection.append("INBOX", null, null, literal(msg1));
-        String s1 = "first addendum\r\n";
-        String s2 = "second addendum\r\n";
+        String s1 = "first part\r\n";
+        String s2 = "second part\r\n";
         String msg2 = msg1 + s1 + s2;
         AppendMessage am = new AppendMessage(
             null, null, url("INBOX", res1), literal(s1), literal(s2));
@@ -87,6 +97,15 @@ public class TestImap {
         connection.select("INBOX");
         byte[] b2 = fetchBody(res2.getUid());
         assertArrayEquals("content mismatch", bytes(msg2), b2);
+    }
+
+    @Test
+    public void testCatenateNoLiteralPlus() throws Exception {
+        withLiteralPlus(false, new RunnableTest() {
+            public void run() throws Exception {
+                testCatenate();
+            }
+        });
     }
 
     @Test
@@ -98,6 +117,15 @@ public class TestImap {
         AppendResult res = connection.append("INBOX", msg1, msg2);
         assertNotNull(res);
         assertEquals("expecting 2 uids", 2, res.getUids().length);
+    }
+
+    @Test
+    public void testMultiappendNoLiteralPlus() throws Exception {
+        withLiteralPlus(false, new RunnableTest() {
+            public void run() throws Exception {
+                testMultiappend();
+            }
+        });
     }
 
     private String url(String mbox, AppendResult res) {
@@ -128,13 +156,7 @@ public class TestImap {
         return bs[0].getImapData().getBytes();
     }
 
-    private byte[] getBytes(MimeMessage mm) throws MessagingException, IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        mm.writeTo(baos);
-        return baos.toByteArray();
-    }
-
-    private static Literal bigMessage(int size) throws IOException {
+    private static Literal message(int size) throws IOException {
         File file = File.createTempFile("msg", null);
         file.deleteOnExit();
         FileWriter out = new FileWriter(file);
@@ -160,6 +182,21 @@ public class TestImap {
             "Subject: Foo foo\r\n\r\n" + text + "\r\n";
     }
 
+    private void withLiteralPlus(boolean lp, RunnableTest test) throws Exception {
+        ImapConfig config = connection.getImapConfig();
+        boolean oldLp = config.isUseLiteralPlus();
+        config.setUseLiteralPlus(lp);
+        try {
+            test.run();
+        } finally {
+            config.setUseLiteralPlus(oldLp);
+        }
+    }
+
+    private static interface RunnableTest {
+        void run() throws Exception;
+    }
+    
     private static ImapConnection connect() throws IOException {
         ImapConfig config = new ImapConfig(HOST);
         config.setPort(PORT);
@@ -168,6 +205,7 @@ public class TestImap {
         ImapConnection connection = new ImapConnection(config);
         connection.connect();
         connection.login(PASS);
+        connection.select("INBOX");
         return connection;
     }
 
@@ -175,10 +213,13 @@ public class TestImap {
         JUnitCore junit = new JUnitCore();
         if (args.length > 0) {
             for (String test : args) {
-                String method = String.format("test%C%s", test.charAt(0), test.substring(1));
+                String method = String.format("test%c%s",
+                    Character.toUpperCase(test.charAt(0)), test.substring(1));
+                System.out.printf("** Running test '%s'\n", method);
                 junit.run(Request.method(TestImap.class, method));
             }
         } else {
+            System.out.println("** Running all tests");
             junit.run(TestImap.class);
         }
     }
