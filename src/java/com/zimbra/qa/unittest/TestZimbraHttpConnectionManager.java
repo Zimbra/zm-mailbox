@@ -50,8 +50,9 @@ public class TestZimbraHttpConnectionManager extends TestCase {
     // hack before I figure out how to run only the selected tests in the unit test framework
     enum Test {
         testReaper(false),
-        testHttpState(true),
+        testHttpState(false),
         testSoTimeoutViaHttpMethod(false),
+        testHttpClientConnectionManagerTimeout(true),
         testSoapProv(false);
         
         private boolean mRunIt;
@@ -120,6 +121,9 @@ public class TestZimbraHttpConnectionManager extends TestCase {
          * Executes the GetMethod and prints some status information.
          */
         public void run() {
+            long startTime = System.currentTimeMillis();
+            long endTime;
+            
             try {
                 System.out.println(mId + " - about to get something from " + mMethod.getURI());
                 // execute the method
@@ -132,7 +136,13 @@ public class TestZimbraHttpConnectionManager extends TestCase {
                 
             } catch (Exception e) {
                 System.out.println(mId + " - error: " + e);
+                e.printStackTrace();
             } finally {
+                
+                endTime = System.currentTimeMillis();
+                long elapsedTime = endTime - startTime;
+                System.out.println("Finished, elapsedTime=" + elapsedTime + " milli seconds");
+                
                 // always release the connection after we're done 
                 mMethod.releaseConnection();
                 System.out.println(mId + " - connection released");
@@ -226,6 +236,8 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         private ServerSocket mServerSocket;
         private boolean mShutdownRequested = false;
         
+        private static final String WAIT_IN_SERVER = "waitInServer";
+        
         private synchronized static void start(int port) {
             if (mServerThread != null) {
                 System.out.println("SimpleHttpServer start: server already started");
@@ -288,7 +300,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
                     e.printStackTrace();
                 // else, the IOException is expected
             } finally {
-                System.out.println("SimpleHttpServer: existing server");
+                System.out.println("SimpleHttpServer: exiting server");
             }
         }
     }
@@ -313,7 +325,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             try {
                 processRequest();
             } catch(Exception e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
         }
         
@@ -328,8 +340,28 @@ public class TestZimbraHttpConnectionManager extends TestCase {
                 
                 if (temp.equals("GET")) {
             
-                    String fileName = s.nextToken();
+                    String req = s.nextToken();
+                    String[] parts = req.split("\\?");
+                    String fileName = parts[0];
                     // fileName = "." + fileName ;
+                    
+                    String qp = null;
+                    long waitInServer = 0;
+                    if (parts.length == 2) {
+                        qp = parts[1];
+                    
+                        String[] params = qp.split("&");
+                        for (String param : params) {
+                            String[] nameValue = param.split("=");
+                            if (nameValue[0].equals(SimpleHttpServer.WAIT_IN_SERVER))
+                                waitInServer = Long.valueOf(nameValue[1]);
+                        }
+                    }
+
+                    if (waitInServer != 0) {
+                        System.out.println("Waiting " + waitInServer + " milli seconds in SimpleHttpServer");
+                        Thread.sleep(waitInServer);
+                    }
                 
                     // Open the requested file.
                     FileInputStream fis = null ;
@@ -407,10 +439,6 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             // Copy requested file into the socket's output stream.
             while ((bytes = fis.read(buffer)) != -1 ) {
                 os.write(buffer, 0, bytes);
-                
-                // wait a little so the client will timeout
-                System.out.println("Server is hanging for 60 seconds...");
-                Thread.sleep(60000);
             }
         }
     }
@@ -423,20 +451,25 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         String path = "/Users/pshao/p4/main/ZimbraServer/src/java/com/zimbra/qa/unittest/TestZimbraHttpConnectionManager.java";  // this file
         int soTimeout = 3000;  // 3 seconds
         
+        // make server take 10 seconds to return
+        long waitInServer = 10000;
+        String qp = "?" + SimpleHttpServer.WAIT_IN_SERVER + "=" + waitInServer;
+        
         // start a server for testing
         SimpleHttpServer.start(serverPort);
         
         HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
 
-        GetMethod method = new GetMethod("http://localhost:" + serverPort + path);
+        GetMethod method = new GetMethod("http://localhost:" + serverPort + path + qp);
         method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
         long startTime = System.currentTimeMillis();
         long endTime;
         try {
             int respCode = httpClient.executeMethod(method);
             dumpResponse(respCode, method, "");
+            fail(); // nope, it should haved timed out
         } catch (java.net.SocketTimeoutException e) {
-            // just what we want
+            // good, just what we want
             endTime = System.currentTimeMillis();
             long elapsedTime = endTime - startTime;
             System.out.println("Timed out after " + elapsedTime + " msecs");
@@ -446,6 +479,44 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         } finally {
             method.releaseConnection();
         }
+        
+        // shutdown the server
+        SimpleHttpServer.shutdown();
+    }
+    
+    /*
+     * before running this test:
+     * 
+     * zmlocalconfig -e httpclient_connmgr_max_total_connections=1  // the connection manager can only hand out one connection
+     * zmlocalconfig -e httpclient_client_connection_timeout=5000   // time to get a connection from the connection manager
+     */
+    public void testHttpClientConnectionManagerTimeout() throws Exception {
+        if (!runIt())
+            return;
+        
+        int serverPort = 7778;
+        String path = "/Users/pshao/p4/main/ZimbraServer/src/java/com/zimbra/qa/unittest/TestZimbraHttpConnectionManager.java";  // this file
+        long waitInServer = 10000;
+        String qp = "?" + SimpleHttpServer.WAIT_IN_SERVER + "=" + waitInServer;
+        
+        // start a server for testing
+        SimpleHttpServer.start(serverPort);
+        
+        ZimbraHttpConnectionManager connMgr = ZimbraHttpConnectionManager.getExternalHttpConnMgr();
+        
+        // first thread
+        GetMethod method1 = new GetMethod("http://localhost:" + serverPort + path + qp);
+        TestGetThread thread1 = new TestGetThread(connMgr.newHttpClient(), method1, 1);
+        thread1.start();  // this thread will hog the only one connection this conn mgr can offer for 10 seconds
+        
+        Thread.sleep(1000); // wait one second let thread one get a head start to grab the one and only connection
+        
+        // second thread
+        GetMethod method2 = new GetMethod("http://localhost:" + serverPort + path + qp);
+        TestGetThread thread2 = new TestGetThread(connMgr.newHttpClient(), method1, 2);
+        thread2.start(); // this thread should timeout (ConnectionPoolTimeoutException) after 5000 milli seconds, because zmlocalconfig -e httpclient_client_connection_timeout=5000 
+        
+        Thread.sleep(60000); // wait a little so we can observe the threads run
         
         // shutdown the server
         SimpleHttpServer.shutdown();
