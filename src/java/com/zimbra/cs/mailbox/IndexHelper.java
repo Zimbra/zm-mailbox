@@ -38,6 +38,7 @@ import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Mailbox.BatchedIndexStatus;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
@@ -940,7 +941,7 @@ public class IndexHelper {
     private static final int NO_CHANGE = -1;
 
     void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, byte itemType, long timestamp, 
-                       boolean noRedo, List<org.apache.lucene.document.Document> docList)
+                       boolean noRedo, List<IndexDocument> docList)
     {
         try {
             if (getMailboxIndex() != null) {

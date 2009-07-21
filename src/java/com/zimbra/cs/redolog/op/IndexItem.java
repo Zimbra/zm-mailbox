@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -101,7 +102,7 @@ public class IndexItem extends RedoableOp {
         }
         
         try {
-            List<org.apache.lucene.document.Document> docList = item.generateIndexData(true);
+            List<IndexDocument> docList = item.generateIndexData(true);
             mbox.redoIndexItem(item, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay(), docList);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag

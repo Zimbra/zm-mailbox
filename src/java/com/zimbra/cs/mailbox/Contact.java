@@ -43,6 +43,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
@@ -719,7 +720,7 @@ public class Contact extends MailItem {
         return con;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
+    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         synchronized (mMailbox) {
             try {
                 ParsedContact pc = new ParsedContact(this);
@@ -730,7 +731,7 @@ public class Contact extends MailItem {
             } catch (TemporaryIndexingException tie) {
                 throw tie;
             } catch (Exception e) {
-                return new ArrayList<org.apache.lucene.document.Document>(); 
+                return new ArrayList<IndexDocument>(); 
             }
         }
     }

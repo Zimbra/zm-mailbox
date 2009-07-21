@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -69,7 +70,7 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         ParsedDocument pd = null;
         try {
             MailboxBlob mblob = getBlob();
@@ -84,20 +85,20 @@ public class Document extends MailItem {
                     throw new MailItem.TemporaryIndexingException();
             }
 
-            org.apache.lucene.document.Document doc = pd.getDocument();
+            IndexDocument doc = pd.getDocument();
             if (doc != null) {
-                List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
+                List<IndexDocument> toRet = new ArrayList<IndexDocument>(1);
                 toRet.add(doc);
                 return toRet;
             } else {
-                return new ArrayList<org.apache.lucene.document.Document>(0);
+                return new ArrayList<IndexDocument>(0);
             }
         } catch (IOException e) {
             ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
-            return new ArrayList<org.apache.lucene.document.Document>(0);
+            return new ArrayList<IndexDocument>(0);
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
-            return new ArrayList<org.apache.lucene.document.Document>(0);
+            return new ArrayList<IndexDocument>(0);
         }
     }
 

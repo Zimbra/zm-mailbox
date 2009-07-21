@@ -30,7 +30,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.json.JSONException;
 
@@ -42,6 +41,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
@@ -64,7 +64,7 @@ public class ParsedContact {
     private String mDigest;
     private long mSize;
 
-    private List<Document> mLuceneDocuments;
+    private List<IndexDocument> mZDocuments;
 
     /**
      * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
@@ -323,7 +323,7 @@ public class ParsedContact {
         addNicknameAndTypeIfPDL(mFields);
 
         mDigest = null;
-        mLuceneDocuments = null;
+        mZDocuments = null;
 
         if (mAttachments != null) {
             try {
@@ -380,10 +380,10 @@ public class ParsedContact {
     public boolean hasTemporaryAnalysisFailure() { return mHasTemporaryAnalysisFailure; } 
 
     private void analyzeContact(boolean indexAttachments) throws ServiceException {
-        if (mLuceneDocuments != null)
+        if (mZDocuments != null)
             return;
 
-        mLuceneDocuments = new ArrayList<Document>();
+        mZDocuments = new ArrayList<IndexDocument>();
         StringBuilder attachContent = new StringBuilder();
 
         int numParseErrors = 0;
@@ -410,12 +410,12 @@ public class ParsedContact {
             }
         }
 
-        mLuceneDocuments.add(getPrimaryDocument(attachContent.toString()));
+        mZDocuments.add(new IndexDocument(getPrimaryDocument(attachContent.toString())));
     }
     
-    public List<Document> getLuceneDocuments(Mailbox mbox) throws ServiceException {
+    public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
         analyze(mbox);
-        return mLuceneDocuments;
+        return mZDocuments;
     }
     
     private void analyzeAttachment(Attachment attach, StringBuilder contentText, boolean indexAttachments)
@@ -444,10 +444,10 @@ public class ParsedContact {
                 // Lucene document.  This is necessary so that we can tell the
                 // client what parts match if a search matched a particular
                 // part.
-                Document doc = handler.getDocument();
+                org.apache.lucene.document.Document doc = handler.getDocument();
                 if (doc != null) {
                     doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(attach.getSize()), Field.Store.YES, Field.Index.NO));
-                    mLuceneDocuments.add(doc);
+                    mZDocuments.add(new IndexDocument(doc));
                 }
             }
         }
@@ -460,7 +460,7 @@ public class ParsedContact {
         }
     }
     
-    private Document getPrimaryDocument(String contentStrIn) throws ServiceException {
+    private org.apache.lucene.document.Document getPrimaryDocument(String contentStrIn) throws ServiceException {
         org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
         
         StringBuilder fieldText = new StringBuilder();

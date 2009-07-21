@@ -65,6 +65,7 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -115,7 +116,7 @@ public class ParsedMessage {
     private String mSubject;
     private String mNormalizedSubject;
     private boolean mSubjectIsReply;
-    private List<Document> mLuceneDocuments = new ArrayList<Document>();
+    private List<IndexDocument> mZDocuments = new ArrayList<IndexDocument>();
     private CalendarPartInfo mCalendarPartInfo;
 
     private String mRawDigest;
@@ -416,7 +417,7 @@ public class ParsedMessage {
             }
             
             // requires FULL content (all parts)
-            mLuceneDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(fullContent)));
+            mZDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(fullContent)));
 
             // we're done with the body content (saved from analyzeBodyParts()) now
             mBodyContent = "";
@@ -767,13 +768,13 @@ public class ParsedMessage {
         return (zimbraDate == null ? -1 : zimbraDate.getTime());
     }
 
-    public List<Document> getLuceneDocuments() {
+    public List<IndexDocument> getLuceneDocuments() {
         try {
             analyzeFully();
         } catch (ServiceException e) {
             sLog.warn("message analysis failed when getting lucene documents");
         }
-        return mLuceneDocuments;
+        return mZDocuments;
     }
 
     /**
@@ -806,9 +807,10 @@ public class ParsedMessage {
         return this.mTemporaryAnalysisFailure; 
     }
     
-    private Document getMainBodyLuceneDocument(StringBuilder fullContent)
+    private IndexDocument getMainBodyLuceneDocument(StringBuilder fullContent)
     throws MessagingException, ServiceException {
         Document document = new Document();
+        IndexDocument zd = new IndexDocument(document);
         
         document.add(new Field(LuceneFields.L_MIMETYPE, "message/rfc822", Field.Store.YES, Field.Index.TOKENIZED));
         document.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
@@ -929,7 +931,7 @@ public class ParsedMessage {
             attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
         document.add(new Field(LuceneFields.L_ATTACHMENTS, attachments, Field.Store.NO, Field.Index.TOKENIZED));
 
-        return document;
+        return zd;
     }
 
     private String setHeaderAsLuceneField(Document d, String headerName,
@@ -954,7 +956,9 @@ public class ParsedMessage {
      * "this" --> top level doc
      * @param d subdocument of top level 
      */
-    private Document setLuceneHeadersFromContainer(Document d) throws MessagingException {
+    private IndexDocument setLuceneHeadersFromContainer(IndexDocument zd) throws MessagingException {
+        org.apache.lucene.document.Document d = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
+        
         setHeaderAsLuceneField(d, "to", LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
         setHeaderAsLuceneField(d, "cc", LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
 
@@ -970,7 +974,7 @@ public class ParsedMessage {
         if (subject != null) 
             d.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
         
-        return d;
+        return zd;
     }
 
     private static boolean isBouncedCalendar(MPartInfo mpi) {
@@ -1067,17 +1071,18 @@ public class ParsedMessage {
                     // Lucene document.  This is necessary so that we can tell the
                     // client what parts match if a search matched a particular
                     // part.
-                    Document doc = handler.getDocument();
+                    IndexDocument zd = new IndexDocument(handler.getDocument());
                     
                     String fn = handler.getFilename();
                     if (fn != null && fn.length() > 0) {
                         mFilenames.add(fn);
                     }
                     
-                    if (doc != null) {
+                    if (zd!= null) {
+                        org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument()); 
                         int partSize = mpi.getMimePart().getSize();
                         doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
-                        mLuceneDocuments.add(setLuceneHeadersFromContainer(doc));
+                        mZDocuments.add(setLuceneHeadersFromContainer(zd));
                     }
                 }
             }

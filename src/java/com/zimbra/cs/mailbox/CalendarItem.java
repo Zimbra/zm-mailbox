@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -205,17 +206,16 @@ public abstract class CalendarItem extends MailItem {
     boolean isIndexed()        { return true; }
     boolean canHaveChildren()  { return false; }
     
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
-        List<org.apache.lucene.document.Document> docs = null;
+    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+        List<IndexDocument> docs = null;
         synchronized(getMailbox()) {
-            docs = getLuceneDocuments();
+            docs = getIndexDocuments();
         }
         return docs;
     }
     
-    protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws TemporaryIndexingException{
-        List<org.apache.lucene.document.Document> toRet = 
-        	new ArrayList<org.apache.lucene.document.Document>();
+    protected List<IndexDocument> getIndexDocuments() throws TemporaryIndexingException{
+        List<IndexDocument> toRet = new ArrayList<IndexDocument>();
 
         // Special case to prevent getDefaultInviteOrNull() from logging an error
         // when this method is called during commit of cancel operation.
@@ -322,36 +322,36 @@ public abstract class CalendarItem extends MailItem {
                 }
         	}
         	
-        	List<org.apache.lucene.document.Document> docList = new ArrayList<org.apache.lucene.document.Document>();
+        	List<IndexDocument> docList = new ArrayList<IndexDocument>();
         	
-        	if (mm == null) {
-        		org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
-        		
+        	if (mm == null) { // no blob!
+        	    org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
         		// need to properly emulate an indexed Invite message here -- set the TOP partname
         		doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
         		
-        		docList.add(doc);
+        		docList.add(new IndexDocument(doc));
         	} else {
         		try {
-        			ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
-        			pm.analyzeFully();
+        		    ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+        		    pm.analyzeFully();
         			
-        			if (pm.hasTemporaryAnalysisFailure())
-        				throw new MailItem.TemporaryIndexingException();
-        			
-        			docList = pm.getLuceneDocuments();
+        		    if (pm.hasTemporaryAnalysisFailure())
+        		        throw new MailItem.TemporaryIndexingException();
+        		    
+        		    docList = pm.getLuceneDocuments();
         		} catch(ServiceException e) {
                     if (ZimbraLog.index.isDebugEnabled()) {
                         ZimbraLog.index.debug("Caught MessagingException for Invite "+inv.toString()+" while indexing CalendarItem "+this.getId()+" skipping Invite", e); 
                     }
-                }
+        		}
         	}
         	
-        	for (org.apache.lucene.document.Document doc : docList) {
+        	for (IndexDocument zd: docList) {
+        	    org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
                 ////////////////////
                 // update the doc, overriding many of the fields with data from the appointment
             	
-            	doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+        	    doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
             	
             	doc.removeField(LuceneFields.L_H_TO);
             	doc.removeField(LuceneFields.L_H_FROM);
@@ -362,7 +362,7 @@ public abstract class CalendarItem extends MailItem {
                 }
                 doc.add(new Field(LuceneFields.L_H_FROM, orgToUse, Field.Store.NO, Field.Index.TOKENIZED));  
                 doc.add(new Field(LuceneFields.L_H_SUBJECT, nameToUse, Field.Store.NO, Field.Index.TOKENIZED));
-                toRet.add(doc);
+                toRet.add(zd);
         	}
         }
         
@@ -372,7 +372,8 @@ public abstract class CalendarItem extends MailItem {
             itemClass = INDEX_FIELD_ITEM_CLASS_PUBLIC;
         else
             itemClass = INDEX_FIELD_ITEM_CLASS_PRIVATE;
-        for (org.apache.lucene.document.Document doc : toRet) {
+        for (IndexDocument zd: toRet) {
+            org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
             doc.add(new Field(LuceneFields.L_FIELD, itemClass, Field.Store.NO, Field.Index.TOKENIZED));
         }
         

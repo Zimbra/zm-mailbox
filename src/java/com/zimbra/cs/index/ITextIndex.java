@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.lucene.document.Document;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 
@@ -38,7 +36,7 @@ interface ITextIndex {
      * Store the specified MailItem in the Index.  If deleteFirst is false, then we are sure that
      * this MailItem is not already in the index, and so we can skip the check-update step.
      */
-    void addDocument(Document[] docs, MailItem item, int itemId, String indexId, int modContent, 
+    void addDocument(IndexDocument[] docs, MailItem item, int itemId, String indexId, int modContent, 
                      long receivedDate, long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException;
 
     /**

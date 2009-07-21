@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
@@ -1139,7 +1140,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @throws ServiceException
      */
     @SuppressWarnings("unused")
-    public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         // override in subclasses that support indexing
         return null;
     }

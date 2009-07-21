@@ -173,7 +173,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
-    public void addDocument(Document[] docs, MailItem item, int itemId, String indexId, int modContent, long receivedDate, 
+    public void addDocument(IndexDocument[] docs, MailItem item, int itemId, String indexId, int modContent, long receivedDate, 
         long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
         if (docs.length == 0)
             return;
@@ -184,7 +184,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             try {
                 assert(mIndexWriter != null);
 
-                for (Document doc : docs) {
+                for (IndexDocument zdoc : docs) {
+                    org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zdoc.getWrappedDocument());
                     // doc can be shared by multiple threads if multiple mailboxes
                     // are referenced in a single email
                     synchronized (doc) {

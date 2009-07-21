@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.*;
@@ -776,7 +777,7 @@ public class Message extends MailItem {
         return copy;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         try {
             ParsedMessage pm = null;
             synchronized (getMailbox()) {
@@ -813,7 +814,7 @@ public class Message extends MailItem {
             return pm.getLuceneDocuments();
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Unable to generate index data for Message "+getId()+". Item will not be indexed", e);
-            return new ArrayList<org.apache.lucene.document.Document>(0);
+            return new ArrayList<IndexDocument>(0);
         }
     }
 

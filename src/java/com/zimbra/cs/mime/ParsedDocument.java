@@ -33,6 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -44,7 +45,7 @@ public class ParsedDocument {
     private String mContentType;
     private String mFilename;
     private String mCreator;
-    private Document mDocument = null;
+    private IndexDocument mZDocument = null;
     private String mFragment;
     private long mCreatedDate;
 
@@ -91,17 +92,18 @@ public class ParsedDocument {
             }
             mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
             try {
-            	mDocument = handler.getDocument();
-            	mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
+            	mZDocument = new IndexDocument(handler.getDocument());
+            	org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(mZDocument.getWrappedDocument()); 
+            	doc.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
             
             	StringBuilder content = new StringBuilder();
             	appendToContent(content, filename);
             	appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, filename));
             	appendToContent(content, textContent);
             	
-            	mDocument.add(new Field(LuceneFields.L_CONTENT, content.toString(),  Field.Store.NO, Field.Index.TOKENIZED));
-            	mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
-            	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
+            	doc.add(new Field(LuceneFields.L_CONTENT, content.toString(),  Field.Store.NO, Field.Index.TOKENIZED));
+            	doc.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
+            	doc.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
             	
             } catch (MimeHandlerException e) {
                 if (ConversionException.isTemporaryCauseOf(e)) {
@@ -127,10 +129,12 @@ public class ParsedDocument {
 
     public void setVersion(int v) {
         // should be indexed so we can add search constraints on the index version
-    	if (mDocument == null)
+    	if (mZDocument == null)
         	ZimbraLog.wiki.warn("Can't index document version.  (is convertd down?)");
-    	else
-    		mDocument.add(new Field(LuceneFields.L_VERSION, Integer.toString(v), Field.Store.YES, Field.Index.UN_TOKENIZED));
+    	else {
+            org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(mZDocument.getWrappedDocument()); 
+            doc.add(new Field(LuceneFields.L_VERSION, Integer.toString(v), Field.Store.YES, Field.Index.UN_TOKENIZED));
+    	}
     }
 
     public int getSize()            { return mSize; }
@@ -140,12 +144,12 @@ public class ParsedDocument {
     public String getFilename()     { return mFilename; }
     public String getContentType()  { return mContentType; }
 
-    public Document getDocument()   { return mDocument; }  // it could return null if the conversion has failed
-    public List<Document> getDocumentList() { 
-    	if (mDocument == null)
+    public IndexDocument getDocument()   { return mZDocument; }  // it could return null if the conversion has failed
+    public List<IndexDocument> getDocumentList() { 
+    	if (mZDocument == null)
     		return java.util.Collections.emptyList();
-        List<Document> toRet = new ArrayList<Document>(1); 
-        toRet.add(mDocument); 
+        List<IndexDocument> toRet = new ArrayList<IndexDocument>(1); 
+        toRet.add(mZDocument); 
         return toRet; 
     }
     public String getFragment()     { return mFragment; }

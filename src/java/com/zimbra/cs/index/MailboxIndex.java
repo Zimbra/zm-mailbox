@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -490,14 +489,14 @@ public final class MailboxIndex
      *                   SHOULD NOT BE TRACKED -- do not call indexingCompleted for them
      * @throws ServiceException
      */
-    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<Document> docList, MailItem mi, int modContent) 
+    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<IndexDocument> docList, MailItem mi, int modContent) 
     throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {
             String indexId = mi.getIndexId();
             try {
                 if (docList != null) {
-                    Document[] docs = new Document[docList.size()];
+                    IndexDocument[] docs = new IndexDocument[docList.size()];
                     docs = docList.toArray(docs);
                     mTextIndex.addDocument(docs, mi, mi.getId(), indexId, modContent, mi.getDate(), mi.getSize(), mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }

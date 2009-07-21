@@ -69,6 +69,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -205,11 +206,11 @@ public class Mailbox {
     
     static final class IndexItemEntry {
         final boolean mDeleteFirst;
-        final List<org.apache.lucene.document.Document> mDocuments;
+        final List<IndexDocument> mDocuments;
         final MailItem mMailItem;
         int mModContent;   // where to set the Mailbox's mod_content when this item has completed.  Can be NO_CHANGE
 
-        IndexItemEntry(boolean deleteFirst, MailItem mi, int modContent, List<org.apache.lucene.document.Document> docList) {
+        IndexItemEntry(boolean deleteFirst, MailItem mi, int modContent, List<IndexDocument> docList) {
             mMailItem = mi;
             mDeleteFirst = deleteFirst;
             mDocuments = docList;
@@ -1012,7 +1013,7 @@ public class Mailbox {
      * @param deleteFirst True if we need to delete this item from the index before indexing it again
      * @param data  The list of documents to be added.  If this is NULL then indexing will be deferred for this item.
      * @see #commitCache(Mailbox.MailboxChange) */
-    void queueForIndexing(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> data) {
+    void queueForIndexing(MailItem item, boolean deleteFirst, List<IndexDocument> data) {
         assert(Thread.holdsLock(this));
         
         if (item.getIndexId() == null) {
@@ -3336,7 +3337,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     synchronized public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, byte itemType, long timestamp, 
-                              boolean noRedo, List<org.apache.lucene.document.Document> docList)
+                              boolean noRedo, List<IndexDocument> docList)
     {
         mIndexHelper.redoIndexItem(item, deleteFirst, itemId, itemType, timestamp, noRedo, docList);
     }
@@ -5417,7 +5418,7 @@ public class Mailbox {
 
     public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
         boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
-        List<org.apache.lucene.document.Document> indexData = null;
+        List<IndexDocument> indexData = null;
         if (!deferIndexing) {
             try {
                 indexData = pc.getLuceneDocuments(this);
@@ -5481,14 +5482,14 @@ public class Mailbox {
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
         pc.analyze(this);
 
-        List<org.apache.lucene.document.Document> indexData = null;
+        List<IndexDocument> indexData = null;
         boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
         if (!deferIndexing) {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (Exception e) {
                 ZimbraLog.index_add.info("caught exception analyzing contact " + contactId + "; contact will not be indexed", e);
-                indexData = new ArrayList<org.apache.lucene.document.Document>();
+                indexData = new ArrayList<IndexDocument>();
             }
         }
 
@@ -6254,7 +6255,7 @@ public class Mailbox {
 
         mIndexHelper.maybeIndexDeferredItems();
         boolean deferIndexing = !indexImmediately();
-        List<org.apache.lucene.document.Document> docList = null;
+        List<IndexDocument> docList = null;
         if (!deferIndexing) {
             pm.analyzeFully();
             docList = pm.getLuceneDocuments();
@@ -6317,7 +6318,7 @@ public class Mailbox {
         }
 
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
-        List<org.apache.lucene.document.Document> docList = null;
+        List<IndexDocument> docList = null;
         if (!deferIndexing)
             docList = pm.getLuceneDocuments();
 

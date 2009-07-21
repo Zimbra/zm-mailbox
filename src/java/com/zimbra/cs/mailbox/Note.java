@@ -26,6 +26,7 @@ import org.apache.lucene.document.Field;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
@@ -149,7 +150,7 @@ public class Note extends MailItem {
         return note;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) {
+    @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) {
         String toIndex = getText();
 
         org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
@@ -157,8 +158,8 @@ public class Note extends MailItem {
         doc.add(new Field(LuceneFields.L_H_SUBJECT, toIndex, Field.Store.NO, Field.Index.TOKENIZED));
         doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE, Field.Store.YES, Field.Index.UN_TOKENIZED));
         
-        List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
-        toRet.add(doc);
+        List<IndexDocument> toRet = new ArrayList<IndexDocument>(1);
+        toRet.add(new IndexDocument(doc));
         return toRet;
     }
     
