@@ -101,7 +101,7 @@ The following terms are used in modeling and implementation of the system:
 ==================
 Depending on the context, there are three aspects of targets that need to be dealt with:
 
-(A) target object, on which a rights are granted.
+(A) target object, on which rights are granted.
         As described in 1.5, ACEs are defined on target entries.  
         For example, the domain entry "company.com" is a target object.
 
@@ -115,7 +115,6 @@ Depending on the context, there are three aspects of targets that need to be dea
 (C) scope of targets, in which granted rights are effective.
         Do not mix up this with (A) or (B).
         
-        Some targets can "contain" 
         Take the setPassword right for example.  While it is a right that is only applicable to accounts 
         and calendar resource, the setPassword right can be granted on a domain object.  The notion of granting 
         an account/CR right on a domain specifies that the right is effective on all accounts/CRs in the domain.
@@ -146,8 +145,6 @@ Depending on the context, there are three aspects of targets that need to be dea
         - global config     : the global config entry
         
         - global grant      : the global grant entry 
-        
-        - right             : the right definition entry  TODO
 
         - server            : the server entry
         
@@ -685,7 +682,7 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
 4.2 Granting/Revoking
 
 4.2.1 Who can grant (executing grant/revoke commands)
-      Authed admin accounts and system admin accounts can grant/revoke admin rights.  
+      Delegated admin accounts and system admin accounts can grant/revoke admin rights.  
     
 4.2.2 Who can be Granted to (being the grantee)  
       Rights can only be granted to admin accounts/groups, i.e. being the grantee of an admin grant.
