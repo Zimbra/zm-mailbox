@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -113,6 +114,10 @@ public class ZimbraMemcachedClient {
     public void connect(String[] servers, boolean useBinaryProtocol, String hashAlgorithm,
                         int defaultExpiry, long defaultTimeout)
     throws ServiceException {
+        // Force spymemcached to use log4j rather than raw stdout/stderr.
+        Properties props = System.getProperties();
+        props.put("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.Log4JLogger");
+
         HashAlgorithm hashAlgo = HashAlgorithm.KETAMA_HASH;
         if (hashAlgorithm != null && hashAlgorithm.length() > 0) {
             HashAlgorithm ha = HashAlgorithm.valueOf(hashAlgorithm);
