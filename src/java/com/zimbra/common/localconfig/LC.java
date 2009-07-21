@@ -429,6 +429,8 @@ public class LC {
     public static final KnownKey httpclient_connmgr_tcp_nodelay;
     public static final KnownKey httpclient_connmgr_connection_timeout;
     public static final KnownKey httpclient_connmgr_so_timeout;
+    public static final KnownKey httpclient_client_connection_timeout;
+    
     // public static final KnownKey httpclient_connmgr_idle_reaper_initial_sleep_time;  don't use this for now
     public static final KnownKey httpclient_connmgr_idle_reaper_sleep_interval;
     public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
@@ -1322,13 +1324,13 @@ public class LC {
         
         httpclient_connmgr_max_host_connections = new KnownKey(
                 "httpclient_connmgr_max_host_connections", 
-                "30",
+                "100",
                 "httpclient connection manager: " + 
                 "Defines the maximum number of connections allowed per host configuration");
         
         httpclient_connmgr_max_total_connections = new KnownKey(
                 "httpclient_connmgr_max_total_connections", 
-                "50",
+                "300",
                 "httpclient connection manager: " +
                 "Defines the maximum number of connections allowed overall");
 
@@ -1356,6 +1358,12 @@ public class LC {
                 "httpclient connection manager: " +
                 "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
 
+        httpclient_client_connection_timeout = new KnownKey(
+                "httpclient_client_connection_timeout", 
+                Long.toString(30 * Constants.MILLIS_PER_SECOND),
+                "httpclient client: " +
+                "Sets the timeout in milliseconds used when retrieving an HTTP connection from the HTTP connection manager. ");
+        
         httpclient_connmgr_idle_reaper_sleep_interval = new KnownKey(
                 "httpclient_connmgr_idle_reaper_sleep_interval", 
                 Long.toString(5 * Constants.MILLIS_PER_MINUTE),
@@ -1368,6 +1376,7 @@ public class LC {
                 Long.toString(5 * Constants.MILLIS_PER_MINUTE),
                 "httpclient connection manager idle reaper: " +
                 "the timeout value to use when testing for idle connections.");
+
         
         httpclient_soaphttptransport_retry_count = new KnownKey(
                 "httpclient_soaphttptransport_retry_count", 
