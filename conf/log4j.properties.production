@@ -74,6 +74,9 @@ log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
 
+# spymemcached is too verbose at INFO level.
+log4j.logger.net.spy.memcached=WARN
+
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
 log4j.additivity.zimbra.synctrace=false
