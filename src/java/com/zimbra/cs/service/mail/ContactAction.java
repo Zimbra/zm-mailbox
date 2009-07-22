@@ -97,7 +97,7 @@ public class ContactAction extends ItemAction {
                     throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
                 String tags  = action.getAttribute(MailConstants.A_TAGS, null);
-                byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
+                MailItem.Color color = getColor(action);
                 ParsedContact pc = null;
                 if (!action.listElements(MailConstants.E_ATTRIBUTE).isEmpty()) {
                     Contact cn = local.size() == 1 ? mbox.getContactById(octxt, local.get(0)) : null;

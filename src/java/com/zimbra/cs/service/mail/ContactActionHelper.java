@@ -29,7 +29,7 @@ public class ContactActionHelper extends ItemActionHelper {
 
     public static ContactActionHelper UPDATE(ZimbraSoapContext zsc, OperationContext octxt,
             Mailbox mbox, List<Integer> ids, ItemId iidFolder,
-            String flags, String tags, byte color, ParsedContact pc)
+            String flags, String tags, MailItem.Color color, ParsedContact pc)
     throws ServiceException {
         ContactActionHelper ca = new ContactActionHelper(octxt, mbox, zsc.getResponseProtocol(), ids, Op.UPDATE);
         ca.setIidFolder(iidFolder);
@@ -66,7 +66,7 @@ public class ContactActionHelper extends ItemActionHelper {
                     getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
                 if (mTags != null || mFlags != null)
                     getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
-                if (mColor >= 0)
+                if (mColor != null)
                     getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
                 if (mParsedContact != null)
                     for (int id : mIds)

@@ -177,7 +177,7 @@ public class ItemAction extends MailDocumentHandler {
         return successes.toString();
     }
 
-    private MailItem.Color getColor(Element action) throws ServiceException {
+    public static MailItem.Color getColor(Element action) throws ServiceException {
         String rgb = action.getAttribute(MailConstants.A_RGB, null);
         byte c = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
         if (rgb == null && c < 0)

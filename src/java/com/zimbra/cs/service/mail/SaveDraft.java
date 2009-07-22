@@ -80,7 +80,7 @@ public class SaveDraft extends MailDocumentHandler {
             throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
         String flags = msgElem.getAttribute(MailConstants.A_FLAGS, null);
         String tags  = msgElem.getAttribute(MailConstants.A_TAGS, null);
-        byte color = (byte) msgElem.getAttributeLong(MailConstants.A_COLOR, -1);
+        MailItem.Color color = ItemAction.getColor(msgElem);
 
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
@@ -120,7 +120,7 @@ public class SaveDraft extends MailDocumentHandler {
             FileUploadServlet.deleteUploads(mimeData.uploads);
 
         // try to set the metadata on the new/revised draft
-        if (folderId != null || flags != null || tags != null || color >= 0) {
+        if (folderId != null || flags != null || tags != null || color != null) {
             try {
                 // best not to fail if there's an error here...
                 ItemActionHelper.UPDATE(octxt, mbox, zsc.getResponseProtocol(), Arrays.asList(msg.getId()), MailItem.TYPE_MESSAGE,
