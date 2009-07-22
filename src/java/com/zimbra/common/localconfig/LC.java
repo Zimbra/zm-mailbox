@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,12 +11,11 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
 package com.zimbra.common.localconfig;
-
-import java.io.File;
 
 import com.zimbra.common.util.Constants;
 
@@ -91,6 +91,7 @@ public class LC {
     public static final KnownKey zimbra_store_sweeper_max_age;
     public static final KnownKey zimbra_store_copy_buffer_size_kb;
     public static final KnownKey zimbra_nio_file_copy_chunk_size_kb;
+    public static final KnownKey zimbra_blob_input_stream_buffer_size_kb;
 
     public static final KnownKey zimbra_mailbox_manager_hardref_cache;
     public static final KnownKey zimbra_mailbox_active_cache;
@@ -124,8 +125,6 @@ public class LC {
     public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs;
     public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb;
     public static final KnownKey zimbra_index_lucene_batch_autocommit;
-    public static final KnownKey zimbra_index_lucene_max_terms_per_query;
-    public static final KnownKey zimbra_index_wildcard_max_terms_expanded;
     
     public static final KnownKey zimbra_index_lucene_nobatch_use_doc_scheduler;
     public static final KnownKey zimbra_index_lucene_nobatch_min_merge;
@@ -153,15 +152,16 @@ public class LC {
     public static final KnownKey zimbra_converter_enabled_uuencode;
     public static final KnownKey zimbra_converter_enabled_tnef;
     public static final KnownKey zimbra_converter_depth_max;
+    public static final KnownKey convertd_version;
 
     public static final KnownKey zimbra_ssl_enabled;
     
     public static final KnownKey stats_img_folder;
     
-    public static final KnownKey soap_response_buffer_size;
-    public static final KnownKey soap_response_chunked_transfer_encoding_disabled;
+    public static final KnownKey soap_max_in_memory_buffer_size;
 
     public static final KnownKey ldap_host;
+    public static final KnownKey ldap_log_level;
     public static final KnownKey ldap_port;
     public static final KnownKey ldap_url;
     public static final KnownKey ldap_master_url;
@@ -181,27 +181,9 @@ public class LC {
     public static final KnownKey ldap_postfix_password;
     public static final KnownKey ldap_amavis_password;
     public static final KnownKey ldap_nginx_password;
+    public static final KnownKey ldap_require_tls;
     public static final KnownKey ldap_starttls_supported;
-    public static final KnownKey ldap_common_loglevel;
-    public static final KnownKey ldap_common_require_tls;
-    public static final KnownKey ldap_common_threads;
-    public static final KnownKey ldap_common_toolthreads;
-    public static final KnownKey ldap_db_cachefree;
-    public static final KnownKey ldap_db_cachesize;
-    public static final KnownKey ldap_db_checkpoint;
-    public static final KnownKey ldap_db_dncachesize;
-    public static final KnownKey ldap_db_idlcachesize;
-    public static final KnownKey ldap_db_shmkey;
-    public static final KnownKey ldap_accesslog_cachefree;
-    public static final KnownKey ldap_accesslog_cachesize;
-    public static final KnownKey ldap_accesslog_checkpoint;
-    public static final KnownKey ldap_accesslog_dncachesize;
-    public static final KnownKey ldap_accesslog_idlcachesize;
-    public static final KnownKey ldap_accesslog_shmkey;
-    public static final KnownKey ldap_overlay_syncprov_checkpoint;
-    public static final KnownKey ldap_overlay_syncprov_sessionlog;
-    public static final KnownKey ldap_overlay_accesslog_logpurge;
-
+    
 
     public static final KnownKey ldap_cache_account_maxsize;
     public static final KnownKey ldap_cache_account_maxage;
@@ -213,13 +195,9 @@ public class LC {
     public static final KnownKey ldap_cache_external_domain_maxage;
     public static final KnownKey ldap_cache_group_maxsize;
     public static final KnownKey ldap_cache_group_maxage;
-    public static final KnownKey ldap_cache_right_maxsize;
-    public static final KnownKey ldap_cache_right_maxage;
     public static final KnownKey ldap_cache_server_maxsize;
     public static final KnownKey ldap_cache_server_maxage;
     public static final KnownKey ldap_cache_timezone_maxsize;
-    public static final KnownKey ldap_cache_xmppcomponent_maxsize;
-    public static final KnownKey ldap_cache_xmppcomponent_maxage;
     public static final KnownKey ldap_cache_zimlet_maxsize;
     public static final KnownKey ldap_cache_zimlet_maxage;
     
@@ -237,10 +215,13 @@ public class LC {
     public static final KnownKey mysql_bind_address;
     public static final KnownKey mysql_port;
     public static final KnownKey mysql_root_password;
+    public static final KnownKey mysql_memory_percent;
+    public static final KnownKey mysql_innodb_log_buffer_size;
+    public static final KnownKey mysql_innodb_log_file_size;
+    public static final KnownKey mysql_sort_buffer_size;
+    public static final KnownKey mysql_read_buffer_size;
+    public static final KnownKey mysql_table_cache;
 
-    public static final KnownKey derby_properties;
-
-    public final static KnownKey logger_data_directory;
     public static final KnownKey logger_mysql_directory;
     public static final KnownKey logger_mysql_data_directory;
     public static final KnownKey logger_mysql_socket;
@@ -253,7 +234,6 @@ public class LC {
 
     public static final KnownKey postfix_alias_maps;
     public static final KnownKey postfix_broken_sasl_auth_clients;
-    public static final KnownKey postfix_bounce_queue_lifetime;
     public static final KnownKey postfix_command_directory;
     public static final KnownKey postfix_daemon_directory;
     public static final KnownKey postfix_enable_smtpd_policyd;
@@ -269,7 +249,7 @@ public class LC {
     public static final KnownKey postfix_newaliases_path;
     public static final KnownKey postfix_policy_time_limit;
     public static final KnownKey postfix_queue_directory;
-    public static final KnownKey postfix_smtpd_sasl_authenticated_header;
+    public static final KnownKey postfix_queue_run_delay;
     public static final KnownKey postfix_sender_canonical_maps;
     public static final KnownKey postfix_sendmail_path;
     public static final KnownKey postfix_smtpd_client_restrictions;
@@ -278,9 +258,8 @@ public class LC {
     public static final KnownKey postfix_smtpd_tls_cert_file;
     public static final KnownKey postfix_smtpd_tls_key_file;
     public static final KnownKey postfix_smtpd_tls_loglevel;
-    public static final KnownKey postfix_queue_run_delay;
     public static final KnownKey postfix_transport_maps;
-    public static final KnownKey postfix_propagate_unmatched_extensions;
+    public static final KnownKey postfix_version;
     public static final KnownKey postfix_virtual_alias_domains;
     public static final KnownKey postfix_virtual_alias_maps;
     public static final KnownKey postfix_virtual_mailbox_domains;
@@ -289,9 +268,8 @@ public class LC {
 
     public static final KnownKey mailboxd_directory;
     public static final KnownKey mailboxd_java_heap_memory_percent;
-    public static final KnownKey mailboxd_java_heap_new_size_percent;
-    public static final KnownKey mailboxd_thread_stack_size;
     public static final KnownKey mailboxd_java_options;
+    public static final KnownKey mailboxd_java_home;
     public static final KnownKey mailboxd_pidfile;
     public static final KnownKey mailboxd_keystore;
     public static final KnownKey mailboxd_keystore_password;
@@ -302,6 +280,7 @@ public class LC {
     public static final KnownKey mailboxd_output_filename;
     public static final KnownKey mailboxd_output_file;
     public static final KnownKey mailboxd_output_rotate_interval;
+    public static final KnownKey mailboxd_thread_stack_size;
     
     public static final KnownKey ssl_allow_untrusted_certs;
     public static final KnownKey ssl_allow_mismatched_certs;
@@ -309,7 +288,6 @@ public class LC {
     public static final KnownKey zimbra_class_sslprotocolsocketfactory;
 
     public static final KnownKey zimlet_directory;
-    public static final KnownKey zimlet_properties_directory;
     public static final KnownKey wiki_enabled;
     public static final KnownKey wiki_user;
 
@@ -319,7 +297,7 @@ public class LC {
     public static final KnownKey calendar_ics_import_full_parse_max_size;
     public static final KnownKey calendar_ics_export_buffer_size;
     public static final KnownKey calendar_max_desc_in_metadata;
-    public static final KnownKey calendar_allow_invite_without_method;
+    public static final KnownKey calendar_canonical_tzid;
     public static final KnownKey calendar_freebusy_max_days;
 
     public static final KnownKey calendar_search_max_days;
@@ -354,7 +332,6 @@ public class LC {
     public static final KnownKey zimbra_class_accessmanager;
     public static final KnownKey zimbra_class_mboxmanager;
     public static final KnownKey zimbra_class_database;
-    public static final KnownKey zimbra_class_store;
     public static final KnownKey zimbra_class_application;
     public static final KnownKey zimbra_class_rulerewriterfactory;
     
@@ -362,7 +339,6 @@ public class LC {
     public static final KnownKey data_source_fetch_size;
     public static final KnownKey data_source_max_message_memory_size;
     public static final KnownKey data_source_new_sync_enabled;
-    public static final KnownKey data_source_xsync_class;
 
     public static final KnownKey timezone_file;
 
@@ -371,7 +347,6 @@ public class LC {
 
     public static final KnownKey zmstat_log_directory;
     public static final KnownKey zmstat_interval;
-    public static final KnownKey zmstat_disk_interval;
     
     public static final KnownKey zimbra_noop_default_timeout;
     public static final KnownKey zimbra_noop_min_timeout;
@@ -394,10 +369,7 @@ public class LC {
     public static final KnownKey zimbra_auth_provider;
     public static final KnownKey zimbra_authtoken_cookie_domain;
     
-    public static final KnownKey zimbra_zmjava_options;
-    public static final KnownKey zimbra_zmjava_java_home;
-    public static final KnownKey zimbra_zmjava_java_library_path;
-    public static final KnownKey zimbra_zmjava_java_ext_dirs;
+    public static final KnownKey debug_update_config_use_old_scheme;
     
     public static final KnownKey debug_xmpp_disable_client_tls;
     
@@ -410,9 +382,6 @@ public class LC {
     public static final KnownKey javamail_pop3_timeout;
     public static final KnownKey javamail_imap_timeout;
     public static final KnownKey javamail_smtp_timeout;
-
-    public static final KnownKey javamail_pop3_test_timeout;
-    public static final KnownKey javamail_imap_test_timeout;
     
     public static final KnownKey javamail_pop3_enable_starttls;
     public static final KnownKey javamail_imap_enable_starttls;
@@ -421,30 +390,12 @@ public class LC {
     public static final KnownKey yauth_baseuri;
     
     public static final KnownKey purge_initial_sleep_time;
-    public static final KnownKey conversation_max_age_ms;
-    
-    public static final KnownKey httpclient_connmgr_max_host_connections;
-    public static final KnownKey httpclient_connmgr_max_total_connections;
-    public static final KnownKey httpclient_connmgr_keepalive_connections;
-    public static final KnownKey httpclient_connmgr_tcp_nodelay;
-    public static final KnownKey httpclient_connmgr_connection_timeout;
-    public static final KnownKey httpclient_connmgr_so_timeout;
-    public static final KnownKey httpclient_client_connection_timeout;
-    
-    // public static final KnownKey httpclient_connmgr_idle_reaper_initial_sleep_time;  don't use this for now
-    public static final KnownKey httpclient_connmgr_idle_reaper_sleep_interval;
-    public static final KnownKey httpclient_connmgr_idle_reaper_connection_timeout;
-    
-    // http client read timeouts
-    public static final KnownKey httpclient_soaphttptransport_retry_count;
-    public static final KnownKey httpclient_soaphttptransport_so_timeout;
-    
-    // convertd
-    public static final KnownKey httpclient_convertd_so_timeout;
-    
+
     public static final KnownKey shared_mime_info_globs;
     public static final KnownKey shared_mime_info_magic;
-
+    
+    public static final KnownKey httpclient_idle_connection_timeout;
+    
     public static final KnownKey xmpp_server_tls_enabled;
     public static final KnownKey xmpp_server_dialback_enabled;
     public static final KnownKey xmpp_server_session_allowmultiple;
@@ -497,18 +448,12 @@ public class LC {
     public static final KnownKey zmailbox_message_cachesize;
     
     public static final KnownKey freebusy_queue_directory;
-    public static final KnownKey contact_ranking_enabled;
     
     public static final KnownKey jdbc_results_streaming_enabled;
-    public static final KnownKey smtp_host_retry_millis;
     
     public static final KnownKey freebusy_exchange_cn1;
     public static final KnownKey freebusy_exchange_cn2;
     public static final KnownKey freebusy_exchange_cn3;
-    
-    public static final KnownKey data_source_scheduling_enabled;
-    
-    public static final KnownKey notes_enabled;
     
     static {
         @SuppressWarnings("unused")
@@ -545,7 +490,7 @@ public class LC {
         zimbra_db_directory.setDefault("${zimbra_home}" + FS + "db");
 
         zimbra_tmp_directory = new KnownKey("zimbra_tmp_directory");
-        zimbra_tmp_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "tmp");
+        zimbra_tmp_directory.setDefault(System.getProperty("java.io.tmpdir") + FS + "zimbra");
 
         zimbra_extensions_directory = new KnownKey("zimbra_extension_directory");
         zimbra_extensions_directory.setDefault("${zimbra_home}" + FS + "lib" + FS + "ext");
@@ -609,6 +554,9 @@ public class LC {
         zimbra_nio_file_copy_chunk_size_kb = new KnownKey("zimbra_nio_file_copy_chunk_size_kb");
         zimbra_nio_file_copy_chunk_size_kb.setDefault("512");  // 512KB
 
+        zimbra_blob_input_stream_buffer_size_kb = new KnownKey("zimbra_blob_input_stream_buffer_size_kb");
+        zimbra_blob_input_stream_buffer_size_kb.setDefault("1");  // 1KB
+
         zimbra_mailbox_manager_hardref_cache = new KnownKey("zimbra_mailbox_manager_hardref_cache");
         zimbra_mailbox_manager_hardref_cache.setDefault("2500");
 
@@ -645,7 +593,7 @@ public class LC {
         zimbra_index_deferred_items_delay = new KnownKey("zimbra_index_deferred_items_delay", "10");
         zimbra_index_deferred_items_failure_delay = new KnownKey("zimbra_index_deferred_items_failure_delay", "300");
         
-        zimbra_index_max_transaction_bytes = new KnownKey("zimbra_index_max_transaction_bytes", "5000000");
+        zimbra_index_max_transaction_bytes = new KnownKey("zimbra_index_max_transaction_bytes", "1000000");
         zimbra_index_max_transaction_items = new KnownKey("zimbra_index_max_transaction_items", "100");
         
         zimbra_index_lucene_autocommit = new KnownKey("zimbra_index_lucene_autocommit", "false");
@@ -662,9 +610,6 @@ public class LC {
         zimbra_index_lucene_batch_max_buffered_docs = new KnownKey("zimbra_index_lucene_batch_max_buffered_docs", "200");
         zimbra_index_lucene_batch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_batch_ram_buffer_size_kb", "10240");
         zimbra_index_lucene_batch_autocommit = new KnownKey("zimbra_index_lucene_batch_autocommit", "false");
-        zimbra_index_lucene_max_terms_per_query = new KnownKey("zimbra_index_lucene_max_terms_per_query", "50000");
-        zimbra_index_wildcard_max_terms_expanded = new KnownKey("zimbra_index_wildcard_max_terms_expanded", "20000");
-        
             
         zimbra_index_lucene_nobatch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_doc_scheduler", "true");
         zimbra_index_lucene_nobatch_min_merge = new KnownKey("zimbra_index_lucene_nobatch_min_merge", "10");
@@ -685,7 +630,7 @@ public class LC {
         zimbra_im_chat_flush_time = new KnownKey("zimbra_im_chat_flush_time", "300");
         zimbra_im_chat_close_time = new KnownKey("zimbra_im_chat_close_time", "3600");
 
-        zimbra_http_originating_ip_header = new KnownKey("zimbra_http_originating_ip_header", "X-Forwarded-For");
+        zimbra_http_originating_ip_header = new KnownKey("zimbra_http_originating_ip_header", "X-Originating-IP");
 
         zimbra_session_limit_imap = new KnownKey("zimbra_session_limit_imap");
         zimbra_session_limit_imap.setDefault("5");
@@ -704,78 +649,22 @@ public class LC {
 
         zimbra_converter_depth_max = new KnownKey("zimbra_converter_depth_max");
         zimbra_converter_depth_max.setDefault("100");
+
+        convertd_version = new KnownKey("convertd_version");
+        convertd_version.setDefault("1");
         
         zimbra_ssl_enabled = new KnownKey("zimbra_ssl_enabled", "true");
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
 
-        soap_response_buffer_size = new KnownKey("soap_response_buffer_size");
-        soap_response_buffer_size.setDefault("");
-        soap_response_buffer_size.setDoc("the size of the content buffer for sending SOAP http responses." + 
-                                         "if not set, use jetty default.");
-        
-        soap_response_chunked_transfer_encoding_disabled = new KnownKey("soap_response_chunked_transfer_encoding_disabled");
-        soap_response_chunked_transfer_encoding_disabled.setDefault("false");
+        soap_max_in_memory_buffer_size = new KnownKey("soap_max_in_memory_buffer_size");
+        soap_max_in_memory_buffer_size.setDefault("0");  // disabled by default
         
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
 
-        ldap_common_loglevel = new KnownKey("ldap_common_loglevel");
-        ldap_common_loglevel.setDefault("49152");
-
-        ldap_common_require_tls = new KnownKey("ldap_common_require_tls");
-        ldap_common_require_tls.setDefault("0");
-
-        ldap_common_threads = new KnownKey("ldap_common_threads");
-        ldap_common_threads.setDefault("8");
-
-        ldap_common_toolthreads = new KnownKey("ldap_common_toolthreads");
-        ldap_common_toolthreads.setDefault("1");
-
-        ldap_db_cachefree = new KnownKey("ldap_db_cachefree");
-        ldap_db_cachefree.setDefault("1");
-
-        ldap_db_cachesize = new KnownKey("ldap_db_cachesize");
-        ldap_db_cachesize.setDefault("10000");
-
-        ldap_db_idlcachesize = new KnownKey("ldap_db_idlcachesize");
-        ldap_db_idlcachesize.setDefault("10000");
-
-        ldap_db_dncachesize = new KnownKey("ldap_db_dncachesize");
-        ldap_db_dncachesize.setDefault("20000");
-
-        ldap_db_shmkey = new KnownKey("ldap_db_shmkey");
-        ldap_db_shmkey.setDefault("0");
-
-        ldap_db_checkpoint = new KnownKey("ldap_db_checkpoint");
-        ldap_db_checkpoint.setDefault("64 5");
-
-        ldap_accesslog_cachefree = new KnownKey("ldap_accesslog_cachefree");
-        ldap_accesslog_cachefree.setDefault("1");
-
-        ldap_accesslog_cachesize = new KnownKey("ldap_accesslog_cachesize");
-        ldap_accesslog_cachesize.setDefault("10000");
-
-        ldap_accesslog_idlcachesize = new KnownKey("ldap_accesslog_idlcachesize");
-        ldap_accesslog_idlcachesize.setDefault("10000");
-
-        ldap_accesslog_shmkey = new KnownKey("ldap_accesslog_shmkey");
-        ldap_accesslog_shmkey.setDefault("0");
-
-        ldap_accesslog_dncachesize = new KnownKey("ldap_accesslog_dncachesize");
-        ldap_accesslog_dncachesize.setDefault("20000");
-
-        ldap_accesslog_checkpoint = new KnownKey("ldap_accesslog_checkpoint");
-        ldap_accesslog_checkpoint.setDefault("64 5");
-
-        ldap_overlay_syncprov_checkpoint = new KnownKey("ldap_overlay_syncprov_checkpoint");
-        ldap_overlay_syncprov_checkpoint.setDefault("20 10");
-
-        ldap_overlay_syncprov_sessionlog = new KnownKey("ldap_overlay_syncprov_sessionlog");
-        ldap_overlay_syncprov_sessionlog.setDefault("500");
-
-        ldap_overlay_accesslog_logpurge = new KnownKey("ldap_overlay_accesslog_logpurge");
-        ldap_overlay_accesslog_logpurge.setDefault("01+00:00  00+04:00");
+        ldap_log_level = new KnownKey("ldap_log_level");
+        ldap_log_level.setDefault("49152");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("");
@@ -838,6 +727,9 @@ public class LC {
         ldap_starttls_supported = new KnownKey("ldap_starttls_supported"); 
         ldap_starttls_supported.setDefault("0");
 
+        ldap_require_tls = new KnownKey("ldap_require_tls");
+        ldap_require_tls.setDefault("false");
+
         ldap_cache_account_maxsize = new KnownKey("ldap_cache_account_maxsize", "20000");
 
         ldap_cache_account_maxage = new KnownKey("ldap_cache_account_maxage", "15");
@@ -858,19 +750,11 @@ public class LC {
 
         ldap_cache_group_maxage = new KnownKey("ldap_cache_group_maxage", "15");
 
-        ldap_cache_right_maxsize = new KnownKey("ldap_cache_right_maxsize", "100");
-
-        ldap_cache_right_maxage = new KnownKey("ldap_cache_right_maxage", "15");
-        
         ldap_cache_server_maxsize = new KnownKey("ldap_cache_server_maxsize", "100");
 
         ldap_cache_server_maxage = new KnownKey("ldap_cache_server_maxage", "15");
 
         ldap_cache_timezone_maxsize = new KnownKey("ldap_cache_timezone_maxsize", "100");
-        
-        ldap_cache_xmppcomponent_maxsize = new KnownKey("ldap_cache_xmppcomponent_maxsize", "100");
-        
-        ldap_cache_xmppcomponent_maxage = new KnownKey("ldap_cache_xmppcomponent_maxage", "15");
 
         ldap_cache_zimlet_maxsize = new KnownKey("ldap_cache_zimlet_maxsize", "100");
 
@@ -884,6 +768,7 @@ public class LC {
 
         ldap_cache_reverseproxylookup_server_maxage = new KnownKey("ldap_cache_reverseproxylookup_server_maxage", "15");
         
+
         mysql_directory = new KnownKey("mysql_directory");
         mysql_directory.setDefault("${zimbra_home}" + FS + "mysql");
 
@@ -912,15 +797,27 @@ public class LC {
         mysql_root_password.setDefault("zimbra");
         mysql_root_password.setForceToEdit(true);
 
-        derby_properties = new KnownKey("derby_properties");
-        derby_properties.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "derby.properties");
+        mysql_memory_percent = new KnownKey("mysql_memory_percent");
+        mysql_memory_percent.setDefault("40");
+
+        mysql_innodb_log_buffer_size = new KnownKey("mysql_innodb_log_buffer_size");
+        mysql_innodb_log_buffer_size.setDefault("8388608");
+
+        mysql_innodb_log_file_size = new KnownKey("mysql_innodb_log_file_size");
+        mysql_innodb_log_file_size.setDefault("104857600");
+
+        mysql_sort_buffer_size = new KnownKey("mysql_sort_buffer_size");
+        mysql_sort_buffer_size.setDefault("1048576");
+
+        mysql_read_buffer_size = new KnownKey("mysql_read_buffer_size");
+        mysql_read_buffer_size.setDefault("1048576");
+
+        mysql_table_cache = new KnownKey("mysql_table_cache");
+        mysql_table_cache.setDefault("500");
 
         zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
         zimbra_logger_mysql_password.setDefault("zimbra");
         zimbra_logger_mysql_password.setForceToEdit(true);
-
-        logger_data_directory = new KnownKey("logger_data_directory");
-        logger_data_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "data");
 
         logger_mysql_directory = new KnownKey("logger_mysql_directory");
         logger_mysql_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "mysql");
@@ -952,9 +849,6 @@ public class LC {
         postfix_broken_sasl_auth_clients  = new KnownKey("postfix_broken_sasl_auth_clients");
         postfix_broken_sasl_auth_clients.setDefault("yes");
 
-        postfix_bounce_queue_lifetime  = new KnownKey("postfix_bounce_queue_lifetime");
-        postfix_bounce_queue_lifetime.setDefault("5d");
-
         postfix_command_directory  = new KnownKey("postfix_command_directory");
         postfix_command_directory.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin");
 
@@ -981,9 +875,6 @@ public class LC {
 
         postfix_queue_directory  = new KnownKey("postfix_queue_directory");
         postfix_queue_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "postfix" + FS + "spool");
-
-        postfix_smtpd_sasl_authenticated_header  = new KnownKey("postfix_smtpd_sasl_authenticated_header");
-        postfix_smtpd_sasl_authenticated_header.setDefault("no");
 
         postfix_sender_canonical_maps  = new KnownKey("postfix_sender_canonical_maps");
         postfix_sender_canonical_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-scm.cf");
@@ -1033,8 +924,8 @@ public class LC {
         postfix_transport_maps  = new KnownKey("postfix_transport_maps");
         postfix_transport_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
 
-        postfix_propagate_unmatched_extensions  = new KnownKey("postfix_propagate_unmatched_extensions");
-        postfix_propagate_unmatched_extensions.setDefault("canonical");
+        postfix_version  = new KnownKey("postfix_version");
+        postfix_version.setDefault("2.4.7.5z");
 
         postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
         postfix_virtual_alias_domains.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vad.cf");
@@ -1057,14 +948,11 @@ public class LC {
         mailboxd_java_heap_memory_percent = new KnownKey("mailboxd_java_heap_memory_percent");
         mailboxd_java_heap_memory_percent.setDefault("30");
 
-        mailboxd_thread_stack_size = new KnownKey("mailboxd_thread_stack_size");
-        mailboxd_thread_stack_size.setDefault("256k");
-
-        mailboxd_java_heap_new_size_percent = new KnownKey("mailboxd_java_heap_new_size_percent");
-        mailboxd_java_heap_new_size_percent.setDefault("25");
-        
         mailboxd_java_options = new KnownKey("mailboxd_java_options");
-        mailboxd_java_options.setDefault("-server -Djava.awt.headless=true -XX:+UseConcMarkSweepGC -XX:NewRatio=2 -XX:PermSize=128m -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
+        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1");
+
+        mailboxd_java_home = new KnownKey("mailboxd_java_home");
+        mailboxd_java_home.setDefault("${zimbra_java_home}");
 
         mailboxd_pidfile = new KnownKey("mailboxd_pidfile");
         mailboxd_pidfile.setDefault("${zimbra_log_directory}" + FS + "mailboxd.pid");
@@ -1096,6 +984,9 @@ public class LC {
         mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
         mailboxd_output_rotate_interval.setDefault("86400");
 
+        mailboxd_thread_stack_size = new KnownKey("mailboxd_thread_stack_size");
+        mailboxd_thread_stack_size.setDefault("256k");
+
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
         
@@ -1108,10 +999,7 @@ public class LC {
         zimbra_class_sslprotocolsocketfactory.setDefault("");
 
         zimlet_directory = new KnownKey("zimlet_directory");
-        zimlet_directory.setDefault("${zimbra_home}" + FS + "zimlets-deployed");
-
-        zimlet_properties_directory = new KnownKey("zimlet_properties_directory");
-        zimlet_properties_directory.setDefault("${zimbra_home}" + FS + "zimlets-properties");
+        zimlet_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
 
         wiki_enabled = new KnownKey("wiki_enabled");
         wiki_enabled.setDefault("false");
@@ -1137,8 +1025,8 @@ public class LC {
         calendar_max_desc_in_metadata = new KnownKey("calendar_max_desc_in_metadata");
         calendar_max_desc_in_metadata.setDefault("4096");  // 4KB
 
-        calendar_allow_invite_without_method = new KnownKey("calendar_allow_invite_without_method");
-        calendar_allow_invite_without_method.setDefault("false");
+        calendar_canonical_tzid = new KnownKey("calendar_canonical_tzid");
+        calendar_canonical_tzid.setDefault("windows");
 
         calendar_freebusy_max_days = new KnownKey("calendar_freebusy_max_days");
         calendar_freebusy_max_days.setDefault("366");
@@ -1150,7 +1038,7 @@ public class LC {
         calendar_cache_enabled.setDefault("false");
 
         calendar_cache_directory = new KnownKey("calendar_cache_directory");
-        calendar_cache_directory.setDefault("${" + zimbra_tmp_directory.key() + "}" + FS + "calcache");
+        calendar_cache_directory.setDefault("${zimbra_home}" + FS + "store" + FS + "calcache");
 
         calendar_cache_lru_size = new KnownKey("calendar_cache_lru_size");
         calendar_cache_lru_size.setDefault("1000");
@@ -1221,10 +1109,9 @@ public class LC {
         debug_mailboxindex_use_new_locking.setDefault("true");
 
         zimbra_class_provisioning = new KnownKey("zimbra_class_provisioning", "com.zimbra.cs.account.ldap.LdapProvisioning");
-        zimbra_class_accessmanager = new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.accesscontrol.ACLAccessManager");
+        zimbra_class_accessmanager = new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.accesscontrol.AclAccessManager");
         zimbra_class_mboxmanager = new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager");
         zimbra_class_database = new KnownKey("zimbra_class_database", "com.zimbra.cs.db.MySQL");
-        zimbra_class_store = new KnownKey("zimbra_class_store", "com.zimbra.cs.store.file.FileBlobStore");
         zimbra_class_application = new KnownKey("zimbra_class_application", "com.zimbra.cs.util.ZimbraApplication");
         zimbra_class_rulerewriterfactory = new KnownKey("zimbra_class_rulerewriterfactory", "com.zimbra.cs.filter.RuleRewriterFactory");
         
@@ -1232,11 +1119,10 @@ public class LC {
         data_source_fetch_size = new KnownKey("data_source_fetch_size", "5");
         data_source_max_message_memory_size = new KnownKey("data_source_max_message_memory_size", "2097152"); // 2 megabytes
         data_source_new_sync_enabled = new KnownKey("data_source_new_sync_enabled", "false");
-        data_source_xsync_class = new KnownKey("data_source_xsync_class", "");
 
         timezone_file = new KnownKey("timezone_file");
         timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
-        
+
         search_disable_database_hints = new KnownKey("search_disable_database_hints");
         search_disable_database_hints.setDefault("false");
 
@@ -1248,9 +1134,6 @@ public class LC {
 
         zmstat_interval = new KnownKey("zmstat_interval");
         zmstat_interval.setDefault("30");
-        
-        zmstat_disk_interval = new KnownKey("zmstat_disk_interval");
-        zmstat_disk_interval.setDefault("600");
 
         zimbra_noop_default_timeout = new KnownKey("zimbra_noop_default_timeout", "300");
         zimbra_noop_min_timeout = new KnownKey("zimbra_noop_min_timeout", "30");
@@ -1276,11 +1159,9 @@ public class LC {
         zimbra_authtoken_cookie_domain = new KnownKey("zimbra_authtoken_cookie_domain");
         zimbra_authtoken_cookie_domain.setDefault("");
         
-        zimbra_zmjava_options = new KnownKey("zimbra_zmjava_options", "-Xmx256m");
-        zimbra_zmjava_java_home = new KnownKey("zimbra_zmjava_java_home", "");
-        zimbra_zmjava_java_library_path = new KnownKey("zimbra_zmjava_java_library_path", "");
-        zimbra_zmjava_java_ext_dirs = new KnownKey("zimbra_zmjava_java_ext_dirs", "");
-        
+        debug_update_config_use_old_scheme = new KnownKey("debug_update_config_use_old_scheme");
+        debug_update_config_use_old_scheme.setDefault("false");
+
         debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0");
         
         im_dnsutil_dnsoverride = new KnownKey("im_dnsutil_dnsoverride", "");
@@ -1294,11 +1175,11 @@ public class LC {
         javamail_smtp_debug = new KnownKey("javamail_smtp_debug");
         javamail_smtp_debug.setDefault("false");
 
-        javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout", "60");
-        javamail_imap_timeout = new KnownKey("javamail_imap_timeout", "60");
-
-        javamail_pop3_test_timeout = new KnownKey("javamail_pop3_test_timeout", "20");
-        javamail_imap_test_timeout = new KnownKey("javamail_imap_test_timeout", "20");
+        javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout");
+        javamail_pop3_timeout.setDefault("60");
+                                                 
+        javamail_imap_timeout = new KnownKey("javamail_imap_timeout");
+        javamail_imap_timeout.setDefault("60");
         
         javamail_smtp_timeout = new KnownKey("javamail_smtp_timeout");
         javamail_smtp_timeout.setDefault("60");
@@ -1320,82 +1201,12 @@ public class LC {
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
             "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
         
-        conversation_max_age_ms = new KnownKey("conversation_max_age_ms", Long.toString(31 * Constants.MILLIS_PER_DAY));
-        
-        httpclient_connmgr_max_host_connections = new KnownKey(
-                "httpclient_connmgr_max_host_connections", 
-                "100",
-                "httpclient connection manager: " + 
-                "Defines the maximum number of connections allowed per host configuration");
-        
-        httpclient_connmgr_max_total_connections = new KnownKey(
-                "httpclient_connmgr_max_total_connections", 
-                "300",
-                "httpclient connection manager: " +
-                "Defines the maximum number of connections allowed overall");
-
-        httpclient_connmgr_keepalive_connections = new KnownKey(
-                "httpclient_connmgr_keepalive_connections", 
-                "true",
-                "httpclient connection manager: " +
-                "Defines whether HTTP keep-alive connections should be used");
-
-        httpclient_connmgr_tcp_nodelay = new KnownKey(
-                "httpclient_connmgr_tcp_nodelay", 
-                "false",
-                "httpclient connection manager: " +
-                "Defines whether to disable Nagle algorithm on HTTP socket");
-
-        httpclient_connmgr_connection_timeout = new KnownKey(
-                "httpclient_connmgr_connection_timeout", 
-                Long.toString(25 * Constants.MILLIS_PER_SECOND),
-                "httpclient connection manager: " +
-                "Determines the timeout until a connection is established. A value of zero means the timeout is not used");
-        
-        httpclient_connmgr_so_timeout = new KnownKey(
-                "httpclient_connmgr_so_timeout", 
-                Long.toString(60 * Constants.MILLIS_PER_SECOND),
-                "httpclient connection manager: " +
-                "A timeout value of zero is interpreted as an infinite timeout. This value is used when no socket timeout is set in the HTTP method parameters");
-
-        httpclient_client_connection_timeout = new KnownKey(
-                "httpclient_client_connection_timeout", 
-                Long.toString(30 * Constants.MILLIS_PER_SECOND),
-                "httpclient client: " +
-                "Sets the timeout in milliseconds used when retrieving an HTTP connection from the HTTP connection manager. ");
-        
-        httpclient_connmgr_idle_reaper_sleep_interval = new KnownKey(
-                "httpclient_connmgr_idle_reaper_sleep_interval", 
-                Long.toString(5 * Constants.MILLIS_PER_MINUTE),
-                "httpclient connection manager idle reaper: " +
-                "Amount of time (in milliseconds) that the http client connection manager idle connection reaper thread sleeps between doing work. " +
-                "0 means that reaper thread is disabled");
-        
-        httpclient_connmgr_idle_reaper_connection_timeout = new KnownKey(
-                "httpclient_connmgr_idle_reaper_connection_timeout", 
-                Long.toString(5 * Constants.MILLIS_PER_MINUTE),
-                "httpclient connection manager idle reaper: " +
-                "the timeout value to use when testing for idle connections.");
-
-        
-        httpclient_soaphttptransport_retry_count = new KnownKey(
-                "httpclient_soaphttptransport_retry_count", 
-                "2",
-                "Defines the number retries after a temporary failure for SOAP clients using the SoapHttpTransport class");
-        
-        httpclient_soaphttptransport_so_timeout = new KnownKey(
-                "httpclient_soaphttptransport_so_timeout", 
-                Long.toString(300 * Constants.MILLIS_PER_SECOND),
-                "socket timeout in milliseconds for SOAP clients using the SoapHttpTransport class");
-        
-        
-        httpclient_convertd_so_timeout = new KnownKey(
-                "httpclient_convertd_so_timeout", 
-                Long.toString(-1),
-                "socket timeout in milliseconds for convertd client." + 
-                "if 0 - means no timeout." + 
-                "if -1 or not set - means use the default read timeout of the connection manager.");
-        
+        httpclient_idle_connection_timeout = new KnownKey(
+                "httpclient_idle_connection_timeout", 
+                "0",
+                "the minimum idle time, in milliseconds, for the connection used by a SoapHttpTransport to be closed. " +
+                "if set to 0, the connection is always closed after each http method invocation, " + 
+                "if set to -1, the connection will not be explicit closed, it could be closed by finalizer, which should not be relied on.");
         
         shared_mime_info_globs = new KnownKey("shared_mime_info_globs",
             "${zimbra_home}" + FS + "conf" + FS + "globs2",
@@ -1460,22 +1271,17 @@ public class LC {
         
         xmpp_dns_override = new KnownKey("xmpp_dns_override", "", "Override DNS for XMPP server, comma-separated list of entries of the form \"{domain:hostname:port}\"");         
         
+        
         zmailbox_message_cachesize = new KnownKey("zmailbox_message_cachesize", "1", "max number of messages cached in zmailbox");
               
         freebusy_queue_directory = new KnownKey("freebusy_queue_directory");
         freebusy_queue_directory.setDefault("${zimbra_home}" + FS + "fbqueue" + FS);
-        contact_ranking_enabled = new KnownKey("contact_ranking_enabled", "true", "Enable contact ranking table");
         
         jdbc_results_streaming_enabled = new KnownKey("jdbc_results_streaming_enabled", "true");
-        smtp_host_retry_millis = new KnownKey("smtp_host_retry_millis", "60000");
         
         freebusy_exchange_cn1 = new KnownKey("freebusy_exchange_cn1");
         freebusy_exchange_cn2 = new KnownKey("freebusy_exchange_cn2");
         freebusy_exchange_cn3 = new KnownKey("freebusy_exchange_cn3");
-        
-        data_source_scheduling_enabled = new KnownKey("data_source_scheduling_enabled", "true");
-        
-        notes_enabled = new KnownKey("notes_enabled", "false");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the

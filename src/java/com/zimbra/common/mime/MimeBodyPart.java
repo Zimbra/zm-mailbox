@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.mime;
@@ -112,7 +114,7 @@ public class MimeBodyPart extends MimePart {
         String charset = getContentType().getParameter("charset");
         if (charset != null) {
             try {
-                return new InputStreamReader(is, HeaderUtils.normalizeCharset(charset));
+                return new InputStreamReader(is, charset);
             } catch (UnsupportedEncodingException e) { }
         }
 
@@ -120,7 +122,7 @@ public class MimeBodyPart extends MimePart {
         String defaultCharset = getDefaultCharset();
         if (defaultCharset != null && !defaultCharset.trim().equals("")) {
             try {
-                return new InputStreamReader(is, HeaderUtils.normalizeCharset(defaultCharset));
+                return new InputStreamReader(is, defaultCharset);
             } catch (UnsupportedEncodingException e) { }
         }
 
@@ -196,10 +198,9 @@ public class MimeBodyPart extends MimePart {
     }
 
 
-    @Override MimePart readContent(ParseState pstate) throws IOException {
-        PeekAheadInputStream pais = pstate.getInputStream();
+    @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
         List<String> boundaries = getActiveBoundaries();
-        pstate.clearBoundary();
+        pais.clearBoundary();
 
         // if there's no pending multipart, we can just consume the remainder of the input
         if (boundaries == null) {
@@ -222,7 +223,7 @@ public class MimeBodyPart extends MimePart {
             // we're at the start of a line
             if ((c = pais.read()) == '-' && (c = pais.read()) == '-') {
                 // found a leading "--", so check to see if the rest of the line matches an active MIME boundary
-                if (checkBoundary(pais, pstate, boundaries, linestart)) {
+                if (checkBoundary(pais, pais, boundaries, linestart)) {
                     recordEndpoint(linestart);
                     return this;
                 }
@@ -243,11 +244,11 @@ public class MimeBodyPart extends MimePart {
         return this;
     }
 
-    static boolean checkBoundary(byte[] content, int offset, ParseState pstate, List<String> boundaries, long linestart) throws IOException {
-        return checkBoundary(new ByteArrayInputStream(content, offset, content.length - offset), pstate, boundaries, linestart);
+    static boolean checkBoundary(byte[] content, int offset, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
+        return checkBoundary(new ByteArrayInputStream(content, offset, content.length - offset), pais, boundaries, linestart);
     }
 
-    static boolean checkBoundary(InputStream is, ParseState pstate, List<String> boundaries, long linestart) throws IOException {
+    static boolean checkBoundary(InputStream is, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
         // found a leading "--", so check to see if the rest of the line matches an active MIME boundary
         is.mark(1024);
 
@@ -278,7 +279,7 @@ public class MimeBodyPart extends MimePart {
                             if (is.read() != '\n')
                                 is.reset();
                         }
-                        pstate.recordBoundary(boundary, isEndBoundary, linestart);
+                        pais.recordBoundary(boundary, isEndBoundary, linestart);
                         return true;
                     } else if (!Character.isWhitespace(c)) {
                         break;

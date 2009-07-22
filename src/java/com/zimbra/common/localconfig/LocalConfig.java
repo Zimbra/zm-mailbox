@@ -1,5 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -33,8 +35,6 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-
-import com.zimbra.common.util.FileUtil;
 
 public class LocalConfig {
 
@@ -66,7 +66,7 @@ public class LocalConfig {
         mConfiguredKeys.put(key, value);
     }
 
-    String getRaw(String key) 
+    private String getRaw(String key) 
     {
         if (mConfiguredKeys.containsKey(key))
             return mConfiguredKeys.get(key);
@@ -150,10 +150,6 @@ public class LocalConfig {
         tempFile.renameTo(configFile);
     }
 
-    void backup(String suffix) throws IOException {
-	FileUtil.copy(new File(mConfigFile), new File(mConfigFile + suffix), true);
-    }
-    
     public LocalConfig(String file) throws DocumentException, ConfigException {
         mConfigFile = file;
         if (mConfigFile == null) {

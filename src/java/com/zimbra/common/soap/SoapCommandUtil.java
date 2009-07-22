@@ -1,25 +1,31 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Version: MPL 1.1
  * 
- * The contents of this file are subject to the Yahoo! Public License
- * Version 1.0 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 ("License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.zimbra.com/license
  * 
  * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * 
+ * The Original Code is: Zimbra Collaboration Suite Server.
+ * 
+ * The Initial Developer of the Original Code is Zimbra, Inc.
+ * Portions created by Zimbra are Copyright (C) 2006 Zimbra, Inc.
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,20 +44,16 @@ import org.apache.commons.cli2.builder.GroupBuilder;
 import org.apache.commons.cli2.commandline.Parser;
 import org.apache.commons.cli2.util.HelpFormatter;
 import org.apache.commons.cli2.validation.EnumValidator;
-import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element.ElementFactory;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 
-public class SoapCommandUtil implements SoapTransport.DebugListener {
+public class SoapCommandUtil {
 
     private static final Map<String, Namespace> sTypeToNamespace =
         new HashMap<String, Namespace>();
@@ -64,18 +66,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String TYPE_MAIL = "mail";
     private static final String TYPE_ADMIN = "admin";
     private static final String TYPE_ACCOUNT = "account";
-    private static final String TYPE_IM = "im";
-    private static final String TYPE_MOBILE = "mobile";
-    private static final String TYPE_OFFLINE = "offline";
     
     static {
         // Namespaces
         sTypeToNamespace.put(TYPE_MAIL, Namespace.get("urn:zimbraMail"));
         sTypeToNamespace.put(TYPE_ADMIN, Namespace.get("urn:zimbraAdmin"));
         sTypeToNamespace.put(TYPE_ACCOUNT, Namespace.get("urn:zimbraAccount"));
-        sTypeToNamespace.put(TYPE_IM, Namespace.get("urn:zimbraIM"));
-        sTypeToNamespace.put(TYPE_MOBILE, Namespace.get("urn:zimbraSync"));
-        sTypeToNamespace.put(TYPE_OFFLINE, Namespace.get("urn:zimbraOffline"));
     }
     
     private Group mOptions;
@@ -86,24 +82,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mAdminAccountName;
     private String mTargetAccountName;
     private String mPassword;
-    private List<String> mPaths;
-    private String mAuthToken;
-    private int mVerbose = 0;
-    private boolean mUseSession = false;
-    private boolean mNoOp = false;
-    private String mSelect;
-    private boolean mUseJson = false;
-    private String mFilePath;
-    private ElementFactory mFactory;
-    private PrintStream mOut;
-
-    SoapCommandUtil() {
-        try {
-            mOut = new PrintStream(System.out, true, "utf-8");
-        } catch (UnsupportedEncodingException e) {}
-    }
-
+    private String mRootElement;
     @SuppressWarnings("unchecked")
+    private List mPaths;
+    private String mAuthToken;
+    private boolean mVerbose = false;
+    
     private void parseCommandLine(String[] args) {
         
         DefaultOptionBuilder obuilder = new DefaultOptionBuilder();
@@ -131,42 +115,34 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         Option passFile = obuilder
             .withLongName("passfile").withShortName("P").withDescription("Read password from file.")
             .withArgument(abuilder.withName("path").withMinimum(1).withMaximum(1).create()).create();
+        Option element = obuilder
+            .withLongName("element").withShortName("e")
+            .withArgument(abuilder.withName("path").withMinimum(1).withMaximum(1).create())
+            .withDescription("Root element path.  If specified, all path arguments that don't start with " +
+                "a slash (/) are relative to this element.").create();
         Option url = obuilder
-            .withLongName("url").withShortName("u").withDescription(
-                "SOAP service url, usually http[s]://host:port/service/soap or https://host:port/service/admin/soap.")
-            .withArgument(abuilder.withName("url").withMinimum(1).withMaximum(1).create()).create();
+            .withLongName("url").withShortName("u").withDescription("Server hostname and optional port.")
+            .withArgument(abuilder.withName("http[s]://...").withMinimum(1).withMaximum(1).create()).create();
         Option zadmin = obuilder
             .withLongName("zadmin").withShortName("z").withArgument(noArgs)
             .withDescription("Authenticate with zimbra admin name/password from localconfig.").create();
         Option verbose = obuilder
             .withLongName("verbose").withShortName("v").withArgument(noArgs)
-            .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output.").create();
-        Option noOp = obuilder
-            .withLongName("no-op").withShortName("n").withArgument(noArgs)
-            .withDescription("Print the SOAP request only.  Don't send it.").create();
-        Option select = obuilder
-            .withLongName("select").withDescription("Select element(s) or an attribute from the response.")
-            .withArgument(abuilder.withMinimum(1).withMaximum(1).withName("path").create()).create();
-        Option json = obuilder
-            .withLongName("json").withArgument(noArgs)
-            .withDescription("Use JSON instead of XML.").create();
-        Option file = obuilder
-            .withLongName("file").withShortName("f").withDescription("Read request from file.")
-            .withArgument(abuilder.withName("file-path").withMinimum(1).withMaximum(1).create()).create();
-        Option paths = abuilder.withName("path")
+            .withDescription("Print the SOAP request and other status information.").create();
+        Option paths = abuilder.withName("path").withMinimum(1)
             .withDescription("Element or attribute path and value.  Roughly follows XPath syntax: " +
-                "[/]element1[/element2][/..][/@attr][=value].").create();
+                "[/]element1[/element2][/@attr][=value].").create();
         
         // Types option
         Set<String> validTypes = new HashSet<String>();
-        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin"); validTypes.add("im"); validTypes.add("mobile"); validTypes.add("offline");
+        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin");
         Argument typeArg = abuilder
             .withName("type").withValidator(new EnumValidator(validTypes))
             .withMinimum(1).withMaximum(1).create();
         Option type = obuilder
             .withLongName("type").withShortName("t")
             .withArgument(typeArg)
-            .withDescription("SOAP request type (mail, account, admin, im, mobile).  Default is admin.")
+            .withDescription("SOAP request type (mail, account, admin).  Default is admin.")
             .create();
         
         // Initialize option group
@@ -180,14 +156,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             .withOption(zadmin)
             .withOption(password)
             .withOption(passFile)
+            .withOption(element)
             .withOption(type)
             .withOption(url)
             .withOption(verbose)
-            .withOption(noOp)
             .withOption(paths)
-            .withOption(select)
-            .withOption(json)
-            .withOption(file)
             .create();
 
         // Parse command line
@@ -234,7 +207,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         if (cl.hasOption(type)) {
             mType = (String) cl.getValue(type);
-            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) && mMailboxName == null) {
+            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT)) && mMailboxName == null) {
                 usage("Mailbox must be specified for mail or account requests.");
             }
         } else {
@@ -262,26 +235,10 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             }
             mTargetAccountName = (String) cl.getValue(target);
         }
+        mRootElement = (String) cl.getValue(element);
         
         mPaths = cl.getValues(paths);
-        mVerbose = cl.getOptionCount(verbose);
-        mNoOp = cl.hasOption(noOp);
-        mSelect = (String) cl.getValue(select);
-        mUseJson = cl.hasOption(json);
-        mFilePath = (String) cl.getValue(file);
-        mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
-    }
-    
-    public void sendSoapMessage(Element envelope) {
-        if (mVerbose > 1) {
-            mOut.println(DomUtil.toString(envelope.toXML(), true));
-        }
-    }
-    
-    public void receiveSoapMessage(Element envelope) {
-        if (mVerbose > 1) {
-            mOut.println(DomUtil.toString(envelope.toXML(), true));
-        }
+        mVerbose = cl.hasOption(verbose);
     }
     
     private void usage(String errorMsg) {
@@ -301,227 +258,175 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     }
     
     private void adminAuth()
-    throws ServiceException, IOException {
+    throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
-        transport.setDebugListener(this);
         
         // Create auth element
-        Element auth = mFactory.createElement(AdminConstants.AUTH_REQUEST);
+        Element auth = DocumentHelper.createElement(AdminConstants.AUTH_REQUEST);
         auth.addElement(AdminConstants.E_NAME).setText(mAdminAccountName);
         auth.addElement(AdminConstants.E_PASSWORD).setText(mPassword);
         
         // Authenticate and get auth token
-        Element response = null;
+        com.zimbra.common.soap.Element response = null;
+        com.zimbra.common.soap.Element request = null;
         
-        if (mVerbose > 0) {
-            mOut.println("Sending admin auth request to " + mUrl);
+        if (mVerbose) {
+            System.out.println("Sending admin auth request to " + mUrl);
         }
         
-        response = transport.invoke(auth, false, !mUseSession, null);
-        mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
+        try {
+            request = com.zimbra.common.soap.Element.convertDOM(auth);
+            response = transport.invoke(request);
+        } catch (SoapFaultException e) {
+            System.err.format("Authentication error: %s\n", e.getMessage());
+            System.exit(1);
+        }
+        mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         transport.setAuthToken(mAuthToken);
         
         // Do delegate auth if this is a mail or account service request
-        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) {
-            Element getInfo = mFactory.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
-            Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
+        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT)) {
+            Element getInfo = DocumentHelper.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
+            Element account = DomUtil.add(getInfo, AccountConstants.E_ACCOUNT, mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
-            response = transport.invoke(getInfo, false, !mUseSession, null);
-            if (mVerbose > 0) {
-                mOut.println(response.prettyPrint());
+            try {
+                request = com.zimbra.common.soap.Element.convertDOM(getInfo);
+                response = transport.invoke(request);
+            } catch (SoapFaultException e) {
+                System.err.format("Cannot access account: %s\n", e.getMessage());
+                System.exit(1);
             }
             mUrl = response.getElement(AdminConstants.E_SOAP_URL).getText();
             
             // Get delegate auth token
-            Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
-            account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
+            Element delegateAuth = DocumentHelper.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
+            account = DomUtil.add(delegateAuth, AccountConstants.E_ACCOUNT, mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
-            response = transport.invoke(delegateAuth, false, !mUseSession, null);
+            try {
+                request = com.zimbra.common.soap.Element.convertDOM(delegateAuth);
+                response = transport.invoke(request);
+            } catch (SoapFaultException e) {
+                System.err.format("Cannot do delegate auth: %s\n", e.getMessage());
+            }
             mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         }
     }
     
     private void mailboxAuth()
-    throws ServiceException, IOException {
-        if (mVerbose > 0) {
-            mOut.println("Sending auth request to " + mUrl);
+    throws Exception {
+        if (mVerbose) {
+            System.out.println("Sending auth request to " + mUrl);
         }
         
         SoapHttpTransport transport = new SoapHttpTransport(mUrl);
-        transport.setDebugListener(this);
         
         // Create auth element
-        Element auth = mFactory.createElement(AccountConstants.AUTH_REQUEST);
-        Element account = auth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
+        Element auth = DocumentHelper.createElement(AccountConstants.AUTH_REQUEST);
+        Element account = DomUtil.add(auth, AccountConstants.E_ACCOUNT, mMailboxName);
         account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
         
         // Authenticate and get auth token
-        Element response = null;
+        com.zimbra.common.soap.Element response = null;
         
-        response = transport.invoke(auth, false, !mUseSession, null);
-        if (mVerbose > 0) {
-            mOut.println(response.prettyPrint());
+        try {
+            com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(auth);
+            response = transport.invoke(requestElt);
+        } catch (SoapFaultException e) {
+            System.err.println("Authentication error: " + e.getMessage());
+            System.exit(1);
         }
-        mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
+        mAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
     }
     
     private void run()
-    throws ServiceException, IOException, DocumentException {
-        // Assemble SOAP request.
-        Element element = null;
-        InputStream in = null;
-        String location = null;
-        if (mFilePath != null) {
-            // Read from file.
-            in = new FileInputStream(mFilePath);
-            location = mFilePath;
-        } else if (mPaths.size() > 0) {
-            // Build request from command line.
-            for (int i = 0; i < mPaths.size(); i++) {
-                element = processPath(element, mPaths.get(i));
-            }
-        } else if (System.in.available() > 0) {
-            // Read from stdin.
-            in = System.in;
-            location = "stdin";
-        }
+    throws Exception {
+        PrintStream out = new PrintStream(System.out, true, "utf-8");
 
-        if (in != null) {
-            try {
-                if (mUseJson) {
-                    element = Element.parseJSON(in);
-                } else {
-                    element = Element.parseXML(in);
-                }
-            } catch (IOException e) {
-                System.err.format("Unable to read request from %s: %s.\n", location, e.getMessage());
-                System.exit(1);
-            } finally {
-                ByteUtil.closeStream(in);
-            }
-        }
-        
-        // Find the root.
-        Element request = element;
-        if (request == null) {
-            System.err.println("No request element specified.");
-            System.exit(1);
-        }
-        while (request.getParent() != null) {
-            request = request.getParent();
-        }
-        
-        if (mVerbose == 1 || mNoOp) {
-            mOut.println(request.prettyPrint());
-        }
-        if (mNoOp) {
-            return;
-        }
-
-        // Authenticate
         if (mAdminAccountName != null) {
             adminAuth();
         } else {
             mailboxAuth();
         }
         
-        // Send request and print response.
-        SoapHttpTransport transport = new SoapHttpTransport(mUrl);
-        transport.setDebugListener(this);
-        transport.setTimeout(0);
+        // Assemble SOAP request
+        Element request = null;
+        Element subpathRoot = null;
         
+        if (mRootElement != null) {
+            subpathRoot = processPath(null, mRootElement);
+        }
+
+        for (int i = 0; i < mPaths.size(); i++) {
+            Element e = processPath(subpathRoot, (String) mPaths.get(i));
+            if (request == null) {
+                request = e;
+                while (request.getParent() != null) {
+                    request = request.getParent();
+                }
+            }
+        }
+        
+        if (request == null) {
+            System.err.println("No request element specified.");
+            System.exit(1);
+        }
+        
+        // Send request and print response
+        if (mVerbose) {
+            out.println(DomUtil.toString(request, true));
+        }
+        
+        SoapHttpTransport transport = new SoapHttpTransport(mUrl);
         transport.setAuthToken(mAuthToken);
         if (!mType.equals(TYPE_ADMIN) && mTargetAccountName != null) {
             transport.setTargetAcctName(mTargetAccountName);
         }
-        Element response = null;
-        response = transport.invoke(request, false, !mUseSession, null);
-
-        // Select result.
-        List<Element> results = null;
-        String resultString = null;
-        
-        if (mSelect != null) {
-            // Create bogus root element, to allow us to find the first element in the path. 
-            Element root = response.getFactory().createElement("root");
-            response.detach();
-            root.addElement(response);
-            
-            String[] parts = mSelect.split("/");
-            if (parts.length > 0) {
-                String lastPart = parts[parts.length - 1];
-                if (lastPart.startsWith("@")) {
-                    parts[parts.length - 1] = lastPart.substring(1);
-                    resultString = root.getPathAttribute(parts);
-                } else {
-                    results = root.getPathElementList(parts);
-                }
-            }
-        } else {
-            results = new ArrayList<Element>();
-            results.add(response);
+        com.zimbra.common.soap.Element response = null;
+        try {
+            com.zimbra.common.soap.Element requestElt = com.zimbra.common.soap.Element.convertDOM(request);
+            response = transport.invoke(requestElt);
+        } catch (SoapFaultException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
         
-        if (mVerbose <= 1) {
-            if (resultString == null && results != null) {
-                StringBuilder buf = new StringBuilder();
-                boolean first = true;
-                for (Element e : results) {
-                    if (first) {
-                        first = false; 
-                    } else {
-                        buf.append('\n');
-                    }
-                    buf.append(e.prettyPrint());
-                }
-                resultString = buf.toString();
-            }
-            if (resultString == null) {
-                resultString = "";
-            }
-            mOut.println(resultString);
-        }
+        out.println(DomUtil.toString(response.toXML(), true));
     }
 
     /**
-     * Processes a path that's relative to the given root.  The path
-     * is in an XPath-like format:
+     * <p>Processes a path that's relative to the given root.  The path
+     * is in an XPath-like format:</p>
      * 
      * <p><tt>element1/element2[/@attr][=value]</tt></p>
      * 
      * If a value is specified, it sets the text of the last element
      * or attribute in the path.
      * 
-     * @param start <tt>Element</tt> that the path is relative to, or <tt>null</tt>
-     * for the root
+     * @param root <tt>Element</tt> that the path is relative to
      * @param path an XPath-like path of elements and attributes
      */
-    private Element processPath(Element start, String path) {
+    private Element processPath(Element root, String path)
+    throws Exception {
         String value = null;
         
-        // Parse out value, if it's specified.
+        // Parse out value, if it's specified
         if (path.contains("=")) {
             String[] parts = path.split("=");
             path = parts[0];
             value = parts[1];
         }
         
-        // Find the first element.
-        Element element = start;
-        
-        // Walk parts and implicitly create elements.
+        // Walk parts and implicitly create elements
         String[] parts = path.split("/");
         String part = null;
         for (int i = 0; i < parts.length; i++) {
             part = parts[i];
-            if (element == null) {
+            if (root == null) {
                 QName name = QName.get(part, mNamespace);
-                element = mFactory.createElement(name);
-            } else if (part.equals("..")) {
-                element = element.getParent();
+                root = DocumentHelper.createElement(name);
             } else if (!(part.startsWith("@"))) {
-                element = element.addElement(part);
+                root = root.addElement(part);
             }
         }
         
@@ -529,40 +434,24 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (value != null && part != null) {
             if (part.startsWith("@")) {
                 String attrName = part.substring(1);
-                element.addAttribute(attrName, value);
+                root.addAttribute(attrName, value);
             } else {
-                element.setText(value);
+                root.setText(value);
             }
         }
-        return element;
-    }
-    
-    private static String formatServiceException(ServiceException e) {
-        Throwable cause = e.getCause();
-        return "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-            (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");  
+        return root;
     }
     
     public static void main(String[] args) {
         CliUtil.toolSetup();
-        SoapTransport.setDefaultUserAgent("zmsoap", null);
         SoapCommandUtil app = new SoapCommandUtil();
         app.parseCommandLine(args);
         
         try {
             app.run();
-        } catch (ServiceException e) {
-            System.err.println(formatServiceException(e));
-            if (app.mVerbose > 0) {
-                e.printStackTrace(System.err);
-            }
-            System.exit(1);
         } catch (Exception e) {
-            if (app.mVerbose > 0) {
-                e.printStackTrace(System.err);
-            } else {
-                System.err.println(e);
-            }
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 }

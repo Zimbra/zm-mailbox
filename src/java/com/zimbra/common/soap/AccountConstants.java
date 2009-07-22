@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009 Zimbra, Inc.
+ * Copyright (C) 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.soap;
@@ -58,12 +60,6 @@ public class AccountConstants {
     public static final QName GET_AVAILABLE_SKINS_RESPONSE = QName.get("GetAvailableSkinsResponse", NAMESPACE);
     public static final QName GET_AVAILABLE_CSV_FORMATS_REQUEST = QName.get("GetAvailableCsvFormatsRequest", NAMESPACE);
     public static final QName GET_AVAILABLE_CSV_FORMATS_RESPONSE = QName.get("GetAvailableCsvFormatsResponse", NAMESPACE);
-    public static final QName GET_SHARE_INFO_REQUEST = QName.get("GetShareInfoRequest", NAMESPACE);
-    public static final QName GET_SHARE_INFO_RESPONSE = QName.get("GetShareInfoResponse", NAMESPACE);
-    public static final QName GET_WHITE_BLACK_LIST_REQUEST = QName.get("GetWhiteBlackListRequest", NAMESPACE);
-    public static final QName GET_WHITE_BLACK_LIST_RESPONSE = QName.get("GetWhiteBlackListResponse", NAMESPACE);
-    public static final QName MODIFY_WHITE_BLACK_LIST_REQUEST = QName.get("ModifyWhiteBlackListRequest", NAMESPACE);
-    public static final QName MODIFY_WHITE_BLACK_LIST_RESPONSE = QName.get("ModifyWhiteBlackListResponse", NAMESPACE);
 
     // identities
     public static final QName CREATE_IDENTITY_REQUEST = QName.get("CreateIdentityRequest", NAMESPACE);
@@ -120,7 +116,6 @@ public class AccountConstants {
     public static final String E_CHANGE_PASSWORD_URL = "changePasswordURL";
     public static final String E_PREAUTH = "preauth";
     public static final String E_A = "a";
-    public static final String E_ADDR = "addr";
     public static final String E_ENTRY_SEARCH_FILTER = "searchFilter";
     public static final String E_ENTRY_SEARCH_FILTER_MULTICOND = "conds";
     public static final String E_ENTRY_SEARCH_FILTER_SINGLECOND = "cond";
@@ -141,13 +136,6 @@ public class AccountConstants {
     public static final String E_REST = "rest";
     public static final String E_CSV = "csv";
     public static final String E_COS = "cos";
-    public static final String E_WHITE_LIST = "whiteList";
-    public static final String E_BLACK_LIST = "blackList";
-    public static final String E_GRANTEE = "grantee";
-    public static final String E_OWNER = "owner";
-    public static final String E_SHARE = "share";
-    
-    public static final String A_ATTRS = "attrs";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
@@ -162,27 +150,12 @@ public class AccountConstants {
     public static final String A_TIMESTAMP = "timestamp";
     public static final String A_TOKENIZE_KEY = "tokenizeKey";
     public static final String A_EXPIRES = "expires";
-    public static final String A_OP = "op";
     public static final String A_STATUS = "status";
+    public static final String A_ATTRS = "attrs";
     public static final String A_SORT_BY = "sortBy";
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_UTF8 = "utf8";
     public static final String A_VISIBLE = "visible";
-    public static final String A_PERM_DENIED = "pd";
-    
-    // share info
-    public static final String A_FOLDER_ID = "folderId";
-    public static final String A_FOLDER_PATH = "folderPath";
-    public static final String A_GRANTEE_ID = "granteeId";
-    public static final String A_GRANTEE_NAME = "granteeName";
-    public static final String A_GRANTEE_DISPLAY_NAME = "granteeDisplayName";
-    public static final String A_GRANTEE_TYPE = "granteeType";
-    public static final String A_INTERNAL = "internal";
-    public static final String A_OWNER_ID = "ownerId";
-    public static final String A_OWNER_EMAIL = "ownerEmail";
-    public static final String A_OWNER_DISPLAY_NAME = "ownerName";
-    public static final String A_RIGHTS = "rights";
-    public static final String A_MOUNTPOINT_ID = "mid";
 
     // calendar resource search
     public static final String A_ENTRY_SEARCH_FILTER_OR = "or";
@@ -197,9 +170,5 @@ public class AccountConstants {
     public static final String A_VERSION_INFO_RELEASE = "release";
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
-    
-    // XMPPComponent APIs
-    public static final String E_XMPP_COMPONENT = "xmppcomponent";
-    
 
 }

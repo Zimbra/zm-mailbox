@@ -1,7 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -10,6 +11,7 @@
  * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
@@ -141,15 +143,15 @@ public class NetUtil {
             socket.setEnabledCipherSuites(enabledCiphers);
     }
     
-    private static Map<String, ServerSocket> mBoundSockets = new HashMap<String, ServerSocket>();
+    private static Map mBoundSockets = new HashMap();
     
     private static String makeKey(String address, int port, boolean ssl, boolean useChannels) {
         return "[ssl=" + ssl + ";addr=" + address + ";port=" + port + ";useChannels=" + useChannels + "]";
     }
     
     public static void dumpMap() {
-        for (Iterator<Map.Entry<String, ServerSocket>> iter = mBoundSockets.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry<String, ServerSocket> entry = iter.next();
+        for (Iterator iter = mBoundSockets.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry)iter.next();
             System.err.println(entry.getKey() + " => " + entry.getValue());
         }
     }
@@ -165,7 +167,7 @@ public class NetUtil {
         mBoundSockets.put(key, serverSocket);
         //dumpMap();
     }
-    
+
     private static ServerSocket getAlreadyBoundServerSocket(String address, int port, boolean ssl, boolean useChannels) {
         //dumpMap();
         String key = makeKey(address, port, ssl, useChannels);
