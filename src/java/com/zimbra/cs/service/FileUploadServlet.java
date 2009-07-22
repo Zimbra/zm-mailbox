@@ -112,14 +112,27 @@ public class FileUploadServlet extends ZimbraServlet {
             if (file == null) {
                 contentType = Mime.CT_TEXT_PLAIN;
             } else {
-                try {
-                    contentType = MimeDetect.getMimeDetect().detect(
-                        name, file.getInputStream());
-                } catch (Exception e) {
-                    contentType = null;
-                }
+                // use content based detection.  we can't use magic based
+                // detection alone because it defaults to application/xml
+                // when it sees xml magic <?xml.  that's incompatible
+                // with WebDAV handlers as the content type needs to be
+                // text/xml instead.
+                
+                // 1. detect by file extension
+                contentType = MimeDetect.getMimeDetect().detect(name);
+                
+                // 2. use content type supplied by the browser
                 if (contentType == null)
                     contentType = file.getContentType();
+                
+                // 3.  detect by magic
+                if (contentType == null) {
+                    try {
+                        contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
+                    } catch (Exception e) {
+                        contentType = null;
+                    }
+                }
                 if (contentType == null)
                     contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             }
