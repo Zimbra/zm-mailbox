@@ -289,7 +289,6 @@ class ImapFolderSync {
                 trackedMsg.delete();
                 stats.msgsDeletedLocally++;
             } else {
-                System.out.println("XXX adding id = " + id);
                 newMsgIds.add(id);
                 stats.msgsAddedRemotely++;
             }
