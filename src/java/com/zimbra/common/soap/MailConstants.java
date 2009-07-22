@@ -366,6 +366,7 @@ public class MailConstants {
     public static final String A_DEFAULT_VIEW = "view";
     public static final String A_UNREAD = "u";
     public static final String A_COLOR = "color";
+    public static final String A_RGB = "rgb";
     public static final String A_CREATED_DATE = "cd";
     public static final String A_ATTRIBUTE_NAME = "n";
     public static final String A_REPLACE = "replace";
