@@ -200,7 +200,7 @@ public class UUEncodeConverter extends MimeVisitor {
             }
 
             mContent = baos.toByteArray();
-            mContentType = MimeDetect.getMimeDetect().detect(mContent, mFilename);
+            mContentType = MimeDetect.getMimeDetect().detect(mFilename, mContent);
             if (mContentType == null)
                 mContentType = Mime.CT_APPLICATION_OCTET_STREAM;
 

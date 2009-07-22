@@ -114,7 +114,7 @@ public class FileUploadServlet extends ZimbraServlet {
             } else {
                 try {
                     contentType = MimeDetect.getMimeDetect().detect(
-                        file.getInputStream(), name);
+                        name, file.getInputStream());
                 } catch (Exception e) {
                     contentType = null;
                 }
