@@ -336,6 +336,15 @@ public class Appointment extends CalendarItem {
             if (p != null) partStat = p;
         }
 
+        // See if we have RSVP=FALSE for the attendee.  Let's assume RSVP was requested unless it is
+        // explicitly set to FALSE.
+        boolean rsvpRequested = true;
+        ZAttendee attendee = invite.getMatchingAttendee(account);
+        if (attendee != null) {
+            Boolean rsvp = attendee.getRsvp();
+            if (rsvp != null)
+                rsvpRequested = rsvp.booleanValue();
+        }
         RedoLogProvider redoProvider = RedoLogProvider.getInstance();
         // Don't send reply emails if we're not on master (in redo-driven master/replica setup).
         // Don't send reply emails if we're replaying redo for reasons other than crash recovery.
@@ -344,6 +353,7 @@ public class Appointment extends CalendarItem {
         // Also don't send emails for cancel invites.  (Organizer doesn't expect reply for cancels.)
         // And don't send emails for task requests.
         boolean needReplyEmail =
+            rsvpRequested &&
             redoProvider.isMaster() &&
             (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
             invite.hasOrganizer() &&
