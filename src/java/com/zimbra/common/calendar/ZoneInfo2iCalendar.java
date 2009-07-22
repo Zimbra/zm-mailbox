@@ -308,7 +308,16 @@ public class ZoneInfo2iCalendar {
             onset = at;
             break;
         }
-        String hhmmss = String.format("%02d%02d%02d", onset.getHour(), onset.getMinute(), onset.getSecond());
+        int hh = onset.getHour();
+        int mm = onset.getMinute();
+        int ss = onset.getSecond();
+        if (hh >= 24) {
+            // Hour should be between 0 and 23, but sometimes we can get 24:00:00 from the zoneinfo source.
+            // Since hour part in iCalendar only allows 0-23, let's approximate any time with hour >= 24 to
+            // 23:59:59.
+            hh = 23; mm = 59; ss = 59;
+        }
+        String hhmmss = String.format("%02d%02d%02d", hh, mm, ss);
         sb.append(hhmmss).append(CRLF);
         Time toOffset, fromOffset;
         if (isStandard) {
