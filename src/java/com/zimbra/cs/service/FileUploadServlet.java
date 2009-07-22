@@ -139,6 +139,8 @@ public class FileUploadServlet extends ZimbraServlet {
                     }
                 }
                 if (contentType == null)
+                    contentType = file.getContentType();
+                if (contentType == null)
                     contentType = Mime.CT_APPLICATION_OCTET_STREAM;
             }
         }
