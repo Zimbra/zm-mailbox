@@ -742,7 +742,7 @@ public class LC {
         ldap_db_idlcachesize.setDefault("10000");
 
         ldap_db_dncachesize = new KnownKey("ldap_db_dncachesize");
-        ldap_db_dncachesize.setDefault("20000");
+        ldap_db_dncachesize.setDefault("500000");
 
         ldap_db_shmkey = new KnownKey("ldap_db_shmkey");
         ldap_db_shmkey.setDefault("0");
