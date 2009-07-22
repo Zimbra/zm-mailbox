@@ -122,6 +122,7 @@ public class MimeDetect {
     }
     
     private class Magic implements Comparable<Magic> {
+        @SuppressWarnings("unused")
         public class Rule {
             public int indent;
             public byte mask[];
@@ -289,19 +290,7 @@ public class MimeDetect {
 
     public String detect(byte data[]) { return detect(null, data, data.length); }
     
-    public String detect(String file, byte data[]) {
-        return detect(file, data, data.length);
-    }
-    
     public String detect(byte data[], int limit) {
-        return detect(null, data, limit);
-    }
-    
-    public String detect(String file, byte data[], int limit) {
-        String ct = detect(file);
-        
-        if (ct != null)
-            return ct;
         for (Map.Entry<Magic, String> entry : magics.entrySet()) {
             boolean found = true;
             int indent = 0;
@@ -316,6 +305,18 @@ public class MimeDetect {
                 return entry.getValue();
         }
         return null;
+    }
+    
+    public String detect(String file, byte data[]) {
+        return detect(file, data, data.length);
+    }
+    
+    public String detect(String file, byte data[], int limit) {
+        String ct = detect(file);
+        
+        if (ct != null)
+            return ct;
+        return detect(data, limit);
     }
 
     public String detect(File file) throws IOException {
@@ -354,11 +355,11 @@ public class MimeDetect {
     }
     
     public String detect(InputStream is) throws IOException {
-        return detect(null, is, DEFAULT_LIMIT);
+        return detect(is, DEFAULT_LIMIT);
     }
 
     public String detect(InputStream is, int limit) throws IOException {
-        return detect(null, is, limit);
+        return detect(ByteUtil.getPartialContent(is, limit, limit), limit);
     }
     
     public String detect(String file, InputStream is) throws IOException {
@@ -366,7 +367,11 @@ public class MimeDetect {
     }
 
     public String detect(String file, InputStream is, int limit) throws IOException {
-        return detect(file, ByteUtil.getPartialContent(is, limit, limit), limit);
+        String ct = detect(file);
+        
+        if (ct != null)
+            return ct;        
+        return detect(ByteUtil.getPartialContent(is, limit, limit), limit);
     }
 
     public String validate(String file, byte data[], int limit) {
