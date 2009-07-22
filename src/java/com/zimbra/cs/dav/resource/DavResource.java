@@ -85,6 +85,8 @@ public abstract class DavResource {
 		mDavCompliance.add(Compliance.calendarserver_principal_property_search);
 		
 		ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
+		rtype.setProtected(true);
+		rtype.setVisible(true);
 		addProperty(rtype);
 
 		ResourceProperty href = new ResourceProperty(DavElements.E_HREF);
