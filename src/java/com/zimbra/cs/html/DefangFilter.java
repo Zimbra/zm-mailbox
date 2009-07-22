@@ -39,8 +39,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * @author schemers@example.zimbra.com
- * 
  * very Mutated version of ElementRemover.java filter from cyberneko html.
  * change accepted/removed elements to static hashmaps for one-time 
  * initialization, switched from Hashtable to HashMap, sanatize
@@ -121,12 +119,19 @@ public class DefangFilter extends DefaultFilter {
 
     /** Strip images */
     boolean mNeuterImages;
-    
-    /** The element depth. */
-    protected int mElementDepth;
 
-    /** The element depth at element removal. */
-    protected int mRemovalElementDepth;
+    /** The name of the element in the process of being removed. */
+    protected String mRemovalElementName;
+
+    /** Tracks the recursive nesting level of the element being removed.
+     *  Since we're skipping from the element's open-tag to its close-tag,
+     *  we need to make sure not to stop skipping if another element of
+     *  the same type was nested in the first.  For instance,
+     *  <pre>
+     *    &lt;skipme>&lt;foo>&lt;skipme>XX&lt;/skipme>&lt;/foo>&lt;/skipme>
+     *  </pre> should not stop skipping at the first <tt>&lt;/skipme></tt>
+     *  but rather after the second. */
+    protected int mRemovalElementCount;
 
     /** The style element depth */
     protected int mStyleDepth;
@@ -172,7 +177,7 @@ public class DefangFilter extends DefaultFilter {
         acceptElement("q", CORE_LANG+"cite");
         acceptElement("span", CORE_LANG);
 
-        // style removed. TODO: see if we can safely include it or not, maybe by sanatizing
+        // style removed. TODO: see if we can safely include it or not, maybe by sanitizing
         acceptElement("style", CORE_LANG);
         acceptElement("sub",  CORE_LANG);
         acceptElement("sup",  CORE_LANG);
@@ -277,7 +282,6 @@ public class DefangFilter extends DefaultFilter {
         // don't remove "content" of these tags since they have none.
         //removeElement("meta");
         //removeElement("param");        
-        
     }
     
     /**
@@ -340,68 +344,72 @@ public class DefangFilter extends DefaultFilter {
     // since Xerces-J 2.2.0
 
     /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, 
+    @Override public void startDocument(XMLLocator locator, String encoding, 
                               NamespaceContext nscontext, Augmentations augs) 
-        throws XNIException {
-        mElementDepth = 0;
-        mRemovalElementDepth = Integer.MAX_VALUE;
+    throws XNIException {
+        mRemovalElementCount = 0;
         super.startDocument(locator, encoding, nscontext, augs);
     } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
 
     // old methods
 
     /** Start document. */
-    public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
-        throws XNIException {
+    @Override public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
+    throws XNIException {
         startDocument(locator, encoding, null, augs);
     } // startDocument(XMLLocator,String,Augmentations)
 
     /** Start prefix mapping. */
-    public void startPrefixMapping(String prefix, String uri, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void startPrefixMapping(String prefix, String uri, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.startPrefixMapping(prefix, uri, augs);
         }
     } // startPrefixMapping(String,String,Augmentations)
 
     /** Start element. */
-    public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth && handleOpenTag(element, attributes)) {
-            super.startElement(element, attributes, augs);
+    @Override public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
+    throws XNIException {
+        String name = element.localpart;
+        if (mRemovalElementName == null) {
+            if (handleOpenTag(element, attributes))
+                super.startElement(element, attributes, augs);
+        } else {
+            if (name.equalsIgnoreCase(mRemovalElementName))
+                mRemovalElementCount++;
         }
-        mElementDepth++;
-        if (element.localpart.equalsIgnoreCase("style")) mStyleDepth++;
+        if (name.equalsIgnoreCase("style"))
+            mStyleDepth++;
     } // startElement(QName,XMLAttributes,Augmentations)
 
     /** Empty element. */
-    public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth && handleOpenTag(element, attributes)) {
+    @Override public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null && handleOpenTag(element, attributes)) {
             super.emptyElement(element, attributes, augs);
         }
     } // emptyElement(QName,XMLAttributes,Augmentations)
 
     /** Comment. */
-    public void comment(XMLString text, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void comment(XMLString text, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.comment(text, augs);
         }
     } // comment(XMLString,Augmentations)
 
     /** Processing instruction. */
-    public void processingInstruction(String target, XMLString data, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void processingInstruction(String target, XMLString data, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.processingInstruction(target, data, augs);
         }
     } // processingInstruction(String,XMLString,Augmentations)
 
     /** Characters. */
-    public void characters(XMLString text, Augmentations augs) 
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void characters(XMLString text, Augmentations augs) 
+    throws XNIException {
+        if (mRemovalElementName == null) {
             if (mStyleDepth > 0) {
                 String result = text.toString().replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
                 result = result.replaceAll("expression\\s*\\(.*\\)","");
@@ -413,68 +421,70 @@ public class DefangFilter extends DefaultFilter {
     } // characters(XMLString,Augmentations)
 
     /** Ignorable whitespace. */
-    public void ignorableWhitespace(XMLString text, Augmentations augs) 
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void ignorableWhitespace(XMLString text, Augmentations augs) 
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.ignorableWhitespace(text, augs);
         }
     } // ignorableWhitespace(XMLString,Augmentations)
 
     /** Start general entity. */
-    public void startGeneralEntity(String name, XMLResourceIdentifier id, String encoding, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void startGeneralEntity(String name, XMLResourceIdentifier id, String encoding, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.startGeneralEntity(name, id, encoding, augs);
         }
     } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
 
     /** Text declaration. */
-    public void textDecl(String version, String encoding, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void textDecl(String version, String encoding, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.textDecl(version, encoding, augs);
         }
     } // textDecl(String,String,Augmentations)
 
     /** End general entity. */
-    public void endGeneralEntity(String name, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void endGeneralEntity(String name, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.endGeneralEntity(name, augs);
         }
     } // endGeneralEntity(String,Augmentations)
 
     /** Start CDATA section. */
-    public void startCDATA(Augmentations augs) throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void startCDATA(Augmentations augs) throws XNIException {
+        if (mRemovalElementName == null) {
             super.startCDATA(augs);
         }
     } // startCDATA(Augmentations)
 
     /** End CDATA section. */
-    public void endCDATA(Augmentations augs) throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void endCDATA(Augmentations augs) throws XNIException {
+        if (mRemovalElementName == null) {
             super.endCDATA(augs);
         }
     } // endCDATA(Augmentations)
 
     /** End element. */
-    public void endElement(QName element, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth && elementAccepted(element.rawname)) {
-            super.endElement(element, augs);
+    @Override public void endElement(QName element, Augmentations augs)
+    throws XNIException {
+        String name = element.localpart;
+        if (mRemovalElementName == null) {
+            if (elementAccepted(element.rawname))
+                super.endElement(element, augs);
+        } else {
+            if (name.equalsIgnoreCase(mRemovalElementName) && --mRemovalElementCount == 0)
+                mRemovalElementName = null;
         }
-        mElementDepth--;
-        if (element.localpart.equalsIgnoreCase("style")) mStyleDepth--;
-        if (mElementDepth == mRemovalElementDepth) {
-            mRemovalElementDepth = Integer.MAX_VALUE;
-        }
+        if (name.equalsIgnoreCase("style"))
+            mStyleDepth--;
     } // endElement(QName,Augmentations)
 
     /** End prefix mapping. */
-    public void endPrefixMapping(String prefix, Augmentations augs)
-        throws XNIException {
-        if (mElementDepth <= mRemovalElementDepth) {
+    @Override public void endPrefixMapping(String prefix, Augmentations augs)
+    throws XNIException {
+        if (mRemovalElementName == null) {
             super.endPrefixMapping(prefix, augs);
         }
     } // endPrefixMapping(String,Augmentations)
@@ -497,7 +507,8 @@ public class DefangFilter extends DefaultFilter {
 
     /** Handles an open tag. */
     protected boolean handleOpenTag(QName element, XMLAttributes attributes) {
-        if (element.rawname.toLowerCase().equals("base")) {
+        String eName = element.rawname.toLowerCase();
+        if (eName.equals("base")) {
             int index = attributes.getIndex("href");
             if (index != -1) {
                 mBaseHref = attributes.getValue(index);
@@ -512,10 +523,9 @@ public class DefangFilter extends DefaultFilter {
             }
         }
         if (elementAccepted(element.rawname)) {
-            String eName = element.rawname.toLowerCase();
             Object value = mAcceptedElements.get(eName);
             if (value != NULL) {
-                HashSet anames = (HashSet)value;
+                HashSet anames = (HashSet) value;
                 int attributeCount = attributes.getLength();
                 for (int i = 0; i < attributeCount; i++) {
                     String aName = attributes.getQName(i).toLowerCase();
@@ -526,8 +536,7 @@ public class DefangFilter extends DefaultFilter {
                         sanatizeAttrValue(eName, aName, attributes, i);
                     }
                 }
-            }
-            else {
+            } else {
                 attributes.removeAllAttributes();
             }
 
@@ -548,9 +557,9 @@ public class DefangFilter extends DefaultFilter {
             }
 
             return true;
-        }
-        else if (elementRemoved(element.rawname)) {
-            mRemovalElementDepth = mElementDepth;
+        } else if (elementRemoved(element.rawname)) {
+            mRemovalElementName = element.rawname;
+            mRemovalElementCount = 1;
         }
         return false;
     } // handleOpenTag(QName,XMLAttributes):boolean
@@ -602,24 +611,24 @@ public class DefangFilter extends DefaultFilter {
      * @param attributes
      */
     private void fixATag(XMLAttributes attributes) {
-	// BEGIN: bug 7927
-	int index = attributes.getIndex("href");
-	if (index == -1)	// links that don't have a href don't need target="_blank"
-	    return;
-	String href = attributes.getValue(index);
-	if (href.indexOf('#') == 0) // LOCAL links don't need target="_blank"
-	    return;
-	// END: bug 7927
-	index = attributes.getIndex("target");
+        // BEGIN: bug 7927
+        int index = attributes.getIndex("href");
+        if (index == -1)	// links that don't have a href don't need target="_blank"
+            return;
+        String href = attributes.getValue(index);
+        if (href.indexOf('#') == 0) // LOCAL links don't need target="_blank"
+            return;
+        // END: bug 7927
+        index = attributes.getIndex("target");
         if (index != -1) {
             attributes.setValue(index, "_blank");
         } else {
             attributes.addAttribute(new QName("", "target", "target", null), "CDATA", "_blank");
         }
     }
-    
+
     /**
-     * sanatize an attr value. For now, this means stirpping out Java Script entity tags &{...},
+     * sanitize an attr value. For now, this means stirpping out Java Script entity tags &{...},
      * and <script> tags.
      * 
      * 
