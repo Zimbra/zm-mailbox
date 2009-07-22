@@ -195,6 +195,11 @@ public abstract class WikiPage {
 	private static WikiPage findTemplatePage(WikiPage.WikiContext ctxt, String wikiAccountName, String template) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = prov.get(Provisioning.AccountBy.name, wikiAccountName);
+		
+		if (acct == null)
+		    throw ServiceException.FAILURE("wiki account " + wikiAccountName + " does not exist, please check " + 
+		            Provisioning.A_zimbraNotebookAccount + " on the domain or global config", null);
+		
 		WikiPage page = null;
 		if (Provisioning.onLocalServer(acct)) {
 	        try {
