@@ -82,7 +82,7 @@ public class ItemActionHelper {
     }
     
     public static ItemActionHelper COLOR(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, byte color)
+                List<Integer> ids, byte type, TargetConstraint tcon, MailItem.Color color)
     throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.COLOR, type, true, tcon);
         ia.setColor(color);
@@ -146,7 +146,7 @@ public class ItemActionHelper {
 
     public static ItemActionHelper UPDATE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
-                String tags, byte color)
+                String tags, MailItem.Color color)
     throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
@@ -195,7 +195,7 @@ public class ItemActionHelper {
     protected int mTagId;
 
     // only when OP=COLOR or OP=UPDATE
-    protected byte mColor;
+    protected MailItem.Color mColor;
 
     // only when OP=RENAME or OP=UPDATE
     protected String mName; 
@@ -242,7 +242,7 @@ public class ItemActionHelper {
         assert(mOperation == Op.TAG);
         mTagId = tagId;
     }
-    public void setColor(byte color) { 
+    public void setColor(MailItem.Color color) { 
         assert(mOperation == Op.COLOR || mOperation == Op.UPDATE);
         mColor = color; 
     }
@@ -381,7 +381,7 @@ public class ItemActionHelper {
                 }
                 if (mTags != null || mFlags != null)
                     getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
-                if (mColor >= 0)
+                if (mColor != null)
                     getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
                 break;
             default:

@@ -131,7 +131,7 @@ public class ItemAction extends MailDocumentHandler {
         	} else if (opStr.equals(OP_READ)) {
         		localResults = ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
         	} else if (opStr.equals(OP_COLOR)) {
-        		byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR);
+        	    MailItem.Color color = getColor(action);
         		localResults = ItemActionHelper.COLOR(octxt, mbox, responseProto, local, type, tcon, color).getResult();
         	} else if (opStr.equals(OP_HARD_DELETE)) {
         		localResults = ItemActionHelper.HARD_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
@@ -161,7 +161,7 @@ public class ItemAction extends MailDocumentHandler {
                 String name  = action.getAttribute(MailConstants.A_NAME, null);
         		String flags = action.getAttribute(MailConstants.A_FLAGS, null);
         		String tags  = action.getAttribute(MailConstants.A_TAGS, null);
-        		byte color   = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
+        		MailItem.Color color = getColor(action);
         		localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags, 
         					tags, color).getResult();
         	} else {
@@ -177,6 +177,17 @@ public class ItemAction extends MailDocumentHandler {
         return successes.toString();
     }
 
+    private MailItem.Color getColor(Element action) throws ServiceException {
+        String rgb = action.getAttribute(MailConstants.A_RGB, null);
+        byte c = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
+        if (rgb == null && c < 0)
+            return null;
+        if (rgb == null)
+            return new MailItem.Color(c);
+        else
+            return new MailItem.Color(rgb);
+    }
+    
     private Account forceRemoteSession(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt, String op, Element action)
     throws ServiceException {
         // only proxying notification from the user's home-server master session

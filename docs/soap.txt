@@ -1759,8 +1759,9 @@ originally intended.
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update" [tag="..."] [l="{folder}"] [name="{item-name}"] [color="{color}"]
-                                                                   [tcon="[-]{constraint}"] [f="{flags}"] [t="{tag-list}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update|color" 
+         [tag="..."] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
+         [tcon="[-]{constraint}"] [f="{flags}"] [t="{tag-list}"]/>
 </ItemActionRequest>
 
 <ItemActionResponse>
@@ -1778,6 +1779,11 @@ originally intended.
 
   for op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}", t="{tag-list}", f="{flags}"
 
+  <action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
+    - change the item's color to new color.  only one of color or rgb attribute
+      needs to be present.  if both are present rgb value takes precedence.
+      rgb is specified as CSS style #rrggbb
+    
 ---------
 
 <MsgActionRequest>
@@ -1821,7 +1827,7 @@ originally intended.
 
 <FolderActionRequest>
   <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update|[!]syncon" [l="{target-folder}"]
-                      [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
+                      [name="{new-name}"] [color="{new-color}"] [rgb="{rgb-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [pw="..."] [key="..."]/>]
   </action>
@@ -1852,9 +1858,9 @@ Actions:
     - move the folder to the Trash, marking all contents as read and
       renaming the folder if a folder by that name is already present in the Trash
 
-  <action op="color" id="{list}" color="{new-color}"/>
-    - change the folder's color to {new-color}
-
+  <action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
+    - see ItemActionRequest
+    
   <action op="grant" id="{list}">
     <grant perm="..." gt="..." d="..." [pw="..."] [key="..."]/>
   </action>

@@ -303,6 +303,7 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_FLAGS, flags);
         }
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
+            elem.addAttribute(MailConstants.A_RGB, folder.getRgbColor().toString());
             byte color = folder.getColor();
             if (color != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS)
                 elem.addAttribute(MailConstants.A_COLOR, color);
@@ -531,8 +532,10 @@ public class ToXML {
         recordItemTags(elem, note, fields);
         if (needToOutput(fields, Change.MODIFIED_POSITION))
             elem.addAttribute(MailConstants.A_BOUNDS, note.getBounds().toString());
-        if (needToOutput(fields, Change.MODIFIED_COLOR))
+        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
+            elem.addAttribute(MailConstants.A_RGB, note.getRgbColor().toString());
             elem.addAttribute(MailConstants.A_COLOR, note.getColor());
+        }
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
             elem.addAttribute(MailConstants.E_CONTENT, note.getText(), Element.Disposition.CONTENT);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
@@ -553,8 +556,10 @@ public class ToXML {
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
         if (needToOutput(fields, Change.MODIFIED_NAME))
             elem.addAttribute(MailConstants.A_NAME, tag.getName());
-        if (needToOutput(fields, Change.MODIFIED_COLOR))
+        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
+            elem.addAttribute(MailConstants.A_RGB, tag.getRgbColor().toString());
             elem.addAttribute(MailConstants.A_COLOR, tag.getColor());
+        }
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unreadCount = tag.getUnreadCount();
             if (unreadCount > 0 || fields != NOTIFY_FIELDS)
