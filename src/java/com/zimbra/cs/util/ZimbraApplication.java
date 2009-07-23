@@ -23,45 +23,50 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraApplication {
 
-	private static ZimbraApplication sServices;
+    private static ZimbraApplication sServices;
 
-	public static ZimbraApplication getInstance() {
-		if (sServices == null) {
-	        String className = LC.zimbra_class_application.value();
-	        if (className != null && !className.equals("")) {
-	            try {
-	            	sServices = (ZimbraApplication)Class.forName(className).newInstance();
-	            } catch (Exception e) {
-	                ZimbraLog.misc.error("could not instantiate ZimbraServices interface of class '" + className + "'; defaulting to ZimbraServices", e);
-	            }
-	        }
-	        if (sServices == null)
-	        	sServices = new ZimbraApplication();
-		}
-		return sServices;
-	}
+    public static ZimbraApplication getInstance() {
+        if (sServices == null) {
+            String className = LC.zimbra_class_application.value();
+            if (className != null && !className.equals("")) {
+                try {
+                    sServices = (ZimbraApplication)Class.forName(className)
+                        .newInstance();
+                } catch (Exception e) {
+                    ZimbraLog.misc.error(
+                        "could not instantiate ZimbraServices interface of class '"
+                            + className + "'; defaulting to ZimbraServices", e);
+                }
+            }
+            if (sServices == null)
+                sServices = new ZimbraApplication();
+        }
+        return sServices;
+    }
 
-	public String getId() {
-		return "zimbra";
-	}
-	
-	public String getInstallId() {
-	    return "zimbra";
-	}
+    public String getId() {
+        return "zimbra";
+    }
 
-	public boolean supports(String className) {
-		return true;
-	}
+    public String getInstallId() {
+        return "zimbra";
+    }
 
-    public void startup()  { }
+    public boolean supports(String className) {
+        return true;
+    }
 
-	private boolean isShutdown;
+    public void startup() {}
 
-	public void shutdown() {
-		isShutdown = true;
-	}
+    public void initialize(boolean forMailboxd) {}
 
-	public boolean isShutdown() {
-		return isShutdown;
-	}
+    private boolean isShutdown;
+
+    public void shutdown() {
+        isShutdown = true;
+    }
+
+    public boolean isShutdown() {
+        return isShutdown;
+    }
 }

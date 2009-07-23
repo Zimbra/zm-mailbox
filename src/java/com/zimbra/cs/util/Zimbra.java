@@ -162,15 +162,16 @@ public class Zimbra {
 
         ZimbraHttpConnectionManager.startReaperThread();
         
-        MemcachedConnector.startup();
         MailboxManager.getInstance();
 
         ZimbraApplication app = ZimbraApplication.getInstance();
         app.startup();
         	
-        if (app.supports(ExtensionUtil.class.getName())) {
+        if (app.supports(MemcachedConnector.class.getName()))
+            MemcachedConnector.startup();
+
+        if (app.supports(ExtensionUtil.class.getName()))
             ExtensionUtil.initAll();
-        }
 
     	// ZimletUtil.loadZimlets();
 
@@ -194,6 +195,7 @@ public class Zimbra {
 
         MailboxManager.getInstance().startup();
 
+        app.initialize(sIsMailboxd);
         if (sIsMailboxd) {
             SessionCache.startup();
 
@@ -302,7 +304,9 @@ public class Zimbra {
         if (app.supports(ExtensionUtil.class.getName()))
             ExtensionUtil.destroyAll();
 
-        MemcachedConnector.shutdown();
+        if (app.supports(MemcachedConnector.class.getName()))
+            MemcachedConnector.shutdown();
+
         MailboxManager.getInstance().shutdown();
         
         ZimbraHttpConnectionManager.shutdownReaperThread();
