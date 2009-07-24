@@ -380,9 +380,9 @@ public class ZimbraAuthToken extends AuthToken {
     
     public void encodeAuthResp(Element parent, boolean isAdmin)  throws ServiceException {
         if (isAdmin)
-            parent.addAttribute(AdminConstants.E_AUTH_TOKEN, getOrigAuthData(), Element.Disposition.CONTENT);
+            parent.addElement(AdminConstants.E_AUTH_TOKEN).setText(getOrigAuthData());
         else
-            parent.addAttribute(AccountConstants.E_AUTH_TOKEN, getOrigAuthData(), Element.Disposition.CONTENT);
+            parent.addElement(AccountConstants.E_AUTH_TOKEN).setText(getOrigAuthData());
     }
     
     public ZAuthToken toZAuthToken() throws ServiceException {

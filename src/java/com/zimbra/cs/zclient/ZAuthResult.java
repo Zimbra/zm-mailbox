@@ -34,8 +34,7 @@ public class ZAuthResult {
 	private String mSkin;
 
     public ZAuthResult(Element e) throws ServiceException {
-        String authToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);;
-        mAuthToken = new ZAuthToken(null, authToken, null);
+        mAuthToken = new ZAuthToken(e.getElement(AccountConstants.E_AUTH_TOKEN), false);
         
         mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
         mExpires = System.currentTimeMillis() + mLifetime;
