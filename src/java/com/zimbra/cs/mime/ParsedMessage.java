@@ -22,8 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -1098,8 +1096,8 @@ public class ParsedMessage {
                     if (charset == null || charset.trim().equals(""))
                         charset = Mime.P_CHARSET_DEFAULT;
 
-                    Reader reader = new InputStreamReader(is = mpi.getMimePart().getInputStream(), charset);
-                    ZVCalendar cal = ZCalendarBuilder.build(reader);
+                    is = mpi.getMimePart().getInputStream();
+                    ZVCalendar cal = ZCalendarBuilder.build(is, charset);
                     if (cal != null)
                         setCalendarPartInfo(mpi, cal);
                 } catch (IOException ioe) {

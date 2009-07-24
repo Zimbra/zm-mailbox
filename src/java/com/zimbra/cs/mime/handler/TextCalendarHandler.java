@@ -15,7 +15,6 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.InputStream;
-import java.io.Reader;
 
 import javax.activation.DataSource;
 
@@ -61,8 +60,15 @@ public class TextCalendarHandler extends MimeHandler {
         InputStream is = null;
         int maxLength = MimeHandlerManager.getIndexedTextLimit();
         try {
-            Reader reader = Mime.getTextReader(is = source.getInputStream(), source.getContentType(), null);
-            miCalendar = ZCalendarBuilder.build(reader);
+            is = source.getInputStream();
+            String charset = Mime.P_CHARSET_UTF8;
+            String ctStr = source.getContentType();
+            if (ctStr != null) {
+                String cs = Mime.getCharset(ctStr);
+                if (cs != null)
+                    charset = cs;
+            }
+            miCalendar = ZCalendarBuilder.build(is, charset);
 
             mContent = "";
             StringBuilder buf = new StringBuilder(1024);

@@ -32,10 +32,9 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -67,14 +66,14 @@ public class ImportAppointments extends MailDocumentHandler  {
 
         Element content = request.getElement(MailConstants.E_CONTENT);
         List<Upload> uploads = null;
-        BufferedReader reader = null;
+        InputStream is = null;
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         String messageId = content.getAttribute(MailConstants.A_MESSAGE_ID, null);
         if (attachment != null && messageId != null)
             throw ServiceException.INVALID_REQUEST("use either aid or mid but not both", null);
         try {
             if (attachment != null) {
-                reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
+                is = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
             } else if (messageId != null) {
                 // part of existing message
                 ItemId iid = new ItemId(messageId, zsc);
@@ -82,13 +81,14 @@ public class ImportAppointments extends MailDocumentHandler  {
                 String[] acceptableTypes = new String[] { Mime.CT_TEXT_CALENDAR };
                 String partStr = CreateContact.fetchItemPart(
                         zsc, octxt, mbox, iid, part, acceptableTypes, Mime.P_CHARSET_UTF8);
-                reader = new BufferedReader(new StringReader(partStr));
+                is = new ByteArrayInputStream(partStr.getBytes(Mime.P_CHARSET_UTF8));
             } else {
-                reader = new BufferedReader(new StringReader(content.getText()));
+                is = new ByteArrayInputStream(content.getText().getBytes(Mime.P_CHARSET_UTF8));
             }
 
-            List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
-            reader.close();
+            List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, Mime.P_CHARSET_UTF8);
+            is.close();
+            is = null;
 
             List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, icals, true, true, null);
 
@@ -131,22 +131,22 @@ public class ImportAppointments extends MailDocumentHandler  {
         } catch (IOException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_APPOINTMENTS(e.getMessage(), e);
         } finally {
-            if (reader != null)
-                try { reader.close(); } catch (IOException e) { }
+            if (is != null)
+                try { is.close(); } catch (IOException e) { }
             if (attachment != null)
                 FileUploadServlet.deleteUploads(uploads);
         }
 
     }
 
-    private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List<Upload> uploads)
+    private static InputStream parseUploadedContent(ZimbraSoapContext lc, String attachId, List<Upload> uploads)
     throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         uploads.add(up);
         try {
-            return new BufferedReader(new InputStreamReader(up.getInputStream(), "UTF-8"));
+            return up.getInputStream();
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }

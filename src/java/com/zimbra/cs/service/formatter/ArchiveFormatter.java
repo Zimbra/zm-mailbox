@@ -1360,13 +1360,12 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_TASK:
                 boolean continueOnError = context.ignoreAndContinueOnError();
                 boolean preserveExistingAlarms = context.preserveAlarms();
-                
-                reader = new BufferedReader(new InputStreamReader(
-                    ais.getInputStream(), UTF8));
+
+                InputStream is = ais.getInputStream();
                 try {
                     if (aie.getSize() <=
                         LC.calendar_ics_import_full_parse_max_size.intValue()) {
-                        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+                        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, UTF8);
                         ImportInviteVisitor visitor = new ImportInviteVisitor(oc,
                             fldr, preserveExistingAlarms);
                         
@@ -1376,10 +1375,10 @@ public abstract class ArchiveFormatter extends Formatter {
                         ZICalendarParseHandler handler =
                             new IcsImportParseHandler(oc, context.targetAccount,
                                 fldr, continueOnError, preserveExistingAlarms);
-                        ZCalendarBuilder.parse(reader, handler);
+                        ZCalendarBuilder.parse(is, UTF8, handler);
                     }
                 } finally {
-                    reader.close();
+                    is.close();
                 }
                 break;
             case MailItem.TYPE_CONTACT:

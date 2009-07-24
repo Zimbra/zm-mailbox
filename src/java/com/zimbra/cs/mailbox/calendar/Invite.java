@@ -15,11 +15,9 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -847,17 +845,21 @@ public class Invite {
                 if (mmCt.match(Mime.CT_TEXT_CALENDAR)) {
                     boolean wantHtml = Mime.CT_TEXT_HTML.equalsIgnoreCase(mimeType);
                     Object mmInvContent = mmInv.getContent();
-                    Reader reader = null;
+                    InputStream is = null;
                     try {
+                        String charset = Mime.P_CHARSET_UTF8;
                         if (mmInvContent instanceof InputStream) {
-                            String charset = mmCt.getParameter(Mime.P_CHARSET);
+                            charset = mmCt.getParameter(Mime.P_CHARSET);
                             if (charset == null)
                                 charset = Mime.P_CHARSET_UTF8;
-                            reader = new InputStreamReader((InputStream) mmInvContent, charset);
-                        } else if (mmInvContent instanceof String)
-                            reader = new StringReader((String) mmInvContent);
-                        if (reader != null) {
-                            ZVCalendar iCal = ZCalendarBuilder.build(reader);
+                            is = (InputStream) mmInvContent;
+                        } else if (mmInvContent instanceof String) {
+                            String str = (String) mmInvContent;
+                            charset = Mime.P_CHARSET_UTF8;
+                            is = new ByteArrayInputStream(str.getBytes(charset));
+                        }
+                        if (is != null) {
+                            ZVCalendar iCal = ZCalendarBuilder.build(is, charset);
                             for (Iterator<ZComponent> compIter = iCal.getComponentIterator(); compIter.hasNext(); ) {
                                 ZComponent component = compIter.next();
                                 ICalTok compTypeTok = component.getTok();
@@ -870,8 +872,7 @@ public class Invite {
                             }
                         }
                     } finally {
-                        if (reader != null)
-                            reader.close();
+                        ByteUtil.closeStream(is);
                     }
                 }
             }

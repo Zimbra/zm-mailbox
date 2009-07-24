@@ -16,7 +16,6 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,6 +55,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil;
 
 public class ScheduleOutbox extends Collection {
@@ -70,7 +70,7 @@ public class ScheduleOutbox extends Collection {
 
 		InputStream in = ctxt.getUpload().getInputStream();
 
-		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(in, "UTF-8"));
+		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(in, Mime.P_CHARSET_UTF8);
 		Iterator<ZComponent> iter = vcalendar.getComponentIterator();
 		ZComponent req = null;
 		while (iter.hasNext()) {

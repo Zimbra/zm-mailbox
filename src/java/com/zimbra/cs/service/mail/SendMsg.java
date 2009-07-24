@@ -20,7 +20,6 @@ package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -386,8 +385,12 @@ public class SendMsg extends MailDocumentHandler {
             InputStream is = null;
             try {
                 DataSource source = bp.getDataHandler().getDataSource();
-                Reader reader = Mime.getTextReader(is = source.getInputStream(), source.getContentType(), mDefaultCharset);
-                ical = ZCalendarBuilder.build(reader);
+                is = source.getInputStream();
+                String charset = mDefaultCharset;
+                String cs = Mime.getCharset(source.getContentType());
+                if (cs != null)
+                    charset = cs;
+                ical = ZCalendarBuilder.build(is, charset);
             } catch (Exception e) {
                 throw new MessagingException("Unable to parse iCalendar part: " + e.getMessage(), e);
             } finally {

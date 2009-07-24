@@ -18,8 +18,6 @@ package com.zimbra.cs.mailbox.calendar;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,6 +32,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 
 public class WellKnownTimeZones {
 
@@ -67,14 +66,14 @@ public class WellKnownTimeZones {
      * @throws ServiceException
      */
     public static void loadFromFile(File tzFile) throws IOException, ServiceException {
-        Reader reader = null;
+        FileInputStream fis = null;
         ZVCalendar tzs = null;
         try {
-            reader = new InputStreamReader(new FileInputStream(tzFile), "UTF-8");
-            tzs = ZCalendar.ZCalendarBuilder.build(reader);
+            fis = new FileInputStream(tzFile);
+            tzs = ZCalendar.ZCalendarBuilder.build(new FileInputStream(tzFile), Mime.P_CHARSET_UTF8);
         } finally {
-            if (reader != null)
-                reader.close();
+            if (fis != null)
+                fis.close();
         }
         for (Iterator<ZComponent> compIter = tzs.getComponentIterator();
              compIter.hasNext(); ) {

@@ -16,7 +16,6 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -295,7 +294,7 @@ public class CalendarCollection extends Collection {
             InputStream is = ctxt.getUpload().getInputStream();
 			List<Invite> invites;
 			try {
-				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(is, "UTF-8"));
+				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, Mime.P_CHARSET_UTF8);
 				invites = Invite.createFromCalendar(account,
 						findSummary(vcalendar), 
 						vcalendar, 
