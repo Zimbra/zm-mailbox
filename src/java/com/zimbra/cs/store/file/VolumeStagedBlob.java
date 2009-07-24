@@ -24,8 +24,8 @@ public class VolumeStagedBlob extends StagedBlob {
     private Blob mLocalBlob;
     private boolean mWasStagedDirectly;
 
-    VolumeStagedBlob(Mailbox mbox, Blob blob) {
-        super(mbox);
+    VolumeStagedBlob(Mailbox mbox, Blob blob) throws IOException {
+        super(mbox, blob.getDigest(), blob.getRawSize());
         mLocalBlob = blob;
     }
 
@@ -40,13 +40,5 @@ public class VolumeStagedBlob extends StagedBlob {
 
     boolean wasStagedDirectly() {
         return mWasStagedDirectly;
-    }
-
-    @Override public long getSize() throws IOException {
-        return mLocalBlob.getRawSize();
-    }
-
-    @Override public String getDigest() throws IOException {
-        return mLocalBlob.getDigest();
     }
 }

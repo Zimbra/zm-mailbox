@@ -86,7 +86,7 @@ public class FileBlobStore extends StoreManager {
         return new VolumeStagedBlob(mbox, blob).markStagedDirectly();
     }
 
-    @Override public StagedBlob stage(Blob blob, Mailbox mbox) {
+    @Override public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException {
         // mailbox store is on the same volume as incoming directory, so no need to stage the blob
         return new VolumeStagedBlob(mbox, blob);
     }
