@@ -15,13 +15,9 @@
 package com.zimbra.cs.store.http;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.LocalBlobCache;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -31,25 +27,13 @@ public class HttpMailboxBlob extends MailboxBlob {
     }
 
     @Override public Blob getLocalBlob() throws IOException {
-        StoreManager sm = StoreManager.getInstance();
+        HttpStoreManager hsm = (HttpStoreManager) StoreManager.getInstance();
+        Blob blob = hsm.getLocalBlob(getMailbox(), getLocator(), mSize == null ? -1 : mSize.intValue());
 
-        LocalBlobCache blobcache = ((HttpStoreManager) sm).getBlobCache();
-        Blob blob = blobcache.get(this);
-        if (blob != null)
-            return blob;
-
-        InputStream is = sm.getContent(this);
-        try {
-            blob = sm.storeIncoming(is, mSize == null ? -1 : mSize.intValue(), null);
-            setSize(blob.getRawSize());
-            if (mDigest != null)
-                setDigest(blob.getDigest());
-            return blobcache.cache(this, blob);
-        } catch (ServiceException e) {
-            throw new IOException("fetching local blob: " + e);
-        } finally {
-            ByteUtil.closeStream(is);
-        }
+        setSize(blob.getRawSize());
+        if (mDigest != null)
+            setDigest(blob.getDigest());
+        return blob;
     }
 
     @Override public int hashCode() {

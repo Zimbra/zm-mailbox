@@ -20,12 +20,16 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.StagedBlob;
 
 public class HttpStagedBlob extends StagedBlob {
-    private String mLocator;
+    private final String mLocator;
+    private final String mDigest;
+    private final long mSize;
     private boolean mIsInserted;
 
-    protected HttpStagedBlob(Mailbox mbox, String locator) {
+    protected HttpStagedBlob(Mailbox mbox, String locator, String digest, long size) {
         super(mbox);
         mLocator = locator;
+        mDigest = digest;
+        mSize = size;
     }
 
     String getLocator() {
@@ -39,5 +43,25 @@ public class HttpStagedBlob extends StagedBlob {
 
     boolean isInserted() {
         return mIsInserted;
+    }
+
+    @Override public String getDigest() {
+        return mDigest;
+    }
+
+    @Override public long getSize() {
+        return mSize;
+    }
+
+    @Override public int hashCode() {
+        return mLocator.hashCode();
+    }
+
+    @Override public boolean equals(Object other) {
+        if (this == other)
+            return true;
+        if (!(other instanceof HttpStagedBlob))
+            return false;
+        return mLocator.equals(((HttpStagedBlob) other).mLocator);
     }
 }

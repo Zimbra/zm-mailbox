@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.store.file;
 
+import java.io.IOException;
+
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StagedBlob;
@@ -38,5 +40,13 @@ public class VolumeStagedBlob extends StagedBlob {
 
     boolean wasStagedDirectly() {
         return mWasStagedDirectly;
+    }
+
+    @Override public long getSize() throws IOException {
+        return mLocalBlob.getRawSize();
+    }
+
+    @Override public String getDigest() throws IOException {
+        return mLocalBlob.getDigest();
     }
 }

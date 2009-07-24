@@ -32,7 +32,7 @@ public class LocalBlobCache {
     private File mCacheDir;
 
     /** Maps the key to the cache to the corresponding file. */
-    private LinkedHashMap<MailboxBlob, Blob> mKeyToBlob;
+    private LinkedHashMap<String, Blob> mKeyToBlob;
     private long mNumBytes = 0;
 
     public LocalBlobCache(String path) {
@@ -62,12 +62,12 @@ public class LocalBlobCache {
     public synchronized void startup() throws IOException {
         FileUtil.mkdirs(mCacheDir);
         if (!mCacheDir.exists())
-            throw new IOException("swept file cache folder does not exist: " + mCacheDir);
+            throw new IOException("local blob cache folder does not exist: " + mCacheDir);
         if (!mCacheDir.isDirectory())
-            throw new IOException("swept file cache folder is not a directory: " + mCacheDir);
+            throw new IOException("local blob cache folder is not a directory: " + mCacheDir);
 
         // create the file cache with default LinkedHashMap values, but sorted by last access time
-        mKeyToBlob = new LinkedHashMap<MailboxBlob, Blob>(16, 0.75f, true);
+        mKeyToBlob = new LinkedHashMap<String, Blob>(16, 0.75f, true);
 
         // clear out the stale cache entries on disk
         for (File file : mCacheDir.listFiles()) {
@@ -77,11 +77,11 @@ public class LocalBlobCache {
         }
     }
 
-    public synchronized Blob get(MailboxBlob key) {
+    public synchronized Blob get(String key) {
         return mKeyToBlob.get(key);
     }
 
-    public synchronized Blob cache(MailboxBlob key, Blob blob) throws IOException {
+    public synchronized Blob cache(String key, Blob blob) throws IOException {
         Blob found = mKeyToBlob.get(key);
         if (found != null)
             return found;
@@ -103,10 +103,10 @@ public class LocalBlobCache {
 
         StoreManager sm = StoreManager.getInstance();
 
-        Iterator<Map.Entry<MailboxBlob, Blob>> iEntries = mKeyToBlob.entrySet().iterator();
+        Iterator<Map.Entry<String, Blob>> iEntries = mKeyToBlob.entrySet().iterator();
         while (iEntries.hasNext() && !(mNumBytes < mMaxBytes && mKeyToBlob.size() < mMaxFiles)) {
-            Map.Entry<MailboxBlob, Blob> entry = iEntries.next();
-            MailboxBlob key = entry.getKey();
+            Map.Entry<String, Blob> entry = iEntries.next();
+            String key = entry.getKey();
             Blob blob = entry.getValue();
 
             try {

@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.store;
 
+import java.io.IOException;
+
 import com.zimbra.cs.mailbox.Mailbox;
 
 /** This class represents blob data that has been "staged" to a place
@@ -31,7 +33,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  *  is not always the case, however; {@link StoreManager#stage} may
  *  involve making a local copy of the original <code>Blob</code> or
  *  even pushing it out into the cloud. */
-public class StagedBlob {
+public abstract class StagedBlob {
     private Mailbox mMailbox;
 
     protected StagedBlob(Mailbox mbox) {
@@ -41,4 +43,8 @@ public class StagedBlob {
     public Mailbox getMailbox() {
         return mMailbox;
     }
+
+    public abstract long getSize() throws IOException;
+
+    public abstract String getDigest() throws IOException;
 }

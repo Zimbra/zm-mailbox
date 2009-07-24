@@ -19,6 +19,9 @@ package com.zimbra.cs.store.http;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
@@ -85,25 +88,47 @@ public abstract class HttpStoreManager extends StoreManager {
         return new HttpBlobBuilder(new HttpBlob(mIncoming.getNewIncomingFile()));
     }
 
+    @Override public InputStream getContent(Blob blob) throws IOException {
+        return new BlobInputStream(blob);
+    }
+
     @Override public InputStream getContent(MailboxBlob mblob) throws IOException {
         if (mblob == null)
             return null;
+        return getContent(mblob.getMailbox(), mblob.getLocator());
+    }
+
+    private InputStream getContent(Mailbox mbox, String locator) throws IOException {
+        if (mbox == null || locator == null)
+            return null;
 
         // check the local cache before doing a GET
-        Blob blob = mLocalCache.get(mblob);
+        Blob blob = mLocalCache.get(locator);
         if (blob != null)
             return getContent(blob);
 
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(getGetUrl(mblob.getMailbox(), mblob.getLocator()));
+        GetMethod get = new GetMethod(getGetUrl(mbox, locator));
         int statusCode = client.executeMethod(get);
         if (statusCode != HttpStatus.SC_OK)
             throw new IOException("unexpected return code during blob GET: " + get.getStatusText());
         return new UserServlet.HttpInputStream(get);
     }
 
-    @Override public InputStream getContent(Blob blob) throws IOException {
-        return new BlobInputStream(blob);
+    Blob getLocalBlob(Mailbox mbox, String locator, long sizeHint) throws IOException {
+        Blob blob = mLocalCache.get(locator);
+        if (blob != null)
+            return blob;
+
+        InputStream is = getContent(mbox, locator);
+        try {
+            blob = storeIncoming(is, sizeHint, null);
+            return mLocalCache.cache(locator, blob);
+        } catch (ServiceException e) {
+            throw new IOException("fetching local blob: " + e);
+        } finally {
+            ByteUtil.closeStream(is);
+        }
     }
 
     @Override public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
@@ -149,18 +174,27 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    protected abstract StagedBlob getStagedBlob(PostMethod post, Mailbox mbox) throws ServiceException, IOException;
+    protected abstract StagedBlob getStagedBlob(PostMethod post, String postDigest, long postSize, Mailbox mbox)
+    throws ServiceException, IOException;
 
     protected StagedBlob stage(InputStream in, long actualSize, Mailbox mbox)
     throws IOException, ServiceException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            throw ServiceException.FAILURE("SHA1 digest not found", e);
+        }
+        ByteUtil.PositionInputStream pin = new ByteUtil.PositionInputStream(new DigestInputStream(in, digest));
+
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         PostMethod post = new PostMethod(getPostUrl(mbox));
         try {
-            post.setRequestEntity(new InputStreamRequestEntity(in, actualSize, "application/octet-stream"));
+            post.setRequestEntity(new InputStreamRequestEntity(pin, actualSize, "application/octet-stream"));
             int statusCode = client.executeMethod(post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
-            return getStagedBlob(post, mbox);
+            return getStagedBlob(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
         } finally {
             post.releaseConnection();
         }
@@ -194,7 +228,7 @@ public abstract class HttpStoreManager extends StoreManager {
         // rename is a noop
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
         hsb.markInserted();
-        return new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getLocator());
+        return new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getLocator()).setSize(hsb.getSize()).setDigest(hsb.getDigest());
     }
 
     @Override public boolean delete(MailboxBlob mblob) throws IOException {

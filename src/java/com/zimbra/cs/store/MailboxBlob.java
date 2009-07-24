@@ -58,7 +58,7 @@ public abstract class MailboxBlob {
         return mDigest;
     }
 
-    protected MailboxBlob setDigest(String digest) {
+    public MailboxBlob setDigest(String digest) {
         mDigest = digest;
         return this;
     }
@@ -69,7 +69,7 @@ public abstract class MailboxBlob {
         return mSize;
     }
 
-    protected MailboxBlob setSize(long size) {
+    public MailboxBlob setSize(long size) {
         mSize = size;
         return this;
     }

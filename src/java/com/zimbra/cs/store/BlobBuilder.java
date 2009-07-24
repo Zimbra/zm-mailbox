@@ -18,7 +18,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.store.file.FileBlobStore;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,7 +52,7 @@ public class BlobBuilder {
     public long getSizeHint() {
         return sizeHint;
     }
-    
+
     public long getTotalBytes() {
         return totalBytes;
     }
@@ -81,7 +80,7 @@ public class BlobBuilder {
                 throw ServiceException.FAILURE("SHA1 digest not found", e);
             }
         }
-        
+
         FileOutputStream fos = new FileOutputStream(blob.getFile());
         fc = fos.getChannel();
         if (useCompression(sizeHint)) {
@@ -100,6 +99,7 @@ public class BlobBuilder {
         return this;
     }
 
+    @SuppressWarnings("unused")
     protected boolean useCompression(long size) throws ServiceException {
         return false;
     }
@@ -114,9 +114,8 @@ public class BlobBuilder {
             out.write(b, off, len);
             if (storageCallback != null)
                 storageCallback.wrote(blob, b, off, len);
-            if (digest != null) {
+            if (digest != null)
                 digest.update(b, off, len);
-            }
             totalBytes += len;
         } catch (IOException e) {
             dispose();
@@ -131,12 +130,12 @@ public class BlobBuilder {
             try {
                 init();
             } catch (Exception e) {
-                throw (IOException) new IOException(
-                    "Unable to initialize BlobBuilder").initCause(e);
+                throw (IOException) new IOException("Unable to initialize BlobBuilder").initCause(e);
             }
         }
     }
 
+    @SuppressWarnings("unused")
     public Blob finish() throws IOException, ServiceException {
         if (finished)
             return blob;
@@ -154,9 +153,8 @@ public class BlobBuilder {
         }
 
         // set the blob's digest and size
-        if (digest != null) {
+        if (digest != null)
             blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
-        }
         blob.setRawSize(totalBytes);
 
         if (ZimbraLog.store.isDebugEnabled())
@@ -191,7 +189,7 @@ public class BlobBuilder {
         if (blob != null) {
             finished = true;
             ByteUtil.closeStream(out);
-            FileBlobStore.getInstance().quietDelete(blob);
+            StoreManager.getInstance().quietDelete(blob);
             blob = null;
         }
     }
