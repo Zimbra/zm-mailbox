@@ -18,7 +18,6 @@ package com.zimbra.cs.datasource;
 
 import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -445,7 +444,7 @@ public class CalDavDataImport extends MailItemImport {
     		dsItem.md.put(METADATA_KEY_ETAG, appt.etag);
     		
     		try {
-    			vcalendar = ZCalendar.ZCalendarBuilder.build(new StringReader(appt.data));
+    			vcalendar = ZCalendar.ZCalendarBuilder.build(appt.data);
     			List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, vcalendar, true);
     			if (invites.size() > 1)
     				exceptions = new SetCalendarItemData[invites.size() - 1];

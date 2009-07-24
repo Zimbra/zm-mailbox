@@ -22,8 +22,6 @@ package com.zimbra.cs.service;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -165,8 +163,7 @@ public class FeedManager {
                 case '<':
                     return parseRssFeed(Element.parseXML(content), fsd);
                 case 'B':  case 'b':
-                    Reader reader = new InputStreamReader(content, charset.toString());
-                    List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+                    List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(content, charset.toString());
                     List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true);
                     // handle missing UIDs on remote calendars by generating them as needed
                     for (Invite inv : invites)

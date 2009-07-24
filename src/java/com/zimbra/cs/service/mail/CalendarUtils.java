@@ -56,7 +56,6 @@ import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
-import java.io.StringReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -82,14 +81,7 @@ public class CalendarUtils {
         Element content = inviteElem.getElement("content");
         toRet.mUid = content.getAttribute("uid");
         toRet.mSummary = content.getAttribute("summary");
-
-        String calStr = content.getText();
-        StringReader reader = new StringReader(calStr);
-        try {
-            toRet.mCal = ZCalendarBuilder.build(reader);
-        } finally {
-            reader.close();
-        }
+        toRet.mCal = ZCalendarBuilder.build(content.getText());
 
         List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary,
                 toRet.mCal, false);

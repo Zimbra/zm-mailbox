@@ -20,8 +20,6 @@ package com.zimbra.cs.mailbox.calendar;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.Mime;
 
 public class WellKnownTimeZones {
 
@@ -59,14 +58,14 @@ public class WellKnownTimeZones {
      */
     public static void loadFromFile(File tzFile) throws IOException, ServiceException {
         sLastModifiedTime = tzFile.lastModified();
-        Reader reader = null;
+        FileInputStream fis = null;
         ZVCalendar tzs = null;
         try {
-            reader = new InputStreamReader(new FileInputStream(tzFile));
-            tzs = ZCalendar.ZCalendarBuilder.build(reader);
+            fis = new FileInputStream(tzFile);
+            tzs = ZCalendar.ZCalendarBuilder.build(new FileInputStream(tzFile), Mime.P_CHARSET_UTF8);
         } finally {
-            if (reader != null)
-                reader.close();
+            if (fis != null)
+                fis.close();
         }
         for (Iterator<ZComponent> compIter = tzs.getComponentIterator();
              compIter.hasNext(); ) {
@@ -83,19 +82,19 @@ public class WellKnownTimeZones {
             String wid = tz.getWindowsID();
             if (wid != null) {
                 ICalTimeZone itz = getTimeZoneById(wid);
-                if (itz != null) {
+            if (itz != null) {
                     String jid = tz.getJavaID();
                     addAlias(itz, jid);
                     String oid = tz.getOlsonID();
                     addAlias(itz, oid);
-                    String[] aliases = tz.getAliases();
-                    if (aliases != null) {
-                        for (String alias : aliases) {
-                            addAlias(itz, alias);
-                        }
+                String[] aliases = tz.getAliases();
+                if (aliases != null) {
+                    for (String alias : aliases) {
+                        addAlias(itz, alias);
                     }
                 }
             }
+        }
         }
     }
 

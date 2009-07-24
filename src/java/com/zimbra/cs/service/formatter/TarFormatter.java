@@ -1292,11 +1292,10 @@ public class TarFormatter extends Formatter {
                 boolean continueOnError = context.ignoreAndContinueOnError();
                 boolean preserveExistingAlarms = context.preserveAlarms();
                 
-                reader = new BufferedReader(new InputStreamReader(tis, UTF8));
                 try {
                     if (te.getSize() <=
                         LC.calendar_ics_import_full_parse_max_size.intValue()) {
-                        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+                        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(tis, UTF8);
                         ImportInviteVisitor visitor = new ImportInviteVisitor(oc,
                             fldr, preserveExistingAlarms);
                         
@@ -1306,10 +1305,10 @@ public class TarFormatter extends Formatter {
                         ZICalendarParseHandler handler =
                             new IcsImportParseHandler(oc, context.targetAccount,
                                 fldr, continueOnError, preserveExistingAlarms);
-                        ZCalendarBuilder.parse(reader, handler);
+                        ZCalendarBuilder.parse(tis, UTF8, handler);
                     }
                 } finally {
-                    reader.close();
+                    tis.close();
                 }
                 break;
             case MailItem.TYPE_CONTACT:

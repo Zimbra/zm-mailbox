@@ -16,12 +16,14 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,7 +40,6 @@ import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.data.UnfoldingReader;
 
 public class ZCalendar {
     
@@ -799,140 +800,6 @@ public class ZCalendar {
         return null;
     }
     
-//    private static class UnfoldingReader : extends FilterReader
-//    {
-//        Reader mIn;
-//        
-//        char[] mBuf = new char[3];
-//        
-//        boolean buffering = false;
-//        boolean atNl = false;
-//        int bufPos = 0;
-//        
-//        
-//        
-//        UnfoldingReader(Reader in) {
-//            mIn = in;
-//        }
-//        
-//        int read() {
-//            int read = read();
-//            
-//            // buffering?
-//            //    yes:
-//            //       at nl?
-//            //         yes:
-//            //           is space?
-//            //             yes:
-//            //               eat 1 space, done buffering
-//            //             no:
-//            //               don't eat, done buffering
-//            //         no:
-//            //           is it a '\n'?
-//            //              yes: 
-//            //                 at nl=true.  still buffering
-//            //              no:
-//            //                 don't eat.  done buffering
-//            //    no:
-//            //      is it a '\r'?
-//            //          buffering, not at nl
-//            //      is it a '\n'?
-//            //          buffering.  at nl
-//            //      return it
-//            //
-//            if (buffering) {
-//                if (atNl) {
-//                    if ((char)read == ' ') {
-//                        
-//                    }
-//                }
-//            } else {
-//                
-//            }
-//            
-//            
-//        }
-//        
-//        int read(char[] cbuf, int off, int len) {
-//            
-//            for (int i = 0; i < len; i++) {
-//                int read = read();
-//                if (read == -1)
-//                    return i;
-//                
-//                cbuf[i+off] = (char)read;
-//            }
-//            return len;
-//        }
-//        
-//        
-//    }
-//    
-//    
-//    private static class Parser 
-//    {
-//        ZVCalendar mCal = null;
-//        ArrayList<ZComponent> mComponents = new ArrayList();
-//        ZProperty mCurProperty = null;
-//        StringBuffer curLine = null;
-//        
-//        StreamTokenizer mTokenizer;
-//        
-//n        static enum Token {
-//            BEGIN, VCALENDAR, END, COLON;
-//
-//            Token lookup(String str) {
-//                if (str.equals(":")) 
-//                    return COLON;
-//                
-//                return Token.valueOf(str);
-//            }
-//        }
-//
-//        static ZVCalendar parse(Reader in) throws ServiceException {
-//            Parser p = new Parser(in);
-//            return p.mCal;
-//        }
-//        
-//        private Parser(Reader in) throws ServiceException {
-//            mTokenizer = new StreamTokenizer(in);
-//            mTokenizer.wordChars(32, 127);
-//            mTokenizer.whitespaceChars(0, 20);
-//            mTokenizer.eolIsSignificant(true);
-//            mTokenizer.quoteChar('"');
-//            mTokenizer.ordinaryChar(';');
-//            mTokenizer.ordinaryChar(':');
-//            mTokenizer.ordinaryChar('=');
-//        }
-//        
-//        private int nextToken()
-//        {
-//            int toRet = nextToken();
-//            
-//        }
-//        
-//        private void parseError(String expected) throws ServiceException 
-//        {
-//            throw ServiceException.PARSE_ERROR("Expected \""+expected+"\" at l, cause)
-//        }
-//       
-//        private void expectToken(String token) throws ServiceException
-//        {
-//            if (tokeniser.nextToken() != StreamTokenizer.TT_WORD) {
-//                throw ServiceException.PARSE_ERROR("Expected \""+token, cause)
-//            
-//        }
-//            
-//            
-//        
-//        private void expectToken(Integer ch) throws ServiceException
-//        {
-//
-//        }
-//        
-//        
-//    }
-
     public interface ZICalendarParseHandler extends ContentHandler {
         public boolean inZCalendar();
         public int getNumCals();
@@ -1013,8 +880,24 @@ public class ZCalendar {
 
     public static class ZCalendarBuilder {
 
-        public static ZVCalendar build(Reader reader) throws ServiceException {
-            List<ZVCalendar> list = buildMulti(reader);
+        public static ZVCalendar build(String icalStr) throws ServiceException {
+            ByteArrayInputStream bais = null;
+            try {
+                bais = new ByteArrayInputStream(icalStr.getBytes(Mime.P_CHARSET_UTF8));
+            } catch (UnsupportedEncodingException e) {
+                throw ServiceException.FAILURE("Can't get input stream from string", e);
+            }
+            try {
+                return build(bais, Mime.P_CHARSET_UTF8);
+            } finally {
+                try {
+                    bais.close();
+                } catch (IOException e) {}
+            }
+        }
+
+        public static ZVCalendar build(InputStream is, String charset) throws ServiceException {
+            List<ZVCalendar> list = buildMulti(is, charset);
             int len = list.size();
             if (len == 1) {
                 return list.get(0);
@@ -1028,47 +911,32 @@ public class ZCalendar {
             }
         }
 
-        public static List<ZVCalendar> buildMulti(Reader reader) throws ServiceException {
+        public static List<ZVCalendar> buildMulti(InputStream is, String charset) throws ServiceException {
             DefaultContentHandler handler = new DefaultContentHandler();
-            parse(reader, handler);
+            parse(is, charset, handler);
             return handler.getCals();
             
         }
 
-        public static void parse(Reader reader, ZICalendarParseHandler handler) throws ServiceException {
-            BufferedReader br = new BufferedReader(reader);
-            reader = br;
-            try {
-                reader.mark(32000);
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-
+        public static void parse(InputStream is, String charset, ZICalendarParseHandler handler) throws ServiceException {
+            BufferedInputStream bis = new BufferedInputStream(is);
+            bis.mark(32 * 1024);
             CalendarParser parser = new CalendarParserImpl();
             try {
-                parser.parse(new UnfoldingReader(reader), handler);
+                parser.parse(bis, charset, handler);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Caught IOException parsing calendar: " + e, e);
             } catch (ParserException e) {
                 StringBuilder s = new StringBuilder("Caught ParseException parsing calendar: " + e);
                 try {
-                    br.reset();
-                    s.append('\n');
-                    boolean abbreviated = false;
-                    int charsRead = 0;
-                    String line = null;
-                    while ((line = br.readLine()) != null) {
-                        charsRead += line.length();
-                        // Show only the first 32KB of the ics in the log, to avoid running out of heap
-                        // when printing the exception stack trace.
-                        if (charsRead <= 32 * 1024) {
-                            s.append(line).append('\n');
-                        } else if (!abbreviated) {
-                            abbreviated = true;
+                    bis.reset();
+                    byte[] ics = new byte[32 * 1024];
+                    int bytesRead = bis.read(ics, 0, ics.length);
+                    if (bytesRead > 0) {
+                        String icsStr = new String(ics, 0, bytesRead, charset);
+                        s.append(icsStr).append("\n");
+                        if (bytesRead == ics.length) {
                             s.append("...\n");
-                            // QUESTION: Is it okay to break without reading until EOF?
-                            // Will it confuse any code?
-                            break;
                         }
                     }
                 } catch (IOException ioe) {
@@ -1136,12 +1004,12 @@ public class ZCalendar {
 
             if (false) {
                 File inFile = new File("c:\\test.ics");
-                FileReader in = new FileReader(inFile);
+                FileInputStream in = new FileInputStream(inFile);
 
                 CalendarParser parser = new CalendarParserImpl();
 
                 DefaultContentHandler handler = new DefaultContentHandler();
-                parser.parse(new UnfoldingReader(in), handler);
+                parser.parse(in, "utf-8", handler);
                 ZVCalendar cal = handler.getCals().get(0);
                 System.out.println(cal.toString());
                 Invite.createFromCalendar(null, null, cal, false);

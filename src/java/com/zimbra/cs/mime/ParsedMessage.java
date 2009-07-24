@@ -26,10 +26,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -146,15 +144,15 @@ public class ParsedMessage {
         // must set received-date before Lucene document is initialized
         setReceivedDate(receivedDate);
     }
-
+    
     public ParsedMessage(byte[] rawData, boolean indexAttachments) throws MessagingException {
         this(rawData, null, indexAttachments);
     }
-
+    
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments) throws MessagingException {
         if (rawData == null || rawData.length == 0)
             throw new MessagingException("Message data cannot be null or empty.");
-
+    
         mIndexAttachments = indexAttachments;
         InputStream is = new SharedByteArrayInputStream(rawData);
         mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
@@ -164,7 +162,7 @@ public class ParsedMessage {
             if (!wasMutated()) {
                 // Not mutated, so raw data is valid and storeable.
                 mRawData = rawData;
-            }
+    }
         } catch (MessagingException e) {
             // mutator threw an exception, so go back to the raw and use it verbatim
             ZimbraLog.extensions.warn("Error applying message mutator.  Reverting to original MIME message.", e);
@@ -186,18 +184,18 @@ public class ParsedMessage {
     throws MessagingException, IOException {
         if (file == null) {
             throw new IOException("File cannot be null.");
-        }
+            }
         if (file.length() == 0) {
             throw new IOException("File " + file.getPath() + " is empty.");
-        }
+            }
         mIndexAttachments = indexAttachments;
         BlobInputStream in = new BlobInputStream(file);
         mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
-        
+
         try {
             // Maintain reference to the file only if the content was not mutated.
             runMimeMutators();
-            if (wasMutated()) {
+        if (wasMutated()) {
                 // Load data into memory.  This allows access to the message
                 // data after close() has been called.
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -209,7 +207,7 @@ public class ParsedMessage {
             } else {
                 mRawFile = file;
                 mRawFileInputStream = in;
-            }
+        }
         } catch (Exception e) {
             ZimbraLog.extensions.warn(
                 "Error applying message mutator.  Reverting to original MIME message.", e);
@@ -224,7 +222,7 @@ public class ParsedMessage {
         }
         setReceivedDate(receivedDate);
     }
-
+    
     public boolean wasMutated() {
         return mWasMutated;
     }
@@ -465,8 +463,8 @@ public class ParsedMessage {
      */
     public MimeMessage getMimeMessage() {
         if (mExpandedMessage != null) {
-            return mExpandedMessage;
-        }
+        return mExpandedMessage;
+    }
         // Reference to MimeMessage was dropped by close().
         try {
             InputStream in;
@@ -552,31 +550,31 @@ public class ParsedMessage {
             mRawDigest = ByteUtil.getSHA1Digest(mRawData, true);
             mRawSize = mRawData.length;
         } else {
-            int size = 0;
-            InputStream in = null;
-            MessageDigest digest;
+        int size = 0;
+        InputStream in = null;
+        MessageDigest digest;
 
-            // Initialize streams and digest calculator.
-            try {
-                digest = MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                throw ServiceException.FAILURE("Unable to calculate digest", e);
-            }
-            
-            try {
-                in = getRawInputStream();
-                DigestInputStream digestStream = new DigestInputStream(in, digest);
-                int numRead = -1;
-                byte[] buf = new byte[1024];
-                while ((numRead = digestStream.read(buf)) >= 0) {
-                    size += numRead;
-                }
-                mRawSize = size;
-                mRawDigest = ByteUtil.encodeFSSafeBase64(digest.digest());
-            } finally {
-                ByteUtil.closeStream(in);
-            }
+        // Initialize streams and digest calculator.
+        try {
+            digest = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            throw ServiceException.FAILURE("Unable to calculate digest", e);
         }
+
+        try {
+            in = getRawInputStream();
+            DigestInputStream digestStream = new DigestInputStream(in, digest);
+            int numRead = -1;
+            byte[] buf = new byte[1024];
+            while ((numRead = digestStream.read(buf)) >= 0) {
+                size += numRead;
+            }
+            mRawSize = size;
+            mRawDigest = ByteUtil.encodeFSSafeBase64(digest.digest());
+        } finally {
+            ByteUtil.closeStream(in);
+        }
+    }
     }
     /**
      * Returns a stream to the raw MIME message.  Affected by mutation but
@@ -615,7 +613,7 @@ public class ParsedMessage {
         ZimbraLog.mailbox.warn("%s.getInputStream(): Unable to get input stream because message data is not available.",
             ParsedMessage.class.getSimpleName());
         return null;
-    }
+        }
     
     private byte[] getByteArray(MimeMessage mm)
     throws IOException, MessagingException {
@@ -627,7 +625,7 @@ public class ParsedMessage {
         mMimeMessage.writeTo(out);
         return out.toByteArray();
     }
-
+    
     public boolean isAttachmentIndexingEnabled() {
         return mIndexAttachments;
     }
@@ -641,7 +639,7 @@ public class ParsedMessage {
         parse();
         return mHasAttachments;
     }
-
+    
     public int getPriorityBitmask() {
         parse();
 
@@ -927,7 +925,7 @@ public class ParsedMessage {
         }
         return mCalendar;
     }
-    
+
     /**
      * @return TRUE if there was a _temporary_ failure detected while analyzing the message.  In
      *         the case of a temporary failure, the message should be flagged and indexing re-tried
@@ -1018,7 +1016,7 @@ public class ParsedMessage {
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
-
+        
         String text = contentPrepend.toString()+" "+fullContent.toString();
 
         document.add(new Field(LuceneFields.L_CONTENT, text, Field.Store.NO, Field.Index.TOKENIZED));
@@ -1046,7 +1044,7 @@ public class ParsedMessage {
                 buf.append(',');
             buf.append(contentType);
         }
-
+        
         String attachments = buf.toString();
         if (attachments.equals(""))
             attachments = LuceneFields.L_ATTACHMENT_NONE;
@@ -1097,15 +1095,15 @@ public class ParsedMessage {
         
         return d;
     }
-    
-    
-    
+
+
+
     /**
      * @return Extracted toplevel text (any text that should go into the toplevel indexed document)
      */
     private String analyzePart(boolean isMainBody, MPartInfo mpi, boolean ignoreCalendar)
     throws MessagingException, ServiceException {
-        
+
         String toRet = "";
         try {
             String ctype = mpi.getContentType();
@@ -1174,8 +1172,8 @@ public class ParsedMessage {
                     if (charset == null || charset.trim().equals(""))
                         charset = Mime.P_CHARSET_DEFAULT;
 
-                    Reader reader = new InputStreamReader(is = mpi.getMimePart().getInputStream(), charset);
-                    mCalendar = ZCalendarBuilder.build(reader);
+                    is = mpi.getMimePart().getInputStream();
+                    mCalendar = ZCalendarBuilder.build(is, charset);
                 } catch (IOException ioe) {
                     ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
                 } finally {
@@ -1204,7 +1202,7 @@ public class ParsedMessage {
         }
         return toRet;
     }
-    
+
     private static final void appendToContent(StringBuilder sb, String s) {
         if (sb.length() > 0)
             sb.append(' ');
@@ -1236,32 +1234,32 @@ public class ParsedMessage {
             if (colon <= (braced ? 1 : 0))
                 return subject;
 
-            // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
-            String prefix = subject.substring(braced ? 1 : 0, colon + 1);
-            boolean matched = true;
+                // figure out if it's either a known calendar response prefix or a 1-3 letter prefix
+                String prefix = subject.substring(braced ? 1 : 0, colon + 1);
+                boolean matched = true;
             if (CALENDAR_PREFIXES.contains(prefix))
                 matched = true;
             else {
-                // make sure to catch "re(2):" and "fwd[5]:" as well...
-                int paren = -1;
-                for (int i = 0; matched && i < prefix.length() - 1; i++) {
+                    // make sure to catch "re(2):" and "fwd[5]:" as well...
+                    int paren = -1;
+                    for (int i = 0; matched && i < prefix.length() - 1; i++) {
                     char c = prefix.charAt(i);
-                    if ((c == '(' || c == '[') && i > 0 && paren == -1)
-                        paren = i;
-                    else if ((c == ')' || c == ']') && paren != -1)
-                        matched &= i > paren + 1 && i == prefix.length() - 2;
+                        if ((c == '(' || c == '[') && i > 0 && paren == -1)
+                            paren = i;
+                        else if ((c == ')' || c == ']') && paren != -1)
+                            matched &= i > paren + 1 && i == prefix.length() - 2;
                         else if (!Character.isLetter(c))
                             matched &= c >= '0' && c <= '9' && paren != -1;
-                            else if (i >= MAX_PREFIX_LENGTH || paren != -1)
-                                matched = false;
+                        else if (i >= MAX_PREFIX_LENGTH || paren != -1)
+                            matched = false;
+                    }
                 }
-            }
 
             if (!matched)
                 return subject;
-            if (braced && subject.endsWith("]"))
+                    if (braced && subject.endsWith("]"))
                 subject = subject.substring(colon + 1, length - 1).trim();
-            else
+                    else
                 subject = subject.substring(colon + 1).trim();
         }
     }
@@ -1331,7 +1329,7 @@ public class ParsedMessage {
 
         return subject;
     }
-    
+
     /**
      * If this <tt>ParsedMessage</tt> references a file on disk, closes
      * the file descriptor.
@@ -1342,7 +1340,7 @@ public class ParsedMessage {
             mRawFileInputStream.closeFile();
         }
     }
-    
+
     /**
      * Tells this <tt>ParsedMessage</tt> to get its data from a new file.
      * Only applies to <tt>ParsedMessage</tt>s that were instantiated from
@@ -1355,6 +1353,6 @@ public class ParsedMessage {
         }
         if (mRawFile != null) {
             mRawFile = newFile;
-        }
+    }
     }
 }

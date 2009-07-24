@@ -18,7 +18,6 @@ package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,8 +91,8 @@ public class CalendarCollection extends Collection {
 		if (ctxt.isSchedulingEnabled())
 			mDavCompliance.add(Compliance.calendar_schedule);
 
-        if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
-        	addResourceType(DavElements.E_CALENDAR);
+		if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
+			addResourceType(DavElements.E_CALENDAR);
 		
 		if (f.getId() == Mailbox.ID_FOLDER_CALENDAR)
 			addResourceType(DavElements.E_DEFAULT_CALENDAR);
@@ -161,7 +160,7 @@ public class CalendarCollection extends Collection {
 			requestedAppts = mAppts;
 		}
 		if (uidmap == null)
-			return requestedAppts.values();
+		return requestedAppts.values();
 		for (String uid : uidmap.keySet()) {
 			String href = uidmap.get(uid);
 			DavResource appt = requestedAppts.get(uid);
@@ -169,7 +168,7 @@ public class CalendarCollection extends Collection {
 				appt = new DavResource.InvalidResource(href, getOwner());
 			appt.setHref(href);
 			resp.add(appt);
-		}
+	}
 		return resp;
 	}
 	
@@ -310,11 +309,11 @@ public class CalendarCollection extends Collection {
                 throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
             InputStream is = ctxt.getUpload().getInputStream();
-			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(is, "UTF-8"));
+				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, Mime.P_CHARSET_UTF8);
 			List<Invite> invites = Invite.createFromCalendar(account,
-					findSummary(vcalendar), 
-					vcalendar, 
-					true);
+						findSummary(vcalendar), 
+						vcalendar, 
+						true);
 
 			String uid = findEventUid(invites);
 			if (!uid.equals(name)) {

@@ -43,8 +43,7 @@ import javax.mail.Part;
 import javax.servlet.ServletException;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -134,18 +133,23 @@ public class IcsFormatter extends Formatter {
 
     public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException {
-        // TODO: Modify Formatter.save() API to pass in charset of body, then
-        // use that charset in String() constructor.
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();
-        Reader reader = new InputStreamReader(context.getRequestInputStream(Long.MAX_VALUE), Mime.P_CHARSET_UTF8);
-        
+        InputStream is = context.getRequestInputStream(Long.MAX_VALUE);
+        String charset = Mime.P_CHARSET_UTF8;
+        String ctStr = context.req.getContentType();
+        if (ctStr != null) {
+            String cs = Mime.getCharset(ctStr);
+            if (cs != null)
+                charset = cs;
+        }
+
         try {
             if (context.req.getContentLength() <= LC.calendar_ics_import_full_parse_max_size.intValue()) {
                 // Build a list of ZVCalendar objects by fully parsing the ics file, then iterate them
                 // and add them one by one.  Memory hungry if there are very many events/tasks, but it allows
                 // TZID reference before VTIMEZONE of that timezone appears in the ics file.
-                List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
+                List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, charset);
                 ImportInviteVisitor visitor = new ImportInviteVisitor(context.opContext, folder, preserveExistingAlarms);
                 Invite.createFromCalendar(context.targetAccount, null, icals, true, continueOnError, visitor);
             } else {
@@ -155,10 +159,10 @@ public class IcsFormatter extends Formatter {
                 ZICalendarParseHandler handler =
                     new IcsImportParseHandler(context.opContext, context.targetAccount, folder,
                                               continueOnError, preserveExistingAlarms);
-                ZCalendarBuilder.parse(reader, handler);
+                ZCalendarBuilder.parse(is, charset, handler);
             }
         } finally {
-            reader.close();
+            is.close();
         }
     }
     

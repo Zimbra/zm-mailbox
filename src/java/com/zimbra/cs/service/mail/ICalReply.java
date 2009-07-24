@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
@@ -43,15 +42,7 @@ public class ICalReply extends MailDocumentHandler {
 
         Element icalElem = request.getElement(MailConstants.E_CAL_ICAL);
         String icalStr = icalElem.getText();
-        ZVCalendar cal;
-        StringReader sr = null;
-        try {
-            sr = new StringReader(icalStr);
-            cal = ZCalendarBuilder.build(sr);
-        } finally {
-            if (sr != null)
-                sr.close();
-        }
+        ZVCalendar cal = ZCalendarBuilder.build(icalStr);
 
         List<Invite> invites =
             Invite.createFromCalendar(mbox.getAccount(), null, cal, false);
