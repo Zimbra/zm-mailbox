@@ -78,6 +78,7 @@ public class LC {
     public static final KnownKey zimbra_uid;
     public static final KnownKey zimbra_gid;
     public static final KnownKey zimbra_log4j_properties;
+    public static final KnownKey zimbra_log4j_properties_watch;
     public static final KnownKey zimbra_auth_always_send_refer;
     public static final KnownKey zimbra_admin_service_port;
     public static final KnownKey zimbra_admin_service_scheme;
@@ -584,6 +585,8 @@ public class LC {
 
         zimbra_log4j_properties = new KnownKey("zimbra_log4j_properties");
         zimbra_log4j_properties.setDefault("${zimbra_home}" + FS + "conf" + FS + "log4j.properties");
+
+        zimbra_log4j_properties_watch = new KnownKey("zimbra_log4j_properties_watch", "60000");
 
         zimbra_attrs_directory = new KnownKey("zimbra_attrs_directory");
         zimbra_attrs_directory.setDefault("${zimbra_home}" + FS + "conf" + FS + "attrs");
