@@ -1874,10 +1874,11 @@ abstract class ImapHandler extends ProtocolHandler {
         List<String> subscriptions = null;
         try {
             // you cannot access your own mailbox via the /home/username mechanism
-            if (patternPath.getOwner() == null || !patternPath.belongsTo(mCredentials)) {
+            String owner = patternPath.getOwner();
+            if (owner == null || owner.indexOf('*') != -1 || owner.indexOf('%') != -1 || !patternPath.belongsTo(mCredentials)) {
                 Map<ImapPath, Boolean> hits = new HashMap<ImapPath, Boolean>();
 
-                if (patternPath.getOwner() == null) {
+                if (owner == null) {
                     Mailbox mbox = mCredentials.getMailbox();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
                         if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
@@ -1887,7 +1888,6 @@ abstract class ImapHandler extends ProtocolHandler {
 
                 Set<String> remoteSubscriptions = mCredentials.listSubscriptions();
                 if (remoteSubscriptions != null && !remoteSubscriptions.isEmpty()) {
-                    String owner = patternPath.getOwner();
                     for (String sub : remoteSubscriptions) {
                         ImapPath subscribed = new ImapPath(sub, mCredentials);
                         if ((owner == null) == (subscribed.getOwner() == null))
