@@ -39,7 +39,10 @@ public class ZAuthToken {
     private static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
     private static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
     
-    private static final String YAHOO_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
+    private static final String YAHOO_CALENDAR_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
+    private static final String YAHOO_MAIL_AUTHTOKEN_TYPE     = "YAHOO_MAIL_AUTH_PROVIDER";
+    
+    private static final String AUTHTOKEN_TYPE_COOKIE = "AUTH_TOKEN_TYPE";
     
     private static final String YAHOO_Y_COOKIE = "Y"; 
     private static final String YAHOO_T_COOKIE = "T";
@@ -189,7 +192,8 @@ public class ZAuthToken {
     public Map<String, String> cookieMap(boolean isAdmin) {
         if (mType == null)
             return toZimbraCookieMap(isAdmin);
-        else if (mType.equals(YAHOO_AUTHTOKEN_TYPE))
+        else if (mType.equals(YAHOO_CALENDAR_AUTHTOKEN_TYPE) ||
+                 mType.equals(YAHOO_MAIL_AUTHTOKEN_TYPE))
             return toYahooCookieMap(isAdmin);
         else
             return null;
@@ -202,6 +206,7 @@ public class ZAuthToken {
      */
     public static void clearCookies(HttpServletResponse response) {
         clearCookie(response, COOKIE_ZM_AUTH_TOKEN);
+        clearCookie(response, AUTHTOKEN_TYPE_COOKIE);
         clearCookie(response, YAHOO_T_COOKIE);
         clearCookie(response, YAHOO_Y_COOKIE);
         clearCookie(response, YAHOO_ADMIN_COOKIE);
@@ -286,6 +291,7 @@ public class ZAuthToken {
     private boolean fromZimbraCookies(Map<String, String> cookieMap, boolean isAdmin) {
         String cookieName = zimbraCookieName(isAdmin);
         String cookieValue = cookieMap.get(cookieName);
+            
         if (cookieValue != null) {
             init(null, cookieValue, null);
             return true;
@@ -316,6 +322,9 @@ public class ZAuthToken {
         if (mAttrs != null) {
             cookieMap = new HashMap<String, String>();
             
+            // auth token type
+            cookieMap.put(AUTHTOKEN_TYPE_COOKIE, mType);
+            
             String yCookie = mAttrs.get(YahooAuthData.YAHOO_Y_ATTR);
             if (yCookie != null)
                 cookieMap.put(YahooAuthData.attrNameToCookieName(YahooAuthData.YAHOO_Y_ATTR), yCookie);
@@ -335,6 +344,8 @@ public class ZAuthToken {
     }
     
     private boolean fromYahooCookies(HttpServletRequest request, Map<String, String> cookieMap, boolean isAdmin) {
+        String authTokenTypeCookie = cookieMap.get(AUTHTOKEN_TYPE_COOKIE);
+        
         String yCookie = cookieMap.get(YAHOO_Y_COOKIE);
         String tCookie = cookieMap.get(YAHOO_T_COOKIE);
         String aCookie = cookieMap.get(YAHOO_ADMIN_COOKIE);
@@ -343,7 +354,8 @@ public class ZAuthToken {
         String accessKey = getYahooAccessKey(request);
         String hostAccountId = getYahooHostAccountId(request);
         
-        if (yCookie != null || tCookie != null || aCookie != null || dCookie != null || accessKey != null || hostAccountId != null) {
+        if (yCookie != null || tCookie != null || aCookie != null || dCookie != null || 
+            accessKey != null || hostAccountId != null) {
             Map<String, String> attrs = new HashMap<String, String>();
             
             if (yCookie != null)
@@ -360,7 +372,11 @@ public class ZAuthToken {
             if (hostAccountId != null) 
                 attrs.put(YAHOO_H_ATTR, hostAccountId);
             
-            init(YAHOO_AUTHTOKEN_TYPE, null, attrs);
+            // if there is no auth token type cookie from the cookie map, default to
+            // YAHOO_MAIL_AUTHTOKEN_TYPE
+            if (authTokenTypeCookie == null)
+                authTokenTypeCookie = YAHOO_MAIL_AUTHTOKEN_TYPE;
+            init(authTokenTypeCookie, null, attrs);
             return true;
         }
         return false;
