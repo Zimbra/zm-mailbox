@@ -90,7 +90,7 @@ public class Zimbra {
                 " buildhost=" + BuildInfo.HOST);
         
         ZimbraLog.misc.info("LANG environment is set to: " + System.getenv("LANG"));
-        
+
         ZimbraLog.misc.info("System property java.home="            + getSysProperty("java.home"));
         ZimbraLog.misc.info("System property java.runtime.version=" + getSysProperty("java.runtime.version"));
         ZimbraLog.misc.info("System property java.version="         + getSysProperty("java.version"));
@@ -140,15 +140,15 @@ public class Zimbra {
         setSystemProperties();
 
         logVersionAndSysInfo();
-        
+
         SoapTransport.setDefaultUserAgent("ZCS", BuildInfo.VERSION);
 
         checkForClasses();
 
         DbPool.loadSettings();
-        
-    	if (!Versions.checkVersions())
-    	    Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
+
+        if (!Versions.checkVersions())
+            Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
 
         String tzFilePath = LC.timezone_file.value();
         try {
@@ -158,30 +158,7 @@ public class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
-        // volume initialization moved into store manager startup
-
         ZimbraHttpConnectionManager.startReaperThread();
-        
-        MailboxManager.getInstance();
-
-        ZimbraApplication app = ZimbraApplication.getInstance();
-        app.startup();
-        	
-        if (app.supports(MemcachedConnector.class.getName()))
-            MemcachedConnector.startup();
-
-        if (app.supports(ExtensionUtil.class.getName()))
-            ExtensionUtil.initAll();
-
-    	// ZimletUtil.loadZimlets();
-
-        MailboxIndex.startup();
-
-        RedoLogProvider redoLog = RedoLogProvider.getInstance();
-        if (sIsMailboxd)
-            redoLog.startup();
-        else
-            redoLog.initRedoLogManager();
 
         if (sIsMailboxd) {
             try {
@@ -190,6 +167,27 @@ public class Zimbra {
                 throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
             }
         }
+
+        MailboxManager.getInstance();
+
+        ZimbraApplication app = ZimbraApplication.getInstance();
+        app.startup();
+
+        if (app.supports(MemcachedConnector.class.getName()))
+            MemcachedConnector.startup();
+
+        if (app.supports(ExtensionUtil.class.getName()))
+            ExtensionUtil.initAll();
+
+        // ZimletUtil.loadZimlets();
+
+        MailboxIndex.startup();
+
+        RedoLogProvider redoLog = RedoLogProvider.getInstance();
+        if (sIsMailboxd)
+            redoLog.startup();
+        else
+            redoLog.initRedoLogManager();
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
@@ -201,17 +199,17 @@ public class Zimbra {
 
             if (!redoLog.isSlave()) {
                 Server server = Provisioning.getInstance().getLocalServer();
-    
+
                 boolean useDirectBuffers = server.getBooleanAttr(Provisioning.A_zimbraMailUseDirectBuffers, false);
                 org.apache.mina.common.ByteBuffer.setUseDirectBuffers(useDirectBuffers);
                 ZimbraLog.misc.info("MINA setUseDirectBuffers(" + useDirectBuffers + ")");
-                    
+
                 if (app.supports(ZimbraIM.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                     ZimbraIM.startup();
                 }
 
                 if (app.supports(LmtpServer.class.getName()))
-                	LmtpServer.startupLmtpServer();
+                    LmtpServer.startupLmtpServer();
                 if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
                     Pop3Server.startupPop3Server();
                 if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3SSLServerEnabled, false))
@@ -226,25 +224,25 @@ public class Zimbra {
                 WaitSetMgr.startup();
 
             if (app.supports(MemoryStats.class.getName()))
-            	MemoryStats.startup();
+                MemoryStats.startup();
 
             if (app.supports(CacheMemoryStats.class.getName()))
-            	CacheMemoryStats.startup();
+                CacheMemoryStats.startup();
 
             if (app.supports(ScheduledTaskManager.class.getName()))
-            	ScheduledTaskManager.startup();
+                ScheduledTaskManager.startup();
 
             if (app.supports(PurgeThread.class.getName()))
-            	PurgeThread.startup();
+                PurgeThread.startup();
 
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName()))
-            	ZimbraPerf.initialize();
+                ZimbraPerf.initialize();
         }
 
         if (app.supports(ExtensionUtil.class.getName()))
-        	ExtensionUtil.postInitAll();
-        
+            ExtensionUtil.postInitAll();
+
         sInited = true;
     }
 
@@ -298,9 +296,6 @@ public class Zimbra {
         if (sIsMailboxd)
             redoLog.shutdown();
 
-        if (sIsMailboxd)
-            StoreManager.getInstance().shutdown();
-
         if (app.supports(ExtensionUtil.class.getName()))
             ExtensionUtil.destroyAll();
 
@@ -308,6 +303,9 @@ public class Zimbra {
             MemcachedConnector.shutdown();
 
         MailboxManager.getInstance().shutdown();
+
+        if (sIsMailboxd)
+            StoreManager.getInstance().shutdown();
         
         ZimbraHttpConnectionManager.shutdownReaperThread();
 
