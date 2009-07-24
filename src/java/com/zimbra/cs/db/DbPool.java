@@ -494,8 +494,10 @@ public class DbPool {
      * @throws Exception
      */
     static synchronized void close() throws Exception {
-    	sConnectionPool.close();
-    	sConnectionPool = null;
+        if (sConnectionPool != null) {
+            sConnectionPool.close();
+            sConnectionPool = null;
+        }
     	sPoolingDataSource = null;
     	Db.getInstance().shutdown();
     }
