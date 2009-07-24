@@ -196,7 +196,9 @@ class IndexWritersCache implements IIndexWritersCache {
             }
             if (!done) {
                 try {
-                    ZimbraLog.index.info("Blocked in beginWriting for "+w+" because state was "+curState);
+                    if (ZimbraLog.index.isDebugEnabled())
+                        ZimbraLog.index.debug("Blocked in beginWriting for "+w+" because state was "+curState+
+                                             " NumFlushing="+mNumFlushing);
                     l.await();
                 } catch (InterruptedException e) {}
             }
@@ -319,9 +321,12 @@ class IndexWritersCache implements IIndexWritersCache {
                     } catch (Throwable t) {
                         System.err.println("Error! "+t);
                         synchronized(this) {
-                        	mNumFlushing--;
-                        	w.setState(WriterState.IDLE);
-                        	mIdleWriters.add(w);
+                            mNumFlushing--;
+                            w.setState(WriterState.IDLE);
+                            w.getFlushWaiterLatch().countDown();
+                            w.resetFlushWaiterLatch();
+                            this.notifyAll();
+                            mIdleWriters.add(w);
                         }
                     }
                 }
@@ -343,6 +348,8 @@ class IndexWritersCache implements IIndexWritersCache {
                 flushInternal(mTarget);
             } catch (OutOfMemoryError e) {
                 Zimbra.halt("OutOfMemory in IndexWritersCache.AsyncFlush", e);
+            } catch (Throwable t) {
+                ZimbraLog.index.warn("Caught exception in Async Index Flush: ", t);
             }
         }
     }
@@ -374,22 +381,25 @@ class IndexWritersCache implements IIndexWritersCache {
         synchronized(this) {
             assert(target.getState() == WriterState.FLUSHING);
         }
-        target.doWriterClose();
-        synchronized(this) {
-            assert(target.getState() == WriterState.FLUSHING);
-            assert(mOpenWriters.contains(target));
-            assert(!mIdleWriters.contains(target));
-            mOpenWriters.remove(target);
-            ZimbraPerf.COUNTER_IDX_WRT.increment(mOpenWriters.size());
-            target.setState(WriterState.CLOSED);
-            mNumFlushing--;
-            if (!mWaitingForSlot.isEmpty()) {
-                CountDownLatch l = mWaitingForSlot.remove(0);
-                l.countDown();
+        try {
+            target.doWriterClose();
+        } finally {
+            synchronized(this) {
+                assert(target.getState() == WriterState.FLUSHING);
+                assert(mOpenWriters.contains(target));
+                assert(!mIdleWriters.contains(target));
+                mOpenWriters.remove(target);
+                ZimbraPerf.COUNTER_IDX_WRT.increment(mOpenWriters.size());
+                target.setState(WriterState.CLOSED);
+                mNumFlushing--;
+                if (!mWaitingForSlot.isEmpty()) {
+                    CountDownLatch l = mWaitingForSlot.remove(0);
+                    l.countDown();
+                }
+                target.getFlushWaiterLatch().countDown();
+                target.resetFlushWaiterLatch();
+                this.notifyAll();
             }
-            target.getFlushWaiterLatch().countDown();
-            target.resetFlushWaiterLatch();
-            this.notifyAll();
         }
     }
     
@@ -411,9 +421,11 @@ static class TestWriter extends IndexWriter {
             }
         }
         
-        public void doWriterOpen() {
+        public void doWriterOpen() throws IOException {
             if (!opened) {
                 try {
+                    if (r.nextFloat() > 0.9)
+                        throw new IOException("Foo");
                     if (false)
                         Thread.sleep(1);
                     opened = true;
@@ -424,10 +436,14 @@ static class TestWriter extends IndexWriter {
         public void doWriterClose() {
             assert(opened);
             try {
+//                System.out.println("BeginWriterClose: "+this);
+                if (r.nextFloat() > 0.999)
+                    throw new IllegalArgumentException("foo");
                 long length = randomLong(100);
                 if (length > 0)
                     Thread.sleep(length);
                 opened = false;
+//                System.out.println("DoneWriterClose: "+this);
           } catch (InterruptedException e) {}
         }
         
@@ -490,7 +506,7 @@ static class TestWriter extends IndexWriter {
             mWritePct = writePct;
             mFlushPct = flushPct;
             mNumIters = numIters;
-            mR = new Random(System.currentTimeMillis());
+            mR = new Random(System.currentTimeMillis()+this.getId());
         }
         public void run() {
             for (int i = 0; i < mNumIters; i++) {
@@ -517,8 +533,8 @@ static class TestWriter extends IndexWriter {
                                 } catch (InterruptedException e) {}
                                 mCache.doneWriting(w);
                             } catch (IOException e) {
-                                System.err.println("Caught IOException: "+e);
-                                e.printStackTrace();
+//                                System.err.println("Caught IOException: "+e);
+//                                e.printStackTrace();
                             }
                         }
                     }
@@ -536,8 +552,8 @@ static class TestWriter extends IndexWriter {
      * @param args
      */
    public static void main(String[] args) {
-       int cacheSize = 100;
-       int numWriters = 70;
+       int cacheSize = 20;
+       int numWriters = 200;
        int numThreads = 10;
        int sweepFrequencyS = 1;
        int idleFlushTimeS = 2000;
@@ -612,7 +628,8 @@ static class TestWriter extends IndexWriter {
                lowestIter = Math.min(lowestIter, threadIter);
                highestIter = Math.max(highestIter, threadIter);
            }
-           System.out.println("Lowest iter is "+lowestIter+" Highest="+highestIter);
+           System.out.println("Lowest iter is "+lowestIter+" Highest="+highestIter+
+                              " NumFlushing="+cache.mNumFlushing);
        }
 
        
