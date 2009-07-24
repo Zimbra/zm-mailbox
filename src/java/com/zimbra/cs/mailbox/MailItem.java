@@ -2687,10 +2687,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             0xff0000, 0x848200, 0xff0084, 0x848284, 0xff8000
         };
         public Color(long rgb) {
-            if ((rgb & RGB_INDICATOR_MASK) > 0)
-                setRgb((rgb & RGB_MASK));
-            else
-                setColor((byte)rgb);
+            setRgb(rgb);
         }
         public Color(byte c) {
             setColor(c);
@@ -2698,6 +2695,17 @@ public abstract class MailItem implements Comparable<MailItem> {
         public Color(String color) {
             // string representation of color.  e.g. #00008B, #F0F8FF, etc
             setColor(color);
+        }
+        // don't change this constructor to public.  RGB_INDICATOR is
+        // for internal use only in order to make metadata backward
+        // compatible.
+        static Color fromMetadata(long rgb) {
+            Color c = new Color(0);
+            if ((rgb & RGB_INDICATOR_MASK) > 0)
+                c.setRgb((rgb & RGB_MASK));
+            else
+                c.setColor((byte)rgb);
+            return c;
         }
         public byte getRed() {
             return (byte)((mRgb >> 16) & 0xff);
@@ -2773,7 +2781,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (meta == null)
             return;
 
-        mRGBColor = new Color(meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR));
+        mRGBColor = Color.fromMetadata(meta.getLong(Metadata.FN_COLOR, DEFAULT_COLOR));
         mVersion = (int) meta.getLong(Metadata.FN_VERSION, 1);
 
         mExtendedData = null;
