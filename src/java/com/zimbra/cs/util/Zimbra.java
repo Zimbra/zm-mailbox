@@ -316,7 +316,7 @@ public class Zimbra {
 	return sInited;
     }
     
-    public static Timer sTimer = new Timer(true);
+    public static Timer sTimer = new Timer("Timer-Zimbra", true);
 
     /**
      * Logs the given message and shuts down the server.

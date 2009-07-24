@@ -115,7 +115,7 @@ public class FirstServlet extends HttpServlet {
         }
     }
 
-    private static Timer sOutputRotationTimer = new Timer();
+    private static Timer sOutputRotationTimer;
     
     private static void doOutputRotation() {
         Date now = new Date();
@@ -134,9 +134,10 @@ public class FirstServlet extends HttpServlet {
     
     private static void setupOutputRotation() throws FileNotFoundException, SecurityException, IOException {
         long configMillis = LC.mailboxd_output_rotate_interval.intValue() * 1000;
-        if (configMillis <= 0) {
+        
+        if (configMillis <= 0)
             return;
-        }
+        sOutputRotationTimer = new Timer("Timer-OutputRotation");
         GregorianCalendar now = new GregorianCalendar();
         long millisSinceEpoch = now.getTimeInMillis(); 
         long dstOffset = now.get(Calendar.DST_OFFSET);

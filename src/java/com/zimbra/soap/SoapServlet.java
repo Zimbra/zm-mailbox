@@ -87,7 +87,12 @@ public class SoapServlet extends ZimbraServlet {
     @Override public void init() throws ServletException {
         // TODO we should have a ReloadConfig soap command that will reload
         // on demand, instead of modifying and waiting for some time.
-        PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value());
+        long watch = LC.zimbra_log4j_properties_watch.longValue();
+        
+        if (watch > 0)
+            PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value(), watch);
+        else
+            PropertyConfigurator.configure(LC.zimbra_log4j_properties.value());
 
         String name = getServletName();
         ZimbraLog.soap.info("Servlet " + name + " starting up");
