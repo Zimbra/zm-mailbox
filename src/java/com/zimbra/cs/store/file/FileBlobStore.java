@@ -105,32 +105,30 @@ public class FileBlobStore extends StoreManager {
         String destPath = dest.getAbsolutePath();
         ensureParentDirExists(dest);
 
-        boolean srcCompressed = FileUtil.isGzipped(src.getFile());
         boolean destCompressed = false;
         if (destVolume.getCompressBlobs()) {
-            if (srcCompressed || src.getFile().length() <= destVolume.getCompressionThreshold()) {
+            if (src.isCompressed() || src.getFile().length() <= destVolume.getCompressionThreshold()) {
                 FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
-                destCompressed = srcCompressed;
+                destCompressed = src.isCompressed();
             } else {
                 FileUtil.compress(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
                 destCompressed = true;
             }
         } else {
-            if (srcCompressed)
+            if (src.isCompressed())
                 FileUtil.uncompress(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
             else
                 FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
         }
 
         if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("Copied id=" + destMsgId +
-                    " mbox=" + destMbox.getId() +
-                    " oldpath=" + srcPath + 
-                    " newpath=" + destPath);
+            ZimbraLog.store.debug("copied id=" + destMsgId +
+                                      " mbox=" + destMbox.getId() +
+                                   " oldpath=" + srcPath + 
+                                   " newpath=" + destPath);
         }
 
-        Blob newBlob = new VolumeBlob(dest, destVolume.getId());
-        newBlob.setCompressed(destCompressed);
+        Blob newBlob = new VolumeBlob(dest, destVolume.getId()).setCompressed(destCompressed);
         return new VolumeMailboxBlob(destMbox, destMsgId, destRevision, destVolume.getLocator(), newBlob);
     }
 
@@ -193,10 +191,10 @@ public class FileBlobStore extends StoreManager {
         }
 
         if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("Linked id=" + destMsgId +
-                    " mbox=" + destMbox.getId() +
-                    " oldpath=" + srcPath + 
-                    " newpath=" + destPath);
+            ZimbraLog.store.debug("linked id=" + destMsgId +
+                                      " mbox=" + destMbox.getId() +
+                                   " oldpath=" + srcPath + 
+                                   " newpath=" + destPath);
         }
 
         String destLocator = Short.toString(destVolumeId);
@@ -234,10 +232,10 @@ public class FileBlobStore extends StoreManager {
         }
 
         if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("Renamed id=" + destMsgId +
-                    " mbox=" + destMbox.getId() +
-                    " oldpath=" + srcPath + 
-                    " newpath=" + destPath);
+            ZimbraLog.store.debug("renamed id=" + destMsgId +
+                                       " mbox=" + destMbox.getId() +
+                                    " oldpath=" + srcPath +
+                                    " newpath=" + destPath);
         }
 
         return new VolumeMailboxBlob(destMbox, destMsgId, destRevision, volume.getLocator(), new VolumeBlob(destFile, volume.getId()));
@@ -267,6 +265,7 @@ public class FileBlobStore extends StoreManager {
     private boolean deleteFile(File file) throws IOException {
         if (file == null)
             return false;
+
         ZimbraLog.store.debug("Deleting %s.", file.getPath());
         boolean deleted = file.delete();
         if (deleted)
@@ -301,9 +300,8 @@ public class FileBlobStore extends StoreManager {
 
     @Override public boolean deleteStore(Mailbox mbox)
     throws IOException {
-        for (Volume vol : Volume.getAll()) {
+        for (Volume vol : Volume.getAll())
             FileUtil.deleteDir(new File(vol.getMessageRootDir(mbox.getId())));
-        }
         return true;
     }
 
@@ -319,9 +317,8 @@ public class FileBlobStore extends StoreManager {
     throws ServiceException {
         Volume vol = Volume.getById(volumeId);
         String path = vol.getBlobDir(mbox.getId(), msgId);
-        int buflen = path.length() + 15;
-        if (revision >= 0)
-            buflen += 11;
+        int buflen = path.length() + 15 + (revision < 0 ? 0 : 11);
+
         StringBuffer sb = new StringBuffer(buflen);
         sb.append(path).append(File.separator).append(msgId);
         if (revision >= 0)
@@ -332,12 +329,10 @@ public class FileBlobStore extends StoreManager {
 
     private static void ensureDirExists(File dir) throws IOException {
         if (!FileUtil.mkdirs(dir))
-            throw new IOException("Unable to create blob store directory " +
-                    dir.getAbsolutePath());
+            throw new IOException("Unable to create blob store directory " + dir.getAbsolutePath());
     }
 
     private static void ensureParentDirExists(File file) throws IOException {
-        File dir = file.getParentFile();
-        ensureDirExists(dir);
+        ensureDirExists(file.getParentFile());
     }
 }
