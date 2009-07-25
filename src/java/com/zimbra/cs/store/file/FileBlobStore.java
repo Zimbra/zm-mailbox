@@ -69,7 +69,9 @@ public class FileBlobStore extends StoreManager {
 
     @Override public Blob storeIncoming(InputStream in, long sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
-        BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).disableCompression(storeAsIs).setStorageCallback(callback).init();
+        BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).setStorageCallback(callback);
+        // if the blob is already compressed, *don't* calculate a digest/size from what we write
+        builder.disableCompression(storeAsIs).disableDigest(storeAsIs).init();
 
         byte[] buffer = new byte[BUFLEN];
         int numRead;

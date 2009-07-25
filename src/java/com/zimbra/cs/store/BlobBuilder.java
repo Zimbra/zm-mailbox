@@ -153,9 +153,10 @@ public class BlobBuilder {
         }
 
         // set the blob's digest and size
-        if (digest != null)
+        if (digest != null) {
             blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
-        blob.setRawSize(totalBytes);
+            blob.setRawSize(totalBytes);
+        }
 
         if (ZimbraLog.store.isDebugEnabled())
             ZimbraLog.store.debug("stored " + this);

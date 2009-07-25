@@ -177,10 +177,6 @@ public class StoreIncomingBlob extends RedoableOp {
 
         StoreIncomingBlob redoRecorder = null;
         if (!getUnloggedReplay()) {
-            redoRecorder =
-                new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
-            redoRecorder =
-                new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder = new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder.start(getTimestamp());
             redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath);
@@ -191,6 +187,8 @@ public class StoreIncomingBlob extends RedoableOp {
         try {
             boolean compressed = mData.getLength() != mMsgSize;
             Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, null, compressed);
+            if (compressed)
+                blob.setDigest(mDigest).setRawSize(mMsgSize).setCompressed(compressed);
             registerBlob(mPath, blob);
             success = true;
         } finally {
