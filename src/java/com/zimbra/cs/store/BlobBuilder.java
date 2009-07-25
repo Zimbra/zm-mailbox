@@ -14,12 +14,14 @@
  */
 package com.zimbra.cs.store;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.File;
@@ -102,6 +104,17 @@ public class BlobBuilder {
     @SuppressWarnings("unused")
     protected boolean useCompression(long size) throws ServiceException {
         return false;
+    }
+
+    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
+
+    public BlobBuilder append(InputStream in) throws IOException {
+        byte[] buffer = new byte[BUFLEN];
+        int numRead;
+        while ((numRead = in.read(buffer)) >= 0)
+            append(buffer, 0, numRead);
+
+        return this;
     }
 
     public BlobBuilder append(byte[] b, int off, int len) throws IOException {

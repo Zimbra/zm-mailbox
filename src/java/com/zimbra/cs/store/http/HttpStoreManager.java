@@ -136,20 +136,13 @@ public abstract class HttpStoreManager extends StoreManager {
         return new HttpMailboxBlob(mbox, msgId, revision, locator);
     }
 
-    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
-
     @Override public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
         BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).setStorageCallback(callback);
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
-        builder.disableCompression(storeAsIs).disableDigest(storeAsIs).init();
+        builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
 
-        byte[] buffer = new byte[BUFLEN];
-        int numRead;
-        while ((numRead = data.read(buffer)) >= 0)
-            builder.append(buffer, 0, numRead);
-
-        return builder.finish();
+        return builder.init().append(data).finish();
     }
 
     @Override public StagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
