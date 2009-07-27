@@ -64,16 +64,17 @@ public class ItemData {
             ud.parentId = json.getInt(Keys.parent_id.toString());
             ud.folderId = json.getInt(Keys.folder_id.toString());
             /*
-             * indexId changed to an optional string from a mandatory int which
-             * breaks sync with 5.0 clients 
+             * indexId and volumeId changed to optional strings from mandatory
+             *  ints which breaks sync with 5.0 clients 
             
              * ud.indexId = json.optString(Keys.index_id.toString());
+             * ud.locator = json.getString(Keys.volume_id.toString());
              */
             ud.indexId = null;
+            ud.locator = null;
             ud.imapId = json.getInt(Keys.imap_id.toString());
             ud.date = json.getInt(Keys.date.toString());
             ud.size = json.getLong(Keys.size.toString());
-            ud.locator = json.getString(Keys.volume_id.toString());
             ud.setBlobDigest(json.optString(Keys.blob_digest.toString()));
             ud.unreadCount = json.getInt(Keys.unread.toString());
             ud.flags = json.getInt(Keys.flags.toString()) |
@@ -111,7 +112,8 @@ public class ItemData {
                 put(Keys.imap_id.toString(), ud.imapId).
                 put(Keys.date.toString(), ud.date).
                 put(Keys.size.toString(), ud.size).
-                put(Keys.volume_id.toString(), ud.locator).
+                // put(Keys.volume_id.toString(), ud.locator).
+                put(Keys.volume_id.toString(), 0).
                 putOpt(Keys.blob_digest.toString(), ud.getBlobDigest()).
                 put(Keys.unread.toString(), ud.unreadCount).
                 put(Keys.flags.toString(), ud.flags).
