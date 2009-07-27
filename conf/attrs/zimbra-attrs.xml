@@ -4608,4 +4608,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The list of available dictionaries that can be used for spell checking.</desc>
 </attr>
 
+<attr id="1043" name="zimbraHttpDebugHandlerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_GA">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable http debug handler on a server</desc>
+</attr>
+
 </attrs>

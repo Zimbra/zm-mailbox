@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090727-1126 */
+    /* build: 6.0.0 pshao 20090727-1438 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2968,6 +2968,78 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetHsmPolicy(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHsmPolicy, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable http debug handler on a server
+     *
+     * @return zimbraHttpDebugHandlerEnabled, or false if unset
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1043)
+    public boolean isHttpDebugHandlerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraHttpDebugHandlerEnabled, false);
+    }
+
+    /**
+     * Whether to enable http debug handler on a server
+     *
+     * @param zimbraHttpDebugHandlerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1043)
+    public void setHttpDebugHandlerEnabled(boolean zimbraHttpDebugHandlerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDebugHandlerEnabled, zimbraHttpDebugHandlerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable http debug handler on a server
+     *
+     * @param zimbraHttpDebugHandlerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1043)
+    public Map<String,Object> setHttpDebugHandlerEnabled(boolean zimbraHttpDebugHandlerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDebugHandlerEnabled, zimbraHttpDebugHandlerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable http debug handler on a server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1043)
+    public void unsetHttpDebugHandlerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDebugHandlerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable http debug handler on a server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1043)
+    public Map<String,Object> unsetHttpDebugHandlerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraHttpDebugHandlerEnabled, "");
         return attrs;
     }
 

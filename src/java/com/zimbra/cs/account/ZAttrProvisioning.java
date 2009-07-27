@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090727-1126 */
+    /* build: 6.0.0 pshao 20090727-1438 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3281,6 +3281,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1024)
     public static final String A_zimbraHsmPolicy = "zimbraHsmPolicy";
+
+    /**
+     * Whether to enable http debug handler on a server
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1043)
+    public static final String A_zimbraHttpDebugHandlerEnabled = "zimbraHttpDebugHandlerEnabled";
 
     /**
      * number of http handler threads
