@@ -349,8 +349,11 @@ public class GalSearchControl {
 	            callback.setNewToken(newToken);
 			}
 			boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
-			if (hasMore)
-				callback.setHasMoreResult(true);
+			if (hasMore) {
+			    callback.setHasMoreResult(true);
+			    callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
+			    callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
+			}
 		} catch (Exception e) {
 			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
 			return false;
