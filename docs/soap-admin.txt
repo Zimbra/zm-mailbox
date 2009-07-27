@@ -2323,13 +2323,13 @@ example for creating domain gal sync account.
 
     <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com" type="ldap">
       <account by="name">gal@mydomain.com</account>
-      <a n="zimbraGalLdapURL">ldap://ldap.mydomain.com</a>
-      <a n="zimbraGalLdapStartTlsEnabled">TRUE</a>
-      <a n="zimbraGalLdapSearchBase">cn=users</a>
-      <a n="zimbraGalLdapAuthMech">simple</a>
-      <a n="zimbraGalLdapBindDn">uid=admin,cn=users</a>
-      <a n="zimbraGalLdapBindPassword">password</a>
-      <a n="zimbraGalLdapFilter">(&amp;(mail=*)(objectClass=user))</a>
+      <a n="zimbraGalSyncLdapURL">ldap://ldap.mydomain.com</a>
+      <a n="zimbraGalSyncLdapStartTlsEnabled">TRUE</a>
+      <a n="zimbraGalSyncLdapSearchBase">cn=users</a>
+      <a n="zimbraGalSyncLdapAuthMech">simple</a>
+      <a n="zimbraGalSyncLdapBindDn">uid=admin,cn=users</a>
+      <a n="zimbraGalSyncLdapBindPassword">password</a>
+      <a n="zimbraGalSyncLdapFilter">(&amp;(mail=*)(objectClass=user))</a>
       <a n="zimbraGalLdapAttrMap">whenChanged,modifyTimeStamp=modifyTimeStamp</a>
       <a n="zimbraGalLdapAttrMap">whenCreated,createTimeStamp=createTimeStamp</a>
       <a n="zimbraGalLdapAttrMap">zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16</a>
