@@ -295,6 +295,22 @@
       </Set>
     </Ref>
 
+    <!-- DEBUGBEGIN
+    <Get id="oldhandler" name="handler"/>
+    <Set name="handler">
+      <New id="DebugHandler" class="org.mortbay.jetty.handler.DebugHandler">
+        <Set name="handler"><Ref id="oldhandler"/></Set>
+        <Set name="outputStream">
+          <New class="org.mortbay.util.RolloverFileOutputStream">
+            <Arg type="String"><SystemProperty name="jetty.home" default="."/>/logs/yyyy_mm_dd.debug.log</Arg>
+            <Arg type="boolean">true</Arg> <!-- append -->
+            <Arg type="int">90</Arg> <!-- retain days -->
+          </New>
+        </Set>
+      </New>
+    </Set>
+    DEBUGEND -->
+
     <!-- =========================================================== -->
     <!-- extra options                                               -->
     <!-- =========================================================== -->
