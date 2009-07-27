@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090720-1036 */
+    /* build: 6.0.0 pshao 20090727-1126 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14192,7 +14192,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the first reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the first reminder for an event.
      *
      * @return zimbraPrefCalendarReminderDuration1, or "-PT15M" if unset
      *
@@ -14204,7 +14205,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the first reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the first reminder for an event.
      *
      * @param zimbraPrefCalendarReminderDuration1 new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14219,7 +14221,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the first reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the first reminder for an event.
      *
      * @param zimbraPrefCalendarReminderDuration1 new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14235,7 +14238,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the first reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the first reminder for an event.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14249,7 +14253,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the first reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the first reminder for an event.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14264,7 +14269,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the second reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the second reminder for an event.
      *
      * @return zimbraPrefCalendarReminderDuration2, or null if unset
      *
@@ -14276,7 +14282,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the second reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the second reminder for an event.
      *
      * @param zimbraPrefCalendarReminderDuration2 new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14291,7 +14298,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the second reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the second reminder for an event.
      *
      * @param zimbraPrefCalendarReminderDuration2 new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14307,7 +14315,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the second reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the second reminder for an event.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14321,7 +14330,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * When to send the second reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the second reminder for an event.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14336,7 +14346,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The email the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The email the reminder goes to.
      *
      * @return zimbraPrefCalendarReminderEmail, or null if unset
      *
@@ -14348,7 +14359,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The email the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The email the reminder goes to.
      *
      * @param zimbraPrefCalendarReminderEmail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14363,7 +14375,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The email the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The email the reminder goes to.
      *
      * @param zimbraPrefCalendarReminderEmail new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14379,7 +14392,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The email the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The email the reminder goes to.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14393,7 +14407,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The email the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The email the reminder goes to.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14480,7 +14495,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The mobile device (phone) the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The mobile device (phone) the reminder goes to.
      *
      * @return zimbraPrefCalendarReminderMobile, or false if unset
      *
@@ -14492,7 +14508,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The mobile device (phone) the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The mobile device (phone) the reminder goes to.
      *
      * @param zimbraPrefCalendarReminderMobile new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14507,7 +14524,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The mobile device (phone) the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The mobile device (phone) the reminder goes to.
      *
      * @param zimbraPrefCalendarReminderMobile new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14523,7 +14541,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The mobile device (phone) the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The mobile device (phone) the reminder goes to.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14537,7 +14556,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The mobile device (phone) the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The mobile device (phone) the reminder goes to.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14552,7 +14572,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * To send email or to not send email is the question.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: To send email or to not send email is the question.
      *
      * @return zimbraPrefCalendarReminderSendEmail, or false if unset
      *
@@ -14564,7 +14585,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * To send email or to not send email is the question.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: To send email or to not send email is the question.
      *
      * @param zimbraPrefCalendarReminderSendEmail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14579,7 +14601,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * To send email or to not send email is the question.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: To send email or to not send email is the question.
      *
      * @param zimbraPrefCalendarReminderSendEmail new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14595,7 +14618,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * To send email or to not send email is the question.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: To send email or to not send email is the question.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14609,7 +14633,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * To send email or to not send email is the question.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: To send email or to not send email is the question.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14701,7 +14726,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Send a reminder via YIM
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: Send a reminder via YIM
      *
      * @return zimbraPrefCalendarReminderYMessenger, or false if unset
      *
@@ -14713,7 +14739,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Send a reminder via YIM
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: Send a reminder via YIM
      *
      * @param zimbraPrefCalendarReminderYMessenger new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14728,7 +14755,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Send a reminder via YIM
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: Send a reminder via YIM
      *
      * @param zimbraPrefCalendarReminderYMessenger new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14744,7 +14772,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Send a reminder via YIM
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: Send a reminder via YIM
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -14758,7 +14787,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Send a reminder via YIM
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: Send a reminder via YIM
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

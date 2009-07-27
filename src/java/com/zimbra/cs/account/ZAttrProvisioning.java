@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090720-1036 */
+    /* build: 6.0.0 pshao 20090727-1126 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5041,7 +5041,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
 
     /**
-     * When to send the first reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the first reminder for an event.
      *
      * @since ZCS 5.0.0
      */
@@ -5049,7 +5050,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderDuration1 = "zimbraPrefCalendarReminderDuration1";
 
     /**
-     * When to send the second reminder for an event.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: When to send the second reminder for an event.
      *
      * @since ZCS 5.0.0
      */
@@ -5057,7 +5059,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderDuration2 = "zimbraPrefCalendarReminderDuration2";
 
     /**
-     * The email the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The email the reminder goes to.
      *
      * @since ZCS 5.0.0
      */
@@ -5073,7 +5076,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderFlashTitle = "zimbraPrefCalendarReminderFlashTitle";
 
     /**
-     * The mobile device (phone) the reminder goes to.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: The mobile device (phone) the reminder goes to.
      *
      * @since ZCS 5.0.0
      */
@@ -5081,7 +5085,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderMobile = "zimbraPrefCalendarReminderMobile";
 
     /**
-     * To send email or to not send email is the question.
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: To send email or to not send email is the question.
      *
      * @since ZCS 5.0.0
      */
@@ -5098,7 +5103,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderSoundsEnabled = "zimbraPrefCalendarReminderSoundsEnabled";
 
     /**
-     * Send a reminder via YIM
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: Send a reminder via YIM
      *
      * @since ZCS 5.0.0
      */

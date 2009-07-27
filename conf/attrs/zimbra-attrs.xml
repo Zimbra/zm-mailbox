@@ -2850,32 +2850,38 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP attribute that contains user name for the principal</desc>
 </attr>
 
-<attr id="573" name="zimbraPrefCalendarReminderDuration1" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="573" name="zimbraPrefCalendarReminderDuration1" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
   <defaultCOSValue>-PT15M</defaultCOSValue>
   <desc>When to send the first reminder for an event.</desc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="574" name="zimbraPrefCalendarReminderDuration2" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="574" name="zimbraPrefCalendarReminderDuration2" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
   <desc>When to send the second reminder for an event.</desc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="575" name="zimbraPrefCalendarReminderEmail" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="575" name="zimbraPrefCalendarReminderEmail" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
   <desc>The email the reminder goes to.</desc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>To send email or to not send email is the question.</desc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
   <defaultCOSValue>FALSE</defaultCOSValue>  
   <desc>The mobile device (phone) the reminder goes to.</desc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="578" name="zimbraPrefCalendarReminderYMessenger" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
+<attr id="578" name="zimbraPrefCalendarReminderYMessenger" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Send a reminder via YIM</desc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
 <attr id="579" name="zimbraJunkMessagesIndexingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
