@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -29,10 +31,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -155,6 +161,8 @@ public abstract class DavResource {
 	}
 	
 	public boolean hasContent(DavContext ctxt) {
+        if (isWebRequest(ctxt))
+            return true;
 		try {
 			return (getContentLength() > 0);
 		} catch (NumberFormatException e) {
@@ -163,6 +171,8 @@ public abstract class DavResource {
 	}
 	
 	public String getContentType(DavContext ctxt) {
+        if (isWebRequest(ctxt))
+            return "text/plain";
 		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTTYPE);
 		if (prop != null)
 			return prop.getStringValue();
@@ -218,11 +228,19 @@ public abstract class DavResource {
 		return true;
 	}
 	
-	public abstract InputStream getContent(DavContext ctxt) throws IOException, DavException;
+	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+        if (isWebRequest(ctxt))
+            return getTextContent(ctxt);
+        return null;
+	}
 	
 	public abstract boolean isCollection();
 	
 	public abstract void delete(DavContext ctxt) throws DavException;
+	
+	public String getName() {
+	    return getUri();
+	}
 	
 	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		return Collections.emptyList();
@@ -233,6 +251,13 @@ public abstract class DavResource {
 	}
 	public String getEtag() {
 		return null;
+	}
+	
+	public String getLastModifiedDate() {
+        ResourceProperty rp = getProperty(DavElements.P_GETLASTMODIFIED);
+        if (rp != null)
+            return rp.getStringValue();
+	    return new Date(0).toString();
 	}
 	
 	public void patchProperties(DavContext ctxt, Collection<Element> set, Collection<QName> remove) throws DavException, IOException {
@@ -261,4 +286,47 @@ public abstract class DavResource {
 	public void rename(DavContext ctxt, String newName, DavResource destCollection) throws DavException {
 		throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
 	}
+
+    protected boolean isWebRequest(DavContext ctxt) {
+        String userAgent = ctxt.getRequest().getHeader(DavProtocol.HEADER_USER_AGENT);
+        if (userAgent != null && 
+                (userAgent.indexOf("MSIE") >= 0 ||
+                 userAgent.indexOf("Mozilla") >= 0)) {
+            return true;
+        }
+        return false;
+    }
+    
+    protected InputStream getRawContent(DavContext ctxt) throws DavException, IOException {
+        return null;
+    }
+    
+    protected InputStream getTextContent(DavContext ctxt) throws IOException {
+        StringBuilder buf = new StringBuilder();
+        buf.append("Request\n\n");
+        buf.append("\tAuthenticated user:\t").append(ctxt.getAuthAccount().getName()).append("\n");
+        buf.append("\tCurrent date:\t\t").append(new Date(System.currentTimeMillis())).append("\n");
+        buf.append("\nResource\n\n");
+        buf.append("\tName:\t\t\t").append(getName()).append("\n");
+        buf.append("\tPath:\t\t\t").append(getUri()).append("\n");
+        buf.append("\tDate:\t\t\t").append(getLastModifiedDate()).append("\n");
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account account = prov.get(Provisioning.AccountBy.name, getOwner());
+            buf.append("\tOwner account name:\t").append(account.getName()).append("\n");
+        } catch (ServiceException se) {
+        }
+        buf.append("\nProperties\n\n");
+        Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_PROP);
+        for (ResourceProperty rp : mProps.values())
+            rp.toElement(ctxt, e, false);
+        OutputFormat format = OutputFormat.createPrettyPrint();
+        format.setTrimText(false);
+        format.setOmitEncoding(false);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        XMLWriter writer = new XMLWriter(baos, format);
+        writer.write(e);
+        buf.append(new String(baos.toByteArray()));
+        return new ByteArrayInputStream(buf.toString().getBytes("UTF-8"));
+    }
 }

@@ -15,7 +15,6 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -47,7 +46,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
@@ -104,12 +102,6 @@ public class User extends Principal {
     }
 
     @Override
-    public InputStream getContent(DavContext ctxt) throws IOException,
-            DavException {
-        return null;
-    }
-
-    @Override
     public boolean isCollection() {
         return true;
     }
@@ -132,6 +124,7 @@ public class User extends Principal {
     	short perm = path.endsWith(CALENDAR_PROXY_READ + "/") ? ACL.RIGHT_READ : ACL.RIGHT_READ | ACL.RIGHT_WRITE;
 		for (Element setElem : set) {
 			if (setElem.getQName().equals(DavElements.E_GROUP_MEMBER_SET)) {
+			    @SuppressWarnings("unchecked")
 				Iterator hrefs = setElem.elementIterator(DavElements.E_HREF);
 				while (hrefs.hasNext()) {
 					Element href = (Element) hrefs.next();

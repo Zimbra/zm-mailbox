@@ -14,9 +14,6 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
@@ -55,12 +52,6 @@ public class Principal extends DavResource {
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
-    }
-
-    @Override
-    public InputStream getContent(DavContext ctxt) throws IOException,
-            DavException {
-        return null;
     }
 
     @Override
