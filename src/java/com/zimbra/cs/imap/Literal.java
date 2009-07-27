@@ -51,7 +51,7 @@ abstract class Literal {
         bb.position(bb.position() + len);
         return len;
     }
-    
+
     protected void checkComplete() {
         if (remaining() > 0) {
             throw new IllegalStateException("Incomplete literal");

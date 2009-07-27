@@ -46,12 +46,12 @@ public interface MinaHandler {
     void connectionIdle() throws IOException;
 
     /**
-     * Called when a new request has been received on the connection
+     * Called when a new message has been received on the connection
      * \
-     * @param req the MinaRequest that has been received
+     * @param msg the message that has been received
      * @throws IOException if an I/O error occurs
      */
-    void requestReceived(MinaRequest req) throws IOException;
+    void messageReceived(Object msg) throws IOException;
 
     /**
      * Drop connection and wait up to 'timeout' milliseconds for last write

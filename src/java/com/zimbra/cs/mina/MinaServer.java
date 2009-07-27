@@ -26,6 +26,7 @@ import com.zimbra.cs.util.Zimbra;
 import org.apache.mina.common.*;
 import org.apache.mina.filter.SSLFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
@@ -45,8 +46,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static com.zimbra.cs.mina.Constants.*;
 
 /**
  * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new
@@ -212,7 +211,7 @@ public abstract class MinaServer implements Server {
         if (sc.isSSLEnabled()) {
             fc.addFirst("ssl", getSSLFilter(getConfig()));
         }
-        fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
+        fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
         fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
         fc.addLast("logger", new MinaLoggingFilter(this, false));
         IoHandler handler = new MinaIoHandler(this);
@@ -262,7 +261,7 @@ public abstract class MinaServer implements Server {
         List<MinaHandler> handlers = new ArrayList<MinaHandler>();
         for (IoSession session : mSocketAcceptor.getManagedSessions(addr)) {
             getLog().info("Closing session = " + session);
-            MinaHandler handler = (MinaHandler) session.getAttribute(MINA_HANDLER_ATTR);
+            MinaHandler handler = MinaIoHandler.getMinaHandler(session);
             if (handler != null) handlers.add(handler);
         }
         // Wait up to grace seconds to close active handlers
@@ -307,15 +306,8 @@ public abstract class MinaServer implements Server {
      */
     protected abstract MinaHandler createHandler(IoSession session);
 
-    /**
-     * Creates a new MinaRequest for parsing a new request received by the
-     * specified handler.
-     *
-     * @param handler the MinaHandler receiving the request
-     * @return the new MinaRequest
-     */
-    protected abstract MinaRequest createRequest(MinaHandler handler);
-
+    protected abstract ProtocolCodecFactory getProtocolCodecFactory();
+    
     /**
      * Returns the logger for server log messages.
      *

@@ -114,11 +114,16 @@ class MinaLoggingFilter extends IoFilterAdapter {
         if (msg instanceof WriteRequest) {
             return pp(((WriteRequest) msg).getMessage());
         }
+        if (msg instanceof String) {
+            return msg;
+        }
         ByteBuffer bb;
         if (msg instanceof ByteBuffer) {
             bb = (ByteBuffer) msg;
         } else if (msg instanceof org.apache.mina.common.ByteBuffer) {
             bb = ((org.apache.mina.common.ByteBuffer) msg).buf();
+        } else if (msg instanceof byte[]) {
+            bb = ByteBuffer.wrap((byte[]) msg);
         } else {
             return msg;
         }
@@ -135,10 +140,10 @@ class MinaLoggingFilter extends IoFilterAdapter {
 
     private static boolean isPrintable(byte b) {
         switch (b) {
-            case '\r': case '\n': case '\t':
-                return true;
-            default:
-                return b > 31 && b < 127;
+        case '\r': case '\n': case '\t':
+            return true;
+        default:
+            return b > 31 && b < 127;
         }
     }
 

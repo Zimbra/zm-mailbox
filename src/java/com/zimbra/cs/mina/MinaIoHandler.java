@@ -21,8 +21,6 @@ import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
 
-import static com.zimbra.cs.mina.Constants.*;
-
 /**
  * Handler for MINA I/O events. Responsible for notifying the connection's
  * MinaHandler when a connection has been opened, closed, become idle, or a
@@ -31,6 +29,8 @@ import static com.zimbra.cs.mina.Constants.*;
 class MinaIoHandler implements IoHandler {
     private MinaServer mServer;
 
+    private static final String MINA_HANDLER_ATTR = "MinaHandler";
+    
     MinaIoHandler(MinaServer server) {
         this.mServer = server;
     }
@@ -40,30 +40,30 @@ class MinaIoHandler implements IoHandler {
     }
 
     public void sessionOpened(IoSession session) throws IOException {
-        getHandler(session).connectionOpened();
+        getMinaHandler(session).connectionOpened();
     }
 
     public void sessionClosed(IoSession session) throws IOException {
-        getHandler(session).connectionClosed();
+        getMinaHandler(session).connectionClosed();
     }
 
     public void sessionIdle(IoSession session, IdleStatus status) throws IOException{
-        getHandler(session).connectionIdle();
+        getMinaHandler(session).connectionIdle();
     }
 
     public void messageReceived(IoSession session, Object msg) throws IOException {
-        getHandler(session).requestReceived((MinaRequest) msg);
+        getMinaHandler(session).messageReceived(msg);
     }
 
     public void exceptionCaught(IoSession session, Throwable e) throws IOException {
-        getHandler(session).connectionClosed();
+        getMinaHandler(session).connectionClosed();
     }
 
     public void messageSent(IoSession session, Object msg) {
         // Nothing to do here...
     }
 
-    private static MinaHandler getHandler(IoSession session) {
+    public static MinaHandler getMinaHandler(IoSession session) {
         return (MinaHandler) session.getAttribute(MINA_HANDLER_ATTR);
     }
 }

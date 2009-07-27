@@ -16,13 +16,10 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
-import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.Constants;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import org.apache.mina.common.IdleStatus;
@@ -33,6 +30,7 @@ import java.net.Socket;
 
 class MinaImapHandler extends ImapHandler implements MinaHandler {
     private IoSession mSession;
+    private MinaImapRequest mRequest;
 
     // Maximum number of milliseconds to wait for last write operation to
     // complete before we force close the session.
@@ -74,45 +72,57 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         throw new UnsupportedOperationException();
     }
 
-    public void requestReceived(MinaRequest req) throws IOException {
-        MinaImapRequest imapReq = (MinaImapRequest) req;
-
-        setUpLogContext(mSession.getRemoteAddress().toString());
-        
-        if (imapReq.isMaxRequestSizeExceeded()) {
-            handleParseException(new ImapParseException(imapReq.getTag(), "TOOBIG", "request too long", false));
-            return;
+    public void messageReceived(Object msg) throws IOException {
+        if (mRequest == null) {
+            mRequest = new MinaImapRequest(this);
         }
+        
+        if (mRequest.parse(msg)) {
+            // Request is complete
+            setUpLogContext(mSession.getRemoteAddress().toString());
+            try {
+                if (!processRequest(mRequest)) {
+                    dropConnection();
+                }
+            } catch (ImapParseException e) {
+                handleParseException(e);
+            } finally {
+                ZimbraLog.clearContext();
+                if (mRequest != null) {
+                    mRequest.cleanup();
+                    mRequest = null;
+                }
+            }
+        }
+    }
+
+    private boolean processRequest(MinaImapRequest req)
+        throws IOException, ImapParseException {
+        if (req.isMaxRequestSizeExceeded())
+            throw new ImapParseException(req.getTag(), "TOOBIG", "request too big", false);
 
         ImapFolder i4selected = mSelectedFolder;
         if (i4selected != null)
             i4selected.updateAccessTime();
 
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
+
         try {
-            if (!processRequest(imapReq))
-                dropConnection();
+            if (!checkAccountStatus())
+                return STOP_PROCESSING;
+            if (mAuthenticator != null && !mAuthenticator.isComplete())
+                return continueAuthentication(req);
+            try {
+                return executeRequest(req);
+            } catch (ImapParseException e) {
+                handleParseException(e);
+                return CONTINUE_PROCESSING;
+            }
         } finally {
-            imapReq.cleanup();
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
-            ZimbraLog.clearContext();
-        }
-    }
 
-    private boolean processRequest(MinaImapRequest req) throws IOException {
-        if (!checkAccountStatus())
-            return STOP_PROCESSING;
-
-        if (mAuthenticator != null && !mAuthenticator.isComplete())
-            return continueAuthentication(req);
-
-        try {
-            return executeRequest(req);
-        } catch (ImapParseException e) {
-            handleParseException(e);
-            return CONTINUE_PROCESSING;
         }
     }
 
@@ -161,9 +171,10 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void cleanup() {
-        MinaImapRequest req = (MinaImapRequest)
-            mSession.getAttribute(Constants.MINA_REQUEST_ATTR);
-        if (req != null) req.cleanup();
+        if (mRequest != null) {
+            mRequest.cleanup();
+            mRequest = null;
+        }
         try {
             unsetSelectedFolder(false);
         } catch (Exception e) {}

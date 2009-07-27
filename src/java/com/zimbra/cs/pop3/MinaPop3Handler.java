@@ -19,9 +19,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
-import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.MinaTextLineRequest;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoSession;
 
@@ -54,9 +52,9 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         dropConnection();
     }
     
-    public void requestReceived(MinaRequest req) throws IOException {
+    public void messageReceived(Object msg) throws IOException {
         try {
-            processCommand(((MinaTextLineRequest) req).getLine());
+            processCommand((String) msg);
         } finally {
             if (dropConnection) dropConnection();
         }

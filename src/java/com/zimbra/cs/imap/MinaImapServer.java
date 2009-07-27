@@ -20,9 +20,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.MinaCodecFactory;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.apache.mina.filter.codec.ProtocolDecoder;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -46,8 +48,12 @@ public class MinaImapServer extends MinaServer {
     }
 
     @Override
-    public MinaRequest createRequest(MinaHandler handler) {
-        return new MinaImapRequest(handler);
+    protected ProtocolCodecFactory getProtocolCodecFactory() {
+        return new MinaCodecFactory(this) {
+            public ProtocolDecoder getDecoder() {
+                return new MinaImapDecoder();
+            }
+        };
     }
 
     @Override

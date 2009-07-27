@@ -15,45 +15,27 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.mina.LineBuffer;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaRequest;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
-public class MinaImapRequest extends ImapRequest implements MinaRequest {
-    private State mState;       // Current request state
-    private LineBuffer mLine;   // Command line
-    private Literal mLiteral;   // Current literal data
-    private int mLiteralCount;  // Remaining byte count for current literal
-    private boolean mBlocking;  // Current literal is blocking continuation
-
-    private enum State {
-        COMMAND,    // Parsing command line
-        LITERAL,    // Parsing literal data
-        COMPLETE    // Request is complete   
-    }
+public class MinaImapRequest extends ImapRequest {
+    private Literal literal;    // current literal data
+    private int literalCount;   // remaining byte count for current literal
+    private boolean complete;   // if true then request is complete
 
     public MinaImapRequest(MinaHandler handler) {
         super((MinaImapHandler) handler);
-        mState = State.COMMAND;
     }
 
-    public void parse(ByteBuffer bb) throws IOException {
+    public boolean parse(Object obj) throws IOException {
         try {
-            while (bb.hasRemaining()) {
-                switch (mState) {
-                case COMMAND:
-                    parseCommand(bb);
-                    continue;
-                case LITERAL:
-                    parseLiteral(bb);
-                    continue;
-                case COMPLETE:
-                    return;
-                }
+            if (literal != null) {
+                parseLiteral((byte[]) obj);
+            } else {
+                parseCommand((String) obj);
             }
+            return complete;
         } catch (ImapParseException e) {
             cleanup();
             mHandler.handleParseException(e);
@@ -62,62 +44,45 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
     }
 
     public boolean isComplete() {
-        return mState == State.COMPLETE;
+        return complete;
     }
 
-    private void parseLiteral(ByteBuffer bb) throws IOException, ImapParseException {
+    private void parseLiteral(byte[] b) throws IOException, ImapParseException {
+        assert b.length <= literalCount;
         if (isMaxRequestSizeExceeded()) {
-            mLiteralCount -= Math.min(mLiteralCount, bb.remaining());
+            literalCount -= Math.min(literalCount, b.length);
         } else {
-            mLiteralCount -= mLiteral.put(bb);
+            literalCount -= literal.put(b, 0, b.length);
         }
-        if (mLiteralCount == 0) {
-            assert mLiteral.remaining() == 0;
+        if (literalCount <= 0) {
+            assert literal.remaining() == 0;
             if (!isMaxRequestSizeExceeded()) {
-                addPart(mLiteral);
+                addPart(literal);
             }
-            mLiteral = null;
-            mState = State.COMMAND;
-        }
-    }
-
-    private void parseCommand(ByteBuffer bb) throws IOException, ImapParseException {
-        if (mLine == null) {
-            mLine = new LineBuffer();
-        }
-        mLine.parse(bb);
-        if (mLine.isComplete()) {
-            String line = mLine.toString();
-            mLine = null;
-            incrementSize(line.length());
-            addPart(line);
-            parseCommand(line);
+            literal = null;
         }
     }
 
     private void parseCommand(String line) throws IOException, ImapParseException {
-        int i;
-        if (!line.endsWith("}") || (i = line.lastIndexOf('{')) == -1) {
-            mState = State.COMPLETE;
-            return;
-        }
-        int j = line.length() - 2;
-        if (line.charAt(j) == '+') {
-            --j;
-        } else {
-            mBlocking = true;
-        }
-        mState = State.LITERAL;
-        mLiteralCount = parseNumber(line, i + 1, j);
-        if (mLiteralCount == -1) {
+        incrementSize(line.length());
+        addPart(line);
+        LiteralInfo li;
+        try {
+            li = LiteralInfo.parse(line);
+        } catch (IllegalArgumentException e) {
             throw new ImapParseException(getTag(), "bad literal format");
         }
-        incrementSize(mLiteralCount);
-        if (!isMaxRequestSizeExceeded()) {
-            mLiteral = Literal.newInstance(mLiteralCount, false /*isCommand("APPEND")*/);
-        }
-        if (mBlocking) {
-            sendContinuation();
+        if (li != null) {
+            literalCount = li.getCount();
+            incrementSize(literalCount);
+            if (!isMaxRequestSizeExceeded()) {
+                literal = Literal.newInstance(literalCount, isCommand("APPEND"));
+            }
+            if (li.isBlocking()) {
+                sendContinuation();
+            }
+        } else {
+            complete = true;
         }
     }
 
@@ -128,18 +93,6 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
             throw new ImapParseException(getTag(), "TOOBIG", "request too big", false);
         }
         mHandler.sendContinuation("send literal data");
-    }
-    
-    private static int parseNumber(String s, int i, int j) {
-        if (i > j) return -1;
-        int result = 0;
-        while (i <= j) {
-            int n = Character.digit(s.charAt(i++), 10);
-            if (n == -1) return -1;
-            result = result * 10 + n;
-            if (result < 0) return -1; // Overflow
-        }
-        return result;
     }
 
     public Literal readLiteral() throws ImapParseException {

@@ -12,7 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.mina;
 
 import java.nio.ByteBuffer;
@@ -49,14 +48,15 @@ public class LineBuffer {
      * 'bb' are consumed.
      * 
      * @param bb the ByteBuffer from which bytes are to be parsed
+     * @return true if line is complete, false otherwise
      */
-    public void parse(ByteBuffer bb) {
-        if (isComplete()) return;
+    public boolean parse(ByteBuffer bb) {
+        if (isComplete()) return true;
         int pos = findLF(bb);
         if (pos == -1) {
             // No end of line found, so just add remaining bytes to buffer
             mBuffer = MinaUtil.expand(mBuffer, bb.remaining()).put(bb);
-            return;
+            return false;
         }
         // End of line found,
         int len = pos - bb.position();
@@ -69,6 +69,7 @@ public class LineBuffer {
         while (pos > 0 && mBuffer.get(pos - 1) == CR) --pos;
         mBuffer.position(pos).flip();
         mComplete = true;
+        return true;
     }
 
     /**
@@ -100,6 +101,11 @@ public class LineBuffer {
      */
     public boolean isComplete() {
         return mComplete;
+    }
+
+    public void reset() {
+        mBuffer.clear();
+        mComplete = false;
     }
 
     private static int findLF(ByteBuffer bb) {

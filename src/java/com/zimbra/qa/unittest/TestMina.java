@@ -18,10 +18,11 @@ package com.zimbra.qa.unittest;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.TaskUtil;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
-import com.zimbra.cs.lmtpserver.MinaLmtpDataRequest;
+import com.zimbra.cs.lmtpserver.MinaLmtpData;
 import com.zimbra.cs.mina.LineBuffer;
 import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaUtil;
+import com.zimbra.cs.imap.LiteralInfo;
 import junit.framework.TestCase;
 
 import java.io.ByteArrayInputStream;
@@ -100,6 +101,19 @@ public class TestMina extends TestCase {
         assertTrue(lb.isComplete());
         assertEquals(LINE.length(), lb.toString().length());
     }
+
+    public void testLiteralInfo() throws Exception {
+        LiteralInfo li = LiteralInfo.parse(". append {10+}");
+        assertNotNull(li);
+        assertEquals(10, li.getCount());
+        assertFalse(li.isBlocking());
+        assertNull(LiteralInfo.parse(". login foo bar}"));
+        try {
+            LiteralInfo.parse(". append {-10}");
+            fail();
+        } catch (IllegalArgumentException e) {
+        }
+    }
     
     public void testMinaOutputStream() throws IOException {
         TestMinaOutputStream tos = new TestMinaOutputStream();
@@ -142,7 +156,7 @@ public class TestMina extends TestCase {
 
     public void testBigData() throws Exception {
         byte[] data = getBigData().getBytes();
-        MinaLmtpDataRequest lmtpData = new MinaLmtpDataRequest();
+        MinaLmtpData lmtpData = new MinaLmtpData();
         for (int off = 0; off < data.length; off += CHUNK_SIZE) {
             int len = Math.min(CHUNK_SIZE, data.length - off);
             ByteBuffer bb = ByteBuffer.wrap(data, off, len);
@@ -210,7 +224,7 @@ public class TestMina extends TestCase {
     // Test MinaLmtpDataRequest for given input data. Test compares result
     // against what is produced by LmtpInputStream as a reference.
     private void testMsgData(String data) throws IOException {
-        MinaLmtpDataRequest lmtpData = new MinaLmtpDataRequest();
+        MinaLmtpData lmtpData = new MinaLmtpData();
         ByteBuffer bb = MinaUtil.toByteBuffer(data);
         lmtpData.parse(bb);
         assertTrue(lmtpData.isComplete());

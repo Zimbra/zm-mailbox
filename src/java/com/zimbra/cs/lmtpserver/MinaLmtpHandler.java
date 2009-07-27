@@ -19,10 +19,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
-import com.zimbra.cs.mina.MinaRequest;
-import com.zimbra.cs.mina.MinaTextLineRequest;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,8 +30,8 @@ import java.net.Socket;
 
 public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     private final IoSession mSession;
-    private boolean expectingMessageData;
     private MinaOutputStream mOutputStream;
+    private boolean expectingData;
 
     private static final long WRITE_TIMEOUT = 5000;
     
@@ -45,26 +44,19 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
         mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
     }
     
-    public void requestReceived(MinaRequest req) throws IOException {
-        if (expectingMessageData) {
+    public void messageReceived(Object msg) throws IOException {
+        if (expectingData) {
             // XXX bburtin: This code is currently instantiating a byte array.  It should
             // be rewritten to use streams.
-            byte[] data = ((MinaLmtpDataRequest) req).getBytes();
+            byte[] data = ((MinaLmtpData) msg).getBytes();
             ByteArrayInputStream bais = new ByteArrayInputStream(data);
             LmtpMessageInputStream messageStream = new LmtpMessageInputStream(bais, getAdditionalHeaders());
             processMessageData(messageStream);
-            expectingMessageData = false;
         } else {
-            processCommand(((MinaTextLineRequest) req).getLine());
+            processCommand((String) msg);
         }
     }
 
-    MinaRequest createRequest() {
-        return expectingMessageData ?
-            new MinaLmtpDataRequest(mEnvelope.getSize(), getAdditionalHeaders()) :
-            new MinaTextLineRequest();
-    }
-    
     public void connectionOpened() {
         setupConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
     }
@@ -80,7 +72,7 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
 
     @Override
     protected void continueDATA() {
-        expectingMessageData = true;
+        expectingData = true;
     }
     
     @Override

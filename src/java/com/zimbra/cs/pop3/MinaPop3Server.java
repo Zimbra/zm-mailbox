@@ -20,11 +20,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.MinaTextLineRequest;
+import com.zimbra.cs.mina.MinaCodecFactory;
 import com.zimbra.cs.server.ServerConfig;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.apache.mina.filter.codec.ProtocolDecoder;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -35,7 +36,7 @@ public class MinaPop3Server extends MinaServer {
     }
 
     MinaPop3Server(ServerConfig config, ExecutorService pool)
-            throws IOException, ServiceException {
+        throws IOException, ServiceException {
         super(config, pool);
     }
 
@@ -43,8 +44,12 @@ public class MinaPop3Server extends MinaServer {
         return new MinaPop3Handler(this, session);
     }
 
-    @Override public MinaRequest createRequest(MinaHandler handler) {
-        return new MinaTextLineRequest();
+    @Override protected ProtocolCodecFactory getProtocolCodecFactory() {
+        return new MinaCodecFactory(this) {
+            public ProtocolDecoder getDecoder() {
+                return new MinaPop3Decoder();
+            }
+        };
     }
 
     @Override public Log getLog() { return ZimbraLog.pop; }

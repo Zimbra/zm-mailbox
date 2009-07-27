@@ -96,10 +96,10 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
 	setIdle(false);
 
-	int space = cmd.indexOf(" ");
-	if (space > 0) {
-	    arg = cmd.substring(space + 1); 
-	    cmd = cmd.substring(0, space);
+	int i = cmd.indexOf(' ');
+	if (i > 0) {
+	    arg = cmd.substring(i + 1); 
+	    cmd = cmd.substring(0, i);
 	}
 
 	ZimbraLog.lmtp.debug("command=%s arg=%s", cmd, arg);
