@@ -117,6 +117,7 @@ extends Thread {
         // of random effect when determining the next mailbox id.
         long sleepTime = LC.purge_initial_sleep_time.longValue();
         ZimbraLog.purge.info("Purge thread sleeping for %dms before doing work.", sleepTime);
+
         try {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
@@ -197,22 +198,26 @@ extends Thread {
     }
     
     /**
+     * Stores the sleep interval, so that the purge thread doesn't
+     * die if there's a problem talking to LDAP.  See bug 32639.
+     */
+    private static long sSleepInterval = 0;
+    
+    /**
      * Returns the current value of {@link Provisioning#A_zimbraMailPurgeSleepInterval},
      * or <tt>0</tt> if it cannot be determined.
      */
     private static long getSleepInterval() {
-        long interval = 0;
-        
         try {
             Provisioning prov = Provisioning.getInstance();
             Server server = prov.getLocalServer();
-            interval = server.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, 0);
+            sSleepInterval = server.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, 0);
         } catch (ServiceException e) {
-            ZimbraLog.purge.warn("Unable to determine value of %s.  Returning 0.",
-                Provisioning.A_zimbraMailPurgeSleepInterval, e);
+            ZimbraLog.purge.warn("Unable to determine value of %s.  Using previous value: %d.",
+                Provisioning.A_zimbraMailPurgeSleepInterval, sSleepInterval, e);
         }
         
-        return interval;
+        return sSleepInterval;
     }
     
     /**
@@ -240,7 +245,7 @@ extends Thread {
             
         } catch (ServiceException e) {
             ZimbraLog.purge.warn("Unable to get mailbox id's", e);
-            return new ArrayList<Integer>();
+            return Collections.emptyList();
         }
         
         return mailboxIds;
