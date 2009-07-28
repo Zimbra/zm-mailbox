@@ -513,8 +513,10 @@ public class ZInvite implements ToZJSONObject {
         public Date getComputedEndDate() {
           if (getEnd() != null)
               return getEnd().getDate();
-            else
-              return getDuration().addToDate(getStart().getDate()); 
+          else if (getDuration() != null)
+			  return getDuration().addToDate(getStart().getDate());
+		  else // simply return the start date
+			  return getStart().getDate();
         }
 
         public ZDateTime getEnd() {
