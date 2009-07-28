@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090727-1438 */
+    /* build: 6.0.0 schemers 20090728-0931 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3073,6 +3073,88 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetAuthTokenLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAuthTokenLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * if set, this value gets stored in the auth token and compared on every
+     * request. Changing it will invalidate all outstanding auth tokens. It
+     * also gets changed when an account password is changed.
+     *
+     * @return zimbraAuthTokenValidityValue, or -1 if unset
+     *
+     * @since ZCS 6.0.0_RC1
+     */
+    @ZAttr(id=1044)
+    public int getAuthTokenValidityValue() {
+        return getIntAttr(Provisioning.A_zimbraAuthTokenValidityValue, -1);
+    }
+
+    /**
+     * if set, this value gets stored in the auth token and compared on every
+     * request. Changing it will invalidate all outstanding auth tokens. It
+     * also gets changed when an account password is changed.
+     *
+     * @param zimbraAuthTokenValidityValue new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_RC1
+     */
+    @ZAttr(id=1044)
+    public void setAuthTokenValidityValue(int zimbraAuthTokenValidityValue) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValue, Integer.toString(zimbraAuthTokenValidityValue));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if set, this value gets stored in the auth token and compared on every
+     * request. Changing it will invalidate all outstanding auth tokens. It
+     * also gets changed when an account password is changed.
+     *
+     * @param zimbraAuthTokenValidityValue new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_RC1
+     */
+    @ZAttr(id=1044)
+    public Map<String,Object> setAuthTokenValidityValue(int zimbraAuthTokenValidityValue, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValue, Integer.toString(zimbraAuthTokenValidityValue));
+        return attrs;
+    }
+
+    /**
+     * if set, this value gets stored in the auth token and compared on every
+     * request. Changing it will invalidate all outstanding auth tokens. It
+     * also gets changed when an account password is changed.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_RC1
+     */
+    @ZAttr(id=1044)
+    public void unsetAuthTokenValidityValue() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValue, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if set, this value gets stored in the auth token and compared on every
+     * request. Changing it will invalidate all outstanding auth tokens. It
+     * also gets changed when an account password is changed.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_RC1
+     */
+    @ZAttr(id=1044)
+    public Map<String,Object> unsetAuthTokenValidityValue(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValue, "");
         return attrs;
     }
 

@@ -18,16 +18,15 @@
  */
 package com.zimbra.cs.account;
 
-import javax.servlet.http.HttpServletResponse;
-
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ByteUtil;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.service.ServiceException;
+import javax.servlet.http.HttpServletResponse;
 
 
 /**
@@ -59,6 +58,10 @@ public abstract class AuthToken {
     public abstract String getAdminAccountId();
     
     public abstract long getExpires();
+
+    public int getValidityValue() {
+        return -1;
+    }
 
     public abstract boolean isExpired();
 

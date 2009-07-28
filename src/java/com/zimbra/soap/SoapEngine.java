@@ -15,12 +15,6 @@
 
 package com.zimbra.soap;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Map;
-
-import org.dom4j.DocumentException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -35,24 +29,29 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
-import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.admin.AdminAccessControl;
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
+import org.dom4j.DocumentException;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Map;
 
 /**
  * The soap engine.
@@ -367,6 +366,9 @@ public class SoapEngine {
                     Account account = Provisioning.getInstance().get(AccountBy.id, acctId, at);
                     if (account == null)
                         return soapFault(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
+
+                    if (at.getValidityValue() != account.getAuthTokenValidityValue())
+                        return soapFault(soapProto, "invalid validity value", ServiceException.AUTH_EXPIRED());
                     
                     if (delegatedAuth && account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
                         return soapFault(soapProto, "delegated account in MAINTENANCE mode", ServiceException.AUTH_EXPIRED());

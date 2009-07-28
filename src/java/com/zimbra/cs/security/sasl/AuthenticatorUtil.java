@@ -14,18 +14,18 @@
  */
 package com.zimbra.cs.security.sasl;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Miscellaneous utility methods to support SASL authentication.
@@ -82,8 +82,10 @@ public final class AuthenticatorUtil {
 
         // make sure that the authentication account is valid
         Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId, at);
-        if (authAccount == null || !authAccount.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+        if (authAccount == null || !authAccount.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
+                authAccount.getAuthTokenValidityValue() != at.getValidityValue())
             return null;
+
         // make sure the auth token belongs to authenticatedId
         if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))
             return null;

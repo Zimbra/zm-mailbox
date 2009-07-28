@@ -15,6 +15,84 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.RemoteServiceException;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.Disposition;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.soap.VoiceConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.zclient.ZFolder.Color;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
+import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
+import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
+import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateTagEvent;
+import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
+import com.zimbra.cs.zclient.event.ZDeleteEvent;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyTagEvent;
+import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.dom4j.QName;
+import org.json.JSONException;
+
+import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -37,61 +115,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.dom4j.QName;
-import org.json.JSONException;
-
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.RemoteServiceException;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.VoiceConstants;
-import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.soap.Element.Disposition;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
-import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.zclient.ZFolder.Color;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.*;
 
 public class ZMailbox implements ToZJSONObject {
 
@@ -339,12 +362,12 @@ public class ZMailbox implements ToZJSONObject {
      * @param options uri/name/pass/newPass
      * @throws ServiceException on error
      */
-    public static void changePassword(Options options) throws ServiceException {
+    public static ZChangePasswordResult changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
         mailbox.mClientIp = options.getClientIp();
         mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
         mailbox.initPreAuth(options);
-        mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
+        return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
 
     public static ZMailbox getByName(String name, String password, String uri) throws ServiceException {
@@ -439,7 +462,7 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-    private void changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
+    private ZChangePasswordResult changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
         Element req = newRequestElement(AccountConstants.CHANGE_PASSWORD_REQUEST);
         Element account = req.addUniqueElement(AccountConstants.E_ACCOUNT);
@@ -449,7 +472,7 @@ public class ZMailbox implements ToZJSONObject {
         req.addAttribute(AccountConstants.E_PASSWORD, newPassword, Disposition.CONTENT);
         if (virtualHost != null)
             req.addAttribute(AccountConstants.E_VIRTUAL_HOST, virtualHost, Disposition.CONTENT);
-        invoke(req);
+        return new ZChangePasswordResult(invoke(req));
     }
 
     private void addAttrsAndPrefs(Element req, Options options) {

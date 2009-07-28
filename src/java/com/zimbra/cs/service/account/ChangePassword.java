@@ -18,19 +18,20 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.Map;
 
 /**
  * @author dkarp
@@ -63,8 +64,11 @@ public class ChangePassword extends AccountDocumentHandler {
 		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
 		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 		prov.changePassword(acct, oldPassword, newPassword);
+        AuthToken at = AuthProvider.getAuthToken(acct);
 
         Element response = zsc.createElement(AccountConstants.CHANGE_PASSWORD_RESPONSE);
+        at.encodeAuthResp(response, false);
+        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         return response;
 	}
 

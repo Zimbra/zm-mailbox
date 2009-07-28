@@ -19,6 +19,9 @@
 package com.zimbra.cs.service.account;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
@@ -31,15 +34,12 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -73,7 +73,8 @@ public class Auth extends AccountDocumentHandler {
                     throw ServiceException.AUTH_EXPIRED();
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
                 Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
-                if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
+                        acct.getAuthTokenValidityValue() != at.getValidityValue())
                     throw ServiceException.AUTH_EXPIRED();
                 return doResponse(request, at, zsc, context, acct);
             } catch (AuthTokenException e) {

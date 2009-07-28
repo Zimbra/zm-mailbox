@@ -18,33 +18,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.net.InetAddress;
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.ACL.GuestAccount;
-import com.zimbra.cs.service.ZimbraAuthProvider;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -53,7 +26,27 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraCookie;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.ACL.GuestAccount;
+import com.zimbra.cs.service.ZimbraAuthProvider;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.servlet.http.HttpServletResponse;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 /**
  * @author schemers
@@ -75,13 +68,15 @@ public class ZimbraAuthToken extends AuthToken {
     private static final String C_TYPE_EXTERNAL_USER = "external";
     private static final String C_EXTERNAL_USER_EMAIL = "email";
     private static final String C_DIGEST = "digest";
+    private static final String C_VALIDITY_VALUE  = "vv";
 
     private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
     private static Log mLog = LogFactory.getLog(AuthToken.class); 
     
     private String mAccountId;
-    private String mAdminAccountId;    
+    private String mAdminAccountId;
+    private int mValidityValue = -1;
     private long mExpires;
     private String mEncoded;
     private boolean mIsAdmin;
@@ -177,6 +172,17 @@ public class ZimbraAuthToken extends AuthToken {
             mType = (String)map.get(C_TYPE);
             mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             mDigest = (String)map.get(C_DIGEST);
+            String vv = (String)map.get(C_VALIDITY_VALUE);
+            if (vv != null) {
+                try {
+                    mValidityValue = Integer.parseInt(vv);
+                } catch (NumberFormatException e) {
+                    mValidityValue = -1;
+                }
+            } else {
+                mValidityValue = -1;
+            }
+
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -212,6 +218,7 @@ public class ZimbraAuthToken extends AuthToken {
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
         mAccountId = acct.getId();
         mAdminAccountId = adminAcct != null ? adminAcct.getId() : null;
+        mValidityValue = acct.getAuthTokenValidityValue();
         mExpires = expires;
         mIsAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
@@ -249,6 +256,10 @@ public class ZimbraAuthToken extends AuthToken {
 
     public long getExpires() {
         return mExpires;
+    }
+
+    public int getValidityValue() {
+        return mValidityValue;
     }
 
     public boolean isExpired() {
@@ -296,6 +307,8 @@ public class ZimbraAuthToken extends AuthToken {
                 BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);
             if (mIsDelegatedAdmin)
                 BlobMetaData.encodeMetaData(C_DLGADMIN, "1", encodedBuff);
+            if (mValidityValue != -1)
+                BlobMetaData.encodeMetaData(C_VALIDITY_VALUE, mValidityValue, encodedBuff);
             BlobMetaData.encodeMetaData(C_TYPE, mType, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, mExternalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, mDigest, encodedBuff);

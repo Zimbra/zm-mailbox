@@ -450,12 +450,17 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
  
+<ChangePasswordResponse>
+   <authToken>...</authToken>
+   <lifetime>...</lifetime>
 <ChangePasswordResponse/>
  
    {virtual-host} = if specified virtual-host is used to determine the domain of the account name, if it
                    does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com", 
                    and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
                    logging in with "joe@foo.com".
+
+  Returns new authToken, as old authToken will be invalidated on password change.
 
 ---------------------------
 

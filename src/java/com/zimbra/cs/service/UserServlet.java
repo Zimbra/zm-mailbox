@@ -15,23 +15,59 @@
 
 package com.zimbra.cs.service;
 
-import java.io.FilterInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Locale;
-import java.util.zip.GZIPInputStream;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
+import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.httpclient.HttpProxyUtil;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.formatter.AtomFormatter;
+import com.zimbra.cs.service.formatter.ContactFolderFormatter;
+import com.zimbra.cs.service.formatter.CsvFormatter;
+import com.zimbra.cs.service.formatter.Formatter;
+import com.zimbra.cs.service.formatter.FreeBusyFormatter;
+import com.zimbra.cs.service.formatter.HtmlFormatter;
+import com.zimbra.cs.service.formatter.IcsFormatter;
+import com.zimbra.cs.service.formatter.IfbFormatter;
+import com.zimbra.cs.service.formatter.JsonFormatter;
+import com.zimbra.cs.service.formatter.NativeFormatter;
+import com.zimbra.cs.service.formatter.RssFormatter;
+import com.zimbra.cs.service.formatter.SyncFormatter;
+import com.zimbra.cs.service.formatter.TarFormatter;
+import com.zimbra.cs.service.formatter.TgzFormatter;
+import com.zimbra.cs.service.formatter.VcfFormatter;
+import com.zimbra.cs.service.formatter.WikiFormatter;
+import com.zimbra.cs.service.formatter.XmlFormatter;
+import com.zimbra.cs.service.formatter.ZipFormatter;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -49,42 +85,21 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PutMethod;
 
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.mime.ContentDisposition;
-import com.zimbra.common.mime.ContentType;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.httpclient.HttpProxyUtil;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.formatter.*;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.servlet.ZimbraServlet;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 /**
  * 
@@ -293,7 +308,8 @@ public class UserServlet extends ZimbraServlet {
                         } else if (at.isZimbraUser()) {
                             context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
                             // bug 35917: token for nonexistent user means auth failure
-                            if (context.authAccount == null)
+                            if (context.authAccount == null ||
+                                context.authAccount.getAuthTokenValidityValue() != at.getValidityValue())
                                 throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                             context.cookieAuthHappened = true;
                             context.authToken = at;
@@ -326,7 +342,8 @@ public class UserServlet extends ZimbraServlet {
                         } else {
                             context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
                             // bug 35917: token for nonexistent user means auth failure
-                            if (context.authAccount == null)
+                            if (context.authAccount == null ||
+                                    context.authAccount.getAuthTokenValidityValue() != at.getValidityValue())
                                 throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                             context.qpAuthHappened = true;
                             context.authToken = at;

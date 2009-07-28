@@ -4612,5 +4612,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable http debug handler on a server</desc>
 </attr>
+     
+<attr id="1044" name="zimbraAuthTokenValidityValue" type="integer" min="0" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="6.0.0_RC1">
+  <desc>if set, this value gets stored in the auth token and compared on every request. Changing it will invalidate all outstanding auth tokens. It also gets changed when an account password is changed.</desc>
+</attr>
 
 </attrs>

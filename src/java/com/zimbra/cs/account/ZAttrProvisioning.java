@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090727-1438 */
+    /* build: 6.0.0 schemers 20090728-0931 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1414,6 +1414,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=108)
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
+
+    /**
+     * if set, this value gets stored in the auth token and compared on every
+     * request. Changing it will invalidate all outstanding auth tokens. It
+     * also gets changed when an account password is changed.
+     *
+     * @since ZCS 6.0.0_RC1
+     */
+    @ZAttr(id=1044)
+    public static final String A_zimbraAuthTokenValidityValue = "zimbraAuthTokenValidityValue";
 
     /**
      * Use null return path for envelope MAIL FROM when sending out of office
