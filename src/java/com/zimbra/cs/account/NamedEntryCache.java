@@ -25,6 +25,8 @@ import java.util.List;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.stats.Counter;
+
 /**
  * @author schemers
  **/
@@ -34,6 +36,7 @@ public class NamedEntryCache<E extends NamedEntry> {
     private LRUMap mIdCache;
     
     private long mRefreshTTL;
+    private Counter mHitRate = new Counter();
 
     static class CacheEntry<E extends NamedEntry> {
         long mLifetime;
@@ -97,11 +100,14 @@ public class NamedEntryCache<E extends NamedEntry> {
         if (ce != null) {
             if (mRefreshTTL != 0 && ce.isStale()) {
                 remove(ce.mEntry);
+                mHitRate.increment(0);
                 return null;
             } else {
+                mHitRate.increment(100);
                 return ce.mEntry;
             }
         } else {
+            mHitRate.increment(0);
             return null;
         }
     }
@@ -112,5 +118,16 @@ public class NamedEntryCache<E extends NamedEntry> {
     
     public synchronized E getByName(String key) {
         return get(key.toLowerCase(), mNameCache);
+    }
+    
+    public synchronized int getSize() {
+        return mIdCache.size();
+    }
+    
+    /**
+     * Returns the cache hit rate as a value between 0 and 100.
+     */
+    public synchronized double getHitRate() {
+        return mHitRate.getAverage();
     }
 }

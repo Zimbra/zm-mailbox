@@ -60,7 +60,6 @@ public class FileDescriptorCache
         return this;
     }
 
-    @SuppressWarnings("static-access")
     public FileDescriptorCache loadSettings() throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer(); 
         int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
@@ -163,7 +162,7 @@ public class FileDescriptorCache
         }
     }
     
-    public int size() {
+    public int getSize() {
         return mCache.size();
     }
     

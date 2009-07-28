@@ -14,10 +14,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +24,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.stats.JmxServerStatsMBean;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,27 +41,15 @@ public class GetServerStats extends AdminDocumentHandler {
         }
         
         // Get latest values.
-        Map<String, Long> stats = new TreeMap<String, Long>();
-        boolean allStats = (requestedNames.size() == 0);
+        Map<String, Object> allStats = ZimbraPerf.getStats();
+        Map<String, Object> returnedStats = new TreeMap<String, Object>();
+        boolean returnAllStats = (requestedNames.size() == 0);
         
-        try {
-            PropertyDescriptor[] properties = Introspector.getBeanInfo(JmxServerStatsMBean.class).getPropertyDescriptors();
-            if (properties != null) {
-                for (PropertyDescriptor property : properties) {
-                    String name = property.getName();
-                    if (allStats || requestedNames.contains(name)) {
-                        Long value = (Long) property.getReadMethod().invoke(ZimbraPerf.getMonitoringStats(), (Object[]) null);
-                        stats.put(name, value);
-                        requestedNames.remove(name);
-                    }
-                }
+        for (String name : allStats.keySet()) {
+            if (returnAllStats || requestedNames.contains(name)) {
+                returnedStats.put(name, allStats.get(name));
+                requestedNames.remove(name);
             }
-        } catch (IntrospectionException e) {
-            throw ServiceException.FAILURE("Unable to retrieve server stats", e);
-        } catch (InvocationTargetException e) {
-            throw ServiceException.FAILURE("Unable to retrieve server stats", e);
-        } catch (IllegalAccessException e) {
-            throw ServiceException.FAILURE("Unable to retrieve server stats", e);
         }
         
         if (requestedNames.size() != 0) {
@@ -80,8 +63,8 @@ public class GetServerStats extends AdminDocumentHandler {
         
         // Send response.
         Element response = zsc.createElement(AdminConstants.GET_SERVER_STATS_RESPONSE);
-        for (String name : stats.keySet()) {
-            String stringVal = toString(stats.get(name));
+        for (String name : returnedStats.keySet()) {
+            String stringVal = toString(returnedStats.get(name));
             response.addElement(AdminConstants.E_STAT)
                 .addAttribute(AdminConstants.A_NAME, name)
                 .setText(stringVal);
@@ -90,10 +73,14 @@ public class GetServerStats extends AdminDocumentHandler {
         return response;
     }
 
-    private static String toString(Long value) {
+    private static String toString(Object value) {
         if (value == null) {
             return null;
         }
-        return value.toString();
+        if (value instanceof Double || value instanceof Float) {
+            return String.format("%.2f", value);
+        } else {
+            return value.toString();
+        }
     }
 }

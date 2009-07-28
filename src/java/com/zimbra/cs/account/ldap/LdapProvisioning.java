@@ -195,6 +195,20 @@ public class LdapProvisioning extends Provisioning {
                 LC.ldap_cache_xmppcomponent_maxsize.intValue(),
                 LC.ldap_cache_xmppcomponent_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
     
+    public int getAccountCacheSize() { return sAccountCache.getSize(); }
+    public double getAccountCacheHitRate() { return sAccountCache.getHitRate(); }
+    public int getCosCacheSize() { return sCosCache.getSize(); }
+    public double getCosCacheHitRate() { return sCosCache.getHitRate(); }
+    public int getDomainCacheSize() { return sDomainCache.getSize(); }
+    public double getDomainCacheHitRate() { return sDomainCache.getHitRate(); }
+    public int getServerCacheSize() { return sServerCache.getSize(); }
+    public double getServerCacheHitRate() { return sServerCache.getHitRate(); }
+    public int getZimletCacheSize() { return sZimletCache.getSize(); }
+    public double getZimletCacheHitRate() { return sZimletCache.getHitRate(); }
+    public int getGroupCacheSize() { return sGroupCache.getSize(); }
+    public double getGroupCacheHitRate() { return sGroupCache.getHitRate(); }
+    public int getXMPPCacheSize() { return sXMPPComponentCache.getSize(); }
+    public double getXMPPCacheHitRate() { return sXMPPComponentCache.getHitRate(); }
     
     private static final int BY_ID = 1;
 

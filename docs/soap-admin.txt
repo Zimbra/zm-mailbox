@@ -791,8 +791,8 @@ Notes:
   <stat name="{stat-name}"/>{stat-value}</stat>+
 </GetServerStatsResponse>
 
-Returns server monitoring stats.  These are the same stats that are available
-over JMX in ZCS 6.0.  If no <stat> element is specified, all server stats
+Returns server monitoring stats.  These are the same stats that are logged
+to mailboxd.csv.  If no <stat> element is specified, all server stats
 are returned.  If the stat name is invalid, returns a SOAP fault.
 
 -----------------------------

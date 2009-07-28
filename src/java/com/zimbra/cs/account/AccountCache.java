@@ -23,11 +23,14 @@ package com.zimbra.cs.account;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.stats.Counter;
+
 public class AccountCache {
     
     private LRUMap mNameCache;
     private LRUMap mIdCache;
     private LRUMap mForeignPrincipalCache;
+    private Counter mHitRate = new Counter();
     
     private long mRefreshTTL;
 
@@ -82,17 +85,19 @@ public class AccountCache {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Account get(String key, LRUMap cache) {
         CacheEntry ce = (CacheEntry) cache.get(key);
         if (ce != null) {
             if (mRefreshTTL != 0 && ce.isStale()) {
                 remove(ce.mEntry);
+                mHitRate.increment(0);
                 return null;
             } else {
+                mHitRate.increment(100);
                 return ce.mEntry;
             }
         } else {
+            mHitRate.increment(0);
             return null;
         }
     }
@@ -109,6 +114,15 @@ public class AccountCache {
         return get(key, mForeignPrincipalCache);
     }
     
+    public synchronized int getSize() {
+        return mIdCache.size();
+    }
     
+    /**
+     * Returns the cache hit rate as a value between 0 and 100.
+     */
+    public synchronized double getHitRate() {
+        return mHitRate.getAverage();
+    }
 }
 

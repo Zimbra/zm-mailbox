@@ -23,6 +23,7 @@ package com.zimbra.cs.account;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.stats.Counter;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 
 /**
@@ -36,6 +37,7 @@ public class DomainCache {
     private LRUMap mKrb5RealmCache;
     
     private long mRefreshTTL;
+    private Counter mHitRate = new Counter();
     
     /*
      * for caching non-existing domains so we don't repeatedly search LDAP for non-exsting domains
@@ -224,17 +226,19 @@ public class DomainCache {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Domain get(String key, LRUMap cache) {
         CacheEntry ce = (CacheEntry) cache.get(key);
         if (ce != null) {
             if (mRefreshTTL != 0 && ce.isStale()) {
                 remove(ce.mEntry);
+                mHitRate.increment(0);
                 return null;
             } else {
+                mHitRate.increment(100);
                 return ce.mEntry;
             }
         } else {
+            mHitRate.increment(0);
             return null;
         }
     }
@@ -270,5 +274,15 @@ public class DomainCache {
         else
             return d;
     }
+
+    public synchronized int getSize() {
+        return mIdCache.size();
+    }
     
+    /**
+     * Returns the cache hit rate as a value between 0 and 100.
+     */
+    public synchronized double getHitRate() {
+        return mHitRate.getAverage();
+    }
 }

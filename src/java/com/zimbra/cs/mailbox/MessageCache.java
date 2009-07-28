@@ -47,20 +47,24 @@ public class MessageCache {
         CacheNode()  { }
         MimeMessage message;
         MimeMessage expanded;
+        long size = 0;
     }
 
     /** Cache mapping message digest to the corresponding message structure. */
     private static Map<String, CacheNode> sCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
     /** Maximum number of items in {@link #sCache}. */
     private static int sMaxCacheSize;
+    /** Number of bytes of message data stored in the cache.  This value includes only
+     * messages that are read into memory, not streamed from disk. */
+    private volatile static long sDataSize = 0;
     
-        static {
-            try {
-                loadSettings();
-            } catch (ServiceException e) {
-                throw new RuntimeException(e);
-            }
+    static {
+        try {
+            loadSettings();
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
         }
+    }
 
     public static void loadSettings() throws ServiceException {
         sMaxCacheSize = Provisioning.getInstance().getLocalServer().getMessageCacheSize();
@@ -72,6 +76,10 @@ public class MessageCache {
         synchronized (sCache) {
             return sCache.size();
         }
+    }
+    
+    public static long getDataSize() {
+        return sDataSize;
     }
 
     /** Uncaches any data associated with the given item.  This must be done
@@ -110,6 +118,7 @@ public class MessageCache {
                 CacheNode node = sCache.remove(digest);
                 if (node != null) {
                     sLog.debug("Purged digest %s from the message cache.", digest);
+                    sDataSize -= node.size;
                 }
             }
         }
@@ -151,6 +160,13 @@ public class MessageCache {
                 try {
                     in = fetchFromStore(item);
                     cnode.message = new Mime.FixedMimeMessage(JMSession.getSession(), in);
+                    if (item.getSize() < MESSAGE_CACHE_DISK_STREAMING_THRESHOLD) {
+                        cnode.size = item.getSize();
+                        // Not the best place to increment the data size, but cacheItem()
+                        // won't get called if we're expanding a message for an existing
+                        // node.
+                        sDataSize += cnode.size;
+                    }
                 } finally {
                     ByteUtil.closeStream(in);
                 }
@@ -163,6 +179,10 @@ public class MessageCache {
                     ExpandMimeMessage expander = new ExpandMimeMessage(cnode.message);
                     expander.expand();
                     cnode.expanded = expander.getExpanded();
+                    if (cnode.expanded != cnode.message) {
+                        sDataSize += cnode.size;
+                        cnode.size *= 2;
+                    }
                 } catch (Exception e) {
                     // if the conversion bombs for any reason, revert to the original
                     sLog.warn("MIME converter failed for message %d.  Reverting to original.", item.getId(), e);
@@ -230,6 +250,7 @@ public class MessageCache {
         sLog.debug("Caching MimeMessage for digest %s.", digest);
         synchronized (sCache) {
             sCache.put(digest, cnode);
+            // Cache data size was incremented in getMimeMessage().
 
             // trim the cache if needed
             if (sCache.size() > sMaxCacheSize) {
@@ -238,14 +259,9 @@ public class MessageCache {
                     Map.Entry<String, CacheNode> entry = it.next();
                     sLog.debug("Pruning digest %s from the cache.", entry.getKey());
                     it.remove();
+                    sDataSize -= entry.getValue().size;
                 }
             }
         }
-    }
-
-    /** Statistics-related method, should not be used for anything other
-     *  than stats collection. */
-    public static Map<String,CacheNode> getBackingMap() {
-        return Collections.unmodifiableMap(sCache);
     }
 }

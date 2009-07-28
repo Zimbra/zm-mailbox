@@ -18,7 +18,9 @@ package com.zimbra.cs.stats;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MBeanServer;
@@ -59,10 +61,26 @@ public class ZimbraPerf {
     public static final String RTS_MBOX_CACHE_SIZE = "mbox_cache_size";
     public static final String RTS_MSG_CACHE_SIZE = "msg_cache_size";
     public static final String RTS_MSG_CACHE_BYTES = "msg_cache_bytes";
+    public static final String RTS_FD_CACHE_SIZE = "fd_cache_size";
+    
+    // LDAP provisioning caches.
+    public static final String RTS_ACCOUNT_CACHE_SIZE = "account_cache_size";
+    public static final String RTS_ACCOUNT_CACHE_HIT_RATE = "account_cache_hit_rate";
+    public static final String RTS_COS_CACHE_SIZE = "cos_cache_size";
+    public static final String RTS_COS_CACHE_HIT_RATE = "cos_cache_hit_rate";
+    public static final String RTS_DOMAIN_CACHE_SIZE = "domain_cache_size";
+    public static final String RTS_DOMAIN_CACHE_HIT_RATE = "domain_cache_hit_rate";
+    public static final String RTS_SERVER_CACHE_SIZE = "server_cache_size";
+    public static final String RTS_SERVER_CACHE_HIT_RATE = "server_cache_hit_rate";
+    public static final String RTS_ZIMLET_CACHE_SIZE = "zimlet_cache_size";
+    public static final String RTS_ZIMLET_CACHE_HIT_RATE = "zimlet_cache_hit_rate";
+    public static final String RTS_GROUP_CACHE_SIZE = "group_cache_size";
+    public static final String RTS_GROUP_CACHE_HIT_RATE = "group_cache_hit_rate";
+    public static final String RTS_XMPP_CACHE_SIZE = "xmpp_cache_size";
+    public static final String RTS_XMPP_CACHE_HIT_RATE = "xmpp_cache_hit_rate";
 
-    // Accumulators.  To add a new accumulator, create a static instance here,
-    // add it to the CORE_ACCUMULATORS array and if necessary, set options
-    // in the static init code below.
+    // Accumulators.  To add a new accumulator, create a static instance here and
+    // add it to sAccumulators.
     public static final Counter COUNTER_LMTP_RCVD_MSGS = new Counter();
     public static final Counter COUNTER_LMTP_RCVD_BYTES = new Counter();
     public static final Counter COUNTER_LMTP_RCVD_RCPT = new Counter();
@@ -101,7 +119,14 @@ public class ZimbraPerf {
         new RealtimeStats(new String[] {
             RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
             RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN, RTS_SOAP_SESSIONS,
-            RTS_MBOX_CACHE_SIZE, RTS_MSG_CACHE_SIZE, RTS_MSG_CACHE_BYTES }
+            RTS_MBOX_CACHE_SIZE, RTS_MSG_CACHE_SIZE, RTS_MSG_CACHE_BYTES, RTS_FD_CACHE_SIZE,
+            RTS_ACCOUNT_CACHE_SIZE, RTS_ACCOUNT_CACHE_HIT_RATE,
+            RTS_COS_CACHE_SIZE, RTS_COS_CACHE_HIT_RATE,
+            RTS_DOMAIN_CACHE_SIZE, RTS_DOMAIN_CACHE_HIT_RATE,
+            RTS_SERVER_CACHE_SIZE, RTS_SERVER_CACHE_HIT_RATE,
+            RTS_ZIMLET_CACHE_SIZE, RTS_ZIMLET_CACHE_HIT_RATE,
+            RTS_GROUP_CACHE_SIZE, RTS_GROUP_CACHE_HIT_RATE,
+            RTS_XMPP_CACHE_SIZE, RTS_XMPP_CACHE_HIT_RATE }
         );
 
     private static CopyOnWriteArrayList<Accumulator> sAccumulators = 
@@ -135,6 +160,27 @@ public class ZimbraPerf {
                         sRealtimeStats
                     }
         );
+
+    /**
+     * Returns all the latest stats as a key-value <tt>Map</tt>.
+     */
+    public static Map<String, Object> getStats() {
+        Map<String, Object> stats = new LinkedHashMap<String, Object>();
+        
+        List<Accumulator> accumulators = new ArrayList<Accumulator>();
+        accumulators.addAll(sAccumulators);
+        accumulators.add(sRealtimeStats);
+        
+        for (Accumulator a : accumulators) {
+            List<String> names = a.getNames();
+            List<Object> data = a.getData();
+            for (int i = 0; i < names.size(); i++) {
+                stats.put(names.get(i), data.get(i));
+            }
+        }
+        
+        return stats;
+    }
     
     /**
      * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
