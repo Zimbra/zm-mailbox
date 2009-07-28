@@ -61,6 +61,10 @@ public class ZFeatures {
 
     public boolean getCalendar() { return getBool(Provisioning.A_zimbraFeatureCalendarEnabled); }
 
+    public boolean getCalendarUpsell() { return getBool(Provisioning.A_zimbraFeatureCalendarUpsellEnabled); }
+
+    public String getCalendarUpsellURL() { return get(Provisioning.A_zimbraFeatureCalendarUpsellURL); }    
+
     public boolean getTasks() { return getBool(Provisioning.A_zimbraFeatureTasksEnabled); }
 
     public boolean getTagging() { return getBool(Provisioning.A_zimbraFeatureTaggingEnabled); }
