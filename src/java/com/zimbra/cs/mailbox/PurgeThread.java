@@ -58,7 +58,7 @@ extends Thread {
             }
 
             if (getSleepInterval() == 0) {
-                ZimbraLog.purge.debug("Not starting purge thread because %s is 0.",
+                ZimbraLog.purge.info("Not starting purge thread because %s is 0.",
                     Provisioning.A_zimbraMailPurgeSleepInterval);
                 return;
             }
@@ -122,6 +122,7 @@ extends Thread {
             Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             ZimbraLog.purge.info("Shutting down purge thread.");
+            sPurgeThread = null;
             return;
         }
         
@@ -132,6 +133,7 @@ extends Thread {
             for (int mailboxId : mailboxIds) {
                 if (mShutdownRequested) {
                     ZimbraLog.purge.info("Shutting down purge thread.");
+                    sPurgeThread = null;
                     return;
                 }
                 ZimbraLog.addMboxToContext(mailboxId);
