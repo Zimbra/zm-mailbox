@@ -278,11 +278,13 @@ public class CalDavDataImport extends MailItemImport {
 				fidArray[i++] = f.itemId;
 				DbDataSource.deleteAllMappingsInFolder(ds, f.itemId);
 			}
-			DbDataSource.deleteMappings(ds, fids);
-			try {
-				mbox.delete(octxt, fidArray, MailItem.TYPE_FOLDER, null);
-			} catch (ServiceException e) {
-    			ZimbraLog.datasource.warn("folder delete failed", e);
+			if (!fids.isEmpty()) {
+    			DbDataSource.deleteMappings(ds, fids);
+    			try {
+    				mbox.delete(octxt, fidArray, MailItem.TYPE_FOLDER, null);
+    			} catch (ServiceException e) {
+        			ZimbraLog.datasource.warn("folder delete failed", e);
+    			}
 			}
 		}
 		return ret;
