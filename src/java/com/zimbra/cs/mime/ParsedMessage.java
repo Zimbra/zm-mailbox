@@ -291,11 +291,21 @@ public class ParsedMessage {
     
     /**
      * Allows the caller to set the digest of the raw message.  This avoids
-     * rereading the file, in the case where the caller has already read it
+     * rereading the file in the case where the caller has already read it
      * once and calculated the digest.
      */
     public void setRawDigest(String digest) {
         mRawDigest = digest;
+    }
+
+    /**
+     * Allows the caller to set the size of the raw message.  This avoids
+     * rereading the possibly compressed file in the case where the caller has
+     * already determined it
+     * 
+     */
+    public void setRawSize(Integer size) {
+        mRawSize = size;
     }
 
     /** Applies all registered on-the-fly MIME converters to a copy of the

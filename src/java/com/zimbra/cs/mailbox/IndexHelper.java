@@ -80,8 +80,10 @@ public class IndexHelper {
     private Object mIndexingDeferredItemsLock = new Object(); // the lock protects the mIndexingDeferredItems boolean below
     private Mailbox mMbox;
 
-    static ThreadPool sReIndexThreadPool = new ThreadPool("ReIndex", 10); // dont wait for it to complete on shutdown
-    static ThreadPool sIndexingCompletedThreadPool = new ThreadPool("IndexingCompleted", 5); // wait for this to complete on shutdown
+    static ThreadPool sReIndexThreadPool = new ThreadPool("ReIndex",
+        LC.zimbra_index_reindex_pool_size.intValue()); // dont wait for it to complete on shutdown
+    static ThreadPool sIndexingCompletedThreadPool = new ThreadPool("IndexingCompleted",
+        LC.zimbra_index_completed_pool_size.intValue()); // wait for this to complete on shutdown
     private MailboxIndex   mMailboxIndex = null;
 
     IndexHelper(Mailbox mbox) { mMbox = mbox; }

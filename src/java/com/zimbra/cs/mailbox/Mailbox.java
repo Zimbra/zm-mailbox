@@ -121,6 +121,7 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BufferedStorageCallback;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StorageCallback;
@@ -4133,17 +4134,19 @@ public class Mailbox {
     throws IOException, ServiceException {
         Blob incoming = null;
         ParsedMessage pm = null;
+        
         if (deliveryCtxt == null)
             deliveryCtxt = new DeliveryContext();
-
         try {
-            InMemoryDataCallback callback = new InMemoryDataCallback(sizeHint, StorageCallback.getDiskStreamingThreshold());
+            BufferedStorageCallback callback = new BufferedStorageCallback(sizeHint);
             incoming = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
             if (callback.getData() != null) {
                 pm = new ParsedMessage(callback.getData(), receivedDate, attachmentsIndexingEnabled());
             } else {
                 pm = new ParsedMessage(incoming.getFile(), receivedDate, attachmentsIndexingEnabled());
             }
+            pm.setRawDigest(callback.getDigest());
+            pm.setRawSize((int)callback.getSize());
             deliveryCtxt.setIncomingBlob(incoming);
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
                               customData, deliveryCtxt);
