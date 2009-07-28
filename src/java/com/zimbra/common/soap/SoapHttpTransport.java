@@ -218,12 +218,19 @@ public class SoapHttpTransport extends SoapTransport {
         try {
             // Assemble post method.  Append document name, so that the request
             // type is written to the access log.
-            String uri = mUri;
-            
+            String uri, query;
+            int i = mUri.indexOf('?');
+            if (i >= 0) {
+                uri = mUri.substring(0, i);
+                query = mUri.substring(i);
+            } else {
+                uri = mUri;
+                query = "";
+            }
             if (!uri.endsWith("/"))
                 uri += '/';
             uri += getDocumentName(document);
-            method = new PostMethod(uri);
+            method = new PostMethod(uri + query);
             
             // Set user agent if it's specified.
             String agentName = getUserAgentName();
