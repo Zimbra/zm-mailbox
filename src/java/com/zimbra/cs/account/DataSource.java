@@ -21,7 +21,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +37,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.CalDavDataImport;
 import com.zimbra.cs.datasource.SyncState;
-import com.zimbra.cs.db.DbDataSource;
-import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.gal.GalImport;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -101,6 +98,7 @@ public class DataSource extends AccountProperty {
     	return null;
     }
     
+    @SuppressWarnings("unused")
     public DataImport getDataImport() throws ServiceException {
         String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, getDefaultImportClass(mType));
         if (val != null) {
@@ -369,6 +367,7 @@ public class DataSource extends AccountProperty {
         return false;
     }
 
+    @SuppressWarnings("unused")
     public boolean checkPendingMessages() throws ServiceException {
         // Does nothing for online
         return false;
@@ -377,22 +376,6 @@ public class DataSource extends AccountProperty {
     public long getSyncFrequency() {
         return 0;
     }
-
-    public Collection<DataSourceItem> getFolderMappings() throws ServiceException {
-        return DbDataSource.getAllMappingsInFolder(this, this.getFolderId());
-    }
-
-    /*
-    public void deleteFolderMapping(DataSourceFolderMapping folder) throws ServiceException {
-        folder.delete();
-        clearSyncState(folder.getItemId());
-    }
-
-    public void updateFolderMapping(DataSourceFolderMapping folder) throws ServiceException {
-        folder.update();
-        clearSyncState(folder.getItemId());
-    }
-    */
 
     // Overridden by OfflineDataSource
     public boolean hasSyncState(int folderId) { return false; }
@@ -415,10 +398,6 @@ public class DataSource extends AccountProperty {
     
     public Mailbox getMailbox() throws ServiceException {
         return MailboxManager.getInstance().getMailboxByAccount(getAccount());
-    }
-    
-    public void deleteItemMappings() throws ServiceException {
-    	DbDataSource.deleteAllMappings(this);
     }
     
     private static byte[] randomSalt() {
