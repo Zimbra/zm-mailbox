@@ -103,7 +103,9 @@ public class LC {
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
     public static final KnownKey zimbra_index_sweep_frequency;
+    public static final KnownKey zimbra_index_completed_pool_size;
     public static final KnownKey zimbra_index_flush_pool_size;
+    public static final KnownKey zimbra_index_reindex_pool_size;
     
     public static final KnownKey zimbra_index_reader_lru_size;
     public static final KnownKey zimbra_index_reader_idle_flush_time;
@@ -634,7 +636,9 @@ public class LC {
         zimbra_index_idle_flush_time.setDefault("600");
 
         zimbra_index_sweep_frequency = new KnownKey("zimbra_index_sweep_frequency", "30");
+        zimbra_index_completed_pool_size = new KnownKey("zimbra_index_completed_pool_size", "5");
         zimbra_index_flush_pool_size = new KnownKey("zimbra_index_flush_pool_size", "10");
+        zimbra_index_reindex_pool_size = new KnownKey("zimbra_index_reindex_pool_size", "10");
 
         zimbra_index_reader_lru_size  = new KnownKey("zimbra_index_reader_lru_size");
         zimbra_index_reader_lru_size.setDefault("20");
@@ -654,7 +658,6 @@ public class LC {
         zimbra_index_lucene_autocommit = new KnownKey("zimbra_index_lucene_autocommit", "false");
 
         zimbra_index_use_reader_reopen = new KnownKey("zimbra_index_use_reader_reopen", "false");
-
         
         zimbra_index_lucene_batch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_batch_use_doc_scheduler", "true");
         zimbra_index_lucene_batch_min_merge = new KnownKey("zimbra_index_lucene_batch_min_merge", "1000");
@@ -667,7 +670,6 @@ public class LC {
         zimbra_index_lucene_batch_autocommit = new KnownKey("zimbra_index_lucene_batch_autocommit", "false");
         zimbra_index_lucene_max_terms_per_query = new KnownKey("zimbra_index_lucene_max_terms_per_query", "50000");
         zimbra_index_wildcard_max_terms_expanded = new KnownKey("zimbra_index_wildcard_max_terms_expanded", "20000");
-        
             
         zimbra_index_lucene_nobatch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_doc_scheduler", "true");
         zimbra_index_lucene_nobatch_min_merge = new KnownKey("zimbra_index_lucene_nobatch_min_merge", "10");

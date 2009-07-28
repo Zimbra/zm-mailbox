@@ -25,138 +25,123 @@ import java.util.concurrent.TimeUnit;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-
 /**
  */
 public class ThreadPool implements Executor {
+    private static Log mLog = LogFactory.getLog(ThreadPool.class);
+    private static long TIMEOUT = 30 * 1000;
 
-	private static Log mLog = LogFactory.getLog(ThreadPool.class);
+    private ThreadCounter mActiveThreadsCounter;
+    private String mName;
+    private ThreadPoolExecutor mPool;
+    private long mTimeout;
 
-	private String mName;
-	private ThreadPoolExecutor mPool;
-	private ThreadCounter mActiveThreadsCounter;
+    public ThreadPool(String name, int poolSize) {
+        this(name, poolSize, TIMEOUT);
+    }
 
-	public ThreadPool(String name, int poolSize) {
-	    mName = name;
-		NamedThreadFactory tfac = new NamedThreadFactory(name, Thread.NORM_PRIORITY);
-		mPool = new ThreadPoolExecutor(poolSize, poolSize,
-		                               Long.MAX_VALUE, TimeUnit.NANOSECONDS, 
-		                               new LinkedBlockingQueue<Runnable>());
-		mPool.setThreadFactory(tfac);
-		mActiveThreadsCounter = new ThreadCounter();
-	}
+    public ThreadPool(String name, int poolSize, long timeout) {
+        mName = name;
+        mTimeout = timeout;
+        NamedThreadFactory tfac = new NamedThreadFactory(name,
+            Thread.NORM_PRIORITY);
+        mPool = new ThreadPoolExecutor(1, poolSize, 60, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<Runnable>());
+        mPool.setThreadFactory(tfac);
+        mActiveThreadsCounter = new ThreadCounter();
+    }
 
-	public void execute(Runnable task) throws RejectedExecutionException {
-	    mPool.execute(new CountedTask(task, mActiveThreadsCounter));
-	}
+    public String getName() { return mName; }
 
-	/**
-	 * Gracefully shutdown the thread pool by waiting for all pending
-	 * tasks to complete.
-	 *
-	 */
-	public void shutdown() {
-		mPool.shutdown();
+    /**
+     * Returns the number of currently active worker threads. An active worker
+     * thread is a thread that is currently executing a task, as opposed to a
+     * thread that is waiting for a new task to execute.
+     */
+    public int getNumActiveThreads() {
+        return mActiveThreadsCounter.getValue();
+    }
 
-    	try {
-    		long timeout = 30;
-    		boolean b = mPool.awaitTermination(timeout * 1000, TimeUnit.MILLISECONDS);
-    		if (!b) {
-    			mLog.warn("Thread pool did not terminate within " + timeout + " seconds");
-    		}
-		} catch (InterruptedException e) {
-		    mLog.warn("InterruptedException waiting for thread pool shutdown", e);
-		}
-	}
+    public void execute(Runnable task) throws RejectedExecutionException {
+        mPool.execute(new CountedTask(task, mActiveThreadsCounter));
+    }
 
-	public void shutdownNow() {
-		mPool.shutdownNow();
-		try {
-		    long timeout = 30;
-		    boolean b = mPool.awaitTermination(timeout * 1000, TimeUnit.MILLISECONDS);
-		    if (!b) {
-		        mLog.warn("Thread pool did not terminate within " + timeout + " seconds");
-		    }
-		} catch (InterruptedException e) {
-		    mLog.warn("InterruptedException waiting for thread pool shutdown", e);
-		}
-	}
-	
-	/**
-	 * Returns the number of currently active worker threads.  An active
-	 * worker thread is a thread that is currently executing a task, as
-	 * opposed to a thread that is waiting for a new task to execute.
-	 * @return
-	 */
-	public int getNumActiveThreads() {
-		return mActiveThreadsCounter.getValue();
-	}
+    /**
+     * Gracefully shutdown the thread pool by waiting for all pending tasks to
+     * complete.
+     */
+    public void shutdown() {
+        mPool.shutdown();
+        awaitTermination();
+    }
 
-	private class ThreadCounter {
-		private int mCount;
+    public void shutdownNow() {
+        mPool.shutdownNow();
+        awaitTermination();
+    }
 
-		public ThreadCounter() {
-			mCount = 0;
-		}
+    private void awaitTermination() {
+        try {
+            if (!mPool.awaitTermination(mTimeout, TimeUnit.MILLISECONDS))
+                mLog.warn("Thread pool did not terminate within " + mTimeout +
+                    " milliseconds");
+        } catch (InterruptedException e) {
+            mLog.warn("InterruptedException waiting for thread pool shutdown",
+                e);
+        }
+    }
 
-		public synchronized int getValue() {
-			return mCount;
-		}
+    private class ThreadCounter {
+        private int mCount;
 
-		public synchronized void inc() {
-			mCount++;
-		}
+        public ThreadCounter() {
+            mCount = 0;
+        }
 
-		public synchronized void dec() {
-			mCount--;
-			if (mCount <= 0)
-				notifyAll();
-		}
+        public synchronized int getValue() {
+            return mCount;
+        }
 
-		public synchronized boolean waitForZero(long timeoutMS) {
-			if (mCount <= 0)
-				return true;
-			try {
-				if (timeoutMS >= 0)
-					wait(timeoutMS);
-				else
-					wait();
-			} catch (InterruptedException e) {
-			}
-			return mCount <= 0;
-		}
-	}
+        public synchronized void inc() {
+            mCount++;
+        }
 
-	/**
-	 * Wrapper class that adds counting logic around a task.  Thread pool
-	 * executes all tasks using this wrapper class to keep track of the
-	 * number of active worker threads.
-	 */
-	public class CountedTask implements Runnable {
-		Runnable mTask;
-		ThreadCounter mCounter;
+        public synchronized void dec() {
+            mCount--;
+            if (mCount <= 0)
+                notifyAll();
+        }
+    }
 
-		public CountedTask(Runnable task, ThreadCounter counter) {
-			mTask = task;
-			mCounter = counter;
-		}
+    /**
+     * Wrapper class that adds counting logic around a task. Thread pool
+     * executes all tasks using this wrapper class to keep track of the number
+     * of active worker threads.
+     */
+    public class CountedTask implements Runnable {
+        ThreadCounter mCounter;
+        Runnable mTask;
 
-		public void run() {
-			mCounter.inc();
-			mTask.run();
-			mCounter.dec();
-		}
+        public CountedTask(Runnable task, ThreadCounter counter) {
+            mTask = task;
+            mCounter = counter;
+        }
 
-		public Runnable getTask() {
-			return mTask;
-		}
-	}
+        public Runnable getTask() {
+            return mTask;
+        }
+
+        public void run() {
+            mCounter.inc();
+            mTask.run();
+            mCounter.dec();
+        }
+    }
 
     private static class NamedThreadFactory implements ThreadFactory {
-
-        private int mThreadNumber;
         private String mName;
         private int mPriority;
+        private int mThreadNumber;
 
         public NamedThreadFactory(String name, int priority) {
             mName = name;
@@ -166,6 +151,7 @@ public class ThreadPool implements Executor {
 
         public Thread newThread(Runnable command) {
             int n;
+            
             synchronized (this) {
                 n = ++mThreadNumber;
             }
