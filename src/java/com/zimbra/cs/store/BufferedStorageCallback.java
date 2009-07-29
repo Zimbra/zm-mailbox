@@ -21,6 +21,7 @@ import java.security.MessageDigest;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DevNullOutputStream;
 
 public class BufferedStorageCallback extends StorageCallback {
     private byte array[] = null;
@@ -50,7 +51,8 @@ public class BufferedStorageCallback extends StorageCallback {
             throw new RuntimeException("Unable to initialize " +
                 BufferedStorageCallback.class.getSimpleName(), e);
         }
-        digestStream  = new DigestOutputStream(byteStream, messageDigest);
+        digestStream  = new DigestOutputStream(new DevNullOutputStream(),
+            messageDigest);
     }
     
     @Override
