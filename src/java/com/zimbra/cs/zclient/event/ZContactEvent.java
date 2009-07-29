@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient.event;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
@@ -80,15 +81,15 @@ public class ZContactEvent implements ToZJSONObject {
     }
 
     public String getEmail(String defaultValue) {
-        return mContactEl.getAttribute(Contact.A_email, defaultValue);
+        return mContactEl.getAttribute(ContactConstants.A_email, defaultValue);
     }
 
     public String getEmail2(String defaultValue) {
-        return mContactEl.getAttribute(Contact.A_email2, defaultValue);
+        return mContactEl.getAttribute(ContactConstants.A_email2, defaultValue);
     }
 
     public String getEmail3(String defaultValue) {
-        return mContactEl.getAttribute(Contact.A_email3, defaultValue);
+        return mContactEl.getAttribute(ContactConstants.A_email3, defaultValue);
     }
 
     public Map<String, String> getAttrs(Map<String, String> defaultValue) throws ServiceException {

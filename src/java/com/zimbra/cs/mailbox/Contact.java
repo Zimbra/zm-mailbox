@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +36,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
@@ -51,201 +51,6 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 
 public class Contact extends MailItem {
-
-    /** "File as" setting: &nbsp;<tt>Last, First</tt> */
-    public static final int FA_LAST_C_FIRST = 1;
-    /** "File as" setting: &nbsp;<tt>First Last</tt> */
-    public static final int FA_FIRST_LAST = 2;
-    /** "File as" setting: &nbsp;<tt>Company</tt> */
-    public static final int FA_COMPANY = 3;
-    /** "File as" setting: &nbsp;<tt>Last, First (Company)</tt> */
-    public static final int FA_LAST_C_FIRST_COMPANY = 4;
-    /** "File as" setting: &nbsp;<tt>First Last (Company)</tt> */
-    public static final int FA_FIRST_LAST_COMPANY = 5;
-    /** "File as" setting: &nbsp;<tt>Company (Last, First)</tt> */
-    public static final int FA_COMPANY_LAST_C_FIRST = 6;
-    /** "File as" setting: &nbsp;<tt>Company (First Last)</tt> */
-    public static final int FA_COMPANY_FIRST_LAST = 7;
-    /** "File as" setting: <i>[explicitly specified "file as" string]</i> */
-    public static final int FA_EXPLICIT = 8;
-
-    /** The default "file as" setting: {@link #FA_LAST_C_FIRST}. */
-    public  static final int FA_DEFAULT = FA_LAST_C_FIRST;
-    private static final int FA_MAXIMUM = FA_EXPLICIT;
-
-    // these are the "well known attrs". keep in sync with Attr enum below
-    public static final String A_assistantPhone = "assistantPhone";
-    public static final String A_birthday = "birthday";
-    public static final String A_callbackPhone = "callbackPhone";
-    public static final String A_carPhone = "carPhone";
-    public static final String A_company = "company";
-    public static final String A_companyPhone = "companyPhone";
-    public static final String A_department = "department";
-    public static final String A_dlist = "dlist";
-    public static final String A_email = "email";
-    public static final String A_email2 = "email2";
-    public static final String A_email3 = "email3";
-    public static final String A_fileAs = "fileAs";
-    public static final String A_firstName = "firstName";
-    public static final String A_fullName = "fullName";
-    public static final String A_homeCity = "homeCity";
-    public static final String A_homeCountry = "homeCountry";
-    public static final String A_homeFax = "homeFax";
-    public static final String A_homePhone = "homePhone";
-    public static final String A_homePhone2 = "homePhone2";
-    public static final String A_homePostalCode = "homePostalCode";
-    public static final String A_homeState = "homeState";
-    public static final String A_homeStreet = "homeStreet";
-    public static final String A_homeURL = "homeURL";
-    public static final String A_image = "image";
-    public static final String A_initials = "initials";
-    public static final String A_isMyCard = "isMyCard";
-    public static final String A_jobTitle = "jobTitle";
-    public static final String A_lastName = "lastName";
-    public static final String A_middleName = "middleName";
-    public static final String A_mobilePhone = "mobilePhone";
-    public static final String A_namePrefix = "namePrefix";
-    public static final String A_nameSuffix = "nameSuffix";
-    public static final String A_nickname = "nickname";
-    public static final String A_notes = "notes";
-    public static final String A_office = "office";
-    public static final String A_otherCity = "otherCity";
-    public static final String A_otherCountry = "otherCountry";
-    public static final String A_otherFax = "otherFax";
-    public static final String A_otherPhone = "otherPhone";
-    public static final String A_otherPostalCode = "otherPostalCode";
-    public static final String A_otherState = "otherState";
-    public static final String A_otherStreet = "otherStreet";
-    public static final String A_otherURL = "otherURL";
-    public static final String A_pager = "pager";
-    public static final String A_workCity = "workCity";
-    public static final String A_workCountry = "workCountry";
-    public static final String A_workFax = "workFax";
-    public static final String A_workPhone = "workPhone";
-    public static final String A_workPhone2 = "workPhone2";
-    public static final String A_workPostalCode = "workPostalCode";
-    public static final String A_workState = "workState";
-    public static final String A_workStreet = "workStreet";
-    public static final String A_workURL = "workURL";
-    public static final String A_type = "type";
-    public static final String A_imAddress1 = "imAddress1";
-    public static final String A_imAddress2 = "imAddress2";
-    public static final String A_imAddress3 = "imAddress3";
-    // Comcast specific fields
-    public static final String A_homeAddress = "homeAddress";
-    public static final String A_workAddress = "workAddress";
-    public static final String A_workEmail1 = "workEmail1";
-    public static final String A_workEmail2 = "workEmail2";
-    public static final String A_workEmail3 = "workEmail3";
-    public static final String A_workMobile = "workMobile";
-    public static final String A_workIM1 = "workIM1";
-    public static final String A_workIM2 = "workIM2";
-    public static final String A_workAltPhone = "workAltPhone";
-    public static final String A_otherDepartment = "otherDepartment";
-    public static final String A_otherOffice = "otherOffice";
-    public static final String A_otherProfession = "otherProfession";
-    public static final String A_otherAddress = "otherAddress";
-    public static final String A_otherMgrName = "otherMgrName";
-    public static final String A_otherAsstName = "otherAsstName";
-    public static final String A_otherAnniversary = "otherAnniversary";
-    public static final String A_otherCustom1 = "otherCustom1";
-    public static final String A_otherCustom2 = "otherCustom2";
-    public static final String A_otherCustom3 = "otherCustom3";
-    public static final String A_otherCustom4 = "otherCustom4";
-    // end
-
-    public static final String TYPE_GROUP = "group";
- 
-    // these are the "well known attrs". keep in sync with A_* above.
-    public enum Attr {
-        assistantPhone,
-        birthday,
-        callbackPhone,
-        carPhone,
-        company,
-        companyPhone,
-        description,
-        department,
-        dlist,
-        email,
-        email2,
-        email3,
-        fileAs,
-        firstName,
-        fullName,
-        homeCity,
-        homeCountry,
-        homeFax,
-        homePhone,
-        homePhone2,
-        homePostalCode,
-        homeState,
-        homeStreet,
-        homeURL,
-        image,
-        initials,
-        jobTitle,
-        lastName,
-        middleName,
-        mobilePhone,
-        namePrefix,
-        nameSuffix,
-        nickname,
-        notes,
-        office,
-        otherCity,
-        otherCountry,
-        otherFax,
-        otherPhone,
-        otherPostalCode,
-        otherState,
-        otherStreet,
-        otherURL,
-        pager,
-        tollFree,
-        workCity,
-        workCountry,
-        workFax,
-        workPhone,
-        workPhone2,
-        workPostalCode,
-        workState,
-        workStreet,
-        workURL,
-        type,
-        homeAddress,
-        imAddress1,
-        imAddress2,
-        imAddress3,
-        workAddress,
-        workEmail1,
-        workEmail2,
-        workEmail3,
-        workMobile,
-        workIM1,
-        workIM2,
-        workAltPhone,
-        otherDepartment,
-        otherOffice,
-        otherProfession,
-        otherAddress,
-        otherMgrName,
-        otherAsstName,
-        otherAnniversary,
-        otherCustom1,
-        otherCustom2,
-        otherCustom3,
-        otherCustom4;
-      
-        public static Attr fromString(String s) throws ServiceException {
-            try {
-                return Attr.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid attr: "+s+", valid values: "+Arrays.asList(Attr.values()), e);
-            }
-        }
-
-    }
 
     public static class Attachment implements DataSource {
         private DataHandler mDataHandler;
@@ -421,54 +226,54 @@ public class Contact extends MailItem {
     }
 
     public static String getFileAsString(Map<String, String> fields) throws ServiceException {
-        String fileAs = fields.get(A_fileAs);
+        String fileAs = fields.get(ContactConstants.A_fileAs);
         String[] fileParts = (fileAs == null ? null : fileAs.split(":", 2));
-        int fileAsInt = FA_DEFAULT;
+        int fileAsInt = ContactConstants.FA_DEFAULT;
         if (fileParts != null) {
             try {
                 fileAsInt = Integer.parseInt(fileParts[0]);
-                if (fileAsInt < 0 || fileAsInt > FA_MAXIMUM)
+                if (fileAsInt < 0 || fileAsInt > ContactConstants.FA_MAXIMUM)
                     throw ServiceException.INVALID_REQUEST("invalid fileAs value: " + fileAs, null);
             } catch (NumberFormatException e) {
                 throw ServiceException.INVALID_REQUEST("invalid fileAs value: " + fileAs, null);
             }
         }
 
-        String company = fields.get(A_company);
+        String company = fields.get(ContactConstants.A_company);
         if (company == null)
             company = "";
-        String first = fields.get(A_firstName);
+        String first = fields.get(ContactConstants.A_firstName);
         if (first == null)
             first = "";
-        String last = fields.get(A_lastName);
+        String last = fields.get(ContactConstants.A_lastName);
         if (last == null)
             last = "";
         
         StringBuilder result = new StringBuilder();
         switch (fileAsInt) {
-            case FA_EXPLICIT:
+            case ContactConstants.FA_EXPLICIT:
                 if (fileParts.length == 2 && !fileParts[1].trim().equals("")) {
                     result.append(fileParts[1].trim());
                     break;
                 }
                 throw ServiceException.INVALID_REQUEST("invalid fileAs value: " + fileAs, null);
             default:
-            case FA_LAST_C_FIRST:
+            case ContactConstants.FA_LAST_C_FIRST:
                 result.append(last);
                 if (first.length() > 0 && last.length() > 0)
                     result.append(", ");
                 result.append(first);
                 break;
-            case FA_FIRST_LAST:
+            case ContactConstants.FA_FIRST_LAST:
                 result.append(first);
                 if (first.length() > 0 && last.length() > 0)
                     result.append(' ');
                 result.append(last);
                 break;
-            case FA_COMPANY:
+            case ContactConstants.FA_COMPANY:
                 result.append(company);
                 break;
-            case FA_LAST_C_FIRST_COMPANY:
+            case ContactConstants.FA_LAST_C_FIRST_COMPANY:
                 result.append(last);
                 if (first.length() > 0 && last.length() > 0)
                     result.append(", ");
@@ -476,7 +281,7 @@ public class Contact extends MailItem {
                 if (company.length() > 0)
                     result.append(" (").append(company).append(')');
                 break;
-            case FA_FIRST_LAST_COMPANY:
+            case ContactConstants.FA_FIRST_LAST_COMPANY:
                 result.append(first);
                 if (first.length() > 0 && last.length() > 0)
                     result.append(' ');
@@ -484,7 +289,7 @@ public class Contact extends MailItem {
                 if (company.length() > 0)
                     result.append(" (").append(company).append(')');
                 break;
-            case FA_COMPANY_LAST_C_FIRST:
+            case ContactConstants.FA_COMPANY_LAST_C_FIRST:
                 result.append(company);
                 if (first.length() > 0 || last.length() > 0) {
                     result.append(" (").append(last);
@@ -493,7 +298,7 @@ public class Contact extends MailItem {
                     result.append(first).append(')');
                 }
                 break;
-            case FA_COMPANY_FIRST_LAST:
+            case ContactConstants.FA_COMPANY_FIRST_LAST:
                 result.append(company);
                 if (first.length() > 0 || last.length() > 0) {
                     result.append(" (").append(first);
@@ -512,66 +317,66 @@ public class Contact extends MailItem {
      * @param attrs
      */
     public static void normalizeFileAs(Map<String, String> attrs) {
-		String fileAs = attrs.get(A_fullName);
+		String fileAs = attrs.get(ContactConstants.A_fullName);
 		if (fileAs == null || fileAs.trim().length() == 0)
 			return;
 
-        String last = attrs.get(A_lastName);
+        String last = attrs.get(ContactConstants.A_lastName);
         last = last == null ? "" : last;
-        String first = attrs.get(A_firstName);
+        String first = attrs.get(ContactConstants.A_firstName);
         first = first == null ? "" : first;
-        String company = attrs.get(A_company);
+        String company = attrs.get(ContactConstants.A_company);
         company = company == null ? "" : company;
         
-        //FA_LAST_C_FIRST = 1
+        //ContactConstants.A_LAST_C_FIRST = 1
         StringBuilder sb = new StringBuilder();
         sb.append(last);
         if (last.length() > 0 && first.length() > 0) sb.append(", ");
         sb.append(first);
         if (sb.toString().equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_LAST_C_FIRST).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_LAST_C_FIRST).toString());
         	return;
         }
         
-        //FA_FIRST_LAST = 2
+        //ContactConstants.A_FIRST_LAST = 2
         sb = new StringBuilder();
         sb.append(first);
         if (last.length() > 0 && first.length() > 0) sb.append(' ');
         sb.append(last);
         if (sb.toString().equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_FIRST_LAST).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_FIRST_LAST).toString());
         	return;
         }
         
-        //FA_COMPANY = 3
+        //ContactConstants.A_COMPANY = 3
         if (company.equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_COMPANY).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_COMPANY).toString());
         	return;
         }
 
-        //FA_LAST_C_FIRST_COMPANY = 4
+        //ContactConstants.A_LAST_C_FIRST_COMPANY = 4
         sb = new StringBuilder();
         sb.append(last);
         if (last.length() > 0 && first.length() > 0) sb.append(", ");
         sb.append(first);
         if (company.length() > 0) sb.append(" (").append(company).append(')');
         if (sb.toString().equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_LAST_C_FIRST_COMPANY).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_LAST_C_FIRST_COMPANY).toString());
         	return;
         }
 
-        //FA_FIRST_LAST_COMPANY = 5
+        //ContactConstants.A_FIRST_LAST_COMPANY = 5
         sb = new StringBuilder();
         sb.append(first);
         if (last.length() > 0 && first.length() > 0) sb.append(' ');
         sb.append(last);
         if (company.length() > 0) sb.append(" (").append(company).append(')');
         if (sb.toString().equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_FIRST_LAST_COMPANY).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_FIRST_LAST_COMPANY).toString());
         	return;
         }
         
-        //FA_COMPANY_LAST_C_FIRST = 6
+        //ContactConstants.A_COMPANY_LAST_C_FIRST = 6
         sb = new StringBuilder();
         sb.append(company);
         if (last.length() > 0 || first.length() > 0) {
@@ -580,11 +385,11 @@ public class Contact extends MailItem {
             sb.append(first).append(')');
         }
         if (sb.toString().equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_COMPANY_LAST_C_FIRST).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_COMPANY_LAST_C_FIRST).toString());
         	return;
         }
         
-        //FA_COMPANY_FIRST_LAST = 7
+        //ContactConstants.A_COMPANY_FIRST_LAST = 7
         sb = new StringBuilder();
         sb.append(company);
         if (last.length() > 0 || first.length() > 0) {
@@ -593,12 +398,12 @@ public class Contact extends MailItem {
             sb.append(last).append(')');
         }
         if (sb.toString().equals(fileAs)) {
-        	attrs.put(A_fileAs, new Integer(FA_COMPANY_FIRST_LAST).toString());
+        	attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_COMPANY_FIRST_LAST).toString());
         	return;
         }
 
-        //FA_EXPLICIT = 8
-        attrs.put(A_fileAs, new Integer(FA_EXPLICIT).toString() + ':' + fileAs);
+        //ContactConstants.A_EXPLICIT = 8
+        attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
     /** The list of all *simple* "email" fields in the contact's map.
@@ -608,7 +413,7 @@ public class Contact extends MailItem {
      * 
      * You most certainly want to use getEmailAddresses() or getEmailAddresses(Map) instead of this
      */
-    private static final String[] EMAIL_FIELDS = new String[] { A_email, A_email2, A_email3, A_workEmail1, A_workEmail2, A_workEmail3 };
+    private static final String[] EMAIL_FIELDS = new String[] { ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3, ContactConstants.A_workEmail1, ContactConstants.A_workEmail2, ContactConstants.A_workEmail3 };
     
     /** Returns a list of all email address fields for this contact.  This is used
      *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
@@ -625,7 +430,7 @@ public class Contact extends MailItem {
             if (lcField.equals(e))
                 return true;
         }
-        if (lcField.equals(A_dlist))
+        if (lcField.equals(ContactConstants.A_dlist))
             return true;
         return false;
     }
@@ -639,7 +444,7 @@ public class Contact extends MailItem {
         }
 
         // if the dlist is set, return it as a single value
-        String dlist = fields.get(A_dlist);
+        String dlist = fields.get(ContactConstants.A_dlist);
         if (dlist != null) {
             String addrs[] = dlist.split(",");
             for (String s : addrs) {
@@ -706,7 +511,7 @@ public class Contact extends MailItem {
         if (ZimbraLog.mailop.isInfoEnabled()) {
             String email = "null";
             if (pc.getFields() != null)
-                email = pc.getFields().get(Contact.A_email);
+                email = pc.getFields().get(ContactConstants.A_email);
             ZimbraLog.mailop.info("adding contact %s: id=%d, folderId=%d, folderName=%s.",
                 email, data.id, folder.getId(), folder.getName());
         }

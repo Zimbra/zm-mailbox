@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
@@ -554,7 +555,7 @@ public class TestGal extends TestCase {
         
         Set<String> results = new HashSet<String>();
         for (GalContact gc : galResult.getMatches()) {
-            String r = (String)gc.getAttrs().get(Contact.A_email);
+            String r = (String)gc.getAttrs().get(ContactConstants.A_email);
             System.out.println("    " + r);
             results.add(r);
         }

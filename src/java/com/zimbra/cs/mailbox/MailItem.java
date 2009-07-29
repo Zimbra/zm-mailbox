@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
@@ -2559,7 +2560,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (item instanceof Folder || item instanceof Tag || item instanceof WikiItem) {
             return String.format("%s %s (id=%d)", item.getClass().getSimpleName(), item.getName(), item.getId());
         } else if (item instanceof Contact) {
-            String email = ((Contact) item).get(Contact.A_email);
+            String email = ((Contact) item).get(ContactConstants.A_email);
             if (StringUtil.isNullOrEmpty(email)) {
                 email = "<undefined>";
             }

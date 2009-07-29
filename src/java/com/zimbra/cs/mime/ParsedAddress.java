@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.mailbox.Contact;
 
 
@@ -90,11 +91,11 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
     public Map<String, String> getAttributes() {
         parse();
         HashMap<String, String> map = new HashMap<String, String>();
-        if (honorific != null)     map.put(Contact.A_namePrefix, honorific);
-        if (firstName != null)     map.put(Contact.A_firstName, firstName);
-        if (lastName != null)      map.put(Contact.A_lastName, lastName);
-        if (personalPart != null)  map.put(Contact.A_fullName, personalPart);
-        if (emailPart != null)     map.put(Contact.A_email, emailPart);
+        if (honorific != null)     map.put(ContactConstants.A_namePrefix, honorific);
+        if (firstName != null)     map.put(ContactConstants.A_firstName, firstName);
+        if (lastName != null)      map.put(ContactConstants.A_lastName, lastName);
+        if (personalPart != null)  map.put(ContactConstants.A_fullName, personalPart);
+        if (emailPart != null)     map.put(ContactConstants.A_email, emailPart);
         return map;
     }
 

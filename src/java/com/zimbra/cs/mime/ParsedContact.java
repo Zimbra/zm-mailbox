@@ -33,6 +33,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.lucene.document.Field;
 import org.json.JSONException;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -238,17 +239,17 @@ public class ParsedContact {
 
     /** This is a workaround for bug 11900 that must go away before Frank GA */
     private static void addNicknameAndTypeIfPDL(Map<String, String> fields) throws ServiceException {
-        if (!fields.containsKey(Contact.A_dlist))
+        if (!fields.containsKey(ContactConstants.A_dlist))
             return;
-        String fileAs = fields.get(Contact.A_fileAs);
+        String fileAs = fields.get(ContactConstants.A_fileAs);
         if (fileAs == null)
-            throw ServiceException.INVALID_REQUEST("PDL: no " + Contact.A_fileAs + " present", null);
-        String fileAsPrefix = Contact.FA_EXPLICIT + ":";
+            throw ServiceException.INVALID_REQUEST("PDL: no " + ContactConstants.A_fileAs + " present", null);
+        String fileAsPrefix = ContactConstants.FA_EXPLICIT + ":";
         if (!fileAs.startsWith(fileAsPrefix) || fileAs.length() <= fileAsPrefix.length())
-            throw ServiceException.INVALID_REQUEST("PDL: invalid" + Contact.A_fileAs + ": " + fileAs, null);
+            throw ServiceException.INVALID_REQUEST("PDL: invalid" + ContactConstants.A_fileAs + ": " + fileAs, null);
         String nickname = fileAs.substring(fileAsPrefix.length());
-        fields.put(Contact.A_nickname, nickname);
-        fields.put(Contact.A_type, Contact.TYPE_GROUP);
+        fields.put(ContactConstants.A_nickname, nickname);
+        fields.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
     }
 
 
@@ -469,7 +470,7 @@ public class ParsedContact {
         Map<String, String> m = getFields();
         for (Map.Entry<String, String> entry : m.entrySet()) {
             if (!Contact.isEmailField(entry.getKey())) { // skip email addrs, they're added to CONTENT below
-                if (!Contact.A_fileAs.equalsIgnoreCase(entry.getKey())) 
+                if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey())) 
                     contentText.append(entry.getValue()).append(' ');
             }
 
@@ -489,10 +490,10 @@ public class ParsedContact {
         String emailStrTokens = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr);
         
         StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
-        appendContactField(searchText, this, Contact.A_company);
-        appendContactField(searchText, this, Contact.A_firstName);
-        appendContactField(searchText, this, Contact.A_lastName);
-        appendContactField(searchText, this, Contact.A_nickname);
+        appendContactField(searchText, this, ContactConstants.A_company);
+        appendContactField(searchText, this, ContactConstants.A_firstName);
+        appendContactField(searchText, this, ContactConstants.A_lastName);
+        appendContactField(searchText, this, ContactConstants.A_nickname);
         
         // rebuild contentText here with the emailStr FIRST, then the other text.  
         // The email addresses should be first so that they have a higher search score than the other

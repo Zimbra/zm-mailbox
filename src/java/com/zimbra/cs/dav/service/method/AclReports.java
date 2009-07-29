@@ -14,15 +14,16 @@
  */
 package com.zimbra.cs.dav.service.method;
 
-import javax.servlet.http.HttpServletResponse;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
@@ -30,16 +31,15 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.dav.DavContext;
-import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
-import com.zimbra.cs.mailbox.Contact;
 
 public class AclReports extends Report {
 	public void handle(DavContext ctxt) throws DavException, ServiceException {
@@ -104,7 +104,7 @@ public class AclReports extends Report {
 		if (prop.equals(DavElements.E_DISPLAYNAME)) {
 	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, type, Provisioning.GalMode.zimbra, null);
 	        for (GalContact ct : result.getMatches()) {
-	            String email = (String)ct.getAttrs().get(Contact.A_email);
+	            String email = (String)ct.getAttrs().get(ContactConstants.A_email);
 	            if (email != null) {
 	            	Account acct = prov.get(Provisioning.AccountBy.name, email);
 	            	if (acct != null)

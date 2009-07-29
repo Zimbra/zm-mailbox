@@ -60,6 +60,7 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -2426,7 +2427,7 @@ public class ZMailboxUtil implements DebugListener {
         Map<String, String> result = getMap(args, offset);
         if (validate) {
             for (String name : result.keySet()) {
-                Contact.Attr.fromString(name);
+                ContactConstants.Attr.fromString(name);
             }
         }
         return result;

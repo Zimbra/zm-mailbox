@@ -21,6 +21,8 @@ import java.util.Map;
 import com.posisoft.jdavmail.JDAVContact;
 import com.posisoft.jdavmail.JDAVContactGroup;
 import com.posisoft.jdavmail.JDAVContact.Fields;
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.ContactConstants.Attr;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -202,58 +204,58 @@ public class LiveData extends DataSourceMapping {
             
             try {
                 switch (Fields.valueOf(key)) {
-                case bday: fields.put(Contact.A_birthday, val); break;
-                case o: fields.put(Contact.A_company, val); break;
+                case bday: fields.put(ContactConstants.A_birthday, val); break;
+                case o: fields.put(ContactConstants.A_company, val); break;
                 case mail: mail = val; break;
-                case othermail: fields.put(Contact.A_email2, val); break;
-                case givenName: fields.put(Contact.A_firstName, val); break;
-                case homeCity: fields.put(Contact.A_homeCity, val); break;
-                case homeCountry: fields.put(Contact.A_homeCountry, val); break;
-                case homeFax: fields.put(Contact.A_homeFax, val); break;
-                case homePhone: fields.put(Contact.A_homePhone, val); break;
-                case homePostalCode: fields.put(Contact.A_homePostalCode, val); break;
-                case homeState: fields.put(Contact.A_homeState, val); break;
-                case homeStreet: fields.put(Contact.A_homeStreet, val); break;
-                case sn: fields.put(Contact.A_lastName, val); break;
-                case mobile: fields.put(Contact.A_mobilePhone, val); break;
-                case nickname: fields.put(Contact.A_nickname, val); break;
-                case notes: fields.put(Contact.A_notes, val); break;
-                case wp: fields.put(Contact.A_otherURL, val); break;
-                case pager: fields.put(Contact.A_pager, val); break;
-                case l: fields.put(Contact.A_workCity, val); break;
-                case co: fields.put(Contact.A_workCountry, val); break;
-                case facsimiletelephoneNumber: fields.put(Contact.A_workFax, val); break;
-                case telephoneNumber: fields.put(Contact.A_workPhone, val); break;
-                case postalcode: fields.put(Contact.A_workPostalCode, val); break;
-                case st: fields.put(Contact.A_workState, val); break;
-                case street: fields.put(Contact.A_workStreet, val); break;
-                case msgrAddress: im = val; fields.put(Contact.A_imAddress1, "msn://" + val); break;
-                case busmail: fields.put(Contact.A_workEmail1, val); break;
-                case otherTelephone: fields.put(Contact.A_workAltPhone, val); break;
+                case othermail: fields.put(ContactConstants.A_email2, val); break;
+                case givenName: fields.put(ContactConstants.A_firstName, val); break;
+                case homeCity: fields.put(ContactConstants.A_homeCity, val); break;
+                case homeCountry: fields.put(ContactConstants.A_homeCountry, val); break;
+                case homeFax: fields.put(ContactConstants.A_homeFax, val); break;
+                case homePhone: fields.put(ContactConstants.A_homePhone, val); break;
+                case homePostalCode: fields.put(ContactConstants.A_homePostalCode, val); break;
+                case homeState: fields.put(ContactConstants.A_homeState, val); break;
+                case homeStreet: fields.put(ContactConstants.A_homeStreet, val); break;
+                case sn: fields.put(ContactConstants.A_lastName, val); break;
+                case mobile: fields.put(ContactConstants.A_mobilePhone, val); break;
+                case nickname: fields.put(ContactConstants.A_nickname, val); break;
+                case notes: fields.put(ContactConstants.A_notes, val); break;
+                case wp: fields.put(ContactConstants.A_otherURL, val); break;
+                case pager: fields.put(ContactConstants.A_pager, val); break;
+                case l: fields.put(ContactConstants.A_workCity, val); break;
+                case co: fields.put(ContactConstants.A_workCountry, val); break;
+                case facsimiletelephoneNumber: fields.put(ContactConstants.A_workFax, val); break;
+                case telephoneNumber: fields.put(ContactConstants.A_workPhone, val); break;
+                case postalcode: fields.put(ContactConstants.A_workPostalCode, val); break;
+                case st: fields.put(ContactConstants.A_workState, val); break;
+                case street: fields.put(ContactConstants.A_workStreet, val); break;
+                case msgrAddress: im = val; fields.put(ContactConstants.A_imAddress1, "msn://" + val); break;
+                case busmail: fields.put(ContactConstants.A_workEmail1, val); break;
+                case otherTelephone: fields.put(ContactConstants.A_workAltPhone, val); break;
                 case group: group = true; break;
                 }
             } catch (Exception e) {
             }
         }
         if (group) {
-            fields.put(Contact.A_fileAs, Contact.FA_EXPLICIT + ":" +
-                fields.get(Contact.A_nickname));
-            fields.put(Contact.A_dlist, mail);
-            fields.put(Contact.A_type, Contact.TYPE_GROUP);
+            fields.put(ContactConstants.A_fileAs, ContactConstants.FA_EXPLICIT + ":" +
+                fields.get(ContactConstants.A_nickname));
+            fields.put(ContactConstants.A_dlist, mail);
+            fields.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
         } else {
-            if (!fields.containsKey(Contact.A_firstName) &&
-                !fields.containsKey(Contact.A_lastName)) {
+            if (!fields.containsKey(ContactConstants.A_firstName) &&
+                !fields.containsKey(ContactConstants.A_lastName)) {
                 String fileAs;
 
-                if ((fileAs = fields.get(Contact.A_fullName)) != null ||
-                    (fileAs = fields.get(Contact.A_nickname)) != null ||
-                    (fileAs = fields.get(Contact.A_email)) != null ||
-                    (fileAs = fields.get(Contact.A_email2)) != null ||
-                    (fileAs = fields.get(Contact.A_workEmail1)) != null ||
+                if ((fileAs = fields.get(ContactConstants.A_fullName)) != null ||
+                    (fileAs = fields.get(ContactConstants.A_nickname)) != null ||
+                    (fileAs = fields.get(ContactConstants.A_email)) != null ||
+                    (fileAs = fields.get(ContactConstants.A_email2)) != null ||
+                    (fileAs = fields.get(ContactConstants.A_workEmail1)) != null ||
                     (fileAs = im) != null)
-                    fields.put(Contact.A_fileAs, Contact.FA_EXPLICIT + ":" + fileAs);
+                    fields.put(ContactConstants.A_fileAs, ContactConstants.FA_EXPLICIT + ":" + fileAs);
             }
-            fields.put(Contact.A_email, mail);
+            fields.put(ContactConstants.A_email, mail);
         }
         return contact == null ? new ParsedContact(fields) :
             new ParsedContact(fields, contact.getContentStream());

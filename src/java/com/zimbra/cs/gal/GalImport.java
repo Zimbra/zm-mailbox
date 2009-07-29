@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.naming.NamingException;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -165,17 +166,17 @@ public class GalImport extends MailItemImport {
 		}
 		
 		private String[] FILE_AS_STR_KEYS = {
-			Contact.A_fullName,
-			Contact.A_email,
-			Contact.A_email2,
-			Contact.A_email3
+			ContactConstants.A_fullName,
+			ContactConstants.A_email,
+			ContactConstants.A_email2,
+			ContactConstants.A_email3
 		};
 		
 		private void addFileAsStr(Map<String,Object> attrs) {
 	        for (String key : FILE_AS_STR_KEYS) {
 	        	Object fileAsStr = attrs.get(key);
 	        	if (fileAsStr != null && fileAsStr instanceof String) {
-	        		attrs.put(Contact.A_fileAs, Contact.FA_EXPLICIT+":"+(String)fileAsStr);
+	        		attrs.put(ContactConstants.A_fileAs, ContactConstants.FA_EXPLICIT+":"+(String)fileAsStr);
 	        		return;
 	        	}
 	        }

@@ -17,8 +17,8 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Contact;
 
 /**
  * @author schemers
@@ -70,11 +70,11 @@ public class GalContact implements Comparable {
     private String getSortField() {
         if (mSortField != null) return mSortField;
         
-        mSortField = getSingleAttr(Contact.A_fullName);
+        mSortField = getSingleAttr(ContactConstants.A_fullName);
         if (mSortField != null) return mSortField;
 
-        String first = getSingleAttr(Contact.A_firstName);
-        String last = getSingleAttr(Contact.A_lastName);
+        String first = getSingleAttr(ContactConstants.A_firstName);
+        String last = getSingleAttr(ContactConstants.A_lastName);
         
         if (first != null || last != null) {
             StringBuilder sb = new StringBuilder();
@@ -87,7 +87,7 @@ public class GalContact implements Comparable {
             }
             mSortField = sb.toString();
         } else {
-            mSortField = getSingleAttr(Contact.A_email);
+            mSortField = getSingleAttr(ContactConstants.A_email);
             if (mSortField == null) mSortField = "";
         }
         return mSortField;

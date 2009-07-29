@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -154,7 +155,7 @@ public class ContactAutoComplete {
     private Collection<String> mEmailKeys;
     
 	private static final String[] DEFAULT_EMAIL_KEYS = {
-		Contact.A_email, Contact.A_email2, Contact.A_email3
+		ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
 	};
 	
 	
@@ -295,11 +296,11 @@ public class ContactAutoComplete {
 		String[] tokens = query.split(" ");
 		if (tokens.length == 2 && tokens[1].length() == 1)
 			query = tokens[0];
-    	String firstName = (String)attrs.get(Contact.A_firstName);
-    	String lastName = (String)attrs.get(Contact.A_lastName);
-    	String fullName = (String)attrs.get(Contact.A_fullName);
-    	String nickname = (String)attrs.get(Contact.A_nickname);
-        if (attrs.get(Contact.A_dlist) == null) {
+    	String firstName = (String)attrs.get(ContactConstants.A_firstName);
+    	String lastName = (String)attrs.get(ContactConstants.A_lastName);
+    	String fullName = (String)attrs.get(ContactConstants.A_fullName);
+    	String nickname = (String)attrs.get(ContactConstants.A_nickname);
+        if (attrs.get(ContactConstants.A_dlist) == null) {
         	boolean nameMatches = 
         		matches(query, firstName) ||
                 matches(query, lastName) ||
@@ -346,7 +347,7 @@ public class ContactAutoComplete {
         	// distribution list
         	ContactEntry entry = new ContactEntry();
         	entry.mDisplayName = nickname;
-        	entry.mDlist = (String)attrs.get(Contact.A_dlist);
+        	entry.mDlist = (String)attrs.get(ContactConstants.A_dlist);
         	entry.mId = id;
         	entry.mFolderId = folderId;
         	result.addEntry(entry);

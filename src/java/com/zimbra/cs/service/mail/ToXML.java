@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -446,17 +447,17 @@ public class ToXML {
                     elem.addAttribute(MailConstants.A_FILE_AS_STR, contact.getFileAsString());
                 } catch (ServiceException e) { }
     
-                elem.addAttribute(Contact.A_email, contact.get(Contact.A_email));
-                elem.addAttribute(Contact.A_email2, contact.get(Contact.A_email2));
-                elem.addAttribute(Contact.A_email3, contact.get(Contact.A_email3));
+                elem.addAttribute(ContactConstants.A_email, contact.get(ContactConstants.A_email));
+                elem.addAttribute(ContactConstants.A_email2, contact.get(ContactConstants.A_email2));
+                elem.addAttribute(ContactConstants.A_email3, contact.get(ContactConstants.A_email3));
 
-                String type = contact.get(Contact.A_type);
-                String dlist = contact.get(Contact.A_dlist);
+                String type = contact.get(ContactConstants.A_type);
+                String dlist = contact.get(ContactConstants.A_dlist);
                 if (type == null && dlist != null)
-                    type = Contact.TYPE_GROUP;
-                elem.addAttribute(Contact.A_type, type);
+                    type = ContactConstants.TYPE_GROUP;
+                elem.addAttribute(ContactConstants.A_type, type);
                 if (dlist != null)
-                    elem.addAttribute(Contact.A_dlist, dlist);
+                    elem.addAttribute(ContactConstants.A_dlist, dlist);
                 
                 // send back date with summary via search results
                 elem.addAttribute(MailConstants.A_CHANGE_DATE, contact.getChangeDate() / 1000);

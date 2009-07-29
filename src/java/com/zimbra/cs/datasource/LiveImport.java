@@ -40,6 +40,7 @@ import com.posisoft.jdavmail.JDAVMailFolder;
 import com.posisoft.jdavmail.JDAVMailMessage;
 import com.posisoft.jdavmail.JDAVMailStore;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -862,7 +863,7 @@ public class LiveImport extends MailItemImport {
             try {
                 trackedContact = new LiveData(ds, localId);
                 Contact localContact = mbox.getContactById(octxt, localId);
-                String dlist = localContact.getFields().get(Contact.A_dlist);
+                String dlist = localContact.getFields().get(ContactConstants.A_dlist);
                 
                 if (dlist == null) {
                     JDAVContact remoteContact = LiveData.getJDAVContact(localContact);

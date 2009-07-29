@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -52,16 +53,16 @@ public class ZContactHit implements ZSearchHit {
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
         mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
-        mEmail = e.getAttribute(Contact.A_email, null);
-        mEmail2 = e.getAttribute(Contact.A_email2, null);
-        mEmail3 = e.getAttribute(Contact.A_email3, null);
-        mWorkEmail1 = e.getAttribute(Contact.A_workEmail1, null);
-        mWorkEmail2 = e.getAttribute(Contact.A_workEmail2, null);
-        mWorkEmail3 = e.getAttribute(Contact.A_workEmail3, null);
+        mEmail = e.getAttribute(ContactConstants.A_email, null);
+        mEmail2 = e.getAttribute(ContactConstants.A_email2, null);
+        mEmail3 = e.getAttribute(ContactConstants.A_email3, null);
+        mWorkEmail1 = e.getAttribute(ContactConstants.A_workEmail1, null);
+        mWorkEmail2 = e.getAttribute(ContactConstants.A_workEmail2, null);
+        mWorkEmail3 = e.getAttribute(ContactConstants.A_workEmail3, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
-        mDlist = e.getAttribute(Contact.A_dlist, null);
-        mFullName = e.getAttribute(Contact.A_fullName,null);
+        mDlist = e.getAttribute(ContactConstants.A_dlist, null);
+        mFullName = e.getAttribute(ContactConstants.A_fullName,null);
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
@@ -76,14 +77,14 @@ public class ZContactHit implements ZSearchHit {
         jo.put("fileAsStr", mFileAsStr);
         jo.put("revision", mRevision);
         jo.put("folderId", mFolderId);
-        jo.put(Contact.A_dlist, mDlist);
-        jo.put(Contact.A_email, mEmail);
-        jo.put(Contact.A_email2, mEmail2);
-        jo.put(Contact.A_email3, mEmail3);
-        jo.put(Contact.A_workEmail1, mWorkEmail1);
-        jo.put(Contact.A_workEmail2, mWorkEmail2);
-        jo.put(Contact.A_workEmail3, mWorkEmail3);
-        jo.put(Contact.A_fullName, mFullName);
+        jo.put(ContactConstants.A_dlist, mDlist);
+        jo.put(ContactConstants.A_email, mEmail);
+        jo.put(ContactConstants.A_email2, mEmail2);
+        jo.put(ContactConstants.A_email3, mEmail3);
+        jo.put(ContactConstants.A_workEmail1, mWorkEmail1);
+        jo.put(ContactConstants.A_workEmail2, mWorkEmail2);
+        jo.put(ContactConstants.A_workEmail3, mWorkEmail3);
+        jo.put(ContactConstants.A_fullName, mFullName);
         return jo;
     }
     
@@ -96,7 +97,7 @@ public class ZContactHit implements ZSearchHit {
     }
 
     public boolean isGroup() {
-        return Contact.TYPE_GROUP.equalsIgnoreCase(getType());
+        return ContactConstants.TYPE_GROUP.equalsIgnoreCase(getType());
     }
 
     public boolean isContact() {
@@ -205,7 +206,7 @@ public class ZContactHit implements ZSearchHit {
                 mEmail3 = cevent.getEmail(mEmail3);
                 //mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
                 Map<String, String> attrs = cevent.getAttrs(null);
-                String dlist = attrs != null ? attrs.get(Contact.A_dlist) : null;
+                String dlist = attrs != null ? attrs.get(ContactConstants.A_dlist) : null;
                 if (dlist != null) mDlist = dlist;
             }
         }

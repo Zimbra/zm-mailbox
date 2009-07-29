@@ -31,6 +31,7 @@ import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -984,12 +985,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     
                     if (oldContact != null) {
-                        String email = string(ct.get(Contact.A_email));
-                        String first = string(ct.get(Contact.A_firstName));
-                        String name = string(ct.get(Contact.A_fullName));
-                        String oldemail = string(oldContact.get(Contact.A_email));
-                        String oldfirst = string(oldContact.get(Contact.A_firstName));
-                        String oldname = string(oldContact.get(Contact.A_fullName));
+                        String email = string(ct.get(ContactConstants.A_email));
+                        String first = string(ct.get(ContactConstants.A_firstName));
+                        String name = string(ct.get(ContactConstants.A_fullName));
+                        String oldemail = string(oldContact.get(ContactConstants.A_email));
+                        String oldfirst = string(oldContact.get(ContactConstants.A_firstName));
+                        String oldname = string(oldContact.get(ContactConstants.A_fullName));
                         
                         if (email.equals(oldemail) && first.equals(oldfirst) &&
                             name.equals(oldname)) {
