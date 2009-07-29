@@ -219,8 +219,16 @@ public class GetLoggerStats extends AdminDocumentHandler {
         stats.addAttribute(AdminConstants.A_NAME, group);
         Element values = stats.addElement(AdminConstants.E_VALUES);
         while (results.hasNext()) {
+            String result = results.next();
+            String name   = result;
+            int idx = result.indexOf(" :: ");
             Element stat = values.addElement(AdminConstants.E_STAT);
-            stat.addAttribute(AdminConstants.A_NAME, results.next());
+            if (idx != -1) {
+                name = result.substring(0, idx);
+                String unit = result.substring(idx + 4);
+                stat.addAttribute(AdminConstants.A_TYPE, unit);
+            }
+            stat.addAttribute(AdminConstants.A_NAME, name);
         }
     }
     static void fetchColumnData(Element response, String group,
