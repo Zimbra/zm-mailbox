@@ -58,11 +58,13 @@ public class HttpUtil {
 
     public static String encodeFilename(HttpServletRequest req, String filename) {
         if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
-            return '"' + filename + '"';
+            return '"' + filename.replace('\t', ' ') + '"';
         return encodeFilename(guessBrowser(req), filename);
     }
 
     public static String encodeFilename(Browser browser, String filename) {
+        // Windows does not allow tabs in filenames - replacing with ' ' is safe
+        filename = filename.replace('\t', ' ');
         if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
             return '"' + filename + '"';
         try {
