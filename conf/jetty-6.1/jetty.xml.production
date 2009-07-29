@@ -303,8 +303,8 @@
         <Set name="outputStream">
           <New class="org.mortbay.util.RolloverFileOutputStream">
             <Arg type="String"><SystemProperty name="jetty.home" default="."/>/logs/yyyy_mm_dd.trace.log</Arg>
-            <Arg type="boolean">true</Arg> <!-- append -->
-            <Arg type="int">10</Arg> <!-- retain days -->
+            <Arg type="boolean">true</Arg>
+            <Arg type="int">10</Arg>
           </New>
         </Set>
       </New>
