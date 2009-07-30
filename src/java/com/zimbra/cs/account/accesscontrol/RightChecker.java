@@ -915,6 +915,18 @@ public class RightChecker {
     }
     
     
+
+    static void getEffectiveRights(
+            RightBearer rightBearer, Entry target, 
+            boolean expandSetAttrs, boolean expandGetAttrs,
+            RightCommand.EffectiveRights result) throws ServiceException {
+        
+        TargetType targetType = TargetType.getTargetType(target);
+        getEffectiveRights(rightBearer, target, targetType, 
+                expandSetAttrs, expandGetAttrs, result);
+    }
+
+    
     /**
      * 
      * @param effectiveACLs
@@ -924,8 +936,8 @@ public class RightChecker {
      * @return
      * @throws ServiceException
      */
-    static void getEffectiveRights(
-            RightBearer rightBearer, Entry target,
+    private static void getEffectiveRights(
+            RightBearer rightBearer, Entry target, TargetType targetType,
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
         
@@ -935,7 +947,6 @@ public class RightChecker {
         
         if (rightBearer instanceof GlobalAdmin) {
             // all preset rights on the target type
-            TargetType targetType = TargetType.getTargetType(target);
             presetRights = getAllExecutablePresetRights(targetType);
             
             // all attrs on the target type
@@ -1229,7 +1240,7 @@ public class RightChecker {
             return false;
     }
 
-    static boolean isSystemAdmin(Account acct, boolean asAdmin) {
+    public static boolean isGlobalAdmin(Account acct, boolean asAdmin) {
         return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false));
     }
     
@@ -1369,7 +1380,7 @@ public class RightChecker {
     static void checkPartiallyDenied(Account grantor, TargetType targetTypeToGrant, 
             Entry targetToGrant, Right rightToGrant) throws ServiceException {
         
-        if (isSystemAdmin(grantor, true))
+        if (isGlobalAdmin(grantor, true))
             return;
         
         Provisioning prov = Provisioning.getInstance();
@@ -1767,9 +1778,17 @@ public class RightChecker {
             boolean expandSetAttrs, boolean expandGetAttrs,
             AllEffectiveRights aer) throws ServiceException {
         
-        if (rightBearer instanceof GlobalAdmin)
-            // throw ServiceException.FAILURE("TODO", null); // todo
+        if (rightBearer instanceof GlobalAdmin) {
+            for (TargetType tt : TargetType.values()) {
+                EffectiveRights er = new EffectiveRights(
+                        tt.getCode(), null, null, 
+                        rightBearer.getId(), rightBearer.getName());
+                
+                RightChecker.getEffectiveRights(rightBearer, null, tt, expandSetAttrs, expandGetAttrs, er);
+                aer.setAll(tt, er);
+            }
             return;
+        }
         
         Grantee grantee = (Grantee)rightBearer;
         

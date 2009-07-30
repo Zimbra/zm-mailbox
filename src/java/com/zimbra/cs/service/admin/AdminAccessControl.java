@@ -31,7 +31,10 @@ import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightChecker;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
@@ -146,8 +149,7 @@ public abstract class AdminAccessControl {
     
     /**
      * for an entry to be listed in the Search*** and GetAll*** response,
-     * the authed admin needs to have both the "list" right and "get all attrs"
-     * right.
+     * the authed admin needs to have the "list***" right.
      * 
      * Note: if the AccessManager is a domain based AccessManager, it always 
      *       returns true.  Callsites of the this method must have either 
@@ -691,15 +693,100 @@ public abstract class AdminAccessControl {
         private AdminAccessControl mAC;
         private Provisioning mProv;
         private Set<String> mReqAttrs; // not used/checked now after bug 38452
+        RightCommand.AllEffectiveRights mAllEffRights;  // if null, means the admin has all rights
         
         public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
             mReqAttrs = reqAttrs;
+            
+            // short cut global admin, should we?  do that for now
+            if (RightChecker.isGlobalAdmin(mAC.mAuthedAcct, true))
+                mAllEffRights = null;
+            else
+                mAllEffRights = mProv.getAllEffectiveRights(GranteeType.GT_USER.getCode(), 
+                        Provisioning.GranteeBy.id, mAC.mAuthedAcct.getId(),
+                        false, false);
+                    
         }
         
+        /* Can't do this because of perf bug 39514
+         * 
+         * For each entry found, this will lead to a LDAP search to find the groups this entry belongs, yuck.
+         * 
         private boolean hasRightsToList(NamedEntry target, AdminRight listRight) throws ServiceException {
             return mAC.hasRightsToList(target, listRight, null);
+        }
+        */
+        
+        /*
+         * See if tis admin has the list right from our AllEffectiveRights
+         * 
+         * Note: this is the only place where permission is computed from an AllEffectiveRights object -
+         *       because of bug 39514.  
+         *       
+         *       If we were to use the usual route (i.e. mAC.hasRightsToList(target, listRight, null)),
+         *       then for each entry found, there will be a LDAP search to find the groups this entry belongs, yuck.
+         */
+        private boolean hasRightsToList(NamedEntry target, AdminRight listRight) throws ServiceException {
+            
+            // short cut global admin
+            if (mAllEffRights == null)
+                return true;
+            
+            TargetType targetType = listRight.getTargetType();
+            
+            RightCommand.RightsByTargetType rbtt = mAllEffRights.rightsByTargetType().get(targetType);
+            
+            // no right for this target type
+            if (rbtt == null || rbtt.hasNoRight())
+                return false;
+            
+            // has some rights for this target type
+            
+            // see if the admin has the right on all entries of the type on the system
+            RightCommand.EffectiveRights er = rbtt.all();
+            if (hasRight(er, target, listRight))
+                return true;
+            
+            // see if the admin has the right on domain scope
+            Domain targetDomain = targetType.getTargetDomain(mProv, target);
+            if (targetDomain != null) {
+                if (rbtt instanceof RightCommand.DomainedRightsByTargetType) {
+                    String domainName = targetDomain.getName();
+                    
+                    RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rbtt;
+                    
+                    for (RightCommand.RightAggregation rightsByDomains : domainedRights.domains()) {
+                        if (rightsByDomains.entries().contains(domainName)) {
+                            RightCommand.EffectiveRights effRights = rightsByDomains.effectiveRights();
+                            if (hasRight(effRights, target, listRight))
+                                return true;
+                        }
+                    }
+                }
+            }
+            
+            // see if the admin has the right on any entries
+            String targetName = target.getName();
+            for (RightCommand.RightAggregation rightsByEntries : rbtt.entries()) {
+                if (rightsByEntries.entries().contains(targetName)) {
+                    RightCommand.EffectiveRights effRights = rightsByEntries.effectiveRights();
+                    if (hasRight(effRights, target, listRight))
+                        return true;
+                }
+            }
+            
+            return false;
+        }
+
+        
+        private boolean hasRight(RightCommand.EffectiveRights effRights, NamedEntry target, AdminRight listRight) {
+            if (effRights == null)
+                return false;
+            
+            List<String> presetRights = effRights.presetRights();
+            return presetRights != null && presetRights.contains(listRight.getName());
         }
         
         private boolean hasRightsToListDanglingAlias(Alias alias) throws ServiceException {
@@ -724,36 +811,43 @@ public abstract class AdminAccessControl {
             // entry contains only attrs on the alias, not the target entry.
             TargetType tt = alias.getTargetType(mProv);
             
-            if (tt == null) // can't check right, allows only system admin
+            if (tt == null) // we have a dangling alias, can't check right, allows only system admin
                 hasRight = hasRightsToListDanglingAlias(alias);
-            else if (tt == TargetType.dl)
-                hasRight = mAC.hasRightsToList(alias.getTarget(mProv), Admin.R_listDistributionList, null);
-            else if (tt == TargetType.calresource)
-                hasRight = mAC.hasRightsToList(alias.getTarget(mProv), Admin.R_listCalendarResource, null);
-            else
-                hasRight = mAC.hasRightsToList(alias.getTarget(mProv), Admin.R_listAccount, null);
+            else 
+                hasRight = allow(alias.getTarget(mProv));
             
             return hasRight;
+        }
+        
+        private AdminRight needRight(NamedEntry entry) throws ServiceException {
+            if (entry instanceof CalendarResource) {
+                return Admin.R_listCalendarResource;
+            } else if (entry instanceof Account) {
+                return Admin.R_listAccount;
+            } else if (entry instanceof DistributionList) {
+                return Admin.R_listDistributionList;
+            } else if (entry instanceof Domain) {
+                return Admin.R_listDomain;
+            } else if (entry instanceof Cos) {
+                return Admin.R_listCos;
+            } else
+                return null;
         }
         
         /**
          * returns if entry is allowed.
          */
         public boolean allow(NamedEntry entry) throws ServiceException {
-            if (entry instanceof CalendarResource) {
-                return hasRightsToList(entry, Admin.R_listCalendarResource);
-            } else if (entry instanceof Account) {
-                return hasRightsToList(entry, Admin.R_listAccount);
-            } else if (entry instanceof DistributionList) {
-                return hasRightsToList(entry, Admin.R_listDistributionList);
-            } else if (entry instanceof Alias) {
+            
+            if (entry instanceof Alias)
                 return hasRightsToListAlias((Alias)entry);
-            } else if (entry instanceof Domain) {
-                return hasRightsToList(entry, Admin.R_listDomain);
-            } else if (entry instanceof Cos) {
-                return hasRightsToList(entry, Admin.R_listCos);
-            } else
-                return false;
+            else {
+                AdminRight listRightNeeded = needRight(entry);  
+                if (listRightNeeded != null)
+                    return hasRightsToList(entry, listRightNeeded);
+                else
+                    return false;
+            }
         }
         
         /**

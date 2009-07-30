@@ -525,7 +525,7 @@ public class ACLAccessManager extends AccessManager {
      * @throws ServiceException
      */
     private Boolean checkHardRules(Account authedAcct, boolean asAdmin, Entry target, Right right) throws ServiceException {
-        if (RightChecker.isSystemAdmin(authedAcct, asAdmin)) {
+        if (RightChecker.isGlobalAdmin(authedAcct, asAdmin)) {
             return Boolean.TRUE;
         } else {
             boolean isAdminRight = (right == null || !right.isUserRight());
@@ -539,7 +539,7 @@ public class ACLAccessManager extends AccessManager {
                 // 2. don't allow a delegated-only admin to access a global admin's account,
                 //    no matter how much rights it has
                 if (target instanceof Account) {
-                    if (RightChecker.isSystemAdmin((Account)target, true))
+                    if (RightChecker.isGlobalAdmin((Account)target, true))
                         // return Boolean.FALSE;
                         throw ServiceException.PERM_DENIED("delegated admin is not allowed to access a global admin's account");
                 }
