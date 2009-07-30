@@ -1034,7 +1034,7 @@ public class RightCommand {
         
         if (targetEntry != null) {
             // get ACL from the target
-            ZimbraACL zimbraAcl = RightUtil.getACL(targetEntry);
+            ZimbraACL zimbraAcl = ACLUtil.getACL(targetEntry);
             grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter);
             
         } else {
@@ -1148,7 +1148,7 @@ public class RightCommand {
         ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
         aces.add(ace);
         
-        RightUtil.grantRight(prov, targetEntry, aces);
+        ACLUtil.grantRight(prov, targetEntry, aces);
     }
 
     public static void revokeRight(Provisioning prov,
@@ -1199,7 +1199,7 @@ public class RightCommand {
         ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, null);
         aces.add(ace);
         
-        List<ZimbraACE> revoked = RightUtil.revokeRight(prov, targetEntry, aces);
+        List<ZimbraACE> revoked = ACLUtil.revokeRight(prov, targetEntry, aces);
         if (revoked.isEmpty())
             throw AccountServiceException.NO_SUCH_GRANT(ace.dump());
     }
@@ -1241,7 +1241,7 @@ public class RightCommand {
                     acesToRevoke.add(ace);
                 }
             }
-            List<ZimbraACE> revoked = RightUtil.revokeRight(prov, targetEntry, acesToRevoke);
+            List<ZimbraACE> revoked = ACLUtil.revokeRight(prov, targetEntry, acesToRevoke);
         }
     }
 

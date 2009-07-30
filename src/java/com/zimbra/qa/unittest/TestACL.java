@@ -64,7 +64,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.accesscontrol.RightUtil;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -775,7 +775,7 @@ public abstract class TestACL extends TestCase {
             String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
             targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
         }
-        return RightUtil.grantRight(mProv, targetEntry, aces);
+        return ACLUtil.grantRight(mProv, targetEntry, aces);
     }
     
     /*
@@ -816,7 +816,7 @@ public abstract class TestACL extends TestCase {
         String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
             targetEntry = TargetType.lookupTarget(mProv, targetType, TargetBy.id, targetId);
         }
-        return RightUtil.revokeRight(mProv, targetEntry, aces);
+        return ACLUtil.revokeRight(mProv, targetEntry, aces);
     }
     
     protected void revokeRight(Account authedAcct,

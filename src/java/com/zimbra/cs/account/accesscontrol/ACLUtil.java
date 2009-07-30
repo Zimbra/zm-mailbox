@@ -24,7 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 
-public class RightUtil {
+public class ACLUtil {
     
     /**
      * Returns all ACEs granted on the entry.  

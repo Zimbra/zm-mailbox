@@ -35,7 +35,7 @@ import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.accesscontrol.RightUtil;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -321,7 +321,7 @@ public class TestACLGrantee extends TestACL {
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.INVALID_REQUEST)) {
                 // make sure nothing is granted, including the good ones
-                if (RightUtil.getAllACEs(target) == null)
+                if (ACLUtil.getAllACEs(target) == null)
                     return; // good!
             }
         }
@@ -491,7 +491,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify that only one is added 
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         assertEquals(1, acl.size());
     }
     
@@ -514,7 +514,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify that only one is added 
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         assertEquals(1, acl.size());
     }
     
@@ -539,7 +539,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grants were added
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         assertEquals(2, acl.size());
         
         // grant some more
@@ -548,7 +548,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grants were added
-        acl = RightUtil.getAllACEs(target);
+        acl = ACLUtil.getAllACEs(target);
         assertEquals(3, acl.size());
         
         // grant some more
@@ -557,7 +557,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grants were added
-        acl = RightUtil.getAllACEs(target);
+        acl = ACLUtil.getAllACEs(target);
         assertEquals(4, acl.size());
         
     }
@@ -583,7 +583,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grant was added
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         assertEquals(1, acl.size());
         via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), User.R_loginAs, POSITIVE);
         verify(user, target, User.R_loginAs, ALLOW, via);
@@ -616,7 +616,7 @@ public class TestACLGrantee extends TestACL {
         grantRight(TargetType.account, target, aces);
         
         // verify the grant was added
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         assertEquals(2, acl.size());
         
         via = new TestViaGrant(TargetType.account, target, GranteeType.GT_USER, user.getName(), User.R_invite, POSITIVE);
@@ -628,7 +628,7 @@ public class TestACLGrantee extends TestACL {
         revokeRight(TargetType.account, target, acesToRevoke);
         
         // verify the grant was removed
-        acl = RightUtil.getAllACEs(target);
+        acl = ACLUtil.getAllACEs(target);
         assertEquals(1, acl.size());
         verifyDefault(user, target, User.R_invite); // callsite default should now apply
         
@@ -644,7 +644,7 @@ public class TestACLGrantee extends TestACL {
         // verify all right are gone
         verifyDefault(user, target, User.R_invite);
         verifyDefault(user, target, User.R_viewFreeBusy);
-        acl = RightUtil.getAllACEs(target);
+        acl = ACLUtil.getAllACEs(target);
         assertNull(acl);
 
         // revoke non-existing right, make sure we don't crash

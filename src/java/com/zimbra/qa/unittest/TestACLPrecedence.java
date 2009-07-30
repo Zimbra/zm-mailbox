@@ -31,7 +31,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.accesscontrol.RightUtil;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -117,7 +117,7 @@ public class TestACLPrecedence extends TestACL {
         mProv.modifyAttrs(TA, attrs);
         
         // verify that both are indeed added
-        List<ZimbraACE> acl = RightUtil.getAllACEs(TA);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(TA);
         assertEquals(2, acl.size());
         
         TestViaGrant via;
@@ -181,7 +181,7 @@ public class TestACLPrecedence extends TestACL {
         mProv.modifyAttrs(TA, attrs);
         
         // verify that both are indeed added
-        List<ZimbraACE> acl = RightUtil.getAllACEs(TA);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(TA);
         assertEquals(2, acl.size());
         
         TestViaGrant via;

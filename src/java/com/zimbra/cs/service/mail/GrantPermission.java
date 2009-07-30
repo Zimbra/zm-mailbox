@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightUtil;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -56,7 +56,7 @@ public class GrantPermission extends MailDocumentHandler {
             aces.add(ace);
         }
 
-        List<ZimbraACE> granted = RightUtil.grantRight(Provisioning.getInstance(), account, aces);
+        List<ZimbraACE> granted = ACLUtil.grantRight(Provisioning.getInstance(), account, aces);
         Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted)

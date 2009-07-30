@@ -42,7 +42,7 @@ public class CrossDomain {
             throw ServiceException.FAILURE("internal error", null);
         
         // see if there is a cross domain right on the target domain
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         if (acl == null)
             return Boolean.FALSE;
         

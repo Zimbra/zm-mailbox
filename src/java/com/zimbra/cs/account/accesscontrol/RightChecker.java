@@ -93,9 +93,9 @@ public class RightChecker {
             if (aclsOnGroupTargetsDenied == null)
                 aclsOnGroupTargetsDenied = new HashSet<ZimbraACE>();
             
-            Set<ZimbraACE> allowedNotDelegable = RightUtil.getAllowedNotDelegableACEs(grantedOn);
-            Set<ZimbraACE> allowedDelegable = RightUtil.getAllowedDelegableACEs(grantedOn);
-            Set<ZimbraACE> denied = RightUtil.getDeniedACEs(grantedOn);
+            Set<ZimbraACE> allowedNotDelegable = ACLUtil.getAllowedNotDelegableACEs(grantedOn);
+            Set<ZimbraACE> allowedDelegable = ACLUtil.getAllowedDelegableACEs(grantedOn);
+            Set<ZimbraACE> denied = ACLUtil.getDeniedACEs(grantedOn);
             
             if (allowedNotDelegable != null && !skipPositiveGrants)
                 aclsOnGroupTargetsAllowedNotDelegable.addAll(allowedNotDelegable);
@@ -202,7 +202,7 @@ public class RightChecker {
         // target is a dl, we need to know if the dl returned from TargetIterator 
         // is the target itself or one of the groups the target is in.  So we check 
         // the actual target separately
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         if (acl != null) {
             result = checkTargetPresetRight(acl, targetType, grantee, granteeGroups, 
                     rightNeeded, canDelegateNeeded, via, seenRight);
@@ -223,7 +223,7 @@ public class RightChecker {
         GroupACLs groupACLs = null;
         
         while ((grantedOn = iter.next()) != null) {
-            acl = RightUtil.getAllACEs(grantedOn);
+            acl = ACLUtil.getAllACEs(grantedOn);
             
             if (grantedOn instanceof DistributionList) {
                 if (acl == null)
@@ -513,7 +513,7 @@ public class RightChecker {
         CollectAttrsResult car = CollectAttrsResult.SOME;
         
         // check the target entry itself
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         if (acl != null) {
             car = checkTargetAttrsRight(acl, targetType, granteeIds, 
                     rightNeeded, canDelegateNeeded, relativity, allowSome, denySome);
@@ -534,7 +534,7 @@ public class RightChecker {
             GroupACLs groupACLs = null;
             
             while ((grantedOn = iter.next()) != null && (!car.isAll())) {
-                acl = RightUtil.getAllACEs(grantedOn);
+                acl = ACLUtil.getAllACEs(grantedOn);
                 
                 if (grantedOn instanceof DistributionList) {
                     if (acl == null)
@@ -1057,7 +1057,7 @@ public class RightChecker {
         CollectAttrsResult car = CollectAttrsResult.SOME;
         
         // check the target entry itself
-        List<ZimbraACE> acl = RightUtil.getAllACEs(target);
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         if (acl != null) {
             collectPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
             relativity += 2;
@@ -1076,7 +1076,7 @@ public class RightChecker {
         GroupACLs groupACLs = null;
             
         while ((grantedOn = iter.next()) != null && (!car.isAll())) {
-            acl = RightUtil.getAllACEs(grantedOn);
+            acl = ACLUtil.getAllACEs(grantedOn);
                 
             if (grantedOn instanceof DistributionList) {
                 if (acl == null)
