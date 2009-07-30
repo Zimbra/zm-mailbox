@@ -71,6 +71,9 @@ public class ZPhone implements ToZJSONObject {
 	}
 
     public static String getName(String display) {
+		if (display == null) {
+			return display;
+		}
         StringBuilder builder = new StringBuilder(display.length());
         for (int i = 0, count = display.length(); i < count; i++) {
             char ch = display.charAt(i);

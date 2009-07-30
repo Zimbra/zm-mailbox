@@ -307,6 +307,7 @@ public class ZMailbox {
 	private boolean mHasMyCard;
 	private ZContact mMyCard;
 	private boolean mNoTagCache;
+	private ZContactByPhoneCache mContactByPhoneCache; 
 
 	private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -4248,6 +4249,14 @@ public class ZMailbox {
         }
         return actionEl;
     }
+
+	public synchronized ZContactByPhoneCache.ContactPhone getContactByPhone(String phone) throws ServiceException {
+		if (mContactByPhoneCache == null) {
+			mContactByPhoneCache = new ZContactByPhoneCache();
+			mHandlers.add(mContactByPhoneCache);
+		}
+		return mContactByPhoneCache.getByPhone(phone, this);
+	}
 
 	private void updateSigs() {
         try {
