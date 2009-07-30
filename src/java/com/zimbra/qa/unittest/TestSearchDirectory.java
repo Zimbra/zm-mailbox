@@ -171,8 +171,8 @@ public class TestSearchDirectory extends TestCase {
         // 1. create 1000 accounts (use LdapProvisioning)
         // createAccounts(Provisioning.getInstance());
         
-        int numAcctsInDomain1 = 10;
-        int numAcctsInDomain2 = 3000;
+        int numAcctsInDomain1 = 5;
+        int numAcctsInDomain2 = 10;
         
         String domain1Name = "domain-1." + DOMAIN_NAME;
         String domain2Name = "domain-2." + DOMAIN_NAME;
@@ -193,16 +193,15 @@ public class TestSearchDirectory extends TestCase {
         Bug39514TestData test21 = new Bug39514TestData(adminAcct21Name, PASSWORD, numAcctsInDomain1 + 2 + numAcctsInDomain2 + 2);
         Bug39514TestData test22 = new Bug39514TestData(adminAcct22Name, PASSWORD, numAcctsInDomain2 + 2);
         
-        // system admin
-        Bug39514TestData systemAdmin = new Bug39514TestData(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value(),
+        Bug39514TestData globalAdmin = new Bug39514TestData(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value(),
                 numAcctsInDomain1 + 2 + numAcctsInDomain2 + 2);
         
         List<Bug39514TestData> tests = new ArrayList<Bug39514TestData>();
-        // tests.add(test11);
+        tests.add(test11);
         tests.add(test12);
-        // tests.add(test21);
-        // tests.add(test22);
-        // tests.add(systemAdmin);
+        tests.add(test21);
+        tests.add(test22);
+        tests.add(globalAdmin);
         
         if (adminAcct11 != null && adminAcct12 != null && adminAcct21 != null && adminAcct12 != null)
             return tests;
@@ -293,12 +292,12 @@ public class TestSearchDirectory extends TestCase {
         // 2 ==> two admin accounts in each domain
         Bug39514TestData test = new Bug39514TestData(adminAcctName, PASSWORD, numAcctsInDomain1 + 2);  
         
-        Bug39514TestData systemAdmin = new Bug39514TestData(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value(),
+        Bug39514TestData globalAdmin = new Bug39514TestData(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value(),
                 numAcctsInDomain1 + 2 + numAcctsInDomain2 + 2);
         
         List<Bug39514TestData> tests = new ArrayList<Bug39514TestData>();
-        // tests.add(test);
-        tests.add(systemAdmin);
+        tests.add(test);
+        tests.add(globalAdmin);
         
         if (adminAcct != null)
             return tests;
@@ -354,7 +353,7 @@ public class TestSearchDirectory extends TestCase {
     
     public void testBug39514() throws Exception {
        
-        List<Bug39514TestData> tests = setupBug39514_qa62();
+        List<Bug39514TestData> tests = setupBug39514();
         
         for (Bug39514TestData test : tests) {
             doTestBug39514(test.mAdminName, test.mAdminPassword, test.mExpectedNumEntriesFound);
@@ -406,7 +405,7 @@ public class TestSearchDirectory extends TestCase {
         options.setBase(null);
         options.setConvertIDNToAscii(true);
         options.setDomain(null);
-        options.setFlags(Provisioning.SA_ACCOUNT_FLAG);
+        options.setFlags(Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_ALIAS_FLAG);
         options.setMaxResults(5000);
         options.setQuery("");
         options.setReturnAttrs(attrs);
@@ -435,8 +434,10 @@ public class TestSearchDirectory extends TestCase {
               
             }
             
+            /*
             if (expectedNumEntries > limit.intValue())
                 expectedNumEntries = limit.intValue();
+            */
             assertEquals(expectedNumEntries, results.size());
         }
     }

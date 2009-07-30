@@ -1240,14 +1240,6 @@ public class RightChecker {
             return false;
     }
 
-    public static boolean isGlobalAdmin(Account acct, boolean asAdmin) {
-        return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false));
-    }
-    
-    static boolean isDelegatedAdmin(Account acct, boolean asAdmin) {
-        return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false));
-    }
-
     private static boolean isSubTarget(Provisioning prov, Entry targetSup, Entry targetSub) throws ServiceException {
        
         if (targetSup instanceof Domain) {
@@ -1380,7 +1372,7 @@ public class RightChecker {
     static void checkPartiallyDenied(Account grantor, TargetType targetTypeToGrant, 
             Entry targetToGrant, Right rightToGrant) throws ServiceException {
         
-        if (isGlobalAdmin(grantor, true))
+        if (AccessControlUtil.isGlobalAdmin(grantor, true))
             return;
         
         Provisioning prov = Provisioning.getInstance();

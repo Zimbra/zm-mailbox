@@ -28,6 +28,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
+import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
@@ -488,8 +489,7 @@ public abstract class AdminAccessControl {
             try {
                 checkRight(target, listRight);
             } catch (ServiceException e) {
-                // if PERM_DENIED, log and return false, do not throw, so we 
-                // can continue with the next entry
+                // if PERM_DENIED, log and return false, do not throw, so we can continue with the next entry
                 if (ServiceException.PERM_DENIED.equals(e.getCode())) {
                     ZimbraLog.acl.warn(getClass().getName() + ": skipping entry " + target.getName() + ": " + e.getMessage());
                     return false;
@@ -693,21 +693,12 @@ public abstract class AdminAccessControl {
         private AdminAccessControl mAC;
         private Provisioning mProv;
         private Set<String> mReqAttrs; // not used/checked now after bug 38452
-        RightCommand.AllEffectiveRights mAllEffRights;  // if null, means the admin has all rights
+        RightCommand.AllEffectiveRights mAllEffRights;
         
         public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
             mReqAttrs = reqAttrs;
-            
-            // short cut global admin, should we?  do that for now
-            if (RightChecker.isGlobalAdmin(mAC.mAuthedAcct, true))
-                mAllEffRights = null;
-            else
-                mAllEffRights = mProv.getAllEffectiveRights(GranteeType.GT_USER.getCode(), 
-                        Provisioning.GranteeBy.id, mAC.mAuthedAcct.getId(),
-                        false, false);
-                    
         }
         
         /* Can't do this because of perf bug 39514
@@ -730,9 +721,23 @@ public abstract class AdminAccessControl {
          */
         private boolean hasRightsToList(NamedEntry target, AdminRight listRight) throws ServiceException {
             
-            // short cut global admin
+            try {
+                Boolean hardRulesResult = AccessControlUtil.checkHardRules(mAC.mAuthedAcct, true, target, listRight);
+                if (hardRulesResult != null)
+                    return hardRulesResult.booleanValue();
+            } catch (ServiceException e) {
+                // if PERM_DENIED, log and return false, do not throw, so we can continue with the next entry
+                if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+                    ZimbraLog.acl.warn(getClass().getName() + ": skipping entry " + target.getName() + ": " + e.getMessage());
+                    return false;
+                } else
+                    throw e;
+            }
+            
             if (mAllEffRights == null)
-                return true;
+                mAllEffRights = mProv.getAllEffectiveRights(GranteeType.GT_USER.getCode(), 
+                        Provisioning.GranteeBy.id, mAC.mAuthedAcct.getId(),
+                        false, false);
             
             TargetType targetType = listRight.getTargetType();
             

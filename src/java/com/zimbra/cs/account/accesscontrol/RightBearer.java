@@ -15,7 +15,7 @@ public abstract class RightBearer {
     protected NamedEntry mRightBearer;
     
     static RightBearer newRightBearer(NamedEntry entry) throws ServiceException {
-        if (entry instanceof Account && RightChecker.isGlobalAdmin((Account)entry, true))
+        if (entry instanceof Account && AccessControlUtil.isGlobalAdmin((Account)entry, true))
             return new GlobalAdmin(entry);
         else
             return new Grantee(entry);
