@@ -247,14 +247,14 @@ public class Acl extends ResourceProperty {
 			setProtected(true);
 		}
 		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+		    Element pcs = parent.addElement(getName());
+			Element e = pcs.addElement(DavElements.E_HREF);
 			try {
 				e.setText(UrlNamespace.getPrincipalCollectionUrl(ctxt.getAuthAccount()));
-				mChildren.add(e);
 			} catch (ServiceException ex) {
 				ZimbraLog.dav.warn("can't generate principal-collection-url", ex);
 			}
-			return super.toElement(ctxt, parent, nameOnly);
+			return pcs;
 		}
 	}
 	private static class SupportedPrivilegeSet extends Acl {

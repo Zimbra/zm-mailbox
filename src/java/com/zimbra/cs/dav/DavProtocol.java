@@ -25,6 +25,7 @@ public class DavProtocol {
 		update, bind, access_control, 
 		calendar_access, calendar_schedule,
 		version_control,
+        addressbook_access,
 		// Apple extensions
 		calendar_proxy,
 		calendarserver_principal_property_search
@@ -49,6 +50,7 @@ public class DavProtocol {
 	// redirectrefs : RFC 4437
 	// bind : draft-ietf-webdav-bind
 	// calendar-proxy, calendarserver-principal-property-search : Apple extension
+	// addressbook-access: draft-daboo-carddav
 	
 	static {
 		sComplianceStrMap = new HashMap<Compliance,String>();
@@ -63,10 +65,11 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.version_control, "version-control");
 		sComplianceStrMap.put(Compliance.calendar_proxy, "calendar-proxy");
 		sComplianceStrMap.put(Compliance.calendarserver_principal_property_search, "calendarserver-principal-property-search");
+        sComplianceStrMap.put(Compliance.addressbook_access, "addressbook-access");
 	}
 	
 	public static Compliance[] COMPLIANCES = {
-		Compliance.one, Compliance.two, Compliance.three, Compliance.calendar_access, Compliance.access_control
+		Compliance.one, Compliance.two, Compliance.three, Compliance.calendar_access, Compliance.access_control, Compliance.addressbook_access
 	};
 	
 	public static String getDefaultComplianceString() {
@@ -87,8 +90,10 @@ public class DavProtocol {
 	
 	public static final String XML_CONTENT_TYPE = "text/xml";
 	public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
+    public static final String VCARD_CONTENT_TYPE = "text/vcard";
 	public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 	public static final String ENCODING_GZIP = "gzip";
+	public static final String VCARD_VERSION = "3.0";
 
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";

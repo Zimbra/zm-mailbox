@@ -37,7 +37,6 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
-import com.zimbra.cs.dav.property.VersioningProperty;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -60,7 +59,6 @@ public class User extends Principal {
         addProperty(CalDavProperty.getScheduleInboxURL(user));
         addProperty(CalDavProperty.getScheduleOutboxURL(user));
         if (ctxt.getAuthAccount().equals(account)) {
-            addProperty(VersioningProperty.getSupportedReportSet());
             if (ctxt.useIcalDelegation()) {
                 addProperty(new CalendarProxyReadFor(mAccount));
                 addProperty(new CalendarProxyWriteFor(mAccount));
@@ -154,6 +152,19 @@ public class User extends Principal {
 		}
 	}
 	
+    private static QName[] SUPPORTED_REPORTS = {
+            DavElements.E_ACL_PRINCIPAL_PROP_SET,
+            DavElements.E_PRINCIPAL_MATCH,
+            DavElements.E_PRINCIPAL_PROPERTY_SEARCH,
+            DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET,
+            DavElements.E_EXPAND_PROPERTY
+    };
+
+    @Override
+    protected QName[] getSupportedReports() {
+        return SUPPORTED_REPORTS;
+    }
+    
     private static final String CALENDAR_PROXY_READ  = "calendar-proxy-read";
     private static final String CALENDAR_PROXY_WRITE = "calendar-proxy-write";
     
@@ -161,7 +172,6 @@ public class User extends Principal {
     	public CalendarProxyRead(String user, String url) throws ServiceException {
     		super(user, url+"calendar-proxy-read");
             addResourceType(DavElements.E_CALENDAR_PROXY_READ);
-            addProperty(VersioningProperty.getSupportedReportSet());
     		addProperty(Acl.getPrincipalUrl(this));
     		addProperty(new ProxyGroupMemberSet(true));
     	}
@@ -175,7 +185,6 @@ public class User extends Principal {
     	public CalendarProxyWrite(String user, String url) throws ServiceException {
     		super(user, url+"calendar-proxy-write");
             addResourceType(DavElements.E_CALENDAR_PROXY_WRITE);
-            addProperty(VersioningProperty.getSupportedReportSet());
     		addProperty(Acl.getPrincipalUrl(this));
     		addProperty(new ProxyGroupMemberSet(false));
     	}

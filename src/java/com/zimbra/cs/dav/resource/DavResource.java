@@ -109,6 +109,17 @@ public abstract class DavResource {
 			addResourceType(DavElements.E_COLLECTION);
 		addProperty(Acl.getPrincipalCollectionSet());
 		addProperty(Acl.getCurrentUserPrincipal());
+		QName[] supportedReports = getSupportedReports();
+		if (supportedReports.length > 0) {
+		    ResourceProperty sr = new ResourceProperty(DavElements.E_SUPPORTED_REPORT_SET);
+		    sr.setProtected(true);
+            Element e = null;
+            for (QName n : supportedReports) {
+                e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_REPORT);
+                e.addElement(DavElements.E_REPORT).addElement(n);
+                sr.getChildren().add(e);
+            }
+		}
 	}
 	
 	public void setHref(String href) {
@@ -299,6 +310,10 @@ public abstract class DavResource {
     
     protected InputStream getRawContent(DavContext ctxt) throws DavException, IOException {
         return null;
+    }
+    
+    protected QName[] getSupportedReports() {
+        return new QName[0];
     }
     
     protected InputStream getTextContent(DavContext ctxt) throws IOException {

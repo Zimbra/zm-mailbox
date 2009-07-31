@@ -37,6 +37,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -368,6 +369,12 @@ public class UrlNamespace {
         		} else {
         			item = mbox.getCalendarItemByUid(octxt, uid);
         		}
+            } else if (path.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
+                String uid = path.substring(index + 1, path.length() - AddressObject.VCARD_EXTENSION.length());
+                index = uid.indexOf(':');
+                if (index > 0) {
+                    item = mbox.getContactById(octxt, Integer.parseInt(uid.substring(index+1)));
+                }
         	} else if (f.getId() == Mailbox.ID_FOLDER_INBOX) {
         		ctxt.setPathInfo(path.substring(index+1));
         		// delegated notification handling
@@ -460,6 +467,9 @@ public class UrlNamespace {
 			case MailItem.TYPE_MESSAGE :
 				resource = getCalendarItemForMessage(ctxt, (Message)item);
 				break;
+			case MailItem.TYPE_CONTACT :
+			    resource = new AddressObject(ctxt, (Contact)item);
+			    break;
 			}
 		} catch (ServiceException e) {
 			resource = null;

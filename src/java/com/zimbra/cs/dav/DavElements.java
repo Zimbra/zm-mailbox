@@ -20,6 +20,7 @@ import org.dom4j.QName;
 public class DavElements {
 	public static final String WEBDAV_NS_STRING = "DAV:";
 	public static final String CALDAV_NS_STRING = "urn:ietf:params:xml:ns:caldav";
+    public static final String CARDDAV_NS_STRING = "urn:ietf:params:xml:ns:carddav";
 	public static final String XML_NS_STRING = "xml:";
 	public static final String APPLE_NS_STRING = "http://apple.com/ns/ical/";
 	public static final String CS_NS_STRING = "http://calendarserver.org/ns/";
@@ -27,6 +28,7 @@ public class DavElements {
 	
 	public static final Namespace WEBDAV_NS = Namespace.get("D", WEBDAV_NS_STRING);
 	public static final Namespace CALDAV_NS = Namespace.get("C", CALDAV_NS_STRING);
+    public static final Namespace CARDDAV_NS = Namespace.get("C", CARDDAV_NS_STRING);
 	public static final Namespace XML_NS = Namespace.get("X", XML_NS_STRING);
 	public static final Namespace APPLE_NS = Namespace.get("A", APPLE_NS_STRING);
 	public static final Namespace CS_NS = Namespace.get("CS", CS_NS_STRING);
@@ -51,6 +53,12 @@ public class DavElements {
 	public static final String P_ACL_PRINCIPAL_PROP_SET = "acl-principal-prop-set";
 	public static final String P_ACL_RESTRICTIONS = "acl-restrictions";
 	public static final String P_ACTIVELOCK = "activelock";
+    public static final String P_ADDRESS_DATA = "address-data";
+    public static final String P_ADDRESSBOOK_DATA = "addressbook-data";
+    public static final String P_ADDRESSBOOK_DESCRIPTION = "addressbook-description";
+    public static final String P_ADDRESSBOOK_HOME_SET = "addressbook-home-set";
+    public static final String P_ADDRESSBOOK_MULTIGET = "addressbook-multiget";
+    public static final String P_ADDRESSBOOK_QUERY = "addressbook-query";
 	public static final String P_ALL = "all";
 	public static final String P_ALLCOMP = "allcomp";
 	public static final String P_ALLPROP = "allprop";
@@ -140,6 +148,7 @@ public class DavElements {
 	public static final String P_MOUNTPOINT = "mountpoint";
 	public static final String P_MOUNTPOINT_TARGET_PRIVILEGE_SET = "mountpoint-target-privilege-set";
 	public static final String P_MOUNTPOINT_TARGET_URL = "mountpoint-target-URL";
+    public static final String P_MKADDRESSBOOK = "mkaddressbook";
 	public static final String P_MKCALENDAR = "mkcalendar";
 	public static final String P_MULTISTATUS = "multistatus";
 	
@@ -196,6 +205,7 @@ public class DavElements {
 	public static final String P_SET = "set";
 	public static final String P_SHARED = "shared";
 	public static final String P_SOURCE = "source";
+    public static final String P_SUPPORTED_ADDRESS_DATA = "supported-address-data";
 	public static final String P_SUPPORTED_CALENDAR_COMPONENT_SET = "supported-calendar-component-set";
 	public static final String P_SUPPORTED_CALENDAR_DATA = "supported-calendar-data";
 	public static final String P_SUPPORTED_COLLATION = "supported-collation";
@@ -391,4 +401,27 @@ public class DavElements {
 
 	// errors
 	public static final QName E_CANNOT_MODIFY_PROTECTED_PROPERTY = QName.get("cannot-modify-protected-property", WEBDAV_NS);
+	
+	public static class CardDav {
+	    public static final QName E_ADDRESSBOOK_DATA = QName.get(P_ADDRESSBOOK_DATA, CARDDAV_NS);
+	    public static final QName E_ADDRESSBOOK_DESCRIPTION = QName.get(P_ADDRESSBOOK_DESCRIPTION, CARDDAV_NS);
+	    public static final QName E_ADDRESSBOOK_HOME_SET = QName.get(P_ADDRESSBOOK_HOME_SET, CARDDAV_NS);
+	    public static final QName E_ADDRESSBOOK_MULTIGET = QName.get(P_ADDRESSBOOK_MULTIGET, CARDDAV_NS);
+	    public static final QName E_ADDRESSBOOK_QUERY = QName.get(P_ADDRESSBOOK_QUERY, CARDDAV_NS);
+	    public static final QName E_ALLPROP = QName.get(P_ALLPROP, CARDDAV_NS);
+	    
+	    public static final QName E_FILTER = QName.get(P_FILTER, CARDDAV_NS);
+	    
+	    public static final QName E_IS_NOT_DEFINED = QName.get(P_IS_NOT_DEFINED, CARDDAV_NS);
+	    
+	    public static final QName E_MAX_RESOURCE_SIZE_ADDRESSBOOK = QName.get(P_MAX_RESOURCE_SIZE, CARDDAV_NS);
+	    
+	    public static final QName E_PARAM_FILTER = QName.get(P_PARAM_FILTER, CARDDAV_NS);
+	    public static final QName E_PROP = QName.get(P_PROP, CARDDAV_NS);
+	    public static final QName E_PROP_FILTER = QName.get(P_PROP_FILTER, CARDDAV_NS);
+	    
+	    public static final QName E_SUPPORTED_ADDRESS_DATA = QName.get(P_SUPPORTED_ADDRESS_DATA, CARDDAV_NS);
+	    
+	    public static final QName E_TEXT_MATCH = QName.get(P_TEXT_MATCH, CARDDAV_NS);
+	}
 }

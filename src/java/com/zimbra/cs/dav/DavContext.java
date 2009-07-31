@@ -38,6 +38,8 @@ import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.FileUploadServlet;
 
@@ -418,6 +420,13 @@ public class DavContext {
 			}
         }
         return rss;
+	}
+	
+	public Mailbox getTargetMailbox() throws ServiceException {
+	    Account acct = Provisioning.getInstance().getAccountByName(mUser);
+	    if (acct == null)
+	        return null;
+	    return MailboxManager.getInstance().getMailboxByAccount(acct);
 	}
 	
 	private static final String EVOLUTION = "Evolution";
