@@ -81,6 +81,9 @@ public class L10nUtil {
         // caldav messages
         caldavCalendarDescription,
         
+        // carddav messages
+        carddavAddressbookDescription,
+        
         // share notification
         shareNotifSubject,
 
