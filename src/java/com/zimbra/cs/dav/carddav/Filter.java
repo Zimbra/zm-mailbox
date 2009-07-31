@@ -23,6 +23,7 @@ import java.util.HashSet;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
@@ -138,28 +139,28 @@ public abstract class Filter {
     
     static {
         sAttrMappings = new HashMap<String,AttrMapping>();
-        AttrMapping.createSimple("FN", Contact.A_fullName);
-        AttrMapping.createSimple("NICKNAME", Contact.A_nickname);
-        AttrMapping.createSimple("TITLE", Contact.A_jobTitle);
-        AttrMapping.createSimple("NOTE", Contact.A_notes);
-        AttrMapping.createStructured("ADR", "home", Contact.A_homeStreet, "work", Contact.A_workStreet);
-        AttrMapping.createStructured("URL", "home", Contact.A_homeURL, "work", Contact.A_workURL);
+        AttrMapping.createSimple("FN", ContactConstants.A_fullName);
+        AttrMapping.createSimple("NICKNAME", ContactConstants.A_nickname);
+        AttrMapping.createSimple("TITLE", ContactConstants.A_jobTitle);
+        AttrMapping.createSimple("NOTE", ContactConstants.A_notes);
+        AttrMapping.createStructured("ADR", "home", ContactConstants.A_homeStreet, "work", ContactConstants.A_workStreet);
+        AttrMapping.createStructured("URL", "home", ContactConstants.A_homeURL, "work", ContactConstants.A_workURL);
         
         AttrMapping m = AttrMapping.createStructured("TEL", 
-                "car", Contact.A_carPhone,
-                "cell", Contact.A_mobilePhone,
-                "pager", Contact.A_pager,
-                "other", Contact.A_otherPhone
+                "car", ContactConstants.A_carPhone,
+                "cell", ContactConstants.A_mobilePhone,
+                "pager", ContactConstants.A_pager,
+                "other", ContactConstants.A_otherPhone
                 );
-        m.addSubType("work", Contact.A_workPhone, Contact.A_workPhone2);
-        m.addSubType("home", Contact.A_homePhone, Contact.A_homePhone2);
-        m.addSubType("fax", Contact.A_homeFax, Contact.A_workFax);
+        m.addSubType("work", ContactConstants.A_workPhone, ContactConstants.A_workPhone2);
+        m.addSubType("home", ContactConstants.A_homePhone, ContactConstants.A_homePhone2);
+        m.addSubType("fax", ContactConstants.A_homeFax, ContactConstants.A_workFax);
         
         m = AttrMapping.createStructured("EMAIL");
-        m.addSubType("internet", Contact.A_email, Contact.A_email2, Contact.A_email3);
+        m.addSubType("internet", ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3);
         
         m = AttrMapping.createStructured("ORG");
-        m.addSubType("work", Contact.A_company, Contact.A_department);
+        m.addSubType("work", ContactConstants.A_company, ContactConstants.A_department);
     }
     
     public String getNameAsContactAttr() {
