@@ -303,8 +303,7 @@ public class DbSearch {
         if (LC.search_disable_database_hints.booleanValue())
             return NO_HINT;
 
-        if (Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) || 
-                        sort.getCriterion() == SortCriterion.NONE)
+        if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getCriterion() == SortCriterion.NONE)
             return NO_HINT;
         
         String index = null;
