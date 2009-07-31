@@ -65,6 +65,7 @@ public abstract class Db {
         UNIQUE_NAME_INDEX,
         AVOID_OR_IN_WHERE_CLAUSE, // if set, then try to avoid ORs in WHERE clauses, run them as separate queries and mergesort in memory
         REQUEST_UTF8_UNICODE_COLLATION, // for mysql
+        FORCE_INDEX_EVEN_IF_NO_SORT, // for derby
         ;
     }
 
