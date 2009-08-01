@@ -15,18 +15,17 @@
 package com.zimbra.cs.store.file;
 
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
 
 public class VolumeMailboxBlob extends MailboxBlob {
-    private Blob mBlob;
+    private VolumeBlob mBlob;
 
-    protected VolumeMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, Blob blob) {
+    protected VolumeMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, VolumeBlob blob) {
         super(mbox, itemId, revision, locator);
         mBlob = blob;
     }
 
-    @Override public Blob getLocalBlob() {
+    @Override public VolumeBlob getLocalBlob() {
         return mBlob;
     }
 }

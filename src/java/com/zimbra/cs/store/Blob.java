@@ -44,7 +44,7 @@ public class Blob {
     private String mDigest;
     private Long mRawSize;
 
-    protected Blob(File file) {
+    protected Blob(final File file) {
         if (file == null)
             throw new NullPointerException("file cannot be null");
 
@@ -57,35 +57,32 @@ public class Blob {
     }
 
     public String getPath() {
-    	return mPath;
+        return mPath;
     }
-    
+
     public InputStream getInputStream() throws IOException {
         InputStream in = new FileInputStream(mFile);
         if (isCompressed())
             in = new GZIPInputStream(in);
         return in;
     }
-    
+
     public boolean isCompressed() throws IOException {
         if (mIsCompressed == null)
             mIsCompressed = FileUtil.isGzipped(mFile);
         return mIsCompressed;
     }
-    
-    /**
-     * Returns the SHA1 digest of this blob's uncompressed data, encoded in base64.
-     */
+
+    /** Returns the SHA1 digest of this blob's uncompressed data,
+     *  encoded in base64. */
     public String getDigest() throws IOException {
         if (mDigest == null)
             initializeSizeAndDigest();
         return mDigest;
     }
-    
-    /**
-     * Returns the size of the blob's data.  If the blob is compressed,
-     * returns the uncompressed size.
-     */
+
+    /** Returns the size of the blob's data.  If the blob is compressed,
+     *  returns the uncompressed size. */
     public long getRawSize() throws IOException {
         if (mRawSize == null) {
             if (!isCompressed())
@@ -93,9 +90,9 @@ public class Blob {
             else
                 initializeSizeAndDigest();
         }
-    	return mRawSize;
+        return mRawSize;
     }
-    
+
     private void initializeSizeAndDigest() throws IOException {
         InputStream in = null;
         try {
@@ -121,23 +118,33 @@ public class Blob {
             ByteUtil.closeStream(in);
         }
     }
-    
-    public Blob setCompressed(boolean isCompressed) {
+
+    public Blob setCompressed(final boolean isCompressed) {
         mIsCompressed = isCompressed;
         return this;
     }
 
-    public Blob setDigest(String digest) {
+    public Blob setDigest(final String digest) {
         mDigest = digest;
         return this;
     }
-    
-    public Blob setRawSize(long rawSize) {
-    	mRawSize = rawSize;
+
+    public Blob setRawSize(final long rawSize) {
+        mRawSize = rawSize;
         return this;
     }
-    
-    public boolean renameTo(String path) {
+
+    public Blob copyCachedDataFrom(final Blob other) {
+        if (mIsCompressed == null && other.mIsCompressed != null)
+            mIsCompressed = other.mIsCompressed;
+        if (mDigest == null && other.mDigest != null)
+            mDigest = other.mDigest;
+        if (mRawSize == null && other.mRawSize != null)
+            mRawSize = other.mRawSize;
+        return this;
+    }
+
+    public boolean renameTo(final String path) {
         if (mPath.equals(path))
             return false;
 

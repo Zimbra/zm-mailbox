@@ -17,19 +17,18 @@ package com.zimbra.cs.store.file;
 import java.io.IOException;
 
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StagedBlob;
 
 public class VolumeStagedBlob extends StagedBlob {
-    private Blob mLocalBlob;
+    private VolumeBlob mLocalBlob;
     private boolean mWasStagedDirectly;
 
-    VolumeStagedBlob(Mailbox mbox, Blob blob) throws IOException {
+    VolumeStagedBlob(Mailbox mbox, VolumeBlob blob) throws IOException {
         super(mbox, blob.getDigest(), blob.getRawSize());
         mLocalBlob = blob;
     }
 
-    public Blob getLocalBlob() {
+    public VolumeBlob getLocalBlob() {
         return mLocalBlob;
     }
 
