@@ -1461,18 +1461,18 @@ public abstract class MailItem implements Comparable<MailItem> {
     final MailboxBlob setContent(byte[] data, String digest, Object content)
     throws ServiceException, IOException {
         if (data == null)
-            return setContent(null, 0, digest, content);
+            return setContent(null, content);
 
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(new ByteArrayInputStream(data), data.length, null, mMailbox);
         try {
-            return setContent(staged, data.length, digest, content);
+            return setContent(staged, content);
         } finally {
             sm.quietDelete(staged);
         }
     }
 
-    MailboxBlob setContent(StagedBlob staged, long dataLength, String digest, Object content)
+    MailboxBlob setContent(StagedBlob staged, Object content)
     throws ServiceException, IOException {
         addRevision(false);
 
@@ -1502,14 +1502,15 @@ public abstract class MailItem implements Comparable<MailItem> {
         // remove the content from the cache
         MessageCache.purge(this);
 
-        long size = staged == null ? 0 : dataLength;
+        // update the object to reflect its new contents
+        long size = staged == null ? 0 : staged.getSize();
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
             mData.size = size;
         }
         getFolder().updateSize(0, size - mData.size);
 
-        mData.setBlobDigest(staged == null ? null : digest);
+        mData.setBlobDigest(staged == null ? null : staged.getDigest());
         mData.date   = mMailbox.getOperationTimestamp();
         mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);

@@ -341,18 +341,17 @@ public class Message extends MailItem {
     }
     
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, MailboxBlob mblob,
-                          int msgSize, String digest, boolean unread, int flags, long tags,
-                          DraftInfo dinfo, boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
-    throws ServiceException {
-        return createInternal(id, folder, conv, pm, mblob, msgSize, digest, unread, flags, tags,
+                          boolean unread, int flags, long tags, DraftInfo dinfo,
+                          boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
+    throws ServiceException, IOException {
+        return createInternal(id, folder, conv, pm, mblob, unread, flags, tags,
                               dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
     
     protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, MailboxBlob mblob,
-                                            int msgSize, String digest, boolean unread, int flags, long tags,
-                                            DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
-                                            CustomMetadataList extended, MessageCreateFactory fact)
-    throws ServiceException {
+                                            boolean unread, int flags, long tags, DraftInfo dinfo,
+                                            boolean noICal, ZVCalendar cal, CustomMetadataList extended, MessageCreateFactory fact)
+    throws ServiceException, IOException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN(folder, TYPE_MESSAGE);
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -402,12 +401,12 @@ public class Message extends MailItem {
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId     = mbox.generateIndexId(id);
-        data.locator     = mblob == null ? null : mblob.getLocator();
+            data.indexId = mbox.generateIndexId(id);
+        data.locator     = mblob.getLocator();
         data.imapId      = id;
         data.date        = (int) (date / 1000);
-        data.size        = msgSize;
-        data.setBlobDigest(digest);
+        data.size        = mblob.getSize();
+        data.setBlobDigest(mblob.getDigest());
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
@@ -416,7 +415,7 @@ public class Message extends MailItem {
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
-            data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
+                              data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data, pm.getParsedSender().getSortString());
         Message msg = fact.create(mbox, data);
 

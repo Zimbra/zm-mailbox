@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.MailboxBlob;
@@ -42,11 +44,9 @@ public class Chat extends Message {
         @Override byte getType() { return TYPE_CHAT; }
     }
 
-    static Chat create(int id, Folder folder, ParsedMessage pm, MailboxBlob mblob,
-                	   int msgSize, String digest, boolean unread, int flags, long tags)  
-    throws ServiceException {
-        return (Chat) Message.createInternal(id, folder, null, pm, mblob, msgSize, digest, unread,
-        									 flags, tags, null, true, null, null, new ChatCreateFactory());
+    static Chat create(int id, Folder folder, ParsedMessage pm, MailboxBlob mblob, boolean unread, int flags, long tags)  
+    throws ServiceException, IOException {
+        return (Chat) Message.createInternal(id, folder, null, pm, mblob, unread, flags, tags, null, true, null, null, new ChatCreateFactory());
     }
 
     @Override boolean isMutable() { return true; }
