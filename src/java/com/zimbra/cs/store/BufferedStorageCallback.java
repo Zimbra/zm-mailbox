@@ -14,64 +14,35 @@
  */
 package com.zimbra.cs.store;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DigestCopyStream;
 
 public class BufferedStorageCallback extends StorageCallback {
-    private byte array[] = null;
-    private ByteArrayOutputStream byteStream;
-    private long maxSize;
-    private MessageDigest messageDigest;
-    private long size = 0;
+    DigestCopyStream dcs;
 
     public BufferedStorageCallback(long sizeHint) throws ServiceException {
         this(sizeHint, getDiskStreamingThreshold());
     }
     
-    public BufferedStorageCallback(long sizeHint, int maxSize) {
-        this.maxSize = maxSize;
-        if (sizeHint > maxSize)
-            sizeHint = maxSize;
-        if (sizeHint > 0)
-            byteStream = new ByteArrayOutputStream((int)sizeHint);
-        else if (maxSize > 0)
-            byteStream = new ByteArrayOutputStream();
-        else
-            byteStream = null;
-        try {
-            messageDigest = MessageDigest.getInstance("SHA1");
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to initialize " +
-                BufferedStorageCallback.class.getSimpleName(), e);
-        }
+    public BufferedStorageCallback(long sizeHint, int maxBuffer) {
+        this(sizeHint, maxBuffer, maxBuffer);
+    }
+    
+    public BufferedStorageCallback(long sizeHint, int maxBuffer, long maxSize) {
+        dcs = new DigestCopyStream(sizeHint, maxBuffer, maxBuffer);
     }
     
     @Override
     public void wrote(Blob blob, byte[] data, int offset, int len) throws
         IOException {
-        if (data.length - offset < len)
-            len = data.length - offset;
-        size += len;
-        if (size > maxSize)
-            byteStream = null;
-        else if (byteStream != null)
-            byteStream.write(data, offset, len);
-        messageDigest.update(data, offset, len);
+        dcs.write(data, offset, len);
     }
 
-    public byte[] getData() {
-        if (array == null && byteStream != null)
-            array = byteStream.toByteArray();
-        return array;
-    }
+    public byte[] getData() { return dcs.getBuffer(); }
     
-    public String getDigest() {
-        return ByteUtil.encodeFSSafeBase64(messageDigest.digest());
-    }
+    public String getDigest() { return dcs.getDigest(); }
     
-    public long getSize() { return size; }
+    public long getSize() { return dcs.getSize(); }
 }
