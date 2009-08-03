@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 schemers 20090728-0931 */
+    /* build: 6.0.0 pshao 20090803-1059 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1420,7 +1420,7 @@ public class ZAttrProvisioning {
      * request. Changing it will invalidate all outstanding auth tokens. It
      * also gets changed when an account password is changed.
      *
-     * @since ZCS 6.0.0_RC1
+     * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1044)
     public static final String A_zimbraAuthTokenValidityValue = "zimbraAuthTokenValidityValue";
@@ -5846,6 +5846,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=396)
     public static final String A_zimbraPrefShortcuts = "zimbraPrefShortcuts";
+
+    /**
+     * show calendar week in calendar views
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1045)
+    public static final String A_zimbraPrefShowCalendarWeek = "zimbraPrefShowCalendarWeek";
 
     /**
      * show fragments in conversation and message lists

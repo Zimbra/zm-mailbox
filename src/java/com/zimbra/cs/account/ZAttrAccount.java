@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 schemers 20090728-0931 */
+    /* build: 6.0.0 pshao 20090803-1059 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3083,7 +3083,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraAuthTokenValidityValue, or -1 if unset
      *
-     * @since ZCS 6.0.0_RC1
+     * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1044)
     public int getAuthTokenValidityValue() {
@@ -3098,7 +3098,7 @@ public class ZAttrAccount  extends MailTarget {
      * @param zimbraAuthTokenValidityValue new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_RC1
+     * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1044)
     public void setAuthTokenValidityValue(int zimbraAuthTokenValidityValue) throws com.zimbra.common.service.ServiceException {
@@ -3116,7 +3116,7 @@ public class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_RC1
+     * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1044)
     public Map<String,Object> setAuthTokenValidityValue(int zimbraAuthTokenValidityValue, Map<String,Object> attrs) {
@@ -3132,7 +3132,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_RC1
+     * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1044)
     public void unsetAuthTokenValidityValue() throws com.zimbra.common.service.ServiceException {
@@ -3149,7 +3149,7 @@ public class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_RC1
+     * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1044)
     public Map<String,Object> unsetAuthTokenValidityValue(Map<String,Object> attrs) {
@@ -28596,6 +28596,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefShortcuts(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShortcuts, "");
+        return attrs;
+    }
+
+    /**
+     * show calendar week in calendar views
+     *
+     * @return zimbraPrefShowCalendarWeek, or false if unset
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1045)
+    public boolean isPrefShowCalendarWeek() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefShowCalendarWeek, false);
+    }
+
+    /**
+     * show calendar week in calendar views
+     *
+     * @param zimbraPrefShowCalendarWeek new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1045)
+    public void setPrefShowCalendarWeek(boolean zimbraPrefShowCalendarWeek) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowCalendarWeek, zimbraPrefShowCalendarWeek ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * show calendar week in calendar views
+     *
+     * @param zimbraPrefShowCalendarWeek new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1045)
+    public Map<String,Object> setPrefShowCalendarWeek(boolean zimbraPrefShowCalendarWeek, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowCalendarWeek, zimbraPrefShowCalendarWeek ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * show calendar week in calendar views
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1045)
+    public void unsetPrefShowCalendarWeek() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowCalendarWeek, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * show calendar week in calendar views
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1045)
+    public Map<String,Object> unsetPrefShowCalendarWeek(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowCalendarWeek, "");
         return attrs;
     }
 
