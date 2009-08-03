@@ -71,7 +71,7 @@ public final class MinaUtil {
         return put(ByteBuffer.allocate(s.length()), s);
     }
 
-    private static ByteBuffer put(ByteBuffer bb, String s) {
+    public static ByteBuffer put(ByteBuffer bb, String s) {
         bb = expand(bb, s.length());
         for (int i = 0; i < s.length(); i++) {
             bb.put(i, (byte) s.charAt(i));
