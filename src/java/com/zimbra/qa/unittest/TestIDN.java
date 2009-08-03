@@ -24,6 +24,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
+
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
@@ -37,6 +49,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestIDN extends TestCase {
@@ -255,6 +268,8 @@ public class TestIDN extends TestCase {
     }
     
     void domainTest() throws Exception {
+        System.out.println("domainTest");
+        
         IDNName d1Name = new IDNName(makeDomainName("domain-1."));
         IDNName d2Name = new IDNName(makeDomainName("domain-2."));
         IDNName d2RenamedName = new IDNName(makeDomainName("domain-2-renamed."));
@@ -281,6 +296,7 @@ public class TestIDN extends TestCase {
     }
     
     public void accountTest() throws Exception {
+        System.out.println("accountTest");
         
         IDNName domainName = new IDNName(makeDomainName("domain-acct-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
@@ -346,6 +362,7 @@ public class TestIDN extends TestCase {
     }
     
     public void distributionListTest() throws Exception {
+        System.out.println("distributionListTest");
         
         IDNName domainName = new IDNName(makeDomainName("domain-dl-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
@@ -402,10 +419,72 @@ public class TestIDN extends TestCase {
         assertEquals(0, members.length);
     }
     
+    public void basicAuthTest() throws Exception {
+        System.out.println("basicAuthTest");
+        
+        IDNName domainName = new IDNName(makeDomainName("basicAuthTest."));
+        Domain domain = createDomain(domainName.uName(), domainName.uName());
+        
+        IDNName acctName = new IDNName("acct", domainName.uName());
+        Account acct = (Account)createTest(EntryType.ACCOUNT, IDNType.UNAME, acctName);
+        
+        HttpState initialState = new HttpState();
+        
+        /*
+        Cookie authCookie = new Cookie(restURL.getURL().getHost(), "ZM_AUTH_TOKEN", mAuthToken, "/", null, false);
+        Cookie sessionCookie = new Cookie(restURL.getURL().getHost(), "JSESSIONID", mSessionId, "/zimbra", null, false);
+        initialState.addCookie(authCookie);
+        initialState.addCookie(sessionCookie);
+        */
+        
+        String guestName = acct.getUnicodeName();
+        String guestPassword = "test123";
+        
+        Credentials loginCredentials = new UsernamePasswordCredentials(guestName, guestPassword);
+        initialState.setCredentials(AuthScope.ANY, loginCredentials);
+        
+        HttpClient client = new HttpClient();
+        client.setState(initialState);
+        
+        String url = UserServlet.getRestUrl(acct) + "/Calendar";
+        System.out.println("REST URL: " + url);
+        HttpMethod method = new GetMethod(url);
+        HttpMethodParams methodParams = method.getParams();
+        methodParams.setCredentialCharset("UTF-8");
+        
+        try {
+            int respCode = client.executeMethod(method);
+
+            if (respCode != HttpStatus.SC_OK ) {
+                 System.out.println("failed, respCode=" + respCode);
+            } else {
+                 
+                 boolean chunked = false;
+                 boolean textContent = false;
+                 
+                 System.out.println("Headers:");
+                 System.out.println("--------");
+                 for (Header header : method.getRequestHeaders()) {
+                     System.out.print("    " + header.toString());
+                 }
+                 System.out.println();
+                 
+                 System.out.println("Body:");
+                 System.out.println("-----");
+                 String respBody = method.getResponseBodyAsString();
+                 System.out.println(respBody);
+             }
+         } finally {
+             // Release the connection.
+             method.releaseConnection();
+         }
+    }
+    
     public void testIDN() throws Exception {
         domainTest();
         accountTest();
-        distributionListTest();        
+        distributionListTest();   
+        basicAuthTest();
         System.out.println("\nTest " + TEST_ID + " done\n");
     }
  
