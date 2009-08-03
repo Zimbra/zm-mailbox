@@ -15,17 +15,13 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.TaskUtil;
-import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
-import com.zimbra.cs.lmtpserver.MinaLmtpData;
 import com.zimbra.cs.mina.LineBuffer;
 import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaUtil;
 import com.zimbra.cs.imap.LiteralInfo;
 import junit.framework.TestCase;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Callable;
@@ -69,7 +65,7 @@ public class TestMina extends TestCase {
 
     public void testToString() {
         ByteBuffer bb = ByteBuffer.wrap(LINE.getBytes());
-        assertEquals(LINE, MinaUtil.toString(bb));
+        assertEquals(LINE, MinaUtil.toAsciiString(bb));
     }
 
     public void testGetBytes() {
@@ -84,22 +80,22 @@ public class TestMina extends TestCase {
     public void testLineBuffer() {
         LineBuffer lb = new LineBuffer();
         assertFalse(lb.isComplete());
-        lb.parse(MinaUtil.toByteBuffer(LINE));
+        lb.parse(MinaUtil.toAsciiBytes(LINE));
         assertFalse(lb.isComplete());
-        ByteBuffer bb = MinaUtil.toByteBuffer(CR+CRLF+LINE);
+        ByteBuffer bb = MinaUtil.toAsciiBytes(CRLF+LINE);
         lb.parse(bb);
         assertTrue(lb.isComplete());
-        assertEquals(LINE, MinaUtil.toString(lb.getByteBuffer()));
+        assertEquals(LINE+CRLF, lb.toString());
         assertEquals(LINE.length(), bb.remaining());
     }
 
     public void testLineBuffer2() {
         LineBuffer lb = new LineBuffer();
-        lb.parse(MinaUtil.toByteBuffer(LINE));
-        lb.parse(MinaUtil.toByteBuffer(CR));
-        lb.parse(MinaUtil.toByteBuffer(LF));
+        lb.parse(MinaUtil.toAsciiBytes(LINE));
+        lb.parse(MinaUtil.toAsciiBytes(CR));
+        lb.parse(MinaUtil.toAsciiBytes(LF));
         assertTrue(lb.isComplete());
-        assertEquals(LINE.length(), lb.toString().length());
+        assertEquals(LINE+CRLF, lb.toString());
     }
 
     public void testLiteralInfo() throws Exception {
@@ -152,47 +148,6 @@ public class TestMina extends TestCase {
         return bb;
     }
 
-    private static final int CHUNK_SIZE = 16;
-
-    public void testBigData() throws Exception {
-        byte[] data = getBigData().getBytes();
-        MinaLmtpData lmtpData = new MinaLmtpData();
-        for (int off = 0; off < data.length; off += CHUNK_SIZE) {
-            int len = Math.min(CHUNK_SIZE, data.length - off);
-            ByteBuffer bb = ByteBuffer.wrap(data, off, len);
-            lmtpData.parse(bb);
-            assertFalse(lmtpData.isComplete());
-            assertFalse(bb.hasRemaining());
-        }
-        lmtpData.parse(MinaUtil.toByteBuffer(EOM));
-        assertTrue(lmtpData.isComplete());
-    }
-
-    private static String getBigData() {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < 1024*1024; i++) {
-            sb.append('0' + (i % 10));
-            if (i % 80 == 0) sb.append(CRLF);
-        }
-        return sb.toString();
-    }
-    
-    public void testMsgData1() throws Exception {
-        testMsgData(MSG_1);
-    }
-
-    public void testMsgData2() throws Exception {
-        testMsgData(MSG_2);
-    }
-
-    public void testMsgData3() throws Exception {
-        testMsgData(MSG_3);
-    }
-
-    public void testMsgData4() throws Exception {
-        testMsgData(MSG_4);
-    }
-
     public void testTaskUtil1() throws Exception {
         final long timeout = 100;
         try {
@@ -221,36 +176,10 @@ public class TestMina extends TestCase {
         }
     }
     
-    // Test MinaLmtpDataRequest for given input data. Test compares result
-    // against what is produced by LmtpInputStream as a reference.
-    private void testMsgData(String data) throws IOException {
-        MinaLmtpData lmtpData = new MinaLmtpData();
-        ByteBuffer bb = MinaUtil.toByteBuffer(data);
-        lmtpData.parse(bb);
-        assertTrue(lmtpData.isComplete());
-        assertFalse(bb.hasRemaining());
-        byte[] resultData = lmtpData.getBytes();
-        byte[] refData = getLmtpInputStreamResult(data, null);
-        assertEquals(refData, resultData);
-    }
-
     private static void assertEquals(byte[] b1, byte[] b2) {
         assertEquals(b1.length, b2.length);
         for (int i = 0; i < b1.length; i++) {
             assertEquals("at index " + i, b1[i], b2[i]);
         }
-    }
-
-    // Return result bytes using LmtpInputStream as a reference
-    private static byte[] getLmtpInputStreamResult(String data, String prefix)
-            throws IOException {
-        byte[] b = data.getBytes();
-        // XXX bburtin: get rid of byte array
-        LmtpMessageInputStream is = new LmtpMessageInputStream(new ByteArrayInputStream(b), prefix);
-        int size = b.length;
-        if (prefix != null) {
-            size += prefix.length();
-        }
-        return ByteUtil.getContent(is, size);
     }
 }

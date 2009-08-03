@@ -27,7 +27,7 @@ public class MinaPop3Decoder extends ProtocolDecoderAdapter {
         java.nio.ByteBuffer bb = in.buf();
         while (bb.hasRemaining()) {
             if (lbuf.parse(bb)) {
-                out.write(lbuf.toString());
+                out.write(lbuf.toString().trim());
                 lbuf.reset();
             }
         }

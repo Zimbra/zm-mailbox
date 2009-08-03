@@ -15,18 +15,25 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import com.zimbra.cs.store.Blob;
+
 import java.io.InputStream;
 
 public interface LmtpBackend {
-	
-	/**
-	 * Gets account status.
-	 */
-	public LmtpReply getAddressStatus(LmtpAddress address);
+    /**
+     * Gets account status.
+     */
+    public LmtpReply getAddressStatus(LmtpAddress address);
 
-	/**
-	 * Delivers this message to the list of recipients in the message, and sets the 
-	 * delivery status on each recipient address. 
-	 */
-	public void deliver(LmtpEnvelope env, InputStream in, int sizeHint);
+    /**
+     * Delivers this message to the list of recipients in the message, and sets the
+     * delivery status on each recipient address.
+     */
+    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint);
+
+    /**
+     * Delivers this message to the list of recipients in the message, and sets the
+     * delivery status on each recipient address.
+     */
+    public void deliver(LmtpEnvelope env, Blob blob);
 }

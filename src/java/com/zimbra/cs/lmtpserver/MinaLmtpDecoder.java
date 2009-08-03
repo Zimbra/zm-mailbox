@@ -21,24 +21,30 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.common.ByteBuffer;
 
 public class MinaLmtpDecoder extends ProtocolDecoderAdapter {
-    private final LineBuffer lbuf = new LineBuffer();
-    private MinaLmtpData data;
+    private final LineBuffer cmd = new LineBuffer(132);
+    private LineBuffer data;
 
     public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
         java.nio.ByteBuffer bb = in.buf();
         while (bb.hasRemaining()) {
             if (data != null) {
+                // Receiving LMTP data...
                 if (data.parse(bb)) {
                     out.write(data);
-                    data = null;
+                    if (data.matches(".\r\n")) {
+                        data = null;
+                    } else {
+                        // Assume subsequent lines are of the same size
+                        data = new LineBuffer(data.size());
+                    }
                 }
-            } else if (lbuf.parse(bb)) {
-                String line = lbuf.toString();
-                lbuf.reset();
-                if ("DATA".equalsIgnoreCase(getCommand(line))) {
-                    data = new MinaLmtpData();
-                }
+            } else if (cmd.parse(bb)) {
+                String line = cmd.toString().trim();
+                cmd.reset();
                 out.write(line);
+                if ("DATA".equalsIgnoreCase(getCommand(line))) {
+                    data = new LineBuffer();
+                }
             }
         }
     }

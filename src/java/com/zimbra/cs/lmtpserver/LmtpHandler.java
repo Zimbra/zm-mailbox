@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
+import com.zimbra.cs.store.Blob;
 
 public abstract class LmtpHandler extends ProtocolHandler {
     // Connection specific data
@@ -351,16 +352,24 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
     protected abstract void continueDATA() throws IOException;
 
+    protected void processMessageData(Blob blob) throws IOException {
+        mConfig.getLmtpBackend().deliver(mEnvelope, blob);
+        finishMessageData(blob.getRawSize());
+    }
+    
     protected void processMessageData(LmtpMessageInputStream in) throws IOException {
 	// TODO cleanup: add Date if not present
 	// TODO cleanup: add From header from envelope if not present
 	// TODO there should be a too many recipients test (for now protected by postfix config)
 
 	mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
+        finishMessageData(in.getMessageSize());
+    }
 
+    private void finishMessageData(long size) throws IOException {
 	int numRecipients = mEnvelope.getRecipients().size();
 	ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.increment();
-	ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(in.getMessageSize());
+	ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(size);
 	ZimbraPerf.COUNTER_LMTP_RCVD_RCPT.increment(numRecipients);
 
 	int numDelivered = 0;
@@ -373,7 +382,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
 	}
 
 	ZimbraPerf.COUNTER_LMTP_DLVD_MSGS.increment(numDelivered);
-	ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * in.getMessageSize());
+	ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * size);
 
 	reset();
     }

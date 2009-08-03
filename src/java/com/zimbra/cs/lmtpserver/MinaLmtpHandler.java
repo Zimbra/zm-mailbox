@@ -16,22 +16,26 @@
 package com.zimbra.cs.lmtpserver;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
+import com.zimbra.cs.mina.LineBuffer;
+import com.zimbra.cs.store.BlobBuilder;
+import com.zimbra.cs.store.StoreManager;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoSession;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     private final IoSession mSession;
+    private BlobBuilder data;
     private MinaOutputStream mOutputStream;
-    private boolean expectingData;
 
     private static final long WRITE_TIMEOUT = 5000;
     
@@ -45,15 +49,32 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     }
     
     public void messageReceived(Object msg) throws IOException {
-        if (expectingData) {
-            // XXX bburtin: This code is currently instantiating a byte array.  It should
-            // be rewritten to use streams.
-            byte[] data = ((MinaLmtpData) msg).getBytes();
-            ByteArrayInputStream bais = new ByteArrayInputStream(data);
-            LmtpMessageInputStream messageStream = new LmtpMessageInputStream(bais, getAdditionalHeaders());
-            processMessageData(messageStream);
+        if (data != null) {
+            receiveData((LineBuffer) msg);
+            if (data.isFinished()) {
+                processMessageData(data.getBlob());
+                data.dispose();
+                data = null;
+            }
         } else {
             processCommand((String) msg);
+        }
+    }
+
+    private void receiveData(LineBuffer lb) throws IOException {
+        if (lb.matches(".\r\n")) {
+            try {
+                data.finish();
+            } catch (ServiceException e) {
+                throw (IOException)
+                    new IOException("Unable to write blob").initCause(e);
+            }
+        } else {
+            ByteBuffer bb = lb.buf();
+            if (lb.startsWith("..")) {
+                bb.position(bb.position() + 1); // Skip leading '.'
+            }
+            data.append(bb);
         }
     }
 
@@ -62,7 +83,7 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     }
 
     public void connectionClosed() {
-        mSession.close();
+        cleanup();
     }
 
     public void connectionIdle() {
@@ -71,8 +92,14 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     }
 
     @Override
-    protected void continueDATA() {
-        expectingData = true;
+    protected void continueDATA() throws IOException {
+        try {
+            data = StoreManager.getInstance().getBlobBuilder();
+        } catch (ServiceException e) {
+            throw (IOException)
+                new IOException("Unable to create blob builder").initCause(e);
+        }
+        data.append(getAdditionalHeaders().getBytes());
     }
     
     @Override
@@ -93,7 +120,15 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
                 ZimbraLog.lmtp.warn("Force closing session because write timed out: " + mSession);
             }
         }
+        cleanup();
+    }
+
+    private void cleanup() {
         mSession.close();
+        if (data != null) {
+            data.dispose();
+            data = null;
+        }
     }
     
     @Override

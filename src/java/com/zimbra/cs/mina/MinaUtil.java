@@ -58,7 +58,7 @@ public final class MinaUtil {
         return expand(bb, minSize, -1);
     }
     
-    public static String toString(ByteBuffer bb) {
+    public static String toAsciiString(ByteBuffer bb) {
         int len = bb.remaining();
         char[] cs = new char[len];
         for (int i = 0; i < len; i++) {
@@ -67,11 +67,11 @@ public final class MinaUtil {
         return new String(cs);
     }
 
-    public static ByteBuffer toByteBuffer(String s) {
+    public static ByteBuffer toAsciiBytes(String s) {
         return put(ByteBuffer.allocate(s.length()), s);
     }
 
-    public static ByteBuffer put(ByteBuffer bb, String s) {
+    private static ByteBuffer put(ByteBuffer bb, String s) {
         bb = expand(bb, s.length());
         for (int i = 0; i < s.length(); i++) {
             bb.put(i, (byte) s.charAt(i));

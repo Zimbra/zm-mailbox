@@ -28,6 +28,7 @@ import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.channels.FileChannel;
+import java.nio.ByteBuffer;
 import java.util.zip.GZIPOutputStream;
 
 public class BlobBuilder {
@@ -117,6 +118,10 @@ public class BlobBuilder {
         return this;
     }
 
+    public BlobBuilder append(byte[] b) throws IOException {
+        return append(b, 0, b.length);
+    }
+    
     public BlobBuilder append(byte[] b, int off, int len) throws IOException {
         if (finished)
             throw new IllegalStateException("BlobBuilder is finished");
@@ -135,6 +140,15 @@ public class BlobBuilder {
             throw e;
         }
 
+        return this;
+    }
+
+    public BlobBuilder append(ByteBuffer bb) throws IOException {
+        if (!bb.hasArray()) {
+            throw new IllegalArgumentException("ByteBuffer must have backing array");
+        }
+        append(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
+        bb.position(bb.limit());
         return this;
     }
 

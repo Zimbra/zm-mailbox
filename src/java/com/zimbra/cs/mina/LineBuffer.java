@@ -15,29 +15,20 @@
 package com.zimbra.cs.mina;
 
 import java.nio.ByteBuffer;
-
-import static com.zimbra.cs.mina.MinaUtil.*;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Utility class for incrementally parsing a line of text from a ByteBuffer.
  * Used when parsing IMAP, POP3, and LMTP command line requests. 
  */
 public class LineBuffer {
-    private ByteBuffer mBuffer;
-    private boolean mComplete;
+    private ByteBuffer buf;
+    private boolean complete;
 
-    /**
-     * Creates a new empty line buffer.
-     */
     public LineBuffer() {}
 
-    /**
-     * Creates a new line buffer with initial capacity of 'size' bytes.
-     * 
-     * @param size the initial size of the buffer in bytes
-     */
     public LineBuffer(int size) {
-        mBuffer = ByteBuffer.allocate(size);
+        buf = ByteBuffer.allocate(size);
     }
 
     /**
@@ -51,67 +42,73 @@ public class LineBuffer {
      * @return true if line is complete, false otherwise
      */
     public boolean parse(ByteBuffer bb) {
-        if (isComplete()) return true;
-        int pos = findLF(bb);
-        if (pos == -1) {
-            // No end of line found, so just add remaining bytes to buffer
-            mBuffer = MinaUtil.expand(mBuffer, bb.remaining()).put(bb);
-            return false;
+        if (!complete) {
+            int pos = indexOf(bb, '\n');
+            if (pos >= 0) {
+                int len = pos + 1 - bb.position();
+                ByteBuffer tmp = bb.slice();
+                tmp.limit(len);
+                bb.position(pos + 1);
+                buf = MinaUtil.expand(buf, len, len).put(tmp);
+                buf.flip();
+                complete = true;
+            } else {
+                buf = MinaUtil.expand(buf, bb.remaining()).put(bb);
+
+            }
         }
-        // End of line found,
-        int len = pos - bb.position();
-        ByteBuffer lbb = bb.slice();
-        lbb.limit(len);
-        bb.position(pos + 1);
-        mBuffer = MinaUtil.expand(mBuffer, len, len).put(lbb);
-        // Remove trailing CR's
-        pos = mBuffer.position();
-        while (pos > 0 && mBuffer.get(pos - 1) == CR) --pos;
-        mBuffer.position(pos).flip();
-        mComplete = true;
-        return true;
+        return complete;
     }
 
-    /**
-     * Returns the line which has been parsed, excluding the terminating
-     * LF and any immediately preceding CRs which are stripped from the line.
-     * 
-     * @return the ByteBuffer containing the line, or null if the line has
-     *         not been completely parsed
-     */
-    public ByteBuffer getByteBuffer() {
-        return isComplete() ? mBuffer : null;
+    public boolean matches(String s) {
+        return s.length() == size() && startsWith(s);
+    }
+    
+    public boolean startsWith(String s) {
+        if (s.length() <= size()) {
+            for (int i = 0; i < s.length(); i++) {
+                if (s.charAt(i) != buf.get(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    public ByteBuffer buf() {
+        return buf;
     }
 
-    /**
-     * Returns the line which has been parsed as a string, exluding the
-     * terminating LF and any immediately preceding CRs.
-     * 
-     * @return the line as a String, or null if the line has not been
-     *         completely parsed.
-     */
+    public int size() {
+        return complete ? buf.limit() : buf.position();
+    }
+    
     public String toString() {
-        return isComplete() ? MinaUtil.toString(mBuffer) : null;
+        try {
+            return new String(buf.array(), buf.arrayOffset(), size(), "ASCII");
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalError("ASCII charset missing");
+        }
     }
 
-    /**
-     * Returns true if the line has been completely parsed.
-     *
-     * @return true if the line has been parsed, false otherwise
-     */
     public boolean isComplete() {
-        return mComplete;
+        return complete;
     }
 
     public void reset() {
-        mBuffer.clear();
-        mComplete = false;
+        buf.clear();
+        complete = false;
     }
 
-    private static int findLF(ByteBuffer bb) {
+    public void rewind() {
+        buf.rewind();
+    }
+
+    private static int indexOf(ByteBuffer bb, char c) {
         int limit = bb.limit();
         for (int pos = bb.position(); pos < limit; pos++) {
-            if (bb.get(pos) == LF) return pos;
+            if (bb.get(pos) == c) return pos;
         }
         return -1;
     }

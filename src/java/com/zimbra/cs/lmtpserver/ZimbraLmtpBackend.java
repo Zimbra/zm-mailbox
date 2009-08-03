@@ -143,6 +143,18 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    public void deliver(LmtpEnvelope env, Blob blob) {
+        try {
+            deliverMessageToLocalMailboxes(blob, null, env);
+        } catch (ServiceException e) {
+            ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
+            setDeliveryStatuses(env.getRecipients(), LmtpReply.TEMPORARY_FAILURE);
+        } catch (IOException e) {
+            ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
+            setDeliveryStatuses(env.getRecipients(), LmtpReply.TEMPORARY_FAILURE);
+        }
+    }
+    
     public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) {
         try {
             deliverMessageToLocalMailboxes(in, env, sizeHint);
@@ -233,7 +245,18 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     private void deliverMessageToLocalMailboxes(InputStream in,
                                                 LmtpEnvelope env, 
                                                 int sizeHint)
-    throws ServiceException, IOException {
+        throws ServiceException, IOException {
+        InMemoryDataCallback imc = new InMemoryDataCallback(sizeHint, StorageCallback.getDiskStreamingThreshold());
+        Blob blob = StoreManager.getInstance().storeIncoming(in, sizeHint, imc);
+        try {
+            deliverMessageToLocalMailboxes(blob, imc.getData(), env);
+        } finally {
+            StoreManager.getInstance().delete(blob);
+        }
+    }
+
+    private void deliverMessageToLocalMailboxes(Blob blob, byte[] data, LmtpEnvelope env)
+        throws ServiceException, IOException {
 
         List<LmtpAddress> recipients = env.getRecipients();
         String envSender = env.getSender().getEmailAddress();
@@ -242,15 +265,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         List<Long> targetMailboxIds = new ArrayList<Long>(recipients.size());
 
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
-        Blob blob = null;
-        byte[] data = null;
-
         try {
-            // Store the incoming blob.
-            InMemoryDataCallback imc = new InMemoryDataCallback(sizeHint, StorageCallback.getDiskStreamingThreshold());
-            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, imc);
-            data = imc.getData();
-
             // Examine attachments indexing option for all recipients and
             // prepare ParsedMessage versions needed.  Parsing is done before
             // attempting delivery to any recipient.  Therefore, parse error
@@ -338,7 +353,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     }
                     rcptMap.put(recipient, new RecipientDetail(account, mbox, pm, endSharedDelivery, da));
                     if (da == DeliveryAction.deliver)
-                        targetMailboxIds.add(new Long(mbox.getId()));
+                        targetMailboxIds.add(mbox.getId());
                 }
             }
 
