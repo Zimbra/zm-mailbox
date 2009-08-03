@@ -747,7 +747,7 @@ public class LC {
         ldap_db_idlcachesize.setDefault("10000");
 
         ldap_db_dncachesize = new KnownKey("ldap_db_dncachesize");
-        ldap_db_dncachesize.setDefault("500000");
+        ldap_db_dncachesize.setDefault("0");
 
         ldap_db_shmkey = new KnownKey("ldap_db_shmkey");
         ldap_db_shmkey.setDefault("0");
@@ -768,7 +768,7 @@ public class LC {
         ldap_accesslog_shmkey.setDefault("0");
 
         ldap_accesslog_dncachesize = new KnownKey("ldap_accesslog_dncachesize");
-        ldap_accesslog_dncachesize.setDefault("20000");
+        ldap_accesslog_dncachesize.setDefault("0");
 
         ldap_accesslog_checkpoint = new KnownKey("ldap_accesslog_checkpoint");
         ldap_accesslog_checkpoint.setDefault("64 5");
