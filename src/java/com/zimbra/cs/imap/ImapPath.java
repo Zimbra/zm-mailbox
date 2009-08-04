@@ -403,7 +403,7 @@ public class ImapPath implements Comparable<ImapPath> {
         String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null : target.getName();
         if (Provisioning.onLocalServer(target)) {
             try {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iidRemote.getAccountId());
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(target);
                 Folder folder = mbox.getFolderById(getContext(), iidRemote.getId());
                 if (subpathRemote == null)
                     mReferent = new ImapPath(owner, folder, mCredentials);

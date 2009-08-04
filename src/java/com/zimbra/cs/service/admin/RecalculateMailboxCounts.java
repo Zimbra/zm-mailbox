@@ -73,7 +73,7 @@ public class RecalculateMailboxCounts extends AdminDocumentHandler {
         
         checkAccountRight(zsc, account, Admin.R_adminLoginAs);
 
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox == null)
             throw ServiceException.FAILURE("mailbox not found for account " + accountId, null);
 

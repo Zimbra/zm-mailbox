@@ -1296,7 +1296,7 @@ public class IndexEditor {
             if (str.indexOf('@') >= 0) {
                 // account
                 Account acct = Provisioning.getInstance().get(AccountBy.name, str);
-                Mailbox mbx = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+                Mailbox mbx = MailboxManager.getInstance().getMailboxByAccount(acct);
                 return mbx.getId();
 
             } else {

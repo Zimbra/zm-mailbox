@@ -263,7 +263,7 @@ public class DataSourceManager {
         }
         // Get the mailbox without requesting auto-create.  It's important not to auto-create
         // the mailbox when this code is called during restore.
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId(), false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox == null)
         	return;
         DataSource ds = prov.get(account, DataSourceBy.id, dsId);

@@ -59,13 +59,13 @@ public class MailboxManager {
     public static interface Listener {
         /** Called whenever a mailbox has left Maintenance mode */
         public void mailboxAvailable(Mailbox mbox);
-        
+
         /** Called whenever a mailbox is loaded */
         public void mailboxLoaded(Mailbox mbox);
-        
+
         /** Called whenever a mailbox is created */
         public void mailboxCreated(Mailbox mbox);
-        
+
         /** Called whenever a mailbox is deleted from this server.  
          *  Could mean the mailbox was moved to another server, or could mean really deleted */ 
         public void mailboxDeleted(String accountId);
@@ -106,6 +106,7 @@ public class MailboxManager {
             mailbox = null;
             allowedThreads.clear();
         }
+
         void cacheMailbox(Mailbox mbox) {
             if (mbox.getId() == mailboxId && mbox.getAccountId().equalsIgnoreCase(accountId))
                 mailbox = mbox;
@@ -227,9 +228,48 @@ public class MailboxManager {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul> */
     public Mailbox getMailboxByAccount(Account account) throws ServiceException {
+        return getMailboxByAccount(account, FetchMode.AUTOCREATE);
+    }
+
+    /** Returns the mailbox for the given account.  Creates a new mailbox
+     *  if one doesn't already exist and <code>autocreate</code> is
+     *  <tt>true</tt>.
+     *
+     * @param accountId   The id of the account whose mailbox we want.
+     * @param autocreate  <tt>true</tt> to create the mailbox if needed,
+     *                    <tt>false</tt> to just return <code>null</code>
+     * @return The requested <code>Mailbox</code> object, or <code>null</code>.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
+    public Mailbox getMailboxByAccount(Account account, boolean autocreate) throws ServiceException {
+        return getMailboxByAccount(account, autocreate ? FetchMode.AUTOCREATE : FetchMode.DO_NOT_AUTOCREATE);
+    }
+
+    /** Returns the mailbox for the given account id.  Creates a new
+     *  mailbox if one doesn't already exist and <code>fetchMode</code>
+     *  is <code>FetchMode.AUTOCREATE</code>.
+     *
+     * @param accountId   The id of the account whose mailbox we want.
+     * @param fetchMode <code>FetchMode.ONLY_IF_CACHED</code> will return the mailbox only
+     *                     if it is already cached in memory
+     *                  <code>FetchMode.DO_NOT_AUTOCREATE</code>Will fetch the mailbox from
+     *                     the DB if it is not cached, but will not create it. 
+     *                  <code>FetchMode.AUTOCREATE</code> to create the mailbox if needed
+     * @return The requested <code>Mailbox</code> object, or <code>null</code>.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */    
+    public Mailbox getMailboxByAccount(Account account, FetchMode fetchMode) throws ServiceException {
         if (account == null)
             throw new IllegalArgumentException();
-        return getMailboxByAccountId(account.getId());
+        return getMailboxByAccountId(account.getId(), fetchMode);
     }
 
     /** Returns the mailbox for the given account id.  Creates a new
@@ -249,11 +289,11 @@ public class MailboxManager {
 
     /** Returns the mailbox for the given account id.  Creates a new
      *  mailbox if one doesn't already exist and <code>autocreate</code>
-     *  is <code>true</code>.
+     *  is <tt>true</tt>.
      *
      * @param accountId   The id of the account whose mailbox we want.
-     * @param autocreate  <code>true</code> to create the mailbox if needed,
-     *                    <code>false</code> to just return <code>null</code>
+     * @param autocreate  <tt>true</tt> to create the mailbox if needed,
+     *                    <tt>false</tt> to just return <code>null</code>
      * @return The requested <code>Mailbox</code> object, or <code>null</code>.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
@@ -264,10 +304,10 @@ public class MailboxManager {
     public Mailbox getMailboxByAccountId(String accountId, boolean autocreate) throws ServiceException {
         return getMailboxByAccountId(accountId, autocreate ? FetchMode.AUTOCREATE : FetchMode.DO_NOT_AUTOCREATE);
     }
-    
+
     /** Returns the mailbox for the given account id.  Creates a new
-     *  mailbox if one doesn't already exist and <code>autocreate</code>
-     *  is <code>true</code>.
+     *  mailbox if one doesn't already exist and <code>fetchMode</code>
+     *  is <code>FetchMode.AUTOCREATE</code>.
      *
      * @param accountId   The id of the account whose mailbox we want.
      * @param fetchMode <code>FetchMode.ONLY_IF_CACHED</code> will return the mailbox only
@@ -369,7 +409,7 @@ public class MailboxManager {
         return getMailboxById(mailboxId, FetchMode.DO_NOT_AUTOCREATE, skipMailHostCheck);
     }
     
-    private Mailbox getMailboxById(long mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
+    protected Mailbox getMailboxById(long mailboxId, FetchMode fetchMode, boolean skipMailHostCheck)
     throws ServiceException {
         // see bug 19088 - we do NOT want to call this while holding the mgr lock, because
         // we need the Mailbox instantiation code to run w/o the lock held.

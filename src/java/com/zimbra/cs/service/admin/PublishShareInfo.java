@@ -64,7 +64,7 @@ public class PublishShareInfo extends ShareInfoHandler {
         String folderId = eFolder.getAttribute(AdminConstants.A_FOLDER, null);
         String folderIdOrPath = eFolder.getAttribute(AdminConstants.A_PATH_OR_ID, null);
             
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
         if (mbox == null)
             throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
         

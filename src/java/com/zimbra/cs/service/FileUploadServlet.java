@@ -376,7 +376,7 @@ public class FileUploadServlet extends ZimbraServlet {
                     throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
                 // fetching the mailbox will except if it's in maintenance mode
                 if (Provisioning.onLocalServer(acct)) {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct, false);
                     if (mbox != null)
                         ZimbraLog.addMboxToContext(mbox.getId());
                 }

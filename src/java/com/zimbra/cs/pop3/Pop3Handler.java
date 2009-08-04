@@ -587,7 +587,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             ZimbraLog.addAccountNameToContext(mAccountName);
             ZimbraLog.pop.info("user " + mAccountName + " authenticated, mechanism=" + type);
             
-            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             mMbx = new Pop3Mailbox(mailbox, acct, mQuery);
             mState = STATE_TRANSACTION;
             mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));

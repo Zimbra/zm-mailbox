@@ -498,7 +498,7 @@ public class CalSummaryCache {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
             if (!targetAcctOnLocalServer)
                 return null;
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(targetAcctId);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(targetAcct);
             Folder folder = mbox.getFolderById(octxt, folderId);
             Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : null;
             boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;

@@ -67,7 +67,7 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
 
         CalendarCacheManager calCache = CalendarCacheManager.getInstance();
         ZimbraLog.calendar.info("Purging calendar cache for account " + account.getName());
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId(), false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox != null)
             calCache.purgeMailbox(mbox);
         Element response = zsc.createElement(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_RESPONSE);

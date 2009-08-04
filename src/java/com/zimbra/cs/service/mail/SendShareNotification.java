@@ -66,7 +66,7 @@ public class SendShareNotification extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         OperationContext octxt = getOperationContext(zsc, context);
         Account authAccount = getAuthenticatedAccount(zsc);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(authAccount.getId(), false);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(authAccount, false);
         
         // validate the share shecpfied in the request and build a share info if all is valid 
         ShareInfo shareInfo = validateRequest(zsc, context, octxt, authAccount, mbox, request);
@@ -103,7 +103,7 @@ public class SendShareNotification extends MailDocumentHandler {
         if (granteeType == ACL.GRANTEE_GUEST) {
             if (granteeName == null)
                 throw ServiceException.INVALID_REQUEST("must specify grantee name for guest grantee type", null);
-            
+
             matchingId = granteeName;
             granteeEmail = granteeName;
             granteeDisplayName = granteeEmail;
@@ -227,7 +227,7 @@ public class SendShareNotification extends MailDocumentHandler {
         Folder ownerFolder = folder;
         
         if (folder instanceof Mountpoint) {
-            Mountpoint mp = (Mountpoint)folder;
+            Mountpoint mp = (Mountpoint) folder;
             Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccountId(mp.getOwnerId(), false);
             ownerFolder = ownerMbox.getFolderById(octxt, mp.getRemoteId());
         }
@@ -237,8 +237,7 @@ public class SendShareNotification extends MailDocumentHandler {
             throw ServiceException.INVALID_REQUEST("no grant on folder", null);
         
         for (ACL.Grant grant : acl.getGrants()) {
-            if (grant.getGranteeType() == granteeType &&
-                grant.getGranteeId().equals(granteeId)) {
+            if (grant.getGranteeType() == granteeType && grant.getGranteeId().equals(granteeId)) {
                 return new MatchingGrant(grant);
             }
         }

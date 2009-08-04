@@ -163,7 +163,7 @@ public class ParseMailboxID
         if (!forceRemote &&  Provisioning.onLocalServer(account)) {
             ZimbraLog.misc.info("Account %s is local", account.getId());
             mIsLocal = true;
-            mMailbox = MailboxManager.getInstance().getMailboxByAccountId(account.getId());
+            mMailbox = MailboxManager.getInstance().getMailboxByAccount(account);
             mMailboxId = mMailbox.getId();
             ZimbraLog.misc.info("Account id %s, mailbox id %s", account.getId(),mMailbox.getId());
         } else {

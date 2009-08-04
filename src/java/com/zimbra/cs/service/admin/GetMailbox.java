@@ -61,7 +61,7 @@ public class GetMailbox extends AdminDocumentHandler {
 
         checkAccountRight(zsc, account, Admin.R_getMailboxInfo);
 
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         Element response = zsc.createElement(AdminConstants.GET_MAILBOX_RESPONSE);
         Element m = response.addElement(AdminConstants.E_MAILBOX);
         m.addAttribute(AdminConstants.A_MAILBOXID, mbox.getId());

@@ -546,7 +546,7 @@ public class ShareInfo {
             if (octxt == null)
                 return null;
             
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId(), false);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct, false);
             if (mbox == null)
                 throw ServiceException.FAILURE("mailbox not found for account " + acct.getId(), null);
             
@@ -609,7 +609,7 @@ public class ShareInfo {
         public static void discover(OperationContext octxt, Provisioning prov, Account targetAcct, 
                 byte granteeType, Account ownerAcct, Visitor visitor) throws ServiceException {
 
-            Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
+            Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
             if (ownerMbox == null)
                 throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
                
@@ -665,7 +665,7 @@ public class ShareInfo {
             if (folder == null) {
                 // no folder descriptor, do the entire folder tree
                 
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(ownerAcct.getId(), false);
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
                 if (mbox == null)
                     throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
                 
