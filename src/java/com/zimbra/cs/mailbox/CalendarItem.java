@@ -1241,11 +1241,12 @@ public abstract class CalendarItem extends MailItem {
             method.equals(ICalTok.PUBLISH.toString())) {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
                                                    preserveAlarms, replaceExistingInvites);
-        } else if (method.equals("REPLY")) {
+        } else if (method.equals(ICalTok.REPLY.toString())) {
             return processNewInviteReply(invite);
         }
 
-        ZimbraLog.calendar.warn("Unsupported METHOD " + method);
+        if (!method.equals(ICalTok.COUNTER.toString()) && !method.equals(ICalTok.DECLINECOUNTER.toString()))
+            ZimbraLog.calendar.warn("Unsupported METHOD " + method);
         return false;
     }
 

@@ -126,8 +126,13 @@ public class CalendarUtils {
         }
 
         // UID
-        if (uid != null && uid.length() > 0)
+        if (uid != null && uid.length() > 0) {
             create.setUid(uid);
+        } else {
+            String uidParsed = create.getUid();
+            if (uidParsed == null || uidParsed.length() == 0)
+                create.setUid(LdapUtil.generateUUID());
+        }
 
         ZVCalendar iCal = create.newToICalendar(true);
 
@@ -294,11 +299,99 @@ public class CalendarUtils {
 
         CalendarUtils.parseInviteElementCommon(account, itemType, inviteElem, inv, true, true);
 
+        String uid = inv.getUid();
+        if (uid == null || uid.length() == 0)
+            throw ServiceException.INVALID_REQUEST("Missing uid in an add invite", null);
+
         // DTSTAMP
         if (inv.getDTStamp() == 0) { //zdsync
             inv.setDtStamp(new Date().getTime());
         }
 
+        ZVCalendar iCal = inv.newToICalendar(true);
+
+        String summaryStr = inv.getName() != null ? inv.getName() : "";
+
+        ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
+        toRet.mCal = iCal;
+        toRet.mUid = inv.getUid();
+        toRet.mSummary = summaryStr;
+        toRet.mInvite = inv;
+
+        return toRet;
+    }
+
+    static ParseMimeMessage.InviteParserResult parseInviteForCounter(
+            Account account, byte itemType, Element inviteElem)
+    throws ServiceException {
+        TimeZoneMap tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        Invite inv = new Invite(ICalTok.COUNTER.toString(), tzMap, false);
+
+        CalendarUtils.parseInviteElementCommon(account, itemType, inviteElem, inv, true, true);
+
+        // UID
+        String uid = inv.getUid();
+        if (uid == null || uid.length() == 0)
+            throw ServiceException.INVALID_REQUEST("Missing uid in a counter invite", null);
+
+        // ORGANIZER
+        if (!inv.hasOrganizer())
+            throw ServiceException.INVALID_REQUEST("Missing organizer in a counter invite", null);
+
+        // DTSTAMP
+        if (inv.getDTStamp() == 0) { //zdsync
+            inv.setDtStamp(new Date().getTime());
+        }
+
+        // DTSTART
+        if (inv.getStartTime() == null)
+            throw ServiceException.INVALID_REQUEST("Missing dtstart in a counter invite", null);
+
+        // Workaround an Outlook bug.  Outlook 2007 will get MIME parse error if COUNTER
+        // iCalendar object doesn't have an ATTENDEE property.  RFC2446 doesn't require one.
+        if (!inv.hasOtherAttendees()) {
+            ZAttendee at = new ZAttendee(account.getMail());
+            at.setPartStat(IcalXmlStrMap.PARTSTAT_TENTATIVE);
+            inv.addAttendee(at);
+        }
+
+        inv.setLocalOnly(false);
+        ZVCalendar iCal = inv.newToICalendar(true);
+
+        String summaryStr = inv.getName() != null ? inv.getName() : "";
+
+        ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
+        toRet.mCal = iCal;
+        toRet.mUid = inv.getUid();
+        toRet.mSummary = summaryStr;
+        toRet.mInvite = inv;
+
+        return toRet;
+    }
+
+    static ParseMimeMessage.InviteParserResult parseInviteForDeclineCounter(
+            Account account, byte itemType, Element inviteElem)
+    throws ServiceException {
+        TimeZoneMap tzMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        Invite inv = new Invite(ICalTok.DECLINECOUNTER.toString(), tzMap, false);
+
+        CalendarUtils.parseInviteElementCommon(account, itemType, inviteElem, inv, true, true);
+
+        // UID
+        String uid = inv.getUid();
+        if (uid == null || uid.length() == 0)
+            throw ServiceException.INVALID_REQUEST("Missing uid in a decline counter invite", null);
+
+        // ORGANIZER
+        if (!inv.hasOrganizer())
+            throw ServiceException.INVALID_REQUEST("Missing organizer in a decline counter invite", null);
+
+        // DTSTAMP
+        if (inv.getDTStamp() == 0) { //zdsync
+            inv.setDtStamp(new Date().getTime());
+        }
+
+        inv.setLocalOnly(false);
         ZVCalendar iCal = inv.newToICalendar(true);
 
         String summaryStr = inv.getName() != null ? inv.getName() : "";
@@ -762,9 +855,8 @@ public class CalendarUtils {
 
         // UID
         String uid = element.getAttribute(MailConstants.A_UID, null);
-        if (uid == null || uid.length() == 0)
-        		uid = LdapUtil.generateUUID();
-        newInv.setUid(uid);
+        if (uid != null && uid.length() > 0)
+            newInv.setUid(uid);
 
         // RECURRENCE-ID
         if (recurrenceIdAllowed) {

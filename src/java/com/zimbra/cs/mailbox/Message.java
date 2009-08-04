@@ -566,10 +566,13 @@ public class Message extends MailItem {
                 cur.setClassPropSetByMe(true);
             }
 
+            ICalTok methodTok = Invite.lookupMethod(method);
+
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
             if (!allowOrganizerAlarm) {
                 cur.clearAlarms();
-                if (cur.isEvent() && isOrganizerMethod && !cur.isCancel()) {  // only for non-cancel VEVENTs
+                // only for non-cancel/non-declinecounter VEVENTs
+                if (cur.isEvent() && isOrganizerMethod && !cur.isCancel() && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
                     int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
                             Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
                     int hoursBefore = 0;
@@ -601,12 +604,12 @@ public class Message extends MailItem {
             try {
                 if (intendedForMe) {
                     calItem = mMailbox.getCalendarItemByUid(cur.getUid());
-                    if (createCalItem) {
+                    if (createCalItem && !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
                         if (calItem == null) {
                             // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
                             // Allow PUBLISH method as well depending on the preference.
-                            if (method.equals(ICalTok.REQUEST.toString()) ||
-                                (method.equals(ICalTok.PUBLISH.toString()) &&
+                            if (ICalTok.REQUEST.equals(methodTok) ||
+                                (ICalTok.PUBLISH.equals(methodTok) &&
                                  getAccount().getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false))) {
                                 if (autoAddNew) {
                                     int flags = 0;

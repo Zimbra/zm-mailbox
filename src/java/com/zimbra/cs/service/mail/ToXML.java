@@ -52,6 +52,7 @@ import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -1324,7 +1325,7 @@ public class ToXML {
     }
 
     public static Element encodeInviteComponent(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-                                                CalendarItem calItem,  // may be null
+                                                CalendarItem calItem /* may be null */,
                                                 Invite invite,
                                                 int fields, boolean neuter)
     throws ServiceException {
@@ -1547,9 +1548,13 @@ public class ToXML {
 
         for (Iterator<Message.CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
             Message.CalendarItemInfo info = iter.next();
-            Invite invite = null;
+            CalendarItem calItem = null;
+            ICalTok method = ICalTok.REQUEST;
+            Invite invCi = info.getInvite();
+            if (invCi != null)
+                method = Invite.lookupMethod(invCi.getMethod());
+            Invite invite = invCi;
             if (info.calItemCreated()) {
-                CalendarItem calItem = null;
                 try {
                     calItem = mbox.getCalendarItemById(octxt, info.getCalendarItemId());
                 } catch (MailServiceException.NoSuchItemException e) {
@@ -1559,21 +1564,19 @@ public class ToXML {
                     if (e.getCode() != ServiceException.PERM_DENIED)
                         throw e;
                 }
-    
-                if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
-                    invite = calItem.getInvite(msg.getId(), info.getComponentNo());
-                    // invite == null if the invite was outdated by a newer update
-                } else {
-                    // couldn't find appointment
+                // Do staleness check for invitation messages.
+                if (ICalTok.REQUEST.equals(method) || ICalTok.PUBLISH.equals(method)) {
+                    if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
+                        invite = calItem.getInvite(msg.getId(), info.getComponentNo());
+                        // invite == null if the invite was outdated by a newer update
+                    }
                 }
             } else {
                 // We have an invite that wasn't auto-added.
-                Invite invCi = info.getInvite();
                 if (invCi != null) {
-                    if (!Invite.isOrganizerMethod(invCi.getMethod())) {
+                    if (!Invite.isOrganizerMethod(invCi.getMethod()) || ICalTok.DECLINECOUNTER.equals(method)) {
                         invite = invCi;
                     } else {
-                        CalendarItem calItem = null;
                         try {
                             calItem = mbox.getCalendarItemByUid(octxt, invCi.getUid());
                         } catch (MailServiceException.NoSuchItemException e) {
@@ -1587,16 +1590,15 @@ public class ToXML {
                             // See if the messsage's invite is outdated.
                             Invite invCurr = calItem.getInvite(invCi.getRecurId());
                             if (invCurr != null) {
-                                if (invCi.isSameOrNewerVersion(invCurr)) {
-                                    // Invite is new or same as what's in the appointment.  Show it even if
-                                    // appointment is in Trash folder.
+                                if (invCi.getSeqNo() >= invCurr.getSeqNo()) {
+                                    // Invite is new or same as what's in the appointment.  Show it.
                                     invite = invCi;
                                 } else {
                                     // Outdated.  Don't show it.
                                     invite = null;
                                 }
                             } else {
-                                // New invite.  Show it even if appointment is in Trash folder.
+                                // New invite.  Show it.
                                 invite = invCi;
                             }
                         } else {
@@ -1610,7 +1612,7 @@ public class ToXML {
             if (invite != null) {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
-                encodeInviteComponent(ie, ifmt, octxt, null, invite, fields, neuter);
+                encodeInviteComponent(ie, ifmt, octxt, calItem, invite, fields, neuter);
             }
         }
 

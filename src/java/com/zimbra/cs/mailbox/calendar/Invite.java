@@ -2030,6 +2030,8 @@ public class Invite {
     
     public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData)
     throws ServiceException {
+        boolean isRequestPublishCancel =
+            ICalTok.REQUEST.equals(mMethod) || ICalTok.PUBLISH.equals(mMethod) || ICalTok.CANCEL.equals(mMethod);
         ICalTok compTok;
         if (mItemType == MailItem.TYPE_TASK) {
             compTok = ICalTok.VTODO;
@@ -2212,7 +2214,7 @@ public class Invite {
                 component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
             
             // Microsoft Outlook compatibility for free-busy status
-            {
+            if (isRequestPublishCancel) {
                 String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(getFreeBusy());
                 component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
             }
@@ -2221,7 +2223,8 @@ public class Invite {
             component.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(getTransparency())));
 
             // Force Outlook to disable UI elements for attendees to suggest new meeting time.
-            component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_DISALLOW_COUNTER, true));
+            if (isRequestPublishCancel)
+                component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_DISALLOW_COUNTER, true));
         }
 
 

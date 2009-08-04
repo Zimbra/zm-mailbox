@@ -974,6 +974,72 @@ OR
 
 //////////////////////////////////////////////////////////////////////
 //
+// CounterAppointment
+//
+// Propose a new time/location.  Sent by meeting attendee to organizer.
+// The syntax is very similar to CreateAppointmentRequest.
+//
+//
+<CounterAppointmentRequest>
+  <m>
+    <e t="f" .../>  // From
+    <e t="t" .../>  // To
+    <su>...</su>    // Subject
+    <mp>...</mp>    // plain/html texts
+    <inv>  // iCalendar COUNTER object
+      [<tz .../>]
+      <comp name="{subject}" uid="{UID}" seq="{SEQUENCE}" ...>
+        [<exceptId .../>]  // RECURRENCE-ID if dealing with an instance of a recurrence
+        <s .../>   // start time
+        <e .../>   // end time
+        <or .../>  // organizer (the appointment's organizer who will be receiving the counter proposal)
+        <at .../>  // attendee (the attendee sending this counter request)
+      </comp>
+    </inv>
+  </m>
+</CounterAppointmentRequest>
+
+<CounterAppointmentResponse/>
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// DeclineCounterAppointment
+//
+// Decline a change proposal from an attendee.  Sent by organizer to an attendee
+// who has previously sent a COUNTER message.  The syntax is very similar to
+// CreateAppointmentRequest.
+//
+<DeclineCounterAppointmentRequest>
+  <m>
+    <e t="f" .../>  // From
+    <e t="t" .../>  // To
+    <su>...</su>    // Subject
+    <mp>...</mp>    // plain/html texts
+    <inv>  // iCalendar DECLINECOUNTER object
+      [<tz .../>]
+      // comp should echo the same data 
+      <comp name="{subject}" uid="{UID}" seq="{SEQUENCE}" ...>
+        [<exceptId .../>]  // RECURRENCE-ID if dealing with an instance of a recurrence
+        <s .../>   // start time
+        <e .../>   // end time
+        <or .../>  // organizer
+        <at .../>  // attendee (the attendee whose COUNTER proposal is being declined)
+      </comp>
+    </inv>
+
+    ...  // same as sending email; specify subject, recipient, etc.
+    <inv>
+      // equivalent of iCalendar DECLINECOUNTER VEVENT
+    </inv>
+  </m>
+</DeclineCounterAppointmentRequest>
+
+<DeclineCounterAppointmentResponse/>
+
+
+//////////////////////////////////////////////////////////////////////
+//
 // GetAppointment
 //
 // Returns the metadata info for each Invite that makes up this appointment.
