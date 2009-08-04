@@ -17,6 +17,7 @@ package com.zimbra.cs.service.formatter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -367,82 +368,106 @@ public class VCard {
 
 
     public static VCard formatContact(Contact con) {
+        return formatContact(con, null);
+    }
+    
+    public static VCard formatContact(Contact con, Collection<String> vcattrs) {
         Map<String, String> fields = con.getFields();
         List<Attachment> attachments = con.getAttachments();
         List<String> emails = con.getEmailAddresses();
 
         StringBuilder sb = new StringBuilder();
         sb.append("BEGIN:VCARD\r\n");
-        sb.append("VERSION:3.0\r\n");
+        if (vcattrs == null || vcattrs.contains("VERSION"))
+            sb.append("VERSION:3.0\r\n");
 
         // FN is the only mandatory component of the vCard -- try our best to find or generate one
         String fn = fields.get(ContactConstants.A_fullName);
-        if (fn == null || fn.trim().equals(""))
-            try { fn = con.getFileAsString(); } catch (ServiceException e) { fn = ""; }
-        if (fn.trim().equals("") && !emails.isEmpty())
-            fn = emails.get(0);
-        sb.append("FN:").append(vcfEncode(fn)).append("\r\n");
-
-        String n = vcfEncode(fields.get(ContactConstants.A_lastName)) + ';' +
-                   vcfEncode(fields.get(ContactConstants.A_firstName)) + ';' +
-                   vcfEncode(fields.get(ContactConstants.A_middleName)) + ';' +
-                   vcfEncode(fields.get(ContactConstants.A_namePrefix)) + ';' +
-                   vcfEncode(fields.get(ContactConstants.A_nameSuffix));
-        if (!n.equals(";;;;"))
-            sb.append("N:").append(n).append("\r\n");
-
-        encodeField(sb, "NICKNAME", fields.get(ContactConstants.A_nickname));
-        encodeField(sb, "PHOTO;VALUE=URI", fields.get(ContactConstants.A_image));
-        String bday = fields.get(ContactConstants.A_birthday);
-        if (bday != null) {
-            Date date = DateUtil.parseDateSpecifier(bday);
-            if (date != null)
-                sb.append("BDAY;VALUE=date:").append(new SimpleDateFormat("yyyy-MM-dd").format(date)).append("\r\n");
+        if (vcattrs == null || vcattrs.contains("FN")) {
+            if (fn == null || fn.trim().equals(""))
+                try { fn = con.getFileAsString(); } catch (ServiceException e) { fn = ""; }
+            if (fn.trim().equals("") && !emails.isEmpty())
+                fn = emails.get(0);
+            sb.append("FN:").append(vcfEncode(fn)).append("\r\n");
         }
 
-        encodeAddress(sb, "home,postal,parcel", fields.get(ContactConstants.A_homeStreet),
-                fields.get(ContactConstants.A_homeCity), fields.get(ContactConstants.A_homeState),
-                fields.get(ContactConstants.A_homePostalCode), fields.get(ContactConstants.A_homeCountry));
-        encodeAddress(sb, "work,postal,parcel", fields.get(ContactConstants.A_workStreet),
-                fields.get(ContactConstants.A_workCity), fields.get(ContactConstants.A_workState),
-                fields.get(ContactConstants.A_workPostalCode), fields.get(ContactConstants.A_workCountry));
-        encodeAddress(sb, "postal,parcel", fields.get(ContactConstants.A_otherStreet),
-                fields.get(ContactConstants.A_otherCity), fields.get(ContactConstants.A_otherState),
-                fields.get(ContactConstants.A_otherPostalCode), fields.get(ContactConstants.A_otherCountry));
+        if (vcattrs == null || vcattrs.contains("N")) {
+            String n = vcfEncode(fields.get(ContactConstants.A_lastName)) + ';' +
+            vcfEncode(fields.get(ContactConstants.A_firstName)) + ';' +
+            vcfEncode(fields.get(ContactConstants.A_middleName)) + ';' +
+            vcfEncode(fields.get(ContactConstants.A_namePrefix)) + ';' +
+            vcfEncode(fields.get(ContactConstants.A_nameSuffix));
+            if (!n.equals(";;;;"))
+                sb.append("N:").append(n).append("\r\n");
+        }
 
-        // omitting callback phone for now
-        encodePhone(sb, "car,voice", fields.get(ContactConstants.A_carPhone));
-        encodePhone(sb, "home,fax", fields.get(ContactConstants.A_homeFax));
-        encodePhone(sb, "home,voice", fields.get(ContactConstants.A_homePhone));
-        encodePhone(sb, "home,voice", fields.get(ContactConstants.A_homePhone2));
-        encodePhone(sb, "cell,voice", fields.get(ContactConstants.A_mobilePhone));
-        encodePhone(sb, "fax", fields.get(ContactConstants.A_otherFax));
-        encodePhone(sb, "voice", fields.get(ContactConstants.A_otherPhone));
-        encodePhone(sb, "pager", fields.get(ContactConstants.A_pager));
-        encodePhone(sb, "work,fax", fields.get(ContactConstants.A_workFax));
-        encodePhone(sb, "work,voice", fields.get(ContactConstants.A_workPhone));
-        encodePhone(sb, "work,voice", fields.get(ContactConstants.A_workPhone2));
+        if (vcattrs == null || vcattrs.contains("NICKNAME"))
+            encodeField(sb, "NICKNAME", fields.get(ContactConstants.A_nickname));
+        if (vcattrs == null || vcattrs.contains("PHOTO"))
+            encodeField(sb, "PHOTO;VALUE=URI", fields.get(ContactConstants.A_image));
+        if (vcattrs == null || vcattrs.contains("BDAY")) {
+            String bday = fields.get(ContactConstants.A_birthday);
+            if (bday != null) {
+                Date date = DateUtil.parseDateSpecifier(bday);
+                if (date != null)
+                    sb.append("BDAY;VALUE=date:").append(new SimpleDateFormat("yyyy-MM-dd").format(date)).append("\r\n");
+            }
+        }
+
+        if (vcattrs == null || vcattrs.contains("ADR")) {
+            encodeAddress(sb, "home,postal,parcel", fields.get(ContactConstants.A_homeStreet),
+                    fields.get(ContactConstants.A_homeCity), fields.get(ContactConstants.A_homeState),
+                    fields.get(ContactConstants.A_homePostalCode), fields.get(ContactConstants.A_homeCountry));
+            encodeAddress(sb, "work,postal,parcel", fields.get(ContactConstants.A_workStreet),
+                    fields.get(ContactConstants.A_workCity), fields.get(ContactConstants.A_workState),
+                    fields.get(ContactConstants.A_workPostalCode), fields.get(ContactConstants.A_workCountry));
+            encodeAddress(sb, "postal,parcel", fields.get(ContactConstants.A_otherStreet),
+                    fields.get(ContactConstants.A_otherCity), fields.get(ContactConstants.A_otherState),
+                    fields.get(ContactConstants.A_otherPostalCode), fields.get(ContactConstants.A_otherCountry));
+        }
+
+        if (vcattrs == null || vcattrs.contains("TEL")) {
+            // omitting callback phone for now
+            encodePhone(sb, "car,voice", fields.get(ContactConstants.A_carPhone));
+            encodePhone(sb, "home,fax", fields.get(ContactConstants.A_homeFax));
+            encodePhone(sb, "home,voice", fields.get(ContactConstants.A_homePhone));
+            encodePhone(sb, "home,voice", fields.get(ContactConstants.A_homePhone2));
+            encodePhone(sb, "cell,voice", fields.get(ContactConstants.A_mobilePhone));
+            encodePhone(sb, "fax", fields.get(ContactConstants.A_otherFax));
+            encodePhone(sb, "voice", fields.get(ContactConstants.A_otherPhone));
+            encodePhone(sb, "pager", fields.get(ContactConstants.A_pager));
+            encodePhone(sb, "work,fax", fields.get(ContactConstants.A_workFax));
+            encodePhone(sb, "work,voice", fields.get(ContactConstants.A_workPhone));
+            encodePhone(sb, "work,voice", fields.get(ContactConstants.A_workPhone2));
+        }
         
-        for (String email : emails)
-            encodeField(sb, "EMAIL;TYPE=internet", email);
+        if (vcattrs == null || vcattrs.contains("EMAIL"))
+            for (String email : emails)
+                encodeField(sb, "EMAIL;TYPE=internet", email);
 
-        encodeField(sb, "URL;TYPE=home", fields.get(ContactConstants.A_homeURL));
-        encodeField(sb, "URL", fields.get(ContactConstants.A_otherURL));
-        encodeField(sb, "URL;TYPE=work", fields.get(ContactConstants.A_workURL));
-
-        String org = fields.get(ContactConstants.A_company);
-        if (org != null && !org.trim().equals("")) {
-            org = vcfEncode(org);
-            String dept = fields.get(ContactConstants.A_department);
-            if (dept != null && !dept.trim().equals(""))
-                org += ';' + vcfEncode(dept);
-            sb.append("ORG:").append(org).append("\r\n");
+        if (vcattrs == null || vcattrs.contains("URL")) {
+            encodeField(sb, "URL;TYPE=home", fields.get(ContactConstants.A_homeURL));
+            encodeField(sb, "URL", fields.get(ContactConstants.A_otherURL));
+            encodeField(sb, "URL;TYPE=work", fields.get(ContactConstants.A_workURL));
         }
-        encodeField(sb, "TITLE", fields.get(ContactConstants.A_jobTitle));
 
-        encodeField(sb, "NOTE", fields.get(ContactConstants.A_notes));
+        if (vcattrs == null || vcattrs.contains("ORG")) {
+            String org = fields.get(ContactConstants.A_company);
+            if (org != null && !org.trim().equals("")) {
+                org = vcfEncode(org);
+                String dept = fields.get(ContactConstants.A_department);
+                if (dept != null && !dept.trim().equals(""))
+                    org += ';' + vcfEncode(dept);
+                sb.append("ORG:").append(org).append("\r\n");
+            }
+        }
+        if (vcattrs == null || vcattrs.contains("TITLE"))
+            encodeField(sb, "TITLE", fields.get(ContactConstants.A_jobTitle));
 
-        if (attachments != null) {
+        if (vcattrs == null || vcattrs.contains("NOTE"))
+            encodeField(sb, "NOTE", fields.get(ContactConstants.A_notes));
+
+        if ((vcattrs == null || vcattrs.contains("PHOTO")) && attachments != null) {
             for (Attachment attach : attachments) {
                 try {
                     if (attach.getName().equalsIgnoreCase(ContactConstants.A_image)) {
@@ -460,18 +485,22 @@ public class VCard {
             }
         }
 
-        try {
-            List<Tag> tags = con.getTagList();
-            if (!tags.isEmpty()) {
-                StringBuilder sbtags = new StringBuilder();
-                for (Tag tag : tags)
-                    sbtags.append(sbtags.length() == 0 ? "" : ",").append(vcfEncode(tag.getName()));
-                sb.append("CATEGORIES:").append(sbtags).append("\r\n");
-            }
-        } catch (ServiceException e) { }
+        if (vcattrs == null || vcattrs.contains("CATEGORIES")) {
+            try {
+                List<Tag> tags = con.getTagList();
+                if (!tags.isEmpty()) {
+                    StringBuilder sbtags = new StringBuilder();
+                    for (Tag tag : tags)
+                        sbtags.append(sbtags.length() == 0 ? "" : ",").append(vcfEncode(tag.getName()));
+                    sb.append("CATEGORIES:").append(sbtags).append("\r\n");
+                }
+            } catch (ServiceException e) { }
+        }
 
-        sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
-        sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append("\r\n");
+        if (vcattrs == null || vcattrs.contains("REV"))
+            sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
+        if (vcattrs == null || vcattrs.contains("UID"))
+            sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
         sb.append("END:VCARD\r\n");
         return new VCard(fn, sb.toString(), fields, attachments);

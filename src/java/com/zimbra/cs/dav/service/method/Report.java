@@ -47,6 +47,8 @@ public class Report extends DavMethod {
 		sReports.put(DavElements.E_PRINCIPAL_MATCH, new AclReports());
 		sReports.put(DavElements.E_PRINCIPAL_SEARCH_PROPERTY_SET, new AclReports());
 		sReports.put(DavElements.E_EXPAND_PROPERTY, new ExpandProperty());
+        sReports.put(DavElements.CardDav.E_ADDRESSBOOK_QUERY, new AddressbookQuery());
+        sReports.put(DavElements.CardDav.E_ADDRESSBOOK_MULTIGET, new AddressbookMultiget());
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		if (!ctxt.hasRequestMessage())

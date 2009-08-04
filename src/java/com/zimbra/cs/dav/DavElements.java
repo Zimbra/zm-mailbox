@@ -54,7 +54,7 @@ public class DavElements {
 	public static final String P_ACL_RESTRICTIONS = "acl-restrictions";
 	public static final String P_ACTIVELOCK = "activelock";
     public static final String P_ADDRESS_DATA = "address-data";
-    public static final String P_ADDRESSBOOK_DATA = "addressbook-data";
+    public static final String P_ADDRESSBOOK = "addressbook";
     public static final String P_ADDRESSBOOK_DESCRIPTION = "addressbook-description";
     public static final String P_ADDRESSBOOK_HOME_SET = "addressbook-home-set";
     public static final String P_ADDRESSBOOK_MULTIGET = "addressbook-multiget";
@@ -403,7 +403,8 @@ public class DavElements {
 	public static final QName E_CANNOT_MODIFY_PROTECTED_PROPERTY = QName.get("cannot-modify-protected-property", WEBDAV_NS);
 	
 	public static class CardDav {
-	    public static final QName E_ADDRESSBOOK_DATA = QName.get(P_ADDRESSBOOK_DATA, CARDDAV_NS);
+        public static final QName E_ADDRESS_DATA = QName.get(P_ADDRESS_DATA, CARDDAV_NS);
+        public static final QName E_ADDRESSBOOK = QName.get(P_ADDRESSBOOK, CARDDAV_NS);
 	    public static final QName E_ADDRESSBOOK_DESCRIPTION = QName.get(P_ADDRESSBOOK_DESCRIPTION, CARDDAV_NS);
 	    public static final QName E_ADDRESSBOOK_HOME_SET = QName.get(P_ADDRESSBOOK_HOME_SET, CARDDAV_NS);
 	    public static final QName E_ADDRESSBOOK_MULTIGET = QName.get(P_ADDRESSBOOK_MULTIGET, CARDDAV_NS);

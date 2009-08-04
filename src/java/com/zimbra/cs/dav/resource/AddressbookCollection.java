@@ -29,6 +29,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 
 public class AddressbookCollection extends MailItemResource {
 
@@ -43,7 +44,7 @@ public class AddressbookCollection extends MailItemResource {
         rp.setProtected(false);
         addProperty(rp);
         rp = new ResourceProperty(DavElements.CardDav.E_SUPPORTED_ADDRESS_DATA);
-        Element vcard = rp.addChild(DavElements.CardDav.E_ADDRESSBOOK_DATA);
+        Element vcard = rp.addChild(DavElements.CardDav.E_ADDRESS_DATA);
         vcard.addAttribute(DavElements.P_CONTENT_TYPE, DavProtocol.VCARD_CONTENT_TYPE);
         vcard.addAttribute(DavElements.P_VERSION, DavProtocol.VCARD_VERSION);
         rp.setProtected(true);
@@ -55,6 +56,8 @@ public class AddressbookCollection extends MailItemResource {
             rp.setProtected(true);
             addProperty(rp);
         }
+        if (f.getDefaultView() == MailItem.TYPE_CONTACT)
+            addResourceType(DavElements.CardDav.E_ADDRESSBOOK);
     }
 
     @Override

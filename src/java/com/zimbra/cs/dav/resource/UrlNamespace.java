@@ -453,6 +453,8 @@ public class UrlNamespace {
 				else if (viewType == MailItem.TYPE_APPOINTMENT ||
 						viewType == MailItem.TYPE_TASK)
 					resource = getCalendarCollection(ctxt, f);
+                else if (viewType == MailItem.TYPE_CONTACT)
+                    resource = new AddressbookCollection(ctxt, f);
 				else
 					resource = new Collection(ctxt, f);
 				break;

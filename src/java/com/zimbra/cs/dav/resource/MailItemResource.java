@@ -156,6 +156,11 @@ public abstract class MailItemResource extends DavResource {
 		return MailboxManager.getInstance().getMailboxByAccount(account);
 	}
 	
+	protected MailItem getMailItem(DavContext ctxt) throws ServiceException, DavException {
+	    Mailbox mbox = getMailbox(ctxt);
+	    return mbox.getItemById(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN);
+	}
+	
 	/* Deletes this resource. */
 	public void delete(DavContext ctxt) throws DavException {
 		if (mId == 0) 

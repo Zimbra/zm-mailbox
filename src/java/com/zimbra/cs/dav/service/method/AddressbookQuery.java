@@ -54,6 +54,7 @@ public class AddressbookQuery extends Report {
         Collection<AddressObject> contacts = filter.match(ctxt, ((AddressbookCollection)rsc));
         RequestProp reqProp = ctxt.getRequestProp();
         DavResponse resp = ctxt.getDavResponse();
+        resp.createResponse(ctxt);
         for (AddressObject c : contacts) {
             resp.addResource(ctxt, c, reqProp, false);
         }

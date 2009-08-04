@@ -153,6 +153,10 @@ public abstract class DavResource {
 	public ResourceProperty getProperty(QName prop) {
 		return mProps.get(prop);
 	}
+	
+	public ResourceProperty getProperty(Element prop) {
+	    return mProps.get(prop.getQName());
+	}
 
 	public Set<QName> getAllPropertyNames() {
 		Set<QName> ret = new HashSet<QName>();

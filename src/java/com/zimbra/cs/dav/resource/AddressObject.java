@@ -14,8 +14,14 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import org.dom4j.Element;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.CardDavProperty;
+import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.formatter.VCard;
 
@@ -23,18 +29,27 @@ public class AddressObject extends MailItemResource {
 
     public static final String VCARD_EXTENSION = ".vcf";
     
-    private VCard mVCard;
-    
     public AddressObject(DavContext ctxt, Contact item) throws ServiceException {
         super(ctxt, item);
-        mVCard = VCard.formatContact(item);
     }
     
     public boolean isCollection() {
         return false;
     }
     
-    public String toVCard() {
-        return mVCard.formatted;
+    public ResourceProperty getProperty(Element prop) {
+        if (prop.getQName().equals(DavElements.CardDav.E_ADDRESS_DATA)) {
+            return CardDavProperty.getAddressbookData(prop, this);
+        }
+        return super.getProperty(prop);
+    }
+    
+    public String toVCard(DavContext ctxt) throws ServiceException, DavException {
+        Contact contact = (Contact)getMailItem(ctxt);
+        return VCard.formatContact(contact).formatted;
+    }
+    public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
+        Contact contact = (Contact)getMailItem(ctxt);
+        return VCard.formatContact(contact, attrs).formatted;
     }
 }
