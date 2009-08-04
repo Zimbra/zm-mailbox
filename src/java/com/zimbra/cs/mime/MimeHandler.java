@@ -63,6 +63,7 @@ public abstract class MimeHandler {
     private String mFilename;
     private DataSource mDataSource;
     private String mContentType;
+    private int mSize = -1;
 
     /** dotted-number part name */
     private String mPartName;
@@ -117,6 +118,14 @@ public abstract class MimeHandler {
 
     public DataSource getDataSource() {
         return mDataSource;
+    }
+    
+    public int getSize() {
+        return mSize;
+    }
+    
+    public void setSize(int size) {
+        mSize = size;
     }
 
     /**
@@ -173,7 +182,6 @@ public abstract class MimeHandler {
      */
     protected abstract String getContentImpl() throws MimeHandlerException;
 
-    @SuppressWarnings("unused")
     public ZVCalendar getICalendar() throws MimeHandlerException {
         return null;
     }
@@ -205,6 +213,7 @@ public abstract class MimeHandler {
      */
     public abstract boolean doConversion();
 
+    @SuppressWarnings("deprecation")
     public Document getDocument() throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
         /*
@@ -234,6 +243,7 @@ public abstract class MimeHandler {
         return doc;
     }
 
+    @SuppressWarnings({ "deprecation", "unchecked" })
     public static void getObjects(String text, Document doc) throws ObjectHandlerException, ServiceException {
         if (DebugConfig.disableObjects)
             return;
@@ -251,7 +261,8 @@ public abstract class MimeHandler {
                     l_objects.append(',');
                 l_objects.append(h.getType());
 
-                if (false /*h.storeMatched()*/) {
+                /* if (h.storeMatched())
+                if (false) {
                     Set<String> set = new HashSet<String>();
                     for (Iterator mit = matchedObjects.iterator(); mit.hasNext(); ) {
                         MatchedObject mo = (MatchedObject) mit.next();
@@ -269,13 +280,13 @@ public abstract class MimeHandler {
                     String fname = "l.object."+h.getType();
                     doc.add(new Field(fname, md.toString(), Field.Store.YES, Field.Index.NO));
                 }
+                */
             }
         }
         if (l_objects.length() > 0)
             doc.add(new Field(LuceneFields.L_OBJECTS, l_objects.toString(), Field.Store.NO, Field.Index.TOKENIZED));
     }
 
-    @SuppressWarnings("unused")
     public AttachmentInfo getDocInfoFromArchive(AttachmentInfo archiveDocInfo, String seq) throws IOException {
         return null;
     }

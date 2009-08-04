@@ -1049,6 +1049,7 @@ public class ParsedMessage {
                 handler.init(mpi.getMimePart().getDataHandler().getDataSource());
                 handler.setPartName(mpi.getPartName());
                 handler.setFilename(mpi.getFilename());
+                handler.setSize(mpi.getSize());
 
                 // remember the first iCalendar attachment
                 if (!ignoreCalendar && mCalendarPartInfo == null) {

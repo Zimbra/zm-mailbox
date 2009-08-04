@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
@@ -60,6 +59,7 @@ public class ParsedDocument {
     	throws ServiceException, IOException {
     	this(saveInputAsBlob(in), filename, ctype, createdDate, creator);
     }
+    @SuppressWarnings("deprecation")
     public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
         mBlob = blob;
@@ -78,6 +78,7 @@ public class ParsedDocument {
                 handler.init(new FileDataSource(blob.getFile()));
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
+            handler.setSize(mSize);
             
             String textContent = "";
             try {
@@ -127,6 +128,7 @@ public class ParsedDocument {
     }
     
 
+    @SuppressWarnings("deprecation")
     public void setVersion(int v) {
         // should be indexed so we can add search constraints on the index version
     	if (mZDocument == null)

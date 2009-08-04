@@ -173,7 +173,7 @@ public class NativeFormatter extends Formatter {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             	sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
-            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), -1 * mp.getSize());
+            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
             }
         }
     }

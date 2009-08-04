@@ -68,7 +68,6 @@ public class TextHtmlHandler extends MimeHandler {
         return mContent;
     }
 
-    @SuppressWarnings("unused")
     protected Reader getReader(InputStream is, String ctype) throws IOException {
         return Mime.getTextReader(is, ctype, null);
     }
