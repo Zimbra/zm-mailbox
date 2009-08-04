@@ -139,6 +139,10 @@ public class MailConstants {
     public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
     public static final QName ADD_APPOINTMENT_INVITE_REQUEST = QName.get("AddAppointmentInviteRequest", NAMESPACE);
     public static final QName ADD_APPOINTMENT_INVITE_RESPONSE = QName.get("AddAppointmentInviteResponse", NAMESPACE);
+    public static final QName COUNTER_APPOINTMENT_REQUEST = QName.get("CounterAppointmentRequest", NAMESPACE);
+    public static final QName COUNTER_APPOINTMENT_RESPONSE = QName.get("CounterAppointmentResponse", NAMESPACE);
+    public static final QName DECLINE_COUNTER_APPOINTMENT_REQUEST = QName.get("DeclineCounterAppointmentRequest", NAMESPACE);
+    public static final QName DECLINE_COUNTER_APPOINTMENT_RESPONSE = QName.get("DeclineCounterAppointmentResponse", NAMESPACE);
     public static final QName IMPORT_APPOINTMENTS_REQUEST = QName.get("ImportAppointmentsRequest", NAMESPACE);
     public static final QName IMPORT_APPOINTMENTS_RESPONSE = QName.get("ImportAppointmentsResponse", NAMESPACE);
 
