@@ -44,12 +44,14 @@ import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.formatter.VCard;
 
 /**
  * Abstraction of DavResource that maps to MailItem in the mailbox.
@@ -133,6 +135,8 @@ public abstract class MailItemResource extends DavResource {
 			path = ctxt.getPath();
 		if ((item.getType() == MailItem.TYPE_FOLDER || item.getType() == MailItem.TYPE_MOUNTPOINT) && !path.endsWith("/"))
 			return path + "/";
+		else if (item.getType() == MailItem.TYPE_CONTACT)
+		    return path + "/" + VCard.getUid((Contact)item) + AddressObject.VCARD_EXTENSION;
 		return path;
 	}
 

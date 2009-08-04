@@ -139,14 +139,15 @@ public abstract class Filter {
     
     static {
         sAttrMappings = new HashMap<String,AttrMapping>();
-        AttrMapping.createSimple("FN", ContactConstants.A_fullName);
+        AttrMapping m = AttrMapping.createStructured("FN");
+        m.addSubType("name", ContactConstants.A_fullName, ContactConstants.A_firstName, ContactConstants.A_lastName);
         AttrMapping.createSimple("NICKNAME", ContactConstants.A_nickname);
         AttrMapping.createSimple("TITLE", ContactConstants.A_jobTitle);
         AttrMapping.createSimple("NOTE", ContactConstants.A_notes);
         AttrMapping.createStructured("ADR", "home", ContactConstants.A_homeStreet, "work", ContactConstants.A_workStreet);
         AttrMapping.createStructured("URL", "home", ContactConstants.A_homeURL, "work", ContactConstants.A_workURL);
         
-        AttrMapping m = AttrMapping.createStructured("TEL", 
+        m = AttrMapping.createStructured("TEL", 
                 "car", ContactConstants.A_carPhone,
                 "cell", ContactConstants.A_mobilePhone,
                 "pager", ContactConstants.A_pager,
@@ -231,7 +232,7 @@ public abstract class Filter {
             for (String key : attrs) {
                 if (!first)
                     search.append(" OR ");
-                search.append("#").append(key).append(":").append(mText);
+                search.append("#").append(key).append(":").append(mText).append("*");
                 first = false;
             }
             search.append(")");

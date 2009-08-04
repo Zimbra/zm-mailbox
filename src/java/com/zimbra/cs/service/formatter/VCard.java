@@ -500,12 +500,16 @@ public class VCard {
         if (vcattrs == null || vcattrs.contains("REV"))
             sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
         if (vcattrs == null || vcattrs.contains("UID"))
-            sb.append("UID:").append(con.getMailbox().getAccountId()).append(':').append(con.getId()).append("\r\n");
+            sb.append("UID:").append(getUid(con)).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
         sb.append("END:VCARD\r\n");
         return new VCard(fn, sb.toString(), fields, attachments);
     }
 
+    public static String getUid(Contact con) {
+        return con.getMailbox().getAccountId() + ":" + con.getId();
+    }
+    
     private static void encodeField(StringBuilder sb, String name, String value) {
         if (sb == null || name == null || value == null)
             return;

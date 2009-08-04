@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -98,11 +99,11 @@ public class DavContext {
 	public static class RequestProp {
 		boolean nameOnly;
 		boolean allProp;
-		Collection<QName> props;
+		HashMap<QName, Element> props;
 		HashMap<QName, DavException> errProps;
 
 		public RequestProp(boolean no) {
-			props = new ArrayList<QName>();
+			props = new HashMap<QName, Element>();
 			errProps = new HashMap<QName, DavException>();
 			nameOnly = no;
 			allProp = true;
@@ -125,7 +126,7 @@ public class DavContext {
 					@SuppressWarnings("unchecked")
 					List<Element> propElems = e.elements();
 					for (Element prop : propElems)
-						props.add(prop.getQName());
+						props.put(prop.getQName(), prop);
 				}
 			}
 		}
@@ -134,8 +135,9 @@ public class DavContext {
 			this(false);
 			allProp = false;
 			for (Element e : set)
-				props.add(e.getQName());
-			props.addAll(remove);
+				props.put(e.getQName(), e);
+			for (QName q : remove)
+			    props.put(q, DocumentHelper.createElement(q));
 		}
 		
 		public boolean isNameOnly() {
@@ -144,17 +146,20 @@ public class DavContext {
 		public boolean isAllProp() {
 			return allProp;
 		}
-		public void addProp(QName p) {
+		public void addProp(Element p) {
 			allProp = false;
-			props.add(p);
+			props.put(p.getQName(), p);
 		}
 		public Collection<QName> getProps() {
-			return props;
+			return props.keySet();
+		}
+		public Element getProp(QName p) {
+		    return props.get(p);
 		}
 		public void addPropError(QName prop, DavException ex) {
 			allProp = false;
-			if (!props.contains(prop))
-				props.add(prop);
+			if (!props.containsKey(prop))
+				props.put(prop, DocumentHelper.createElement(prop));
 			errProps.put(prop, ex);
 		}
 		public Map<QName, DavException> getErrProps() {

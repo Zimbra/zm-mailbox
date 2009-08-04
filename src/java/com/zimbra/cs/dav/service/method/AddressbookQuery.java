@@ -50,7 +50,7 @@ public class AddressbookQuery extends Report {
         Element f = query.element(DavElements.CardDav.E_FILTER);
         if (f == null)
             throw new DavException("msg "+query.getName()+" is missing filter", HttpServletResponse.SC_BAD_REQUEST, null);
-        Filter filter = new Filter.PropFilter(f);
+        Filter filter = new Filter.PropFilter((Element)f.elementIterator().next());
         Collection<AddressObject> contacts = filter.match(ctxt, ((AddressbookCollection)rsc));
         RequestProp reqProp = ctxt.getRequestProp();
         DavResponse resp = ctxt.getDavResponse();

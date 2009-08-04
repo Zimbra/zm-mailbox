@@ -79,7 +79,7 @@ public class PropPatch extends DavMethod {
 							set.add(propElem);
 						else
 							remove.add(propName);
-						rp.addProp(propName);
+						rp.addProp(propElem);
 					} else {
 						rp.addPropError(propName, new DavException.CannotModifyProtectedProperty(propName));
 					}
