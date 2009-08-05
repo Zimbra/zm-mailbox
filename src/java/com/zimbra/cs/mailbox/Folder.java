@@ -1093,7 +1093,9 @@ public class Folder extends MailItem {
     }
 
 
-    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread, boolean useChangeDate) throws ServiceException {
+    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread,
+                              boolean useChangeDate, boolean deleteEmptySubfolders)
+    throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
             return;
 
@@ -1102,6 +1104,17 @@ public class Folder extends MailItem {
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread, useChangeDate);
         delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
+
+        if (deleteEmptySubfolders) {
+            // Iterate folder list in order of decreasing depth. 
+            for (int i = folders.size() - 1; i >= 1; i--) {
+                Folder f = folders.get(i);
+                long date = (useChangeDate ? f.getChangeDate() : f.getDate()) / 1000;
+                if (f.getItemCount() <= 0 && date < beforeDate) {
+                    f.delete(DeleteScope.ENTIRE_ITEM, false);
+                }
+            }
+        }
     }
 
 

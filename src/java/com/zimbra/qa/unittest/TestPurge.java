@@ -14,12 +14,14 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -29,8 +31,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-
-import junit.framework.TestCase;
 
 public class TestPurge extends TestCase {
 
@@ -330,6 +330,42 @@ public class TestPurge extends TestCase {
         // Run purge and verify results
         mbox.purgeMessages(null);
         assertTrue("kept was purged", messageExists(kept.getId()));
+    }
+    
+    /**
+     * Confirms that empty folders in trash are purged (bug 16885). 
+     */
+    public void testFolderInTrash()
+    throws Exception {
+        // Create a subfolder of trash with a message in it.
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        String folderPath = "/Trash/" + NAME_PREFIX + "-testFolderInTrash";
+        Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.TYPE_MESSAGE);
+        String subject = NAME_PREFIX + " testFolderInTrash";
+        Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis());
+        ZimbraLog.test.info("Date: %d, change date: %d.", msg.getDate(), msg.getChangeDate());
+        
+        // Set retention policy.
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setPrefTrashLifetime("1s");
+        account.setMailPurgeUseChangeDateForTrash(false);
+        
+        // Sleep longer than the trash lifetime and purge.
+        Thread.sleep(2000);
+        mbox.purgeMessages(null);
+        
+        // Make sure both the message and folder were deleted.
+        try {
+            mbox.getMessageById(null, msg.getId());
+            fail("Message " + msg.getId() + " was not deleted.");
+        } catch (NoSuchItemException e) {
+        }
+        
+        try {
+            mbox.getFolderById(null, f.getId());
+            fail("Folder " + f.getId() + " was not deleted.");
+        } catch (NoSuchItemException e) {
+        }
     }
     
     private Message alterUnread(Message msg, boolean unread)
