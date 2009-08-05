@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.FileDescriptorCache;
 
 
 public class ServerStatsCallback implements RealtimeStatsCallback {
@@ -32,7 +33,10 @@ public class ServerStatsCallback implements RealtimeStatsCallback {
         data.put(ZimbraPerf.RTS_MBOX_CACHE_SIZE, ZimbraPerf.getMailboxCacheSize());
         data.put(ZimbraPerf.RTS_MSG_CACHE_SIZE, MessageCache.getSize());
         data.put(ZimbraPerf.RTS_MSG_CACHE_BYTES, MessageCache.getDataSize());
-        data.put(ZimbraPerf.RTS_FD_CACHE_SIZE, BlobInputStream.getFileDescriptorCache().getSize());
+        
+        FileDescriptorCache fdc = BlobInputStream.getFileDescriptorCache();
+        data.put(ZimbraPerf.RTS_FD_CACHE_SIZE, fdc.getSize());
+        data.put(ZimbraPerf.RTS_FD_CACHE_HIT_RATE, fdc.getHitRate());
         
         Provisioning prov = Provisioning.getInstance();
         if (prov instanceof LdapProvisioning) {

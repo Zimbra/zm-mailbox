@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.stats.Counter;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -42,6 +43,7 @@ public class FileDescriptorCache
     private LinkedHashMap<String, SharedFile> mCache = new LinkedHashMap<String, SharedFile>(16, 0.75f, true);
     private int mMaxSize = 1000;
     private UncompressedFileCache<String> mUncompressedFileCache;
+    private Counter mHitRate = new Counter();
 
     public FileDescriptorCache(UncompressedFileCache<String> uncompressedCache) {
         mUncompressedFileCache = uncompressedCache;
@@ -56,6 +58,7 @@ public class FileDescriptorCache
             throw new IllegalArgumentException("maxSize value of " + maxSize + " is invalid (must be at least 0)");
 
         mMaxSize = maxSize;
+        mHitRate.reset(); // Recalculate hit rate based on the new size.
         pruneIfNecessary();
         return this;
     }
@@ -120,6 +123,7 @@ public class FileDescriptorCache
         }
         
         if (sharedFile == null) {
+            mHitRate.increment(0);
             File file = new File(path);
             if (FileUtil.isGzipped(file)) {
                 ZimbraLog.store.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
@@ -132,6 +136,8 @@ public class FileDescriptorCache
                 mCache.put(path, sharedFile);
             }
             pruneIfNecessary();
+        } else {
+            mHitRate.increment(100);
         }
         
         return sharedFile;
@@ -164,6 +170,10 @@ public class FileDescriptorCache
     
     public int getSize() {
         return mCache.size();
+    }
+    
+    public double getHitRate() {
+        return mHitRate.getAverage();
     }
     
     private synchronized void pruneIfNecessary() {
