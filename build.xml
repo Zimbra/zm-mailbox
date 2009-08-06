@@ -352,10 +352,23 @@
         </javac>
     </target>
 
-    <!-- You can add more attrs.xml files from outside this project and invoke this target. -->
-    <target name="generate-ldap-config" depends="set-buildinfo-vars">
+    <target name="setup-ldap-config">
+        <!-- copy attrs source files to build dir -->
+        <delete dir="${build.dir}/attrs-src"/>
+        <mkdir dir="${build.dir}/attrs-src"/>
+        <copy todir="${build.dir}/attrs-src" overwrite="true" preservelastmodified="true">
+            <fileset dir="${config.dir}/attrs" includes="*.xml"/>
+        </copy>
+    </target>
+
+    <target name="generate-ldap-config">
+        <antcall target="setup-ldap-config"/>
+        <antcall target="do-generate-ldap-config"/>
+    </target>
+
+    <target name="do-generate-ldap-config" depends="set-buildinfo-vars">
         <dependset>
-            <srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
+            <srcfileset dir="${build.dir}/attrs-src" includes="*.xml"/>
             <targetfileset dir='${build.dir}/ldap-config' includes='*'/>
         </dependset>
 
@@ -364,7 +377,7 @@
             <then>
                 <mkdir dir="${build.dir}/attrs"/>
                 <copy todir="${build.dir}/attrs" overwrite="true">
-                    <fileset dir="${config.dir}/attrs" includes="*.xml"/>
+                    <fileset dir="${build.dir}/attrs-src" includes="*.xml"/>
                 </copy>
                 <mkdir dir="${build.dir}/ldap-config"/>
                 <mkdir dir="${build.dir}/ldap-config/config"/>
@@ -1091,13 +1104,18 @@
         change effective.
     -->
     <target name="refresh-ldap-schema">
+        <antcall target="setup-ldap-config"/>
+        <antcall target="reload-ldap-schema"/>
+    </target>
+
+    <target name="reload-ldap-schema">
         <antcall target="stop-webserver"/>
         <antcall target="stop-ldap"/>
         <sleep seconds="2"/>
         
-        <delete dir="${build.dir}/attrs"/>
+    	<delete dir="${build.dir}/attrs"/>
         <delete dir="${build.dir}/ldap-config"/>
-        <antcall target="generate-ldap-config"/>
+        <antcall target="do-generate-ldap-config"/>
         
         <!-- dist ldap schem and ldif files -->
         <copy todir="${dist.dir}/conf/attrs" overwrite="true">
