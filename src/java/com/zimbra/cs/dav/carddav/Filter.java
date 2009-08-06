@@ -26,10 +26,14 @@ import org.dom4j.QName;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.resource.AddressObject;
 import com.zimbra.cs.dav.resource.AddressbookCollection;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
@@ -203,17 +207,48 @@ public abstract class Filter {
     protected boolean canHavePropFilter()  { return true; }
     protected boolean canHaveParamFilter() { return true; }
     
+    public enum MatchType {
+        equals, contains, starts_with, ends_with;
+        public static MatchType fromString(String s) {
+            try {
+                if (s != null)
+                    return MatchType.valueOf(s.replace('-', '_'));
+            } catch (IllegalArgumentException e) {
+            }
+            return contains;
+        }
+    };
+    
     public static class TextMatch extends Filter {
         //private String mCollation;
         private String mText;
         private boolean mNegate;
+        private MatchType mMatch;
         
+        private class Callback extends GalSearchResultCallback {
+            DavContext ctxt;
+            ArrayList<AddressObject> result;
+            public Callback(DavContext ctxt, ArrayList<AddressObject> result, GalSearchParams params) {
+                super(params);
+                this.ctxt = ctxt;
+                this.result = result;
+            }
+            public com.zimbra.common.soap.Element handleContact(Contact c) {
+                try {
+                    result.add(new AddressObject(ctxt, c));
+                } catch (ServiceException e) {
+                    ZimbraLog.dav.error("can't include gal search result", e);
+                }
+                return null;
+            }
+        }
         public TextMatch(Element elem, Filter parent) {
             super(elem);
             mEnclosingFilter = parent;
             //mCollation = elem.attributeValue(DavElements.P_COLLATION, DavElements.ASCII);
             mNegate = elem.attributeValue(DavElements.P_NEGATE_CONDITION, DavElements.NO).equals(DavElements.YES);
             mText = elem.getText();
+            mMatch = MatchType.fromString(elem.attributeValue(DavElements.P_MATCH_TYPE));
         }
         
         public Collection<AddressObject> match(DavContext ctxt, AddressbookCollection folder) {
@@ -232,11 +267,17 @@ public abstract class Filter {
             for (String key : attrs) {
                 if (!first)
                     search.append(" OR ");
-                search.append("#").append(key).append(":").append(mText).append("*");
+                search.append("#").append(key).append(":");
+                if (mMatch == MatchType.contains || mMatch == MatchType.ends_with)
+                    search.append("*");
+                search.append(mText);
+                if (mMatch == MatchType.contains || mMatch == MatchType.starts_with)
+                    search.append("*");
                 first = false;
             }
             search.append(")");
             String filter = search.toString();
+            ZimbraLog.dav.debug("Search Filter: %s", filter);
             ZimbraQueryResults zqr = null;
             try {
                 Mailbox mbox = ctxt.getTargetMailbox();
@@ -260,8 +301,27 @@ public abstract class Filter {
                         zqr.doneWithSearchResults();
                     } catch (ServiceException e) {}
             }
-            
-            ZimbraLog.dav.debug("Search Filter: %s", filter);
+            boolean includeGal = true;
+            if (includeGal) {
+                StringBuilder query = new StringBuilder();
+                if (mMatch == MatchType.contains || mMatch == MatchType.ends_with)
+                    query.append("*");
+                query.append(mText);
+                if (mMatch == MatchType.contains || mMatch == MatchType.starts_with)
+                    query.append("*");
+                ZimbraLog.dav.debug("Gal query: %s", query.toString());
+
+                GalSearchParams params = new GalSearchParams(ctxt.getAuthAccount());
+                params.setType(GAL_SEARCH_TYPE.USER_ACCOUNT);
+                params.setQuery(query.toString());
+                params.setResultCallback(new Callback(ctxt, result, params));
+                GalSearchControl gal = new GalSearchControl(params);
+                try {
+                    gal.search();
+                } catch (ServiceException e) {
+                    ZimbraLog.dav.error("Can't get gal search result for %s", ctxt.getUser());
+                }
+            }
             return result;
         }
     }

@@ -17,6 +17,7 @@ package com.zimbra.cs.gal;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -53,6 +54,7 @@ public class GalSearchParams {
 	public GalSearchParams(Account account) {
         mAccount = account;
         mResult = SearchGalResult.newSearchGalResult(null);
+        mResponse = AccountConstants.SEARCH_GAL_RESPONSE;
 	}
 	
 	public GalSearchParams(Account account, ZimbraSoapContext ctxt) {

@@ -42,6 +42,9 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	if (params.getSoapContext() != null) {
     		mResponse = params.getSoapContext().createElement(params.getResponseName());
         	mFormatter = new ItemIdFormatter(params.getSoapContext());
+    	} else {
+    	    mResponse = Element.XMLElement.mFactory.createElement(params.getResponseName());
+    	    mFormatter = new ItemIdFormatter();
     	}
     	params.setGalResult(SearchGalResult.newSearchGalResult(this));
     	mIdOnly = params.isIdOnly();

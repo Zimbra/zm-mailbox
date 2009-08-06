@@ -140,6 +140,7 @@ public class DavElements {
 	public static final String P_LOCKTYPE = "locktype";
 
 	public static final String P_MATCH = "match";
+    public static final String P_MATCH_TYPE = "match-type";
 	public static final String P_MAX_ATTENDEES_PER_INSTANCE = "max-attendees-per-instance";
 	public static final String P_MAX_DATE_TIME = "max-date-time";
 	public static final String P_MAX_INSTANCES = "max-instances";
