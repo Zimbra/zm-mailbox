@@ -137,7 +137,7 @@ public class BufferStream extends OutputStream {
     protected void finalize() { release(); }
     
     public byte[] getBuffer() {
-        if (buf != null && buf.length != size) {
+        if (buf != null && buf.length > size) {
             byte newBuf[] = new byte[(int)size];
             
             System.arraycopy(buf, 0, newBuf, 0, (int)size);
@@ -172,6 +172,8 @@ public class BufferStream extends OutputStream {
     
     public long getMaxSize() { return maxSize; }
     
+    public byte[] getRawBuffer() { return buf; }
+
     public long getSize() { return size; }
     
     public boolean isSequenced() { return sequenced; }
