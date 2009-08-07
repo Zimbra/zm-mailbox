@@ -23,15 +23,12 @@ import java.io.RandomAccessFile;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ByteUtil.SegmentInputStream;
-import com.zimbra.cs.store.BlobInputStream;
-
 
 class RedoableOpData {
 
     private byte[] mData;
     private File mFile;
     private long mFileOffset;
-    private InputStream mInputStream;
     private int mLength;
     
     RedoableOpData(byte[] data) {
@@ -50,8 +47,15 @@ class RedoableOpData {
     }
     
     RedoableOpData(InputStream in, int length) {
-        mInputStream = in;
-        mLength = length;
+        // XXX bburtin - replace this constructor with one that takes
+        // a Java Activation DataSource, so we don't have to read the
+        // entire stream into memory.
+        try {
+            mData = ByteUtil.getContent(in, length);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to read content stream", e);
+        }
+        mLength = mData.length;
     }
     
     int getLength() {
@@ -73,9 +77,6 @@ class RedoableOpData {
                     throw new IOException(msg);
                 }
             }
-            if (mInputStream != null) {
-                mData = ByteUtil.getContent(mInputStream, 1024);
-            }
         }
         assert(mData != null);
         return mData;
@@ -83,9 +84,6 @@ class RedoableOpData {
     
     InputStream getInputStream()
     throws IOException {
-        if (mInputStream != null) {
-            return mInputStream;
-        }
         if (mData != null) {
             return new ByteArrayInputStream(mData);
         }
@@ -98,9 +96,5 @@ class RedoableOpData {
         }
         assert(false);
         return null;
-    }
-    
-    boolean hasDataInMemory() {
-        return (mData != null);
     }
 }
