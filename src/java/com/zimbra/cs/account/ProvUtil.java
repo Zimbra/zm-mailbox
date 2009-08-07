@@ -3565,7 +3565,7 @@ public class ProvUtil implements HttpDebugListener {
         RightCommand.AllEffectiveRights allEffRights = mProv.getAllEffectiveRights(
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
         
-        System.out.println(allEffRights.granteeType() + 
+        System.out.println(allEffRights.granteeType() + " " + 
                 allEffRights.granteeName() + "(" + allEffRights.granteeId() + ")" + 
                 " has the following rights:");
         
