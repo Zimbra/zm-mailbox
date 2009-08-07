@@ -105,6 +105,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.*;
@@ -4132,30 +4133,23 @@ public class Mailbox {
     throws IOException, ServiceException {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cs = new CopyInputStream(in, sizeHint, bufLen, bufLen);
-        Blob incoming = null;
+        Blob blob = null;
         
-        if (dctxt == null)
-            dctxt = new DeliveryContext();
         try {
-            byte data[];
             ParsedMessage pm = null;
             
-            incoming = StoreManager.getInstance().storeIncoming(cs, sizeHint, null);
-            data = cs.getBuffer();
-            if (data == null) {
-                pm = new ParsedMessage(incoming.getFile(), receivedDate, attachmentsIndexingEnabled());
-            } else {
-                pm = new ParsedMessage(data, receivedDate, attachmentsIndexingEnabled());
-            }
+            blob = StoreManager.getInstance().storeIncoming(cs, sizeHint, null);
+            pm = new ParsedMessage(new ParsedMessageOptions(blob, cs.getBuffer(),
+                receivedDate, attachmentsIndexingEnabled()));
             cs.release();
-            pm.setRawDigest(incoming.getDigest());
-            pm.setRawSize((int)incoming.getRawSize());
-            dctxt.setIncomingBlob(incoming);
+            if (dctxt == null)
+                dctxt = new DeliveryContext();
+            dctxt.setIncomingBlob(blob);
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
                               customData, dctxt);
         } finally {
             cs.release();
-            StoreManager.getInstance().quietDelete(incoming);
+            StoreManager.getInstance().quietDelete(blob);
         }
     }
 

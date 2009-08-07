@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CopyInputStream;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -46,11 +47,11 @@ import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 
@@ -246,10 +247,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                                 LmtpEnvelope env, 
                                                 int sizeHint)
         throws ServiceException, IOException {
-        InMemoryDataCallback imc = new InMemoryDataCallback(sizeHint, StorageCallback.getDiskStreamingThreshold());
-        Blob blob = StoreManager.getInstance().storeIncoming(in, sizeHint, imc);
+        int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
+        CopyInputStream cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
+        Blob blob = StoreManager.getInstance().storeIncoming(cis, sizeHint, null);
+        
         try {
-            deliverMessageToLocalMailboxes(blob, imc.getData(), env);
+            deliverMessageToLocalMailboxes(blob, cis.getBuffer(), env);
         } finally {
             StoreManager.getInstance().delete(blob);
         }
@@ -314,29 +317,26 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
                 if (account != null && mbox != null) {
                     ParsedMessage pm;
+                    ParsedMessageOptions pmo = new ParsedMessageOptions(blob, data);
+
                     if (attachmentsIndexingEnabled) {
                         if (pmAttachIndex == null) {
-                            if (data != null) {
-                                ZimbraLog.lmtp.debug("Creating ParsedMessage from byte array with attachment indexing enabled.");
-                                pmAttachIndex = new ParsedMessage(data, null, true);
-                            } else {
-                                ZimbraLog.lmtp.debug("Creating ParsedMessage from file with attachment indexing enabled.");
-                                pmAttachIndex = new ParsedMessage(blob.getFile(), null, true);
-                            }
+                            pmo.setAttachmentIndexing(true);
+                            ZimbraLog.lmtp.debug("Creating ParsedMessage from " +
+                                (data == null ? "file" : "byte array") + " with attachment indexing enabled");
+                            pmAttachIndex = new ParsedMessage(pmo);
                         }
                         pm = pmAttachIndex;
                     } else {
                         if (pmNoAttachIndex == null) {
-                            if (data != null) {
-                                ZimbraLog.lmtp.debug("Creating ParsedMessage from byte array with attachment indexing disabled.");
-                                pmNoAttachIndex = new ParsedMessage(data, null, false);
-                            } else {
-                                ZimbraLog.lmtp.debug("Creating ParsedMessage from file with attachment indexing disabled.");
-                                pmNoAttachIndex = new ParsedMessage(blob.getFile(), null, false);
-                            }
+                            pmo.setAttachmentIndexing(false);
+                            ZimbraLog.lmtp.debug("Creating ParsedMessage from " +
+                                (data == null ? "file" : "byte array") + " with attachment indexing disabled");
+                            pmNoAttachIndex = new ParsedMessage(pmo);
                         }
                         pm = pmNoAttachIndex;
                     }
+
                     msgId = pm.getMessageID();
 
                     // For non-shared delivery (i.e. only one recipient),

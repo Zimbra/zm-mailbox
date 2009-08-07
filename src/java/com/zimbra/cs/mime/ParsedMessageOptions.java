@@ -16,8 +16,11 @@
 package com.zimbra.cs.mime;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.mail.internet.MimeMessage;
+
+import com.zimbra.cs.store.Blob;
 
 public class ParsedMessageOptions {
 
@@ -30,6 +33,23 @@ public class ParsedMessageOptions {
     private Boolean mIndexAttachments;
     
     public ParsedMessageOptions() {
+    }
+    
+    public ParsedMessageOptions(Blob blob, byte buffer[]) throws IOException {
+        this(blob, buffer, null, null);
+    }
+
+    public ParsedMessageOptions(Blob blob, byte buffer[], Long receivedDate,
+        Boolean indexAttachments) throws IOException {
+        if (buffer == null)
+            setContent(blob.getFile());
+        else
+            setContent(buffer);
+        setDigest(blob.getDigest()).setSize(blob.getRawSize());
+        if (receivedDate != null)
+            setReceivedDate(receivedDate);
+        if (indexAttachments != null)
+            setAttachmentIndexing(indexAttachments);
     }
     
     public ParsedMessageOptions setContent(MimeMessage mimeMessage) {
