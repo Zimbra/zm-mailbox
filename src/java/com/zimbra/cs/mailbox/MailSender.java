@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -294,14 +293,18 @@ public class MailSender {
                 authuser = acct;
             boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
 
-            if (mSaveToSent == null) {
+            if (mSaveToSent == null)
                 mSaveToSent = authuser.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true);
-            }
 
             // slot the message in the parent's conversation if subjects match
             int convId = Mailbox.ID_AUTO_INCREMENT;
             if (mOriginalMessageId != null && !isDelegatedRequest && mOriginalMessageId.belongsTo(mbox))
                 convId = mbox.getConversationIdFromReferent(mm, mOriginalMessageId.getId());
+
+            if (mm instanceof FixedMimeMessage && mSession != null) {
+                ZimbraLog.smtp.debug("setting alternate Session on the FixedMimeMessage");
+                ((FixedMimeMessage) mm).setSession(mSession);
+            }
 
             // set the From, Sender, Date, Reply-To, etc. headers
             updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, mReplyToSender, mSkipSendAsCheck);
@@ -367,10 +370,6 @@ public class MailSender {
                 rollback[1] = new RollbackData(msg);
             }
 
-            if (mm instanceof FixedMimeMessage && mSession != null) {
-                ZimbraLog.smtp.debug("Setting alternate Session on the FixedMimeMessage.");
-                ((FixedMimeMessage) mm).setSession(mSession);
-            }
             logMessage(mm, mOriginalMessageId, mUploads, mReplyType);
 
             // actually send the message via SMTP
@@ -430,12 +429,10 @@ public class MailSender {
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
                 StringBuilder msg = new StringBuilder("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
-                if (invalidAddrs != null && invalidAddrs.length > 0) {
-                    for (int i = 0; i < invalidAddrs.length; i++) {
-                        if (i > 0)
-                            msg.append(",");
-                        msg.append(invalidAddrs[i]);
-                    }
+                for (int i = 0; i < invalidAddrs.length; i++) {
+                    if (i > 0)
+                        msg.append(",");
+                    msg.append(invalidAddrs[i]);
                 }
                 msg.append(".  ").append(sfe.toString());
 
@@ -589,12 +586,13 @@ public class MailSender {
                 mm.setReplyTo(new Address[] {sender});
         }
 
-        if (isDelegatedRequest && mm instanceof FixedMimeMessage) {
+        if (mm instanceof FixedMimeMessage) {
+            FixedMimeMessage fmm = (FixedMimeMessage) mm;
+            Session session = fmm.getSession() != null ? JMSession.getSession() : fmm.getSession();
             // set MAIL FROM to authenticated user for bounce purposes
             String mailfrom = (sender != null ? sender : AccountUtil.getFriendlyEmailAddress(authuser)).getAddress();
-            Properties props = new Properties(JMSession.getSession().getProperties());
-            props.setProperty("mail.smtp.from", mailfrom);
-            ((FixedMimeMessage) mm).setSession(Session.getInstance(props));
+            session.getProperties().setProperty("mail.smtp.from", mailfrom);
+            fmm.setSession(session);
         }
 
         mm.saveChanges();
