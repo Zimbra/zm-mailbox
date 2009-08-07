@@ -1098,6 +1098,8 @@ public final class ZimbraQuery {
 
         public SizeQuery(Analyzer analyzer, int modifier, int target, String size) throws ParseException {
             super(modifier, target);
+            
+            boolean hasEQ = false;
 
             mSizeStr = size;
 
@@ -1108,6 +1110,12 @@ public final class ZimbraQuery {
             } else if (ch == '<') {
                 setQueryType(ZimbraQueryParser.SMALLER);
                 mSizeStr = mSizeStr.substring(1);
+            }
+            
+            ch = mSizeStr.charAt(0);
+            if (ch == '=') {
+                mSizeStr = mSizeStr.substring(1);
+                hasEQ = true;
             }
 
             char typeChar = '\0';
@@ -1138,7 +1146,13 @@ public final class ZimbraQuery {
 
             mSize = Integer.parseInt(mSizeStr) * multiplier;
 
-//          System.out.println("Size of \""+size+"\" parsed to "+mSize);
+            if (hasEQ) {
+                if (getQueryType() == ZimbraQueryParser.BIGGER) {
+                    mSize--; // correct since range constraint is strict >
+                } else if (getQueryType() == ZimbraQueryParser.SMALLER) {
+                    mSize++; // correct since range constraint is strict <
+                }
+            }
 
             mSizeStr = ZimbraAnalyzer.SizeTokenFilter.encodeSize(mSize);
             if (mSizeStr == null) {
@@ -1164,8 +1178,8 @@ public final class ZimbraQuery {
                     lowest = -1;
                     break;
                 case ZimbraQueryParser.SIZE:
-                    highest = mSize;
-                    lowest = mSize;
+                    highest = mSize+1;
+                    lowest = mSize-1;
                     break;
                 default:
                     assert(false);
