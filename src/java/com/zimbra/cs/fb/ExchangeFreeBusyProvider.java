@@ -16,6 +16,7 @@ package com.zimbra.cs.fb;
 
 import java.net.URLEncoder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -39,6 +40,7 @@ import org.dom4j.DocumentException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -290,7 +292,9 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			method.setRequestHeader(HEADER_TRANSLATE, "f");
 			int status = sendRequest(method, serverInfo);
 			if (status != MULTI_STATUS) {
-				ZimbraLog.fb.error("cannot modify resource at "+url);
+			    InputStream resp = method.getResponseBodyAsStream();
+			    String respStr = (resp == null ? "" : new String(ByteUtil.readInput(resp, 1024, 1024), "UTF-8"));
+				ZimbraLog.fb.error("cannot modify resource at %s : http error %d, buf (%s)", url, status, respStr);
 				return false;  // retry
 			}
 		} catch (IOException ioe) {
