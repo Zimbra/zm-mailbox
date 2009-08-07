@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090803-1059 */
+    /* build: 6.0.0 jhahm 20090807-1015 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -9840,7 +9840,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * keyboard shortcuts aliases features
+     * Deprecated since: 6.0.0_GA. deprecated. Orig desc: keyboard shortcuts
+     * aliases features
      *
      * @return zimbraFeatureShortcutAliasesEnabled, or true if unset
      */
@@ -9850,7 +9851,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * keyboard shortcuts aliases features
+     * Deprecated since: 6.0.0_GA. deprecated. Orig desc: keyboard shortcuts
+     * aliases features
      *
      * @param zimbraFeatureShortcutAliasesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9863,7 +9865,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * keyboard shortcuts aliases features
+     * Deprecated since: 6.0.0_GA. deprecated. Orig desc: keyboard shortcuts
+     * aliases features
      *
      * @param zimbraFeatureShortcutAliasesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9877,7 +9880,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * keyboard shortcuts aliases features
+     * Deprecated since: 6.0.0_GA. deprecated. Orig desc: keyboard shortcuts
+     * aliases features
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -9889,7 +9893,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * keyboard shortcuts aliases features
+     * Deprecated since: 6.0.0_GA. deprecated. Orig desc: keyboard shortcuts
+     * aliases features
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -25874,6 +25879,137 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefMailPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @return zimbraPrefMailSelectAfterDelete, or ZAttrProvisioning.PrefMailSelectAfterDelete.next if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public ZAttrProvisioning.PrefMailSelectAfterDelete getPrefMailSelectAfterDelete() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefMailSelectAfterDelete); return v == null ? ZAttrProvisioning.PrefMailSelectAfterDelete.next : ZAttrProvisioning.PrefMailSelectAfterDelete.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefMailSelectAfterDelete.next; }
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @return zimbraPrefMailSelectAfterDelete, or "next" if unset
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public String getPrefMailSelectAfterDeleteAsString() {
+        return getAttr(Provisioning.A_zimbraPrefMailSelectAfterDelete, "next");
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @param zimbraPrefMailSelectAfterDelete new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public void setPrefMailSelectAfterDelete(ZAttrProvisioning.PrefMailSelectAfterDelete zimbraPrefMailSelectAfterDelete) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSelectAfterDelete, zimbraPrefMailSelectAfterDelete.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @param zimbraPrefMailSelectAfterDelete new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public Map<String,Object> setPrefMailSelectAfterDelete(ZAttrProvisioning.PrefMailSelectAfterDelete zimbraPrefMailSelectAfterDelete, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSelectAfterDelete, zimbraPrefMailSelectAfterDelete.toString());
+        return attrs;
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @param zimbraPrefMailSelectAfterDelete new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public void setPrefMailSelectAfterDeleteAsString(String zimbraPrefMailSelectAfterDelete) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSelectAfterDelete, zimbraPrefMailSelectAfterDelete);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @param zimbraPrefMailSelectAfterDelete new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public Map<String,Object> setPrefMailSelectAfterDeleteAsString(String zimbraPrefMailSelectAfterDelete, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSelectAfterDelete, zimbraPrefMailSelectAfterDelete);
+        return attrs;
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public void unsetPrefMailSelectAfterDelete() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSelectAfterDelete, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * <p>Valid values: [next, adaptive, previous]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public Map<String,Object> unsetPrefMailSelectAfterDelete(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSelectAfterDelete, "");
         return attrs;
     }
 

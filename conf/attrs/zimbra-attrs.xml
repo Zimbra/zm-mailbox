@@ -4623,6 +4623,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>show calendar week in calendar views</desc>
 </attr>
 
+<attr id="1046" name="zimbraPrefMailSelectAfterDelete" type="enum" value="next,previous,adaptive" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_GA">
+  <defaultCOSValue>next</defaultCOSValue>
+  <desc>After deleting a message in list, which message should be selected</desc>
+</attr>
 
 
 </attrs>

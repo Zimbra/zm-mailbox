@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090803-1059 */
+    /* build: 6.0.0 jhahm 20090807-1015 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -630,6 +630,24 @@ public class ZAttrProvisioning {
         public boolean isXa() { return this == xa;}
         public boolean isAway() { return this == away;}
         public boolean isInvisible() { return this == invisible;}
+    }
+
+    public static enum PrefMailSelectAfterDelete {
+        adaptive("adaptive"),
+        previous("previous"),
+        next("next");
+        private String mValue;
+        private PrefMailSelectAfterDelete(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefMailSelectAfterDelete fromString(String s) throws ServiceException {
+            for (PrefMailSelectAfterDelete value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAdaptive() { return this == adaptive;}
+        public boolean isPrevious() { return this == previous;}
+        public boolean isNext() { return this == next;}
     }
 
     public static enum PrefMailSendReadReceipts {
@@ -2767,7 +2785,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSharingEnabled = "zimbraFeatureSharingEnabled";
 
     /**
-     * keyboard shortcuts aliases features
+     * Deprecated since: 6.0.0_GA. deprecated. Orig desc: keyboard shortcuts
+     * aliases features
      */
     @ZAttr(id=452)
     public static final String A_zimbraFeatureShortcutAliasesEnabled = "zimbraFeatureShortcutAliasesEnabled";
@@ -5608,6 +5627,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=111)
     public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
+
+    /**
+     * After deleting a message in list, which message should be selected
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1046)
+    public static final String A_zimbraPrefMailSelectAfterDelete = "zimbraPrefMailSelectAfterDelete";
 
     /**
      * whether to send read receipt
