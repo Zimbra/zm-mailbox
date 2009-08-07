@@ -588,7 +588,7 @@ public class MailSender {
 
         if (mm instanceof FixedMimeMessage) {
             FixedMimeMessage fmm = (FixedMimeMessage) mm;
-            Session session = fmm.getSession() != null ? JMSession.getSession() : fmm.getSession();
+            Session session = fmm.getSession() != null ? fmm.getSession() : JMSession.getSession();
             // set MAIL FROM to authenticated user for bounce purposes
             String mailfrom = (sender != null ? sender : AccountUtil.getFriendlyEmailAddress(authuser)).getAddress();
             session.getProperties().setProperty("mail.smtp.from", mailfrom);
