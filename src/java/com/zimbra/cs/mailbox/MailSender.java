@@ -309,12 +309,10 @@ public class MailSender {
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) { 
                 StringBuilder msg = new StringBuilder("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
-                if (invalidAddrs != null && invalidAddrs.length > 0) {
-                    for (int i = 0; i < invalidAddrs.length; i++) {
-                        if (i > 0)
-                            msg.append(",");
-                        msg.append(invalidAddrs[i]);
-                    }
+                for (int i = 0; i < invalidAddrs.length; i++) {
+                    if (i > 0)
+                        msg.append(",");
+                    msg.append(invalidAddrs[i]);
                 }
 
                 if (JMSession.getSmtpConfig().getSendPartial())
@@ -536,12 +534,15 @@ public class MailSender {
                 mm.setReplyTo(new Address[] {sender});
         }
 
-        if (isDelegatedRequest && mm instanceof FixedMimeMessage) {
+        if (mm instanceof FixedMimeMessage) {
+            FixedMimeMessage fmm = (FixedMimeMessage) mm;
+            Session session = fmm.getSession() != null ? fmm.getSession() : JMSession.getSession();
+            Properties props = new Properties(session.getProperties());
             // set MAIL FROM to authenticated user for bounce purposes
             String mailfrom = (sender != null ? sender : AccountUtil.getFriendlyEmailAddress(authuser)).getAddress();
-            Properties props = new Properties(JMSession.getSession().getProperties());
             props.setProperty("mail.smtp.from", mailfrom);
-            ((FixedMimeMessage) mm).setSession(Session.getInstance(props));
+            // can't modify the old Session because JMSession just reuses one global Session object 
+            fmm.setSession(JMSession.createSession(props));
         }
 
         mm.saveChanges();
