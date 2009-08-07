@@ -38,6 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.CopyInputStream;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -73,7 +74,6 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.cs.lmtpserver.InMemoryDataCallback;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -121,10 +121,8 @@ import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.BufferedStorageCallback;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
-import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -4132,25 +4130,31 @@ public class Mailbox {
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               CustomMetadata customData, DeliveryContext dctxt)
     throws IOException, ServiceException {
+        int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
+        CopyInputStream cs = new CopyInputStream(in, sizeHint, bufLen, bufLen);
         Blob incoming = null;
-        ParsedMessage pm = null;
         
         if (dctxt == null)
             dctxt = new DeliveryContext();
         try {
-            BufferedStorageCallback callback = new BufferedStorageCallback(sizeHint);
-            incoming = StoreManager.getInstance().storeIncoming(in, sizeHint, callback);
-            if (callback.getData() != null) {
-                pm = new ParsedMessage(callback.getData(), receivedDate, attachmentsIndexingEnabled());
-            } else {
+            byte data[];
+            ParsedMessage pm = null;
+            
+            incoming = StoreManager.getInstance().storeIncoming(cs, sizeHint, null);
+            data = cs.getBuffer();
+            if (data == null) {
                 pm = new ParsedMessage(incoming.getFile(), receivedDate, attachmentsIndexingEnabled());
+            } else {
+                pm = new ParsedMessage(data, receivedDate, attachmentsIndexingEnabled());
             }
-            pm.setRawDigest(callback.getDigest());
-            pm.setRawSize((int)callback.getSize());
+            cs.release();
+            pm.setRawDigest(incoming.getDigest());
+            pm.setRawSize((int)incoming.getRawSize());
             dctxt.setIncomingBlob(incoming);
             return addMessage(octxt, pm, folderId, noIcal, flags, tagStr, conversationId, rcptEmail,
                               customData, dctxt);
         } finally {
+            cs.release();
             StoreManager.getInstance().quietDelete(incoming);
         }
     }
