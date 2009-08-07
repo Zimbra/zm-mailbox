@@ -18,29 +18,27 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 
-public class InputCopyStream extends InputStream {
-    private CopyStream cs;
+public class CopyInputStream extends InputStream {
+    private BufferStream cs;
     private InputStream is;
-    private byte skip[] = null;
-    private static final int SKIP_SIZE = 2 * 1024;
 
-    public InputCopyStream(InputStream is) { this(is, 0); }
+    public CopyInputStream(InputStream is) { this(is, 0); }
 
-    public InputCopyStream(InputStream is, long sizeHint) {
-        this(is, sizeHint, CopyStream.BUFFER_SIZE);
+    public CopyInputStream(InputStream is, long sizeHint) {
+        this(is, sizeHint, Integer.MAX_VALUE);
     }
 
-    public InputCopyStream(InputStream is, long sizeHint, int maxBuffer) {
+    public CopyInputStream(InputStream is, long sizeHint, int maxBuffer) {
         this(is, sizeHint, maxBuffer, Long.MAX_VALUE);
     }
 
-    public InputCopyStream(InputStream is, long sizeHint, int maxBuffer, long
+    public CopyInputStream(InputStream is, long sizeHint, int maxBuffer, long
         maxSize) {
-        cs = new CopyStream(sizeHint, maxBuffer, maxSize);
+        cs = new BufferStream(sizeHint, maxBuffer, maxSize);
         this.is = is;
     }
 
-    public InputCopyStream(InputStream is, CopyStream cs) {
+    public CopyInputStream(InputStream is, BufferStream cs) {
         this.cs = cs;
         this.is = is;
     }
@@ -49,15 +47,15 @@ public class InputCopyStream extends InputStream {
 
     public void close() throws IOException { is.close(); }
 
-    public long copy() throws IOException { return cs.copy(is); }
+    public long copy() throws IOException { return copy(Long.MAX_VALUE); }
     
     public long copy(long len) throws IOException { return cs.copy(is, len); }
     
     public byte[] getBuffer() { return cs.getBuffer(); }
 
-    public CopyStream getCopyStream() { return cs; }
+    public BufferStream getCopyStream() { return cs; }
     
-    public File getFileBuffer() { return cs.getFileBuffer(); }
+    public File getFile() { return cs.getFile(); }
 
     public InputStream getInputStream() throws IOException {
         return cs.getInputStream();
@@ -65,10 +63,14 @@ public class InputCopyStream extends InputStream {
     
     public long getSize() { return cs.getSize(); }
 
+    public void mark(int limit) { is.mark(limit); }
+
+    public boolean markSupported() { return is.markSupported(); }
+
     public int read() throws IOException {
         int in = is.read();
         
-        if (in > 0)
+        if (in != -1)
             cs.write(in);
         return in;
     }
@@ -77,24 +79,11 @@ public class InputCopyStream extends InputStream {
         int in = is.read(data, off, len);
         
         if (in > 0)
-            cs.write(data, 0, in);
+            cs.write(data, off, in);
         return in;
     }
 
-    public void release() throws IOException { cs.release(); }
+    public void release() { cs.close(); }
 
-    public long skip(long len) throws IOException {
-        int in;
-        long left = len;
-        
-        if (skip == null)
-            skip = new byte[SKIP_SIZE];
-        while (left > 0) {
-            in = read(skip, 0, left > skip.length ? skip.length : (int)left);
-            if (in == -1)
-                break;
-            left -= in;
-        }
-        return len - left;
-    }
+    public void reset() throws IOException { is.reset(); }
 }

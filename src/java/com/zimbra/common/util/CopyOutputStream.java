@@ -19,40 +19,56 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class OutputCopyStream extends OutputStream {
-    private CopyStream cs;
+public class CopyOutputStream extends OutputStream {
+    private BufferStream cs;
     private OutputStream os;
 
-    public OutputCopyStream(OutputStream os) { this(os, 0); }
+    public CopyOutputStream(OutputStream os) { this(os, 0); }
 
-    public OutputCopyStream(OutputStream os, long sizeHint) {
-        this(os, sizeHint, CopyStream.BUFFER_SIZE);
+    public CopyOutputStream(OutputStream os, long sizeHint) {
+        this(os, sizeHint, Integer.MAX_VALUE);
     }
 
-    public OutputCopyStream(OutputStream os, long sizeHint, int maxBuffer) {
+    public CopyOutputStream(OutputStream os, long sizeHint, int maxBuffer) {
         this(os, sizeHint, maxBuffer, Long.MAX_VALUE);
     }
 
-    public OutputCopyStream(OutputStream os, long sizeHint, int maxBuffer, long
+    public CopyOutputStream(OutputStream os, long sizeHint, int maxBuffer, long
         maxSize) {
-        cs = new CopyStream(sizeHint, maxBuffer, maxSize);
+        cs = new BufferStream(sizeHint, maxBuffer, maxSize);
         this.os = os;
     }
 
-    public OutputCopyStream(OutputStream os, CopyStream cs) {
+    public CopyOutputStream(OutputStream os, BufferStream cs) {
         this.cs = cs;
         this.os = os;
     }
 
     public void close() throws IOException { os.close(); }
 
+    public long copy(InputStream is) throws IOException {
+        return copy(is, Long.MAX_VALUE);
+    }
+    
+    public long copy(InputStream is, long len) throws IOException {
+        byte buf[] = new byte[(int)Math.min(len, 16 * 1024)];
+        int in;
+        long out = 0;
+        
+        while ((in = is.read(buf)) > 0) {
+            write(buf, 0, in);
+            out += in;
+        }
+        return out;
+    }
+    
     public void flush() throws IOException { os.flush(); }
 
     public byte[] getBuffer() { return cs.getBuffer(); }
 
-    public CopyStream getCopyStream() { return cs; }
+    public BufferStream getCopyStream() { return cs; }
 
-    public File getFileBuffer() { return cs.getFileBuffer(); }
+    public File getFile() { return cs.getFile(); }
 
     public InputStream getInputStream() throws IOException {
         return cs.getInputStream();
@@ -60,7 +76,7 @@ public class OutputCopyStream extends OutputStream {
     
     public long getSize() { return cs.getSize(); }
 
-    public void release() throws IOException { cs.release(); }
+    public void release() { cs.close(); }
 
     public void write(int data) throws IOException {
         os.write(data);

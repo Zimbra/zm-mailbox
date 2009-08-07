@@ -14,27 +14,26 @@
  */
 package com.zimbra.common.util;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 
-public class DigestCopyStream extends CopyStream {
+public class DigestStream extends BufferStream {
     private MessageDigest messageDigest;
 
-    public DigestCopyStream() { this(0); }
+    public DigestStream() { this(0); }
 
-    public DigestCopyStream(long sizeHint) { this(sizeHint, BUFFER_SIZE); }
+    public DigestStream(long sizeHint) { this(sizeHint, Integer.MAX_VALUE); }
 
-    public DigestCopyStream(long sizeHint, int maxBuffer) {
+    public DigestStream(long sizeHint, int maxBuffer) {
         this(sizeHint, maxBuffer, Long.MAX_VALUE);
     }
 
-    public DigestCopyStream(long sizeHint, int maxBuffer, long maxSize) {
+    public DigestStream(long sizeHint, int maxBuffer, long maxSize) {
         super(sizeHint, maxBuffer, maxSize);
         try {
             messageDigest = MessageDigest.getInstance("SHA1");
         } catch (Exception e) {
             throw new RuntimeException("Unable to initialize " +
-                DigestCopyStream.class.getSimpleName(), e);
+                DigestStream.class.getSimpleName(), e);
         }
     }
     
@@ -42,12 +41,12 @@ public class DigestCopyStream extends CopyStream {
         return ByteUtil.encodeFSSafeBase64(messageDigest.digest());
     }
 
-    public void write(int data) throws IOException {
+    public void write(int data) {
         super.write(data);
         messageDigest.update((byte)data);
     }
     
-    public void write(byte data[], int off, int len) throws IOException {
+    public void write(byte data[], int off, int len) {
         super.write(data, off, len);
         messageDigest.update(data, off, len);
     }
