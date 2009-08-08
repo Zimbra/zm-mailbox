@@ -23,7 +23,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Flag;
@@ -35,20 +34,18 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class CreateMountpoint extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MOUNT, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+    @Override protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
+    @Override protected boolean checkMountpointProxy(Element request)  { return true; }
+    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
@@ -100,13 +97,8 @@ public class CreateMountpoint extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
         if (mpt != null) {
             Element eMount = ToXML.encodeMountpoint(response, ifmt, mpt);
-            eMount.addAttribute(MailConstants.A_UNREAD, remote.getAttribute(MailConstants.A_UNREAD, null));
-            eMount.addAttribute(MailConstants.A_NUM, remote.getAttribute(MailConstants.A_NUM, null));
-            eMount.addAttribute(MailConstants.A_SIZE, remote.getAttribute(MailConstants.A_SIZE, null));
-            eMount.addAttribute(MailConstants.A_URL, remote.getAttribute(MailConstants.A_URL, null));
-            eMount.addAttribute(MailConstants.A_RIGHTS, remote.getAttribute(MailConstants.A_RIGHTS, null));
-            if (remote.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
-                eMount.addAttribute(MailConstants.A_FLAGS, "u" + eMount.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+            // transfer folder counts and subfolders to the serialized mountpoint from the serialized target folder
+            SoapSession.transferMountpointContents(eMount, remote);
         }
         return response;
     }

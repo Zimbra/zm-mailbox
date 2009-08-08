@@ -929,40 +929,44 @@ public class SoapSession extends Session {
             return;
         } else if (node.mFolder instanceof Mountpoint) {
             Mountpoint mpt = (Mountpoint) node.mFolder;
-            // don't bother generating the subhierarchy more than once
-            ItemId iidTarget = mpt.getTarget();
-            if (mountpoints.containsKey(iidTarget))
-                return;
-            
-            try {
-                Provisioning prov = Provisioning.getInstance();
-                Account owner = prov.get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
-                if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
-                    return;
-
-                // handle mountpoints pointing to a different server later
-                if (!Provisioning.onLocalServer(owner)) {
-                    mountpoints.put(iidTarget, null);
-                    return;
-                }
-
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
-                FolderNode remote = mbox.getFolderTree(octxt, new ItemId(mbox, mpt.getRemoteId()), false);
-                OperationContextData.addGranteeNames(octxt, remote);
-                
-                if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
-                    ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
-                    Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
-                    mountpoints.put(iidTarget, subhierarchy);
-                    // fault in a delegate session because there's actually something to listen on...
-                    getDelegateSession(mpt.getOwnerId());
-                }
-            } catch (ServiceException e) {
-                return;
-            }
+            expandLocalMountpoint(octxt, mpt, factory, mountpoints);
         } else {
             for (FolderNode child : node.mSubfolders)
                 expandLocalMountpoints(octxt, child, factory, mountpoints);
+        }
+    }
+
+    private void expandLocalMountpoint(OperationContext octxt, Mountpoint mpt, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+        // don't bother generating the subhierarchy more than once
+        ItemId iidTarget = mpt.getTarget();
+        if (mountpoints.containsKey(iidTarget))
+            return;
+        
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Account owner = prov.get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
+            if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
+                return;
+
+            // handle mountpoints pointing to a different server later
+            if (!Provisioning.onLocalServer(owner)) {
+                mountpoints.put(iidTarget, null);
+                return;
+            }
+
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
+            FolderNode remote = mbox.getFolderTree(octxt, new ItemId(mbox, mpt.getRemoteId()), false);
+            OperationContextData.addGranteeNames(octxt, remote);
+            
+            if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
+                ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
+                Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
+                mountpoints.put(iidTarget, subhierarchy);
+                // fault in a delegate session because there's actually something to listen on...
+                getDelegateSession(mpt.getOwnerId());
+            }
+        } catch (ServiceException e) {
+            return;
         }
     }
 
@@ -1062,22 +1066,38 @@ public class SoapSession extends Session {
             for (Element child : elem.listElements())
                 transferMountpointContents(child, octxt, mountpoints);
         } else {
-            // transfer folder counts to the serialized mountpoint from the serialized target folder
-            elem.addAttribute(MailConstants.A_UNREAD, target.getAttribute(MailConstants.A_UNREAD, null));
-            elem.addAttribute(MailConstants.A_NUM, target.getAttribute(MailConstants.A_NUM, null));
-            elem.addAttribute(MailConstants.A_SIZE, target.getAttribute(MailConstants.A_SIZE, null));
-            elem.addAttribute(MailConstants.A_URL, target.getAttribute(MailConstants.A_URL, null));
-            elem.addAttribute(MailConstants.A_RIGHTS, target.getAttribute(MailConstants.A_RIGHTS, null));
-            if (target.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
-                elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+            transferMountpointContents(elem, target);
+        }
+    }
 
-            // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
-            for (Element child : target.listElements()) {
-                if (child.getName().equals(MailConstants.E_ACL))
-                    elem.addUniqueElement(child.clone());
-                else
-                    elem.addElement(child.clone());
-            }
+    public static void transferMountpointContents(Element elem, Element mptTarget) {
+        // transfer folder counts to the serialized mountpoint from the serialized target folder
+        transferLongAttribute(elem, mptTarget, MailConstants.A_UNREAD);
+        transferLongAttribute(elem, mptTarget, MailConstants.A_NUM);
+        transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
+        elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
+        elem.addAttribute(MailConstants.A_RIGHTS, mptTarget.getAttribute(MailConstants.A_RIGHTS, null));
+        if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
+            elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+
+        // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
+        for (Element child : mptTarget.listElements()) {
+            if (child.getName().equals(MailConstants.E_ACL))
+                elem.addUniqueElement(child.clone());
+            else
+                elem.addElement(child.clone());
+        }
+    }
+
+    private static void transferLongAttribute(Element to, Element from, String attrName) {
+        try {
+            long remote = from.getAttributeLong(attrName, -1L);
+            if (remote >= 0)
+                to.addAttribute(attrName, remote);
+        } catch (ServiceException e) {
+            ZimbraLog.session.warn("exception reading long attr from remote folder: " + attrName, e);
+        } catch (Element.ContainerException e) {
+            ZimbraLog.session.warn("exception adding remote folder attr to serialized mountpoint: " + attrName, e);
         }
     }
 
@@ -1250,7 +1270,14 @@ public class SoapSession extends Session {
                 for (MailItem item : pms.created.values()) {
                     ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                     try {
-                        ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
+                        Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
+                        // special-case notifications for new mountpoints in the authenticated user's mailbox
+                        if (item instanceof Mountpoint && mbox == item.getMailbox()) {
+                            Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>(2);
+                            expandLocalMountpoint(octxt, (Mountpoint) item, eCreated.getFactory(), mountpoints);
+                            expandRemoteMountpoints(zsc, eCreated.getFactory(), mountpoints);
+                            transferMountpointContents(elem, octxt, mountpoints);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.session.warn("error encoding item " + item.getId(), e);
                         return;
