@@ -14,13 +14,12 @@
  */
 package com.zimbra.common.util;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 public class CopyOutputStream extends OutputStream {
-    private BufferStream cs;
+    private BufferStream bs;
     private OutputStream os;
 
     public CopyOutputStream(OutputStream os) { this(os, 0); }
@@ -35,22 +34,32 @@ public class CopyOutputStream extends OutputStream {
 
     public CopyOutputStream(OutputStream os, long sizeHint, int maxBuffer, long
         maxSize) {
-        cs = new BufferStream(sizeHint, maxBuffer, maxSize);
+        bs = new BufferStream(sizeHint, maxBuffer, maxSize);
         this.os = os;
     }
 
-    public CopyOutputStream(OutputStream os, BufferStream cs) {
-        this.cs = cs;
+    public CopyOutputStream(OutputStream os, BufferStream bs) {
+        this.bs = bs;
         this.os = os;
     }
 
     public void close() throws IOException { os.close(); }
 
-    public long copyFrom(InputStream is) throws IOException {
-        return copyFrom(is, Long.MAX_VALUE);
+    public void flush() throws IOException { os.flush(); }
+
+    public BufferStream getBufferStream() { return bs; }
+
+    public InputStream getInputStream() throws IOException {
+        return bs.getInputStream();
     }
     
-    public long copyFrom(InputStream is, long len) throws IOException {
+    public long getSize() { return bs.getSize(); }
+
+    public long readFrom(InputStream is) throws IOException {
+        return readFrom(is, Long.MAX_VALUE);
+    }
+    
+    public long readFrom(InputStream is, long len) throws IOException {
         byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
         int in;
         long out = 0;
@@ -64,29 +73,17 @@ public class CopyOutputStream extends OutputStream {
         return out;
     }
     
-    public void flush() throws IOException { os.flush(); }
-
-    public byte[] getBuffer() { return cs.getBuffer(); }
-
-    public BufferStream getCopyStream() { return cs; }
-
-    public File getFile() throws IOException { return cs.getFile(); }
-
-    public InputStream getInputStream() throws IOException {
-        return cs.getInputStream();
-    }
+    public void release() { bs.close(); }
     
-    public long getSize() { return cs.getSize(); }
-
-    public void release() { cs.close(); }
+    public byte[] toByteArray() { return bs.toByteArray(); }
 
     public void write(int data) throws IOException {
         os.write(data);
-        cs.write(data);
+        bs.write(data);
     }
     
     public void write(byte data[], int off, int len) throws IOException {
         os.write(data, off, len);
-        cs.write(data, off, len);
+        bs.write(data, off, len);
     }
 }

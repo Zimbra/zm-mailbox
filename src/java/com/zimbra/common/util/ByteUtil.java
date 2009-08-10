@@ -154,29 +154,18 @@ public class ByteUtil {
         if (length == 0)
             return new byte[0];
 
-        ByteArrayOutputStream baos = null;
         try {
-            if (length > 0 && (sizeHint > length || sizeHint < 0))
-                sizeHint = length;
-            baos = new ByteArrayOutputStream(Math.max(sizeHint, 0));
-
-            byte[] buffer = new byte[8192];
-            int num, limit = length > 0 ? Math.min(buffer.length, length - baos.size()) : buffer.length;
-            while ((num = is.read(buffer, 0, limit)) != -1) {
-                baos.write(buffer, 0, num);
-
-                if (sizeLimit > 0 && baos.size() > sizeLimit)
-                    throw new IOException("stream too large");
-                if (length > 0 && baos.size() >= length)
-                    break;
-
-                limit = length > 0 ? Math.min(buffer.length, length - baos.size()) : buffer.length;
-            }
-            return baos.toByteArray();
+            BufferStream bs = sizeLimit == -1 ?  new BufferStream(sizeHint,
+                Integer.MAX_VALUE, Integer.MAX_VALUE) : new BufferStream(sizeHint,
+                (int)sizeLimit, sizeLimit);
+            
+            bs.readFrom(is, length == -1 ? Long.MAX_VALUE : length);
+            if (sizeLimit > 0 && bs.size() > sizeLimit)
+                throw new IOException("stream too large");
+            return bs.toByteArray();
         } finally {
-            if (close) {
+            if (close)
                 closeStream(is);
-            }
         }
     }
 

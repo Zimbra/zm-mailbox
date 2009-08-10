@@ -84,25 +84,24 @@ public class BufferStream extends OutputStream {
         maxSize = maxMem = 0;
     }
 
-    public long copyFrom(InputStream is) throws IOException {
-        return copyFrom(is, Long.MAX_VALUE);
+    public long readFrom(InputStream is) throws IOException {
+        return readFrom(is, Long.MAX_VALUE);
     }
     
-    public long copyFrom(InputStream is, long len) throws IOException {
+    public long readFrom(InputStream is, long len) throws IOException {
         int in;
         int left = buffer(len == Long.MAX_VALUE ? 0 : (int)Math.min(
             Integer.MAX_VALUE, len));
         long out;
         
         if (left > 0) {
-            in = is.read(buf, (int)size, left);
-            if (in <= 0)
+            if ((in = is.read(buf, (int)size, left)) <= 0)
                 return 0;
-            else if (in != left)
+            size += in;
+            if (in < left)
                 return in;
             len -= in;
             out = in;
-            size += in;
         } else {
             out = 0;
         }
@@ -117,10 +116,11 @@ public class BufferStream extends OutputStream {
         while (len > 0 && (left = buffer((int)Math.min(len, 8 * 1024))) != 0) {
             if ((in = is.read(buf, (int)size, (int)Math.min(len, left))) <= 0)
                 return out;
-            len -= in;
+            out += in;
             size += in;
-            if (in != left)
+            if (in < left)
                 return out;
+            len -= in;
         }
 
         byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
@@ -128,49 +128,10 @@ public class BufferStream extends OutputStream {
         while (len > 0 && (in = is.read(tmp, 0, (int)Math.min(len,
             tmp.length))) > 0) {
             write(tmp, 0, in);
-            len -= in;
             out += in;
-            if (in != tmp.length)
-                break;
-        }
-        return out;
-    }
-    
-    public long copyTo(OutputStream os) throws IOException {
-        return copyTo(os, Long.MAX_VALUE);
-    }
-    
-    public long copyTo(OutputStream os, long len) throws IOException {
-        int in;
-        long out = 0;
-
-        sync();
-        if (len == Long.MAX_VALUE)
-            len = size;
-        else if (len > size)
-            throw new IOException("BufferStream underflow");
-        if (buf != null) {
-            in = (int)Math.min(Math.min(size, len), buf.length);
-            os.write(buf, 0, in);
+            if (in < tmp.length)
+                return out;
             len -= in;
-            out = in;
-        }
-        if (len == 0)
-            return out;
-
-        FileInputStream fis = null;
-        byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
-        
-        try {
-            fis = new FileInputStream(file);
-            while (len > 0 && (in = fis.read(tmp, 0, (int)Math.min(len,
-                tmp.length))) > 0) {
-                os.write(tmp, 0, in);
-                len -= in;
-                out += in;
-            }
-        } finally {
-            ByteUtil.closeStream(fis);
         }
         return out;
     }
@@ -237,6 +198,10 @@ public class BufferStream extends OutputStream {
     
     public boolean isSequenced() { return sequenced; }
 
+    public boolean isSpooled() { return file != null; }
+
+    public boolean isPartial() { return size > maxMem && file == null; }
+
     public void release() {
         if (file != null) {
             try {
@@ -251,8 +216,19 @@ public class BufferStream extends OutputStream {
         }
     }
     
+    public void reset() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
+        release();
+        size = 0;
+    }
+    
     public void setSequenced(boolean sequenced) { this.sequenced = sequenced; }
 
+    public long size() { return getSize(); }
+    
     protected boolean spool(int len) {
         if (size + len > maxSize) {
             release();
@@ -293,7 +269,9 @@ public class BufferStream extends OutputStream {
         } catch (IOException e) {
         }
         if (size <= maxMem) {
-            return getBuffer();
+            byte tmp[] = getBuffer();
+            
+            return tmp == null ? new byte[0] : tmp;
         } else if (file == null || size > Integer.MAX_VALUE) {
             throw new RuntimeException("BufferStream overflow");
         } else {
@@ -394,5 +372,44 @@ public class BufferStream extends OutputStream {
             }
             size += len;
         }
+    }
+
+    public long writeTo(OutputStream os) throws IOException {
+        return writeTo(os, Long.MAX_VALUE);
+    }
+    
+    public long writeTo(OutputStream os, long len) throws IOException {
+        int in;
+        long out = 0;
+
+        sync();
+        if (len == Long.MAX_VALUE)
+            len = size;
+        else if (len > size)
+            throw new IOException("BufferStream underflow");
+        if (buf != null) {
+            in = (int)Math.min(Math.min(size, len), buf.length);
+            os.write(buf, 0, in);
+            len -= in;
+            out = in;
+        }
+        if (len == 0)
+            return out;
+
+        FileInputStream fis = null;
+        byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
+        
+        try {
+            fis = new FileInputStream(file);
+            while (len > 0 && (in = fis.read(tmp, 0, (int)Math.min(len,
+                tmp.length))) > 0) {
+                os.write(tmp, 0, in);
+                len -= in;
+                out += in;
+            }
+        } finally {
+            ByteUtil.closeStream(fis);
+        }
+        return out;
     }
 }

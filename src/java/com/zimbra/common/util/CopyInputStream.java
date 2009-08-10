@@ -14,12 +14,11 @@
  */
 package com.zimbra.common.util;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 
 public class CopyInputStream extends InputStream {
-    private BufferStream cs;
+    private BufferStream bs;
     private InputStream is;
 
     public CopyInputStream(InputStream is) { this(is, 0); }
@@ -34,12 +33,12 @@ public class CopyInputStream extends InputStream {
 
     public CopyInputStream(InputStream is, long sizeHint, int maxBuffer, long
         maxSize) {
-        cs = new BufferStream(sizeHint, maxBuffer, maxSize);
+        bs = new BufferStream(sizeHint, maxBuffer, maxSize);
         this.is = is;
     }
 
-    public CopyInputStream(InputStream is, BufferStream cs) {
-        this.cs = cs;
+    public CopyInputStream(InputStream is, BufferStream bs) {
+        this.bs = bs;
         this.is = is;
     }
 
@@ -47,23 +46,13 @@ public class CopyInputStream extends InputStream {
 
     public void close() throws IOException { is.close(); }
 
-    public long copyFrom() throws IOException { return cs.copyFrom(is); }
+    public BufferStream getBufferStream() { return bs; }
     
-    public long copyFrom(long len) throws IOException {
-        return cs.copyFrom(is, len);
-    }
-    
-    public byte[] getBuffer() { return cs.getBuffer(); }
-
-    public BufferStream getCopyStream() { return cs; }
-    
-    public File getFile() throws IOException { return cs.getFile(); }
-
     public InputStream getInputStream() throws IOException {
-        return cs.getInputStream();
+        return bs.getInputStream();
     }
     
-    public long getSize() { return cs.getSize(); }
+    public long getSize() { return bs.getSize(); }
 
     public void mark(int limit) { is.mark(limit); }
 
@@ -73,7 +62,7 @@ public class CopyInputStream extends InputStream {
         int in = is.read();
         
         if (in != -1)
-            cs.write(in);
+            bs.write(in);
         return in;
     }
 
@@ -81,11 +70,19 @@ public class CopyInputStream extends InputStream {
         int in = is.read(data, off, len);
         
         if (in > 0)
-            cs.write(data, off, in);
+            bs.write(data, off, in);
         return in;
     }
 
-    public void release() { cs.close(); }
+    public long readFrom() throws IOException { return bs.readFrom(is); }
+    
+    public long readFrom(long len) throws IOException {
+        return bs.readFrom(is, len);
+    }
+    
+    public void release() { bs.close(); }
 
     public void reset() throws IOException { is.reset(); }
+
+    public byte[] toByteArray() { return bs.toByteArray(); }
 }

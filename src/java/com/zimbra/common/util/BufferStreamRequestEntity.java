@@ -65,7 +65,7 @@ public class BufferStreamRequestEntity extends BufferStream implements
 
     public void writeRequest(final OutputStream out) throws IOException {
         if (is != null) {
-            copyFrom(is);
+            readFrom(is);
             is = null;
         }
         
