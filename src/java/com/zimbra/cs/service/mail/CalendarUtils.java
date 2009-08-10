@@ -53,6 +53,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 
@@ -410,28 +411,43 @@ public class CalendarUtils {
     public static List<ZAttendee> getRemovedAttendees(Invite oldInv, Invite newInv, boolean applyDL)
     throws ServiceException {
         List<ZAttendee> list = new ArrayList<ZAttendee>();
+        Provisioning prov = Provisioning.getInstance();
         // compare the new attendee list with the existing one...if attendees
         // have been removed, then
         // we need to send them individual cancellation messages
         List<ZAttendee> newAts = newInv.getAttendees();
         List<ZAttendee> oldAts = oldInv.getAttendees();
-        for (ZAttendee cur : oldAts) {
+        for (ZAttendee old : oldAts) {
             boolean matches = false;
-            for (ZAttendee newAt : newAts) {
-                if (cur.addressesMatch(newAt)) {
-                    matches = true;
-                    break;
+            String oldAddr = old.getAddress();
+            if (oldAddr != null) {
+                Account oldAcct = prov.get(AccountBy.name, oldAddr);
+                if (oldAcct != null) {
+                    // local user - consider aliases
+                    for (ZAttendee newAt : newAts) {
+                        if (AccountUtil.addressMatchesAccount(oldAcct, newAt.getAddress())) {
+                            matches = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // external email - simple string comparison of email addresses
+                    for (ZAttendee newAt : newAts) {
+                        if (oldAddr.equalsIgnoreCase(newAt.getAddress())) {
+                            matches = true;
+                            break;
+                        }
+                    }
                 }
             }
             if (!matches)
-                list.add(cur);
+                list.add(old);
         }
         if (list.isEmpty())
             return list;
 
         // Find out which of the new attendees are distribution lists.
         if (applyDL) {
-            Provisioning prov = Provisioning.getInstance();
             List<String /* zimbraId */> newAtsDL = new ArrayList<String>();
             for (ZAttendee at : newAts) {
                 String addr = at.getAddress();
