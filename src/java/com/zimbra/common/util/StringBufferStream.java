@@ -15,6 +15,7 @@
 package com.zimbra.common.util;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 public class StringBufferStream extends BufferStream implements Appendable {
     String cset;
@@ -48,7 +49,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
     public StringBufferStream(String cset, long sizeHint, int maxBuffer,
         long maxSize) {
         super(sizeHint, maxBuffer, maxSize);
-        this.cset = cset == null ? "UTF-8" : cset;
+        this.cset = cset == null ? Charset.defaultCharset().toString() : cset;
         sbuf = new StringBuffer((int)Math.min(sizeHint == 0 ?
             DEFAULT_SIZE_HINT : sizeHint, 4 * 1024));
     }
@@ -81,17 +82,14 @@ public class StringBufferStream extends BufferStream implements Appendable {
     }
 
     private void flush(int len) throws IOException {
-        if (sbuf.capacity() < len) {
+        if (sbuf.capacity() < len && sbuf.length() > 0) {
             write(sbuf.toString().getBytes(cset));
             sbuf.setLength(0);
         }
     }
     
     public void sync() throws IOException {
-        if (sbuf.length() > 0) {
-            write(sbuf.toString().getBytes(cset));
-            sbuf.setLength(0);
-        }
+        flush(Integer.MAX_VALUE);
         super.sync();
     }
     
