@@ -19,7 +19,7 @@ import java.nio.charset.Charset;
 
 public class StringBufferStream extends BufferStream implements Appendable {
     String cset;
-    StringBuffer sbuf;
+    StringBuilder sbuf;
     static final int DEFAULT_SIZE_HINT = 512;
 
     public StringBufferStream() { this(0); }
@@ -50,7 +50,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
         long maxSize) {
         super(sizeHint, maxBuffer, maxSize);
         this.cset = cset == null ? Charset.defaultCharset().toString() : cset;
-        sbuf = new StringBuffer((int)Math.min(sizeHint == 0 ?
+        sbuf = new StringBuilder((int)Math.min(sizeHint == 0 ?
             DEFAULT_SIZE_HINT : sizeHint, 4 * 1024));
     }
 
