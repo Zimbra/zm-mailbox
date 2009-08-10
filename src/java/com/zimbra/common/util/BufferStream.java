@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import com.zimbra.common.localconfig.LC;
@@ -230,8 +231,6 @@ public class BufferStream extends OutputStream {
         try {
             sync();
         } catch (IOException e) {
-            maxSize = size;
-            release();
         }
         return size;
     }
@@ -289,6 +288,10 @@ public class BufferStream extends OutputStream {
     }
     
     public byte[] toByteArray() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
         if (size <= maxMem) {
             return getBuffer();
         } else if (file == null || size > Integer.MAX_VALUE) {
@@ -299,7 +302,6 @@ public class BufferStream extends OutputStream {
             
             System.arraycopy(buf, 0, newBuf, 0, buf.length);
             try {
-                sync();
                 fis = new FileInputStream(file);
                 fis.read(newBuf, buf.length, (int)(size - buf.length));
             } catch (IOException e) {
@@ -308,6 +310,20 @@ public class BufferStream extends OutputStream {
                 ByteUtil.closeStream(fis);
             }
             return newBuf;
+        }
+    }
+    
+    public ByteBuffer toByteBuffer() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
+        if (size == 0) {
+            return ByteBuffer.allocate(0);
+        } else if (size <= maxMem) {
+            return ByteBuffer.wrap(buf, 0, (int)size);
+        } else {
+            return ByteBuffer.wrap(toByteArray());
         }
     }
     
@@ -327,13 +343,13 @@ public class BufferStream extends OutputStream {
         else if (file == null)
             return new String(buf, 0, (int)size, cset);
         else
-            throw new IOException("data too large");
+            throw new IOException("BufferStream data too large");
     }
     
     public void truncate(long len) throws IOException {
         sync();
         if (len > size) {
-            throw new IOException("cannot expand buffer");
+            throw new IOException("BufferStream expansion");
         } else if (file != null) {
             if (len > maxMem)
                 fos.getChannel().truncate(len - maxMem);

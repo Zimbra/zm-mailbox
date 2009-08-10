@@ -51,7 +51,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
         super(sizeHint, maxBuffer, maxSize);
         this.cset = cset == null ? Charset.defaultCharset().toString() : cset;
         sbuf = new StringBuilder((int)Math.min(sizeHint == 0 ?
-            DEFAULT_SIZE_HINT : sizeHint, 4 * 1024));
+            DEFAULT_SIZE_HINT : sizeHint, 2 * 1024));
     }
 
     public Appendable append(char c) throws IOException {
@@ -62,7 +62,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
 
     public Appendable append(CharSequence cs) throws IOException {
         flush(cs.length());
-        if (cs.length() > sbuf.capacity())
+        if (cs.length() > sbuf.capacity() - sbuf.length())
             write(cs.toString().getBytes(cset));
         else
             sbuf.append(cs);
@@ -74,7 +74,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
         int len = end - start;
         
         flush(len);
-        if (len > sbuf.capacity())
+        if (len > sbuf.capacity() - sbuf.length())
             write(cs.subSequence(start, end).toString().getBytes(cset));
         else
             sbuf.append(cs, start, end);
@@ -82,7 +82,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
     }
 
     private void flush(int len) throws IOException {
-        if (sbuf.capacity() < len && sbuf.length() > 0) {
+        if (sbuf.capacity() - sbuf.length() < len && sbuf.length() > 0) {
             write(sbuf.toString().getBytes(cset));
             sbuf.setLength(0);
         }
@@ -100,4 +100,14 @@ public class StringBufferStream extends BufferStream implements Appendable {
             return new String(getBuffer());
         }
     }
+    
+    public static void main(String[] args) throws IOException {
+        StringBufferStream sbs = new StringBufferStream(12);
+        
+        sbs.append("start ");
+        sbs.append(new StringBuilder("-middle-"), 1, 7);
+        sbs.append(" end");
+        System.out.println(sbs.toString());
+    }
+
 }
