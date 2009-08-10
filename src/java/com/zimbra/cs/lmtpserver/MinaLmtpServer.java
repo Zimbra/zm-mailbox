@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutorService;
 
 public class MinaLmtpServer extends MinaServer {
     public static boolean isEnabled() {
-        return MinaServer.isEnabled() || LC.nio_lmtp_enabled.booleanValue();
+        return Boolean.getBoolean("ZimbraNioLmtpEnabled") || LC.nio_lmtp_enabled.booleanValue();
     }
 
     public MinaLmtpServer(LmtpConfig config, ExecutorService pool)

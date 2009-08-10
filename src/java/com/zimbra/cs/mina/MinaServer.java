@@ -70,14 +70,6 @@ public abstract class MinaServer implements Server {
     private static final ExecutorService IO_THREAD_POOL =
         Executors.newCachedThreadPool(new MinaThreadFactory("MinaIoProcessorThread"));
     
-    // TODO Disable for production
-    public static final String NIO_ENABLED_PROP = "ZimbraNioEnabled";
-
-    public static boolean isEnabled() {
-        return LC.nio_enabled.booleanValue() ||
-              Boolean.getBoolean(NIO_ENABLED_PROP);
-    }
-
     private static synchronized SSLContext getSSLContext() {
         if (sslContext == null) {
             try {

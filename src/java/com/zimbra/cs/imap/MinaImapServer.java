@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
  */
 public class MinaImapServer extends MinaServer {
     public static boolean isEnabled() {
-        return MinaServer.isEnabled() || LC.nio_imap_enabled.booleanValue();
+        return Boolean.getBoolean("ZimbraNioImapEnabled") || LC.nio_imap_enabled.booleanValue();
     }
 
     MinaImapServer(ImapConfig config, ExecutorService pool)

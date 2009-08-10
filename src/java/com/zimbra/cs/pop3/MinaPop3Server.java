@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 
 public class MinaPop3Server extends MinaServer {
     public static boolean isEnabled() {
-        return MinaServer.isEnabled() || LC.nio_pop3_enabled.booleanValue();
+        return Boolean.getBoolean("ZimbraNioPop3Enabled") || LC.nio_pop3_enabled.booleanValue();
     }
 
     MinaPop3Server(ServerConfig config, ExecutorService pool)
