@@ -206,8 +206,17 @@ public class SoapServlet extends ZimbraServlet {
 
     @Override public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
-        long startTime = ZimbraPerf.STOPWATCH_SOAP.start();  
-
+        long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
+        
+        try {
+            doWork(req, resp);
+        } finally {
+            ZimbraLog.clearContext();
+            ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
+        }
+    }
+    
+    private void doWork(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         int len = req.getContentLength();
         byte[] buffer;
         boolean isResumed = true;
@@ -250,7 +259,6 @@ public class SoapServlet extends ZimbraServlet {
                 Element fault = SoapProtocol.Soap12.soapFault(e);
                 Element envelope = SoapProtocol.Soap12.soapEnvelope(fault);
                 sendResponse(req, resp, envelope);
-                ZimbraLog.clearContext();
                 return;
             }
             
@@ -300,9 +308,6 @@ public class SoapServlet extends ZimbraServlet {
             ZimbraLog.soap.debug("SOAP response: \n" + envelope.prettyPrint());
         }
         sendResponse(req, resp, envelope);
-        
-        ZimbraLog.clearContext();
-        ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
     }
     
     private int soapResponseBufferSize() {
@@ -355,10 +360,11 @@ public class SoapServlet extends ZimbraServlet {
                  */
                 ZimbraServletOutputStream out = new ZimbraServletOutputStream(resp.getOutputStream());
                 envelope.output(out);
+                out.flush();
             }
         } catch (IOException e) {
             ZimbraLog.soap.warn("Caught IOException while writing response", e);
-            // do not rethrow, to let all the post-tasks go through, should we? 
+            throw e; // rethrow
         }
     }
 
