@@ -259,7 +259,7 @@ public class CalendarCollection extends Collection {
 	/* creates an appointment sent in PUT request in this calendar. */
     @Override
 	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-    	if (!ctxt.getUpload().getContentType().equals(Mime.CT_TEXT_CALENDAR) ||
+    	if (!ctxt.getUpload().getContentType().startsWith(Mime.CT_TEXT_CALENDAR) ||
     		 ctxt.getUpload().getSize() <= 0)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		
