@@ -69,16 +69,16 @@ public class BufferStreamRequestEntity extends BufferStream implements
             is = null;
         }
         
-        byte buf[] = getRawBuffer();
+        Pair<byte[], Integer> rawBuf = getRawBuffer();
         File file = getFile();
         
-        if (buf != null)
-            out.write(buf, 0, (int)Math.min(buf.length, getSize()));
+        if (rawBuf != null)
+            out.write(rawBuf.getFirst(), 0, rawBuf.getSecond());
         if (file != null) {
+            byte buf[] = new byte[32 * 1024];
             FileInputStream fis = new FileInputStream(file);
             int in;
 
-            buf = new byte[32 * 1024];
             try {
                 while ((in = fis.read(buf)) != -1)
                     out.write(buf, 0, in);

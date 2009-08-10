@@ -30,7 +30,7 @@ import com.zimbra.common.localconfig.LC;
 
 public class BufferStream extends OutputStream {
     private byte buf[] = null;
-    private FileOutputStream fs;
+    private FileOutputStream fos = null;
     private File file = null;
     private int maxMem;
     private long maxSize;
@@ -101,6 +101,7 @@ public class BufferStream extends OutputStream {
                 return in;
             len -= in;
             out = in;
+            size += in;
         } else {
             out = 0;
         }
@@ -112,7 +113,7 @@ public class BufferStream extends OutputStream {
             write(in);
             len--;
         }
-        while (len > 0 && (left = buffer((int)Math.min(len, 8 * 1024))) == 0) {
+        while (len > 0 && (left = buffer((int)Math.min(len, 8 * 1024))) != 0) {
             if ((in = is.read(buf, (int)size, (int)Math.min(len, left))) <= 0)
                 return out;
             len -= in;
@@ -156,7 +157,7 @@ public class BufferStream extends OutputStream {
         if (size > maxSize)
             throw new EOFException("data exceeds copy capacity");
         if (file != null)
-            fs.flush();
+            fos.flush();
         if (buf == null)
             return file == null ? new ByteArrayInputStream(new byte[0]) :
                 new FileInputStream(file);
@@ -172,7 +173,9 @@ public class BufferStream extends OutputStream {
     
     public long getMaxSize() { return maxSize; }
     
-    public byte[] getRawBuffer() { return buf; }
+    public Pair<byte[], Integer> getRawBuffer() {
+        return size == 0 ? null : new Pair<byte[], Integer>(buf, (int)size);
+    }
 
     public long getSize() { return size; }
     
@@ -181,10 +184,10 @@ public class BufferStream extends OutputStream {
     public void release() {
         if (file != null) {
             try {
-                fs.close();
+                fos.close();
             } catch (Exception e) {
             }
-            fs = null;
+            fos = null;
             if (!file.delete())
                 file.deleteOnExit();
             file = null;
@@ -201,9 +204,9 @@ public class BufferStream extends OutputStream {
             try {
                 file = File.createTempFile("cstrm", null, new File(
                     LC.zimbra_tmp_directory.value()));
-                fs = new FileOutputStream(file);
+                fos = new FileOutputStream(file);
                 if (!sequenced) {
-                    fs.write(buf);
+                    fos.write(buf);
                     buf = null;
                     maxMem = 0;
                 }
@@ -214,6 +217,29 @@ public class BufferStream extends OutputStream {
             }
         }
         return true;
+    }
+    
+    public byte[] toByteArray() {
+        if (size <= maxMem) {
+            return getBuffer();
+        } else if (file == null || size > Integer.MAX_VALUE) {
+            throw new RuntimeException("BufferStream overflow");
+        } else {
+            byte newBuf[] = new byte[(int)size];
+            FileInputStream fis = null;
+            
+            System.arraycopy(buf, 0, newBuf, 0, buf.length);
+            try {
+                fos.flush();
+                fis = new FileInputStream(file);
+                fis.read(newBuf, buf.length, (int)(size - buf.length));
+            } catch (IOException e) {
+                throw new RuntimeException("BufferStream lost");
+            } finally {
+                ByteUtil.closeStream(fis);
+            }
+            return newBuf;
+        }
     }
     
     public String toString() {
@@ -239,8 +265,8 @@ public class BufferStream extends OutputStream {
             throw new IOException("cannot expand buffer");
         } else if (file != null) {
             if (len > maxMem) {
-                fs.flush();
-                fs.getChannel().truncate(len - maxMem);
+                fos.flush();
+                fos.getChannel().truncate(len - maxMem);
             } else {
                 release();
             }
@@ -253,7 +279,7 @@ public class BufferStream extends OutputStream {
             buf[(int)size] = (byte)data;
         } else if (spool(1)) {
             try {
-                fs.write(data);
+                fos.write(data);
             } catch (Exception e) {
                 maxSize = size;
                 release();
@@ -275,7 +301,7 @@ public class BufferStream extends OutputStream {
         if (len > 0) {
             if (spool(len)) {
                 try {
-                    fs.write(data, off, len);
+                    fos.write(data, off, len);
                 } catch (Exception e) {
                     maxSize = size;
                     release();
