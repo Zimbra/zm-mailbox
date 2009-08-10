@@ -346,25 +346,20 @@ public class SoapServlet extends ZimbraServlet {
         resp.setContentType(soapProto.getContentType());  
         resp.setStatus(statusCode);
         
-        try {
-            if (chunkingDisabled) {
-                /*
-                 * serialize the envelope to a byte array and send the response with Content-Length header.
-                 */
-                byte[] soapBytes = envelope.toUTF8();
-                resp.setContentLength(soapBytes.length);
-                resp.getOutputStream().write(soapBytes);
-            } else {
-                /*
-                 * Let jetty chunk the response if applicable.
-                 */
-                ZimbraServletOutputStream out = new ZimbraServletOutputStream(resp.getOutputStream());
-                envelope.output(out);
-                out.flush();
-            }
-        } catch (IOException e) {
-            ZimbraLog.soap.warn("Caught IOException while writing response", e);
-            throw e; // rethrow
+        if (chunkingDisabled) {
+            /*
+             * serialize the envelope to a byte array and send the response with Content-Length header.
+             */
+            byte[] soapBytes = envelope.toUTF8();
+            resp.setContentLength(soapBytes.length);
+            resp.getOutputStream().write(soapBytes);
+        } else {
+            /*
+             * Let jetty chunk the response if applicable.
+             */
+            ZimbraServletOutputStream out = new ZimbraServletOutputStream(resp.getOutputStream());
+            envelope.output(out);
+            out.flush();
         }
     }
 
