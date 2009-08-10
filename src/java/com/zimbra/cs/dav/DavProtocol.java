@@ -25,7 +25,7 @@ public class DavProtocol {
 		update, bind, access_control, 
 		calendar_access, calendar_schedule,
 		version_control,
-        addressbook_access,
+        addressbook, extended_mkcol,
 		// Apple extensions
 		calendar_proxy,
 		calendarserver_principal_property_search
@@ -65,11 +65,15 @@ public class DavProtocol {
 		sComplianceStrMap.put(Compliance.version_control, "version-control");
 		sComplianceStrMap.put(Compliance.calendar_proxy, "calendar-proxy");
 		sComplianceStrMap.put(Compliance.calendarserver_principal_property_search, "calendarserver-principal-property-search");
-        sComplianceStrMap.put(Compliance.addressbook_access, "addressbook-access");
+        sComplianceStrMap.put(Compliance.addressbook, "addressbook");
+        sComplianceStrMap.put(Compliance.extended_mkcol, "extended-mkcol");
 	}
 	
 	public static Compliance[] COMPLIANCES = {
-		Compliance.one, Compliance.two, Compliance.three, Compliance.calendar_access, Compliance.access_control, Compliance.addressbook_access
+		Compliance.one, Compliance.two, Compliance.three, 
+		Compliance.calendar_access, 
+		Compliance.calendar_proxy, Compliance.calendarserver_principal_property_search,
+		Compliance.access_control, Compliance.addressbook
 	};
 	
 	public static String getDefaultComplianceString() {

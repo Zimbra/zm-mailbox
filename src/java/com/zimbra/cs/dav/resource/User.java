@@ -296,7 +296,7 @@ public class User extends Principal {
         	for (Pair<Mountpoint,ZFolder> folder : mps) {
         		try {
         			short rights = ACL.stringToRights(folder.getSecond().getEffectivePerms());
-        			if ((rights & ACL.RIGHT_READ) > 0) {
+        			if ((rights & ACL.RIGHT_WRITE) == 0 && (rights & ACL.RIGHT_READ) > 0) {
         				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
         				if (owner != null)
         					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner));

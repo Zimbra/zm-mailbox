@@ -97,25 +97,26 @@ public class ExpandProperty extends Report {
 						prop = prop.element(p.getQName());
 						if (prop == null)
 							continue;
-						Element href = prop.element(DavElements.E_HREF);
-						if (href == null)
-							continue;
-						String url = href.getText();
-						if (url == null)
-							continue;
-						try {
-							url = URLDecoder.decode(url, "UTF-8");
-						} catch (UnsupportedEncodingException e) {
-					        ZimbraLog.dav.warn("can't decode url %s", url, e);
-						}
-						try {
-							DavResource target = UrlNamespace.getResourceAtUrl(ctxt, url);
-							href.detach();
-							Element targetElem = DocumentHelper.createElement(DavElements.E_RESPONSE);
-							expandProperties(ctxt, target, property, targetElem);
-							propstat.add(rp.getName(), targetElem);
-						} catch (DavException e) {
-					        ZimbraLog.dav.warn("can't find resource for "+url, e);
+						Iterator hrefs = prop.elementIterator(DavElements.E_HREF);
+						while (hrefs.hasNext()) {
+	                        Element href = (Element)hrefs.next();
+	                        String url = href.getText();
+	                        if (url == null)
+	                            continue;
+	                        try {
+	                            url = URLDecoder.decode(url, "UTF-8");
+	                        } catch (UnsupportedEncodingException e) {
+	                            ZimbraLog.dav.warn("can't decode url %s", url, e);
+	                        }
+	                        try {
+	                            DavResource target = UrlNamespace.getResourceAtUrl(ctxt, url);
+	                            href.detach();
+	                            Element targetElem = DocumentHelper.createElement(DavElements.E_RESPONSE);
+	                            expandProperties(ctxt, target, property, targetElem);
+	                            propstat.add(rp.getName(), targetElem);
+	                        } catch (DavException e) {
+	                            ZimbraLog.dav.warn("can't find resource for "+url, e);
+	                        }
 						}
 					}
 				} else {

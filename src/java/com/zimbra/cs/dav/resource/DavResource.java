@@ -89,6 +89,8 @@ public abstract class DavResource {
 		mDavCompliance.add(Compliance.version_control);
 		mDavCompliance.add(Compliance.calendar_proxy);
 		mDavCompliance.add(Compliance.calendarserver_principal_property_search);
+        mDavCompliance.add(Compliance.addressbook);
+        mDavCompliance.add(Compliance.extended_mkcol);
 		
 		ResourceProperty rtype = new ResourceProperty(DavElements.E_RESOURCETYPE);
 		rtype.setProtected(true);
@@ -112,7 +114,9 @@ public abstract class DavResource {
 		QName[] supportedReports = getSupportedReports();
 		if (supportedReports.length > 0) {
 		    ResourceProperty sr = new ResourceProperty(DavElements.E_SUPPORTED_REPORT_SET);
+		    addProperty(sr);
 		    sr.setProtected(true);
+            sr.setVisible(true);
             Element e = null;
             for (QName n : supportedReports) {
                 e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_REPORT);
