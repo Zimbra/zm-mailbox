@@ -391,6 +391,7 @@ public class ACLAccessManager extends AccessManager {
                           attrs, asAdmin, viaGrant);
     }
     
+    
     // all user and admin preset rights go through here 
     private boolean checkPresetRight(Account grantee, Entry target, 
                                      Right rightNeeded, boolean canDelegateNeeded, 
@@ -409,21 +410,32 @@ public class ACLAccessManager extends AccessManager {
             //
             // user right treatment
             //
-            if (rightNeeded.isUserRight() && target instanceof Account) {
-                // always allow self for user right, self can also delegate(i.e. grant) the right
-                if (((Account)target).getId().equals(grantee.getId()))
-                    return true;
-                
-                // check the loginAs right and family access - if the right being asked for is not loginAs
-                if (rightNeeded != Rights.User.R_loginAs)
-                    if (canAccessAccount(grantee, (Account)target, asAdmin))
+            if (rightNeeded.isUserRight()) {
+                if (target instanceof Account) {
+                    // always allow self for user right, self can also delegate(i.e. grant) the right
+                    if (((Account)target).getId().equals(grantee.getId()))
                         return true;
+                    
+                    // check the loginAs right and family access - if the right being asked for is not loginAs
+                    if (rightNeeded != Rights.User.R_loginAs)
+                        if (canAccessAccount(grantee, (Account)target, asAdmin))
+                            return true;
+                }
+            } else {
+                // not a user right, must have a target object
+                // if it is a user right, let it fall through to return the default permission.
+                if (target == null)
+                    return false;
             }
+            
             
             //
             // check ACL
             //
-            Boolean result = RightChecker.checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
+            Boolean result = null;
+            if (target != null)
+                result = RightChecker.checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
+            
             if (result != null)
                 return result.booleanValue();
             else {

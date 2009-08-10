@@ -26,11 +26,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -59,12 +59,10 @@ public class CheckPermission extends MailDocumentHandler {
         
         if (TargetType.account == tt) {
             entry = prov.get(AccountBy.fromString(targetBy), targetValue, zsc.getAuthToken());
-            if (entry == null)
-                return returnResponse(response, false);
         } else if (TargetType.calresource == tt) {
             entry = prov.get(CalendarResourceBy.fromString(targetBy), targetValue);
-            if (entry == null)
-                return returnResponse(response, false);
+        } else if (TargetType.dl == tt) {
+            entry = prov.get(DistributionListBy.fromString(targetBy), targetValue);
         } else
             throw ServiceException.INVALID_REQUEST("invalid target type: " + targetType, null);
         
