@@ -61,8 +61,6 @@ public class PrivilegedHandler {
         int port;
         String address;
         String[] excludeCiphers;
-        boolean nio_enabled = LC.nio_enabled.booleanValue(); // TODO move this to ldap
-        
         try {
         	
         	if (LC.zimbra_ssl_enabled.booleanValue()) { //default is true
@@ -74,7 +72,7 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraPop3ServerEnabled, false)) {
                 port = getIntAttr(attributes, A_zimbraPop3BindPort, D_POP3_BIND_PORT);
                 address = getAttr(attributes, A_zimbraPop3BindAddress, null);
-                if (nio_enabled || LC.nio_pop3_enabled.booleanValue()) {
+                if (LC.nio_pop3_enabled.booleanValue()) {
                     NetUtil.bindNioServerSocket(address, port);
                 } else {
                     NetUtil.bindTcpServerSocket(address, port);
@@ -84,7 +82,7 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraPop3SSLServerEnabled, false)) {
                 port = getIntAttr(attributes, A_zimbraPop3SSLBindPort, D_POP3_SSL_BIND_PORT);
                 address = getAttr(attributes, A_zimbraPop3SSLBindAddress, null);
-                if (nio_enabled || LC.nio_pop3_enabled.booleanValue()) {
+                if (LC.nio_pop3_enabled.booleanValue()) {
                     NetUtil.bindNioServerSocket(address, port);
                 } else {
                     excludeCiphers = getExcludeCiphers(attributes);
@@ -95,7 +93,7 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraImapServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraImapBindPort, D_IMAP_BIND_PORT);
             	address = getAttr(attributes, A_zimbraImapBindAddress, null);
-                if (nio_enabled || LC.nio_imap_enabled.booleanValue()) {
+                if (LC.nio_imap_enabled.booleanValue()) {
                     NetUtil.bindNioServerSocket(address, port);
                 } else {
                     NetUtil.bindTcpServerSocket(address, port);
@@ -105,7 +103,7 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraImapSSLServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraImapSSLBindPort, D_IMAP_SSL_BIND_PORT);
             	address = getAttr(attributes, A_zimbraImapSSLBindAddress, null);
-            	if (nio_enabled || LC.nio_imap_enabled.booleanValue()) {
+            	if (LC.nio_imap_enabled.booleanValue()) {
                     NetUtil.bindNioServerSocket(address, port);
                 } else {
                     excludeCiphers = getExcludeCiphers(attributes);
@@ -116,7 +114,7 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraLmtpServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraLmtpBindPort, D_LMTP_BIND_PORT);
             	address = getAttr(attributes, A_zimbraLmtpBindAddress, null);
-            	if (nio_enabled || LC.nio_lmtp_enabled.booleanValue()) {
+            	if (LC.nio_lmtp_enabled.booleanValue()) {
             		NetUtil.bindNioServerSocket(address, port);
             	} else {
             		NetUtil.bindTcpServerSocket(address, port);

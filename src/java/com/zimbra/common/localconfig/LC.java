@@ -333,10 +333,7 @@ public class LC {
     public static final KnownKey calendar_cache_range_months;
     public static final KnownKey calendar_cache_max_stale_items;
 
-    public static final KnownKey nio_enabled;
-    public static final KnownKey nio_debug_enabled;
     public static final KnownKey nio_imap_enabled;
-    public static final KnownKey nio_imap_debug_logging;
     public static final KnownKey nio_pop3_enabled;
     public static final KnownKey nio_lmtp_enabled;
 
@@ -1172,20 +1169,11 @@ public class LC {
         nio_imap_enabled = new KnownKey("nio_imap_enabled");
         nio_imap_enabled.setDefault("false");
 
-        nio_imap_debug_logging = new KnownKey("nio_imap_log_buffers");
-        nio_imap_debug_logging.setDefault("false");
-
         nio_pop3_enabled = new KnownKey("nio_pop3_enabled");
         nio_pop3_enabled.setDefault("false");
 
         nio_lmtp_enabled = new KnownKey("nio_lmtp_enabled");
         nio_lmtp_enabled.setDefault("false");
-
-        nio_enabled = new KnownKey("nio_enabled");
-        nio_enabled.setDefault("false");
-
-        nio_debug_enabled = new KnownKey("nio_debug_enabled");
-        nio_debug_enabled.setDefault("false");
 
         krb5_keytab = new KnownKey("krb5_keytab");
         krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
