@@ -72,9 +72,8 @@ public class ZimbraServletOutputStream implements Appendable {
         
         if (lenToAppend >= BUFFER_SIZE) {
             // data to append itself exceeds our threshold, don't let the buffer grow(realloc)
-            flush();
-            mBuffer.append(csq, start, end);
-            flush();
+            flush(); // flush existing data in the buffer
+            write(csq.toString()); // then flush this append data out.
         } else {
             if (mBuffer.length() + lenToAppend > BUFFER_SIZE)
                 flush();
@@ -84,12 +83,31 @@ public class ZimbraServletOutputStream implements Appendable {
         return this;
     }
     
+    private void write(String str) throws IOException {
+        mOut.write(str.getBytes("utf-8"));
+    }
+    
     public void flush() throws IOException {
         if (mBuffer.length() > 0) {
-            mOut.write(mBuffer.toString().getBytes("utf-8"));
+            write(mBuffer.toString());
             mBuffer.setLength(0);
         }
     }
-
+    
+    /*
+    public static void main(String[] args) throws IOException {
+        ZimbraServletOutputStream out = new ZimbraServletOutputStream(null);
+        
+        out.append("");
+        out.append("1");
+        out.append('2');
+        out.append("123456789012345678901");
+        out.append("12345");
+        out.append("67890");
+        out.append("12345678901234567890");
+        out.append('3');
+        out.flush();
+    }
+    */
     
 }
