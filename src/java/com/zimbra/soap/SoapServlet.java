@@ -18,7 +18,6 @@ package com.zimbra.soap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +43,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraServletOutputStream;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -341,17 +341,24 @@ public class SoapServlet extends ZimbraServlet {
         resp.setContentType(soapProto.getContentType());  
         resp.setStatus(statusCode);
         
-        if (chunkingDisabled) {
-            /*
-             * serialize the envelope to a byte array and send the response with Content-Length header.
-             */
-            byte[] soapBytes = envelope.toUTF8();
-            // resp.setBufferSize(soapBytes.length + 2048);
-            resp.setContentLength(soapBytes.length);
-            resp.getOutputStream().write(soapBytes);
-        } else {
-            Writer writer = resp.getWriter();
-            envelope.toUTF8(writer);
+        try {
+            if (chunkingDisabled) {
+                /*
+                 * serialize the envelope to a byte array and send the response with Content-Length header.
+                 */
+                byte[] soapBytes = envelope.toUTF8();
+                resp.setContentLength(soapBytes.length);
+                resp.getOutputStream().write(soapBytes);
+            } else {
+                /*
+                 * Let jetty chunk the response if applicable.
+                 */
+                ZimbraServletOutputStream out = new ZimbraServletOutputStream(resp.getOutputStream());
+                envelope.output(out);
+            }
+        } catch (IOException e) {
+            ZimbraLog.soap.warn("Caught IOException while writing response", e);
+            // do not rethrow, to let all the post-tasks go through, should we? 
         }
     }
 
