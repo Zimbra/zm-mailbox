@@ -15,9 +15,8 @@
 
 package com.zimbra.soap;
 
-import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +37,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
@@ -151,7 +151,7 @@ public class SoapServlet extends ZimbraServlet {
     }
 
     private void loadHandler(String cname) throws ServletException {
-        Class dispatcherClass = null;
+        Class<?> dispatcherClass = null;
         try {
             dispatcherClass = Class.forName(cname);
         } catch (ClassNotFoundException cnfe) {
@@ -244,9 +244,14 @@ public class SoapServlet extends ZimbraServlet {
             if (len > maxSize) {
                 success = false;
             } else {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                success = readRequest(req.getInputStream(), baos, maxSize, len);
-                buffer = baos.toByteArray();
+                BufferStream bs = new BufferStream(len, maxSize, maxSize);
+                int in = (int)bs.readFrom(req.getInputStream(), len >= 0 ? len :
+                    Integer.MAX_VALUE);
+                
+                if (len > 0 && in < len)
+                    throw new EOFException("SOAP content truncated");
+                success = in <= maxSize;
+                buffer = bs.toByteArray();
             }
             
             // Handle requests that exceed the size limit
@@ -361,31 +366,6 @@ public class SoapServlet extends ZimbraServlet {
             envelope.output(out);
             out.flush();
         }
-    }
-
-    /**
-     * Reads from the <tt>InputStream</tt> and writes to the <tt>ByteArrayOutputStream</tt> until
-     * either EOF or the maximum number of bytes have been read.
-     * @param sizeHint the buffer size used for each read from the <tt>InputStream</tt>
-     * 
-     * @return <tt>true</tt> if successful, or <tt>false</tt> if the number of bytes read
-     * exceeded <tt>maxBytes</tt> 
-     */
-    private boolean readRequest(InputStream input, ByteArrayOutputStream baos, int maxBytes, int sizeHint)
-    throws IOException {
-        if (sizeHint <= 0) {
-            sizeHint = 2048;
-        }
-        byte[] buffer = new byte[sizeHint];
-
-        int numRead = 0;
-        while ((numRead = input.read(buffer)) > 0) {
-            baos.write(buffer, 0, numRead);
-            if (baos.size() > maxBytes) {
-                return false;
-            }
-        }
-        return true;
     }
 }
 

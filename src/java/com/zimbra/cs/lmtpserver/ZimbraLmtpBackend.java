@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.CopyInputStream;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -250,10 +251,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
         Blob blob = StoreManager.getInstance().storeIncoming(cis, sizeHint, null);
-        
+        BufferStream bs = cis.getBufferStream();
+
         try {
-            deliverMessageToLocalMailboxes(blob, cis.getBuffer(), env);
+            deliverMessageToLocalMailboxes(blob, bs.isPartial() ? null :
+                bs.getBuffer(), env);
         } finally {
+            cis.release();
             StoreManager.getInstance().delete(blob);
         }
     }
@@ -323,7 +327,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         if (pmAttachIndex == null) {
                             pmo.setAttachmentIndexing(true);
                             ZimbraLog.lmtp.debug("Creating ParsedMessage from " +
-                                (data == null ? "file" : "byte array") + " with attachment indexing enabled");
+                                (data == null ? "file" : "memory") + " with attachment indexing enabled");
                             pmAttachIndex = new ParsedMessage(pmo);
                         }
                         pm = pmAttachIndex;
@@ -331,7 +335,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         if (pmNoAttachIndex == null) {
                             pmo.setAttachmentIndexing(false);
                             ZimbraLog.lmtp.debug("Creating ParsedMessage from " +
-                                (data == null ? "file" : "byte array") + " with attachment indexing disabled");
+                                (data == null ? "file" : "memory") + " with attachment indexing disabled");
                             pmNoAttachIndex = new ParsedMessage(pmo);
                         }
                         pm = pmNoAttachIndex;

@@ -36,6 +36,7 @@ import org.apache.commons.collections.map.LRUMap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CopyInputStream;
@@ -4136,11 +4137,12 @@ public class Mailbox {
         Blob blob = null;
         
         try {
+            BufferStream bs = cs.getBufferStream();
             ParsedMessage pm = null;
             
             blob = StoreManager.getInstance().storeIncoming(cs, sizeHint, null);
-            pm = new ParsedMessage(new ParsedMessageOptions(blob, cs.getBuffer(),
-                receivedDate, attachmentsIndexingEnabled()));
+            pm = new ParsedMessage(new ParsedMessageOptions(blob, bs.isPartial() ?
+                null : bs.getBuffer(), receivedDate, attachmentsIndexingEnabled()));
             cs.release();
             if (dctxt == null)
                 dctxt = new DeliveryContext();
