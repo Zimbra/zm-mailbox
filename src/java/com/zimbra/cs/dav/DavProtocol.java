@@ -89,6 +89,7 @@ public class DavProtocol {
 	}
 	
 	public static final String XML_CONTENT_TYPE = "text/xml";
+    public static final String XML_CONTENT_TYPE2 = "application/xml";
 	public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
     public static final String VCARD_CONTENT_TYPE = "text/vcard";
 	public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";

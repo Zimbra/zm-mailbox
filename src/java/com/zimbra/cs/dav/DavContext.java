@@ -339,7 +339,8 @@ public class DavContext {
 	/* Returns true if the DAV request contains a message. */
 	public boolean hasRequestMessage() {
 		try {
-			return getUpload().getSize() > 0 && getUpload().getContentType().startsWith(DavProtocol.XML_CONTENT_TYPE);
+		    String ct = getUpload().getContentType();
+			return getUpload().getSize() > 0 && ct != null && (ct.startsWith(DavProtocol.XML_CONTENT_TYPE) || ct.startsWith(DavProtocol.XML_CONTENT_TYPE2));
 		} catch (Exception e) {
 		}
 		return false;
@@ -350,9 +351,9 @@ public class DavContext {
 			String name = null;
 			String ctype = getRequest().getContentType();
 			if (ctype == null)
-				name = getItem();
+                name = getItem();
 			try {
-				mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId());
+				mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, (ctype == null ? DavProtocol.XML_CONTENT_TYPE : ctype), mAuthAccount.getId());
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());
 			} catch (ServiceException se) {
 				throw new DavException("can't save upload", se);
@@ -437,6 +438,7 @@ public class DavContext {
 	private static final String EVOLUTION = "Evolution";
 	private static final String ICAL = "iCal/";
 	private static final String IPHONE = "iPhone/";
+    private static final String ADDRESSBOOK = "Address";
 	
 	private boolean userAgentHeaderContains(String str) {
 		String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
@@ -445,8 +447,8 @@ public class DavContext {
 		return userAgent.indexOf(str) >= 0;
 	}
 	
-	public boolean isEvolutionClient() {
-		return userAgentHeaderContains(EVOLUTION);
+	public boolean isAddressbookClient() {
+		return userAgentHeaderContains(ADDRESSBOOK);
 	}
 
 	public boolean isIcalClient() {
