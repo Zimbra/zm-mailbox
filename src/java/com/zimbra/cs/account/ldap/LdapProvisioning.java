@@ -6023,8 +6023,19 @@ public class LdapProvisioning extends Provisioning {
             Account acct = getFromCache(AccountBy.id, id);
             if (acct != null) 
                 result.put(id, acct.getName());
-            else 
+            else {
                 unresolvedIds.add(id);
+                
+                // also put unresolved ids into result, with empty String as the initial value.
+                // - if an id is found in LDAP, the result entry will be replaced with the name.
+                // - if an id is not found in LDAP (the grantee might have been deletaed), 
+                //   the value for the entry in result will remain an empty Stream, so in 
+                //   com.zimbra.cs.service.mail.ToXML.encodeACL it won't try to search LDAP
+                //   again.  it would especially a perf hit if the deleted grantee had been 
+                //   granted rights on lots of folders (bug 39804). 
+                // 
+                result.put(id, "");
+            }
         }
                 
         // we are done if all ids can be resolved in our cache
