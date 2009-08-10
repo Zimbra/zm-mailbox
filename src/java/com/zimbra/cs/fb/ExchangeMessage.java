@@ -264,7 +264,9 @@ public class ExchangeMessage {
     }
     private void encodeFb(long s, long e, LinkedList<Byte> buf) {
     	int start = millisToMinutes(s);
-    	int end = millisToMinutes(e);
+    	int end = start + (int)((e - s) / 60000);
+    	ZimbraLog.fb.debug("Start: %s %d", new Date(s).toGMTString(), start);
+        ZimbraLog.fb.debug("End:   %s %d", new Date(e).toGMTString(), end);
     	// swap bytes and convert to little endian.  then lay out bytes
     	// two bytes each for start time, then end time
     	buf.addLast((byte)(start & 0xFF));
