@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
 
+import com.zimbra.common.localconfig.LC;
+
 
 /**
  * A wrapper of ServletOutputStream that supports the Appendable interface.
@@ -23,13 +25,14 @@ import javax.servlet.ServletOutputStream;
  *    methods of the Writer, then data is buffered in the Writer object and a 
  *    Writer.flush() is needed to flush any buffered data to the jetty's Stream after
  *    we have appended all our data.   The problem of invoking Writer.flush() is 
- *    that it will trigger OutputStream.flush() on the underling OutputStream,
- *    and this interferes with jetty's logic of determining whether to use http 
- *    chunked transfer encoding in the response.  This is because when a flush() 
- *    is invoked on jetty's OutputStream, jetty has no way of knowing if this is the 
- *    end of the response.  As a result, it has to assume there is more data, and flushes 
- *    the current data in the response buffer to the wire as a chunk.  This causes all 
- *    responses, no matter how small it is, is always returned as chunked encoding
+ *    that it will trigger OutputStream.flush() on the underling OutputStream, and 
+ *    if Content-Length header is not set, the flush will interfere with jetty's 
+ *    logic of determining whether to use http chunked transfer encoding in the response.  
+ *    This is because when a flush() is invoked on jetty's OutputStream, jetty needs to first 
+ *    complete and write out all the headers if it has not.  At this point,  jetty has no way 
+ *    of knowing if this is the end of the response.  As a result, it has to assume there 
+ *    is more data, and flushes the current data in the response buffer to the wire as a chunk.  
+ *    This causes all responses, no matter how small it is, is always returned as chunked encoding
  *    (Transfer-Encoding: chunked, instead of setting a Content-Length), even it has only one 
  *    small chunk.  This will add extra overhead to http clients.  We want jetty to only chunk 
  *    large responses.
@@ -42,25 +45,51 @@ import javax.servlet.ServletOutputStream;
 
 public class ZimbraServletOutputStream implements Appendable {
 
+    private static final int BUFFER_SIZE = LC.zimbra_servlet_output_stream_buffer_size.intValueWithinRange(512, 20480);
     ServletOutputStream mOut;
+    
+    // buffer to avoid frequent toString().getBytes()
+    StringBuilder mBuffer = new StringBuilder(BUFFER_SIZE);
     
     public ZimbraServletOutputStream(ServletOutputStream out) {
         mOut = out;
     }
-
+    
     public Appendable append(CharSequence csq) throws IOException {
-        mOut.write(csq.toString().getBytes("utf-8"));
+        append(csq, 0, csq.length());
         return this;
     }
 
     public Appendable append(char c) throws IOException {
-        mOut.write(Character.toString(c).getBytes("utf-8"));
+        if (mBuffer.length() + 1 > BUFFER_SIZE)
+            flush();
+        mBuffer.append(c);
         return this;
     }
 
     public Appendable append(CharSequence csq, int start, int end) throws IOException {
-        mOut.write(csq.subSequence(start, end).toString().getBytes("utf-8"));
+        int lenToAppend = end - start;
+        
+        if (lenToAppend >= BUFFER_SIZE) {
+            // data to append itself exceeds our threshold, don't let the buffer grow(realloc)
+            flush();
+            mBuffer.append(csq, start, end);
+            flush();
+        } else {
+            if (mBuffer.length() + lenToAppend > BUFFER_SIZE)
+                flush();
+            mBuffer.append(csq, start, end);
+        }
+        
         return this;
     }
+    
+    public void flush() throws IOException {
+        if (mBuffer.length() > 0) {
+            mOut.write(mBuffer.toString().getBytes("utf-8"));
+            mBuffer.setLength(0);
+        }
+    }
 
+    
 }

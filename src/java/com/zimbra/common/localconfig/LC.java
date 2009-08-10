@@ -163,6 +163,7 @@ public class LC {
     
     public static final KnownKey soap_response_buffer_size;
     public static final KnownKey soap_response_chunked_transfer_encoding_disabled;
+    public static final KnownKey zimbra_servlet_output_stream_buffer_size;
 
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_port;
@@ -718,6 +719,9 @@ public class LC {
         
         soap_response_chunked_transfer_encoding_disabled = new KnownKey("soap_response_chunked_transfer_encoding_disabled");
         soap_response_chunked_transfer_encoding_disabled.setDefault("false");
+        
+        zimbra_servlet_output_stream_buffer_size = new KnownKey("zimbra_servlet_output_stream_buffer_size");
+        zimbra_servlet_output_stream_buffer_size.setDefault("5120");
         
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
