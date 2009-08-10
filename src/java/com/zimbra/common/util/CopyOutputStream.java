@@ -46,17 +46,19 @@ public class CopyOutputStream extends OutputStream {
 
     public void close() throws IOException { os.close(); }
 
-    public long copy(InputStream is) throws IOException {
-        return copy(is, Long.MAX_VALUE);
+    public long copyFrom(InputStream is) throws IOException {
+        return copyFrom(is, Long.MAX_VALUE);
     }
     
-    public long copy(InputStream is, long len) throws IOException {
-        byte buf[] = new byte[(int)Math.min(len, 16 * 1024)];
+    public long copyFrom(InputStream is, long len) throws IOException {
+        byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
         int in;
         long out = 0;
         
-        while ((in = is.read(buf)) > 0) {
-            write(buf, 0, in);
+        while (len > 0 && (in = is.read(tmp, 0, (int)Math.min(len,
+            tmp.length))) > 0) {
+            write(tmp, 0, in);
+            len -= in;
             out += in;
         }
         return out;
@@ -68,7 +70,7 @@ public class CopyOutputStream extends OutputStream {
 
     public BufferStream getCopyStream() { return cs; }
 
-    public File getFile() { return cs.getFile(); }
+    public File getFile() throws IOException { return cs.getFile(); }
 
     public InputStream getInputStream() throws IOException {
         return cs.getInputStream();

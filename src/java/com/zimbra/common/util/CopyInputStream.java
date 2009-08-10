@@ -47,15 +47,17 @@ public class CopyInputStream extends InputStream {
 
     public void close() throws IOException { is.close(); }
 
-    public long copy() throws IOException { return copy(Long.MAX_VALUE); }
+    public long copyFrom() throws IOException { return cs.copyFrom(is); }
     
-    public long copy(long len) throws IOException { return cs.copy(is, len); }
+    public long copyFrom(long len) throws IOException {
+        return cs.copyFrom(is, len);
+    }
     
     public byte[] getBuffer() { return cs.getBuffer(); }
 
     public BufferStream getCopyStream() { return cs; }
     
-    public File getFile() { return cs.getFile(); }
+    public File getFile() throws IOException { return cs.getFile(); }
 
     public InputStream getInputStream() throws IOException {
         return cs.getInputStream();

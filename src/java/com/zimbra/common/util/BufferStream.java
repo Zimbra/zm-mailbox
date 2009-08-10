@@ -83,11 +83,11 @@ public class BufferStream extends OutputStream {
         maxSize = maxMem = 0;
     }
 
-    public long copy(InputStream is) throws IOException {
-        return copy(is, Long.MAX_VALUE);
+    public long copyFrom(InputStream is) throws IOException {
+        return copyFrom(is, Long.MAX_VALUE);
     }
     
-    public long copy(InputStream is, long len) throws IOException {
+    public long copyFrom(InputStream is, long len) throws IOException {
         int in;
         int left = buffer(len == Long.MAX_VALUE ? 0 : (int)Math.min(
             Integer.MAX_VALUE, len));
@@ -122,7 +122,7 @@ public class BufferStream extends OutputStream {
                 return out;
         }
 
-        byte tmp[] = new byte[(int)Math.min(len, 16 * 1024)];
+        byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
         
         while (len > 0 && (in = is.read(tmp, 0, (int)Math.min(len,
             tmp.length))) > 0) {
@@ -135,9 +135,52 @@ public class BufferStream extends OutputStream {
         return out;
     }
     
+    public long copyTo(OutputStream os) throws IOException {
+        return copyTo(os, Long.MAX_VALUE);
+    }
+    
+    public long copyTo(OutputStream os, long len) throws IOException {
+        int in;
+        long out = 0;
+
+        sync();
+        if (len == Long.MAX_VALUE)
+            len = size;
+        else if (len > size)
+            throw new IOException("BufferStream underflow");
+        if (buf != null) {
+            in = (int)Math.min(Math.min(size, len), buf.length);
+            os.write(buf, 0, in);
+            len -= in;
+            out = in;
+        }
+        if (len == 0)
+            return out;
+
+        FileInputStream fis = null;
+        byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
+        
+        try {
+            fis = new FileInputStream(file);
+            while (len > 0 && (in = fis.read(tmp, 0, (int)Math.min(len,
+                tmp.length))) > 0) {
+                os.write(tmp, 0, in);
+                len -= in;
+                out += in;
+            }
+        } finally {
+            ByteUtil.closeStream(fis);
+        }
+        return out;
+    }
+    
     protected void finalize() { release(); }
     
     public byte[] getBuffer() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
         if (buf != null && buf.length > size) {
             byte newBuf[] = new byte[(int)size];
             
@@ -147,17 +190,19 @@ public class BufferStream extends OutputStream {
         return buf;
     }
 
-    public File getFile() { return file; }
+    public File getFile() throws IOException { 
+        sync();
+        return file;
+    }
     
-    public static BufferStream getFixedBufferStream(int len) {
+    public static BufferStream newFixedBufferStream(int len) {
         return new BufferStream(len, len, len);
     }
 
     public InputStream getInputStream() throws IOException {
+        sync();
         if (size > maxSize)
             throw new EOFException("data exceeds copy capacity");
-        if (file != null)
-            fos.flush();
         if (buf == null)
             return file == null ? new ByteArrayInputStream(new byte[0]) :
                 new FileInputStream(file);
@@ -174,10 +219,22 @@ public class BufferStream extends OutputStream {
     public long getMaxSize() { return maxSize; }
     
     public Pair<byte[], Integer> getRawBuffer() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
         return size == 0 ? null : new Pair<byte[], Integer>(buf, (int)size);
     }
 
-    public long getSize() { return size; }
+    public long getSize() {
+        try {
+            sync();
+        } catch (IOException e) {
+            maxSize = size;
+            release();
+        }
+        return size;
+    }
     
     public boolean isSequenced() { return sequenced; }
 
@@ -191,6 +248,7 @@ public class BufferStream extends OutputStream {
             if (!file.delete())
                 file.deleteOnExit();
             file = null;
+            maxSize = maxMem;
         }
     }
     
@@ -219,6 +277,17 @@ public class BufferStream extends OutputStream {
         return true;
     }
     
+    public void sync() throws IOException {
+        if (file != null) {
+            try {
+                fos.flush();
+            } catch (IOException e) {
+                release();
+                throw e;
+            }
+        }
+    }
+    
     public byte[] toByteArray() {
         if (size <= maxMem) {
             return getBuffer();
@@ -230,7 +299,7 @@ public class BufferStream extends OutputStream {
             
             System.arraycopy(buf, 0, newBuf, 0, buf.length);
             try {
-                fos.flush();
+                sync();
                 fis = new FileInputStream(file);
                 fis.read(newBuf, buf.length, (int)(size - buf.length));
             } catch (IOException e) {
@@ -250,26 +319,26 @@ public class BufferStream extends OutputStream {
         }
     }
     
-    public String toString(String enc) throws IOException,
+    public String toString(String cset) throws IOException,
         UnsupportedEncodingException {
+        sync();
         if (buf == null)
             return new String();
         else if (file == null)
-            return new String(buf, 0, (int)size, enc);
+            return new String(buf, 0, (int)size, cset);
         else
             throw new IOException("data too large");
     }
     
     public void truncate(long len) throws IOException {
+        sync();
         if (len > size) {
             throw new IOException("cannot expand buffer");
         } else if (file != null) {
-            if (len > maxMem) {
-                fos.flush();
+            if (len > maxMem)
                 fos.getChannel().truncate(len - maxMem);
-            } else {
+            else
                 release();
-            }
         }
         size = len;
     }
@@ -302,7 +371,7 @@ public class BufferStream extends OutputStream {
             if (spool(len)) {
                 try {
                     fos.write(data, off, len);
-                } catch (Exception e) {
+                } catch (IOException e) {
                     maxSize = size;
                     release();
                 }
