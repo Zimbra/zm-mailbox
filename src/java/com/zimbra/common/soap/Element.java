@@ -21,7 +21,6 @@ package com.zimbra.common.soap;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.Writer;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,12 +49,6 @@ public abstract class Element implements Cloneable {
     protected Element mParent;
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
-    
-    /** Indicates that the serialized data of this Element may be large.  This
-     *  can be set by SOAP handlers on the response body Element if it's got a 
-     *  large result.  Callsites of the toUTF8 methods can check this flag and 
-     *  use the toUTF8(Writer) method instead of using toUTF8() to serialize. */
-    private boolean mIsLarge;
 
     /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
      *  them for every XML parse. */
@@ -285,17 +278,17 @@ public abstract class Element implements Cloneable {
         }
     }
     
-    public void toUTF8(Writer writer) throws IOException {
-        toString(writer);
+    public void output(Appendable out) throws IOException {
+        toString(out);
     }
     
     public abstract String prettyPrint();
 
     /**
-     * serialize this <tt>Element</tt> to a Writer
-     * @param writer
+     * serialize this <tt>Element</tt> to an Appendable
+     * @param out
      */
-    public abstract void toString(Writer writer) throws IOException;
+    public abstract void toString(Appendable out) throws IOException;
     
     private static final String FORTY_SPACES = "                                        ";
     protected void indent(Appendable sb, int indent, boolean newline) throws IOException {
@@ -988,8 +981,8 @@ public abstract class Element implements Cloneable {
             return sb.toString();
         }
         
-        @Override public void toString(Writer writer) throws IOException {
-            toString(writer, -1);
+        @Override public void toString(Appendable out) throws IOException {
+            toString(out, -1);
         }
         
         @Override public String prettyPrint() {
@@ -1314,8 +1307,8 @@ public abstract class Element implements Cloneable {
             return sb.toString();
         }
         
-        @Override public void toString(Writer writer) throws IOException {
-            toString(writer, -1);
+        @Override public void toString(Appendable out) throws IOException {
+            toString(out, -1);
         }
         
         @Override public String prettyPrint() {
