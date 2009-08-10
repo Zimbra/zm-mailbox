@@ -55,15 +55,16 @@ public class CheckPermission extends MailDocumentHandler {
         // Note, to defend against harvest attack, if the target is not found, return "not allowed"
         // instead of NO_SUCH_XXX.
         //
+        Element response = zsc.createElement(MailConstants.CHECK_PERMISSION_RESPONSE);
         
         if (TargetType.account == tt) {
             entry = prov.get(AccountBy.fromString(targetBy), targetValue, zsc.getAuthToken());
             if (entry == null)
-                return returnResponse(zsc, false);
+                return returnResponse(response, false);
         } else if (TargetType.calresource == tt) {
             entry = prov.get(CalendarResourceBy.fromString(targetBy), targetValue);
             if (entry == null)
-                return returnResponse(zsc, false);
+                return returnResponse(response, false);
         } else
             throw ServiceException.INVALID_REQUEST("invalid target type: " + targetType, null);
         
@@ -73,16 +74,18 @@ public class CheckPermission extends MailDocumentHandler {
             rights.add(r); 
         }
         
+        boolean finalResult = true;
+        AccessManager am = AccessManager.getInstance();
         for (UserRight right : rights) {
-            if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), entry, right, false))
-                return returnResponse(zsc, false);
+            boolean allow = am.canDo(zsc.getAuthToken(), entry, right, false);
+            response.addElement(MailConstants.E_RIGHT).addAttribute(MailConstants.A_ALLOW, allow).setText(right.getName());
+            finalResult = finalResult & allow;
         }
             
-        return returnResponse(zsc, true);
+        return returnResponse(response, finalResult);
     }
     
-    private Element returnResponse(ZimbraSoapContext zsc, boolean allow) {
-        Element response = zsc.createElement(MailConstants.CHECK_PERMISSION_RESPONSE);
+    private Element returnResponse(Element response, boolean allow) {
         response.addAttribute(MailConstants.A_ALLOW, allow);
         return response;
     }

@@ -2971,12 +2971,17 @@ view user2's free/busy.
 </CheckPermissionRequest>
 
 
-<CheckRightResponse allow="{1|0}"/>
+<CheckPermissionResponse allow="{1|0}">
+  <right allow="{1|0}">invite</right>
+  <right allow="{1|0}">viewFreeBusy</right>
+</CheckPermissionResponse>
 
 allow = 1 | 0
         1: the authed user has the right on the target
         0: the authed user does not have the right on the target
-
+        In CheckPermissionResponse, it is the AND result of each individual result
+        In each <right> element, it is the result for that right.
+        
     
 ---------------------------
     
