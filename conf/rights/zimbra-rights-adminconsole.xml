@@ -3,8 +3,9 @@
 
 <rights>
 
-<include file="zimbra-rights.xml"/>
 
+<include file="zimbra-rights.xml"/>
+<include file="zimbra-rights-roles.xml"/>
 <!--
   =======================================================
     Admin Console Accounts List View
@@ -2317,6 +2318,55 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleServerStatusRights">
+  <desc>Admin Console Server Status Rights</desc>
+  <rights>
+    <r n="getServiceStatus"/>
+    <r n="listServer"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleServerStatisticRights">
+  <desc>Admin Console Server Statistics Rights</desc>
+  <rights>
+    <r n="getServiceStatus"/>
+    <r n="listServer"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleMailQueueRights">
+  <desc>Admin Console Mail Queue Rights</desc>
+  <rights>
+    <r n="mailQueueRights"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleCertificateRights">
+  <desc>Admin Console Certificate Rights</desc>
+  <rights>
+    <r n="listServer"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleBackupRights">
+  <desc>Admin Console Backup Rights</desc>
+  <rights>
+    <r n="backupAccount"/>
+    <r n="restoreAccount"/>
+    <r n="moveAccountMailbox"/>
+    <r n="moveCalendarResourceMailbox"/>
+    <r n="moveMailboxFromServer"/>
+    <r n="moveMailboxToServer"/>
+  </rights>
+</right>
+
+<right type="combo" name="adminConsoleCrossMailboxSearchRights">
+  <desc>Admin Console Cross Mailbox Search Rights</desc>
+  <rights>
+    <r n="crossMailboxSearchRights"/>
+  </rights>
+</right>
+
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
   <rights>
@@ -2330,6 +2380,12 @@
     <r n="adminConsoleZimletRights"/>
     <r n="adminConsoleExtensionRights"/>
     <r n="adminConsoleGlobalRights"/>
+    <r n="adminConsoleServerStatusRights"/>
+    <r n="adminConsoleServerStatisticRights"/>
+    <r n="adminConsoleMailQueueRights"/>
+    <r n="adminConsoleCertificateRights"/>
+    <r n="adminConsoleBackupRights"/>
+    <r n="adminConsoleCrossMailboxSearchRights"/>
     <r n="adminConsoleSavedSearchRights"/>
   </rights>
 </right>
