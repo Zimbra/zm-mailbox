@@ -249,7 +249,7 @@ public class SoapServlet extends ZimbraServlet {
                     Integer.MAX_VALUE);
                 
                 if (len > 0 && in < len)
-                    throw new EOFException("SOAP content truncated");
+                    throw new EOFException("SOAP content truncated " + in + "!=" + len);
                 success = in <= maxSize;
                 buffer = bs.toByteArray();
             }
