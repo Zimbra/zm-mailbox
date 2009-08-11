@@ -31,8 +31,8 @@ import com.zimbra.common.localconfig.LC;
 
 public class BufferStream extends OutputStream {
     private byte buf[] = null;
-    private FileOutputStream fos = null;
     private File file = null;
+    private FileOutputStream fos = null;
     private int maxMem;
     private long maxSize;
     private boolean sequenced = true;
@@ -92,18 +92,15 @@ public class BufferStream extends OutputStream {
         int in;
         int left = buffer(len == Long.MAX_VALUE ? 0 : (int)Math.min(
             Integer.MAX_VALUE, len));
-        long out;
+        long out = 0;
         
-        if (left > 0) {
-            if ((in = is.read(buf, (int)size, left)) <= 0)
-                return 0;
-            size += in;
-            if (in < left)
-                return in;
+        while (len > 0 && left > 0) {
+            if ((in = is.read(buf, (int)size, left)) == -1)
+                return out;
+            left -= in;
             len -= in;
-            out = in;
-        } else {
-            out = 0;
+            out += in;
+            size += in;
         }
         if (len == 0)
             return out;
@@ -113,30 +110,32 @@ public class BufferStream extends OutputStream {
             write(in);
             len--;
         }
-        while (len > 0 && (left = buffer((int)Math.min(len, 8 * 1024))) != 0) {
-            if ((in = is.read(buf, (int)size, (int)Math.min(len, left))) <= 0)
+        while (len > 0 && (left = buffer((int)Math.min(len, 8 * 1024))) > 0) {
+            if ((in = is.read(buf, (int)size, (int)Math.min(len, left))) == -1)
                 return out;
             out += in;
             size += in;
-            if (in < left)
-                return out;
             len -= in;
         }
+        if (len == 0)
+            return out;
 
         byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
         
-        while (len > 0 && (in = is.read(tmp, 0, (int)Math.min(len,
-            tmp.length))) > 0) {
+        while (len > 0) {
+            if ((in = is.read(tmp, 0, (int)Math.min(len, tmp.length))) == -1)
+                return out;
             write(tmp, 0, in);
             out += in;
-            if (in < tmp.length)
-                return out;
             len -= in;
         }
         return out;
     }
     
-    protected void finalize() { release(); }
+    protected void finalize() throws Throwable {
+        release();
+        super.finalize();
+    }
     
     public byte[] getBuffer() {
         try {
@@ -280,12 +279,24 @@ public class BufferStream extends OutputStream {
             
             System.arraycopy(buf, 0, newBuf, 0, buf.length);
             try {
+                int in;
+                int left = (int)(size - buf.length);
+                
                 fis = new FileInputStream(file);
-                fis.read(newBuf, buf.length, (int)(size - buf.length));
+                while (left > 0) {
+                    if ((in = fis.read(newBuf, buf.length, left)) == -1)
+                        throw new RuntimeException("BufferStream truncated");
+                    left -= in;
+                }
             } catch (IOException e) {
                 throw new RuntimeException("BufferStream lost");
             } finally {
-                ByteUtil.closeStream(fis);
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                    }
+                }
             }
             return newBuf;
         }
@@ -402,13 +413,14 @@ public class BufferStream extends OutputStream {
         try {
             fis = new FileInputStream(file);
             while (len > 0 && (in = fis.read(tmp, 0, (int)Math.min(len,
-                tmp.length))) > 0) {
+                tmp.length))) != -1) {
                 os.write(tmp, 0, in);
                 len -= in;
                 out += in;
             }
         } finally {
-            ByteUtil.closeStream(fis);
+            if (fis != null)
+                fis.close();
         }
         return out;
     }
