@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ZFolder implements ZItem, Comparable, ToZJSONObject {
+public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     
     public static final String ID_USER_ROOT = "1";
     public static final String ID_INBOX = "2";
@@ -149,29 +149,40 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     public enum View {
         
         appointment,
+        chat,
         contact,
         conversation,
         document,
         message,
-        wiki,
+        remote,
+        search,
         task,
-        voice;
+        voice,
+        wiki;
 
         public static View fromString(String s) throws ServiceException {
             try {
-                return View.valueOf(s);
+                return s.equals("search folder") ? search : View.valueOf(s);
             } catch (IllegalArgumentException e) {
+                if (s.equals("remote folder"))
+                    return remote;
+                else if (s.equals("search folder"))
+                    return search;
                 throw ZClientException.CLIENT_ERROR("invalid view: "+s+", valid values: "+Arrays.asList(View.values()), e);                
             }
         }
 
         public boolean isAppointment() { return equals(appointment); }
+        public boolean isChat() { return equals(chat); }
         public boolean isContact() { return equals(contact); }
         public boolean isConversation() { return equals(conversation); }
         public boolean isDocument() { return equals(document); }
         public boolean isMessage() { return equals(message); }
-        public boolean isWiki() { return equals(wiki); }
+        public boolean isRemote() { return equals(remote); }
+        public boolean isSearch() { return equals(search); }
         public boolean isTask() { return equals(task); }
+        public boolean isVoice() { return equals(voice); }
+        public boolean isWiki() { return equals(wiki); }
 
     }
     
