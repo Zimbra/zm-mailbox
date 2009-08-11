@@ -228,11 +228,18 @@ public class ItemId {
                 if (ecode.equals(ServiceException.PERM_DENIED)) {
                     // share permission was revoked
                     ZimbraLog.calendar.warn(
-                            "Ignorable permission error " + ifmt.formatItemId(folderId), e);
+                            "Ignorable permission error " + ifmt.formatItemId(iidFolder), e);
                 } else if (ecode.equals(MailServiceException.NO_SUCH_FOLDER)) {
                     // shared calendar folder was deleted by the owner
                     ZimbraLog.calendar.warn(
-                            "Ignoring deleted folder " + ifmt.formatItemId(folderId));
+                            "Ignoring deleted folder " + ifmt.formatItemId(iidFolder), e);
+                } else if (ecode.equals(MailServiceException.NO_SUCH_MOUNTPOINT)) {
+                    // non-existent mountpoint and/or mountpoint's target account
+                    ZimbraLog.calendar.warn(
+                            "Ignoring deleted mountpoint target account for " + ifmt.formatItemId(iidFolder), e);
+                } else if (ecode.equals(ServiceException.TOO_MANY_HOPS)) {
+                    ZimbraLog.calendar.warn(
+                            "Ignoring mountpoint with too many hops " + ifmt.formatItemId(iidFolder), e);
                 } else {
                     throw e;
                 }
