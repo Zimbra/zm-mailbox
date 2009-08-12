@@ -83,7 +83,10 @@ public class BufferStreamRequestEntity extends BufferStream implements
         this.is = is;
     }
 
-    public long getContentLength() { return getSize(); }
+    public long getContentLength() {
+        readData();
+        return getSize();
+    }
 
     public String getContentType() { return contentType; }
 
@@ -93,11 +96,18 @@ public class BufferStreamRequestEntity extends BufferStream implements
         this.contentType = contentType;
     }
 
-    public void writeRequest(final OutputStream out) throws IOException {
+    private void readData() {
         if (is != null) {
-            readFrom(is);
+            try {
+                readFrom(is);
+            } catch (IOException e) {
+            }
             is = null;
         }
+    }
+    
+    public void writeRequest(final OutputStream out) throws IOException {
+        readData();
         
         Pair<byte[], Integer> rawBuf = getRawBuffer();
         File file = getFile();
