@@ -26,11 +26,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -58,11 +58,32 @@ public class CheckPermission extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.CHECK_PERMISSION_RESPONSE);
         
         if (TargetType.account == tt) {
-            entry = prov.get(AccountBy.fromString(targetBy), targetValue, zsc.getAuthToken());
+            AccountBy acctBy = AccountBy.fromString(targetBy);
+            entry = prov.get(acctBy, targetValue, zsc.getAuthToken());
+            
+            if (acctBy == AccountBy.id)
+                throw AccountServiceException.NO_SUCH_ACCOUNT(targetValue);
+            
+            // otherwise, the target could be an external user, let it fall through
+            // to return the default permission.
+            
         } else if (TargetType.calresource == tt) {
-            entry = prov.get(CalendarResourceBy.fromString(targetBy), targetValue);
+            CalendarResourceBy crBy = CalendarResourceBy.fromString(targetBy);
+            entry = prov.get(crBy, targetValue);
+            
+            if (crBy == CalendarResourceBy.id)
+                throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(targetValue);
+            
         } else if (TargetType.dl == tt) {
-            entry = prov.get(DistributionListBy.fromString(targetBy), targetValue);
+            // entry = prov.get(DistributionListBy.fromString(targetBy), targetValue);
+            
+            // target for all user rights is "account", it doesn't make sense to 
+            // check if the authed user has right on a DL (e.g. can I invite tis DL?)
+            // until we add an inviteDistributionList right targeted for DLs.
+            // 
+            // let it fall through to return the default permission
+            entry = null;
+            
         } else
             throw ServiceException.INVALID_REQUEST("invalid target type: " + targetType, null);
         

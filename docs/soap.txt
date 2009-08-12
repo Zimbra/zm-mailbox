@@ -2957,8 +2957,6 @@ RevokePermissionResponse returns permissions that are successfully revoked.
 {target-type} = account | calresource
 
     Check if the authed user has the specified right(s) on a target.
-    To defend against harvest attack, the the specified target does not exist, 
-    server will return <CheckRightResponse allow="0"/> instead of NO_SUCH_XXX.
     
 e.g.   
 With user1's auth token, the following checks if user1 can invite user2 and 
