@@ -2958,6 +2958,10 @@ RevokePermissionResponse returns permissions that are successfully revoked.
 
     Check if the authed user has the specified right(s) on a target.
     
+    If the specified target cannot be found: 
+    - if by is "id", throw NO_SUCH_ACCOUNT/NO_SUCH_CALENDAR_RESOURCE
+    - if by is "name", return the default permission for the right.
+    
 e.g.   
 With user1's auth token, the following checks if user1 can invite user2 and 
 view user2's free/busy.
