@@ -33,9 +33,11 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
@@ -469,7 +471,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     MimeMessage mm = ((Message)mi).getMimeMessage();
                     
                     for (String part : context.getPart().split(",")) {
+                        BufferStream bs;
                         MimePart mp = Mime.getMimePart(mm, part);
+                        Pair<byte[], Integer> pr;
                         int sz;
                         
                         if (mp == null)
@@ -488,13 +492,16 @@ public abstract class ArchiveFormatter extends Formatter {
                                 name = name.substring(0, dot);
                             }
                         }
+                        bs = new BufferStream(sz, sz * 4, sz * 4);
+                        bs.readFrom(mp.getInputStream());
+                        pr = bs.getRawBuffer();
                         aoe = aos.newOutputEntry(getEntryName(mi, "", name,
                             ext, names), MailItem.getNameForType(mi),
                             mi.getType(), mi.getDate());
-                        data = ByteUtil.readInput(mp.getInputStream(), sz, sz * 4);
-                        aoe.setSize(data.length);
+                        aoe.setSize(pr.getSecond());
                         aos.putNextEntry(aoe);
-                        aos.write(data);
+                        aos.write(pr.getFirst(), 0, pr.getSecond());
+                        bs.close();
                         aos.closeEntry();
                     }
                     return aos;
