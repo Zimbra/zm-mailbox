@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -53,9 +54,9 @@ public class ScheduleInbox extends CalendarCollection {
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
 	}
 
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt, java.util.Collection<String> hrefs, TimeRange tr) throws DavException {
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange tr) throws DavException {
 		try {
-			return getScheduleMessages(ctxt, hrefs);
+			return getAppointmentsByUids(ctxt, null);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get schedule messages in folder "+getId(), se);
 			return Collections.emptyList();
@@ -64,7 +65,7 @@ public class ScheduleInbox extends CalendarCollection {
 
 	protected static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
 	
-	protected java.util.Collection<DavResource> getScheduleMessages(DavContext ctxt, java.util.Collection<String> hrefs) throws ServiceException, DavException {
+	public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {
 		ArrayList<DavResource> result = new ArrayList<DavResource>();
         if (!ctxt.isSchedulingEnabled())
         	return result;
