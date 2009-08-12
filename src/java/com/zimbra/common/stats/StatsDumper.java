@@ -33,6 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class StatsDumper
 implements Callable<Void> {
     
+    public final static int SYSLOG_ELIDING_THRESHOLD = 800;
     private static final File STATS_DIR = new File(LC.zmstat_log_directory.value());
     private static final ThreadGroup statsGroup = new ThreadGroup("ZimbraPerf Stats");
 
@@ -151,20 +152,20 @@ implements Callable<Void> {
             String logLine = mDataSource.getFilename() + ": " +
                     (mDataSource.hasTimestampColumn() ? "timestamp," : "") +
                     header + ":: " + timestamp + "," + line;
-            if (logLine.length() <= 900) {
+            if (logLine.length() <= SYSLOG_ELIDING_THRESHOLD) {
                 ZimbraLog.slogger.info(logLine);
             } else {
                 StringBuilder b = new StringBuilder(logLine);
                 String lastUuid = null;
                 do {
-                    String sub = b.substring(0, 900);
-                    b.delete(0, 900);
+                    String sub = b.substring(0, SYSLOG_ELIDING_THRESHOLD);
+                    b.delete(0, SYSLOG_ELIDING_THRESHOLD);
                     if (lastUuid != null) {
                         sub = ":::" + lastUuid + ":::" + sub;
                     }
                     lastUuid = UUID.randomUUID().toString();
                     ZimbraLog.slogger.info(sub + ":::" + lastUuid + ":::");
-                } while (b.length() > 900);
+                } while (b.length() > SYSLOG_ELIDING_THRESHOLD);
                 ZimbraLog.slogger.info(":::" + lastUuid + ":::" + b.toString());
             }
         }
