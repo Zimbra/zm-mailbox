@@ -209,11 +209,13 @@ translate the value of into Zimbra tag.
         <column name="Company" field="company"/>
         <column name="Department" field="department"/>
         <column name="Job Title" field="jobTitle"/>
+        <column name="Business Address" field="workStreet"/>
         <column name="Business Street,Business Street 2,Business Street 3" field="workStreet" type="multivalue"/>
         <column name="Business City" field="workCity"/>
         <column name="Business State" field="workState"/>
         <column name="Business Postal Code" field="workPostalCode"/>
         <column name="Business Country" field="workCountry"/>
+        <column name="Home Address" field="homeStreet"/>
         <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
         <column name="Home City" field="homeCity"/>
         <column name="Home State" field="homeState"/>
@@ -294,11 +296,13 @@ translate the value of into Zimbra tag.
         <column name="Company" field="company"/>
         <column name="Department" field="department"/>
         <column name="Job Title" field="jobTitle"/>
+        <column name="Business Address" field="workStreet"/>
         <column name="Business Street,Business Street 2,Business Street 3" field="workStreet" type="multivalue"/>
         <column name="Business City" field="workCity"/>
         <column name="Business State" field="workState"/>
         <column name="Business Postal Code" field="workPostalCode"/>
         <column name="Business Country" field="workCountry"/>
+        <column name="Home Address" field="homeStreet"/>
         <column name="Home Street,Home Street 2,Home Street 3" field="homeStreet" type="multivalue"/>
         <column name="Home City" field="homeCity"/>
         <column name="Home State" field="homeState"/>
