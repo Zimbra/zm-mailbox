@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.account.soap;
 
-import java.util.TreeMap;
-
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -32,7 +30,6 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AccessManager;
@@ -49,17 +46,10 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CosBy;
-import com.zimbra.cs.account.Provisioning.CountAccountResult;
-import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.GranteeBy;
-import com.zimbra.cs.account.Provisioning.RightsDoc;
-import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
@@ -85,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -175,7 +166,7 @@ public class SoapProvisioning extends Provisioning {
 
         if (options.getLocalConfigAuth()) {
             soapZimbraAdminAuthenticate();
-        } else if (mAuthToken == null) {
+        } else if (mAuthToken != null) {
             soapAdminAuthenticate(mAuthToken);
         } else if (options.getAccount() != null && options.getPassword() != null) {
             XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
