@@ -29,8 +29,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -70,7 +72,8 @@ public class GetFolder extends MailDocumentHandler {
 
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
 		
-        FolderNode rootnode = getFolderTree(octxt, mbox, iid, visible);
+        FolderNode rootnode = mbox.getFolderTree(octxt, iid, visible);
+        OperationContextData.addGranteeNames(octxt, rootnode);
 
 		Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
@@ -116,56 +119,6 @@ public class GetFolder extends MailDocumentHandler {
                 eRoot.addElement(eRemote.detach());
             }
         }
-    }
-    
-    public static class FolderNode {
-        public int mId;
-        public String mName;
-        public Folder mFolder;
-        public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
-    }
-    
-	public static FolderNode getFolderTree(OperationContext octxt, Mailbox mbox, ItemId iid, boolean returnAllVisibleFolders) throws ServiceException {
-	    synchronized (mbox) {
-            // get the root node...
-	        int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
-            Folder folder = mbox.getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
-
-            // for each subNode...
-            Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
-            return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
-        }
-	}
-    
-	private static FolderNode handleFolder(Folder folder, Set<Folder> visible, boolean returnAllVisibleFolders) throws ServiceException {
-	    boolean isVisible = visible == null || visible.remove(folder);
-        if (!isVisible && !returnAllVisibleFolders)
-            return null;
-
-	    // short-circuit if we know that this won't be in the output
-        List<Folder> subfolders = folder.getSubfolders(null);
-        if (!isVisible && subfolders.isEmpty())
-            return null;
-
-        FolderNode node = new FolderNode();
-        node.mId = folder.getId();
-        node.mName = node.mId == Mailbox.ID_FOLDER_ROOT ? null : folder.getName();
-        node.mFolder = isVisible ? folder : null;
-
-        // if this was the last visible folder overall, no need to look at children
-        if (isVisible && visible != null && visible.isEmpty())
-            return node;
-
-        // write the subfolders' data to the response
-        for (Folder subfolder : subfolders) {
-            FolderNode child = handleFolder(subfolder, visible, returnAllVisibleFolders);
-            if (child != null) {
-                node.mSubfolders.add(child);
-                isVisible = true;
-            }
-        }
-
-        return isVisible ? node : null;
     }
     
 }

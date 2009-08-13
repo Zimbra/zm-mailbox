@@ -2940,4 +2940,8 @@ public abstract class Provisioning {
     public void reloadMemcachedClientConfig() throws ServiceException {
         // do nothing by default
     }
+
+    public Map<String, String> getAccountNamesForIds(Set<String> ids) throws ServiceException {
+        return new HashMap<String, String>();  // return empty map
+    }
 }

@@ -110,6 +110,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
@@ -301,6 +302,7 @@ public class Mailbox {
         private String     requestIP;
         private String     userAgent;
         private AuthToken  authToken;
+        private Map<String, OperationContextData> contextData;
         
         boolean changetype = CHECK_CREATED;
         int     change = -1;
@@ -409,6 +411,19 @@ public class Mailbox {
         
         public String getUserAgent() {
             return userAgent;
+        }
+
+        void SetCtxtData(String key, OperationContextData data) {
+            if (contextData == null)
+                contextData = new HashMap<String, OperationContextData>();
+            contextData.put(key, data);
+        }
+    
+        OperationContextData getCtxtData(String key) {
+            if (contextData == null)
+                return null;
+            else
+                return contextData.get(key);
         }
     }
 
@@ -2907,6 +2922,54 @@ public class Mailbox {
 
     List<Folder> listAllFolders() {
         return new ArrayList<Folder>(mFolderCache.values());
+    }
+
+    public static class FolderNode {
+        public int mId;
+        public String mName;
+        public Folder mFolder;
+        public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
+    }
+    
+    public synchronized FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders) throws ServiceException {
+        // get the root node...
+        int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
+        Folder folder = getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
+
+        // for each subNode...
+        Set<Folder> visibleFolders = getVisibleFolders(octxt);
+        return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
+    }
+    
+    private FolderNode handleFolder(Folder folder, Set<Folder> visible, boolean returnAllVisibleFolders) throws ServiceException {
+        boolean isVisible = visible == null || visible.remove(folder);
+        if (!isVisible && !returnAllVisibleFolders)
+            return null;
+
+        // short-circuit if we know that this won't be in the output
+        List<Folder> subfolders = folder.getSubfolders(null);
+        if (!isVisible && subfolders.isEmpty())
+            return null;
+
+        FolderNode node = new FolderNode();
+        node.mId = folder.getId();
+        node.mName = node.mId == Mailbox.ID_FOLDER_ROOT ? null : folder.getName();
+        node.mFolder = isVisible ? folder : null;
+
+        // if this was the last visible folder overall, no need to look at children
+        if (isVisible && visible != null && visible.isEmpty())
+            return node;
+
+        // write the subfolders' data to the response
+        for (Folder subfolder : subfolders) {
+            FolderNode child = handleFolder(subfolder, visible, returnAllVisibleFolders);
+            if (child != null) {
+                node.mSubfolders.add(child);
+                isVisible = true;
+            }
+        }
+
+        return isVisible ? node : null;
     }
 
     public synchronized List<Folder> getCalendarFolders(OperationContext octxt, byte sort) throws ServiceException {
