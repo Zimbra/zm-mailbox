@@ -56,6 +56,7 @@
     <a n="zimbraAttachmentsViewInHtmlOnly"/>
     <a n="zimbraAuthLdapExternalDn"/>
     <a n="zimbraAuthTokenLifetime"/>
+    <a n="zimbraAuthTokenValidityValue"/>
     <a n="zimbraAvailableLocale"/>
     <a n="zimbraAvailableSkin"/>
     <a n="zimbraBatchedIndexingSize"/>
@@ -237,6 +238,7 @@
     <a n="zimbraPrefMailItemsPerPage"/>
     <a n="zimbraPrefMailLocalDeliveryDisabled"/>
     <a n="zimbraPrefMailPollingInterval"/>
+    <a n="zimbraPrefMailSelectAfterDelete"/>
     <a n="zimbraPrefMailSendReadReceipts"/>
     <a n="zimbraPrefMailSignature"/>
     <a n="zimbraPrefMailSignatureEnabled"/>
@@ -270,10 +272,12 @@
     <a n="zimbraPrefSentMailFolder"/>
     <a n="zimbraPrefSharedAddrBookAutoCompleteEnabled"/>
     <a n="zimbraPrefShortcuts"/>
+    <a n="zimbraPrefShowCalendarWeek"/>
     <a n="zimbraPrefShowFragments"/>
     <a n="zimbraPrefShowSearchString"/>
     <a n="zimbraPrefShowSelectionCheckbox"/>
     <a n="zimbraPrefSkin"/>
+    <a n="zimbraPrefSpellDictionary"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
     <a n="zimbraPrefTagTreeOpen"/>
     <a n="zimbraPrefTimeZoneId"/>
@@ -300,6 +304,7 @@
     <a n="zimbraSpamApplyUserFilters"/>
     <a n="zimbraSyncWindowSize"/>
     <a n="zimbraTextAnalyzer"/>
+    <a n="zimbraWebClientShowOfflineLink"/>
     <a n="zimbraZimletAvailableZimlets"/>
     <a n="zimbraZimletUserProperties"/>
 
