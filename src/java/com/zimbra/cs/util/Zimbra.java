@@ -160,12 +160,10 @@ public class Zimbra {
 
         ZimbraHttpConnectionManager.startReaperThread();
 
-        if (sIsMailboxd) {
-            try {
-                StoreManager.getInstance().startup();
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
-            }
+        try {
+            StoreManager.getInstance().startup();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
         }
 
         MailboxManager.getInstance();
