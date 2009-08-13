@@ -35,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailItem.TypedIdList;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -82,15 +83,23 @@ public class Sync extends MailDocumentHandler {
 
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
+        ItemId iidFolder = null;
         try {
-            ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID + ""), zsc);
+            iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID + ""), zsc);
             OperationContext octxtOwner = new OperationContext(mbox);
             root = mbox.getFolderById(octxtOwner, iidFolder.getId());
         } catch (MailServiceException.NoSuchItemException nsie) { }
 
         Set<Folder> visible = octxt.isDelegatedRequest(mbox) ? mbox.getVisibleFolders(octxt) : null;
 
-        OperationContextData.setGranteeNames(octxt, mbox);
+        if (root == null || iidFolder == null) {
+            // resolve grantee names of all ACLs on the mailbox 
+            OperationContextData.setGranteeNames(octxt, mbox);
+        } else {
+            // resolve grantee names of all ACLs on all sub-folders of the requested folder 
+            FolderNode rootNode = mbox.getFolderTree(octxt, iidFolder, true);
+            OperationContextData.addGranteeNames(octxt, rootNode);
+        }
         
         // actually perform the sync
         synchronized (mbox) {
