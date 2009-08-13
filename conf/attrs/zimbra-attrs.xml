@@ -3001,9 +3001,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for customer care accounts</desc>
 </attr>
 
-<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.2">
+<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.2" deprecatedSince="6.0.0_GA">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether web search feature is enabled</desc>
+  <deprecateDesc>deprecated per bug 40170</deprecateDesc>
 </attr>
 
 <attr id="603" name="zimbraPrefLabel" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="5.0.2">
@@ -4628,5 +4629,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>After deleting a message in list, which message should be selected</desc>
 </attr>
 
+<attr id="1047" name="zimbraWebClientShowOfflineLink" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_GA">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not to show link to offline version in the web UI top bar</desc>
+</attr>
 
 </attrs>

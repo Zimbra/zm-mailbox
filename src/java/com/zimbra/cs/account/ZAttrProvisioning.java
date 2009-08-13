@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jhahm 20090807-1015 */
+    /* build: 6.0.0 pshao 20090813-1128 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2844,6 +2844,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureVoiceUpsellURL = "zimbraFeatureVoiceUpsellURL";
 
     /**
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
      * @since ZCS 5.0.2
@@ -7187,6 +7188,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=507)
     public static final String A_zimbraWebClientLogoutURL = "zimbraWebClientLogoutURL";
+
+    /**
+     * whether or not to show link to offline version in the web UI top bar
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1047)
+    public static final String A_zimbraWebClientShowOfflineLink = "zimbraWebClientShowOfflineLink";
 
     /**
      * XMPP Category of the component

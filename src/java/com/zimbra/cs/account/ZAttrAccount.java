@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jhahm 20090807-1015 */
+    /* build: 6.0.0 pshao 20090813-1128 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -10423,6 +10423,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
      * @return zimbraFeatureWebSearchEnabled, or true if unset
@@ -10435,6 +10436,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
      * @param zimbraFeatureWebSearchEnabled new value
@@ -10450,6 +10452,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
      * @param zimbraFeatureWebSearchEnabled new value
@@ -10466,6 +10469,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10480,6 +10484,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40170. Orig desc:
      * whether web search feature is enabled
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -31765,6 +31770,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetVersion(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersion, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to show link to offline version in the web UI top bar
+     *
+     * @return zimbraWebClientShowOfflineLink, or true if unset
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1047)
+    public boolean isWebClientShowOfflineLink() {
+        return getBooleanAttr(Provisioning.A_zimbraWebClientShowOfflineLink, true);
+    }
+
+    /**
+     * whether or not to show link to offline version in the web UI top bar
+     *
+     * @param zimbraWebClientShowOfflineLink new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1047)
+    public void setWebClientShowOfflineLink(boolean zimbraWebClientShowOfflineLink) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientShowOfflineLink, zimbraWebClientShowOfflineLink ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to show link to offline version in the web UI top bar
+     *
+     * @param zimbraWebClientShowOfflineLink new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1047)
+    public Map<String,Object> setWebClientShowOfflineLink(boolean zimbraWebClientShowOfflineLink, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientShowOfflineLink, zimbraWebClientShowOfflineLink ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to show link to offline version in the web UI top bar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1047)
+    public void unsetWebClientShowOfflineLink() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientShowOfflineLink, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to show link to offline version in the web UI top bar
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_GA
+     */
+    @ZAttr(id=1047)
+    public Map<String,Object> unsetWebClientShowOfflineLink(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientShowOfflineLink, "");
         return attrs;
     }
 
