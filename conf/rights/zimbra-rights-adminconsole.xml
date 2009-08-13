@@ -2364,6 +2364,8 @@
   <desc>Admin Console Cross Mailbox Search Rights</desc>
   <rights>
     <r n="crossMailboxSearchRights"/>
+    <r n="listAccount"/>
+    <r n="createAccount"/>
   </rights>
 </right>
 
