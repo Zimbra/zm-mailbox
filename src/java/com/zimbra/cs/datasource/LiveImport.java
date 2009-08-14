@@ -79,10 +79,6 @@ public class LiveImport extends MailItemImport {
             super(ds, itemId, remoteId);
         }
         
-        public Map<Integer, LiveFolderMapping> getMappingsById() throws ServiceException {
-            return getMappingsById(ds, dsi.itemId);
-        }
-        
         public static Map<Integer, LiveFolderMapping> getMappingsById(DataSource ds, int
             folderId) throws ServiceException {
             Collection<DataSourceItem> dsMappings = getMappings(ds, folderId);
@@ -435,7 +431,7 @@ public class LiveImport extends MailItemImport {
                             remoteDate.getTime(), mbox.attachmentsIndexingEnabled()),
                             folderId, remoteFlags);
                     if (localMsg != null) {
-                        ld = new LiveData(ds, folderTracker.getFolderId(), localMsg.getId(),
+                        ld = new LiveData(ds, folderTracker.getItemId(), localMsg.getId(),
                             localMsg.getChangeDate(), remoteMsg.getMessageID(),
                             remoteFolder.getUID(), remoteDate.getTime(), remoteFlags);
                         ld.set();
@@ -553,7 +549,7 @@ public class LiveImport extends MailItemImport {
                     remoteDate = remoteMsg.getReceivedDate();
                     if (remoteDate == null)
                         remoteDate = new Date(localMsg.getDate());
-                    trackedMsg = new LiveData(ds, folderTracker.getFolderId(),
+                    trackedMsg = new LiveData(ds, folderTracker.getItemId(),
                         localMsg.getId(), localMsg.getChangeDate(), newUids[0],
                         remoteFolder.getUID(), remoteDate.getTime(),
                         getZimbraFlags(remoteMsg));
@@ -818,7 +814,7 @@ public class LiveImport extends MailItemImport {
                 Contact localContact = mbox.createContact(octxt,
                     LiveData.getParsedContact(remoteContact, null),
                     folderTracker.getItemId(), null);
-                LiveData ld = new LiveData(ds, folderTracker.getFolderId(),
+                LiveData ld = new LiveData(ds, folderTracker.getItemId(),
                     localContact.getId(), localContact.getChangeDate(),
                     remoteContact.getUID(), contactFolder.getURI().toString(),
                     remoteContact.getModifiedDate().getTime(), 0);

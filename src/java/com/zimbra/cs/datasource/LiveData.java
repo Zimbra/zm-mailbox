@@ -27,7 +27,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.mailbox.Contact;
-import static com.zimbra.cs.mailbox.Contact.*;
 import com.zimbra.cs.mime.ParsedContact;
 
 public class LiveData extends DataSourceMapping {
