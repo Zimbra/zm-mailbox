@@ -98,7 +98,7 @@ public final class MailboxName {
                 if (count > 15) {
                     count -= 16; // bits remaining
                     sb.append((char) (bits >> count));
-                    bits &= (count * 2 - 1);
+                    bits &= (1 << count) - 1;
                 }
             } while ((c = bb.get()) != '-');
             // Discard remaining bits
