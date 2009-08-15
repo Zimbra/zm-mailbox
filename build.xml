@@ -77,8 +77,6 @@
     <property name="config.dir" location="conf"/>
 	<property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
-    <property name="zimlet.dir" location="../Zimlet/build/dist"/>
-    <property file="${zimlet.dir}/build.properties"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
@@ -802,6 +800,7 @@
     <target name="reset-all" description="Reset the world plus jetty" depends="clean-all">
         <antcall target="reset-the-world"/>
         <ant dir="../Zimlet" target="clean" inheritAll="false"/>
+        <ant dir="../Zimlet" target="deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
@@ -823,7 +822,7 @@
 
     <target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped."/>
 
-    <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,deploy-zimlets,init-unittest"
+    <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,init-unittest"
             description="Run when web server is running.">
         <antcall target="inject">
             <param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
@@ -1461,24 +1460,6 @@
         </for>
     </target>
 
-    <target name="deploy-zimlets" if="dist.zimlet.dir">
-        <foreach target="install-zimlet" param="zimlet">
-            <path>
-                <fileset dir="${zimlet.dir}/zimlets" includes="**/*.zip"/>
-            </path>
-            <param name="action" value="deploy"/>
-        </foreach>
-    </target>
-
-    <target name="install-zimlet">
-        <echo>${action} ${zimlet}</echo>
-        <java classname="com.zimbra.cs.zimlet.ZimletUtil" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-q"/>
-            <arg line="${action}"/>
-            <arg file="${zimlet}"/>
-        </java>
-    </target>
-
     <target name="stop-servers" depends="stop-webserver,stop-ldap"/>
 
     <!-- LDAP service control -->
@@ -1542,6 +1523,8 @@
     </target>
 
     <target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
+        <mkdir dir="${zimbra.home.dir}/zimlets-deployed"/>
+        <mkdir dir="${jetty.home.dir}/webapps/zimlet"/>
         <echo>Waiting for jetty to start</echo>
         <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
             <http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
