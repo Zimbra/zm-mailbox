@@ -342,8 +342,8 @@ public class LC {
     public static final KnownKey krb5_service_principal_from_interface_address;
     public static final KnownKey krb5_debug_enabled;
         
-    public static final KnownKey zimbra_mtareport_max_recipients;
-    public static final KnownKey zimbra_mtareport_max_senders;
+    public static final KnownKey zimbra_mtareport_max_users;
+    public static final KnownKey zimbra_mtareport_max_hosts;
 
     public static final KnownKey zmmtaconfig_enable_config_restarts;
 
@@ -1188,11 +1188,11 @@ public class LC {
         krb5_debug_enabled = new KnownKey("krb5_debug_enabled");
         krb5_debug_enabled.setDefault("false");
 
-        zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
-        zimbra_mtareport_max_recipients.setDefault("50");
+        zimbra_mtareport_max_users = new KnownKey("zimbra_mtareport_max_users");
+        zimbra_mtareport_max_users.setDefault("50");
 
-        zimbra_mtareport_max_senders = new KnownKey("zimbra_mtareport_max_senders");
-        zimbra_mtareport_max_senders.setDefault("50");
+        zimbra_mtareport_max_hosts = new KnownKey("zimbra_mtareport_max_hosts");
+        zimbra_mtareport_max_hosts.setDefault("50");
 
 	zmmtaconfig_enable_config_restarts = new KnownKey("zmmtaconfig_enable_config_restarts");
 	zmmtaconfig_enable_config_restarts.setDefault("TRUE");
