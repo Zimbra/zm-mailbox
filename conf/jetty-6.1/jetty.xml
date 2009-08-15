@@ -139,6 +139,7 @@
         <Call name="addRewriteRule"><Arg>/zimbraAdmin/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/*</Arg><Arg>/zimbra</Arg></Call>
         <Set name="handler">
           <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
@@ -202,6 +203,25 @@
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbraAdmin</Set>
     </New>
     
+    <New id="zimlet" class="org.mortbay.jetty.webapp.WebAppContext">
+      <Arg><Ref id="Contexts"/></Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimlet</Arg>
+      <Arg>/zimlet</Arg>
+      <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
+      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimlet</Set>
+      <Set name="baseResource">
+        <New class="org.mortbay.resource.ResourceCollection">
+          <Set name="resources">
+            <Array type="String">
+              <Item><SystemProperty name="jetty.home" default="."/>/webapps/zimlet</Item>
+              <Item><SystemProperty name="jetty.home" default="."/>/../zimlets-deployed</Item>
+            </Array>
+          </Set>
+        </New>
+      </Set>
+    </New>
+
     <!-- =========================================================== -->
     <!-- Configure the context deployer                              -->
     <!-- A context deployer will deploy contexts described in        -->
