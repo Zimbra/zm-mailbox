@@ -89,37 +89,10 @@ public class ZimletResources
 
         if (!pathInfo.startsWith(RESOURCE_PATH)) {
             // handle requests for individual files included in zimlet in case dev=1 is set.
-            if (pathInfo.endsWith(".jsp")) {
-                // jsp files are deployed in zimbra webapp now.
-                ServletContext targetContext = getServletConfig().getServletContext().getContext("/zimbra");
-                RequestDispatcher dispatcher = targetContext.getRequestDispatcher("/zimlet" + pathInfo);
-                dispatcher.forward(req, resp);
-                return;
-            } else if (pathInfo.startsWith("/_dev")) {
-            	pathInfo = pathInfo.substring(6);
-            } else {
-                pathInfo = pathInfo.substring(1);
-            }
-            int slash = pathInfo.indexOf('/');
-            if (slash > 0) {
-            	String zimlet = pathInfo.substring(0, slash);
-            	String file = pathInfo.substring(slash+1);
-            	if (!zimletNames.contains(zimlet)) {
-            		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            		return;
-            	}
-                ZimbraLog.zimlet.debug("DEBUG: zimlet=%s, file=%s", zimlet, file);
-                try {
-                	printFile(resp, zimlet, file);
-                } catch (IOException e) {
-                    ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
-            		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                } catch (ZimletException e) {
-                    ZimbraLog.zimlet.error("Can't get Zimlet file: zimlet=%s, file=%s", zimlet, file, e);
-            		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                }
-            	return;
-            }
+            ServletContext targetContext = getServletConfig().getServletContext().getContext("/zimlet");
+            RequestDispatcher dispatcher = targetContext.getRequestDispatcher(pathInfo);
+            dispatcher.forward(req, resp);
+            return;
         }
         
         String contentType = getContentType(uri);
@@ -260,7 +233,8 @@ public class ZimletResources
 
     private static MimetypesFileTypeMap sFileTypeMap = new MimetypesFileTypeMap();
     
-	private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
+	@SuppressWarnings("unused")
+    private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
     	ZimletFile zf = ZimletUtil.getZimlet(zimletName);
     	if (zf == null) {
             ZimbraLog.zimlet.warn("zimlet file not found for: %s", zimletName);

@@ -530,21 +530,19 @@ public class ZimletUtil {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet " + zimletName + " on this host.");
-		String zimletRoot = getZimletDir();
 		
 		// install the jar file and properties in zimlet
 		File serviceLibDir = new File(LC.mailboxd_directory.value() + File.separator + 
 									"webapps" + File.separator + 
-									"service" + File.separator + 
+									"zimlet" + File.separator + 
 									"WEB-INF" + File.separator + 
 									"lib");
 		File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimletName);
-        File jspDir = new File(LC.mailboxd_directory.value() + File.separator +
-                                    "webapps" + File.separator + 
-                                    "zimbra" + File.separator +
-                                    "zimlet" + File.separator +
-                                    zimletName);
-
+        File zimlet = new File(getZimletDir() + File.separatorChar + zimletName);
+        zimlet.getParentFile().mkdirs();
+        if (zimlet.exists())
+            deleteFile(zimlet);
+        
 		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
 			String fname = entry.getName();
 			if (fname.endsWith(".jar")) {
@@ -555,23 +553,13 @@ public class ZimletUtil {
 				File file = new File(propsDir, fname);
 				file.getParentFile().mkdirs();
 				writeFile(entry.getContents(), file);
-            } else if (fname.endsWith(".jsp")) {
-                File file = new File(jspDir, fname);
+            } else {
+                File file = new File(zimlet, fname);
                 file.getParentFile().mkdirs();
                 writeFile(entry.getContents(), file);
 			}
 		}
 
-		// install the zimlet file
-		File zimlet = new File(zimletRoot + File.separatorChar + zimletName);
-		zimlet.getParentFile().mkdirs();
-		if (zimlet.exists())
-			deleteFile(zimlet);
-		if (zf.getFile() != null)
-			FileUtil.copy(zf.getFile(), zimlet);
-		else
-			ByteUtil.putContent(zimlet.getAbsolutePath(), zf.toByteArray());
-		
 		flushCache();
 	}
 	
