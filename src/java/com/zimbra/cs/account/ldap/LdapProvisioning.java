@@ -6013,61 +6013,96 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override
-    public Map<String, String> getAccountNamesForIds(Set<String> ids) throws ServiceException {
+    public Map<String, String> getNamesForIds(Set<String> ids, EntryType type) throws ServiceException {
         final Map<String, String> result = new HashMap<String, String>();
-
-        List<String> unresolvedIds = new ArrayList<String>();
+        Set<String> unresolvedIds;
         
-        // try to get the name from cache 
-        for (String id : ids) {
-            Account acct = getFromCache(AccountBy.id, id);
-            if (acct != null) 
-                result.put(id, acct.getName());
-            else {
-                unresolvedIds.add(id);
-                
-                // also put unresolved ids into result, with empty String as the initial value.
-                // - if an id is found in LDAP, the result entry will be replaced with the name.
-                // - if an id is not found in LDAP (the grantee might have been deletaed), 
-                //   the value for the entry in result will remain an empty Stream, so in 
-                //   com.zimbra.cs.service.mail.ToXML.encodeACL it won't try to search LDAP
-                //   again.  it would especially a perf hit if the deleted grantee had been 
-                //   granted rights on lots of folders (bug 39804). 
-                // 
-                result.put(id, "");
+        NamedEntry entry;
+        final String nameAttr;
+        String base;
+        String objectClass;
+        
+        switch (type) {
+        case account:
+            unresolvedIds = new HashSet<String>();
+            for (String id : ids) {
+                entry = sAccountCache.getById(id);
+                if (entry != null) 
+                    result.put(id, entry.getName());
+                else
+                    unresolvedIds.add(id);
             }
+            nameAttr = Provisioning.A_zimbraMailDeliveryAddress;
+            base = mDIT.mailBranchBaseDN();
+            objectClass = C_zimbraAccount;
+            break;
+        case group:
+            unresolvedIds = ids;
+            nameAttr = Provisioning.A_mail;
+            base = mDIT.mailBranchBaseDN();
+            objectClass = C_zimbraMailList;
+            break;
+        case cos:
+            unresolvedIds = new HashSet<String>();
+            for (String id : ids) {
+                entry = sCosCache.getById(id);
+                if (entry != null) 
+                    result.put(id, entry.getName());
+                else
+                    unresolvedIds.add(id);
+            }
+            nameAttr = Provisioning.A_cn;
+            base = mDIT.cosBaseDN();
+            objectClass = C_zimbraCOS;
+            break;
+        case domain:
+            unresolvedIds = new HashSet<String>();
+            for (String id : ids) {
+                entry = sDomainCache.getById(id);
+                if (entry != null) 
+                    result.put(id, entry.getName());
+                else
+                    unresolvedIds.add(id);
+            }
+            nameAttr = Provisioning.A_zimbraDomainName;
+            base = mDIT.domainBaseDN();
+            objectClass = C_zimbraDomain;
+            break;
+        default:
+            throw ServiceException.FAILURE("unsupported entry type for getNamesForIds" + type.name(), null);
         }
-                
+        
         // we are done if all ids can be resolved in our cache
         if (unresolvedIds.size() == 0)
             return result;
         
-        //
-        // search LDAP for unresolved ids
-        //
-        
-        String base = mDIT.mailBranchBaseDN();
-        String returnAttrs[] = new String[] {Provisioning.A_zimbraId,
-                                             Provisioning.A_zimbraMailDeliveryAddress};
-        
         LdapUtil.SearchLdapVisitor visitor = new LdapUtil.SearchLdapVisitor() {
             public void visit(String dn, Map<String, Object> attrs) {
                 String id = (String)attrs.get(Provisioning.A_zimbraId);
-                String name = (String)attrs.get(Provisioning.A_zimbraMailDeliveryAddress);
+                String name = (String)attrs.get(nameAttr);
                 result.put(id, name);
             }
         };
         
+        String returnAttrs[] = new String[] {Provisioning.A_zimbraId, nameAttr};
+        searchNamesForIds(unresolvedIds, base, objectClass, returnAttrs, visitor);
+        
+        return result;
+    }
+    
+    public void searchNamesForIds(Set<String> unresolvedIds, String base, String objectClass, String returnAttrs[], LdapUtil.SearchLdapVisitor visitor) throws ServiceException {
+        
         final int batchSize = 10;  // num ids per search
-        final String queryStart = "(&(objectClass=zimbraAccount)(";
+        final String queryStart = "(&(objectClass=" + objectClass + ")(";
         final String queryEnd = "))";
         
         StringBuilder query = new StringBuilder();
         query.append(queryStart);
         
-        for (int i = 0; i < unresolvedIds.size(); i++) {
-            query.append("|(" + Provisioning.A_zimbraId + "=" + unresolvedIds.get(i) + ")");
-            if ((i+1) % batchSize == 0) {
+        int i = 0;
+        for (String id : unresolvedIds) {
+            query.append("|(" + Provisioning.A_zimbraId + "=" + id + ")");
+            if ((++i) % batchSize == 0) {
                 query.append(queryEnd);
                 LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
                 query.setLength(0);
@@ -6080,8 +6115,6 @@ public class LdapProvisioning extends Provisioning {
             query.append(queryEnd);
             LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
         }
-        
-        return result;
     }
     
     public static void testAuthDN(String args[]) {

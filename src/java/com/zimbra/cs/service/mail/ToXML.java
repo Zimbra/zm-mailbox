@@ -236,16 +236,17 @@ public class ToXML {
             // 1. try getting the name from the Grant, the name is set on the Grant 
             //    if we are in the path of proxying sharing in ZD
             String name = grant.getGranteeName();
+            byte granteeType = grant.getGranteeType();
             if (name == null) {
                 // 2. (for bug 35079), see if the name is already resolved in the in the OperationContextData
                 OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames(octxt);
                 if (granteeNames != null)
-                    name = granteeNames.getNameById(grant.getGranteeId());
+                    name = granteeNames.getNameById(grant.getGranteeId(), granteeType);
                 
                 // 3. lookup the name using the Provisioning interface, 
                 //    this *may* lead to a LDAP search if the id is not in cache
                 if (name == null) {
-                    NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
+                    NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), granteeType);
                     if (nentry != null)
                         name = nentry.getName();
                 }
@@ -253,11 +254,11 @@ public class ToXML {
             
             Element eGrant = eACL.addElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
-                  .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(grant.getGranteeType()))
+                  .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
                   .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
                   .addAttribute(MailConstants.A_DISPLAY, name);
             
-            if (grant.getGranteeType() == ACL.GRANTEE_KEY) {
+            if (granteeType == ACL.GRANTEE_KEY) {
                 if (exposeAclAccessKey)
                     eGrant.addAttribute(MailConstants.A_ACCESSKEY, grant.getPassword());
             } else
