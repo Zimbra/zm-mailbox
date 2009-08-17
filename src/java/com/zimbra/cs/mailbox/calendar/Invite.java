@@ -45,6 +45,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.calendar.Alarm.Action;
+import com.zimbra.cs.mailbox.calendar.Alarm.TriggerRelated;
+import com.zimbra.cs.mailbox.calendar.Alarm.TriggerType;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
@@ -2498,5 +2501,36 @@ public class Invite {
 
         mPercentComplete = limitIntegerRange(mPercentComplete, 0, 100, null);
         mPriority = limitIntegerRange(mPriority, 0, 9, null);
+    }
+
+    /**
+     * Add default alarm to an invite using the account's preferences.
+     * @param inv
+     * @param acct
+     * @throws ServiceException
+     */
+    public static void setDefaultAlarm(Invite inv, Account acct) throws ServiceException {
+        inv.clearAlarms();
+        int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
+                Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
+        int hoursBefore = 0;
+        int minutesBefore = 0;
+        if (!inv.isAllDayEvent()) {
+            hoursBefore = 0;
+            minutesBefore = prefNonAllDayMinutesBefore;
+        } else if (prefNonAllDayMinutesBefore > 0) {
+            // If preference says reminder is enabled, use 18-hours for all-day appointments,
+            // regardless of preference value for non-all-day appointments.
+            hoursBefore = 18;
+            minutesBefore = 0;
+        }
+        if (minutesBefore > 0 || hoursBefore > 0) {
+            String summary = inv.getName();
+            Alarm newAlarm = new Alarm(
+                    Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
+                    ParsedDuration.parse(true, 0, 0, hoursBefore, minutesBefore, 0),
+                    null, null, 0, null, summary, null, null);
+            inv.addAlarm(newAlarm);
+        }
     }
 }

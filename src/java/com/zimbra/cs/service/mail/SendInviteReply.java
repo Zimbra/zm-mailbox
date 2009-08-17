@@ -171,6 +171,7 @@ public class SendInviteReply extends CalendarRequest {
                     } else if (info.getInvite() != null) {
                         // Appointment wasn't auto-added upon invite delivery.  Add it now.
                         Invite inv = info.getInvite().newCopy();
+                        Invite.setDefaultAlarm(inv, acct);
                         inv.setMailItemId(inviteMsgId);
                         // Let's first try to lookup the appointment by UID.
                         calItem = mbox.getCalendarItemByUid(octxt, inv.getUid());

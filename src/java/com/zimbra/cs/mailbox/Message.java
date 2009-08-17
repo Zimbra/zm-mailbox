@@ -570,31 +570,9 @@ public class Message extends MailItem {
 
             // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
             if (!allowOrganizerAlarm) {
-                cur.clearAlarms();
                 // only for non-cancel/non-declinecounter VEVENTs
-                if (cur.isEvent() && isOrganizerMethod && !cur.isCancel() && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
-                    int prefNonAllDayMinutesBefore = (int) acct.getLongAttr(
-                            Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
-                    int hoursBefore = 0;
-                    int minutesBefore = 0;
-                    if (!cur.isAllDayEvent()) {
-                        hoursBefore = 0;
-                        minutesBefore = prefNonAllDayMinutesBefore;
-                    } else if (prefNonAllDayMinutesBefore > 0) {
-                        // If preference says reminder is enabled, use 18-hours for all-day appointments,
-                        // regardless of preference value for non-all-day appointments.
-                        hoursBefore = 18;
-                        minutesBefore = 0;
-                    }
-                    if (minutesBefore > 0 || hoursBefore > 0) {
-                        String summary = cur.getName();
-                        Alarm newAlarm = new Alarm(
-                                Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
-                                ParsedDuration.parse(true, 0, 0, hoursBefore, minutesBefore, 0),
-                                null, null, 0, null, summary, null, null);
-                        cur.addAlarm(newAlarm);
-                    }
-                }
+                if (cur.isEvent() && isOrganizerMethod && !cur.isCancel() && !ICalTok.DECLINECOUNTER.equals(methodTok))
+                    Invite.setDefaultAlarm(cur, acct);
             }
 
             boolean calItemIsNew = false;
