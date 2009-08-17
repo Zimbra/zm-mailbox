@@ -52,7 +52,7 @@ public class GrantPermission extends MailDocumentHandler {
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         for (Element eACE : request.listElements(MailConstants.E_ACE)) {
-            ZimbraACE ace = handleACE(eACE, zsc);
+            ZimbraACE ace = handleACE(eACE, zsc, true);
             aces.add(ace);
         }
 
@@ -76,8 +76,16 @@ public class GrantPermission extends MailDocumentHandler {
         return response;
     }
     
-    // orig: FolderAction
-    static ZimbraACE handleACE(Element eACE, ZimbraSoapContext zsc) throws ServiceException {
+    /**
+     * // orig: FolderAction
+     * 
+     * @param eACE
+     * @param zsc
+     * @param granting true if granting, false if revoking
+     * @return
+     * @throws ServiceException
+     */
+    static ZimbraACE handleACE(Element eACE, ZimbraSoapContext zsc, boolean granting) throws ServiceException {
         Right right = RightManager.getInstance().getUserRight(eACE.getAttribute(MailConstants.A_RIGHT));
         GranteeType gtype = GranteeType.fromCode(eACE.getAttribute(MailConstants.A_GRANT_TYPE));
         String zid = eACE.getAttribute(MailConstants.A_ZIMBRA_ID, null);
@@ -115,7 +123,7 @@ public class GrantPermission extends MailDocumentHandler {
             secret = eACE.getAttribute(MailConstants.A_ACCESSKEY, null);
          
         } else if (zid != null) {
-            nentry = lookupGranteeByZimbraId(zid, gtype);
+            nentry = lookupGranteeByZimbraId(zid, gtype, granting);
         } else {
             nentry = lookupGranteeByName(eACE.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
             zid = nentry.getId();
@@ -183,12 +191,23 @@ public class GrantPermission extends MailDocumentHandler {
     }
 
     // orig: FolderAction.lookupGranteeByZimbraId
-    private static NamedEntry lookupGranteeByZimbraId(String zid, GranteeType type) {
+    private static NamedEntry lookupGranteeByZimbraId(String zid, GranteeType type, boolean granting) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
+        NamedEntry nentry = null;
         try {
             switch (type) {
-                case GT_USER:    return prov.get(AccountBy.id, zid);
-                case GT_GROUP:   return prov.get(DistributionListBy.id, zid);
+                case GT_USER:    
+                    nentry = prov.get(AccountBy.id, zid); 
+                    if (nentry == null && granting)
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(zid);
+                    else
+                        return nentry;
+                case GT_GROUP:   
+                    nentry = prov.get(DistributionListBy.id, zid);
+                    if (nentry == null && granting)
+                        throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zid);
+                    else
+                        return nentry;
                 case GT_GUEST:
                 case GT_KEY:    
                 case GT_AUTHUSER:
@@ -196,7 +215,10 @@ public class GrantPermission extends MailDocumentHandler {
                 default:         return null;
             }
         } catch (ServiceException e) {
-            return null;
+            if (granting)
+                throw e;
+            else
+                return null;
         }
     }
 

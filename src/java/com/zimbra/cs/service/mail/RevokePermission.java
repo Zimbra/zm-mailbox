@@ -42,7 +42,7 @@ public class RevokePermission extends MailDocumentHandler {
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         for (Element eACE : request.listElements(MailConstants.E_ACE)) {
-            ZimbraACE ace = GrantPermission.handleACE(eACE, zsc);
+            ZimbraACE ace = GrantPermission.handleACE(eACE, zsc, false);
             aces.add(ace);
         }
 
