@@ -111,44 +111,68 @@ URL
               nsc    do not set a cookie when using basic auth
               (default is "co,ba", i.e. check both)
 
-          fmt="sync" -- requests that the server return additional metadata in response as X-Zimbra-* HTTP headers
-              (query param "nohdr=1" puts the headers only in HTTP; otherwise, they're also inlined in the response body)
+          fmt="sync" -- requests that the server return additional metadata in
+              response as X-Zimbra-* HTTP headers
+              (query param "nohdr=1" puts the headers only in HTTP; otherwise,
+              they're also inlined in the response body)
 
-          fmt="tgz" -- stream items in gzipped tar format
-              download options: export item data in raw or interchange format
+          fmt="tar", "tgz", "zip" -- stream multiple items in an archive format.
+              These forms are a superset of most other REST formatters
 
-              charset=name character set for tar file and directory names as well as ical or vcard text. UTF-8 is default
+              Download options: export item data in raw or interchange format
 
-              emptyname=name filename to set in content-disposition header if no data items are found in query instead of returning HTTP 204 error
+              body=0 only include msg headers, not bodies
+
+              charset=name character set for tar file and directory names as
+                  well as ical or vcard text. UTF-8 is default
+
+              emptyname=name filename to set in content-disposition header if
+                  no data items are found in query instead of returning HTTP
+                  204 error
 
               file=name filename to set in content-disposition header
 
-              lock=1 lock mailbox before running query to assure a complete, consistent snapshot
+              lock=1 lock mailbox before running query to assure a complete,
+                  consistent snapshot
 
-              meta=0 data items saved in common interchange formats including eml for mail, ical for appointments and vcard for contacts. Briefcase files saved unmodified
-              meta=1 (default) item metadata from the DB is JSON encoded as .meta files. Associated data blobs follow immediately after.
+              meta=0 data items saved in common interchange formats including
+                  eml for mail, ical for appointments and vcard for contacts.
+                  Briefcase files saved unmodified
 
-              upload options: POST to the original folder or a subfolder in raw or MIME encoded data stream. If .meta files are included, data will be imported with original details. Otherwise, eml, ics and vcards are imported the same as with other formatters and all other files are imported to the briefcase
+              meta=1 (default) item metadata from the DB is JSON encoded as
+                  .meta files. Associated data blobs follow immediately after
 
-              callback=name name of javascript function used to return status when doing a direct browser upload.
-                  window.parent.name("exception string", "exception class name", exception_code) is called when the upload completes. plain html is returned by default if callback unspecified
+              Upload options: POST to the original folder or a subfolder in raw
+                  or MIME encoded data stream. If .meta files are included,
+                  data will be imported with original details. Otherwise, eml,
+                  ics and vcards are imported the same as with other formatters
+                  and all other files are imported to the briefcase
 
-              charset=name character set for tar file and directory names as well as ical or vcard text
+              callback=name name of javascript function used to return status
+                  when doing a direct browser upload.
+                  window.parent.name("exception string", "exception class name",
+                  exception_code) is called when the upload completes.
+                  plain html is returned by default if callback unspecified
 
-              resolve=[modfy|replace|reset|skip] how to handle duplicate data conflicts
+              charset=name character set for archive file and directory names as
+                  well as ical or vcard text
+
+              resolve=[modfy|replace|reset|skip] how to handle duplicate data
+                  conflicts
                   modify   modify old item in place
                   replace  delete old item and recreate
                   reset    reset folder by deleting all item before importing
                   skip (default) skip duplicate items completely
 
-              subfolder=name create subfolder under the destination to import items into
+              subfolder=name create subfolder under the destination to import
+                  items into
 
-              timeout=mscec update brower client with a text newline to prevent upload timeouts
+              timestamp=0 do not use the archive entry date as the received
+                  date for msgs or the creation date for documents. Msg dates
+                  will be inferred from the Date header if available
 
-          fmt="zip" -- download item(s) in zip package.  Additional metadata (same ones as "sync") are encoded as X-Zimbra-*
-              headers stored in each zip entry's metadata field.
-
-          list={item-id}*[,{item-id}] -- download items specified by the list parameter.  Only works with zip and tgz formatters.
+              timeout=mscec update brower client with a text newline to prevent
+                  upload timeouts
 
 ------------------------------------------------------------
 EXAMPLES
@@ -173,7 +197,7 @@ Some examples:
 /home/roland/calendars                    // ICS view of calendar
 /home/janie/holidays                      // Janie's holidays calendar
 /home/roland/calendar/project.html        // html view of calendar/projects calendar
-/home/roland/calendar.atom                           // atom feed of calendar  (-7/+7 days by default)
+/home/roland/calendar.atom                // atom feed of calendar  (-7/+7 days by default)
 /home/roland/calendar.atom?start=0day&end=+2weeks    // atom feed of calendar for next two weeks
 
 The second format is used to reference something by its mail item id:

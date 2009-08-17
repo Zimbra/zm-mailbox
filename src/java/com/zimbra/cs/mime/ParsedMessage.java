@@ -121,6 +121,9 @@ public class ParsedMessage {
     private boolean mWasMutated;
     private Integer mRawSize;
     private InputStream mSharedStream;
+    
+    public static final long DATE_HEADER = -2;
+    public static final long DATE_UNKNOWN = -1;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments)
     throws ServiceException {
@@ -744,7 +747,9 @@ public class ParsedMessage {
 
     public void setReceivedDate(long date) {
         // round to nearest second...
-        if (date != -1)
+        if (date == DATE_HEADER)
+            mReceivedDate = getDateHeader();
+        else if (date != DATE_UNKNOWN)
             mReceivedDate = (Math.max(0, date) / 1000) * 1000;
     }
     

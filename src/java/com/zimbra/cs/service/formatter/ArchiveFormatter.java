@@ -604,6 +604,7 @@ public abstract class ArchiveFormatter extends Formatter {
         String charset = context.params.get("charset");
         String resolve = context.params.get("resolve");
         String subfolder = context.params.get("subfolder");
+        String timestamp = context.params.get("timestamp");
         String timeout = context.params.get("timeout");
  
         if (charset == null)
@@ -733,8 +734,9 @@ public abstract class ArchiveFormatter extends Formatter {
                             addError(errs, FormatterServiceException.MISSING_META(
                                 aie.getName()));
                         else
-                            addData(context, fldr, fmap, searchTypes, r, ais,
-                                aie, errs);
+                            addData(context, fldr, fmap, searchTypes, r,
+                                timestamp == null || !timestamp.equals("0"),
+                                ais, aie, errs);
                     } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) ||
                         (id.ud.getBlobDigest() != null && id.ud.size !=
                         aie.getSize())) {
@@ -1290,10 +1292,10 @@ public abstract class ArchiveFormatter extends Formatter {
         }
     }
 
-    private void addData(Context context, Folder fldr,
-        Map<Object, Folder> fmap, byte[] searchTypes, Resolve r,
-        ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> 
-        errs) throws MessagingException, ServiceException {
+    private void addData(Context context, Folder fldr, Map<Object, Folder> fmap,
+        byte[] searchTypes, Resolve r, boolean timestamp,
+        ArchiveInputStream ais, ArchiveInputEntry aie,
+        List<ServiceException> errs) throws MessagingException, ServiceException {
         try {
             int defaultFldr;
             Mailbox mbox = fldr.getMailbox();
@@ -1440,8 +1442,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                 }
                 if (newItem != null) {
-                    mbox.setDate(oc, newItem.getId(), type,
-                        aie.getModTime());
+                    if (timestamp)
+                        mbox.setDate(oc, newItem.getId(), type,
+                            aie.getModTime());
                     if (type == MailItem.TYPE_WIKI)
                         WikiFormatter.expireCacheItem(fldr);
                 }
@@ -1452,7 +1455,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     setFolderId(fldr.getId()).setNoICal(true).setFlags(flags);
 
                 mbox.addMessage(oc, ais.getInputStream(), (int)aie.getSize(),
-                    aie.getModTime(), opt);
+                    timestamp ? aie.getModTime() : ParsedMessage.DATE_HEADER, opt);
                 break;
             }
         } catch (Exception e) {
