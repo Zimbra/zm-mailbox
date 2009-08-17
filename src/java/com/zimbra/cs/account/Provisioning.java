@@ -2941,7 +2941,18 @@ public abstract class Provisioning {
         // do nothing by default
     }
 
-    public Map<String, String> getAccountNamesForIds(Set<String> ids) throws ServiceException {
+    // TODO: consolidate with CacheEntryType in main
+    public static enum EntryType {
+        account,
+        group,
+        config,
+        cos,
+        domain,
+        server,
+        zimlet;
+    }
+    
+    public Map<String, String> getNamesForIds(Set<String> ids, EntryType type) throws ServiceException {
         return new HashMap<String, String>();  // return empty map
     }
 }
