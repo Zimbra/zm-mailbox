@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090813-1128 */
+    /* build: 6.0.0 pshao 20090817-1550 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8129,7 +8129,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8143,7 +8144,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8157,7 +8159,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8174,7 +8177,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8192,7 +8196,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8209,7 +8214,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8227,7 +8233,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *
@@ -8243,7 +8250,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * <p>Valid values: [yahoo, zimbra]
      *

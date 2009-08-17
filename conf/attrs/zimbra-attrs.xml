@@ -3828,9 +3828,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>UI components available for the authed admin in admin console</desc>
 </attr>
 
-<attr id="762" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
+<attr id="762" name="zimbraIMService" type="enum" value="zimbra,yahoo" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA1" deprecatedSince="6.0.0_GA">
   <defaultCOSValue>zimbra</defaultCOSValue>
   <desc>IM service</desc>
+  <deprecateDesc>deprecated per bug 40069</deprecateDesc>
 </attr>
 
 <attr id="763" name="zimbraXMPPComponentClassName" type="string" cardinality="single" requiredIn="xmppComponent" since="6.0.0_BETA1">

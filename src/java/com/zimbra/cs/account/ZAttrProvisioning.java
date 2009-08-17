@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090813-1128 */
+    /* build: 6.0.0 pshao 20090817-1550 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3490,7 +3490,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIMBindAddress = "zimbraIMBindAddress";
 
     /**
-     * IM service
+     * Deprecated since: 6.0.0_GA. deprecated per bug 40069. Orig desc: IM
+     * service
      *
      * @since ZCS 6.0.0_BETA1
      */
