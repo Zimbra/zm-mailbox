@@ -27,7 +27,8 @@ public class ZGetMessageParams {
     private boolean mNeuterImages;
     private boolean mRawContent;
     private String mPart;
-
+    private String mRequestHeaders;
+    
     public ZGetMessageParams() { }
 
     public boolean isWantHtml() {
@@ -84,6 +85,14 @@ public class ZGetMessageParams {
             return (mId+mPart).hashCode();
         else
             return mId.hashCode();
+    }
+
+    public void setReqHeaders(String reqHeaders) {
+        this.mRequestHeaders = reqHeaders;
+    }
+
+    public String getReqHeaders() {
+        return this.mRequestHeaders;   
     }
 
     /**

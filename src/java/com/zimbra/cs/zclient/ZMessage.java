@@ -26,6 +26,8 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class ZMessage implements ZItem, ToZJSONObject {
 
@@ -91,7 +93,8 @@ public class ZMessage implements ZItem, ToZJSONObject {
     private String mOrigId;
     private ZInvite mInvite;
     private ZShare mShare;
-        
+    private Map<String, String> mReqHdrs;
+    
     public ZMessage(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
@@ -120,6 +123,16 @@ public class ZMessage implements ZItem, ToZJSONObject {
         for (Element emailEl: e.listElements(MailConstants.E_EMAIL)) {
             mAddresses.add(new ZEmailAddress(emailEl));
         }
+
+        //request headers
+        mReqHdrs = new HashMap<String,String>();
+        Element attrsEl = e.getOptionalElement("_attrs");
+        if(attrsEl != null) {
+            for (Element.Attribute eHdr : attrsEl.listAttributes()) {
+                mReqHdrs.put(eHdr.getKey(),eHdr.getValue());
+            }
+        }
+
         Element mp = e.getOptionalElement(MailConstants.E_MIMEPART);
         if (mp != null)
             mMimeStructure = new ZMimePart(null, mp);
@@ -222,6 +235,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         zjo.put("mimeStructure", mMimeStructure);
         zjo.put("invite", mInvite);
         zjo.put("share", mShare);
+        zjo.putMap("requestHeaders", mReqHdrs); 
         return zjo;
     }
 
@@ -257,6 +271,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return mConversationId;
     }
 
+    public Map<String,String> getRequestHeader() {
+        return mReqHdrs;
+    }
+    
     public List<ZEmailAddress> getEmailAddresses() {
         return mAddresses;
     }

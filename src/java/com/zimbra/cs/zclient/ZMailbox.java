@@ -2029,6 +2029,14 @@ public class ZMailbox {
             msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
             msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
             msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
+            //header request bug:33054
+            String reqHdrs = params.getReqHeaders();
+            if (reqHdrs != null && reqHdrs.length() > 0) {
+                for (String hdrName : reqHdrs.split(",")) {
+                    Element headerEl = msgEl.addElement(MailConstants.A_HEADER);
+                    headerEl.addAttribute(MailConstants.A_ATTRIBUTE_NAME, hdrName);
+                }
+            }
             ZMessage zm = new ZMessage(invoke(req).getElement(MailConstants.E_MSG));
             cm = new CachedMessage();
             cm.zm = zm;
