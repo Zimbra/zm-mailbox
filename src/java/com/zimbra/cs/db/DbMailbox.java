@@ -214,18 +214,20 @@ public class DbMailbox {
             if (DebugConfig.disableMailboxGroups) {
                 Db.getInstance().registerDatabaseInterest(conn, getDatabaseName(groupId));
 
-                // then create the primary lookup row in ZIMBRA.MAILBOX
-                stmt = conn.prepareStatement("INSERT INTO mailbox (account_id, id, last_backup_at, comment)" +
-                        " VALUES (?, ?, ?, ?)");
-                stmt.setString(1, accountId);
-                stmt.setLong(2, mailboxId);
-                if (lastBackupAt >= 0)
-                    stmt.setInt(3, lastBackupAt);
-                else
-                    stmt.setNull(3, Types.INTEGER);
-                stmt.setString(4, comment);
-                stmt.executeUpdate();
-                stmt.close();  stmt = null;
+                if (!DebugConfig.externalMailboxDirectory) {
+                    // then create the primary lookup row in ZIMBRA.MAILBOX
+                    stmt = conn.prepareStatement("INSERT INTO mailbox (account_id, id, last_backup_at, comment)" +
+                            " VALUES (?, ?, ?, ?)");
+                    stmt.setString(1, accountId);
+                    stmt.setLong(2, mailboxId);
+                    if (lastBackupAt >= 0)
+                        stmt.setInt(3, lastBackupAt);
+                    else
+                        stmt.setNull(3, Types.INTEGER);
+                    stmt.setString(4, comment);
+                    stmt.executeUpdate();
+                    stmt.close();  stmt = null;
+                }
 
                 // finally, create the row in MBOXGROUPnn.MAILBOX for mutable state and counts 
                 stmt = conn.prepareStatement("INSERT INTO " + qualifyTableName(groupId, TABLE_MAILBOX) +
@@ -383,6 +385,9 @@ public class DbMailbox {
     }
 
     public static void renameMailbox(Mailbox mbox, String newName) throws ServiceException {
+        if (DebugConfig.externalMailboxDirectory)
+            return;
+
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         long mailboxId = mbox.getId();
@@ -599,6 +604,9 @@ public class DbMailbox {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mmgr));
 
         HashMap<String, Long> result = new HashMap<String, Long>();
+        if (DebugConfig.externalMailboxDirectory)
+            return result;
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -633,6 +641,8 @@ public class DbMailbox {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         HashMap<String, Long> sizes = new HashMap<String, Long>();
+        if (DebugConfig.externalMailboxDirectory)
+            return sizes;
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -843,6 +853,9 @@ public class DbMailbox {
     private static void addToDeletedAccount(Connection conn, Mailbox mbox) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
+        if (DebugConfig.externalMailboxDirectory)
+            return;
+
         // Get email address for mailbox by querying the mailbox table.  We can't get it by
         // calling mbox.getAccount().getName() because the account was already deleted from LDAP.
         String email = null;
@@ -962,9 +975,11 @@ public class DbMailbox {
             }
 
             // remove entry from mailbox table
-            stmt = conn.prepareStatement("DELETE FROM mailbox WHERE id = ?");
-            stmt.setLong(1, mbox.getId());
-            stmt.executeUpdate();
+            if (!DebugConfig.externalMailboxDirectory) {
+                stmt = conn.prepareStatement("DELETE FROM mailbox WHERE id = ?");
+                stmt.setLong(1, mbox.getId());
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("deleting mailbox " + mbox.getId(), e);
         } finally {
@@ -1025,6 +1040,8 @@ public class DbMailbox {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
         Set<String> accountIds = new HashSet<String>();
+        if (DebugConfig.externalMailboxDirectory)
+            return accountIds;
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1045,6 +1062,8 @@ public class DbMailbox {
   
     public static List<Mailbox.MailboxData> getMailboxRawData(Connection conn) throws ServiceException {
         List<Mailbox.MailboxData> results = new ArrayList<Mailbox.MailboxData>();
+        if (DebugConfig.externalMailboxDirectory)
+            return results;
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1053,10 +1072,10 @@ public class DbMailbox {
                 assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
 
                 stmt = conn.prepareStatement(
-                        "SELECT id, group_id, account_id, index_volume_id, item_id_checkpoint, " +
-                        "contact_count, size_checkpoint, change_checkpoint, tracking_sync, " +
-                        "tracking_imap, last_backup_at, last_soap_access, new_messages, " +
-                        "idx_deferred_count, highest_indexed " +
+                        "SELECT id, group_id, account_id, index_volume_id, item_id_checkpoint," +
+                        " contact_count, size_checkpoint, change_checkpoint, tracking_sync," +
+                        " tracking_imap, last_backup_at, last_soap_access, new_messages," +
+                        " idx_deferred_count, highest_indexed " +
                         "FROM mailbox");
                 rs = stmt.executeQuery();
                 readMailboxRawData(results, rs);
