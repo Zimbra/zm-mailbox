@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090817-1550 */
+    /* build: 6.0.0 pshao 20090818-1054 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4928,6 +4928,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=307)
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
+
+    /**
+     * whether or not account tree is expanded
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1048)
+    public static final String A_zimbraPrefAccountTreeOpen = "zimbraPrefAccountTreeOpen";
 
     /**
      * whether to display a warning when users try to navigate away from the

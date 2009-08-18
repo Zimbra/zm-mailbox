@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090817-1550 */
+    /* build: 6.0.0 pshao 20090818-1054 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -18470,6 +18470,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPortalName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPortalName, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not account tree is expanded
+     *
+     * @return zimbraPrefAccountTreeOpen, or true if unset
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1048)
+    public boolean isPrefAccountTreeOpen() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefAccountTreeOpen, true);
+    }
+
+    /**
+     * whether or not account tree is expanded
+     *
+     * @param zimbraPrefAccountTreeOpen new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1048)
+    public void setPrefAccountTreeOpen(boolean zimbraPrefAccountTreeOpen) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAccountTreeOpen, zimbraPrefAccountTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not account tree is expanded
+     *
+     * @param zimbraPrefAccountTreeOpen new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1048)
+    public Map<String,Object> setPrefAccountTreeOpen(boolean zimbraPrefAccountTreeOpen, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAccountTreeOpen, zimbraPrefAccountTreeOpen ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not account tree is expanded
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1048)
+    public void unsetPrefAccountTreeOpen() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAccountTreeOpen, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not account tree is expanded
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1048)
+    public Map<String,Object> unsetPrefAccountTreeOpen(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAccountTreeOpen, "");
         return attrs;
     }
 
