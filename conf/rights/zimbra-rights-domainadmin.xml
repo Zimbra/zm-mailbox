@@ -144,6 +144,7 @@
     <a n="zimbraPasswordMustChange"/>
     <a n="zimbraPop3Enabled"/>
     <a n="zimbraPortalName"/>
+    <a n="zimbraPrefAccountTreeOpen"/>
     <a n="zimbraPrefAdminConsoleWarnOnExit"/>
     <a n="zimbraPrefAdvancedClientEnforceMinDisplay"/>
     <a n="zimbraPrefAppleIcalDelegationEnabled"/>
