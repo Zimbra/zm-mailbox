@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -188,11 +189,16 @@ public class ZimletFile implements Comparable<ZimletFile> {
 		} else if (mBase.isDirectory()) {
 			addFileEntry(mBase, "");
 		} else {
-			ZipFile zip = new ZipFile(mBase);
-			Enumeration entries = zip.entries();
+			JarFile jar = new JarFile(mBase);
+            Manifest mf = jar.getManifest();
+            if (mf != null) {
+                mDescFile = mf.getMainAttributes().getValue("Zimlet-Description-File");
+            }
+			Enumeration entries = jar.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry entry = (ZipEntry) entries.nextElement();
-				mEntries.put(entry.getName().toLowerCase(), new ZimletZipEntry(zip, entry));
+				if (entry.getSize() > 0)
+				    mEntries.put(entry.getName().toLowerCase(), new ZimletZipEntry(jar, entry));
 			}
 		}
 		

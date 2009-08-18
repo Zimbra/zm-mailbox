@@ -530,15 +530,24 @@ public class ZimletUtil {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet " + zimletName + " on this host.");
-		
-		// install the jar file and properties in zimlet
-		File serviceLibDir = new File(LC.mailboxd_directory.value() + File.separator + 
+
+		// location for server extension class
+		File serviceDir = new File(LC.mailboxd_directory.value() + File.separator + 
 									"webapps" + File.separator + 
-									"zimlet" + File.separator + 
+									"service" + File.separator + 
 									"WEB-INF" + File.separator + 
 									"lib");
+        // location for the jar files
+        File libDir = new File(LC.mailboxd_directory.value() + File.separator + 
+                                    "webapps" + File.separator + 
+                                    "zimlet" + File.separator + 
+                                    "WEB-INF" + File.separator + 
+                                    "lib");
+        // location for the properties
 		File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimletName);
+		// location for the rest of the files
         File zimlet = new File(getZimletDir() + File.separatorChar + zimletName);
+        
         zimlet.getParentFile().mkdirs();
         if (zimlet.exists())
             deleteFile(zimlet);
@@ -546,9 +555,13 @@ public class ZimletUtil {
 		for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
 			String fname = entry.getName();
 			if (fname.endsWith(".jar")) {
-				File file = new File(serviceLibDir, fname);
+				File file = new File(libDir, fname);
 				file.getParentFile().mkdirs();
 				writeFile(entry.getContents(), file);
+            } else if (fname.endsWith(".class")) {
+                File file = new File(serviceDir, fname);
+                file.getParentFile().mkdirs();
+                writeFile(entry.getContents(), file);
 			} else if (fname.endsWith(".properties")) {
 				File file = new File(propsDir, fname);
 				file.getParentFile().mkdirs();
