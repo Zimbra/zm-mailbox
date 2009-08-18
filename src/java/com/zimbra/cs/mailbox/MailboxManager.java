@@ -744,72 +744,23 @@ public class MailboxManager {
         if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
 
+        // the awkward structure here is to avoid calling getMailboxById while holding the lock
         Mailbox mbox = null;
-
-        synchronized (this) {
-            // check to make sure the mailbox doesn't already exist
-            Long mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
+        Long mailboxKey = null;
+        do {
             if (mailboxKey != null)
                 return getMailboxById(mailboxKey);
 
-            // didn't have the mailbox in the database; need to create one now
-            CreateMailbox redoRecorder = new CreateMailbox(account.getId());
+            synchronized (this) {
+                // check to make sure the mailbox doesn't already exist
+                mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
+                if (mailboxKey != null)
+                    continue;
 
-            Connection conn = null;
-            boolean success = false;
-            try {
-                conn = DbPool.getConnection();
-
-                // create the mailbox row and the mailbox database
-                CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
-                long id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
-
-                MailboxData data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
-                ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
-
-                mbox = instantiateMailbox(data);
-
-                synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
-                    // the existing Connection is used for the rest of this transaction...
-                    mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
-                }
-
-                // create the default folders
-                mbox.initialize();
-
-                // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
-                cacheAccount(data.accountId, data.id);
-                cacheMailbox(mbox);
-                redoRecorder.setMailboxId(mbox.getId());
-
-                success = true;
-            } catch (ServiceException e) {
-                // Log exception here, just in case.  If badness happens during rollback
-                // the original exception will be lost.
-                ZimbraLog.mailbox.error("Error during mailbox creation", e);
-                throw e;
-            } catch (OutOfMemoryError e) {
-                Zimbra.halt("out of memory", e);
-            } catch (Throwable t) {
-                ZimbraLog.mailbox.error("Error during mailbox creation", t);
-                throw ServiceException.FAILURE("createMailbox", t);
-            } finally {
-                try {
-                    if (mbox != null) {
-                        synchronized(mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
-                            mbox.endTransaction(success);
-                        }
-                        conn = null;
-                    } else {
-                        if (conn != null)
-                            conn.rollback();
-                    }
-                } finally {
-                    if (conn != null)
-                        DbPool.quietClose(conn);
-                }
+                // didn't have the mailbox in the database; need to create one now
+                mbox = createMailboxInternal(octxt, account);
             }
-        }
+        } while (mbox == null);
 
         // now, make sure the mailbox is initialized -- we do this after releasing 
         // the Mgr lock so that filesystem IO and other longer operations don't 
@@ -817,6 +768,69 @@ public class MailboxManager {
         if (mbox.finishInitialization())
             notifyMailboxCreated(mbox);
         
+        return mbox;
+    }
+
+    private synchronized Mailbox createMailboxInternal(OperationContext octxt, Account account) throws ServiceException {
+        CreateMailbox redoRecorder = new CreateMailbox(account.getId());
+
+        Mailbox mbox = null;
+
+        Connection conn = null;
+        boolean success = false;
+        try {
+            conn = DbPool.getConnection();
+
+            CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
+            long id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
+
+            // create the mailbox row and the mailbox database
+            MailboxData data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
+            ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
+
+            mbox = instantiateMailbox(data);
+
+            synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                // the existing Connection is used for the rest of this transaction...
+                mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
+            }
+
+            // create the default folders
+            mbox.initialize();
+
+            // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
+            cacheAccount(data.accountId, data.id);
+            cacheMailbox(mbox);
+            redoRecorder.setMailboxId(mbox.getId());
+
+            success = true;
+        } catch (ServiceException e) {
+            // Log exception here, just in case.  If badness happens during rollback
+            // the original exception will be lost.
+            ZimbraLog.mailbox.error("Error during mailbox creation", e);
+            throw e;
+        } catch (OutOfMemoryError e) {
+            Zimbra.halt("out of memory", e);
+        } catch (Throwable t) {
+            ZimbraLog.mailbox.error("Error during mailbox creation", t);
+            throw ServiceException.FAILURE("createMailbox", t);
+        } finally {
+            try {
+                if (mbox != null) {
+                    synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                        mbox.endTransaction(success);
+                    }
+                    conn = null;
+                } else {
+                    if (conn != null)
+                        conn.rollback();
+                }
+            } finally {
+                if (conn != null)
+                    DbPool.quietClose(conn);
+            }
+        }
+
         return mbox;
     }
 
