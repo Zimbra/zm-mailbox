@@ -55,6 +55,7 @@ public class SQLite extends Db {
             case CLOB_COMPARISON:            return true;
             case DISABLE_CONSTRAINT_CHECK:   return false;
             case FILE_PER_DATABASE:          return true;
+            case FORCE_INDEX_EVEN_IF_NO_SORT:  return false;
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return false;
             case ON_DUPLICATE_KEY:           return false;
@@ -189,7 +190,7 @@ public class SQLite extends Db {
         return retVal == null ? conn : retVal;
     }
 
-    @Override public void registerDatabaseInterest(Connection conn, String dbname) throws SQLException {
+    @Override public void registerDatabaseInterest(Connection conn, String dbname) throws SQLException, ServiceException {
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
             return;
@@ -206,7 +207,8 @@ public class SQLite extends Db {
         recordAttachedDatabase(conn, dbname);
     }
 
-    void attachDatabase(Connection conn, String dbname) throws SQLException {
+    @SuppressWarnings("unused")
+    void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
         PreparedStatement stmt = null;
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();

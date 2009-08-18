@@ -148,7 +148,7 @@ public abstract class Db {
     }
 
     @SuppressWarnings("unused")
-    void registerDatabaseInterest(Connection conn, String dbname) throws SQLException {
+    void registerDatabaseInterest(Connection conn, String dbname) throws SQLException, ServiceException {
         // default is to do nothing
     }
 
