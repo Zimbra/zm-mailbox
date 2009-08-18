@@ -2565,7 +2565,7 @@ public class ZMailbox implements ToZJSONObject {
 
             get = new GetMethod(uri.toString());
             
-            if (msecTimeout > 0)
+            if (msecTimeout > -1)
                 get.getParams().setSoTimeout(msecTimeout);
 
             statusCode = client.executeMethod(get);
@@ -2632,7 +2632,7 @@ public class ZMailbox implements ToZJSONObject {
 
             post = new PostMethod(uri.toString());
             
-            if (msecTimeout > 0)
+            if (msecTimeout > -1)
                 post.getParams().setSoTimeout(msecTimeout);
             
             RequestEntity entity = (length > 0) ?

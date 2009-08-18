@@ -129,6 +129,7 @@ public class ZMailboxUtil implements DebugListener {
     SoapProvisioning mProv;
     SoapProtocol mRequestProto = SoapProtocol.SoapJS;
     SoapProtocol mResponseProto = SoapProtocol.SoapJS;
+    private int mTimeout = LC.httpclient_connmgr_so_timeout.intValue();
 
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
@@ -176,6 +177,18 @@ public class ZMailboxUtil implements DebugListener {
         mUrl = ZMailbox.resolveUrl(url, admin);
     }
 
+    public void setTimeout(String timeout) throws ServiceException {
+        int num;
+        try {
+            num = Integer.parseInt(timeout);
+        } catch (NumberFormatException e) {
+            throw ServiceException.INVALID_REQUEST("Invalid timeout value " + timeout, e);
+        }
+        if (num < 0)
+            throw ServiceException.INVALID_REQUEST("Timeout can't be negative", null);
+        mTimeout = num * 1000;
+    }
+
     private void usage() {
 
         if (mCommand != null) {
@@ -199,6 +212,7 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println("  -p/--password {pass}                     password for admin account and/or mailbox");
         stdout.println("  -P/--passfile {file}                     read password from file");
         stdout.println("  -r/--protocol {proto|req-proto/response-proto} specify request/response protocol [soap11,soap12,json]");
+        stdout.println("  -t/--timeout                             timeout (in seconds)");
         stdout.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         stdout.println("  -d/--debug                               debug mode (dumps SOAP messages)");
 
@@ -551,7 +565,8 @@ public class ZMailboxUtil implements DebugListener {
         ZMailbox.Options options = prov.getMailboxOptions(AccountBy.name, mMailboxName, 60*60*24);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
-        
+        options.setTimeout(mTimeout);
+
         if (prov.soapGetTransportDebugListener() != null)
             options.setDebugListener(prov.soapGetTransportDebugListener());
         else  // use the same debug listener used by zmprov
@@ -600,6 +615,7 @@ public class ZMailboxUtil implements DebugListener {
         options.setDebugListener(mDebug ? this : null);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
+        options.setTimeout(mTimeout);
         mMbox = ZMailbox.getMailbox(options);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
         dumpMailboxConnect();
@@ -2505,6 +2521,7 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("m", "mailbox", true, "mailbox to open");
         options.addOption("p", "password", true, "password for admin/mailbox");
         options.addOption("P", "passfile", true, "filename with password in it");
+        options.addOption("t", "timeout", true, "timeout (in seconds)");
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
@@ -2559,8 +2576,10 @@ public class ZMailboxUtil implements DebugListener {
         if (cl.hasOption('r')) pu.setProtocol(cl.getOptionValue('r'));        
         if (cl.hasOption('P')) {
             pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
-        }        
+        }
         if (cl.hasOption('d')) pu.setDebug(true);
+
+        if (cl.hasOption('t')) pu.setTimeout(cl.getOptionValue('t'));
 
         args = cl.getArgs();
 
@@ -2678,7 +2697,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
-            mMbox.getRESTResource(encodeURL(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), 0, urlOpt(false));
+            mMbox.getRESTResource(encodeURL(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), mTimeout, urlOpt(false));
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
@@ -2690,7 +2709,7 @@ public class ZMailboxUtil implements DebugListener {
         try {
             File file = new File(args[1]);
             mMbox.postRESTResource(encodeURL(args[0]), new FileInputStream(file), true, file.length(),
-                    contentTypeOpt(), ignoreAndContinueOnErrorOpt(), preserveAlarmsOpt(), 0, urlOpt(false));
+                    contentTypeOpt(), ignoreAndContinueOnErrorOpt(), preserveAlarmsOpt(), mTimeout, urlOpt(false));
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
         }
