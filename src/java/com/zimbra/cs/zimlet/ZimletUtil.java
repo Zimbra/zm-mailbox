@@ -531,12 +531,6 @@ public class ZimletUtil {
 		String zimletName = zd.getName();
 		ZimbraLog.zimlet.info("Installing Zimlet " + zimletName + " on this host.");
 
-		// location for server extension class
-		File serviceDir = new File(LC.mailboxd_directory.value() + File.separator + 
-									"webapps" + File.separator + 
-									"service" + File.separator + 
-									"WEB-INF" + File.separator + 
-									"lib");
         // location for the jar files
         File libDir = new File(LC.mailboxd_directory.value() + File.separator + 
                                     "webapps" + File.separator + 
@@ -558,10 +552,6 @@ public class ZimletUtil {
 				File file = new File(libDir, fname);
 				file.getParentFile().mkdirs();
 				writeFile(entry.getContents(), file);
-            } else if (fname.endsWith(".class")) {
-                File file = new File(serviceDir, fname);
-                file.getParentFile().mkdirs();
-                writeFile(entry.getContents(), file);
 			} else if (fname.endsWith(".properties")) {
 				File file = new File(propsDir, fname);
 				file.getParentFile().mkdirs();
@@ -669,16 +659,6 @@ public class ZimletUtil {
         if (propsDir.exists()) {
             ZimbraLog.zimlet.info("Deleting Zimlet property files "+propsDir.getAbsolutePath());
             deleteFile(propsDir);
-        }
-        
-        File jspDir = new File(LC.mailboxd_directory.value() + File.separator +
-                "webapps" + File.separator + 
-                "zimbra" + File.separator +
-                "zimlet" + File.separator +
-                zimlet);
-        if (jspDir.exists()) {
-            ZimbraLog.zimlet.info("Deleting Zimlet jsp files "+jspDir.getAbsolutePath());
-            deleteFile(jspDir);
         }
         
 		if (auth == null)
