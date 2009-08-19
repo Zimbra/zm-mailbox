@@ -22,7 +22,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
     StringBuilder sbuf;
     static final int DEFAULT_SIZE_HINT = 512;
 
-    public StringBufferStream() { this(0); }
+    public StringBufferStream() { this(null); }
 
     public StringBufferStream(long sizeHint) {
         this(null, sizeHint);
@@ -36,7 +36,7 @@ public class StringBufferStream extends BufferStream implements Appendable {
         this(null, sizeHint, maxBuffer, maxSize);
     }
 
-    public StringBufferStream(String cset) { this(0); }
+    public StringBufferStream(String cset) { this(cset, 0); }
 
     public StringBufferStream(String cset, long sizeHint) {
         this(cset, sizeHint, Integer.MAX_VALUE);
