@@ -2684,10 +2684,11 @@ public abstract class MailItem implements Comparable<MailItem> {
     	private static final long RGB_MASK           = 0x00ffffff;
         private static final long[] COLORS = {
             // none,  blue,     cyan,     green,    purple
-            0x000000, 0x0000ff, 0x008284, 0x008200, 0x840084, 
+            0x000000, 0x9EB6F5, 0xA4E6E6, 0x97C8B1, 0xBA86E5,
             // red,   yellow,   pink,     gray      orange
-            0xff0000, 0x848200, 0xff0084, 0x848284, 0xff8000
+            0xFC9696, 0xFFF6B3, 0xFE9BD3, 0xD3D3D3, 0xFDBC55
         };
+
         public Color(long rgb) {
             setRgb(rgb);
         }
