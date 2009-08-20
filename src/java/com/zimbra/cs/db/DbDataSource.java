@@ -581,6 +581,64 @@ public class DbDataSource {
         }
     	return new DataSourceItem(folderId, itemId, remoteId, md);
     }
+    
+    public static Collection<DataSourceItem> getMappings(DataSource ds, Collection<Integer> ids) throws ServiceException {
+        Mailbox mbox = ds.getMailbox();
+
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        int folderId = 0;
+        int itemId = 0;
+        String remoteId = null;
+        Metadata md = null;
+        List<List<Integer>> splitIds = ListUtil.split(ids, Db.getINClauseBatchSize());
+        ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        
+        ZimbraLog.datasource.debug("Get mappings for %s", ds.getName());
+
+        synchronized (getSynchronizer(mbox)) {
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                conn = DbPool.getConnection();
+                for (List<Integer> curIds : splitIds) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("SELECT item_id, remote_id, folder_id, metadata FROM ");
+                    sb.append(getTableName(mbox));
+                    sb.append(" WHERE ");
+                    sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+                    sb.append("  data_source_id = ? AND item_id IN ");
+                    sb.append(DbUtil.suitableNumberOfVariables(curIds));
+                    stmt = conn.prepareStatement(sb.toString());
+                    int i = 1;
+                    i = DbMailItem.setMailboxId(stmt, mbox, i);
+                    stmt.setString(i++, ds.getId());
+                    for (int uid : curIds)
+                        stmt.setInt(i++, uid);
+                    rs = stmt.executeQuery();
+                    while (rs.next()) {
+                        itemId = rs.getInt(1);
+                        remoteId = rs.getString(2);
+                        folderId = rs.getInt(3);
+                        String buf = rs.getString(4);
+                        if (buf != null)
+                            md = new Metadata(buf);
+                        items.add( new DataSourceItem(folderId, itemId, remoteId, md));
+                    }
+                    rs.close();
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to get mapping for dataSource "+ds.getName(), e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
+            }
+        }
+        return items;
+    }
 
     public static Collection<DataSourceItem> getReverseMappings(DataSource ds, Collection<String> remoteIds) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
