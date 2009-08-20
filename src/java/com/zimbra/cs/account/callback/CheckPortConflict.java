@@ -24,7 +24,6 @@ import org.apache.commons.collections.bidimap.DualHashBidiMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
@@ -38,6 +37,7 @@ public class CheckPortConflict extends AttributeCallback {
     private static final Set<String> sPortAttrs = new HashSet<String>();
         
     static {
+        // TODO: use a flag in imbra-attrs.xml and generate this map automatically
         sPortAttrs.add(Provisioning.A_zimbraAdminPort);
             
         sPortAttrs.add(Provisioning.A_zimbraImapBindPort);
@@ -71,70 +71,65 @@ public class CheckPortConflict extends AttributeCallback {
     public void preModify(Map context, String attrName, Object attrValue,
                           Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
+        if (entry != null && !(entry instanceof Server) && !(entry instanceof Config)) return;
+        
         Object done = context.get(KEY);
         if (done == null)
             context.put(KEY, KEY);
         else
             return;
             
-        if (!((entry instanceof Server)||(entry instanceof Config))) return;
-            
         // sanity check, zimbra-attrs.xml and the sPortAttrsToCheck map has to be in sync
         if (!sPortAttrs.contains(attrName) ||
             !AttributeManager.getInstance().isServerInherited(attrName))
             assert(false);
-           
-        if (entry instanceof Server)
+        
+        // server == null means the server entry is being created
+        if (entry == null || entry instanceof Server)
             checkServer((Server)entry, attrsToModify);
         else 
             checkConfig((Config)entry, attrsToModify);
     }
-
+    
     private void checkServer(Server server, Map<String, Object> serverAttrsToModify) throws ServiceException {
-           
         Map<String, String> ports = new HashMap<String, String>();
-        Map<String, Object> serverDefaults = Provisioning.getInstance().getConfig().getServerDefaults();
-            
-        for (String attrName : sPortAttrs) {
-            String newValue = null;
-                
-            if (serverAttrsToModify.containsKey(attrName)) {
-                Object obj = serverAttrsToModify.get(attrName);
-                if (obj instanceof String) {
-                    String newPort = (String)obj;
-                    if (newPort.length() > 0) {
-                        // setting
-                        newValue = newPort;
-                    } else {
-                        // unsetting, get default, which would become the new value
-                        Object defValue = serverDefaults.get(attrName);
-                        if (defValue != null) {
-                            if (defValue instanceof String) {
-                                newValue = (String)defValue;
-                            } else {
-                                // huh??
-                                ZimbraLog.misc.info("default value for " + attrName + " should be a single-valued attribute, invalid default value ignored");
-                            }
-                        } 
-                    }
-                } else if (obj != null)
-                    throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
-            } else {
-                if (server != null)
-                    newValue = server.getAttr(attrName);
-            }
-            
-            if (!StringUtil.isNullOrEmpty(newValue)) {
-                if (conflict(ports, newValue))
-                    throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
-                                                           attrName + " and " + ports.get(newValue) + " on server " + 
-                                                           (server == null?"":server.getName()), null);
-                else
-                    ports.put(newValue, attrName);
+        Map<String, Object> defaults = Provisioning.getInstance().getConfig().getServerDefaults();
+        
+        // collect current port values
+        if (server != null) {
+            for (String attrName : sPortAttrs) {
+                if (!serverAttrsToModify.containsKey(attrName))
+                    ports.put(server.getAttr(attrName), attrName);
             }
         }
-    }
         
+        // check conflict for attrs being changed 
+        for (Map.Entry<String, Object> attrToModify : serverAttrsToModify.entrySet()) {
+            String attrName = attrToModify.getKey();
+            SingleValueMod mod = singleValueMod(serverAttrsToModify, attrName);
+            String newValue = null;
+            if (mod.setting())
+                newValue = mod.value();
+            else {
+                // unsetting, get default, which would become the new value
+                Object defValue = defaults.get(attrName);
+                if (defValue != null) {
+                    if (defValue instanceof String)
+                        newValue = (String)defValue;
+                    else
+                        ZimbraLog.misc.info("default value for " + attrName + " should be a single-valued attribute, invalid default value ignored");
+                } 
+            }
+            
+            if (conflict(ports, newValue)) {
+                String serverInfo = (server == null) ? "" : " on server " + server.getName();
+                throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
+                                                       attrName + " and " + ports.get(newValue) + serverInfo, null);
+            } else
+                ports.put(newValue, attrName);
+        }
+    }
+    
     private void checkConfig(Config config, Map<String, Object> configAttrsToModify) throws ServiceException {
         DualHashBidiMap newDefaults = new DualHashBidiMap();
             
@@ -143,65 +138,62 @@ public class CheckPortConflict extends AttributeCallback {
          * if the value on the config entry might not be effective on a server.
          */ 
         for (String attrName : sPortAttrs) {
-            String newValue = null;
-                
-            if (configAttrsToModify.containsKey(attrName)) {
-                Object obj = configAttrsToModify.get(attrName);
-                if (obj instanceof String) {
-                    String newPort = (String)obj;
-                    newValue = newPort;
-                } else if (obj != null)
-                    throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
-            } else {
-                if (config != null)
-                    newValue = config.getAttr(attrName);
-            }
-                
-            if (!StringUtil.isNullOrEmpty(newValue)) {
-                if (conflict(newDefaults, newValue))
-                    throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
-                                                           attrName + " and " + newDefaults.get(newValue) + " on global config", null);
-                else
-                    newDefaults.put(newValue, attrName);
-            }
+            if (!configAttrsToModify.containsKey(attrName))
+                newDefaults.put(config.getAttr(attrName), attrName);
         }
-            
+        
+        // check conflict for attrs being changed 
+        for (Map.Entry<String, Object> attrToModify : configAttrsToModify.entrySet()) {
+            String attrName = attrToModify.getKey();
+            SingleValueMod mod = singleValueMod(configAttrsToModify, attrName);
+            String newValue = null;
+            if (mod.setting())
+                newValue = mod.value();
+                        
+            if (conflict(newDefaults, newValue)) {
+                throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
+                        attrName + " and " + newDefaults.get(newValue) + " on global config", null);
+            } else
+                newDefaults.put(newValue, attrName);
+        }
+        
         /* 
          * Then, iterate through all servers see if this port change on the Config
-         * entry has impact on a server.  It has impact on a server only when the
-         * attr is not present on a server.  
+         * entry has impact on a server.  
          */
         List<Server> servers = Provisioning.getInstance().getAllServers();
         for (Server server : servers) {
-            checkServerWithNewDefaults(server, newDefaults);
+            checkServerWithNewDefaults(server, newDefaults, configAttrsToModify);
         }
     }
     
-    private void checkServerWithNewDefaults(Server server, DualHashBidiMap newDefaults) throws ServiceException {
+    private void checkServerWithNewDefaults(Server server, DualHashBidiMap newDefaults, Map<String, Object> configAttrsToModify) throws ServiceException {
         Map<String, String> ports = new HashMap<String, String>();
+        
         for (String attrName : sPortAttrs) {
             String newValue = null;
             String curValue = server.getAttr(attrName, false); // value on the server entry
-            if (!StringUtil.isNullOrEmpty(curValue)) {
-                if (newDefaults.containsValue(attrName))
-                    newValue = (String)newDefaults.getKey(attrName);
-                else
-                    newValue = server.getAttr(attrName);
-            } else
+            if (curValue == null)
+                newValue = (String)newDefaults.getKey(attrName);  // will inherit from new default
+            else
                 newValue = curValue;
             
-            if (!StringUtil.isNullOrEmpty(newValue)) {
-                if (conflict(ports, newValue))
+            if (conflict(ports, newValue)) {
+                String conflictWith = ports.get(newValue);
+                // throw only when the attr is one of the attrs being modified, otherwise, just let it pass.
+                if (configAttrsToModify.containsKey(attrName) || configAttrsToModify.containsKey(conflictWith))
                     throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
-                            attrName + " and " + ports.get(newValue) + " on server " + server.getName(), null);
-                else
-                    ports.put(newValue, attrName);
-            }
+                        attrName + " and " + ports.get(newValue) + " on server " + server.getName(), null);
+            } else
+                ports.put(newValue, attrName);
         }
     }
         
     private boolean conflict(Map ports, String port) {
-        if (port.equals("0"))
+        
+        if (StringUtil.isNullOrEmpty(port))
+            return false;
+        else if (port.equals("0"))
             return false;
         else
             return ports.containsKey(port);
