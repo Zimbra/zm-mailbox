@@ -68,7 +68,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
         if (value != null) {
             Mailbox mbox = getRequestedMailbox(zsc);
-            CreateDataSource.validateFolderId(mbox, eDataSource);
+            CreateDataSource.validateFolderId(account, mbox, eDataSource);
         	dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
         }
         

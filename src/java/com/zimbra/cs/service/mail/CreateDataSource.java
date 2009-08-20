@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -52,7 +53,7 @@ public class CreateDataSource extends MailDocumentHandler {
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
 
         // Common attributes
-        validateFolderId(mbox, eDataSource);
+        validateFolderId(account, mbox, eDataSource);
         String name = eDataSource.getAttribute(MailConstants.A_NAME);
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
@@ -107,16 +108,30 @@ public class CreateDataSource extends MailDocumentHandler {
     }
 
     /**
-     * Confirms that the folder attribute specifies a valid folder id.
+     * Confirms that the folder attribute specifies a valid folder id and is not
+     * within the subtree of another datasource
      */
-    static void validateFolderId(Mailbox mbox, Element eDataSource)
+    static void validateFolderId(Account account, Mailbox mbox, Element eDataSource)
     throws ServiceException {
         int folderId = (int) eDataSource.getAttributeLong(MailConstants.A_FOLDER);
+        String id = eDataSource.getAttribute(MailConstants.A_ID, null);
+
         try {
             mbox.getFolderById(null, folderId);
         } catch (NoSuchItemException e) {
             throw ServiceException.INVALID_REQUEST("Invalid folder id: " + folderId, null);
         }
+        for (DataSource ds : account.getAllDataSources()) {
+            if (id != null && ds.getId().equals(id))
+                continue;
+            try {
+                for (Folder fldr : mbox.getFolderById(null, ds.getFolderId()).getSubfolderHierarchy()) {
+                    if (fldr.getId() == folderId)
+                        throw ServiceException.INVALID_REQUEST("Folder location conflict: " +
+                            fldr.getPath(), null);
+                }
+            } catch (NoSuchItemException e) {
+            }
+        }
     }
-
 }
