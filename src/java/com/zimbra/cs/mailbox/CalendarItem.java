@@ -383,6 +383,8 @@ public abstract class CalendarItem extends MailItem {
                                String uid, ParsedMessage pm, Invite firstInvite,
                                long nextAlarm)
     throws ServiceException {
+        firstInvite.sanitize(true);
+
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
         if (!firstInvite.isPublic() && !folder.canAccess(ACL.RIGHT_PRIVATE))
@@ -663,7 +665,7 @@ public abstract class CalendarItem extends MailItem {
 
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mVersion, mUid, mStartTime, mEndTime,
-                mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
+                              mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
     }
     private static String encodeMetadata(byte color, int version, String uid, long startTime, long endTime,
                                          Recurrence.IRecurrence recur, List<Invite> invs, TimeZoneMap tzmap,
@@ -1273,6 +1275,8 @@ public abstract class CalendarItem extends MailItem {
                                                     boolean preserveAlarms,
                                                     boolean discardExistingInvites)
     throws ServiceException {
+        newInvite.sanitize(true);
+
         boolean isCancel = newInvite.isCancel();
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
@@ -2831,16 +2835,16 @@ public abstract class CalendarItem extends MailItem {
             ByteUtil.closeStream(is);
 
             if (DebugConfig.forceMimeConvertersForCalendarBlobs) {
-                try {
-                    for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
-                        visitor.newInstance().accept(mm);
-                } catch (Exception e) {
-                    // If the conversion bombs for any reason, revert to the original
-                    ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
-                    is = getRawMessage();
-                    mm = new MimeMessage(JMSession.getSession(), is);
-                    ByteUtil.closeStream(is);
-                }
+            try {
+                for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
+                    visitor.newInstance().accept(mm);
+            } catch (Exception e) {
+                // If the conversion bombs for any reason, revert to the original
+                ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
+                is = getRawMessage();
+                mm = new MimeMessage(JMSession.getSession(), is);
+                ByteUtil.closeStream(is);
+            }
             }
             
             // it'll be multipart/digest

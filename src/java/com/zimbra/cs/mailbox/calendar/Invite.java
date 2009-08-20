@@ -752,6 +752,7 @@ public class Invite {
         boolean localOnly = meta.getBool(FN_LOCAL_ONLY, false);
         invite.setLocalOnly(localOnly);
 
+        invite.sanitize(false);
         return invite;
     }
 
@@ -2383,5 +2384,56 @@ public class Invite {
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         inv.mLocalOnly = mLocalOnly;
         return inv;
+    }
+
+    private static String limitIntegerRange(String value, int min, int max, String defaultValue) {
+        String retval = defaultValue;
+        if (value != null) {
+            try {
+                int num = Integer.parseInt(value);
+                if (num < min)
+                    retval = Integer.toString(min);
+                else if (num > max)
+                    retval = Integer.toString(max);
+                else
+                    retval = value;
+            } catch (NumberFormatException e) {}
+        }
+        return retval;
+    }
+
+    public void sanitize(boolean throwException) throws ServiceException {
+        if (mUid == null && throwException)
+            throw ServiceException.INVALID_REQUEST("missing UID", null);
+
+        // Keep all-day flag and DTSTART in sync.
+        setIsAllDayEvent(mStart != null && !mStart.hasTime());
+
+        // ORGANIZER is required if there is at least one ATTENDEE.
+        if (hasOtherAttendees() && !hasOrganizer()) {
+            if (throwException)
+                throw ServiceException.INVALID_REQUEST("ORGANIZER missing when ATTENDEEs are present", null);
+            else
+                clearAttendees();
+            // If we don't know who the organizer is, remove attendees.  Some clients will assume missing
+            // organizer means current user is the organizer.  If attendees were kept, these clients will
+            // send cancel notice to the attendees when appointment is deleted.  The attendees will get
+            // confused because the cancel notice came from someone other than the organizer.
+        }
+
+        // DTEND or DUE, if specified, can't be earlier than DTSTART.
+        if (mStart != null && mEnd != null && mEnd.compareTo(mStart) < 0)
+            mEnd = (ParsedDateTime) mStart.clone();
+
+        // Recurrence rule can't be set without DTSTART.
+        if (mRecurrence != null && mStart == null) {
+            if (throwException)
+                throw ServiceException.INVALID_REQUEST("recurrence used without DTSTART", null);
+            else
+                mRecurrence = null;
+        }
+
+        mPercentComplete = limitIntegerRange(mPercentComplete, 0, 100, null);
+        mPriority = limitIntegerRange(mPriority, 0, 9, null);
     }
 }
