@@ -20,6 +20,7 @@ package com.zimbra.cs.service.mail;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -80,7 +81,7 @@ public class ImportAppointments extends MailDocumentHandler  {
             is.close();
             is = null;
 
-            List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, icals, true);
+            List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, icals, true, true, null);
 
             Set<String> uidsSeen = new HashSet<String>();
             StringBuilder ids = new StringBuilder();
@@ -99,11 +100,16 @@ public class ImportAppointments extends MailDocumentHandler  {
                 } else {
                     addRevision = false;
                 }
+                inv.sanitize(false);  // Clean up known bad patterns to increase the chance of successful import.
                 // and add the invite to the calendar!
+                try {
                     int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, addRevision);
-                        if (ids.length() > 0) ids.append(",");
-                        ids.append(invIds[0]).append("-").append(invIds[1]);
-                    }
+                    if (ids.length() > 0) ids.append(",");
+                    ids.append(invIds[0]).append("-").append(invIds[1]);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
+                }
+            }
             
             Element response = zsc.createElement(MailConstants.IMPORT_APPOINTMENTS_RESPONSE);
             Element cn = response.addElement(MailConstants.E_APPOINTMENT);

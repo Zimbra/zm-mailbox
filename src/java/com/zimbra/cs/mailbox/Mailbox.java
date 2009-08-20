@@ -6321,9 +6321,14 @@ public class Mailbox {
                     } else {
                         addRevision = false;
                     }
-                    int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
-                    if (calIds != null && calIds.length > 0)
-                        existingCalItems.remove(calIds[0]);
+                    inv.sanitize(false);  // Clean up known bad patterns to increase the chance of successful import.
+                    try {
+                        int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
+                        if (calIds != null && calIds.length > 0)
+                            existingCalItems.remove(calIds[0]);
+                    } catch (ServiceException e) {
+                        ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
+                    }
                 } else if (obj instanceof ParsedMessage) {
                     addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
                 }

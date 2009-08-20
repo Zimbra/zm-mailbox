@@ -1738,6 +1738,13 @@ public class Invite {
                         }
     
                         for (ZProperty prop : comp.mProperties) {
+                            // Skip properties with missing value.  There may be parameters specified, but
+                            // it's still wrong to send a property without value.  They can only lead to
+                            // parse errors later, so ignore them.
+                            String val = prop.getValue();
+                            if (val == null || val.length() < 1)
+                                continue;
+
                             if (prop.mTok == null) {
                                 String name = prop.getName();
                                 if (name.startsWith("X-") || name.startsWith("x-"))
