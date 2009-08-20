@@ -2403,11 +2403,24 @@ public class Invite {
     }
 
     public void sanitize(boolean throwException) throws ServiceException {
-        if (mUid == null && throwException)
+        if ((mUid == null || mUid.length() == 0) && throwException)
             throw ServiceException.INVALID_REQUEST("missing UID", null);
 
         // Keep all-day flag and DTSTART in sync.
-        setIsAllDayEvent(mStart != null && !mStart.hasTime());
+        if (mStart == null) {
+            // No DTSTART.  Force non-all-day.
+            setIsAllDayEvent(false);
+        } else if (!mStart.hasTime()) {
+            // DTSTART has no time part.  Force all-day.
+            setIsAllDayEvent(true);
+        } else if (!mStart.hasZeroTime()) {
+            // Time part is not T000000.  Force non-all-day.
+            setIsAllDayEvent(false);
+        } else {
+            // Time part is T000000.  Strictly speaking presence of any time part implies non-all-day,
+            // but Outlook compatibility dictates we allow T000000 in an all-day appointment.
+            // Leave current all-day flag as is.
+        }
 
         // ORGANIZER is required if there is at least one ATTENDEE.
         if (hasOtherAttendees() && !hasOrganizer()) {

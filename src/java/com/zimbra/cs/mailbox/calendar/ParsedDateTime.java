@@ -22,6 +22,7 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
@@ -570,6 +571,22 @@ public final class ParsedDateTime {
 
     public void setHasTime(boolean hasTime) {
         mHasTime = hasTime;
+    }
+
+    /**
+     * Are the time fields set to 00:00:00.000?  If so, this ParsedDateTime may be an all-day value
+     * expressed in Outlook-compatible format.
+     * @return
+     */
+    public boolean hasZeroTime() {
+        int hour = mCal.get(Calendar.HOUR_OF_DAY);
+        if (hour != 0) return false;
+        int minute = mCal.get(Calendar.MINUTE);
+        if (minute != 0) return false;
+        int second = mCal.get(Calendar.SECOND);
+        if (second != 0) return false;
+        int milli = mCal.get(Calendar.MILLISECOND);
+        return milli == 0;
     }
 
     public String toString() {
