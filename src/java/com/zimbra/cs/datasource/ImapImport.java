@@ -121,13 +121,62 @@ public class ImapImport extends MailItemImport {
             close();
         }
     }
-    
+
+    //
+    // Fix for bug 39633 (Comcast): Check if folder root has been renamed
+    // and update all folder trackers accordingly.
+    //
+    private void checkIfRootFolderRenamed() throws ServiceException {
+        ImapFolderCollection trackers = dataSource.getImapFolders();
+        com.zimbra.cs.mailbox.Folder rootFolder = mbox.getFolderById(null, dataSource.getFolderId());
+        String rootPath = rootFolder.getPath();
+        String oldRootPath = null;
+        for (ImapFolder tracker : trackers) {
+            com.zimbra.cs.mailbox.Folder folder;
+            try {
+                folder = mbox.getFolderById(null, tracker.getItemId());
+            } catch (NoSuchItemException e) {
+                continue; // Skip deleted folder
+            }
+            if (isParent(rootFolder, folder)) {
+                String trackerPath = tracker.getLocalPath();
+                if (oldRootPath == null) {
+                    // See if this folder indicates that root folder has been renamed
+                    String path = folder.getPath();
+                    if (path.startsWith(rootPath + "/")) {
+                        String relpath = path.substring(rootPath.length());
+                        if (trackerPath.endsWith(relpath)) {
+                            oldRootPath = trackerPath.substring(
+                                0, trackerPath.length() - relpath.length());
+                            if (oldRootPath.equals(rootPath)) {
+                                // Root folder has not been renamed. No need to check
+                                // remaining folders.
+                                break;
+                            }
+                            ZimbraLog.datasource.info(
+                                "Local root folder has been renamed from '%s' to '%s'", oldRootPath, rootPath);
+                        }
+                    }
+                }
+                if (oldRootPath != null && trackerPath.startsWith(oldRootPath + "/")) {
+                    String newPath = rootPath + trackerPath.substring(oldRootPath.length());
+                    ZimbraLog.datasource.info(
+                        "Renaming tracker local path from '%s' to '%s'", trackerPath, newPath);
+                    tracker.setLocalPath(newPath);
+                    dataSource.updateImapFolder(tracker);
+                }
+            }
+        }
+    }
+
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         validateDataSource();
         connect();
         DataSource ds = getDataSource();
         try {
+            checkIfRootFolderRenamed();
+
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
             ImapFolderCollection imapFolders = ds.getImapFolders();
 
