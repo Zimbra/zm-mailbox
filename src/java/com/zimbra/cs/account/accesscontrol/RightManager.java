@@ -335,7 +335,7 @@ public class RightManager {
 
             if (!seenRight) {
                 seenRight = true;
-                ZimbraLog.acl.info("Loading " + file.getName());
+                ZimbraLog.acl.debug("Loading " + file.getName());
             }
             
             String name = eRight.attributeValue(A_NAME);
