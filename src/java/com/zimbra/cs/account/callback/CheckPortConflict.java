@@ -70,10 +70,7 @@ public class CheckPortConflict extends AttributeCallback {
      */
     public void preModify(Map context, String attrName, Object attrValue,
                           Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
-        
-        return;
-        
-        /*
+
         if (entry != null && !(entry instanceof Server) && !(entry instanceof Config)) return;
         
         Object done = context.get(KEY);
@@ -92,9 +89,6 @@ public class CheckPortConflict extends AttributeCallback {
             checkServer((Server)entry, attrsToModify);
         else 
             checkConfig((Config)entry, attrsToModify);
-        
-        */
-        
     }
     
     private void checkServer(Server server, Map<String, Object> serverAttrsToModify) throws ServiceException {
@@ -112,6 +106,10 @@ public class CheckPortConflict extends AttributeCallback {
         // check conflict for attrs being changed 
         for (Map.Entry<String, Object> attrToModify : serverAttrsToModify.entrySet()) {
             String attrName = attrToModify.getKey();
+            
+            if (!sPortAttrs.contains(attrName))
+                continue;
+            
             SingleValueMod mod = singleValueMod(serverAttrsToModify, attrName);
             String newValue = null;
             if (mod.setting())
@@ -151,6 +149,10 @@ public class CheckPortConflict extends AttributeCallback {
         // check conflict for attrs being changed 
         for (Map.Entry<String, Object> attrToModify : configAttrsToModify.entrySet()) {
             String attrName = attrToModify.getKey();
+            
+            if (!sPortAttrs.contains(attrName))
+                continue;
+            
             SingleValueMod mod = singleValueMod(configAttrsToModify, attrName);
             String newValue = null;
             if (mod.setting())
