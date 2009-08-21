@@ -61,7 +61,9 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestFilter.class);
         sClasses.add(TestPop3ImapAuth.class);
         sClasses.add(TestContacts.class);
-        sClasses.add(TestTaskScheduler.class);
+        
+        // XXX bburtin: commenting out flaky unit test in the FRANKLIN branch
+        // sClasses.add(TestTaskScheduler.class);
         
         // XXX bburtin: commenting out TestSearch until bug 18802 is fixed
         // sClasses.add(TestSearch.class);
