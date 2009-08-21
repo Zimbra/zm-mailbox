@@ -61,7 +61,7 @@ public class CheckPermission extends MailDocumentHandler {
             AccountBy acctBy = AccountBy.fromString(targetBy);
             entry = prov.get(acctBy, targetValue, zsc.getAuthToken());
             
-            if (acctBy == AccountBy.id)
+            if (entry == null && acctBy == AccountBy.id)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(targetValue);
             
             // otherwise, the target could be an external user, let it fall through
@@ -71,7 +71,7 @@ public class CheckPermission extends MailDocumentHandler {
             CalendarResourceBy crBy = CalendarResourceBy.fromString(targetBy);
             entry = prov.get(crBy, targetValue);
             
-            if (crBy == CalendarResourceBy.id)
+            if (entry == null && crBy == CalendarResourceBy.id)
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(targetValue);
             
         } else if (TargetType.dl == tt) {
