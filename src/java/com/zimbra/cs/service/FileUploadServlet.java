@@ -29,6 +29,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -536,7 +537,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         StringBuffer results = new StringBuffer();
-        results.append(status).append(",'").append(reqId != null ? reqId : "null").append('\'');
+        results.append(status).append(",'").append(reqId != null ? StringUtil.jsEncode(reqId) : "null").append('\'');
         if (status == HttpServletResponse.SC_OK) {
             boolean first = true;
             if (extended) {

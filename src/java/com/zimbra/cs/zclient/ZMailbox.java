@@ -2003,13 +2003,20 @@ public class ZMailbox implements ToZJSONObject {
         int i = 0;
         for (String name : attachments.keySet()) {
             byte[] content = attachments.get(name);
-            FilePart part = new FilePart(name, new ByteArrayPartSource(name, content));
-            String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
-            part.setContentType(contentType);
-            parts[i++] = part;
+            parts[i++] = createAttachmentPart(name, content);
         }
 
         return uploadAttachments(parts, msTimeout);
+    }
+    
+    /**
+     * Creates an <tt>HttpClient FilePart</tt> from the given filename and content.
+     */
+    public FilePart createAttachmentPart(String filename, byte[] content) {
+        FilePart part = new FilePart(filename, new ByteArrayPartSource(filename, content));
+        String contentType = URLConnection.getFileNameMap().getContentTypeFor(filename);
+        part.setContentType(contentType);
+        return part;
     }
 
     /**
@@ -2080,7 +2087,7 @@ public class ZMailbox implements ToZJSONObject {
         return aid;
     }
 
-    private URI getUploadURI()  throws ServiceException {
+    public URI getUploadURI()  throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
             return  uri.resolve("/service/upload?fmt=raw");
@@ -2111,7 +2118,7 @@ public class ZMailbox implements ToZJSONObject {
         }
     }
 
-    private HttpClient getHttpClient(URI uri) {
+    public HttpClient getHttpClient(URI uri) {
         boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
         HttpState initialState = new HttpState();
         
