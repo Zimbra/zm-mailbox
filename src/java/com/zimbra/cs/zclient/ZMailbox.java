@@ -468,10 +468,10 @@ public class ZMailbox implements ToZJSONObject {
         Element account = req.addUniqueElement(AccountConstants.E_ACCOUNT);
         account.addAttribute(AccountConstants.A_BY, by.name());
         account.setText(key);
-        req.addAttribute(AccountConstants.E_OLD_PASSWORD, oldPassword, Disposition.CONTENT);
-        req.addAttribute(AccountConstants.E_PASSWORD, newPassword, Disposition.CONTENT);
+        req.addElement(AccountConstants.E_OLD_PASSWORD).setText(oldPassword);
+        req.addElement(AccountConstants.E_PASSWORD).setText(newPassword);
         if (virtualHost != null)
-            req.addAttribute(AccountConstants.E_VIRTUAL_HOST, virtualHost, Disposition.CONTENT);
+            req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(virtualHost);
         return new ZChangePasswordResult(invoke(req));
     }
 
