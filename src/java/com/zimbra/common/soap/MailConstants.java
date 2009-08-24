@@ -67,6 +67,8 @@ public class MailConstants {
     public static final QName ADD_MSG_RESPONSE = QName.get("AddMsgResponse", NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get("SaveDraftRequest", NAMESPACE);
     public static final QName SAVE_DRAFT_RESPONSE = QName.get("SaveDraftResponse", NAMESPACE);
+    public static final QName REMOVE_ATTACHMENTS_REQUEST = QName.get("RemoveAttachmentsRequest", NAMESPACE);
+    public static final QName REMOVE_ATTACHMENTS_RESPONSE = QName.get("RemoveAttachmentsResponse", NAMESPACE);
     // folders
     public static final QName CREATE_FOLDER_REQUEST = QName.get("CreateFolderRequest", NAMESPACE);
     public static final QName CREATE_FOLDER_RESPONSE = QName.get("CreateFolderResponse", NAMESPACE);
