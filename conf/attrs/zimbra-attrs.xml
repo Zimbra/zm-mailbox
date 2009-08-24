@@ -4644,5 +4644,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>value for envelope from (MAIL FROM) in spam report</desc>
 </attr>
 
+<attr id="1050" name="zimbraFeatureSharingCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.1">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether sharing is enabled for calendar folders</desc>
+</attr>
 
 </attrs>
