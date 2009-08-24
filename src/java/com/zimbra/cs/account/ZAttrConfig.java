@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090818-1054 */
+    /* build: 6.0.0 pshao 20090824-1053 */
 
     /**
      * RFC2256: descriptive information
@@ -25443,6 +25443,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSpamKillPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpamKillPercent, "");
+        return attrs;
+    }
+
+    /**
+     * value for envelope from (MAIL FROM) in spam report
+     *
+     * @return zimbraSpamReportEnvelopeFrom, or null if unset
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1049)
+    public String getSpamReportEnvelopeFrom() {
+        return getAttr(Provisioning.A_zimbraSpamReportEnvelopeFrom, null);
+    }
+
+    /**
+     * value for envelope from (MAIL FROM) in spam report
+     *
+     * @param zimbraSpamReportEnvelopeFrom new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1049)
+    public void setSpamReportEnvelopeFrom(String zimbraSpamReportEnvelopeFrom) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamReportEnvelopeFrom, zimbraSpamReportEnvelopeFrom);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * value for envelope from (MAIL FROM) in spam report
+     *
+     * @param zimbraSpamReportEnvelopeFrom new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1049)
+    public Map<String,Object> setSpamReportEnvelopeFrom(String zimbraSpamReportEnvelopeFrom, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamReportEnvelopeFrom, zimbraSpamReportEnvelopeFrom);
+        return attrs;
+    }
+
+    /**
+     * value for envelope from (MAIL FROM) in spam report
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1049)
+    public void unsetSpamReportEnvelopeFrom() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamReportEnvelopeFrom, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * value for envelope from (MAIL FROM) in spam report
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1049)
+    public Map<String,Object> unsetSpamReportEnvelopeFrom(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamReportEnvelopeFrom, "");
         return attrs;
     }
 

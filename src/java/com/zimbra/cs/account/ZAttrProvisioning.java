@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090818-1054 */
+    /* build: 6.0.0 pshao 20090824-1053 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -6925,6 +6925,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=202)
     public static final String A_zimbraSpamKillPercent = "zimbraSpamKillPercent";
+
+    /**
+     * value for envelope from (MAIL FROM) in spam report
+     *
+     * @since ZCS 6.0.1
+     */
+    @ZAttr(id=1049)
+    public static final String A_zimbraSpamReportEnvelopeFrom = "zimbraSpamReportEnvelopeFrom";
 
     /**
      * mail header name for sender in spam report

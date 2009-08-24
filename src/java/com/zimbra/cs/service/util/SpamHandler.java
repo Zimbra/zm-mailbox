@@ -74,6 +74,7 @@ public class SpamHandler {
         
     private Thread mSpamHandlerThread;
     
+    private String mEnvelopeFrom;
     private String mSenderHeader;
     private String mTypeHeader;
     private String mTypeSpam;
@@ -102,7 +103,7 @@ public class SpamHandler {
                 ZimbraLog.misc.warn("exception parsing " + Provisioning.A_zimbraSpamIsSpamAccount + " " + mIsSpamAccount, ae); 
             }
         }
-        
+
         mIsNotSpamAccount = config.getAttr(Provisioning.A_zimbraSpamIsNotSpamAccount, null);
         if (mIsNotSpamAccount == null) {
             if (mLog.isDebugEnabled()) {
@@ -116,6 +117,7 @@ public class SpamHandler {
             }
         }
 
+        mEnvelopeFrom = config.getAttr(Provisioning.A_zimbraSpamReportEnvelopeFrom, "<>");
         mSenderHeader = config.getAttr(Provisioning.A_zimbraSpamReportSenderHeader, "X-Zimbra-Spam-Report-Sender");
         mTypeHeader = config.getAttr(Provisioning.A_zimbraSpamReportTypeHeader, "X-Zimbra-Spam-Report-Type");
         mTypeSpam = config.getAttr(Provisioning.A_zimbraSpamReportTypeSpam, "spam");
@@ -170,7 +172,7 @@ public class SpamHandler {
             out.addHeader(MailSender.X_ORIGINATING_IP, MailSender.formatXOrigIpHeader(sr.mOrigIp));
         
         out.setRecipient(javax.mail.Message.RecipientType.TO, toAddress);
-        out.setEnvelopeFrom("<>");
+        out.setEnvelopeFrom(mEnvelopeFrom);
         out.setSubject("zimbra-spam-report: " + sr.mAccountName + ": " + isSpamString);
         Transport.send(out);
         

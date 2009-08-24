@@ -4640,5 +4640,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not account tree is expanded</desc>
 </attr>
 
+<attr id="1049" name="zimbraSpamReportEnvelopeFrom" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="6.0.1">
+  <desc>value for envelope from (MAIL FROM) in spam report</desc>
+</attr>
+
 
 </attrs>
