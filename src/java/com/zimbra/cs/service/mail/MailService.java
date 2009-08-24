@@ -58,6 +58,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.SEND_SHARE_NOTIFICATION_REQUEST, new SendShareNotification());
         dispatcher.registerHandler(MailConstants.ADD_MSG_REQUEST, new AddMsg());
         dispatcher.registerHandler(MailConstants.SAVE_DRAFT_REQUEST, new SaveDraft());
+        dispatcher.registerHandler(MailConstants.REMOVE_ATTACHMENTS_REQUEST, new RemoveAttachments());
 
         // folders
         dispatcher.registerHandler(MailConstants.GET_FOLDER_REQUEST, new GetFolder());

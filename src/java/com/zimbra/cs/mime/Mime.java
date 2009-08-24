@@ -486,10 +486,12 @@ public class Mime {
      *  part with content-type "multipart/*".  Use this method instead of
      *  {@link Part#getContent()} to work around JavaMail's fascism about
      *  proper MIME format and failure to support RFC 2184. */
-    public static Object getMultipartContent(MimePart multipartPart, String contentType) throws IOException, MessagingException {
+    public static MimeMultipart getMultipartContent(MimePart multipartPart, String contentType) throws IOException, MessagingException {
         Object content = multipartPart.getContent();
-        if (content instanceof InputStream) {
-        	MimeMultipart mmp = null;
+        MimeMultipart mmp = null;
+        if (content instanceof MimeMultipart) {
+            mmp = (MimeMultipart) content;
+        } else if (content instanceof InputStream) {
             try {
                 // handle unparsed content due to miscapitalization of content-type value
                 mmp = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
@@ -497,12 +499,10 @@ public class Mime {
             } finally {
                 ByteUtil.closeStream((InputStream) content);
             }
-            if (mmp != null)
-            	content = mmp;
         }
-        if (content instanceof MimeMultipart)
-            content = validateMultipart((MimeMultipart) content, multipartPart);
-        return content;
+        if (mmp == null)
+            return null;
+        return validateMultipart(mmp, multipartPart);
     }
 
     /** Returns a String containing the text content of the MimePart.  If the
@@ -569,9 +569,9 @@ public class Mime {
             digestParent = ct.equals(CT_MULTIPART_DIGEST);
 
             if (ct.startsWith(CT_MULTIPART_PREFIX)) {
-                Object content = getMultipartContent(mp, ct);
-                if (content instanceof MimeMultipart && ((MimeMultipart) content).getCount() >= index) {
-                    BodyPart bp = ((MimeMultipart) content).getBodyPart(index - 1);
+                MimeMultipart mmp = getMultipartContent(mp, ct);
+                if (mmp != null && mmp.getCount() >= index) {
+                    BodyPart bp = mmp.getBodyPart(index - 1);
                     if (bp instanceof MimePart) {
                         mp = (MimePart) bp;
                         continue;

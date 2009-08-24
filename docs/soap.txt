@@ -2157,6 +2157,21 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 
 ---------------------------- 
 
+  <RemoveAttachmentsRequest>
+    <m id="{message-id}" part="{list-of-part-ids-to-remove}">
+  </RemoveAttachmentsRequest>
+  
+  {list-of-part-ids-to-remove} = comma-separated list of part IDs to strip from existing message body
+
+# NOTE that this operation is effectively a create and a delete, and thus the message's item ID will change
+
+  <RemoveAttachmentsResponse>
+    <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
+        rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>
+  </RemoveAttachmentsResponse>
+
+---------------------------- 
+
 Contacts: 
  
   <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{modified-date}" [l="{folder}"] [fileAsStr="{file-as}"]>
