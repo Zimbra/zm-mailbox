@@ -1153,7 +1153,7 @@ public class LC {
         calendar_search_max_days.setDefault("400");
 
         calendar_cache_enabled = new KnownKey("calendar_cache_enabled");
-        calendar_cache_enabled.setDefault("false");
+        calendar_cache_enabled.setDefault("true");
 
         calendar_cache_directory = new KnownKey("calendar_cache_directory");
         calendar_cache_directory.setDefault("${" + zimbra_tmp_directory.key() + "}" + FS + "calcache");
