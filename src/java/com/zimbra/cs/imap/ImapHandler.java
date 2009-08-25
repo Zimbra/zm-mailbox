@@ -302,7 +302,7 @@ abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();
                         ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         do {
-                            appends.add(AppendMessage.parse(this, tag, req));
+                            req.skipSpace();  appends.add(AppendMessage.parse(this, tag, req));
                         } while (!req.eof() && extensionEnabled("MULTIAPPEND"));
                         checkEOF(tag, req);
                         return doAPPEND(tag, path, appends);

@@ -1,16 +1,15 @@
 package com.zimbra.cs.imap;
 
+import com.sun.mail.dsn.MessageHeaders;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -20,8 +19,9 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
+
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -32,8 +32,9 @@ import java.io.InputStream;
  * Encapsulates append message data for an APPEND request.
  */
 class AppendMessage {
-    private final ImapHandler handler;
-    private final String tag;
+    final ImapHandler handler;
+    final String tag;
+
     private Date date;
     private boolean catenate;
     private List<Part> parts;
@@ -43,7 +44,7 @@ class AppendMessage {
     private short sflags;
 
     public static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
-        throws ImapParseException, IOException {
+    throws ImapParseException, IOException {
         AppendMessage append = new AppendMessage(handler, tag);
         append.parse(req);
         return append;
@@ -55,7 +56,6 @@ class AppendMessage {
     }
     
     private void parse(ImapRequest req) throws ImapParseException, IOException {
-        req.skipSpace();
         if (req.peekChar() == '(') {
             flagNames = req.readFlags();
             req.skipSpace();
@@ -69,7 +69,7 @@ class AppendMessage {
             req.skipSpace();
             req.skipChar('(');
             catenate = true;
-            parts = new ArrayList<Part>();
+            parts = new ArrayList<Part>(5);
             while (req.peekChar() != ')') {
                 if (!parts.isEmpty())
                     req.skipSpace();
@@ -79,12 +79,12 @@ class AppendMessage {
                     parts.add(new Part(req.readLiteral()));
                 else if (type.equals("URL"))
                     parts.add(new Part(new ImapURL(tag, handler, req.readAstring())));
-                else throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
+                else
+                    throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
             }
             req.skipChar(')');
         } else {
-            parts = new ArrayList<Part>(1);
-            parts.add(new Part(req.readLiteral8()));
+            parts = Arrays.asList(new Part(req.readLiteral8()));
         }
     }
 
@@ -110,22 +110,20 @@ class AppendMessage {
         flagNames = null;
     }
 
-    public int storeContent(Object mboxObj, Object folderObj)
-        throws IOException, ServiceException, ImapParseException {
+    public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException, ImapParseException {
         Blob blob = getContent();
         try {
-            return mboxObj instanceof Mailbox ?
-                store(blob, (Mailbox) mboxObj, (Folder) folderObj) :
-                store(blob, (ZMailbox) mboxObj, (ZFolder) folderObj);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE(e.toString(), e);
+            checkDate(blob);
+            if (mboxObj instanceof Mailbox)
+                return store(blob, (Mailbox) mboxObj, (Folder) folderObj);
+            else
+                return store(blob, (ZMailbox) mboxObj, (ZFolder) folderObj);
         } finally {
             StoreManager.getInstance().quietDelete(blob);
         }
     }
 
-    private int store(Blob content, Mailbox mbox, Folder folder)
-        throws ServiceException, IOException, ImapParseException {
+    private int store(Blob content, Mailbox mbox, Folder folder) throws ServiceException, IOException {
         boolean idxAttach = mbox.attachmentsIndexingEnabled();
         Long receivedDate = date != null ? date.getTime() : null;
         ParsedMessage pm = new ParsedMessage(content.getFile(), receivedDate, idxAttach);
@@ -136,6 +134,7 @@ class AppendMessage {
                     flags |= Flag.BITMASK_FROM_ME;
             }
         } catch (Exception e) { }
+
         Message msg = mbox.addMessage(handler.getContext(), pm, folder.getId(), true, flags, Tag.bitmaskToTags(tags));
         if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
             ImapFolder selectedFolder = handler.getSelectedFolder();
@@ -146,8 +145,7 @@ class AppendMessage {
         return msg == null ? -1 : msg.getId();
     }
 
-    private int store(Blob content, ZMailbox mbox, ZFolder folder)
-        throws IOException, ServiceException {
+    private int store(Blob content, ZMailbox mbox, ZFolder folder) throws IOException, ServiceException {
         InputStream is = content.getInputStream();
         String id = mbox.addMessage(folder.getId(), Flag.bitmaskToFlags(flags), null, date.getTime(), is, content.getRawSize(), true);
         return new ItemId(id, getCredentials().getAccountId()).getId();
@@ -159,7 +157,7 @@ class AppendMessage {
             return parts.get(0).literal.getBlob();
         }
         // translate CATENATE (...) directives into Blob
-        BlobBuilder bb = FileBlobStore.getInstance().getBlobBuilder();
+        BlobBuilder bb = StoreManager.getInstance().getBlobBuilder();
         boolean success = false;
         try {
             for (Part part : parts) {
@@ -167,39 +165,32 @@ class AppendMessage {
                 part.cleanup();
             }
             Blob blob = bb.finish();
-            if (blob.getRawSize() > handler.getConfig().getMaxRequestSize()) {
+            if (blob.getRawSize() > handler.getConfig().getMaxRequestSize())
                 throw new ImapParseException(tag, "TOOBIG", "request too long", false);
-            }
-            checkDate(blob);
             success = true;
             return blob;
         } finally {
-            for (Part part : parts) {
+            for (Part part : parts)
                 part.cleanup();
-            }
             parts = null;
-            if (!success) {
+            if (!success)
                 bb.dispose();
-            }
         }
     }
 
     private void copyBytes(InputStream is, BlobBuilder bb) throws IOException {
-        byte[] b = new byte[8192];
-        int len;
         try {
-            while ((len = is.read(b)) != -1) {
-                bb.append(b, 0, len);
-            }
+            bb.append(is);
         } finally {
             ByteUtil.closeStream(is);
         }
     }
 
     private void checkDate(Blob content) throws IOException, ServiceException {
-        if (date == null && getCredentials().isHackEnabled(ImapCredentials.EnabledHack.THUNDERBIRD)) {
+        // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
+        if (date == null && getCredentials().isHackEnabled(ImapCredentials.EnabledHack.THUNDERBIRD))
             date = getSentDate(content);
-        }
+
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         // FIXME: Why is this different from INTERNALDATE range check?
         if (date != null && date.getTime() > Integer.MAX_VALUE * 1000L) {
@@ -212,7 +203,7 @@ class AppendMessage {
         InputStream is = content.getInputStream();
         try {
             // inefficient, but must be done before creating the ParsedMessage
-            return new MimeMessage(JMSession.getSession(), is).getSentDate();
+            return new MessageHeaders(is).getSentDate();
         } catch (MessagingException e) {
             return null;
         } finally {
@@ -224,9 +215,7 @@ class AppendMessage {
         return handler.getCredentials();
     }
 
-    /*
-    * Append message part, either literal data or IMAP URL.
-    */
+    /** APPEND message part, either literal data or IMAP URL. */
     private class Part {
         Literal literal;
         ImapURL url;
@@ -240,11 +229,15 @@ class AppendMessage {
         }
 
         InputStream getInputStream() throws IOException, ImapParseException {
-            return literal != null ? literal.getInputStream() :
-                url.getContentAsStream(handler, getCredentials(), tag).getSecond();
+            if (literal != null)
+                return literal.getInputStream();
+            else
+                return url.getContentAsStream(handler, handler.getCredentials(), tag).getSecond();
         }
+
         void cleanup() {
-            if (literal != null) literal.cleanup();
+            if (literal != null)
+                literal.cleanup();
         }
     }
 }
