@@ -1727,10 +1727,16 @@ public abstract class CalendarItem extends MailItem {
                                        isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
                         }
                         // TIM: modifyBlob will save the metadata for us as a side-effect
-//                      saveMetadata();
+//                      saveMetadata();                        
                     } else {
                         markItemModified(Change.MODIFIED_INVITE);
-                        saveMetadata();
+                        try {
+                            // call setContent here so that MOD_CONTENT is updated...this is required
+                            // for the index entry to be correctly updated (bug 39463)
+                            setContent(null, null);
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("IOException", e);
+                        }
                     }
 
                     Callback cb = getCallback();
