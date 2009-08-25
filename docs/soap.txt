@@ -2484,7 +2484,7 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]
-    [failingSince="{timestamp}">
+    [failingSince="{timestamp}">]
     [<lastError>{error message}</lastError>]
    </pop3>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
@@ -2496,7 +2496,7 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]>
-    [failingSince="{timestamp}">
+    [failingSince="{timestamp}">]
     [<lastError>{error message}</lastError>]
    </imap>]
   ...
