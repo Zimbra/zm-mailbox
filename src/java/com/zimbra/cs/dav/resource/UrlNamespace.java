@@ -106,18 +106,24 @@ public class UrlNamespace {
 
     public static DavResource getPrincipalAtUrl(DavContext ctxt, String url) throws DavException {
         ZimbraLog.dav.debug("getPrincipalAtUrl");
-        int index = url.indexOf(PRINCIPALS_PATH);
-        if (index == -1 || url.endsWith(PRINCIPALS_PATH))
-			try {
-				return new Principal(ctxt.getAuthAccount(), url);
-			} catch (ServiceException se) {
-				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, se);
-			}
-        index += PRINCIPALS_PATH.length();
-        String name = url.substring(index);
-        if (name.indexOf('/') > 0)
-            name = name.substring(0, name.indexOf('/'));
-        ZimbraLog.dav.debug("name: "+name);
+        String name = ctxt.getAuthAccount().getName();
+        if (url != null) {
+            int index = url.indexOf(PRINCIPALS_PATH);
+            if (index == -1 || url.endsWith(PRINCIPALS_PATH))
+                try {
+                    return new Principal(ctxt.getAuthAccount(), url);
+                } catch (ServiceException se) {
+                    throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, se);
+                }
+            index += PRINCIPALS_PATH.length();
+            name = url.substring(index);
+            if (name.indexOf('/') > 0)
+                name = name.substring(0, name.indexOf('/'));
+            ZimbraLog.dav.debug("name: "+name);
+        } else {
+            url = "/";
+        }
+            
         try {
             Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
             if (a == null)

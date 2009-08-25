@@ -43,6 +43,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DavContext.RequestProp;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
@@ -159,7 +160,15 @@ public abstract class DavResource {
 	}
 	
 	public ResourceProperty getProperty(Element prop) {
+	    if (prop == null)
+	        return null;
 	    return mProps.get(prop.getQName());
+	}
+	
+	public ResourceProperty getProperty(QName prop, RequestProp request) {
+	    if (request.getProp(prop) == null)
+	        return getProperty(prop);
+	    return getProperty(request.getProp(prop));
 	}
 
 	public Set<QName> getAllPropertyNames() {
@@ -250,7 +259,7 @@ public abstract class DavResource {
 	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
         if (isWebRequest(ctxt))
             return getTextContent(ctxt);
-        return null;
+        return getRawContent(ctxt);
 	}
 	
 	public abstract boolean isCollection();

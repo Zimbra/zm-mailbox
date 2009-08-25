@@ -153,7 +153,7 @@ public class DavResponse {
 		PropStat propstat = new PropStat();
 		Map<QName,DavException> errPropMap = props.getErrProps();
 		for (QName name : propNames) {
-			ResourceProperty prop = rs.getProperty(props.getProp(name));
+			ResourceProperty prop = rs.getProperty(name, props);
 			if (errPropMap.containsKey(name)) {
 				DavException ex = errPropMap.get(name);
 				propstat.add(name, ex.getMessage(), ex.getStatus());

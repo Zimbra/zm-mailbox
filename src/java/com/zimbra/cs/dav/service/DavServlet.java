@@ -117,7 +117,7 @@ public class DavServlet extends ZimbraServlet {
 				buf.append(", ");
 			buf.append(method);
 		}
-		resp.setHeader(DavProtocol.HEADER_ALLOW, buf.toString());
+		DavMethod.setResponseHeader(resp, DavProtocol.HEADER_ALLOW, buf.toString());
 	}
 	
 	enum RequestType { password, authtoken, both, none };
@@ -186,10 +186,6 @@ public class DavServlet extends ZimbraServlet {
 			}
 			ZimbraLog.addToContext(ZimbraLog.C_ANAME, authUser.getName());
 			ctxt = new DavContext(req, resp, authUser);
-            if (ctxt.getUser() == null) {
-                resp.sendRedirect(DAV_PATH + "/" + authUser.getName() + "/");
-                return;
-            }
 		} catch (AuthTokenException e) {
 			ZimbraLog.dav.error("error getting authenticated user", e);
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -494,6 +490,8 @@ public class DavServlet extends ZimbraServlet {
 		ItemId target = null;
 		String extraPath = null;
 		try {
+		    if (ctxt.getUser() == null)
+		        return false;
 			Account account = prov.getAccountByName(ctxt.getUser());
 			if (account == null)
 				return false;

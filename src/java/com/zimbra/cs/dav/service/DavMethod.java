@@ -27,6 +27,7 @@ import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
@@ -58,19 +59,37 @@ public abstract class DavMethod {
 	protected static final int STATUS_OK = HttpServletResponse.SC_OK;
 	
 	protected void sendResponse(DavContext ctxt) throws IOException {
-		if (ctxt.isResponseSent())
-			return;
-		HttpServletResponse resp = ctxt.getResponse();
-		resp.setStatus(ctxt.getStatus());
-		String compliance = ctxt.getDavCompliance();
-		if (compliance != null)
-			resp.setHeader(DavProtocol.HEADER_DAV, compliance);
-		if (ctxt.hasResponseMessage()) {
-			resp.setContentType(DavProtocol.DAV_CONTENT_TYPE);
-			DavResponse respMsg = ctxt.getDavResponse();
-			respMsg.writeTo(resp.getOutputStream());
-		}
-		ctxt.responseSent();
+	    if (ctxt.isResponseSent())
+	        return;
+	    HttpServletResponse resp = ctxt.getResponse();
+	    resp.setStatus(ctxt.getStatus());
+	    String compliance = ctxt.getDavCompliance();
+	    if (compliance != null)
+	        setResponseHeader(resp, DavProtocol.HEADER_DAV, compliance);
+	    if (ctxt.hasResponseMessage()) {
+	        resp.setContentType(DavProtocol.DAV_CONTENT_TYPE);
+	        DavResponse respMsg = ctxt.getDavResponse();
+	        respMsg.writeTo(resp.getOutputStream());
+	    }
+	    ctxt.responseSent();
+	}
+	
+	public static void setResponseHeader(HttpServletResponse resp, String name, String value) {
+	    while (value != null) {
+	        String val = value;
+	        if (value.length() > 70) {
+	            int index = value.lastIndexOf(',', 70);
+	            if (index == -1) {
+	                ZimbraLog.dav.warn("header value is too long for %s : %s", name, value);
+	                return;
+	            }
+	            val = value.substring(0, index);
+	            value = value.substring(index+1).trim();
+	        } else {
+	            value = null;
+	        }
+            resp.addHeader(name, val);
+	    }
 	}
 	
 	public HttpMethod toHttpMethod(DavContext ctxt, String targetUrl) throws IOException, DavException {
