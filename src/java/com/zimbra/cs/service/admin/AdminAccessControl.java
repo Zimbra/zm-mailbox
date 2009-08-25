@@ -749,12 +749,17 @@ public abstract class AdminAccessControl {
             
             // has some rights for this target type
             
-            // see if the admin has the right on all entries of the type on the system
-            RightCommand.EffectiveRights er = rbtt.all();
-            if (hasRight(er, target, listRight))
-                return true;
             
-            // see if the admin has the right on domain scope
+            // 1. see if the admin has the right on any entries
+            String targetName = target.getName();
+            for (RightCommand.RightAggregation rightsByEntries : rbtt.entries()) {
+                if (rightsByEntries.entries().contains(targetName)) {
+                    RightCommand.EffectiveRights effRights = rightsByEntries.effectiveRights();
+                    return hasRight(effRights, target, listRight);
+                }
+            }
+            
+            // 2. see if the admin has the right on domain scope
             Domain targetDomain = targetType.getTargetDomain(mProv, target);
             if (targetDomain != null) {
                 if (rbtt instanceof RightCommand.DomainedRightsByTargetType) {
@@ -765,22 +770,16 @@ public abstract class AdminAccessControl {
                     for (RightCommand.RightAggregation rightsByDomains : domainedRights.domains()) {
                         if (rightsByDomains.entries().contains(domainName)) {
                             RightCommand.EffectiveRights effRights = rightsByDomains.effectiveRights();
-                            if (hasRight(effRights, target, listRight))
-                                return true;
+                            return hasRight(effRights, target, listRight);
                         }
                     }
                 }
             }
             
-            // see if the admin has the right on any entries
-            String targetName = target.getName();
-            for (RightCommand.RightAggregation rightsByEntries : rbtt.entries()) {
-                if (rightsByEntries.entries().contains(targetName)) {
-                    RightCommand.EffectiveRights effRights = rightsByEntries.effectiveRights();
-                    if (hasRight(effRights, target, listRight))
-                        return true;
-                }
-            }
+            // 3. see if the admin has the right on all entries of the type on the system
+            RightCommand.EffectiveRights er = rbtt.all();
+            if (hasRight(er, target, listRight))
+                return true;
             
             return false;
         }
