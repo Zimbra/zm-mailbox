@@ -191,10 +191,44 @@ public class RuleRewriter {
                     param = MailConstants.A_RHS;
                 else
                     param = PARAM_PREFIX + String.valueOf(x++);
-                elem.addAttribute(param, val.toString());
+                elem.addAttribute(param, toString(val));
             } 
             test(elem, childNode);
         }
+    }
+    
+    /**
+     * Returns the string representation of a value list.  Values are surrounded
+     * with quotes, to maintain backward compatibility.  See bug 39911.
+     */
+    private static String toString(List<Object> list) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("[");
+        if (list != null) {
+            boolean isFirst = true;
+            
+            for (Object val : list) {
+                if (isFirst) {
+                    isFirst = false;
+                } else {
+                    buf.append(", ");
+                }
+                String sVal = String.valueOf(val);
+                if (val == null) {
+                    buf.append(sVal);
+                } else {
+                    if (!sVal.startsWith("\"")) {
+                        buf.append('"');
+                    }
+                    buf.append(sVal);
+                    if (!sVal.endsWith("\"")) {
+                        buf.append('"');
+                    }
+                }
+            }
+        }
+        buf.append("]");
+        return buf.toString();
     }
     
     private static final int K = 1024;
