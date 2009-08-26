@@ -123,13 +123,13 @@ public class FileUploadServlet extends ZimbraServlet {
                 // 1. detect by file extension
                 contentType = MimeDetect.getMimeDetect().detect(name);
                 
-                // 2. use content type supplied by the browser
+                // 2. special-case text/xml to avoid detection
                 if (contentType == null && file.getContentType() != null) {
                     if (file.getContentType().equals("text/xml"))
                         contentType = file.getContentType();
                 }
                 
-                // 3.  detect by magic
+                // 3. detect by magic
                 if (contentType == null) {
                     try {
                         contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
@@ -137,6 +137,13 @@ public class FileUploadServlet extends ZimbraServlet {
                         contentType = null;
                     }
                 }
+                
+                // 4. try the browser-specified content type 
+                if (contentType == null || contentType.equals(Mime.CT_APPLICATION_OCTET_STREAM)) {
+                    contentType = file.getContentType();
+                }
+                
+                // 5. when all else fails, use application/octet-stream
                 if (contentType == null)
                     contentType = file.getContentType();
                 if (contentType == null)
