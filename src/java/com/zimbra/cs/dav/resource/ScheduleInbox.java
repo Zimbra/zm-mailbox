@@ -73,7 +73,7 @@ public class ScheduleInbox extends CalendarCollection {
         Provisioning prov = Provisioning.getInstance();
         if (ctxt.getPathInfo() != null)
         	target = prov.getAccountByName(ctxt.getPathInfo());
-		String query = "is:invite inid:" + getId();
+		String query = "is:invite inid:" + getId() + " after:\"-1month\" ";
 		Mailbox mbox = getMailbox(ctxt);
 		ZimbraQueryResults zqr = null;
 		try {
@@ -84,6 +84,8 @@ public class ScheduleInbox extends CalendarCollection {
                 	Message msg = ((MessageHit)hit).getMessage();
                 	if (target == null && msg.getCalendarIntendedFor() != null)
                 		continue;
+                	if (!msg.isUnread())
+                	    continue;
                 	if (target != null) {
                 		if (msg.getCalendarIntendedFor() == null)
                 			continue;
