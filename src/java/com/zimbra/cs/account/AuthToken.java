@@ -18,6 +18,8 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -148,6 +150,10 @@ public abstract class AuthToken {
     // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getZimbraAdminAuthToken() throws ServiceException {
         return ZimbraAuthToken.getZimbraAdminAuthToken();
+    }
+    
+    public static Map getInfo(String encoded) throws AuthTokenException {
+        return ZimbraAuthToken.getInfo(encoded);
     }
 
 }

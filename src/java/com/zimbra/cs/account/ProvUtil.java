@@ -17,6 +17,7 @@ package com.zimbra.cs.account;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.util.Collections;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +39,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import net.spy.memcached.HashAlgorithm;
 
@@ -58,6 +58,7 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -372,6 +373,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ALL_RIGHTS("getAllRights", "gar", "[-v] [{target-type}]", Category.RIGHT, 0, 2),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
         GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
+        GET_AUTH_TOKEN_INFO("getAuthTokenInfo", "gati", "{auth-token}", Category.MISC, 1, 1),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
         GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
@@ -1026,6 +1028,9 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case GET_MEMCACHED_CLIENT_CONFIG:
             doGetMemcachedClientConfig(args);
+            break;
+        case GET_AUTH_TOKEN_INFO:
+            doGetAuthTokenInfo(args);
             break;
         case SOAP:
             // HACK FOR NOW
@@ -3823,6 +3828,32 @@ public class ProvUtil implements HttpDebugListener {
         mProv.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
                          ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
                          ra.mRight, ra.mRightModifier);
+    }
+    
+    private void doGetAuthTokenInfo(String[] args) throws ServiceException {
+        String authToken = args[1];
+        
+        try {
+            Map attrs = AuthToken.getInfo(authToken);
+            List keys = new ArrayList(attrs.keySet());
+            Collections.sort(keys);
+            
+            for (Object k : keys) {
+                String key = k.toString();
+                String value = attrs.get(k).toString();
+                
+                if ("exp".equals(key)) {
+                    long exp = Long.parseLong(value);
+                    System.out.format("%s: %s (%s)\n", key, value, DateUtil.toRFC822Date(new Date(exp)));
+                } else
+                    System.out.format("%s: %s\n", key, value);
+            }
+        } catch (AuthTokenException e) {
+            System.out.println("Unable to parse auth token: " + e.getMessage());
+        }
+        
+        System.out.println();
+
     }
     
     private void doHelp(String[] args) {
