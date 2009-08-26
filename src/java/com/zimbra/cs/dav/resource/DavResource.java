@@ -162,7 +162,7 @@ public abstract class DavResource {
 	public ResourceProperty getProperty(Element prop) {
 	    if (prop == null)
 	        return null;
-	    return mProps.get(prop.getQName());
+	    return getProperty(prop.getQName());
 	}
 	
 	public ResourceProperty getProperty(QName prop, RequestProp request) {
