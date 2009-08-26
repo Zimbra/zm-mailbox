@@ -36,6 +36,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.dav.property.CardDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -73,6 +74,7 @@ public class User extends Principal {
             addrs.add(alias);
         addrs.add(url);
         addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
+        addProperty(CardDavProperty.getAddressbookHomeSet(user));
         setProperty(DavElements.E_HREF, url);
         String cn = account.getAttr(Provisioning.A_cn);
         if (cn == null)
