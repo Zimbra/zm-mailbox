@@ -424,6 +424,7 @@ public class MailConstants {
     public static final String A_IDENTITY_ID = "idnt";
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_SEND_UID = "suid";
+    public static final String A_FOR_ACCOUNT = "forAcct";
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
