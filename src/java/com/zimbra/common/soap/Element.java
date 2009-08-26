@@ -428,26 +428,25 @@ public abstract class Element implements Cloneable {
             saxReader = new org.dom4j.io.SAXReader(fact);
         else
             saxReader = new org.dom4j.io.SAXReader();
-            
+
         EntityResolver nullEntityResolver = new EntityResolver() {
-            public InputSource resolveEntity (String publicId, String systemId)
-            {
+            public InputSource resolveEntity (String publicId, String systemId) {
                 return new InputSource(new StringReader(""));
             }            
         };
         saxReader.setEntityResolver(nullEntityResolver);
         return saxReader; 
     }
-    
+
     public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
     public static Element convertDOM(org.dom4j.Element d4root, ElementFactory factory) {
         Element elt = factory.createElement(d4root.getQName());
-        for (Iterator it = d4root.attributeIterator(); it.hasNext(); ) {
+        for (Iterator<?> it = d4root.attributeIterator(); it.hasNext(); ) {
             org.dom4j.Attribute d4attr = (org.dom4j.Attribute) it.next();
             elt.addAttribute(d4attr.getQualifiedName(), d4attr.getValue());
         }
         String content = null;
-        for (Iterator it = d4root.elementIterator(); it.hasNext(); ) {
+        for (Iterator<?> it = d4root.elementIterator(); it.hasNext(); ) {
             org.dom4j.Element d4elt = (org.dom4j.Element) it.next();
             if (XHTML_NS_URI.equalsIgnoreCase(d4elt.getNamespaceURI()) && !d4elt.elements().isEmpty())
                 content = (content == null ? d4elt.asXML() : content + d4elt.asXML());
@@ -460,7 +459,7 @@ public abstract class Element implements Cloneable {
             elt.setText(content);
         return elt;
     }
-    
+
 
     public static class ContainerException extends RuntimeException {
         private static final long serialVersionUID = -5884422477180821199L;
@@ -658,8 +657,8 @@ public abstract class Element implements Cloneable {
             if (obj == elt) {
                 mAttributes.remove(elt.getName());
             } else if (obj instanceof List) {
-                ((List) obj).remove(elt);
-                if (((List) obj).size() == 0)
+                ((List<?>) obj).remove(elt);
+                if (((List<?>) obj).isEmpty())
                     mAttributes.remove(elt.getName());
             }
         }
@@ -669,7 +668,7 @@ public abstract class Element implements Cloneable {
             if (obj instanceof Element)
                 return (Element) obj;
             else if (obj instanceof List)
-                return (Element) ((List) obj).get(0);
+                return (Element) ((List<?>) obj).get(0);
             // could return a "pseudo-element" for attribute values...
             return null;
         }
@@ -720,7 +719,7 @@ public abstract class Element implements Cloneable {
 
             List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
             for (Map.Entry<String, Object> entry : attrs.mAttributes.entrySet()) {
-                List values = (entry.getValue() instanceof List ? (List) entry.getValue() : Arrays.asList(entry.getValue()));
+                List<?> values = (entry.getValue() instanceof List ? (List<?>) entry.getValue() : Arrays.asList(entry.getValue()));
                 for (Object multi : values) {
                     if (multi instanceof KeyValuePair)
                         pairs.add((KeyValuePair) multi);
@@ -738,7 +737,7 @@ public abstract class Element implements Cloneable {
             Object obj = mAttributes.get(key);
             if (obj != null) {
                 if (obj instanceof List)
-                    obj = ((List) obj).isEmpty() ? null : ((List) obj).get(0);
+                    obj = ((List<?>) obj).isEmpty() ? null : ((List<?>) obj).get(0);
                 if (obj instanceof Element)
                     obj = ((Element) obj).getRawText();
                 else if (obj instanceof KeyValuePair)
@@ -906,7 +905,7 @@ public abstract class Element implements Cloneable {
                                }
                            } while (jsr.peekChar() != '}');  jsr.skipChar();  break;
                 case '[':  jsr.skipChar();
-                           do {
+                           while (jsr.peekChar() != ']') {
                                parseKeyValuePair(jsr, key, parent);
                                switch (jsr.peekChar()) {
                                    case ']':  break;
@@ -914,7 +913,8 @@ public abstract class Element implements Cloneable {
                                    case ';':  jsr.skipChar();  break;
                                    default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
                                }
-                           } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
+                           };
+                           jsr.skipChar();  break;
                 default:   if ((value = jsr.readValue()) != null)
                                parent.addKeyValuePair(key, value.toString());  break;
             }
@@ -941,7 +941,7 @@ public abstract class Element implements Cloneable {
                     switch (jsr.peekChar()) {
                         case '{':  elt.addUniqueElement(parseElement(jsr, key, factory, elt));  break;
                         case '[':  jsr.skipChar();
-                                   do {
+                                   while (jsr.peekChar() != ']') {
                                        elt.addElement(parseElement(jsr, key, factory, elt));
                                        switch (jsr.peekChar()) {
                                            case ']':  break;
@@ -949,7 +949,8 @@ public abstract class Element implements Cloneable {
                                            case ';':  jsr.skipChar();  break;
                                            default:   throw new SoapParseException("missing expected ',' or ']'", jsr.js);
                                        }
-                                   } while (jsr.peekChar() != ']');  jsr.skipChar();  break;
+                                   };
+                                   jsr.skipChar();  break;
                         default:   if ((value = jsr.readValue()) == null)  break;
                                    if (key.equals(A_NAMESPACE))            elt.setNamespace("", value.toString());
                                    else if (value instanceof Boolean)      elt.addAttribute(key, ((Boolean) value).booleanValue());
@@ -1004,9 +1005,8 @@ public abstract class Element implements Cloneable {
             int size = mAttributes.size() + (needNamespace ? 1 : 0), lsize;
             if (size != 0) {
                 int index = 0;
-                for (Iterator it = mAttributes.entrySet().iterator(); it.hasNext(); index++) {
+                for (Map.Entry<String, Object> attr : mAttributes.entrySet()) {
                     indent(sb, indent, true);
-                    Map.Entry attr = (Map.Entry) it.next();
                     sb.append('"').append(StringUtil.jsEncode(attr.getKey())).append(indent >= 0 ? "\": " : "\":");
 
                     Object value = attr.getValue();
@@ -1017,8 +1017,8 @@ public abstract class Element implements Cloneable {
                     else if (!(value instanceof List))           sb.append(String.valueOf(value));
                     else {
                         sb.append('[');
-                        if ((lsize = ((List) value).size()) > 0)
-                            for (ListIterator lit = ((List) value).listIterator(); lit.hasNext(); ) {
+                        if ((lsize = ((List<?>) value).size()) > 0)
+                            for (ListIterator<?> lit = ((List<?>) value).listIterator(); lit.hasNext(); ) {
                                 int lindent = indent < 0 ? -1 : indent + INDENT_SIZE;
                                 if (lsize > 1)
                                     indent(sb, lindent, true);
@@ -1033,7 +1033,7 @@ public abstract class Element implements Cloneable {
                             }
                         sb.append(']');
                     }
-                    if (index < size - 1)  sb.append(",");
+                    if (index++ < size - 1)  sb.append(",");
                 }
                 if (needNamespace) {
                     indent(sb, indent, true);
@@ -1370,6 +1370,8 @@ public abstract class Element implements Cloneable {
         System.out.println(Element.parseJSON("{foo:' bar'}").getAttribute("foo", null));
         System.out.println(Element.parseJSON("{foo:'bar'}").getAttribute("foo", null));
         System.out.println(Element.parseJSON("{foo:''}").getAttribute("foo", null));
+        System.out.println(Element.parseJSON("{ \"items\" : [ ] }"));
+        System.out.println(Element.parseJSON("{ '_attrs' : {'a':[]}}").getAttribute("a", null));
 
         org.dom4j.Namespace bogusNS = org.dom4j.Namespace.get("bogus", "");
         QName qm = new QName("m", bogusNS);
