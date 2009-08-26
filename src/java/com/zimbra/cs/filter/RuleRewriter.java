@@ -271,7 +271,18 @@ public class RuleRewriter {
                 if (val.startsWith("text:")) {
                     elem.addText(val.substring(5));
                 } else {
-                    elem.addElement(MailConstants.E_FILTER_ARG).setText(val);
+                    // Put quotes around value to maintain backward compatibility
+                    // with ZCS 5.x.  See bug 39911.
+                    StringBuilder buf = new StringBuilder();
+                    if (!val.startsWith("\"")) {
+                        buf.append('"');
+                    }
+                    buf.append(val);
+                    if (!val.endsWith("\"")) {
+                        buf.append('"');
+                    }
+                    
+                    elem.addElement(MailConstants.E_FILTER_ARG).setText(buf.toString());
                 }
             } else {
                 action(elem, childNode);
