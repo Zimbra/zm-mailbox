@@ -480,7 +480,7 @@ public class MailSender {
         }
     }
 
-    private void logMessage(MimeMessage mm, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
+    public void logMessage(MimeMessage mm, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
             StringBuilder msg = new StringBuilder("Sending message");
@@ -601,7 +601,6 @@ public class MailSender {
     /*
      * returns a Collection of successfully sent recipient Addresses
      */
-    @SuppressWarnings("unused")
     protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
     throws SafeMessagingException, IOException  {
         // send the message via SMTP
@@ -682,7 +681,7 @@ public class MailSender {
     }
 
 
-    private List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
+    public List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
         if (contacts.isEmpty())
             return Collections.emptyList();
 
@@ -772,7 +771,7 @@ public class MailSender {
         return ret;
     }
     
-    private void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
+    public void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
         for (InternetAddress inetaddr : newContacts) {
             ZimbraLog.smtp.debug("adding new contact: " + inetaddr);
             Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();

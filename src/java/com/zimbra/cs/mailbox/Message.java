@@ -41,9 +41,6 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.*;
-import com.zimbra.cs.mailbox.calendar.Alarm.Action;
-import com.zimbra.cs.mailbox.calendar.Alarm.TriggerRelated;
-import com.zimbra.cs.mailbox.calendar.Alarm.TriggerType;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -66,6 +63,7 @@ import com.zimbra.common.util.LogFactory;
 public class Message extends MailItem {
 
     static class DraftInfo {
+        String accountId;
         String identityId;
         String replyType;
         String origId;
@@ -74,7 +72,9 @@ public class Message extends MailItem {
         public DraftInfo(String ident)                        { identityId = ident; }
         public DraftInfo(String rt, String id)                { replyType = rt;  origId = id; }
         public DraftInfo(String rt, String id, String ident)  { replyType = rt;  origId = id;  identityId = ident; }
+        public DraftInfo(String rt, String id, String ident, String account)  { replyType = rt;  origId = id;  identityId = ident; accountId = account; }
         public DraftInfo(Metadata meta) {
+            accountId = meta.get(Metadata.FN_ACCOUNT_ID, null);
             identityId = meta.get(Metadata.FN_IDENTITY_ID, null);
             replyType = meta.get(Metadata.FN_REPLY_TYPE, null);
             origId = meta.get(Metadata.FN_REPLY_ORIG, null);
@@ -243,6 +243,17 @@ public class Message extends MailItem {
      * @see com.zimbra.cs.service.mail.SendMsg#TYPE_REPLY */
     public String getDraftReplyType() {
         return (mDraftInfo == null || mDraftInfo.replyType == null ? "" : mDraftInfo.replyType);
+    }
+
+
+    /** Returns the ID of the account that was used to compose this draft message.
+     * 
+     * @return The ID of the account used to compose this draft message, or ""
+     *         for Messages that are not drafts.
+     * @see #getDraftReplyType
+     * @see #getDraftOrigId() */
+    public String getDraftAccountId() {
+        return (mDraftInfo == null || mDraftInfo.accountId == null ? "" : mDraftInfo.accountId);
     }
 
     /** Returns the ID of the {@link com.zimbra.cs.account.Identity} that was
@@ -978,6 +989,7 @@ public class Message extends MailItem {
             dmeta.put(Metadata.FN_REPLY_ORIG, dinfo.origId);
             dmeta.put(Metadata.FN_REPLY_TYPE, dinfo.replyType);
             dmeta.put(Metadata.FN_IDENTITY_ID, dinfo.identityId);
+            dmeta.put(Metadata.FN_ACCOUNT_ID, dinfo.accountId);
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 

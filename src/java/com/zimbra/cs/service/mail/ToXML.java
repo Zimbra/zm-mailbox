@@ -817,6 +817,8 @@ public class ToXML {
                     m.addAttribute(MailConstants.A_REPLY_TYPE, msg.getDraftReplyType());
                 if (!msg.getDraftIdentityId().equals(""))
                     m.addAttribute(MailConstants.A_IDENTITY_ID, msg.getDraftIdentityId());
+                if (!msg.getDraftAccountId().equals(""))
+                    m.addAttribute(MailConstants.A_FOR_ACCOUNT, msg.getDraftAccountId());
                 String inReplyTo = mm.getHeader("In-Reply-To", null);
                 if (inReplyTo != null && !inReplyTo.equals(""))
                     m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);

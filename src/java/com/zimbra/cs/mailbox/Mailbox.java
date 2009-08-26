@@ -4540,16 +4540,18 @@ public class Mailbox {
     }
     
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
-        return saveDraft(octxt, pm, id, null, null, null);
+        return saveDraft(octxt, pm, id, null, null, null, null);
     }
 
-    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType, String identityId)
+    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id,
+        String origId, String replyType, String identityId, String accountId)
     throws IOException, ServiceException {
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             Message.DraftInfo dinfo = null;
-            if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")))
-                dinfo = new Message.DraftInfo(replyType, origId, identityId);
+            if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")) ||
+                (accountId != null && !accountId.equals("")))
+                dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId);
             
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
                               null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);

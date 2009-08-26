@@ -70,6 +70,7 @@ public class SaveDraft extends MailDocumentHandler {
         ItemId iidOrigid = originalId == null ? null : new ItemId(originalId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, null);
         String identity = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        String account = msgElem.getAttribute(MailConstants.A_FOR_ACCOUNT, null);
 
         // allow the caller to update the draft's metadata at the same time as they save the draft
         String folderId = msgElem.getAttribute(MailConstants.A_FOLDER, null);
@@ -106,11 +107,13 @@ public class SaveDraft extends MailDocumentHandler {
         }
 
         ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-
         Message msg;
+        
         try {
-            String origid = iidOrigid == null ? null : iidOrigid.toString(mbox.getAccountId());
-            msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity);
+            String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ?
+                mbox.getAccountId() : account);
+            
+            msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
         }
