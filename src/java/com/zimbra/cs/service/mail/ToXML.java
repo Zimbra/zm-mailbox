@@ -24,6 +24,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
@@ -90,7 +91,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.httpclient.HttpURL;
 import org.json.JSONException;
 
 /**
@@ -176,7 +176,7 @@ public class ToXML {
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
             if (!url.equals("") || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailConstants.A_URL, sanitizeURL(url));
+                elem.addAttribute(MailConstants.A_URL, HttpUtil.sanitizeURL(url));
         }
 
         Mailbox mbox = folder.getMailbox();
@@ -197,19 +197,6 @@ public class ToXML {
             }
         }
         return elem;
-    }
-
-    public static String sanitizeURL(String url) {
-        if (url != null && url.indexOf('@') != -1) {
-            try {
-                HttpURL httpurl = new HttpURL(url);
-                if (httpurl.getPassword() != null) {
-                    httpurl.setPassword("");
-                    return httpurl.toString();
-                }
-            } catch (org.apache.commons.httpclient.URIException urie) { }
-        }
-        return url;
     }
 
     public static String encodeEffectivePermissions(Folder folder, OperationContext octxt) {

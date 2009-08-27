@@ -208,7 +208,7 @@ public class ItemAction extends MailDocumentHandler {
             return null;
 
         // recursively dereference mountpoints to find ultimate target folder
-        ItemId iidFolder = new ItemId(folderStr, zsc);
+        ItemId iidFolder = new ItemId(folderStr, zsc), iidRequested = iidFolder;
         Account owner = null;
         int hopCount = 0;
         ZAuthToken zat = null;
@@ -239,7 +239,7 @@ public class ItemAction extends MailDocumentHandler {
             hopCount++;
         }
         if (hopCount == ZimbraSoapContext.MAX_HOP_COUNT)
-            throw ServiceException.TOO_MANY_HOPS();
+            throw MailServiceException.TOO_MANY_HOPS(iidRequested);
 
         // avoid dereferencing the mountpoint again later on
         action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());

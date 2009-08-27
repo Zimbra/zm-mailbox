@@ -19,13 +19,10 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.service.util.ItemId;
 
 import javax.mail.Address;
 
-
-/**
- * @author schemers
- */
 public class MailServiceException extends ServiceException {
     private static final long serialVersionUID = -2047883574519400960L;
 
@@ -278,6 +275,11 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException UPLOAD_REJECTED(String file, String reason) {
         return new MailServiceException("upload rejected: file '" + file + "': " + reason, UPLOAD_REJECTED, SENDERS_FAULT, new Argument(NAME, file, Argument.Type.STR), new Argument("reason", reason, Argument.Type.STR));
+    }
+
+    // note that this logs "service.TOO_MANY_HOPS" rather than "mail.*"
+    public static MailServiceException TOO_MANY_HOPS(ItemId iid) {
+        return new MailServiceException("proxy loop detected", TOO_MANY_HOPS, SENDERS_FAULT, new Argument(ITEM_ID, iid.toString(), Argument.Type.IID));
     }
 
     public static MailServiceException TOO_MANY_TAGS() {

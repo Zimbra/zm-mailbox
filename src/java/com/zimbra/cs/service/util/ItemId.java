@@ -37,9 +37,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class ItemId {
     private static final char ACCOUNT_DELIMITER = ':';
     private static final char PART_DELIMITER    = '-';
@@ -214,7 +211,7 @@ public class ItemId {
                         }
                     }
                     if (hopCount >= ZimbraSoapContext.MAX_HOP_COUNT)
-                        throw ServiceException.TOO_MANY_HOPS();
+                        throw MailServiceException.TOO_MANY_HOPS(iidFolder);
                 }
                 List<Integer> folderList = foldersMap.get(targetAccountId);
                 if (folderList == null) {

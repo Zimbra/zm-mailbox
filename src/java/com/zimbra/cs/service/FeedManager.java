@@ -65,9 +65,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
-/**
- * @author dkarp
- */
 public class FeedManager {
 
     public static final class SubscriptionData {
@@ -93,7 +90,9 @@ public class FeedManager {
     public static SubscriptionData retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd) throws ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
-        
+
+        String originalURL = url;
+
         // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.
         // see comments in ZimbraHttpConnectionManager
         // client.setConnectionTimeout(10000); 
@@ -101,7 +100,7 @@ public class FeedManager {
         HttpMethodParams params = new HttpMethodParams();
         params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, Mime.P_CHARSET_UTF8);
         params.setSoTimeout(60000);
-        
+
         GetMethod get = null;
         BufferedInputStream content = null;
         try {
@@ -166,7 +165,7 @@ public class FeedManager {
             } while (++redirects <= MAX_REDIRECTS);
 
             if (redirects > MAX_REDIRECTS)
-                throw ServiceException.TOO_MANY_HOPS();
+                throw ServiceException.TOO_MANY_PROXIES(originalURL);
 
             StringBuilder charset = new StringBuilder(expectedCharset);
             switch (getLeadingChar(content, charset)) {
@@ -379,11 +378,11 @@ public class FeedManager {
         String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
         // cull out invalid enclosures
         if (attach != null) {
-            for (Iterator it = attach.iterator(); it.hasNext(); )
-                if (((Enclosure) it.next()).getLocation() == null)
+            for (Iterator<Enclosure> it = attach.iterator(); it.hasNext(); )
+                if (it.next().getLocation() == null)
                     it.remove();
         }
-        boolean hasAttachments = attach != null && attach.size() > 0;
+        boolean hasAttachments = attach != null && !attach.isEmpty();
 
         // create the MIME message and wrap it
         try {
@@ -466,22 +465,24 @@ public class FeedManager {
         private StringBuffer str = new StringBuffer();
         private boolean continued;
 
-        public void startDocument() {
+        UnescapedContent()  { }
+
+        @Override public void startDocument() {
             str.setLength(0);  continued = false;
         }
-        public void characters(char[] ch, int offset, int length) {
+        @Override public void characters(char[] ch, int offset, int length) {
             if (!continued && str.length() > 0)
                 str.append(' ');
             str.append(ch, offset, length);
             continued = true;
         }
-        public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
+        @Override public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
             continued = localName.toUpperCase().equals("A");
         }
-        public void endElement(String uri, String localName, String qName) {
+        @Override public void endElement(String uri, String localName, String qName) {
             continued = localName.toUpperCase().equals("A");
         }
-        public String toString() {
+        @Override public String toString() {
             return str.toString();
         }
     }

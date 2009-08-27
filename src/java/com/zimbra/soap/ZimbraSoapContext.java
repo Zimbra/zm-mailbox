@@ -124,7 +124,8 @@ public class ZimbraSoapContext {
      * 
      * Hop count is not checked for TOO_MANY_HOPS in this route.
      */
-    public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount) throws ServiceException {
+    public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount)
+    throws ServiceException {
         mAuthToken = authToken;
         mRawAuthToken = authToken.toZAuthToken();
         mAuthTokenAccountId = authToken.getAccountId();
@@ -135,22 +136,21 @@ public class ZimbraSoapContext {
         mSessionEnabled = false;
         mHopCount = hopCount;
     }
-    
-    
-    /** Creates a <code>ZimbraSoapContext</code> from another existing
-     *  <code>ZimbraSoapContext</code> for use in proxying. */
-    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
-        this(zsc);
-        mRequestedAccountId = targetAccountId;
-    }
+
     
     /** Creates a <code>ZimbraSoapContext</code> from another existing
      *  <code>ZimbraSoapContext</code> for use in proxying. */
     public ZimbraSoapContext(ZimbraSoapContext zsc) throws ServiceException {
+        this(zsc, zsc.mRequestedAccountId);
+    }
+
+    /** Creates a <code>ZimbraSoapContext</code> from another existing
+     *  <code>ZimbraSoapContext</code> for use in proxying. */
+    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
         mRawAuthToken = zsc.mRawAuthToken;
         mAuthToken = zsc.mAuthToken;
         mAuthTokenAccountId = zsc.mAuthTokenAccountId;
-        mRequestedAccountId = zsc.mRequestedAccountId;
+        mRequestedAccountId = targetAccountId;
 
         mRequestProtocol = zsc.mRequestProtocol;
         mResponseProtocol = zsc.mResponseProtocol;
@@ -161,9 +161,8 @@ public class ZimbraSoapContext {
         mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
 
         mMountpointTraversed = zsc.mMountpointTraversed;
-        
-        int hopCount = zsc.mHopCount + 1;
-        setHopCount(hopCount);
+
+        setHopCount(zsc.mHopCount + 1);
     }
     
 
@@ -190,12 +189,12 @@ public class ZimbraSoapContext {
             else if (format.equals(HeaderConstants.TYPE_JAVASCRIPT))
                 mResponseProtocol = SoapProtocol.SoapJS;
         }
-        
+
         try {
             mAuthToken = AuthProvider.getAuthToken(ctxt, context);
             if (mAuthToken != null) {
                 mRawAuthToken = mAuthToken.toZAuthToken();
-            
+
                 if (mAuthToken.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
                 mAuthTokenAccountId = mAuthToken.getAccountId();
@@ -563,17 +562,17 @@ public class ZimbraSoapContext {
     public boolean wantsUnqualifiedIds() {
         return mUnqualifiedItemIds;
     }
-    
+
     private void setHopCount(int hopCount) throws ServiceException {
         if (hopCount > MAX_HOP_COUNT)
-            throw ServiceException.TOO_MANY_HOPS();
+            throw ServiceException.TOO_MANY_HOPS(mRequestedAccountId);
         mHopCount = hopCount;
     }
-    
+
     public int getHopCount() {
         return mHopCount;
     }
-    
+
     public void resetProxyAuthToken() {
         mAuthToken.resetProxyAuthToken();
         mRawAuthToken.resetProxyAuthToken();

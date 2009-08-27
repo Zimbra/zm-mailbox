@@ -201,7 +201,7 @@ public class ItemActionHelper {
     protected String mName; 
 
     // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
-    protected ItemId mIidFolder; 
+    protected ItemId mIidFolder, mIidRequestedFolder; 
 
     // only when OP=UPDATE
     protected String mFlags;
@@ -252,7 +252,7 @@ public class ItemActionHelper {
     }
     public void setIidFolder(ItemId iidFolder)  { 
         assert(mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE);
-        mIidFolder = iidFolder; 
+        mIidRequestedFolder = mIidFolder = iidFolder; 
     }
     public void setFlags(String flags) {
         assert(mOperation == Op.UPDATE);
@@ -445,7 +445,7 @@ public class ItemActionHelper {
             if (!mIidFolder.equals(iidTarget)) {
                 mIidFolder = iidTarget;
                 if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
-                    throw ServiceException.TOO_MANY_HOPS();
+                    throw MailServiceException.TOO_MANY_HOPS(mIidRequestedFolder);
                 schedule();
                 return;
             }
