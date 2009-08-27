@@ -16,6 +16,7 @@ JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
+CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc -arch ppc64 -arch x86_64
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
@@ -26,6 +27,7 @@ ifeq (MACOSXx86,$(findstring MACOSXx86,$(BUILD_PLATFORM)))
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
+CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc -arch ppc64 -arch x86_64
 SHARED_EXT := jnilib
 LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
 LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
