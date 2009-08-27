@@ -846,8 +846,12 @@ public class ByteUtil {
         private final long mLimit;
 
         public static SegmentInputStream create(InputStream is, long start, long end) throws IOException {
-            if (start != 0)
-                is.skip(start);
+            if (start > 0) {
+                long numSkipped = is.skip(start);
+                if (numSkipped != start) {
+                    throw new IOException("Attempted to skip " + start + " bytes, actually skipped " + numSkipped);
+                }
+            }
             return new SegmentInputStream(is, Math.max(0L, end - start));
         }
 
