@@ -23,12 +23,8 @@ import java.security.SecureRandom;
 
 import org.apache.commons.codec.binary.Hex;
 
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.HttpUtil;
 
-/**
- * @author schemers
- *
- */
 @SuppressWarnings("serial")
 public class ServiceException extends Exception {
 
@@ -49,30 +45,30 @@ public class ServiceException extends Exception {
     public static final String NOT_IN_PROGRESS = "service.NOT_IN_PROGRESS";
     public static final String INTERRUPTED = "service.INTERRUPTED";
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
-    
+
     protected String mCode;
     protected Argument[] mArgs = null;
     private String mId;
-    
+
     public static final String HOST            = "host";
     public static final String URL             = "url"; 
     public static final String MAILBOX_ID      = "mboxId";
     public static final String ACCOUNT_ID      = "acctId"; 
-    
+
     public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
-    
+
     // to ensure that exception id is unique across multiple servers.
     private static String ID_KEY = null;
-    
+
     static {
         SecureRandom random = new SecureRandom();
         byte[] key = new byte[8];
         random.nextBytes(key);
         ID_KEY = new String(Hex.encodeHex(key));
     }
-    
-    
-    public String toString() {
+
+
+    @Override public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
         toRet.append("\nExceptionId:").append(mId);
         toRet.append("\nCode:").append(mCode);
@@ -81,43 +77,43 @@ public class ServiceException extends Exception {
                 toRet.append(" Arg:").append(arg.toString()).append("");
             }
         }
-        
+
         return toRet.toString();
     }
-    
+
     public static class Argument {
         public static enum Type {
-            IID,        // mail-item ID or mailbox-id 
-            ACCTID,   // account ID
+            IID,       // mail-item ID or mailbox-id 
+            ACCTID,    // account ID
             STR,       // opaque string
             NUM        // opaque number
         }
-        
+
         public Argument(String name, String value, Type typ) {
             mName = name;
             mValue = value;
             mType = typ;
         }
-        
+
         public Argument(String name, long value, Type type) {
             mName = name;
             mValue = Long.toString(value);
             mType = type;
         }
-        
+
         public boolean externalVisible() {
             return true;
         }
-        
+
         public String mName;
         public String mValue;
         public Type mType;
-        
-        public String toString() {
-            return "("+mName+", "+mType.name()+", \""+mValue+"\")";
+
+        @Override public String toString() {
+            return "(" + mName + ", " + mType.name() + ", \"" + mValue + "\")";
         }
     }
-    
+
     /**
      * Argument that should not be included in SOAP fault.
      * For example: url
@@ -126,16 +122,16 @@ public class ServiceException extends Exception {
         public InternalArgument(String name, String value, Type typ) {
             super(name, value, typ);
         }
-        
+
         public InternalArgument(String name, long value, Type type) {
             super(name, value, type);
         }
-        
-        public boolean externalVisible() {
+
+        @Override public boolean externalVisible() {
             return false;
         }
     }
-    
+
     /**
      * Sets the specified argument if it is not already set, updates 
      * it if it is.
@@ -154,19 +150,19 @@ public class ServiceException extends Exception {
                     return;
                 }
             }
-    
+
             // not found -- enlarge array
             Argument[] newArgs = new Argument[mArgs.length + 1];
             for (int i = mArgs.length-1; i>=0; i--) {
                 newArgs[i] = mArgs[i];
             }
-            
+
             // add new argument
             newArgs[mArgs.length] = new Argument(name, value, type);
             mArgs = newArgs;
         }
     }
-    
+
     /**
      * Comment for <code>mReceiver</code>
      * 
@@ -180,7 +176,7 @@ public class ServiceException extends Exception {
     public static final boolean RECEIVERS_FAULT = true; // server's fault
     public static final boolean SENDERS_FAULT = false; // client's fault
     private boolean mReceiver;
-    
+
     /**
      * This is for exceptions that are usually not logged and thus need to include an unique "label" 
      * in the exception id so the thrown(or instantiation) location can be identified by the exception id alone
@@ -193,57 +189,57 @@ public class ServiceException extends Exception {
         int i = fileName.lastIndexOf('.');
         if (i != -1)
             fileName = fileName.substring(0, i);
-        
+
         mId = mId + ":" + fileName + callSite.getLineNumber();
     }
-    
+
     private void setId() {
         mId = Thread.currentThread().getName() + ":"+ System.currentTimeMillis() + ":" + ID_KEY;
     }
 
     protected void setId(String id) { mId = id; }
-    
+
     protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments)
     {
         super(message, cause);
         mCode = code;
         mReceiver = isReceiversFault;
-        
+
         mArgs = arguments;
-        
+
         setId();
     }
-    
+
     protected ServiceException(String message, String code, boolean isReceiversFault, Argument... arguments)
     {
         super(message);
         mCode = code;
         mReceiver = isReceiversFault;
-        
+
         mArgs = arguments;
-        
+
         setId();
     }
 
     public String getCode() {
         return mCode;
     }
-    
+
     public Argument[] getArgs() {
         return mArgs;
     }
-    
+
     public String getId() {
         return mId;
     }
-    
+
     /**
      * @return See the comment for the mReceiver member
      */
     public boolean isReceiversFault() {
         return mReceiver;
     }
-    
+
     /**
      * generic system failure. most likely a temporary situation.
      */
@@ -257,7 +253,7 @@ public class ServiceException extends Exception {
     public static ServiceException INVALID_REQUEST(String message, Throwable cause) {
         return new ServiceException("invalid request: "+message, INVALID_REQUEST, SENDERS_FAULT, cause);
     }
-    
+
     /**
      * User sent an unknown SOAP command (the "document" is the Soap Request)
      */
@@ -274,17 +270,17 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException TEMPORARILY_UNAVAILABLE() {
-    	return new ServiceException("service temporarily unavailable", TEMPORARILY_UNAVAILABLE, RECEIVERS_FAULT);
+        return new ServiceException("service temporarily unavailable", TEMPORARILY_UNAVAILABLE, RECEIVERS_FAULT);
     }
 
     public static ServiceException PERM_DENIED(String message) {
         return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT);
     }
-    
+
     public static ServiceException AUTH_EXPIRED() {
         return new ServiceException("auth credentials have expired", AUTH_EXPIRED, SENDERS_FAULT);
     }
-    
+
     public static ServiceException AUTH_REQUIRED() {
         return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT);
     }
@@ -305,15 +301,23 @@ public class ServiceException extends Exception {
     public static ServiceException TOO_MANY_HOPS() {
         return new ServiceException("mountpoint or proxy loop detected", TOO_MANY_HOPS, SENDERS_FAULT);
     }
-    
+
+    public static ServiceException TOO_MANY_HOPS(String acctId) {
+        return new ServiceException("mountpoint or proxy loop detected", TOO_MANY_HOPS, SENDERS_FAULT, new Argument(ACCOUNT_ID, acctId, Argument.Type.STR));
+    }
+
+    public static ServiceException TOO_MANY_PROXIES(String url) {
+        return new ServiceException("proxy loop detected", TOO_MANY_HOPS, SENDERS_FAULT, new Argument(URL, HttpUtil.sanitizeURL(url), Argument.Type.STR));
+    }
+
     public static ServiceException ALREADY_IN_PROGRESS(String message) {
         return new ServiceException(message, ALREADY_IN_PROGRESS, SENDERS_FAULT);
     }
-    
+
     public static ServiceException ALREADY_IN_PROGRESS(String mboxId, String action) {
         return new ServiceException("mbox "+mboxId+" is already running action "+action, ALREADY_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId, Argument.Type.IID), new Argument("action", action, Argument.Type.STR));
     }
-    
+
     public static ServiceException NOT_IN_PROGRESS(String mboxId, String action) {
         return new ServiceException("mbox "+mboxId+" is not currently running action "+action, NOT_IN_PROGRESS, SENDERS_FAULT, new Argument(MAILBOX_ID, mboxId, Argument.Type.IID), new Argument("action", action, Argument.Type.STR));
     }
@@ -321,8 +325,8 @@ public class ServiceException extends Exception {
     public static ServiceException INTERRUPTED(String str) {
         return new ServiceException("The operation has been interrupted "+str!=null?str:"", INTERRUPTED, RECEIVERS_FAULT);
     }
-    
+
     public static ServiceException NO_SPELL_CHECK_URL(String str) {
-    	   return new ServiceException("Spell Checking Not Available "+str!=null?str:"", NO_SPELL_CHECK_URL, RECEIVERS_FAULT);
+        return new ServiceException("Spell Checking Not Available "+str!=null?str:"", NO_SPELL_CHECK_URL, RECEIVERS_FAULT);
     }
 }

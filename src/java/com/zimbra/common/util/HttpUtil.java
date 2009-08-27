@@ -25,6 +25,8 @@ import java.util.Map;
 import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.httpclient.HttpURL;
+
 public class HttpUtil {
 
     public enum Browser { IE, FIREFOX, MOZILLA, OPERA, SAFARI, APPLE_ICAL, UNKNOWN };
@@ -77,6 +79,33 @@ public class HttpUtil {
         } catch (UnsupportedEncodingException uee) {
             return filename;
         }
+    }
+
+    /** Strips any userinfo (username/password) data from the passed-in URL
+     *  and returns the result. */
+    public static String sanitizeURL(String url) {
+        if (url != null && url.indexOf('@') != -1) {
+            try {
+                HttpURL httpurl = new HttpURL(url);
+                if (httpurl.getPassword() != null) {
+                    httpurl.setPassword("");
+                    return httpurl.toString();
+                }
+            } catch (org.apache.commons.httpclient.URIException urie) { }
+        }
+        return url;
+    }
+
+    /** Returns the full URL (including query string) associated with the
+     *  given <code>HttpServletRequest</code>. */
+    public static String getFullRequestURL(HttpServletRequest req) {
+        if (req == null)
+            return null;
+
+        String uri = encodePath(req.getRequestURI()), qs = req.getQueryString();
+        if (qs != null)
+            uri += '?' + qs;
+        return uri;
     }
 
     public static Map<String, String> getURIParams(HttpServletRequest req) {
