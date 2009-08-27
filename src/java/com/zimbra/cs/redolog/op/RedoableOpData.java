@@ -14,48 +14,40 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
+
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ByteUtil.SegmentInputStream;
+import com.zimbra.common.util.FileSegmentDataSource;
+import com.zimbra.cs.mime.Mime;
 
 class RedoableOpData {
-
-    private byte[] mData;
-    private File mFile;
-    private long mFileOffset;
     private int mLength;
+    private DataSource mDataSource;
     
     RedoableOpData(byte[] data) {
-        mData = data;
+        mDataSource = new ByteArrayDataSource(data, Mime.CT_APPLICATION_OCTET_STREAM);
         mLength = data.length;
     }
     
     RedoableOpData(File file) {
-        this(file, 0, (int) file.length());
+        mDataSource = new FileDataSource(file);
+        mLength = (int) file.length();
     }
     
     RedoableOpData(File file, long offset, int length) {
-        mFile = file;
-        mFileOffset = offset;
+        mDataSource = new FileSegmentDataSource(file, offset, length);
         mLength = length;
     }
     
-    RedoableOpData(InputStream in, int length) {
-        // XXX bburtin - replace this constructor with one that takes
-        // a Java Activation DataSource, so we don't have to read the
-        // entire stream into memory.
-        try {
-            mData = ByteUtil.getContent(in, length);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read content stream", e);
-        }
-        mLength = mData.length;
+    RedoableOpData(DataSource dataSource, int length) {
+        mDataSource = dataSource;
+        mLength = length;
     }
     
     int getLength() {
@@ -64,37 +56,11 @@ class RedoableOpData {
     
     byte[] getData()
     throws IOException {
-        if (mData == null) {
-            if (mFile != null) {
-                RandomAccessFile file = new RandomAccessFile(mFile, "r");
-                file.seek(mFileOffset);
-                mData = new byte[mLength];
-                int numRead = file.read(mData);
-                file.close();
-                if (numRead != mLength) {
-                    String msg = String.format("Attempted to read %d bytes from %s at offset %d.  Actually read %d.",
-                        mLength, mFile.getPath(), mFileOffset, numRead);
-                    throw new IOException(msg);
-                }
-            }
-        }
-        assert(mData != null);
-        return mData;
+        return ByteUtil.getContent(mDataSource.getInputStream(), mLength);
     }
     
     InputStream getInputStream()
     throws IOException {
-        if (mData != null) {
-            return new ByteArrayInputStream(mData);
-        }
-        if (mFile != null) {
-            InputStream in = new FileInputStream(mFile);
-            if (mFileOffset > 0 || mLength != mFile.length()) {
-                in = SegmentInputStream.create(in, mFileOffset, mFileOffset + mLength);
-            }
-            return in;
-        }
-        assert(false);
-        return null;
+        return mDataSource.getInputStream();
     }
 }

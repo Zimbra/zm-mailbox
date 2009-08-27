@@ -24,8 +24,11 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 
+import javax.activation.DataSource;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -212,12 +215,12 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return mPath;
     }
 
-    public void setMessageBodyInfo(InputStream dataStream, long size) {
+    public void setMessageBodyInfo(DataSource ds, long size) {
         mMsgBodyType = MSGBODY_INLINE;
-        mData = new RedoableOpData(dataStream, (int) size);
+        mData = new RedoableOpData(ds, (int) size);
         mPath = ":streamed:";
     }
-
+    
     public void setMessageBodyInfo(File dataFile) {
         mMsgBodyType = MSGBODY_INLINE;
         mData = new RedoableOpData(dataFile);

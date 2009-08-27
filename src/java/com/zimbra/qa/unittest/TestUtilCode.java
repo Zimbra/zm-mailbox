@@ -32,6 +32,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileSegmentDataSource;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
@@ -47,6 +48,8 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class TestUtilCode extends TestCase
 {
+    private static final String NAME_PREFIX = TestUtilCode.class.getSimpleName();
+    
     public void setUp()
     throws Exception {
         cleanUp();
@@ -356,6 +359,25 @@ public class TestUtilCode extends TestCase
             }
         }
         return true;
+    }
+    
+    public void testFileSegmentDataSource()
+    throws Exception {
+        // Write "12345" to a temporary file.
+        File file = File.createTempFile(NAME_PREFIX, null);
+        String content = "12345";
+        FileOutputStream out = new FileOutputStream(file);
+        out.write(content.getBytes());
+        out.close();
+        
+        FileSegmentDataSource ds = new FileSegmentDataSource(file, 0, 5);
+        assertEquals("12345", new String(ByteUtil.getContent(ds.getInputStream(), 5)));
+        assertEquals("12345", new String(ByteUtil.getContent(ds.getInputStream(), 5))); // Make sure we can get multiple streams.
+        
+        ds = new FileSegmentDataSource(file, 1, 3);
+        assertEquals("234", new String(ByteUtil.getContent(ds.getInputStream(), 5)));
+        
+        file.delete();
     }
     
     public void tearDown()

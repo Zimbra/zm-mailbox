@@ -18,14 +18,26 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.mail.MessagingException;
@@ -35,6 +47,7 @@ import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
@@ -44,7 +57,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -67,11 +79,11 @@ import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -106,24 +118,26 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.*;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.util.SpamHandler;
-import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
@@ -4596,8 +4610,7 @@ public class Mailbox {
                 // content changed, so we're obliged to change the IMAP uid
                 int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
                 redoRecorder.setImapId(imapID);
-                redoStream = pm.getRawInputStream();
-                redoRecorder.setMessageBodyInfo(redoStream, size);
+                redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
 
                 // update the content and increment the revision number
                 msg.setContent(staged, pm);
@@ -6138,7 +6151,6 @@ public class Mailbox {
 
         synchronized (this) {
             SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
-            InputStream redoStream = null;
 
             boolean success = false;
             try {
@@ -6158,10 +6170,13 @@ public class Mailbox {
                 redoRecorder.setMessageId(itemId);
                 redoRecorder.setDocument(pd);
                 redoRecorder.setItemType(type);
-                redoStream = new FileInputStream(pd.getBlob().getFile());
-                redoRecorder.setMessageBodyInfo(redoStream, pd.getSize());
-
-                doc.setContent(staged, pd);
+                
+                // Get the redolog data from the mailbox blob.  This is less than ideal in the
+                // HTTP store case because it will result in network access, and possibly an
+                // extra write to local disk.  If this becomes a problem, we should update the
+                // ParsedDocument constructor to take a DataSource instead of an InputStream.
+                MailboxBlob mailboxBlob = doc.setContent(staged, pd);
+                redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
                 queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
 
@@ -6171,8 +6186,6 @@ public class Mailbox {
                 throw ServiceException.FAILURE("error writing document blob", ioe);
             } finally {
                 endTransaction(success);
-
-                ByteUtil.closeStream(redoStream);
                 sm.quietDelete(staged);
             }
         }
@@ -6199,7 +6212,6 @@ public class Mailbox {
 
         synchronized (this) {
             AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
-            InputStream redoStream = null;
 
             boolean success = false;
             try {
@@ -6211,11 +6223,13 @@ public class Mailbox {
                 redoRecorder.setDocId(docId);
                 redoRecorder.setItemType(doc.getType());
                 // TODO: simplify the redoRecorder by not subclassing from CreateMessage
-                // can't load the redoRecorder with the incoming File because setContent() may rename it out from under us
-                redoStream = new FileInputStream(pd.getBlob().getFile());
-                redoRecorder.setMessageBodyInfo(redoStream, pd.getSize());
-
-                doc.setContent(staged, pd);
+                
+                // Get the redolog data from the mailbox blob.  This is less than ideal in the
+                // HTTP store case because it will result in network access, and possibly an
+                // extra write to local disk.  If this becomes a problem, we should update the
+                // ParsedDocument constructor to take a DataSource instead of an InputStream.
+                MailboxBlob mailboxBlob = doc.setContent(staged, pd);
+                redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
                 queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
 
@@ -6225,8 +6239,6 @@ public class Mailbox {
                 throw ServiceException.FAILURE("error writing document blob", ioe);
             } finally {
                 endTransaction(success);
-
-                ByteUtil.closeStream(redoStream);
                 sm.quietDelete(staged);
             }
         }
@@ -6277,15 +6289,13 @@ public class Mailbox {
 
         synchronized (this) {
             CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
-            InputStream redoStream = null;
 
             boolean success = false;
             try {
                 beginTransaction("createChat", octxt, redoRecorder);
 
                 CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
-                redoStream = pm.getRawInputStream();
-                redoRecorder.setMessageBodyInfo(redoStream, size);
+                redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
 
                 long tags = Tag.tagsToBitmask(tagsStr);
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
@@ -6301,8 +6311,6 @@ public class Mailbox {
                 return chat;
             } finally {
                 endTransaction(success);
-
-                ByteUtil.closeStream(redoStream);
                 sm.quietDelete(staged);
             }
         }
@@ -6338,7 +6346,6 @@ public class Mailbox {
 
         synchronized (this) {
             SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
-            InputStream redoStream = null;
 
             boolean success = false;
             try {
@@ -6346,9 +6353,7 @@ public class Mailbox {
 
                 SaveChat redoPlayer = (SaveChat) mCurrentChange.getRedoPlayer();
 
-                // can't load the redoRecorder with the incoming File because setContent() may rename it out from under us
-                redoStream = pm.getRawInputStream();
-                redoRecorder.setMessageBodyInfo(redoStream, size);
+                redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
 
                 Chat chat = (Chat) getItemById(id, MailItem.TYPE_CHAT);
 
@@ -6371,8 +6376,6 @@ public class Mailbox {
                 return chat;
             } finally {
                 endTransaction(success);
-
-                ByteUtil.closeStream(redoStream);
                 sm.quietDelete(staged);
             }
         }

@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.activation.DataSource;
+
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
@@ -66,18 +68,13 @@ public class StoreIncomingBlob extends RedoableOp {
         mMailboxIdList = list;
     }
 
-    public void setBlobBodyInfo(byte[] data, String path) {
-        mData = new RedoableOpData(data);
-        mPath = path;
-    }
-
     public void setBlobBodyInfo(File file) {
         mData = new RedoableOpData(file);
         mPath = file.getPath();
     }
 
-    public void setBlobBodyInfo(InputStream dataStream, int dataLength, String path) {
-        mData = new RedoableOpData(dataStream, dataLength);
+    public void setBlobBodyInfo(DataSource ds, int dataLength, String path) {
+        mData = new RedoableOpData(ds, dataLength);
         mPath = path;
     }
 
@@ -179,7 +176,7 @@ public class StoreIncomingBlob extends RedoableOp {
         if (!getUnloggedReplay()) {
             redoRecorder = new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder.start(getTimestamp());
-            redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath);
+            redoRecorder.setBlobBodyInfo(new RedoableOpDataSource(mData), mData.getLength(), mPath);
             redoRecorder.log();
         }
 
