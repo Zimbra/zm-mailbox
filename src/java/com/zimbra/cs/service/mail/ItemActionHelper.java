@@ -16,6 +16,7 @@ package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -46,6 +48,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZContact;
@@ -507,6 +510,7 @@ public class ItemActionHelper {
             String flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : item.getFlagString());
             String name = ((mOperation == Op.RENAME || mOperation == Op.UPDATE) && mName != null ? mName : item.getName());
             String createdId = null;
+            InputStream in = null;
 
             switch (item.getType()) {
                 case MailItem.TYPE_CONTACT:
@@ -516,7 +520,12 @@ public class ItemActionHelper {
                     break;
 
                 case MailItem.TYPE_MESSAGE:
-                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), ((Message) item).getContent(), true);
+                    try {
+                        in = StoreManager.getInstance().getContent(item.getBlob());
+                        createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), in, item.getSize(), true);
+                    } finally {
+                        ByteUtil.closeStream(in);
+                    }
                     mCreatedIds.add(createdId);
                     break;
 
@@ -524,15 +533,25 @@ public class ItemActionHelper {
                 case MailItem.TYPE_CONVERSATION:
                     for (Message msg : msgs) {
                         flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
-                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), msg.getContent(), true);
+                        try {
+                            in = StoreManager.getInstance().getContent(msg.getBlob());
+                            createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), in, msg.getSize(), true);
+                        } finally {
+                            ByteUtil.closeStream(in);
+                        }
                         mCreatedIds.add(createdId);
                     }
                     break;
 
                 case MailItem.TYPE_DOCUMENT:
                     Document doc = (Document) item;
-                    String uploadId = zmbx.uploadAttachment(name, doc.getContent(), doc.getContentType(), 4000);
-                    createdId = zmbx.createDocument(folderStr, name, uploadId);
+                    try {
+                        in = StoreManager.getInstance().getContent(doc.getBlob());
+                        String uploadId = zmbx.uploadContentAsStream(name, in, doc.getContentType(), doc.getSize(), 4000);
+                        createdId = zmbx.createDocument(folderStr, name, uploadId);
+                    } finally {
+                        ByteUtil.closeStream(in);
+                    }
                     mCreatedIds.add(createdId);
                     break;
 
