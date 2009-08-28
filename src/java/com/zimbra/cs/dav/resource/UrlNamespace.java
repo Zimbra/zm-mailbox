@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -376,10 +378,14 @@ public class UrlNamespace {
         			item = mbox.getCalendarItemByUid(octxt, uid);
         		}
             } else if (path.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
-                String uid = path.substring(index + 1, path.length() - AddressObject.VCARD_EXTENSION.length());
-                index = uid.indexOf(':');
-                if (index > 0) {
-                    item = mbox.getContactById(octxt, Integer.parseInt(uid.substring(index+1)));
+                try {
+                    String uid = URLDecoder.decode(path.substring(index + 1, path.length() - AddressObject.VCARD_EXTENSION.length()), "UTF-8");
+                    index = uid.indexOf(':');
+                    if (index > 0) {
+                        item = mbox.getContactById(octxt, Integer.parseInt(uid.substring(index+1)));
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    ZimbraLog.dav.warn("Can't decode URL %s", path);
                 }
         	} else if (f.getId() == Mailbox.ID_FOLDER_INBOX) {
         		ctxt.setPathInfo(path.substring(index+1));

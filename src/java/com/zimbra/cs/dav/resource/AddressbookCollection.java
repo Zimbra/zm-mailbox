@@ -26,14 +26,16 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 
-public class AddressbookCollection extends MailItemResource {
+public class AddressbookCollection extends Collection {
 
-    public AddressbookCollection(DavContext ctxt, Folder f) throws ServiceException {
+    public AddressbookCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
         super(ctxt, f);
         Account acct = f.getAccount();
         Locale lc = acct.getLocale();
@@ -58,12 +60,11 @@ public class AddressbookCollection extends MailItemResource {
         }
         if (f.getDefaultView() == MailItem.TYPE_CONTACT)
             addResourceType(DavElements.CardDav.E_ADDRESSBOOK);
+        mCtag = CtagInfo.makeCtag(f);
+        setProperty(DavElements.E_GETCTAG, mCtag);
     }
-
-    @Override
-    public boolean isCollection() {
-        return true;
-    }
+    
+    private String mCtag;
     
     private static QName[] SUPPORTED_REPORTS = {
             DavElements.CardDav.E_ADDRESSBOOK_MULTIGET,

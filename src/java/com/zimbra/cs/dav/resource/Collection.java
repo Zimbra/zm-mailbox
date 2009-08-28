@@ -21,10 +21,12 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -32,7 +34,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.formatter.VCard;
 
 /**
  * RFC 2518bis section 5.
@@ -114,6 +118,7 @@ public class Collection extends MailItemResource {
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, mId));
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, mId));
+        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_CONTACT, mId));
         return ret;
     }
 
@@ -146,8 +151,24 @@ public class Collection extends MailItemResource {
         }
 
         FileUploadServlet.Upload upload = ctxt.getUpload();
-        String author = ctxt.getAuthAccount().getName();
         String ctype = upload.getContentType();
+        // create vcard if content type is text/vcard
+        if (ctype != null && ctype.startsWith(DavProtocol.VCARD_CONTENT_TYPE)) {
+            String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), Mime.P_CHARSET_UTF8);
+            try {
+                DavResource res = null;
+                for (VCard vcard : VCard.parseVCard(buf)) {
+                    if (vcard.fields.isEmpty())
+                        continue;
+                    res = new AddressObject(ctxt, mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), mId, null));
+                }
+                res.mNewlyCreated = true;
+                return res;
+            } catch (ServiceException e) {
+                throw new DavException("cannot parse vcard ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+            }
+        }
+        String author = ctxt.getAuthAccount().getName();
         try {
             // add a revision if the resource already exists
             MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath());

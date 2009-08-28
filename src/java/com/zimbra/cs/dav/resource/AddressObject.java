@@ -14,12 +14,18 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.CardDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Contact;
@@ -31,6 +37,8 @@ public class AddressObject extends MailItemResource {
     
     public AddressObject(DavContext ctxt, Contact item) throws ServiceException {
         super(ctxt, item);
+        setProperty(DavElements.P_GETCONTENTTYPE, DavProtocol.VCARD_CONTENT_TYPE);
+        setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mId));
     }
     
     public boolean isCollection() {
@@ -44,11 +52,22 @@ public class AddressObject extends MailItemResource {
         return super.getProperty(prop);
     }
     
+    protected InputStream getRawContent(DavContext ctxt) throws DavException, IOException {
+        try {
+            return new ByteArrayInputStream(toVCard(ctxt).getBytes("UTF-8"));
+        } catch (ServiceException e) {
+            ZimbraLog.dav.warn("can't get content for Contact %d", mId, e);
+        }
+        return null;
+    }
+    
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
         return VCard.formatContact(contact).formatted;
     }
     public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
+        if (attrs == null || attrs.isEmpty())
+            return toVCard(ctxt);
         Contact contact = (Contact)getMailItem(ctxt);
         return VCard.formatContact(contact, attrs).formatted;
     }
