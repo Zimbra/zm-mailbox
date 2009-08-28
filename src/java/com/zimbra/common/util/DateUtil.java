@@ -474,6 +474,7 @@ public class DateUtil {
      *   <li>NNh - hours</li>
      *   <li>NNm - minutes</li>
      *   <li>NNs - seconds</li>
+     *   <li>NNms - milli seconds</li>
      *   <li>NN - seconds</li>
      * </ul>
      * @param value the time interval value
@@ -488,7 +489,12 @@ public class DateUtil {
                 if (units >= '0' && units <= '9') {
                     return Long.parseLong(value)*1000;
                 } else {
+                    if (value.endsWith("ms")) {
+                        return Long.parseLong(value.substring(0, value.length()-2));
+                    }
+                    
                     long n = Long.parseLong(value.substring(0, value.length()-1));
+                    
                     switch (units) {
                     case 'd':
                         n = n * Constants.MILLIS_PER_DAY;
@@ -522,6 +528,10 @@ public class DateUtil {
                 if (units >= '0' && units <= '9') {
                     return Long.parseLong(value)*1000;
                 } else {
+                    if (value.endsWith("ms")) {
+                        return Long.parseLong(value.substring(0, value.length()-2));
+                    }
+                    
                     long n = Long.parseLong(value.substring(0, value.length()-1));
                     switch (units) {
                     case 'd':
@@ -556,8 +566,12 @@ public class DateUtil {
      *   <li>NNh - hours</li>
      *   <li>NNm - minutes</li>
      *   <li>NNs - seconds</li>
+     *   <li>NNms - milli seconds</li>
      *   <li>NN - seconds</li>
      * </ul>
+     * 
+     * If the value is in ms (milli seconds), round to the nearest second.
+     * 
      * @param value the time interval value
      * @param defaultValue returned if the time interval is null or cannot be parsed
      */
@@ -566,6 +580,8 @@ public class DateUtil {
          * like getTimeInterval, but return interval in seconds, saving the overhead 
          * for code that needs seconds but gets milliseconds from getTimeInterval and 
          * has to convert it back seconds.
+         * 
+         * If the value is in ms, round to the nearest second.
          */
         if (value == null || value.length() == 0)
             return defaultValue;
@@ -575,6 +591,12 @@ public class DateUtil {
                 if (units >= '0' && units <= '9') {
                     return Long.parseLong(value);
                 } else {
+                    if (value.endsWith("ms")) {
+                        // round up to the next second
+                        long ms = Long.parseLong(value.substring(0, value.length()-2));
+                        return Math.round((float)ms/Constants.MILLIS_PER_SECOND);
+                    }
+                    
                     long n = Long.parseLong(value.substring(0, value.length()-1));
                     switch (units) {
                     case 'd':
