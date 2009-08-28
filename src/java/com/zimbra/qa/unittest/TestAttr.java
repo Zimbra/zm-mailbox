@@ -24,7 +24,9 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -268,6 +270,136 @@ public class TestAttr extends TestCase {
         assertNull(value);
         values = acct.getMultiAttrSet(attrName);
         assertTrue(values != null && values.size() == 0);
+    }
+    
+    public void testDurationAttr() throws Exception {
+        Server server = getServer();  
+        String attrName = Provisioning.A_zimbraHsmAge;
+        
+        String strValue;
+        long msValue;
+        long secValue;
+        Map<String, Object> attrs = new HashMap<String, Object>();
+                
+        // nnnnn([hmsd]|ms)
+        
+        // d (day)
+        attrs.put(attrName, "1d");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1d", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(Constants.MILLIS_PER_DAY, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(Constants.SECONDS_PER_DAY, secValue);
+        
+        // h (hour)
+        attrs.put(attrName, "1h");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1h", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(Constants.MILLIS_PER_HOUR, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(Constants.SECONDS_PER_HOUR, secValue);
+        
+        // m (minute)
+        attrs.put(attrName, "1m");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1m", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(Constants.MILLIS_PER_MINUTE, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(Constants.SECONDS_PER_MINUTE, secValue);
+        
+        // s (second)
+        attrs.put(attrName, "1s");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1s", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(Constants.MILLIS_PER_SECOND, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(1, secValue);
+        
+        // default (== s)
+        attrs.put(attrName, "1");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(Constants.MILLIS_PER_SECOND, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(1, secValue);
+        
+        // ms (milli second)
+        attrs.put(attrName, "1ms");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1ms", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(1, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(0, secValue);
+        
+        attrs.put(attrName, "500ms");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("500ms", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(500, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(1, secValue);
+        
+        attrs.put(attrName, "1000ms");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1000ms", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(1000, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(1, secValue);
+        
+        attrs.put(attrName, "1001ms");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("1001ms", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(1001, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(1, secValue);
+        
+        attrs.put(attrName, "999ms");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("999ms", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(999, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(1, secValue);
+        
+        // invalid unit
+        boolean good = false;
+        attrs.put(attrName, "1y");
+        try {
+            mProv.modifyAttrs(server, attrs);
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.INVALID_ATTR_VALUE.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+        
+        good = false;
+        attrs.put(attrName, "1mm");
+        try {
+            mProv.modifyAttrs(server, attrs);
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.INVALID_ATTR_VALUE.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+        
     }
     
     public void testCallbackAccountStatus() throws Exception {

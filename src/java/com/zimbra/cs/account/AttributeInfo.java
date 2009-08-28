@@ -39,7 +39,7 @@ public class AttributeInfo {
     //yyyyMMddHHmmssZ
     private static Pattern GENTIME_PATTERN = Pattern.compile("^\\d{14}[zZ]$");
 
-    private static Pattern DURATION_PATTERN = Pattern.compile("^\\d+[hmsd]?$");
+    private static Pattern DURATION_PATTERN = Pattern.compile("^\\d+([hmsd]|ms)?$");
     
     /** attribute name */
     private String mName;

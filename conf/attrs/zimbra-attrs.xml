@@ -76,7 +76,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
   type:
     boolean.....TRUE|FALSE
-    duration....^\d+[hmsd]?$.  If [hmsd] is not specified, the default
+    duration....^\d+([hmsd]|ms)?$.  If ([hmsd]|ms) is not specified, the default
                 is seconds.
     gentime.....time expressed as \d{14}[zZ]
     enum........value attr is comma-separated list of valid values
