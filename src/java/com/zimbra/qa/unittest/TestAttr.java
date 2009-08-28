@@ -379,6 +379,16 @@ public class TestAttr extends TestCase {
         secValue = server.getTimeIntervalSecs(attrName, 0);
         assertEquals(1, secValue);
         
+        attrs.put(attrName, "0ms");
+        mProv.modifyAttrs(server, attrs);
+        strValue = server.getAttr(attrName);
+        assertEquals("0ms", strValue);
+        msValue = server.getTimeInterval(attrName, 0);
+        assertEquals(0, msValue);
+        secValue = server.getTimeIntervalSecs(attrName, 0);
+        assertEquals(0, secValue);
+        
+        
         // invalid unit
         boolean good = false;
         attrs.put(attrName, "1y");
