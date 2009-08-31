@@ -20,18 +20,22 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.PostMethod;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.service.util.RemoteServerRequest;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -40,6 +44,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class CheckSpelling extends MailDocumentHandler {
     
     private static Log sLog = LogFactory.getLog(CheckSpelling.class);
+    
+    private class ServerResponse {
+        int statusCode;
+        String content;
+    }
     
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
@@ -73,69 +82,79 @@ public class CheckSpelling extends MailDocumentHandler {
                 dictionary = account.getLocale().toString();
             }
         }
-        
-        Map<String, String> params = null;        
+
+        // Get word list from one of the spell servers.
+        ServerResponse spellResponse = null;
         for (int i = 0; i < urls.length; i++) {
-            RemoteServerRequest req = new RemoteServerRequest();
-            req.addParameter("text", text);
-            req.addParameter("dictionary", dictionary);
             String url = urls[i];
             try {
                 sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s", url, dictionary, text);
-                req.invoke(url);
-                params = req.getResponseParameters();
-                break; // Successful request.  No need to check the other servers.
+                spellResponse = checkSpelling(url, dictionary, text);
+                if (spellResponse.statusCode == 200) {
+                    break; // Successful request.  No need to check the other servers.
+                }
             } catch (IOException ex) {
                 ZimbraLog.mailbox.warn("An error occurred while contacting " + url, ex);
             }
         }
 
         // Check for errors
-        if (params == null) {
-            sLog.warn("Unable to check spelling.  No params returned from the spell server.");
-            return unavailable(response);
-        }
-        if (params.containsKey("error")) {
-            throw ServiceException.FAILURE("Spell check failed: " + params.get("error"), null);
-        }
-        
-        String misspelled = params.get("misspelled");
-        if (misspelled == null) {
-            sLog.warn("Misspelled data not found in spell server response.");
-            return unavailable(response);
+        if (spellResponse.statusCode != 200) {
+            throw ServiceException.FAILURE("Spell check failed: " + spellResponse.content, null);
         }
         
         // Parse spell server response, assemble SOAP response
-        BufferedReader reader =
-            new BufferedReader(new StringReader(misspelled));
-        String line = null;
-        int numLines = 0;
-        int numMisspelled = 0;
-        try {
-            while ((line = reader.readLine()) != null) {
-                // Each line in the response has the format "werd:word,ward,weird"
-                line = line.trim();
-                numLines++;
-                int colonPos = line.indexOf(':');
-                
-                if (colonPos >= 0) {
-                    Element wordEl = response.addElement(MailConstants.E_MISSPELLED);
-                    String word = line.substring(0, colonPos);
-                    String suggestions = line.substring(colonPos + 1, line.length());
-                    wordEl.addAttribute(MailConstants.A_WORD, word);
-                    wordEl.addAttribute(MailConstants.A_SUGGESTIONS, suggestions);
-                    numMisspelled++;
+        if (spellResponse.content != null) {
+            BufferedReader reader =
+                new BufferedReader(new StringReader(spellResponse.content));
+            String line = null;
+            int numLines = 0;
+            int numMisspelled = 0;
+            try {
+                while ((line = reader.readLine()) != null) {
+                    // Each line in the response has the format "werd:word,ward,weird"
+                    line = line.trim();
+                    numLines++;
+                    int colonPos = line.indexOf(':');
+
+                    if (colonPos > 0) {
+                        Element wordEl = response.addElement(MailConstants.E_MISSPELLED);
+                        String word = line.substring(0, colonPos);
+                        String suggestions = line.substring(colonPos + 1, line.length());
+                        wordEl.addAttribute(MailConstants.A_WORD, word);
+                        wordEl.addAttribute(MailConstants.A_SUGGESTIONS, suggestions);
+                        numMisspelled++;
+                    }
                 }
+            } catch (IOException e) {
+                sLog.warn(e);
+                return unavailable(response);
             }
-        } catch (IOException e) {
-            sLog.warn(e);
-            return unavailable(response);
+            sLog.debug(
+                "CheckSpelling: found %d misspelled words in %d lines", numMisspelled, numLines);
         }
         
         response.addAttribute(MailConstants.A_AVAILABLE, true);
-        sLog.debug(
-            "CheckSpelling: found %d misspelled words in %d lines", numMisspelled, numLines);
-        
+        return response;
+    }
+    
+    private ServerResponse checkSpelling(String url, String dictionary, String text)
+    throws IOException {
+        PostMethod post = new PostMethod(url);
+        if (dictionary != null) {
+            post.addParameter("dictionary", dictionary);
+        }
+        if (text != null) {
+            post.addParameter("text", text);
+        }
+        HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        ServerResponse response = new ServerResponse();
+        try {
+            response.statusCode = http.executeMethod(post);
+            response.content = post.getResponseBodyAsString();
+        } finally {
+            post.releaseConnection();
+        }
         return response;
     }
     
