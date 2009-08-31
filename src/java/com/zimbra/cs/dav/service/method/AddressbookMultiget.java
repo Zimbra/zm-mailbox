@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.dav.service.method;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.dom4j.Element;
@@ -27,6 +30,7 @@ import com.zimbra.cs.dav.resource.AddressbookCollection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
+import com.zimbra.cs.mime.Mime;
 
 public class AddressbookMultiget extends Report {
     public void handle(DavContext ctxt) throws ServiceException, DavException {
@@ -41,7 +45,12 @@ public class AddressbookMultiget extends Report {
         RequestProp reqProp = ctxt.getRequestProp();
         for (Object obj : query.elements(DavElements.E_HREF)) {
             if (obj instanceof Element) {
-                String href = ((Element)obj).getText();
+                String href;
+                try {
+                    href = URLDecoder.decode(((Element)obj).getText(), Mime.P_CHARSET_UTF8);
+                } catch (UnsupportedEncodingException e) {
+                    href = URLDecoder.decode(((Element)obj).getText());
+                }
                 DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href);
                 if (rs != null)
                     resp.addResource(ctxt, rs, reqProp, false);
