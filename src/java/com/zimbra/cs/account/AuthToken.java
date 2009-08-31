@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.Map;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -145,6 +147,10 @@ public abstract class AuthToken {
     // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getZimbraAdminAuthToken() throws ServiceException {
         return ZimbraAuthToken.getZimbraAdminAuthToken();
+    }
+    
+    public static Map getInfo(String encoded) throws AuthTokenException {
+        return ZimbraAuthToken.getInfo(encoded);
     }
 
 }

@@ -146,6 +146,25 @@ public class ZimbraAuthToken extends AuthToken {
          
     }
     
+    public static Map getInfo(String encoded) throws AuthTokenException {
+        String[] parts = encoded.split("_");
+        if (parts.length != 3)
+            throw new AuthTokenException("invalid authtoken format");
+        
+        return getAttrs(parts[2]);
+    }
+    
+    private static Map getAttrs(String data) throws AuthTokenException{
+        try {
+            String decoded = new String(Hex.decodeHex(data.toCharArray()));
+            return BlobMetaData.decode(decoded);
+        } catch (DecoderException e) {
+            throw new AuthTokenException("decoding exception", e);
+        } catch (BlobMetaDataEncodingException e) {
+            throw new AuthTokenException("blob decoding exception", e);
+        }
+    }
+    
     protected ZimbraAuthToken(String encoded) throws AuthTokenException {
         try {
             mEncoded = encoded;
@@ -169,9 +188,8 @@ public class ZimbraAuthToken extends AuthToken {
             if (!computedHmac.equals(hmac))
                 throw new AuthTokenException("hmac failure");      
 
-            data = new String(Hex.decodeHex(data.toCharArray()));
-
-            Map map = BlobMetaData.decode(data);
+            Map map = getAttrs(data);
+            
             mAccountId = (String)map.get(C_ID);
             mAdminAccountId = (String)map.get(C_AID);            
             mExpires = Long.parseLong((String)map.get(C_EXP));
@@ -195,10 +213,6 @@ public class ZimbraAuthToken extends AuthToken {
             /* Zimbra Customer Care*/
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
-        } catch (DecoderException e) {
-            throw new AuthTokenException("decoding exception", e);
-        } catch (BlobMetaDataEncodingException e) {
-            throw new AuthTokenException("blob decoding exception", e);
         }
     }
 

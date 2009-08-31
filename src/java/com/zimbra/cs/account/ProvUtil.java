@@ -19,6 +19,7 @@ package com.zimbra.cs.account;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.util.Collections;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +29,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,6 +53,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -246,6 +249,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
+        GET_AUTH_TOKEN_INFO("getAuthTokenInfo", "gati", "{auth-token}", Category.MISC, 1, 1),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
         GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
@@ -827,6 +831,9 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_MEMCACHED_CLIENT_CONFIG:
             doGetMemcachedClientConfig(args);
+            break;
+        case GET_AUTH_TOKEN_INFO:
+            doGetAuthTokenInfo(args);
             break;
         case SOAP:
             // HACK FOR NOW
@@ -2499,6 +2506,32 @@ public class ProvUtil implements DebugListener {
         }
     }
 
+    private void doGetAuthTokenInfo(String[] args) throws ServiceException {
+        String authToken = args[1];
+        
+        try {
+            Map attrs = AuthToken.getInfo(authToken);
+            List keys = new ArrayList(attrs.keySet());
+            Collections.sort(keys);
+            
+            for (Object k : keys) {
+                String key = k.toString();
+                String value = attrs.get(k).toString();
+                
+                if ("exp".equals(key)) {
+                    long exp = Long.parseLong(value);
+                    System.out.format("%s: %s (%s)\n", key, value, DateUtil.toRFC822Date(new Date(exp)));
+                } else
+                    System.out.format("%s: %s\n", key, value);
+            }
+        } catch (AuthTokenException e) {
+            System.out.println("Unable to parse auth token: " + e.getMessage());
+        }
+        
+        System.out.println();
+
+    }
+    
     private void doHelp(String[] args) {
         Category cat = null;
         if (args != null && args.length >= 2) {
