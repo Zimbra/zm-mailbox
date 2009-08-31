@@ -216,7 +216,11 @@ public class DataSourceManager {
         while (t != null) {
 			// HACK: go with JavaMail error message
 			if (t.getClass().getName().startsWith("javax.mail.")) {
-				return t.getMessage();
+				String msg = t.getMessage();
+				if (msg == null) {
+				    msg = t.toString();
+				}
+				return msg;
 			}
             if (isFirst) {
                 isFirst = false;
