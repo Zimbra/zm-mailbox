@@ -35,6 +35,10 @@ JAVA_BINARY = /usr/bin/java
 PUSHED_EXT := jnilib.MacOSX.i386
 endif
 
+ifeq (MACOSXx86,$(BUILD_PLATFORM))
+CF :=-fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc
+endif
+
 all: FORCE
 	ant
 	$(MAKE) $(BUILD)/libzimbra-native.$(SHARED_EXT)
