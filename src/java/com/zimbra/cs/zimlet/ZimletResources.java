@@ -18,6 +18,7 @@ import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.DiskCacheServlet;
 import org.mozilla.javascript.ErrorReporter;
 import org.mozilla.javascript.EvaluatorException;
@@ -118,9 +119,15 @@ public class ZimletResources
 
             // zimlet messages
             if (type.equals(T_JAVASCRIPT)) {
+                String mailUrl = "/zimbra";
+                try {
+                    mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
+                } catch (Exception e) {
+                    ZimbraLog.zimlet.warn("can't get mailUrl", e);
+                }
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
-                ServletContext clientContext = baseContext.getContext("/zimbra/");
+                ServletContext clientContext = baseContext.getContext(mailUrl);
                 RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/res/");
 
                 for (String zimletName : zimletNames) {

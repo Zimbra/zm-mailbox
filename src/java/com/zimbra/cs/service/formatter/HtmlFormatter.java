@@ -160,7 +160,12 @@ public class HtmlFormatter extends Formatter {
                 context.req.setAttribute(ATTR_TARGET_ITEM_VIEW, MailItem.getNameForType(((Folder)targetItem).getDefaultView()));
         }
 
-        ServletContext targetContext = servlet.getServletConfig().getServletContext().getContext(PATH_MAIN_CONTEXT);
+        String mailUrl = PATH_MAIN_CONTEXT;
+        try {
+            mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
+        } catch (Exception e) {
+        }
+        ServletContext targetContext = servlet.getServletConfig().getServletContext().getContext(mailUrl);
         RequestDispatcher dispatcher = targetContext.getRequestDispatcher(PATH_JSP_REST_PAGE);
         dispatcher.forward(context.req, context.resp);
     }
