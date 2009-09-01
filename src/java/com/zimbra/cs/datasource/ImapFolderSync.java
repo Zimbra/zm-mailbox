@@ -709,7 +709,8 @@ class ImapFolderSync {
         Iterator<Long> ui = uids.iterator();
         while (ui.hasNext()) {
             fetchMessages(nextFetchSeq(ui), uidsToDelete);
-            
+            // Send pending messages if any...
+            ds.checkPendingMessages();
             long time = System.currentTimeMillis();
             long freq = ds.getSyncFrequency();
             if (maxUid > 0 && freq > 0 && time - lastCheckTime > freq) {
