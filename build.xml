@@ -150,6 +150,14 @@
             <os name="Mac OS X"/>
         </not>
     </condition>
+    <condition property="native.arch" value="">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.arch" value=".${os.arch}">
+        <not>
+            <os name="Mac OS X"/>
+        </not>
+    </condition>
 
     <condition property="production.suffix" value=".production">
         <isset property="is-production"/>
@@ -623,7 +631,7 @@
 
     <target name="dev-dist-unix" if="is-unix">
         <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}"
-              file="${lib.dir}/libzimbra-native.${native.so}.${native.os}.${os.arch}" verbose="true" failonerror="false"
+              file="${lib.dir}/libzimbra-native.${native.so}.${native.os}${native.arch}" verbose="true" failonerror="false"
               overwrite="true"/>
     </target>
 
