@@ -23,6 +23,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.service.AuthProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -77,13 +78,17 @@ public final class AuthenticatorUtil {
         } catch (AuthTokenException e) {
             return null;
         }
-        if (at == null || at.isExpired())
+        
+        Account authTokenAccount = null;
+        try {
+            authTokenAccount = AuthProvider.validateAuthToken(prov, at, false);
+        } catch (ServiceException e) {
             return null;
+        }
 
         // make sure that the authentication account is valid
         Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId, at);
-        if (authAccount == null || !authAccount.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
-                authAccount.getAuthTokenValidityValue() != at.getValidityValue())
+        if (authAccount == null)
             return null;
 
         // make sure the auth token belongs to authenticatedId

@@ -27,10 +27,13 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class AuthProvider {
@@ -474,6 +477,42 @@ public abstract class AuthProvider {
                 return true;
         }
         return false;
+    }
+    
+    public static Account validateAuthToken(Provisioning prov, AuthToken at, boolean addToLoggingContext) throws ServiceException {
+        if (prov == null)
+            prov = Provisioning.getInstance();
+        
+        if (at.isExpired())
+            throw ServiceException.AUTH_EXPIRED();
+        // make sure that the authenticated account is active and has not been deleted/disabled since the last request
+        Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
+        
+        if (addToLoggingContext && acct != null) {
+            ZimbraLog.addAccountNameToContext(acct.getName());
+        }
+        
+        /*
+         * should we throw more specific exception?  Before this consolidation,
+         * FileUploadServlet did, but other places didn't.
+         
+           if (acct == null)
+               throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
+               
+           if (acct.getAuthTokenValidityValue() != at.getValidityValue())
+               throw AccountServiceException.AUTH_EXPIRED()     
+                     
+           if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+               throw AccountServiceException.MAINTENANCE_MODE();
+           else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+               throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+         */
+        if (acct == null || 
+            !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
+            acct.getAuthTokenValidityValue() != at.getValidityValue())
+            throw ServiceException.AUTH_EXPIRED();
+        
+        return acct;
     }
     
     

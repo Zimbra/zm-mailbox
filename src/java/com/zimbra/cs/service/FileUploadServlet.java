@@ -370,18 +370,8 @@ public class FileUploadServlet extends ZimbraServlet {
         try {
             if (!isAdminRequest) {
                 Provisioning prov = Provisioning.getInstance();
-                // make sure the authenticated account exists and is active
-                Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
-                if (acct == null)
-                    throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
-                if (acct.getAuthTokenValidityValue() != at.getValidityValue())
-                    throw AccountServiceException.AUTH_EXPIRED();
-                ZimbraLog.addAccountNameToContext(acct.getName());
-                String acctStatus = acct.getAccountStatus(prov);
-                if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-                    throw AccountServiceException.MAINTENANCE_MODE();
-                else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                    throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
+                Account acct = AuthProvider.validateAuthToken(prov, at, true);
+                
                 // fetching the mailbox will except if it's in maintenance mode
                 if (Provisioning.onLocalServer(acct)) {
                     Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct, false);

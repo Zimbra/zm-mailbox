@@ -69,13 +69,8 @@ public class Auth extends AccountDocumentHandler {
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
                 
-                if (at.isExpired())
-                    throw ServiceException.AUTH_EXPIRED();
-                // make sure that the authenticated account is active and has not been deleted/disabled since the last request
-                Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
-                if (acct == null || !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
-                        acct.getAuthTokenValidityValue() != at.getValidityValue())
-                    throw ServiceException.AUTH_EXPIRED();
+                Account acct = AuthProvider.validateAuthToken(prov, at, false);
+                
                 return doResponse(request, at, zsc, context, acct);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();

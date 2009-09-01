@@ -302,19 +302,19 @@ public class UserServlet extends ZimbraServlet {
                 try {
                     AuthToken at = AuthProvider.getAuthToken(context.req, isAdminRequest);
                     if (at != null) {
-                        if (at.isExpired()) {
-                            // bug 35917: expired auth token means auth failure
-                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                        } else if (at.isZimbraUser()) {
-                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
-                            // bug 35917: token for nonexistent user means auth failure
-                            if (context.authAccount == null ||
-                                context.authAccount.getAuthTokenValidityValue() != at.getValidityValue())
+                        
+                        if (at.isZimbraUser()) {
+                            try {
+                                context.authAccount = AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false);
+                            } catch (ServiceException e) {
                                 throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                            }
                             context.cookieAuthHappened = true;
                             context.authToken = at;
                             return;
                         } else {
+                            if (at.isExpired())
+                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                             context.authAccount = new ACL.GuestAccount(at);
                             context.basicAuthHappened = true; // pretend that we basic authed
                             context.authToken = at;
@@ -336,19 +336,16 @@ public class UserServlet extends ZimbraServlet {
                     try {
                         // Only supported by ZimbraAuthProvider
                         AuthToken at = AuthProvider.getAuthToken(auth);
-                        if (at.isExpired()) {
-                            // bug 35917: expired auth token means auth failure
-                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                        } else {
-                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
-                            // bug 35917: token for nonexistent user means auth failure
-                            if (context.authAccount == null ||
-                                    context.authAccount.getAuthTokenValidityValue() != at.getValidityValue())
-                                throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
+                        
+                        try {
+                            context.authAccount = AuthProvider.validateAuthToken(Provisioning.getInstance(), at, false);
                             context.qpAuthHappened = true;
                             context.authToken = at;
                             return;
+                        } catch (ServiceException e) {
+                            throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
                         }
+
                     } catch (AuthTokenException e) {
                         // bug 35917: malformed auth token means auth failure
                         throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
