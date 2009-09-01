@@ -4649,4 +4649,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether sharing is enabled for calendar folders</desc>
 </attr>
 
+<attr id="1051" name="zimbraFeatureVoiceChangePinEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.19">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not changing voicemail pin is enabled</desc>
+</attr>
+
 </attrs>

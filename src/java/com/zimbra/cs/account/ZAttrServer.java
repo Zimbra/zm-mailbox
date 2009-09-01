@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090824-1652 */
+    /* build: 6.0.0 pshao 20090901-1134 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -13105,13 +13105,13 @@ public class ZAttrServer extends NamedEntry {
      *
      * @see #getReverseProxyConnectTimeoutAsString()
      *
-     * @return zimbraReverseProxyConnectTimeout in millseconds, or -1 (120000ms)  if unset
+     * @return zimbraReverseProxyConnectTimeout in millseconds, or 120000 (120000ms)  if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=797)
     public long getReverseProxyConnectTimeout() {
-        return getTimeInterval(Provisioning.A_zimbraReverseProxyConnectTimeout, -1L);
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyConnectTimeout, 120000L);
     }
 
     /**

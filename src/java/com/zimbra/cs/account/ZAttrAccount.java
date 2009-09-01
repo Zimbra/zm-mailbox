@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090824-1652 */
+    /* build: 6.0.0 pshao 20090901-1134 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -10285,6 +10285,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureViewInHtmlEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureViewInHtmlEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not changing voicemail pin is enabled
+     *
+     * @return zimbraFeatureVoiceChangePinEnabled, or true if unset
+     *
+     * @since ZCS 5.0.19
+     */
+    @ZAttr(id=1051)
+    public boolean isFeatureVoiceChangePinEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, true);
+    }
+
+    /**
+     * whether or not changing voicemail pin is enabled
+     *
+     * @param zimbraFeatureVoiceChangePinEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.19
+     */
+    @ZAttr(id=1051)
+    public void setFeatureVoiceChangePinEnabled(boolean zimbraFeatureVoiceChangePinEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, zimbraFeatureVoiceChangePinEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not changing voicemail pin is enabled
+     *
+     * @param zimbraFeatureVoiceChangePinEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.19
+     */
+    @ZAttr(id=1051)
+    public Map<String,Object> setFeatureVoiceChangePinEnabled(boolean zimbraFeatureVoiceChangePinEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, zimbraFeatureVoiceChangePinEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not changing voicemail pin is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.19
+     */
+    @ZAttr(id=1051)
+    public void unsetFeatureVoiceChangePinEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not changing voicemail pin is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.19
+     */
+    @ZAttr(id=1051)
+    public Map<String,Object> unsetFeatureVoiceChangePinEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, "");
         return attrs;
     }
 

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090824-1652 */
+    /* build: 6.0.0 pshao 20090901-1134 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2828,6 +2828,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=312)
     public static final String A_zimbraFeatureViewInHtmlEnabled = "zimbraFeatureViewInHtmlEnabled";
+
+    /**
+     * whether or not changing voicemail pin is enabled
+     *
+     * @since ZCS 5.0.19
+     */
+    @ZAttr(id=1051)
+    public static final String A_zimbraFeatureVoiceChangePinEnabled = "zimbraFeatureVoiceChangePinEnabled";
 
     /**
      * Voicemail features enabled
