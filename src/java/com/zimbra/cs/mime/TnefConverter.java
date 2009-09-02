@@ -31,6 +31,7 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 
 import net.freeutils.tnef.TNEFInputStream;
 import net.freeutils.tnef.TNEFUtils;
@@ -109,7 +110,7 @@ public class TnefConverter extends MimeVisitor {
         if (visitKind != VisitPhase.VISIT_END)
             return false;
         // proactively ignore already-converted TNEF attachments
-        if (Mime.CT_MULTIPART_ALTERNATIVE.equals(mmp.getContentType()))
+        if (MimeConstants.CT_MULTIPART_ALTERNATIVE.equals(mmp.getContentType()))
             return false;
 
         Map<Integer, MimeBodyPart> changedParts = null;

@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -34,7 +35,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.formatter.VCard;
 
@@ -154,7 +154,7 @@ public class Collection extends MailItemResource {
         String ctype = upload.getContentType();
         // create vcard if content type is text/vcard
         if (ctype != null && ctype.startsWith(DavProtocol.VCARD_CONTENT_TYPE)) {
-            String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), Mime.P_CHARSET_UTF8);
+            String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), MimeConstants.P_CHARSET_UTF8);
             try {
                 DavResource res = null;
                 for (VCard vcard : VCard.parseVCard(buf)) {

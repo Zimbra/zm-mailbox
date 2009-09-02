@@ -55,11 +55,11 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.mime.MimeConstants;
 
 /**
  * Invite
@@ -738,7 +738,7 @@ public class Invite {
                     // Backward compat.  We used to save X-ALT-DESC property as an x-prop.  Now we use it
                     // for HTML description, when FMTTYPE=text/html.
                     ZParameter fmttype = xprop.getParameter(ICalTok.FMTTYPE);
-                    if (fmttype != null && Mime.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
+                    if (fmttype != null && MimeConstants.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
                         isHtmlDesc = true;
                         invite.mDescHtml = xprop.getValue();
                     }
@@ -815,8 +815,8 @@ public class Invite {
     private synchronized void loadDescFromBlob() throws ServiceException {
         MimeMessage mmInv = mCalItem != null ? mCalItem.getSubpartMessage(mMailItemId) : null;
         if (mmInv != null) {
-            mDescription = getDescription(mmInv, Mime.CT_TEXT_PLAIN);
-            mDescHtml = getDescription(mmInv, Mime.CT_TEXT_HTML);
+            mDescription = getDescription(mmInv, MimeConstants.CT_TEXT_PLAIN);
+            mDescHtml = getDescription(mmInv, MimeConstants.CT_TEXT_HTML);
         }
     }
 
@@ -845,20 +845,20 @@ public class Invite {
             String mmCtStr = mmInv.getContentType();
             if (mmCtStr != null) {
                 ContentType mmCt = new ContentType(mmCtStr);
-                if (mmCt.match(Mime.CT_TEXT_CALENDAR)) {
-                    boolean wantHtml = Mime.CT_TEXT_HTML.equalsIgnoreCase(mimeType);
+                if (mmCt.match(MimeConstants.CT_TEXT_CALENDAR)) {
+                    boolean wantHtml = MimeConstants.CT_TEXT_HTML.equalsIgnoreCase(mimeType);
                     Object mmInvContent = mmInv.getContent();
                     InputStream is = null;
                     try {
-                        String charset = Mime.P_CHARSET_UTF8;
+                        String charset = MimeConstants.P_CHARSET_UTF8;
                         if (mmInvContent instanceof InputStream) {
-                            charset = mmCt.getParameter(Mime.P_CHARSET);
+                            charset = mmCt.getParameter(MimeConstants.P_CHARSET);
                             if (charset == null)
-                                charset = Mime.P_CHARSET_UTF8;
+                                charset = MimeConstants.P_CHARSET_UTF8;
                             is = (InputStream) mmInvContent;
                         } else if (mmInvContent instanceof String) {
                             String str = (String) mmInvContent;
-                            charset = Mime.P_CHARSET_UTF8;
+                            charset = MimeConstants.P_CHARSET_UTF8;
                             is = new ByteArrayInputStream(str.getBytes(charset));
                         }
                         if (is != null) {
@@ -894,8 +894,8 @@ public class Invite {
                 try {
                     ContentType ct = new ContentType(ctStr);
                     if (ct.match(mimeType)) {
-                        charset = ct.getParameter(Mime.P_CHARSET);
-                        if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
+                        charset = ct.getParameter(MimeConstants.P_CHARSET);
+                        if (charset == null) charset = MimeConstants.P_CHARSET_DEFAULT;
                         byte[] descBytes = ByteUtil.getContent(part.getInputStream(), part.getSize());
                         return new String(descBytes, charset);
                     }
@@ -1813,7 +1813,7 @@ public class Invite {
                                 break;
                             case X_ALT_DESC:
                                 ZParameter fmttype = prop.getParameter(ICalTok.FMTTYPE);
-                                if (fmttype != null && Mime.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
+                                if (fmttype != null && MimeConstants.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
                                     String html = prop.getValue();
                                     newInv.setDescription(newInv.mDescription, html);
                                 } else {
@@ -2094,7 +2094,7 @@ public class Invite {
             String descHtml = getDescriptionHtml();
             if (descHtml != null && descHtml.length() > 0) {
                 ZProperty altDesc = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
-                altDesc.addParameter(new ZParameter(ICalTok.FMTTYPE, Mime.CT_TEXT_HTML));
+                altDesc.addParameter(new ZParameter(ICalTok.FMTTYPE, MimeConstants.CT_TEXT_HTML));
                 component.addProperty(altDesc);
             }
             

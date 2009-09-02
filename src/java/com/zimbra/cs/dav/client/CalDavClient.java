@@ -27,11 +27,11 @@ import org.dom4j.QName;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
 
 public class CalDavClient extends WebDavClient {
@@ -139,7 +139,7 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public String sendCalendarData(Appointment appt) throws IOException, DavException {
-		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes("UTF-8"), Mime.CT_TEXT_CALENDAR, appt.etag, null);
+		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes("UTF-8"), MimeConstants.CT_TEXT_CALENDAR, appt.etag, null);
 		String etag = resp.getHeader(DavProtocol.HEADER_ETAG);
 		ZimbraLog.dav.debug("ETags: "+appt.etag+", "+etag);
 		int status = resp.getStatusCode();

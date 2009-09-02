@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.mime;
 
+import com.zimbra.common.mime.MimeConstants;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,7 +35,7 @@ public class ParsedMessageDataSource implements DataSource {
     }
 
     public String getContentType() {
-        return Mime.CT_MESSAGE_RFC822;
+        return MimeConstants.CT_MESSAGE_RFC822;
     }
 
     public InputStream getInputStream() throws IOException {

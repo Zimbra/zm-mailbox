@@ -41,11 +41,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
@@ -68,7 +68,7 @@ public class Contact extends MailItem {
          */
         public Attachment(byte[] content, String ctype, String field, String filename) {
             if (ctype == null) {
-                ctype = Mime.CT_APPLICATION_OCTET_STREAM;
+                ctype = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             } else {
                 ctype = ctype.toLowerCase();
             }

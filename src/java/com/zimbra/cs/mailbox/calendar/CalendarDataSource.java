@@ -30,7 +30,7 @@ import javax.mail.internet.ContentType;
 
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.mime.MimeConstants;
 
 
 /**
@@ -62,7 +62,7 @@ public class CalendarDataSource implements DataSource
 
     public String getContentType() {
         ContentType ct = new ContentType();
-        ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
+        ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
         
         ct.setPrimaryType("text");
         ct.setSubType("calendar");
@@ -87,7 +87,7 @@ public class CalendarDataSource implements DataSource
             if (mBuf == null) {
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
                 OutputStreamWriter wout =
-                    new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
+                    new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
                 mICal.toICalendar(wout);
                 wout.flush();
                 mBuf = buf.toByteArray();

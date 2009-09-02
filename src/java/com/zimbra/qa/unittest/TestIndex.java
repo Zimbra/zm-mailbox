@@ -17,12 +17,11 @@ package com.zimbra.qa.unittest;
 import java.util.List;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.common.mime.MimeConstants;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 
 public class TestIndex extends TestCase {
@@ -50,27 +49,27 @@ public class TestIndex extends TestCase {
         // Test text truncated
         setTextLimit(50);
         String subject = NAME_PREFIX + " text attachment 1";
-        String msgId = sendMessage(subject, body.toString().getBytes(), "attachment.txt", Mime.CT_TEXT_PLAIN).getId();
+        String msgId = sendMessage(subject, body.toString().getBytes(), "attachment.txt", MimeConstants.CT_TEXT_PLAIN).getId();
         checkQuery("in:inbox subject:\"" + subject + "\" walrus", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" joob", null);
         
         // Test HTML truncated
         subject = NAME_PREFIX + " HTML attachment 1";
         String htmlBody = "<html>\n" + body + "</html>";
-        msgId = sendMessage(subject, htmlBody.getBytes(), "attachment.html", Mime.CT_TEXT_HTML).getId();
+        msgId = sendMessage(subject, htmlBody.getBytes(), "attachment.html", MimeConstants.CT_TEXT_HTML).getId();
         checkQuery("in:inbox subject:\"" + subject + "\" walrus", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" joob", null);
         
         // Test text not truncated
         setTextLimit(100000);
         subject = NAME_PREFIX + " text attachment 2";
-        msgId = sendMessage(subject, body.toString().getBytes(), "attachment.txt", Mime.CT_TEXT_PLAIN).getId();
+        msgId = sendMessage(subject, body.toString().getBytes(), "attachment.txt", MimeConstants.CT_TEXT_PLAIN).getId();
         checkQuery("in:inbox subject:\"" + subject + "\" walrus", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" joob", msgId);
 
         // Test HTML not truncated
         subject = NAME_PREFIX + " HTML attachment 2";
-        msgId = sendMessage(subject, htmlBody.getBytes(), "attachment.html", Mime.CT_TEXT_HTML).getId();
+        msgId = sendMessage(subject, htmlBody.getBytes(), "attachment.html", MimeConstants.CT_TEXT_HTML).getId();
         checkQuery("in:inbox subject:\"" + subject + "\" walrus", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" joob", msgId);
         
@@ -78,7 +77,7 @@ public class TestIndex extends TestCase {
         subject = NAME_PREFIX + " subject";
         String attachedMsg = TestUtil.getTestMessage("Pigs from a gun", "recipient", "sender", null);
         setTextLimit(4);
-        msgId = sendMessage(subject, attachedMsg.getBytes(), "attachment.msg", Mime.CT_MESSAGE_RFC822).getId();
+        msgId = sendMessage(subject, attachedMsg.getBytes(), "attachment.msg", MimeConstants.CT_MESSAGE_RFC822).getId();
         checkQuery("in:inbox subject:\"" + subject + "\" pigs", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" gun", null);
     }

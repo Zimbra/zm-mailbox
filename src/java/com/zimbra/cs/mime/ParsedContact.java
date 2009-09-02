@@ -35,6 +35,7 @@ import org.json.JSONException;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
@@ -209,7 +210,7 @@ public class ParsedContact {
             MimeBodyPart bp = new MimeBodyPart();
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
-            bp.addHeader("Content-Transfer-Encoding", Mime.ET_8BIT);
+            bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
             bp.setDataHandler(attach.getDataHandler());
             multi.addBodyPart(bp);
             

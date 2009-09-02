@@ -27,6 +27,7 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -214,7 +215,7 @@ public class CreateContact extends MailDocumentHandler  {
             // part of existing message
             ItemId iid = new ItemId(messageId, zsc);
             String part = vcard.getAttribute(MailConstants.A_PART);
-            String[] acceptableTypes = new String[] { Mime.CT_TEXT_PLAIN, Mime.CT_TEXT_VCARD };
+            String[] acceptableTypes = new String[] { MimeConstants.CT_TEXT_PLAIN, MimeConstants.CT_TEXT_VCARD };
             String charsetWanted = mbox.getAccount().getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             text = fetchItemPart(zsc, octxt, mbox, iid, part, acceptableTypes, charsetWanted);
         }
@@ -273,7 +274,7 @@ public class CreateContact extends MailDocumentHandler  {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_PART, part);
                 byte[] content = UserServlet.getRemoteContent(zsc.getAuthToken(), iid, params);
-                text = new String(content, Mime.P_CHARSET_UTF8);
+                text = new String(content, MimeConstants.P_CHARSET_UTF8);
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("error fetching message part: iid=" + iid + ", part=" + part, e);

@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
@@ -37,7 +38,6 @@ import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.service.mail.ParseMimeMessage.InviteParserResult;
@@ -161,8 +161,8 @@ public class SetCalendarItem extends CalendarRequest {
             // the MimeMessage has text parts.  This prevents discarding texts when they're specified only
             // in the <inv> but not in mime parts.
             if (ipr != null && ipr.mInvite != null && mm != null) {
-                String desc = Invite.getDescription(mm, Mime.CT_TEXT_PLAIN);
-                String descHtml = Invite.getDescription(mm, Mime.CT_TEXT_HTML);
+                String desc = Invite.getDescription(mm, MimeConstants.CT_TEXT_PLAIN);
+                String descHtml = Invite.getDescription(mm, MimeConstants.CT_TEXT_HTML);
                 if ((desc != null && desc.length() > 0) || (descHtml != null && descHtml.length() > 0))
                     ipr.mInvite.setDescription(desc, descHtml);
             }

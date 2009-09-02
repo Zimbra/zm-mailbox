@@ -32,6 +32,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeDetect;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -49,14 +50,14 @@ public class UUEncodeConverter extends MimeVisitor {
         MimeMultipart mmp = null;
         try {
             // only check "text/plain" parts for uudecodeable attachments
-            if (!msg.isMimeType(Mime.CT_TEXT_PLAIN))
+            if (!msg.isMimeType(MimeConstants.CT_TEXT_PLAIN))
                 return false;
 
             // don't check transfer-encoded parts for uudecodeable attachments
             String cte = msg.getHeader("Content-Transfer-Encoding", null);
             if (cte != null) {
                 cte = cte.trim().toLowerCase();
-                if (!cte.equals(Mime.ET_7BIT) && !cte.equals(Mime.ET_8BIT) && !cte.equals(Mime.ET_BINARY))
+                if (!cte.equals(MimeConstants.ET_7BIT) && !cte.equals(MimeConstants.ET_8BIT) && !cte.equals(MimeConstants.ET_BINARY))
                     return false;
             }
 
@@ -134,7 +135,7 @@ public class UUEncodeConverter extends MimeVisitor {
                 ByteUtil.copy(isOrig, true, baos, true);
 
                 MimeBodyPart mbp = new MimeBodyPart();
-                mbp.setDataHandler(new DataHandler(new ByteArrayDataSource(baos.toByteArray(), Mime.CT_TEXT_PLAIN)));
+                mbp.setDataHandler(new DataHandler(new ByteArrayDataSource(baos.toByteArray(), MimeConstants.CT_TEXT_PLAIN)));
                 mmp.addBodyPart(mbp, 0);
             } finally {
                 ByteUtil.closeStream(isOrig);
@@ -200,7 +201,7 @@ public class UUEncodeConverter extends MimeVisitor {
             mContent = baos.toByteArray();
             mContentType = MimeDetect.getMimeDetect().detect(mFilename, mContent);
             if (mContentType == null)
-                mContentType = Mime.CT_APPLICATION_OCTET_STREAM;
+                mContentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
 
             mEndOffset = is.getPosition();
         }
@@ -212,7 +213,7 @@ public class UUEncodeConverter extends MimeVisitor {
         String getFilename()   { return mFilename; }
 
         DataSource getDataSource() {
-            ByteArrayDataSource bads = new ByteArrayDataSource(mContent, Mime.CT_APPLICATION_OCTET_STREAM);
+            ByteArrayDataSource bads = new ByteArrayDataSource(mContent, MimeConstants.CT_APPLICATION_OCTET_STREAM);
             bads.setName(mFilename);
             return bads;
         }

@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -30,7 +31,6 @@ import com.zimbra.cs.dav.resource.AddressbookCollection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
-import com.zimbra.cs.mime.Mime;
 
 public class AddressbookMultiget extends Report {
     public void handle(DavContext ctxt) throws ServiceException, DavException {
@@ -47,7 +47,7 @@ public class AddressbookMultiget extends Report {
             if (obj instanceof Element) {
                 String href;
                 try {
-                    href = URLDecoder.decode(((Element)obj).getText(), Mime.P_CHARSET_UTF8);
+                    href = URLDecoder.decode(((Element)obj).getText(), MimeConstants.P_CHARSET_UTF8);
                 } catch (UnsupportedEncodingException e) {
                     href = URLDecoder.decode(((Element)obj).getText());
                 }

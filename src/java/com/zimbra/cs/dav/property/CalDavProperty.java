@@ -24,6 +24,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -37,7 +38,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
-import com.zimbra.cs.mime.Mime;
 
 /**
  * CALDAV:supported-calendar-component-set - draft-dusseault-caldav section 5.2.3
@@ -142,7 +142,7 @@ public class CalDavProperty extends ResourceProperty {
 		public SupportedCalendarData() {
 			super(DavElements.E_SUPPORTED_CALENDAR_DATA);
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_CALENDAR_DATA);
-			e.addAttribute(DavElements.P_CONTENT_TYPE, Mime.CT_TEXT_CALENDAR);
+			e.addAttribute(DavElements.P_CONTENT_TYPE, MimeConstants.CT_TEXT_CALENDAR);
 			e.addAttribute(DavElements.P_VERSION, ZCalendar.sIcalVersion);
 			mChildren.add(e);
 		}

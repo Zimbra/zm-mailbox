@@ -31,6 +31,7 @@ import com.zimbra.cs.mime.MimeHandlerException;
 import com.zimbra.cs.mime.MimeHandlerManager;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 
 public class TextCalendarHandler extends MimeHandler {
     private String mContent;
@@ -61,7 +62,7 @@ public class TextCalendarHandler extends MimeHandler {
         int maxLength = MimeHandlerManager.getIndexedTextLimit();
         try {
             is = source.getInputStream();
-            String charset = Mime.P_CHARSET_UTF8;
+            String charset = MimeConstants.P_CHARSET_UTF8;
             String ctStr = source.getContentType();
             if (ctStr != null) {
                 String cs = Mime.getCharset(ctStr);

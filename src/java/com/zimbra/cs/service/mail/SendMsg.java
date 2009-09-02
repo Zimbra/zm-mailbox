@@ -45,6 +45,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -378,7 +379,7 @@ public class SendMsg extends MailDocumentHandler {
             boolean modified = false;
 
             String ct = Mime.getContentType(bp);
-            if (Mime.CT_TEXT_CALENDAR.compareToIgnoreCase(ct) != 0)
+            if (MimeConstants.CT_TEXT_CALENDAR.compareToIgnoreCase(ct) != 0)
                 return false;
 
             ZVCalendar ical;

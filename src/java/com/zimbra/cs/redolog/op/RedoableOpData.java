@@ -24,14 +24,14 @@ import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileSegmentDataSource;
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.mime.MimeConstants;
 
 class RedoableOpData {
     private int mLength;
     private DataSource mDataSource;
     
     RedoableOpData(byte[] data) {
-        mDataSource = new ByteArrayDataSource(data, Mime.CT_APPLICATION_OCTET_STREAM);
+        mDataSource = new ByteArrayDataSource(data, MimeConstants.CT_APPLICATION_OCTET_STREAM);
         mLength = data.length;
     }
     

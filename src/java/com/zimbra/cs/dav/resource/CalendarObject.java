@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -45,7 +46,6 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
-import com.zimbra.cs.mime.Mime;
 
 /**
  * CalendarObject is a single instance of iCalendar (RFC 2445) object, such as
@@ -275,7 +275,7 @@ public interface CalendarObject {
             Invite defInv = calItem.getDefaultInviteOrNull();
             if (defInv != null)
                 setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
-            setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
+            setProperty(DavElements.P_GETCONTENTTYPE, MimeConstants.CT_TEXT_CALENDAR);
             setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(calItem.getSize()));
             addProperty(CalDavProperty.getCalendarData(this));
             if (mInvites[0].hasRecurId() && mInvites.length > 1) {

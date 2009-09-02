@@ -42,6 +42,7 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -172,11 +173,11 @@ public class ParseMimeMessage {
     }
 
     public static String getTextPlainContent(Element elem) {
-        return getFirstContentByType(elem, Mime.CT_TEXT_PLAIN);
+        return getFirstContentByType(elem, MimeConstants.CT_TEXT_PLAIN);
     }
 
     public static String getTextHtmlContent(Element elem) {
-        return getFirstContentByType(elem, Mime.CT_TEXT_HTML);
+        return getFirstContentByType(elem, MimeConstants.CT_TEXT_HTML);
     }
 
     // Recursively find and return the content of the first part with the specified content type.
@@ -189,7 +190,7 @@ public class ParseMimeMessage {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, contentType).trim().toLowerCase();
         if (type.equals(contentType)) {
             return elem.getAttribute(MailConstants.E_CONTENT, null);
-        } else if (type.startsWith(Mime.CT_MULTIPART_PREFIX)) {
+        } else if (type.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
             for (Element childElem : elem.listElements(MailConstants.E_MIMEPART)) {
                 String text = getFirstContentByType(childElem, contentType);
                 if (text != null)
@@ -259,9 +260,9 @@ public class ParseMimeMessage {
         ctxt.octxt = octxt;
         ctxt.mbox = mbox;
         ctxt.use2231 = target.getBooleanAttr(Provisioning.A_zimbraPrefUseRfc2231, false);
-        ctxt.defaultCharset = target.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        ctxt.defaultCharset = target.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         if (ctxt.defaultCharset.equals(""))
-            ctxt.defaultCharset = Mime.P_CHARSET_UTF8;
+            ctxt.defaultCharset = MimeConstants.P_CHARSET_UTF8;
 
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
@@ -369,7 +370,7 @@ public class ParseMimeMessage {
                 addAddressHeaders(mm, maddrs, ctxt.defaultCharset);
             	
             if (!hasContent && !isMultipart)
-                mm.setText("", Mime.P_CHARSET_DEFAULT);
+                mm.setText("", MimeConstants.P_CHARSET_DEFAULT);
 
             String flagStr = msgElem.getAttribute(MailConstants.A_FLAGS, "");
             if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_HIGH_PRIORITY)) != -1) {
@@ -470,7 +471,7 @@ public class ParseMimeMessage {
      */
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
     throws MessagingException, ServiceException, IOException {
-        String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, Mime.CT_DEFAULT).trim();
+        String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231);
 
         // is the client passing us a multipart?
@@ -510,7 +511,7 @@ public class ParseMimeMessage {
 
         // if the user has specified an alternative charset, make sure it exists and can encode the content
         String charset = StringUtil.checkCharset(data, ctxt.defaultCharset);
-        ctype.setCharset(charset).setParameter(Mime.P_CHARSET, charset);
+        ctype.setCharset(charset).setParameter(MimeConstants.P_CHARSET, charset);
 
         if (mmp != null) {
             MimeBodyPart mbp = new MimeBodyPart();
@@ -608,7 +609,7 @@ public class ParseMimeMessage {
         ContentType ctype = ctypeOverride;
         ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT, ctxt.use2231);
         if (ctype == null) {
-            ctype = new ContentType(up.getContentType() == null ? Mime.CT_APPLICATION_OCTET_STREAM : up.getContentType()).setParameter("name", filename);
+            ctype = new ContentType(up.getContentType() == null ? MimeConstants.CT_APPLICATION_OCTET_STREAM : up.getContentType()).setParameter("name", filename);
             cdisp.setParameter("filename", filename);
         }
         mbp.setHeader("Content-Type", ctype.setCharset(ctxt.defaultCharset).toString());
@@ -636,7 +637,7 @@ public class ParseMimeMessage {
     private static void attachMessage(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
         if (!iid.isLocal()) {
-            attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, new ContentType(Mime.CT_MESSAGE_RFC822));
+            attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, new ContentType(MimeConstants.CT_MESSAGE_RFC822));
             return;
         }
 
@@ -646,7 +647,7 @@ public class ParseMimeMessage {
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
-        mbp.setHeader("Content-Type", Mime.CT_MESSAGE_RFC822);
+        mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);

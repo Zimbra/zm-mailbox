@@ -35,6 +35,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
@@ -83,7 +84,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         MimeMessage mm = msg.getMimeMessage();
         Account owner = msg.getMailbox().getAccount();
 
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         try {
             InternetAddress[] recipients = Mime.parseAddressHeader(mm, "Disposition-Notification-To");
             if (recipients == null || recipients.length == 0)
@@ -114,14 +115,14 @@ public class SendDeliveryReport extends MailDocumentHandler {
             // part 2: disposition notification
             String mdn = generateReport(owner, mm, automatic, requestHost, userAgent);
             MimeBodyPart mpMDN = new MimeBodyPart();
-            mpMDN.setText(mdn, Mime.P_CHARSET_UTF8);
+            mpMDN.setText(mdn, MimeConstants.P_CHARSET_UTF8);
             mpMDN.setHeader("Content-Type", "message/disposition-notification; charset=utf-8");
             multi.addBodyPart(mpMDN);
 
             // part 3: original message
             MimeBodyPart mpOriginal = new MimeBodyPart();
             mpOriginal.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
-            mpOriginal.setHeader("Content-Type", Mime.CT_MESSAGE_RFC822);
+            mpOriginal.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
             mpOriginal.setHeader("Content-Disposition", Part.ATTACHMENT);
             multi.addBodyPart(mpOriginal);
 

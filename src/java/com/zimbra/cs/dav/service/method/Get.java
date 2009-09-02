@@ -19,6 +19,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -27,7 +28,6 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavMethod;
-import com.zimbra.cs.mime.Mime;
 
 public class Get extends DavMethod {
 	public static final String GET  = "GET";
@@ -43,8 +43,8 @@ public class Get extends DavMethod {
 		String contentType = resource.getContentType(ctxt);
         if (contentType != null) {
             ContentType ct = new ContentType(contentType);
-            if (ct.getParameter(Mime.P_CHARSET) == null)
-                ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
+            if (ct.getParameter(MimeConstants.P_CHARSET) == null)
+                ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
             resp.setContentType(ct.toString());
         }
 		if (resource.hasEtag())

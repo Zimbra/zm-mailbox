@@ -21,7 +21,7 @@ import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.mime.MimeConstants;
 
 public class MailboxBlobDataSource implements DataSource {
     
@@ -35,7 +35,7 @@ public class MailboxBlobDataSource implements DataSource {
     }
 
     public String getContentType() {
-        return Mime.CT_APPLICATION_OCTET_STREAM;
+        return MimeConstants.CT_APPLICATION_OCTET_STREAM;
     }
 
     public InputStream getInputStream() throws IOException {

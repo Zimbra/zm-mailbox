@@ -33,6 +33,7 @@ import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -55,7 +56,6 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil;
 
 public class ScheduleOutbox extends Collection {
@@ -70,7 +70,7 @@ public class ScheduleOutbox extends Collection {
 
 		InputStream in = ctxt.getUpload().getInputStream();
 
-		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(in, Mime.P_CHARSET_UTF8);
+		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(in, MimeConstants.P_CHARSET_UTF8);
 		Iterator<ZComponent> iter = vcalendar.getComponentIterator();
 		ZComponent req = null;
 		while (iter.hasNext()) {

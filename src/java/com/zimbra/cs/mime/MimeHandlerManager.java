@@ -26,6 +26,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -120,17 +121,17 @@ public class MimeHandlerManager {
             
             // Look up the MimeTypeInfo.
             if (mt == null || mt.getHandlerClass() == null) {
-                boolean isTextType = (mimeType != null && (mimeType.matches(Mime.CT_TEXT_WILD) ||
-                    mimeType.equalsIgnoreCase(Mime.CT_MESSAGE_RFC822)));
+                boolean isTextType = (mimeType != null && (mimeType.matches(MimeConstants.CT_TEXT_WILD) ||
+                    mimeType.equalsIgnoreCase(MimeConstants.CT_MESSAGE_RFC822)));
                 
                 // All unhandled text types default to text/plain handler.
                 if (isTextType) {
-                    sLog.debug("Falling back to %s MIME Handler for type %s", Mime.CT_DEFAULT, mimeType);
-                    mimeTypeList = Provisioning.getInstance().getMimeTypes(Mime.CT_DEFAULT);
+                    sLog.debug("Falling back to %s MIME Handler for type %s", MimeConstants.CT_DEFAULT, mimeType);
+                    mimeTypeList = Provisioning.getInstance().getMimeTypes(MimeConstants.CT_DEFAULT);
                     if (mimeTypeList.size() > 0) {
                         mt = mimeTypeList.get(0);
                     } else {
-                        sLog.warn("Unable to load MIME handler for %s", Mime.CT_DEFAULT);
+                        sLog.warn("Unable to load MIME handler for %s", MimeConstants.CT_DEFAULT);
                     }
                 }
 

@@ -29,9 +29,9 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.mime.MimeConstants;
 
 public abstract class CalendarUser {
 
@@ -173,7 +173,7 @@ public abstract class CalendarUser {
             if (hasCn())
                 addr = new InternetAddress(address,
                                            getCn(),
-                                           Mime.P_CHARSET_UTF8);
+                                           MimeConstants.P_CHARSET_UTF8);
             else
                 addr = new InternetAddress(address);
             return addr;

@@ -32,7 +32,7 @@ import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.mime.MimeConstants;
 
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -195,7 +195,7 @@ public class ZCalendar {
         public void addDescription(String desc, String descHtml) {
             ZProperty descProp = new ZProperty(ICalTok.DESCRIPTION, desc);
             ZProperty altDescProp = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
-            altDescProp.addParameter(new ZParameter(ICalTok.FMTTYPE, Mime.CT_TEXT_HTML));
+            altDescProp.addParameter(new ZParameter(ICalTok.FMTTYPE, MimeConstants.CT_TEXT_HTML));
             for (ZComponent comp : mComponents) {
                 ICalTok name = comp.getTok();
                 if (ICalTok.VEVENT.equals(name) || ICalTok.VTODO.equals(name) || ICalTok.VJOURNAL.equals(name)) {
@@ -335,7 +335,7 @@ public class ZCalendar {
             for (ZProperty prop : mProperties) {
                 if (ICalTok.X_ALT_DESC.equals(prop.getToken())) {
                     ZParameter fmttype = prop.getParameter(ICalTok.FMTTYPE);
-                    if (fmttype != null && Mime.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue()))
+                    if (fmttype != null && MimeConstants.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue()))
                         return prop.getValue();
                 }
             }
@@ -881,12 +881,12 @@ public class ZCalendar {
         public static ZVCalendar build(String icalStr) throws ServiceException {
             ByteArrayInputStream bais = null;
             try {
-                bais = new ByteArrayInputStream(icalStr.getBytes(Mime.P_CHARSET_UTF8));
+                bais = new ByteArrayInputStream(icalStr.getBytes(MimeConstants.P_CHARSET_UTF8));
             } catch (UnsupportedEncodingException e) {
                 throw ServiceException.FAILURE("Can't get input stream from string", e);
             }
             try {
-                return build(bais, Mime.P_CHARSET_UTF8);
+                return build(bais, MimeConstants.P_CHARSET_UTF8);
             } finally {
                 try {
                     bais.close();

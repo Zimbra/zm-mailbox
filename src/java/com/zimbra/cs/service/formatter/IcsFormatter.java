@@ -20,6 +20,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
@@ -54,7 +55,7 @@ public class IcsFormatter extends Formatter {
     }
 
     public String[] getDefaultMimeTypes() {
-        return new String[] { Mime.CT_TEXT_CALENDAR, "text/x-vcalendar" };
+        return new String[] { MimeConstants.CT_TEXT_CALENDAR, "text/x-vcalendar" };
     }
 
     public String getDefaultSearchTypes() {
@@ -92,8 +93,8 @@ public class IcsFormatter extends Formatter {
             filename = "contacts";
         String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".ics");
         context.resp.addHeader("Content-Disposition", cd);
-        context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
-        context.resp.setContentType(Mime.CT_TEXT_CALENDAR );
+        context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
+        context.resp.setContentType(MimeConstants.CT_TEXT_CALENDAR );
 
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
@@ -134,7 +135,7 @@ public class IcsFormatter extends Formatter {
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();
         InputStream is = context.getRequestInputStream(Long.MAX_VALUE);
-        String charset = Mime.P_CHARSET_UTF8;
+        String charset = MimeConstants.P_CHARSET_UTF8;
         String ctStr = context.req.getContentType();
         if (ctStr != null) {
             String cs = Mime.getCharset(ctStr);

@@ -17,12 +17,12 @@ package com.zimbra.qa.unittest;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.common.mime.MimeConstants;
 
 public class TestGetMsg
 extends TestCase {
@@ -40,17 +40,17 @@ extends TestCase {
     
     public void testPlainMessageContent()
     throws Exception {
-        doTestMessageContent(Mime.CT_TEXT_PLAIN, "This is the body of a plain message.");
+        doTestMessageContent(MimeConstants.CT_TEXT_PLAIN, "This is the body of a plain message.");
     }
     
     public void testHtmlMessageContent()
     throws Exception {
-        doTestMessageContent(Mime.CT_TEXT_HTML, "<html><head></head><body>HTML message</body></html>");
+        doTestMessageContent(MimeConstants.CT_TEXT_HTML, "<html><head></head><body>HTML message</body></html>");
     }
     
     public void testEnrichedMessageContent()
     throws Exception {
-        doTestMessageContent(Mime.CT_TEXT_ENRICHED,
+        doTestMessageContent(MimeConstants.CT_TEXT_ENRICHED,
             "<color><param>red</param>Blood</color> is <bold>thicker</bold> than<color><param>blue</param>water</color>.");
     }
     
@@ -62,7 +62,7 @@ extends TestCase {
         String subject = NAME_PREFIX + " testMessageContent " + contentType;
         String raw = mb.withSubject(subject).withBody(body).withContentType(contentType).create();
         String msgId = TestUtil.addRawMessage(mbox, raw);
-        if (contentType.equals(Mime.CT_TEXT_ENRICHED)) {
+        if (contentType.equals(MimeConstants.CT_TEXT_ENRICHED)) {
             body = TextEnrichedHandler.convertToHTML(body);
         }
         
@@ -95,7 +95,7 @@ extends TestCase {
             expected = body.substring(0, expectedLength);
         }
 
-        if (contentType.equals(Mime.CT_TEXT_ENRICHED)) {
+        if (contentType.equals(MimeConstants.CT_TEXT_ENRICHED)) {
             // HTML conversion in TextEnrichedHandler will drop trailing
             // characters when the enriched data is malformed (tags not
             // closed, etc.).

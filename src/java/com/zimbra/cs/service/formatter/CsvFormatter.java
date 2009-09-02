@@ -28,7 +28,6 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -36,6 +35,7 @@ import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.mime.MimeConstants;
 
 public class CsvFormatter extends Formatter {
 
@@ -44,7 +44,7 @@ public class CsvFormatter extends Formatter {
     }
 
     public String[] getDefaultMimeTypes() {
-        return new String[] { "text/csv", "text/comma-separated-values", Mime.CT_TEXT_PLAIN };
+        return new String[] { "text/csv", "text/comma-separated-values", MimeConstants.CT_TEXT_PLAIN };
     }
 
     public String getDefaultSearchTypes() {
@@ -71,7 +71,7 @@ public class CsvFormatter extends Formatter {
             filename = "contacts";
         String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".csv");
         context.resp.addHeader("Content-Disposition", cd);
-        context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
+        context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
         context.resp.setContentType("text/csv");
         context.resp.getWriter().print(sb.toString());
     }
@@ -86,7 +86,7 @@ public class CsvFormatter extends Formatter {
 
     public void saveCallback(Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
-        InputStreamReader isr = new InputStreamReader(context.getRequestInputStream(), Mime.P_CHARSET_UTF8);
+        InputStreamReader isr = new InputStreamReader(context.getRequestInputStream(), MimeConstants.P_CHARSET_UTF8);
         BufferedReader reader = new BufferedReader(isr);
         
         try {

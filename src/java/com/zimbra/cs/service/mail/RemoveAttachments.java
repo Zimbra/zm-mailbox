@@ -19,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -152,7 +153,7 @@ public class RemoveAttachments extends MailDocumentHandler {
         } else {
             try {
                 int partid = Integer.parseInt(subpart);
-                if (Mime.getContentType(mp, Mime.CT_DEFAULT).startsWith(Mime.CT_MULTIPART_PREFIX)) {
+                if (Mime.getContentType(mp, MimeConstants.CT_DEFAULT).startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
                     MimeMultipart mmp = Mime.getMultipartContent(mp, mp.getContentType());
                     if (partid <= 0 || partid > mmp.getCount())
                         throw MailServiceException.NO_SUCH_PART(part);

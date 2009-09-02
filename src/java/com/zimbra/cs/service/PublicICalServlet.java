@@ -30,6 +30,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -37,7 +38,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -84,7 +84,7 @@ public class PublicICalServlet extends ZimbraServlet {
         String startStr = req.getParameter(QP_START_TIME);
         String endStr = req.getParameter(QP_END_TIME);
 
-        resp.setContentType(Mime.CT_TEXT_CALENDAR);
+        resp.setContentType(MimeConstants.CT_TEXT_CALENDAR);
 
         if (checkBlankOrNull(resp, QP_ACCOUNT, acctName))
             return;

@@ -48,6 +48,7 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -64,7 +65,6 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ACL.Grant;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -1118,7 +1118,7 @@ public class ShareInfo {
     
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(genTextPart(si, intro, notes, locale, null), Mime.P_CHARSET_UTF8);
+            textPart.setText(genTextPart(si, intro, notes, locale, null), MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
     
             // HTML part 
@@ -1492,7 +1492,7 @@ public class ShareInfo {
 
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(shareInfoText, Mime.P_CHARSET_UTF8);
+            textPart.setText(shareInfoText, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part 
@@ -1584,7 +1584,7 @@ public class ShareInfo {
                     if (mBuf == null) {
                         ByteArrayOutputStream buf = new ByteArrayOutputStream();
                         OutputStreamWriter wout =
-                            new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
+                            new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
                         String text = mText;
                         wout.write(text);
                         wout.flush();
@@ -1602,7 +1602,7 @@ public class ShareInfo {
         
         private static class HtmlPartDataSource extends MimePartDataSource {
             private static final String CONTENT_TYPE =
-                Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
+                MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
             private static final String NAME = "HtmlDataSource";
 
             HtmlPartDataSource(String text) {
@@ -1620,7 +1620,7 @@ public class ShareInfo {
         
         private static class XmlPartDataSource extends MimePartDataSource {
             private static final String CONTENT_TYPE =
-                Mime.CT_XML_ZIMBRA_SHARE + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
+                MimeConstants.CT_XML_ZIMBRA_SHARE + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
             private static final String NAME = "XmlDataSource";
 
             XmlPartDataSource(String text) {

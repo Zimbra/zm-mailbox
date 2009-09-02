@@ -31,6 +31,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
@@ -1643,7 +1644,7 @@ public class ToXML {
 
         String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
 
-        if (excludeCalendarParts && Mime.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
+        if (excludeCalendarParts && MimeConstants.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
             return null;
 
         Element elem = parent.addElement(MailConstants.E_MIMEPART);
@@ -1653,7 +1654,7 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailConstants.A_PART, part);
 
-        if (Mime.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
+        if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             // the <shr> share info goes underneath the top-level <m>
             Element shr = root.addElement(MailConstants.E_SHARE_NOTIFICATION);
             try {
@@ -1663,9 +1664,9 @@ public class ToXML {
                     mLog.warn("error writing body part: ", e);
             } catch (MessagingException e) {
             }
-        } else if (Mime.CT_TEXT_ENRICHED.equals(ctype)) {
+        } else if (MimeConstants.CT_TEXT_ENRICHED.equals(ctype)) {
             // we'll be replacing text/enriched with text/html
-            ctype = Mime.CT_TEXT_HTML;
+            ctype = MimeConstants.CT_TEXT_HTML;
         }
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, ctype);
 
@@ -1697,7 +1698,7 @@ public class ToXML {
         // figure out attachment name
         try {
             String fname = Mime.getFilename(mp);
-            if (fname == null && Mime.CT_MESSAGE_RFC822.equals(ctype)) {
+            if (fname == null && MimeConstants.CT_MESSAGE_RFC822.equals(ctype)) {
                 // "filename" for attached messages is the Subject
                 Object content = Mime.getMessageContent(mp);
                 if (content instanceof MimeMessage)
@@ -1773,7 +1774,7 @@ public class ToXML {
     throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
-        if (!ctype.matches(Mime.CT_TEXT_WILD) && !ctype.matches(Mime.CT_XML_WILD))
+        if (!ctype.matches(MimeConstants.CT_TEXT_WILD) && !ctype.matches(MimeConstants.CT_XML_WILD))
             return;
 
         MimePart mp = mpi.getMimePart();
@@ -1791,8 +1792,8 @@ public class ToXML {
             ZimbraLog.soap.warn("Unable to determine max content size", e);
         }
 
-        if (ctype.equals(Mime.CT_TEXT_HTML)) {
-            String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+        if (ctype.equals(MimeConstants.CT_TEXT_HTML)) {
+            String charset = mpi.getContentTypeParameter(MimeConstants.P_CHARSET);
             InputStream stream = null;
             StringWriter sw = new StringWriter();
             TruncatingWriter tw = null;
@@ -1812,7 +1813,7 @@ public class ToXML {
                     data = sw.toString();
                 } else {
                     String cte = mp.getEncoding();
-                    if (cte != null && !cte.trim().toLowerCase().equals(Mime.ET_7BIT)) {
+                    if (cte != null && !cte.trim().toLowerCase().equals(MimeConstants.ET_7BIT)) {
                         try {
                             stream = mp.getInputStream();
                             HtmlDefang.defang(stream, neuter, out);
@@ -1829,7 +1830,7 @@ public class ToXML {
                 ByteUtil.closeStream(stream);
                 ByteUtil.closeReader(reader);
             }
-        } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
+        } else if (ctype.equals(MimeConstants.CT_TEXT_ENRICHED)) {
             // Enriched text handling is a little funky because TextEnrichedHandler
             // doesn't use Reader and Writer.  As a result, we truncate
             // the source before converting to HTML.

@@ -52,6 +52,7 @@ import org.apache.commons.codec.net.QCodec;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
@@ -153,7 +154,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 VCard vcard = VCard.formatContact((Contact) item);
                 QCodec qcodec = new QCodec();  qcodec.setEncodeBlanks(true);
                 StringBuilder header = new StringBuilder();
-                header.append("Subject: ").append(qcodec.encode(vcard.fn, Mime.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
+                header.append("Subject: ").append(qcodec.encode(vcard.fn, MimeConstants.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
                 synchronized (GMT_DATE_FORMAT) {
                     header.append("Date: ").append(GMT_DATE_FORMAT.format(new Date(item.getDate()))).append(ImapHandler.LINE_SEPARATOR);
                 }
@@ -161,9 +162,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 header.append("Content-Transfer-Encoding: 8bit").append(ImapHandler.LINE_SEPARATOR);
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                baos.write(header.toString().getBytes(Mime.P_CHARSET_ASCII));
+                baos.write(header.toString().getBytes(MimeConstants.P_CHARSET_ASCII));
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
-                baos.write(vcard.formatted.getBytes(Mime.P_CHARSET_UTF8));
+                baos.write(vcard.formatted.getBytes(MimeConstants.P_CHARSET_UTF8));
                 return new Pair<Long, InputStream>((long) baos.size(), new ByteArrayInputStream(baos.toByteArray()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
@@ -298,7 +299,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
             ps.write('"');  ps.print(content);  ps.write('"');
         } else {
             try {
-                byte[] bytes = content.getBytes(Mime.P_CHARSET_UTF8);
+                byte[] bytes = content.getBytes(MimeConstants.P_CHARSET_UTF8);
                 ps.write('{');  ps.print(bytes.length);  ps.write('}');  ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
                 ps.write(bytes, 0, bytes.length);
             } catch (UnsupportedEncodingException uee) {

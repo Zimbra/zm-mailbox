@@ -58,12 +58,11 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class CalendarRequest extends MailDocumentHandler {
@@ -131,7 +130,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     protected static String getOrigHtml(MimeMessage mm, String defaultCharset) throws ServiceException {
         try {
             for (MPartInfo mpi : Mime.getParts(mm)) {
-                if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
+                if (mpi.getContentType().equals(MimeConstants.CT_TEXT_HTML))
                     return Mime.getStringContent(mpi.getMimePart(), defaultCharset);
             }
             return null;
@@ -152,7 +151,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             String tentative = buildUrl(localURL, orgAddress, uid, attendee, invId, "TENTATIVE");
             
             for (MPartInfo mpi : Mime.getParts(mm)) {
-                if (mpi.getContentType().equals(Mime.CT_TEXT_HTML)) {
+                if (mpi.getContentType().equals(MimeConstants.CT_TEXT_HTML)) {
                     String str = htmlStr;
                     
                     str = str.replaceFirst("href=\"@@ACCEPT@@\"", accept);
@@ -160,7 +159,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     str = str.replaceFirst("href=\"@@TENTATIVE@@\"", tentative);
                     
                     System.out.println(str);
-                    mpi.getMimePart().setContent(str, Mime.CT_TEXT_HTML);
+                    mpi.getMimePart().setContent(str, MimeConstants.CT_TEXT_HTML);
                     changed = true;
                     
                     break; // only match one part

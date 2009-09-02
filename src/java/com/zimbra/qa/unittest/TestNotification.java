@@ -36,6 +36,7 @@ import org.testng.annotations.Test;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -43,7 +44,6 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -268,13 +268,13 @@ extends TestCase {
     throws Exception {
         // Check structure
         ZMimePart part = interceptMsg.getMimeStructure();
-        assertEquals(Mime.CT_MULTIPART_MIXED, part.getContentType());
+        assertEquals(MimeConstants.CT_MULTIPART_MIXED, part.getContentType());
         List<ZMimePart> children = part.getChildren();
         assertEquals(2, children.size());
         
         // Check body
         ZMimePart bodyPart = children.get(0);
-        assertEquals(Mime.CT_TEXT_PLAIN, bodyPart.getContentType());
+        assertEquals(MimeConstants.CT_TEXT_PLAIN, bodyPart.getContentType());
         String body = bodyPart.getContent();
         String context = "Unexpected body: \n" + body;
         assertTrue(context, body.contains("Intercepted message for " + RECIPIENT_NAME));
@@ -284,7 +284,7 @@ extends TestCase {
         
         // Compare to original message
         ZMimePart interceptedPart = children.get(1);
-        assertEquals(Mime.CT_MESSAGE_RFC822, interceptedPart.getContentType());
+        assertEquals(MimeConstants.CT_MESSAGE_RFC822, interceptedPart.getContentType());
     }
     
     /**

@@ -31,13 +31,13 @@ import org.apache.commons.codec.net.QuotedPrintableCodec;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Contact.Attachment;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 
 public class VCard {
 
@@ -94,7 +94,7 @@ public class VCard {
 
         private void reset() {
             name = value = null;
-            charset = Mime.P_CHARSET_UTF8;
+            charset = MimeConstants.P_CHARSET_UTF8;
             params.clear();
             encoding = Encoding.NONE;
             isEmpty = false;

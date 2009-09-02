@@ -82,6 +82,7 @@ import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.mime.MimeConstants;
 
 
 /**
@@ -2116,7 +2117,7 @@ public abstract class CalendarItem extends MailItem {
                 for (int j = 0; j < numSubParts; j++) {
                     MimeBodyPart part = (MimeBodyPart) multi.getBodyPart(j);
                     ContentType ct = new ContentType(part.getContentType());
-                    if (ct.match(Mime.CT_TEXT_CALENDAR)) {
+                    if (ct.match(MimeConstants.CT_TEXT_CALENDAR)) {
                         icalPartNum = j;
                         break;
                     }

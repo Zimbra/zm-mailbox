@@ -65,6 +65,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 
 public class CalendarMailSender {
 
@@ -254,7 +255,7 @@ public class CalendarMailSender {
     throws ServiceException {
         String notes = inv.getDescription();
         if ((notes == null || notes.length() < 1) && mmInv != null)
-            notes = Invite.getDescription(mmInv, Mime.CT_TEXT_PLAIN);
+            notes = Invite.getDescription(mmInv, MimeConstants.CT_TEXT_PLAIN);
         if (notes != null && notes.length() > 0) {
             // Remove Outlook's special "*~*~*~*" delimiter from original
             // body. If we leave it in, Outlook will hide all text above
@@ -386,16 +387,16 @@ public class CalendarMailSender {
             // ///////
             // TEXT part (add me first!)
             MimeBodyPart textPart = new MimeBodyPart();
-            textPart.setText(desc, Mime.P_CHARSET_UTF8);
+            textPart.setText(desc, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
             MimeBodyPart htmlPart = new MimeBodyPart();
             if (descHtml != null) {
-                ContentType ct = new ContentType(Mime.CT_TEXT_HTML);
-                ct.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_UTF8);
-                htmlPart.setText(descHtml, Mime.P_CHARSET_UTF8);
+                ContentType ct = new ContentType(MimeConstants.CT_TEXT_HTML);
+                ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
+                htmlPart.setText(descHtml, MimeConstants.P_CHARSET_UTF8);
                 htmlPart.setHeader("Content-Type", ct.toString());
             } else {
                 htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(desc)));
@@ -410,7 +411,7 @@ public class CalendarMailSender {
             // ///////
             // MESSAGE HEADERS
             if (subject != null)
-                mm.setSubject(subject, Mime.P_CHARSET_UTF8);
+                mm.setSubject(subject, MimeConstants.P_CHARSET_UTF8);
 
             if (toAddrs != null) {
                 Address[] addrs = new Address[toAddrs.size()];
@@ -449,7 +450,7 @@ public class CalendarMailSender {
             String mmCtStr = part.getContentType();
             if (mmCtStr != null) {
                 ContentType mmCt = new ContentType(mmCtStr);
-                return mmCt.match(Mime.CT_TEXT_CALENDAR);
+                return mmCt.match(MimeConstants.CT_TEXT_CALENDAR);
             }
             return false;
         }
@@ -856,7 +857,7 @@ public class CalendarMailSender {
 
     private static class HtmlPartDataSource implements DataSource {
         private static final String CONTENT_TYPE =
-            Mime.CT_TEXT_HTML + "; " + Mime.P_CHARSET + "=" + Mime.P_CHARSET_UTF8;
+            MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
         private static final String HEAD =
             "<html><body>\n" +
             "<pre style=\"font-family: monospace; font-size: 14px\">\n";
@@ -882,7 +883,7 @@ public class CalendarMailSender {
                 if (mBuf == null) {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
                     OutputStreamWriter wout =
-                        new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
+                        new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
                     String text = HEAD + mText + TAIL;
                     wout.write(text);
                     wout.flush();

@@ -35,6 +35,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
@@ -43,7 +44,6 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -637,7 +637,7 @@ public class ItemActionHelper {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream(spinfo.getSecond());
                 spinfo.getFirst().writeTo(baos);
-                String uploadId = zmbx.uploadAttachment("message", baos.toByteArray(), Mime.CT_MESSAGE_RFC822, 6000);
+                String uploadId = zmbx.uploadAttachment("message", baos.toByteArray(), MimeConstants.CT_MESSAGE_RFC822, 6000);
                 m.addAttribute(MailConstants.A_ATTACHMENT_ID, uploadId);
             } catch (IOException ioe) {
                 ZimbraLog.misc.info("could not read subpart message for part " + inv.getComponentNum() + " of item " + cal.getId(), ioe);

@@ -19,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -26,7 +27,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
@@ -61,7 +61,7 @@ public class ImportAppointments extends MailDocumentHandler  {
         ItemId iidFolder = new ItemId(folder, zsc);
 
         String ct = request.getAttribute(MailConstants.A_CONTENT_TYPE);
-        if (!ct.equalsIgnoreCase("ics") && !ct.equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
+        if (!ct.equalsIgnoreCase("ics") && !ct.equalsIgnoreCase(MimeConstants.CT_TEXT_CALENDAR))
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
 
         Element content = request.getElement(MailConstants.E_CONTENT);
@@ -78,15 +78,15 @@ public class ImportAppointments extends MailDocumentHandler  {
                 // part of existing message
                 ItemId iid = new ItemId(messageId, zsc);
                 String part = content.getAttribute(MailConstants.A_PART);
-                String[] acceptableTypes = new String[] { Mime.CT_TEXT_CALENDAR };
+                String[] acceptableTypes = new String[] { MimeConstants.CT_TEXT_CALENDAR };
                 String partStr = CreateContact.fetchItemPart(
-                        zsc, octxt, mbox, iid, part, acceptableTypes, Mime.P_CHARSET_UTF8);
-                is = new ByteArrayInputStream(partStr.getBytes(Mime.P_CHARSET_UTF8));
+                        zsc, octxt, mbox, iid, part, acceptableTypes, MimeConstants.P_CHARSET_UTF8);
+                is = new ByteArrayInputStream(partStr.getBytes(MimeConstants.P_CHARSET_UTF8));
             } else {
-                is = new ByteArrayInputStream(content.getText().getBytes(Mime.P_CHARSET_UTF8));
+                is = new ByteArrayInputStream(content.getText().getBytes(MimeConstants.P_CHARSET_UTF8));
             }
 
-            List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, Mime.P_CHARSET_UTF8);
+            List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, MimeConstants.P_CHARSET_UTF8);
             is.close();
             is = null;
 

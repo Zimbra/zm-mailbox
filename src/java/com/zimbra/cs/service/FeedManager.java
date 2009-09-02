@@ -48,6 +48,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
@@ -98,13 +99,13 @@ public class FeedManager {
         // client.setConnectionTimeout(10000); 
 
         HttpMethodParams params = new HttpMethodParams();
-        params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, Mime.P_CHARSET_UTF8);
+        params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, MimeConstants.P_CHARSET_UTF8);
         params.setSoTimeout(60000);
 
         GetMethod get = null;
         BufferedInputStream content = null;
         try {
-            String expectedCharset = Mime.P_CHARSET_UTF8;
+            String expectedCharset = MimeConstants.P_CHARSET_UTF8;
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))

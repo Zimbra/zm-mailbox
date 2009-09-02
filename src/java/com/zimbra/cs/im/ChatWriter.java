@@ -41,9 +41,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.html.HtmlEntityMapper;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.im.IMGetChat;
 import com.zimbra.cs.util.JMSession;
@@ -72,7 +72,7 @@ class ChatWriter {
                 if (mBuf == null) {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
                     OutputStreamWriter wout =
-                        new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
+                        new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
                     String text = mElt.toXML().asXML();
                     
                     // convert unicode chars to HTML entities.  This is purely to make the "show original"
@@ -116,7 +116,7 @@ class ChatWriter {
                 if (mBuf == null) {
                     ByteArrayOutputStream buf = new ByteArrayOutputStream();
                     OutputStreamWriter wout =
-                        new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
+                        new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
                     String text = mText;
                     wout.write(text);
                     wout.flush();
@@ -223,7 +223,7 @@ class ChatWriter {
 
         // subject
         int subjLen = Math.min(40, subject.length());
-        mm.setSubject(subject.substring(0, subjLen), Mime.P_CHARSET_UTF8);
+        mm.setSubject(subject.substring(0, subjLen), MimeConstants.P_CHARSET_UTF8);
 
         // sender list
         Address[] addrArray  = new Address[addrs.size()];
@@ -236,7 +236,7 @@ class ChatWriter {
         // plain text part
         MimeBodyPart textPart = new MimeBodyPart();
         mmp.addBodyPart(textPart);
-        textPart.setText(plainText.toString(), Mime.P_CHARSET_UTF8);
+        textPart.setText(plainText.toString(), MimeConstants.P_CHARSET_UTF8);
 
         // html
         MimeBodyPart htmlPart = new MimeBodyPart();

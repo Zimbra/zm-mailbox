@@ -50,6 +50,7 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
@@ -991,11 +992,11 @@ public class ParsedMessage {
     }
 
     private static boolean isBouncedCalendar(MPartInfo mpi) {
-        if (Mime.CT_TEXT_CALENDAR.equals(mpi.getContentType())) {
+        if (MimeConstants.CT_TEXT_CALENDAR.equals(mpi.getContentType())) {
             MPartInfo parent = mpi;
             while ((parent = parent.getParent()) != null) {
                 String ct = parent.getContentType();
-                if (Mime.CT_MULTIPART_REPORT.equals(ct))  // Assume multipart/report == bounced message.
+                if (MimeConstants.CT_MULTIPART_REPORT.equals(ct))  // Assume multipart/report == bounced message.
                     return true;
             }
         }
@@ -1017,7 +1018,7 @@ public class ParsedMessage {
         MPartInfo parent = mpi;
         while ((parent = parent.getParent()) != null) {
             String ct = parent.getContentType();
-            if (Mime.CT_MESSAGE_RFC822.equals(ct))
+            if (MimeConstants.CT_MESSAGE_RFC822.equals(ct))
                 mCalendarPartInfo.wasForwarded = true;
         }
     }
@@ -1042,7 +1043,7 @@ public class ParsedMessage {
         try {
             String ctype = mpi.getContentType();
             // ignore multipart "container" parts
-            if (ctype.startsWith(Mime.CT_MULTIPART_PREFIX))
+            if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX))
                 return toRet;
             
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
@@ -1102,15 +1103,15 @@ public class ParsedMessage {
             }
 
             // make sure we've got the text/calendar handler installed
-            if (!ignoreCalendar && mCalendarPartInfo == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
+            if (!ignoreCalendar && mCalendarPartInfo == null && ctype.equals(MimeConstants.CT_TEXT_CALENDAR)) {
                 if (handler.isIndexingEnabled())
                     ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
 
                 InputStream is = null;
                 try {
-                    String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+                    String charset = mpi.getContentTypeParameter(MimeConstants.P_CHARSET);
                     if (charset == null || charset.trim().equals(""))
-                        charset = Mime.P_CHARSET_DEFAULT;
+                        charset = MimeConstants.P_CHARSET_DEFAULT;
 
                     is = mpi.getMimePart().getInputStream();
                     ZVCalendar cal = ZCalendarBuilder.build(is, charset);

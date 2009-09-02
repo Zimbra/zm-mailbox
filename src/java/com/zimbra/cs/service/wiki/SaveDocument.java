@@ -46,6 +46,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
@@ -238,7 +239,7 @@ public class SaveDocument extends WikiDocumentHandler {
                 name = "New Document";
             contentType = ct.getValue();
             if (contentType == null)
-                contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+                contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             overrideProperties(filename, ctype);
         }
 

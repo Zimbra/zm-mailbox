@@ -25,13 +25,13 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class AccountUtil {
@@ -54,7 +54,7 @@ public class AccountUtil {
         }
 
         try {
-            return new InternetAddress(address, personalPart, Mime.P_CHARSET_UTF8);
+            return new InternetAddress(address, personalPart, MimeConstants.P_CHARSET_UTF8);
         } catch (UnsupportedEncodingException e) { }
 
         // UTF-8 should *always* be supported (i.e. this is actually unreachable)

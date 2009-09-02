@@ -25,8 +25,8 @@ import gnu.inet.encoding.IDNAException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.AttributeManager.IDNType;
-import com.zimbra.cs.mime.Mime;
 
 public class IDNUtil {
     public static final String ACE_PREFIX = "xn--";
@@ -105,7 +105,7 @@ public class IDNUtil {
             String addr = ia.getAddress();
             String asciiAddr = toAscii(addr);
             try {
-                ia = new InternetAddress(asciiAddr, ia.getPersonal(), Mime.P_CHARSET_UTF8);
+                ia = new InternetAddress(asciiAddr, ia.getPersonal(), MimeConstants.P_CHARSET_UTF8);
                 
                 /*
                  * note, if personal part contains non-ascii chars, it will be 
@@ -179,7 +179,7 @@ public class IDNUtil {
             String addr = ia.getAddress();
             String unicodeAddr = toUnicode(addr);
             try {
-                ia = new InternetAddress(unicodeAddr, ia.getPersonal(), Mime.P_CHARSET_UTF8);
+                ia = new InternetAddress(unicodeAddr, ia.getPersonal(), MimeConstants.P_CHARSET_UTF8);
                 
                 /*
                  *  call InternetAddress.toUnicodeString instead of 

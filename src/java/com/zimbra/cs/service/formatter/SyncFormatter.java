@@ -43,6 +43,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.mime.MimeConstants;
 
 public class SyncFormatter extends Formatter {
     
@@ -123,7 +124,7 @@ public class SyncFormatter extends Formatter {
     }
 
     private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException {
-        context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+        context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
         if (context.itemId.hasSubpart()) {
             Pair<MimeMessage,Integer> calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
             if (calItemMsgData != null) {
@@ -159,7 +160,7 @@ public class SyncFormatter extends Formatter {
     }
 
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
-        context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+        context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
         InputStream is = msg.getContentStream();
         long size = msg.getSize();
 
@@ -181,7 +182,7 @@ public class SyncFormatter extends Formatter {
         if (mp != null) {
             String contentType = mp.getContentType();
             if (contentType == null)
-                contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+                contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             sendbackOriginalDoc(mp, contentType, context.req, context.resp);
             return;
         }

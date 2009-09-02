@@ -43,6 +43,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HtmlTextExtractor;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -123,7 +124,7 @@ public class BodyTest extends AbstractTest {
             String cType = mpi.getContentType();
             // Check only parts that are text/plain or text/html and are not attachments.
             if (!Part.ATTACHMENT.equals(mpi.getDisposition())) {
-                if (cType.equals(Mime.CT_TEXT_PLAIN)) {
+                if (cType.equals(MimeConstants.CT_TEXT_PLAIN)) {
                     InputStream in = null;
                     try {
                         in = mpi.getMimePart().getInputStream();
@@ -136,7 +137,7 @@ public class BodyTest extends AbstractTest {
                     } finally {
                         ByteUtil.closeStream(in);
                     }
-                } else if (cType.equals(Mime.CT_TEXT_HTML)) {
+                } else if (cType.equals(MimeConstants.CT_TEXT_HTML)) {
                     InputStream in = null;
 
                     try {

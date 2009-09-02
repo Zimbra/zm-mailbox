@@ -29,7 +29,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.util.JMSession;
 
 public class MessageBuilder {
@@ -121,7 +121,7 @@ public class MessageBuilder {
             mDate = new Date();
         }
         if (mContentType == null) {
-            mContentType = Mime.CT_TEXT_PLAIN;
+            mContentType = MimeConstants.CT_TEXT_PLAIN;
         }
         if (mBody == null) {
             mBody = MessageBuilder.DEFAULT_MESSAGE_BODY;

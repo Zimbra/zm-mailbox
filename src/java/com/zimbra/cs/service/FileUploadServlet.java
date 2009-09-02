@@ -19,6 +19,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeDetect;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
@@ -33,17 +34,14 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -112,7 +110,7 @@ public class FileUploadServlet extends ZimbraServlet {
             name      = FileUtil.trimFilename(filename);
             file      = attachment;
             if (file == null) {
-                contentType = Mime.CT_TEXT_PLAIN;
+                contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
                 // use content based detection.  we can't use magic based
                 // detection alone because it defaults to application/xml
@@ -139,7 +137,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 }
                 
                 // 4. try the browser-specified content type 
-                if (contentType == null || contentType.equals(Mime.CT_APPLICATION_OCTET_STREAM)) {
+                if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
                     contentType = file.getContentType();
                 }
                 
@@ -147,7 +145,7 @@ public class FileUploadServlet extends ZimbraServlet {
                 if (contentType == null)
                     contentType = file.getContentType();
                 if (contentType == null)
-                    contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+                    contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
         }
 

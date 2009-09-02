@@ -24,13 +24,13 @@ import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.mime.MimeConstants;
 
 public class IfbFormatter extends Formatter {
    
@@ -50,7 +50,7 @@ public class IfbFormatter extends Formatter {
 
     public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
         context.resp.setCharacterEncoding("UTF-8");
-        context.resp.setContentType(Mime.CT_TEXT_CALENDAR);
+        context.resp.setContentType(MimeConstants.CT_TEXT_CALENDAR);
 
         long rangeStart = Math.max(context.getStartTime(), getDefaultStartTime());
         long rangeEnd = Math.max(context.getEndTime(), getDefaultEndTime());

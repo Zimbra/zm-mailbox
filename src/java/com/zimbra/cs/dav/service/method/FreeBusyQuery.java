@@ -21,13 +21,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.resource.CalendarCollection;
 import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.mime.Mime;
 
 /*
  * draft-dusseault-caldav section 9.11
@@ -54,7 +54,7 @@ public class FreeBusyQuery extends Report {
 		try {
 			String freebusy = ((CalendarCollection)rs).getFreeBusyReport(ctxt, timeRange);
 			HttpServletResponse resp = ctxt.getResponse();
-            resp.setContentType(Mime.CT_TEXT_CALENDAR);
+            resp.setContentType(MimeConstants.CT_TEXT_CALENDAR);
 			resp.getOutputStream().write(freebusy.getBytes("UTF-8"));
 			ctxt.responseSent();
 		} catch (ServiceException se) {

@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.mime.MimeDetect;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServletException;
@@ -111,7 +112,7 @@ public class NativeFormatter extends Formatter {
             MimePart mp = getMimePart(msg, context.getPart());            
             handleMessagePart(context, mp, msg);
         } else {
-            context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+            context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
             long size = msg.getSize();
             if (size > 0)
                 context.resp.setContentLength((int)size);
@@ -131,7 +132,7 @@ public class NativeFormatter extends Formatter {
             }
             handleMessagePart(context, mp, calItem);
         } else {
-            context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+            context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
             InputStream is = calItem.getRawMessage();
             if (is != null)
                 ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
@@ -145,7 +146,7 @@ public class NativeFormatter extends Formatter {
             MimePart mp = Mime.getMimePart(con.getMimeMessage(false), context.getPart());
             handleMessagePart(context, mp, con);
         } else {
-            context.resp.setContentType(Mime.CT_TEXT_PLAIN);
+            context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
             InputStream is = new ByteArrayInputStream(con.getContent());
             ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
         }
@@ -159,10 +160,10 @@ public class NativeFormatter extends Formatter {
         } else {
             String contentType = mp.getContentType();
             if (contentType == null) {
-                contentType = Mime.CT_TEXT_PLAIN;
-            } else if (contentType.equals(Mime.CT_APPLICATION_OCTET_STREAM)) {
+                contentType = MimeConstants.CT_TEXT_PLAIN;
+            } else if (contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
                 if ((contentType = MimeDetect.getMimeDetect().detect(Mime.getFilename(mp), mp.getInputStream())) == null)
-                    contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+                    contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
             // CR or LF in Content-Type causes Chrome to barf, unfortunately
             contentType = contentType.replace('\r', ' ').replace('\n', ' ');
@@ -245,7 +246,7 @@ public class NativeFormatter extends Formatter {
         resp.setContentType(contentType);
 
         // defang when the html attachment was requested with disposition inline
-        if (contentType.startsWith(Mime.CT_TEXT_HTML) &&
+        if (contentType.startsWith(MimeConstants.CT_TEXT_HTML) &&
                 disp.equals(Part.INLINE)) {
             String charset = Mime.getCharset(contentType);
             String content;

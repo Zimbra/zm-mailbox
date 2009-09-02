@@ -64,9 +64,9 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 
 /**
  * draft-dusseault-caldav-15 section 4.2
@@ -259,7 +259,7 @@ public class CalendarCollection extends Collection {
 	/* creates an appointment sent in PUT request in this calendar. */
     @Override
 	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-    	if (!ctxt.getUpload().getContentType().startsWith(Mime.CT_TEXT_CALENDAR) ||
+    	if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR) ||
     		 ctxt.getUpload().getSize() <= 0)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		
@@ -294,7 +294,7 @@ public class CalendarCollection extends Collection {
             InputStream is = ctxt.getUpload().getInputStream();
 			List<Invite> invites;
 			try {
-				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, Mime.P_CHARSET_UTF8);
+				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
 				invites = Invite.createFromCalendar(account,
 						findSummary(vcalendar), 
 						vcalendar, 

@@ -34,6 +34,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailbox;
@@ -329,7 +330,7 @@ implements LmtpCallback {
     }
     
     private String getCharset(Account account, String data) {
-        String requestedCharset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        String requestedCharset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         return StringUtil.checkCharset(data, requestedCharset);
     }
 
@@ -534,7 +535,7 @@ implements LmtpCallback {
 
                     // Add original message
                     part = new MimeBodyPart();
-                    part.setContent(attached, Mime.CT_MESSAGE_RFC822);
+                    part.setContent(attached, MimeConstants.CT_MESSAGE_RFC822);
                     multi.addBodyPart(part);
 
                     out.setContent(multi);

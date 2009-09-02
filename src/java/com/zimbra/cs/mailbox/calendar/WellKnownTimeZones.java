@@ -28,11 +28,11 @@ import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.calendar.TZIDMapper.TZ;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.mime.Mime;
 
 public class WellKnownTimeZones {
 
@@ -70,7 +70,7 @@ public class WellKnownTimeZones {
         ZVCalendar tzs = null;
         try {
             fis = new FileInputStream(tzFile);
-            tzs = ZCalendar.ZCalendarBuilder.build(new FileInputStream(tzFile), Mime.P_CHARSET_UTF8);
+            tzs = ZCalendar.ZCalendarBuilder.build(new FileInputStream(tzFile), MimeConstants.P_CHARSET_UTF8);
         } finally {
             if (fis != null)
                 fis.close();

@@ -29,6 +29,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
 import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -161,7 +162,7 @@ public class ContentServlet extends ZimbraServlet {
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
 
-                        resp.setContentType(Mime.CT_TEXT_PLAIN);
+                        resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
                         InputStream is = msg.getContentStream();
                         ByteUtil.copy(is, true, resp.getOutputStream(), false);
                     } else if (item instanceof CalendarItem) {
@@ -170,7 +171,7 @@ public class ContentServlet extends ZimbraServlet {
                             resp.getOutputStream().write(hdr.toString().getBytes());
                         }
                         
-                        resp.setContentType(Mime.CT_TEXT_PLAIN);
+                        resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
                         if (iid.hasSubpart()) {
                             int invId = iid.getSubpartId();
                             MimeMessage mm = calItem.getSubpartMessage(invId);
@@ -208,9 +209,9 @@ public class ContentServlet extends ZimbraServlet {
                     if (mp != null) {
                         String contentType = mp.getContentType();
                         if (contentType == null) {
-                            contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+                            contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
                         }
-                        if (contentType.toLowerCase().startsWith(Mime.CT_TEXT_HTML) && (FORMAT_DEFANGED_HTML.equals(fmt) || FORMAT_DEFANGED_HTML_NOT_IMAGES.equals(fmt))) {
+                        if (contentType.toLowerCase().startsWith(MimeConstants.CT_TEXT_HTML) && (FORMAT_DEFANGED_HTML.equals(fmt) || FORMAT_DEFANGED_HTML_NOT_IMAGES.equals(fmt))) {
                             sendbackDefangedHtml(mp, contentType, resp, fmt);
                         } else {
                             if (!isTrue(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, mbox.getAccountId())) {

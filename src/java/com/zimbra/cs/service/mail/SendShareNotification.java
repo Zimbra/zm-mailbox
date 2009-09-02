@@ -38,6 +38,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
@@ -388,7 +389,7 @@ public class SendShareNotification extends MailDocumentHandler {
     throws ServiceException {
         
         Locale locale = authAccount.getLocale();
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         
         MimeMessage mm = null;
         try {
@@ -442,7 +443,7 @@ public class SendShareNotification extends MailDocumentHandler {
     throws ServiceException {
         
         Locale locale = authAccount.getLocale();
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, Mime.P_CHARSET_UTF8);
+        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         
         try {
             SMTPMessage notif = new SMTPMessage(JMSession.getSession());

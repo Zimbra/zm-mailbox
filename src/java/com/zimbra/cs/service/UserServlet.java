@@ -18,6 +18,7 @@ package com.zimbra.cs.service;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
@@ -47,7 +48,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.AtomFormatter;
 import com.zimbra.cs.service.formatter.ContactFolderFormatter;
 import com.zimbra.cs.service.formatter.CsvFormatter;
@@ -1142,7 +1142,7 @@ public class UserServlet extends ZimbraServlet {
         
         public InputStream getRequestInputStream(long limit) 
             throws IOException, ServiceException, UserServletException {
-            String contentType = Mime.CT_APPLICATION_OCTET_STREAM;
+            String contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             String filename = null;
             InputStream is = null;
             final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;

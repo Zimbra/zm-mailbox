@@ -27,6 +27,7 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 
 /**
  * Walks a JavaMail MIME tree and calls the abstract methods for each node. 
@@ -188,8 +189,8 @@ public abstract class MimeVisitor {
             modified |= visitMessage((MimeMessage) mp, VisitPhase.VISIT_BEGIN);
 
         String ctype = Mime.getContentType(mp);
-        boolean isMultipart = ctype.startsWith(Mime.CT_MULTIPART_PREFIX);
-        boolean isMessage = !isMultipart && ctype.equals(Mime.CT_MESSAGE_RFC822);
+        boolean isMultipart = ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX);
+        boolean isMessage = !isMultipart && ctype.equals(MimeConstants.CT_MESSAGE_RFC822);
 
         if (isMultipart) {
             Object content = null;

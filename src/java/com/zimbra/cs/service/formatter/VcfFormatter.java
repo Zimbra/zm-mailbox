@@ -24,12 +24,12 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.mime.MimeConstants;
 
 public class VcfFormatter extends Formatter {
 
@@ -38,7 +38,7 @@ public class VcfFormatter extends Formatter {
     }
 
     public String[] getDefaultMimeTypes() {
-        return new String[] { Mime.CT_TEXT_VCARD, "application/vcard" };
+        return new String[] { MimeConstants.CT_TEXT_VCARD, "application/vcard" };
     }
 
     public String getDefaultSearchTypes() {
@@ -57,8 +57,8 @@ public class VcfFormatter extends Formatter {
             String filename = context.target instanceof Contact ? ((Contact) context.target).getFileAsString() : "contacts";
             String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
             context.resp.addHeader("Content-Disposition", cd);
-            context.resp.setContentType(Mime.CT_TEXT_VCARD);
-            context.resp.setCharacterEncoding(Mime.P_CHARSET_UTF8);
+            context.resp.setContentType(MimeConstants.CT_TEXT_VCARD);
+            context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
 
             int count = 0;
             while (iterator.hasNext()) {
@@ -66,7 +66,7 @@ public class VcfFormatter extends Formatter {
                 if (!(item instanceof Contact))
                     continue;
                 VCard vcf = VCard.formatContact((Contact) item);
-                context.resp.getOutputStream().write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
+                context.resp.getOutputStream().write(vcf.formatted.getBytes(MimeConstants.P_CHARSET_UTF8));
                 count++;
             }
 //            if (count == 0)
@@ -83,7 +83,7 @@ public class VcfFormatter extends Formatter {
 
     public void saveCallback(Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException, UserServletException {
         byte[] body = context.getPostBody();
-        List<VCard> cards = VCard.parseVCard(new String(body, Mime.P_CHARSET_UTF8));
+        List<VCard> cards = VCard.parseVCard(new String(body, MimeConstants.P_CHARSET_UTF8));
         
         if (cards == null || cards.size() == 0 || (cards.size() == 1 && cards.get(0).fields.isEmpty()))
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "no contact fields found in vcard");
