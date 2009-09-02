@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090901-1134 */
+    /* build: 6.0.0 pshao 20090902-1033 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by

@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090901-1134 */
+    /* build: 6.0.0 pshao 20090902-1033 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6451,78 +6451,6 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether sharing is enabled for calendar folders
-     *
-     * @return zimbraFeatureSharingCalendarEnabled, or true if unset
-     *
-     * @since ZCS 6.0.1
-     */
-    @ZAttr(id=1050)
-    public boolean isFeatureSharingCalendarEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureSharingCalendarEnabled, true);
-    }
-
-    /**
-     * whether sharing is enabled for calendar folders
-     *
-     * @param zimbraFeatureSharingCalendarEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.1
-     */
-    @ZAttr(id=1050)
-    public void setFeatureSharingCalendarEnabled(boolean zimbraFeatureSharingCalendarEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSharingCalendarEnabled, zimbraFeatureSharingCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether sharing is enabled for calendar folders
-     *
-     * @param zimbraFeatureSharingCalendarEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.1
-     */
-    @ZAttr(id=1050)
-    public Map<String,Object> setFeatureSharingCalendarEnabled(boolean zimbraFeatureSharingCalendarEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSharingCalendarEnabled, zimbraFeatureSharingCalendarEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether sharing is enabled for calendar folders
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.1
-     */
-    @ZAttr(id=1050)
-    public void unsetFeatureSharingCalendarEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSharingCalendarEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether sharing is enabled for calendar folders
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.1
-     */
-    @ZAttr(id=1050)
-    public Map<String,Object> unsetFeatureSharingCalendarEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureSharingCalendarEnabled, "");
-        return attrs;
-    }
-
-    /**
      * enabled sharing
      *
      * @return zimbraFeatureSharingEnabled, or true if unset
@@ -6968,7 +6896,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 5.0.19
      */
-    @ZAttr(id=1051)
+    @ZAttr(id=1050)
     public boolean isFeatureVoiceChangePinEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, true);
     }
@@ -6981,7 +6909,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 5.0.19
      */
-    @ZAttr(id=1051)
+    @ZAttr(id=1050)
     public void setFeatureVoiceChangePinEnabled(boolean zimbraFeatureVoiceChangePinEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, zimbraFeatureVoiceChangePinEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -6997,7 +6925,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 5.0.19
      */
-    @ZAttr(id=1051)
+    @ZAttr(id=1050)
     public Map<String,Object> setFeatureVoiceChangePinEnabled(boolean zimbraFeatureVoiceChangePinEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, zimbraFeatureVoiceChangePinEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -7011,7 +6939,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 5.0.19
      */
-    @ZAttr(id=1051)
+    @ZAttr(id=1050)
     public void unsetFeatureVoiceChangePinEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, "");
@@ -7026,7 +6954,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 5.0.19
      */
-    @ZAttr(id=1051)
+    @ZAttr(id=1050)
     public Map<String,Object> unsetFeatureVoiceChangePinEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureVoiceChangePinEnabled, "");

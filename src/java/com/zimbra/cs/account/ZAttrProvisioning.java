@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090901-1134 */
+    /* build: 6.0.0 pshao 20090902-1033 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2779,14 +2779,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSavedSearchesEnabled = "zimbraFeatureSavedSearchesEnabled";
 
     /**
-     * whether sharing is enabled for calendar folders
-     *
-     * @since ZCS 6.0.1
-     */
-    @ZAttr(id=1050)
-    public static final String A_zimbraFeatureSharingCalendarEnabled = "zimbraFeatureSharingCalendarEnabled";
-
-    /**
      * enabled sharing
      */
     @ZAttr(id=335)
@@ -2834,7 +2826,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 5.0.19
      */
-    @ZAttr(id=1051)
+    @ZAttr(id=1050)
     public static final String A_zimbraFeatureVoiceChangePinEnabled = "zimbraFeatureVoiceChangePinEnabled";
 
     /**
