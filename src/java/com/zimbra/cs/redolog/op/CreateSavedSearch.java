@@ -35,13 +35,15 @@ public class CreateSavedSearch extends RedoableOp {
     private String mTypes;
     private String mSort;
     private int mFolderId;
+    private int mFlags;
     private long mColor;
 
     public CreateSavedSearch() {
         mSearchId = UNKNOWN_ID;
     }
 
-    public CreateSavedSearch(long mailboxId, int folderId, String name, String query, String types, String sort, MailItem.Color color) {
+    public CreateSavedSearch(long mailboxId, int folderId, String name,
+        String query, String types, String sort, int flags, MailItem.Color color) {
         setMailboxId(mailboxId);
         mSearchId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -49,6 +51,7 @@ public class CreateSavedSearch extends RedoableOp {
         mTypes = types != null ? query : "";
         mSort = sort != null ? query : "";
         mFolderId = folderId;
+        mFlags = flags;
         mColor = color.getRgb();
     }
 
@@ -68,6 +71,7 @@ public class CreateSavedSearch extends RedoableOp {
         StringBuilder sb = new StringBuilder("id=").append(mSearchId);
         sb.append(", name=").append(mName).append(", query=").append(mQuery);
         sb.append(", types=").append(mTypes).append(", sort=").append(mSort);
+        sb.append(", flags=").append(mFlags);
         sb.append(", color=").append(mColor);
         return sb.toString();
     }
@@ -79,6 +83,7 @@ public class CreateSavedSearch extends RedoableOp {
         out.writeUTF(mTypes);
         out.writeUTF(mSort);
         out.writeInt(mFolderId);
+        out.writeInt(mFlags);
         // mColor from byte to long in Version 1.27
         out.writeLong(mColor);
     }
@@ -90,6 +95,7 @@ public class CreateSavedSearch extends RedoableOp {
         mTypes = in.readUTF();
         mSort = in.readUTF();
         mFolderId = in.readInt();
+        mFlags = getVersion().atLeast(1, 28) ? in.readInt() : 0;
         if (getVersion().atLeast(1, 27))
             mColor = in.readLong();
         else
@@ -101,7 +107,8 @@ public class CreateSavedSearch extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createSearchFolder(getOperationContext(), mFolderId, mName, mQuery, mTypes, mSort, new MailItem.Color(mColor));
+            mailbox.createSearchFolder(getOperationContext(), mFolderId, mName,
+                mQuery, mTypes, mSort, mFlags, new MailItem.Color(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

@@ -1244,7 +1244,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     fldr = createParent(context, fmap, path, Folder.TYPE_UNKNOWN);
                     newItem = mbox.createSearchFolder(oc, fldr.getId(),
                         sf.getName(), sf.getQuery(), sf.getReturnTypes(),
-                        sf.getSortField(), sf.getColor());
+                        sf.getSortField(), sf.getFlagBitmask(), sf.getColor());
                 }
                 break;
             case MailItem.TYPE_TAG:

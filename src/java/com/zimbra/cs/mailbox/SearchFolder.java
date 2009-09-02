@@ -108,7 +108,7 @@ public class SearchFolder extends Folder {
      * @see #validateItemName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, Color color, CustomMetadata custom)
+    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, int flags, Color color, CustomMetadata custom)
     throws ServiceException {
         if (parent == null || !parent.canContain(TYPE_SEARCHFOLDER))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -130,6 +130,7 @@ public class SearchFolder extends Folder {
         data.folderId    = parent.getId();
         data.parentId    = parent.getId();
         data.date        = mbox.getOperationTimestamp();
+        data.flags       = flags;
         data.name        = name;
         data.subject     = name;
         data.metadata    = encodeMetadata(color, 1, custom, query, types, sort);

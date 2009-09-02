@@ -5938,14 +5938,14 @@ public class Mailbox {
         }
     }
 
-    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, byte color)
+    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, int flags, byte color)
     throws ServiceException {
-        return createSearchFolder(octxt, folderId, name, query, types, sort, new MailItem.Color(color));
+        return createSearchFolder(octxt, folderId, name, query, types, sort, flags, new MailItem.Color(color));
     }
     
-    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, MailItem.Color color)
+    public synchronized SearchFolder createSearchFolder(OperationContext octxt, int folderId, String name, String query, String types, String sort, int flags, MailItem.Color color)
     throws ServiceException {
-        CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, color);
+        CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, flags, color);
 
         boolean success = false;
         try {
@@ -5953,7 +5953,7 @@ public class Mailbox {
             CreateSavedSearch redoPlayer = (CreateSavedSearch) mCurrentChange.getRedoPlayer();
 
             int searchId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getSearchId());
-            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort, color, null);
+            SearchFolder search = SearchFolder.create(searchId, getFolderById(folderId), name, query, types, sort, flags, color, null);
             redoRecorder.setSearchId(search.getId());
             success = true;
             return search;

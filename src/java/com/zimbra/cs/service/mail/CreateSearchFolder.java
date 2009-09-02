@@ -23,6 +23,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -41,8 +42,8 @@ public class CreateSearchFolder extends MailDocumentHandler  {
     protected boolean checkMountpointProxy(Element request)  { return true; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
@@ -52,14 +53,16 @@ public class CreateSearchFolder extends MailDocumentHandler  {
         String query     = t.getAttribute(MailConstants.A_QUERY);
         String types     = t.getAttribute(MailConstants.A_SEARCH_TYPES, null);
         String sort      = t.getAttribute(MailConstants.A_SORTBY, null);
+        String flags     = t.getAttribute(MailConstants.A_FLAGS, null);
         byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
         ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
 
-        SearchFolder search = mbox.createSearchFolder(octxt, iidParent.getId(), name, query, types, sort, color);
+        SearchFolder search = mbox.createSearchFolder(octxt, iidParent.getId(),
+            name, query, types, sort, Flag.flagsToBitmask(flags), color);
 
         Element response = zsc.createElement(MailConstants.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)
-        	ToXML.encodeSearchFolder(response, ifmt, search);
+            ToXML.encodeSearchFolder(response, ifmt, search);
         return response;
-	}
+    }
 }

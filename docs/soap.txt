@@ -1977,7 +1977,7 @@ u attribute is present iff count > 0
 ---------
 
 <CreateSearchFolderRequest>
-  <search name="..." query="..." [types="..."] [sortBy="..."] l="{folder}" [color="{color}"]/>
+  <search name="..." query="..." [types="..."] [sortBy="..."] l="{folder}" [f="{flags}"] [color="{color}"]/>
 </CreateSearchFolderRequest>
 
 <CreateSearchFolderResponse>
