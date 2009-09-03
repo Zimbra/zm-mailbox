@@ -36,6 +36,7 @@ import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.ACL.Grant;
 
 /*
@@ -60,7 +61,11 @@ public class Acl extends ResourceProperty {
 		ACL acl = folder.getEffectiveACL();
 		props.add(getSupportedPrivilegeSet());
 		if (folder != null) {
-			props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
+		    // calendar feeds are read-only.
+		    if (folder.getDefaultView() != MailItem.TYPE_APPOINTMENT || folder.getUrl() == null || folder.getUrl().equals(""))
+		        props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
+		    else
+                props.add(getCurrentUserPrivilegeSet(ACL.RIGHT_READ));
 			props.add(getPrincipalCollectionSet());
 		}
 		props.add(getAcl(acl, owner));
