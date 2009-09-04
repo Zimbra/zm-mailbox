@@ -544,7 +544,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         aos.putNextEntry(aoe);
                     }
                 } else {
-                    // Read headers into memory, since we need to write the size first.
+                    // Read headers into memory to compute size
                     byte headerData[] = HeadersOnlyInputStream.getHeaders(is);
                     
                     aoe.setSize(headerData.length);
@@ -645,7 +645,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 String filename = context.params.get(UserServlet.UPLOAD_NAME);
                 
                 throw FormatterServiceException.INVALID_FORMAT(filename == null ?
-                    "unkown" : filename);
+                    "unknown" : filename);
             }
             if (subfolder != null && !subfolder.equals(""))
                 fldr = createPath(context, fmap, fldr.getPath() + subfolder,
@@ -723,7 +723,12 @@ public abstract class ArchiveFormatter extends Formatter {
                         if (id != null)
                             addItem(context, fldr, fmap, digestMap, idMap,
                                 ids, searchTypes, r, id, ais, null, errs);
-                        id = new ItemData(readArchiveEntry(ais, aie));
+                        try {
+                            id = new ItemData(readArchiveEntry(ais, aie));
+                        } catch (Exception e) {
+                            addError(errs, FormatterServiceException.INVALID_FORMAT(
+                                aie.getName()));
+                        }
                         continue;
                     }
                     if (aie.getName().endsWith(".err")) {
@@ -738,8 +743,8 @@ public abstract class ArchiveFormatter extends Formatter {
                                 timestamp == null || !timestamp.equals("0"),
                                 ais, aie, errs);
                     } else if ((aie.getType() != 0 && id.ud.type != aie.getType()) ||
-                        (id.ud.getBlobDigest() != null && id.ud.size !=
-                        aie.getSize())) {
+                        (id.ud.getBlobDigest() != null && aie.getSize() != -1 &&
+                        id.ud.size != aie.getSize())) {
                         addError(errs, FormatterServiceException.MISMATCHED_META(
                             aie.getName()));
                     } else {
@@ -774,7 +779,8 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private void addError(List<ServiceException> errs, ServiceException ex) {
-        StringBuilder s = new StringBuilder(ex.getLocalizedMessage());
+        StringBuilder s = new StringBuilder(ex.getLocalizedMessage() == null ?
+            ex.toString() : ex.getLocalizedMessage());
         
         errs.add(ex);
         if (ex.getArgs() != null) {
@@ -814,7 +820,8 @@ public abstract class ArchiveFormatter extends Formatter {
             !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
             (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
             fldr.getDefaultView() == Folder.TYPE_WIKI)))
-            throw FormatterServiceException.INVALID_TYPE(Folder.getNameForType(view), path);
+            throw FormatterServiceException.INVALID_TYPE(Folder.getNameForType(
+                view), path);
         return fldr;
     }
 
@@ -826,11 +833,15 @@ public abstract class ArchiveFormatter extends Formatter {
         int dsz = (int)aie.getSize();
         byte[] data;
         
-        if (dsz == 0)
+        if (dsz == 0) {
             return null;
-        data = new byte[dsz];
-        if (ais.read(data, 0, dsz) != dsz)
-            throw new IOException("archive read err");
+        } else if (dsz == -1) {
+            data = ByteUtil.getContent(ais.getInputStream(), -1, false);
+        } else {
+            data = new byte[dsz];
+            if (ais.read(data, 0, dsz) != dsz)
+                throw new IOException("archive read err");
+        }
         return data;
     }
 
@@ -935,9 +946,8 @@ public abstract class ArchiveFormatter extends Formatter {
                 break;
             case MailItem.TYPE_CHAT:
                 Chat chat = (Chat)mi;
+                byte[] content = readArchiveEntry(ais, aie);
                 
-                byte[] content = ByteUtil.getContent(ais.getInputStream(),
-                    (int)aie.getSize(), false);
                 pm = new ParsedMessage(content, mi.getDate(),
                     mbox.attachmentsIndexingEnabled());
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
@@ -1215,8 +1225,8 @@ public abstract class ArchiveFormatter extends Formatter {
                     break;
                 }
                 if (oldItem == null) {
-                    newItem = mbox.createNote(oc, new String(readArchiveEntry(ais,
-                        aie), UTF8), note.getBounds(), note.getColor(),
+                    newItem = mbox.createNote(oc, new String(readArchiveEntry(
+                        ais, aie), UTF8), note.getBounds(), note.getColor(),
                         fldr.getId());
                 }
                 break;
@@ -1355,7 +1365,8 @@ public abstract class ArchiveFormatter extends Formatter {
                     !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
                     (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
                     fldr.getDefaultView() == Folder.TYPE_WIKI)))
-	                throw FormatterServiceException.INVALID_TYPE(Folder.getNameForType(view), fldr.getPath());
+	                throw FormatterServiceException.INVALID_TYPE(
+	                    Folder.getNameForType(view), fldr.getPath());
             } else {
                 String s = fldr.getPath();
                 
@@ -1370,8 +1381,8 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_TASK:
                 boolean continueOnError = context.ignoreAndContinueOnError();
                 boolean preserveExistingAlarms = context.preserveAlarms();
-
                 InputStream is = ais.getInputStream();
+                
                 try {
                     if (aie.getSize() <=
                         LC.calendar_ics_import_full_parse_max_size.intValue()) {
@@ -1429,8 +1440,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         throw MailServiceException.NO_SUCH_ITEM(oldItem.getId());
                     } else if (r != Resolve.Skip) {
                         newItem = mbox.addDocumentRevision(oc, oldItem.getId(),
-                            ais.getInputStream(), creator,
-                            oldItem.getName());
+                            ais.getInputStream(), creator, oldItem.getName());
                     }
                 } catch (NoSuchItemException e) {
                     if (type == MailItem.TYPE_WIKI) {
@@ -1443,8 +1453,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (newItem != null) {
                     if (timestamp)
-                        mbox.setDate(oc, newItem.getId(), type,
-                            aie.getModTime());
+                        mbox.setDate(oc, newItem.getId(), type, aie.getModTime());
                     if (type == MailItem.TYPE_WIKI)
                         WikiFormatter.expireCacheItem(fldr);
                 }

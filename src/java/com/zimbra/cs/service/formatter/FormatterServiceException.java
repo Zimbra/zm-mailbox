@@ -80,7 +80,8 @@ public class FormatterServiceException extends ServiceException {
     public static FormatterServiceException UNKNOWN_ERROR(Throwable cause) {
         if (cause instanceof ServiceException)
             return WRAPPED_EXCEPTION((ServiceException) cause);
-        return new FormatterServiceException(cause.getMessage(), UNKNOWN_ERROR,
+        return new FormatterServiceException(cause.getMessage() == null ?
+            cause.toString() : cause.getMessage(), UNKNOWN_ERROR,
             true, cause);
     }
 
@@ -88,7 +89,8 @@ public class FormatterServiceException extends ServiceException {
         Throwable cause) {
         if (cause instanceof ServiceException)
             return WRAPPED_EXCEPTION((ServiceException) cause);
-        return new FormatterServiceException(cause.getMessage(), UNKNOWN_ERROR,
+        return new FormatterServiceException(cause.getMessage() == null ?
+            cause.toString() : cause.getMessage(), UNKNOWN_ERROR,
             true, cause, arg(ITEM_PATH, path));
     }
 
@@ -102,6 +104,5 @@ public class FormatterServiceException extends ServiceException {
     private static Argument arg(String name, String value) {
         return new Argument(name, value, Argument.Type.STR);
     }
-
 }
 
