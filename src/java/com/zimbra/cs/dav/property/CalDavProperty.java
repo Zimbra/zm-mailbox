@@ -192,18 +192,10 @@ public class CalDavProperty extends ResourceProperty {
 				
 			}
 			if (homeSets == null || homeSets.length == 0) {
-				// iCal doesn't recognize properly encoded calendar-home-set
-				// see bug 37508
-				//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/"));
-				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-				e.setText(DavServlet.DAV_PATH + "/" + user + "/");
-				mChildren.add(e);
+			    mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/"));
 			} else {
 				for (String calHome : homeSets) {
-					//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/"));
-					Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-					e.setText(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/");
-					mChildren.add(e);
+				    mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/"));
 				}
 			}
 		}
@@ -225,12 +217,7 @@ public class CalDavProperty extends ResourceProperty {
 			String url = DavServlet.DAV_PATH + "/" + authUser + "/Inbox/";
 			if (!authUser.equals(mUser))
 				url += mUser + "/";
-			// iCal doesn't recognize properly encoded calendar-home-set
-			// see bug 37508
-			//inboxUrl.add(createHref(url));
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(url);
-			inboxUrl.add(e);
+			inboxUrl.add(createHref(url));
 			return inboxUrl;
 		}
 	}
@@ -252,12 +239,7 @@ public class CalDavProperty extends ResourceProperty {
 			String url = DavServlet.DAV_PATH + "/" + authUser + "/Sent/";
 			//if (!authUser.equals(mUser))
 				//url += mUser + "/";
-			// iCal doesn't recognize properly encoded calendar-home-set
-			// see bug 37508
-			//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Sent/"));
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(url);
-			outboxUrl.add(e);
+			outboxUrl.add(createHref(url));
 			return outboxUrl;
 		}
 	}
