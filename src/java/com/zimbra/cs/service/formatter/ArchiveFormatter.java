@@ -718,7 +718,9 @@ public abstract class ArchiveFormatter extends Formatter {
                         updateClient(context, true);
                         last = System.currentTimeMillis();
                     }
-                    if (aie.getName().endsWith(".meta")) {
+                    if (aie.getName().startsWith("__MACOSX/")) {
+                        continue;
+                    } else if (aie.getName().endsWith(".meta")) {
                         meta = true;
                         if (id != null)
                             addItem(context, fldr, fmap, digestMap, idMap,
@@ -730,8 +732,7 @@ public abstract class ArchiveFormatter extends Formatter {
                                 aie.getName()));
                         }
                         continue;
-                    }
-                    if (aie.getName().endsWith(".err")) {
+                    } else if (aie.getName().endsWith(".err")) {
                         addError(errs, FormatterServiceException.MISMATCHED_SIZE(
                             aie.getName()));
                     } else if (id == null) {
