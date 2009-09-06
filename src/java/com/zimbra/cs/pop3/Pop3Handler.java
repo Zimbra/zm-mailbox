@@ -31,7 +31,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
-import com.zimbra.cs.security.sasl.AuthenticatorUtil;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
@@ -104,7 +103,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     
     protected void setOrigRemoteIpAddr(String ip) { mOrigRemoteAddress = ip; }
     
-    protected boolean authenticate() {
+    @Override protected boolean authenticate() {
         // we auth with the USER/PASS commands
         return true;
     }
@@ -319,10 +318,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         throw new Pop3CmdException("unknown command");        
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.tcpserver.ProtocolHandler#notifyIdleConnection()
-     */
-    protected void notifyIdleConnection() {
+    @Override protected void notifyIdleConnection() {
         // according to RFC 1939 we aren't supposed to snd a response on idle timeout
         ZimbraLog.pop.debug("idle connection");
 
@@ -566,17 +562,19 @@ public abstract class Pop3Handler extends ProtocolHandler {
         return GSS_ENABLED || mConfig.isSaslGssapiEnabled();
     }
     
-    protected void authenticate(String username, String authenticateId, String password, String mechanism)
+    protected void authenticate(String username, String authenticateId, String password, Authenticator auth)
     throws Pop3CmdException {
-        String type = mechanism != null ? "authentication" : "login";
+        String type = auth != null ? "authentication" : "login";
         try {
-            Account acct;
-            if (MECHANISM_GSSAPI.equals(mechanism))
-                acct = AuthenticatorUtil.authenticateKrb5(username, authenticateId);
-            else if (MECHANISM_ZIMBRA.equals(mechanism))
-                acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
-            else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), null);
+            // LOGIN is just another form of AUTH PLAIN with authcid == authzid
+            if (auth == null) {
+                auth = new PlainAuthenticator(new Pop3AuthenticatorUser(this));
+                authenticateId = username;
+            }
+            // for some authenticators, actually do the authentication here
+            // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check 
+            Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), null);
+            // auth failure was represented by Authenticator.authenticate() returning null
             if (acct == null)
                 throw new Pop3CmdException(type + " failed");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
@@ -746,10 +744,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         if (!mConfig.isSSLEnabled()) {
             sendLine("STLS", false);
         }
-        String sasl = getSaslCapabilities();
-        if (sasl != null) {
-            sendLine("SASL" + sasl, false);
-        }
+        sendLine("SASL" + getSaslCapabilities(), false);
         if (mState != STATE_TRANSACTION) {
             sendLine("EXPIRE "+MIN_EXPIRE_DAYS+" USER", false);
         } else {

@@ -20,6 +20,15 @@ import java.io.OutputStream;
 
 import javax.security.sasl.SaslServer;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.service.AuthProvider;
+
 public class ZimbraAuthenticator extends Authenticator {
     public static final String MECHANISM = "X-ZIMBRA";
 
@@ -52,5 +61,42 @@ public class ZimbraAuthenticator extends Authenticator {
         String authenticateId = message.substring(nul1 + 1, nul2);
         String authtoken = message.substring(nul2 + 1);
         authenticate(authorizeId, authenticateId, authtoken);
+    }
+
+    @Override public Account authenticate(String username, String authenticateId, String authtoken,
+                                          AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
+    throws ServiceException {
+        if (authenticateId == null || authenticateId.equals(""))
+            return null;
+
+        // validate the auth token
+        Provisioning prov = Provisioning.getInstance();
+        AuthToken at;
+        try {
+            at = ZimbraAuthToken.getAuthToken(authtoken);
+        } catch (AuthTokenException e) {
+            return null;
+        }
+
+        try {
+            AuthProvider.validateAuthToken(prov, at, false);
+        } catch (ServiceException e) {
+            return null;
+        }
+
+        // make sure that the authentication account is valid
+        Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId, at);
+        if (authAccount == null)
+            return null;
+
+        // make sure the auth token belongs to authenticatedId
+        if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))
+            return null;
+
+        // if necessary, check that the authenticated user can authorize as the target user
+        Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));
+        if (targetAcct != null)
+            prov.accountAuthed(authAccount);
+        return targetAcct;
     }
 }

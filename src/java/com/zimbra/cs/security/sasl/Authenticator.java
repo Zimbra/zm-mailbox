@@ -15,7 +15,13 @@
 
 package com.zimbra.cs.security.sasl;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext;
 
 import java.net.Socket;
 import javax.security.sasl.SaslServer;
@@ -40,6 +46,9 @@ public abstract class Authenticator {
     public abstract boolean initialize() throws IOException;
 
     public abstract void handle(byte[] data) throws IOException;
+
+    public abstract Account authenticate(String username, String authenticateId, String password,
+            AuthContext.Protocol protocol, String origRemoteIp, String userAgent) throws ServiceException;
 
     public abstract boolean isEncryptionEnabled();
 
@@ -102,9 +111,39 @@ public abstract class Authenticator {
     }
 
     protected boolean authenticate(String authorizationId, String authenticationId, String password)
-        throws IOException {
+    throws IOException {
         mAuthenticated = mAuthUser.authenticate(authorizationId, authenticationId, password, this);
         mComplete = true;
         return mAuthenticated;
+    }
+
+    protected Account authorize(Account authAccount, String username, boolean asAdmin) throws ServiceException {
+        if (username == null || username.length() == 0)
+            return authAccount;
+
+        Provisioning prov = Provisioning.getInstance();
+        Account userAcct = prov.get(Provisioning.AccountBy.name, username);
+        if (userAcct == null) {
+            // if username not found, check username again using the domain associated with the authorization account
+            int i = username.indexOf('@');
+            if (i != -1) {
+                String domain = authAccount.getDomainName();
+                if (domain != null) {
+                    username = username.substring(0, i) + '@' + domain;
+                    userAcct = prov.get(Provisioning.AccountBy.name, username);
+                }
+            }
+        }
+        if (userAcct == null) {
+            ZimbraLog.account.info("authorization failed for " + username + " (account not found)", username);
+            return null;
+        }
+
+        // check whether the authenticated user is able to access the target
+        if (!authAccount.getId().equals(userAcct.getId()) && !AccessManager.getInstance().canAccessAccount(authAccount, userAcct, asAdmin)) {
+            ZimbraLog.account.warn("authorization failed for " + username + " (authenticated user " + authAccount.getName() + " has insufficient rights)");
+            return null;
+        }
+        return userAcct;
     }
 }

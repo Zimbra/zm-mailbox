@@ -15,8 +15,12 @@
 
 package com.zimbra.cs.security.sasl;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.security.kerberos.Krb5Keytab;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 import javax.security.sasl.SaslServer;
@@ -37,8 +41,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
-import java.net.Socket;
-import java.net.InetAddress;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -65,8 +67,7 @@ public class GssAuthenticator extends Authenticator {
         new HashMap<String, String>();
 
     static {
-        ENCRYPTION_PROPS.put(Sasl.QOP,
-            QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
+        ENCRYPTION_PROPS.put(Sasl.QOP, QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
         ENCRYPTION_PROPS.put(Sasl.MAX_BUFFER, String.valueOf(MAX_RECEIVE_SIZE));
         ENCRYPTION_PROPS.put(Sasl.RAW_SEND_SIZE, String.valueOf(MAX_SEND_SIZE));
         if (DEBUG) {
@@ -79,8 +80,7 @@ public class GssAuthenticator extends Authenticator {
         super(MECHANISM, user);
     }
 
-    @Override
-    public boolean initialize() throws IOException {
+    @Override public boolean initialize() throws IOException {
         Krb5Keytab keytab = getKeytab(LC.krb5_keytab.value());
         if (keytab == null) {
             sendFailed("mechanism not supported");
@@ -90,13 +90,13 @@ public class GssAuthenticator extends Authenticator {
 
         final String host;
         if (LC.krb5_service_principal_from_interface_address.booleanValue()) {
-            String localSocketHostname = "";
-            localSocketHostname = mConnection.getLocalAddress().getCanonicalHostName().toLowerCase();
+            String localSocketHostname = mConnection.getLocalAddress().getCanonicalHostName().toLowerCase();
             if (localSocketHostname.length() == 0 || Character.isDigit(localSocketHostname.charAt(0)))
                 localSocketHostname = LC.zimbra_server_hostname.value();
             host = localSocketHostname;
-        } else
+        } else {
             host = LC.zimbra_server_hostname.value();
+        }
 
         KerberosPrincipal kp = new KerberosPrincipal(getProtocol() + '/' + host);
         debug("kerberos principle = %s", kp);
@@ -115,7 +115,7 @@ public class GssAuthenticator extends Authenticator {
 
         try {
             mSaslServer = (SaslServer) Subject.doAs(subject,
-                new PrivilegedExceptionAction() {
+                new PrivilegedExceptionAction<Object>() {
                     public Object run() throws SaslException {
                         return Sasl.createSaslServer(
                             getMechanism(), getProtocol(), host, props,
@@ -141,11 +141,10 @@ public class GssAuthenticator extends Authenticator {
     }
 
     private Subject getSubject(Krb5Keytab keytab, KerberosPrincipal kp)
-            throws IOException {
+    throws IOException {
         List<KerberosKey> keys = keytab.getKeys(kp);
         if (keys == null) {
-            getLog().warn(
-                "Key not found in keystore for service principal '" + kp + "'");
+            getLog().warn("Key not found in keystore for service principal '" + kp + "'");
             return null;
         }
         Subject subject = new Subject();
@@ -154,8 +153,7 @@ public class GssAuthenticator extends Authenticator {
         return subject;
     }
 
-    @Override
-    public void handle(final byte[] data) throws IOException {
+    @Override public void handle(final byte[] data) throws IOException {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
@@ -195,33 +193,44 @@ public class GssAuthenticator extends Authenticator {
         }
     }
 
+    @Override public Account authenticate(String username, String principal, String unused,
+                                          AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account authAccount = prov.get(Provisioning.AccountBy.krb5Principal, principal);
+        if (authAccount == null) {
+            ZimbraLog.account.warn("authentication failed (no account associated with Kerberos principal " + principal + ')');
+            return null;
+        }
+
+        Account targetAcct = authorize(authAccount, username, true);
+        if (targetAcct != null)
+            prov.accountAuthed(authAccount);
+        return targetAcct;
+    }
+
     private Map<String, String> getSaslProperties() {
         // Don't offer encryption if SSL is enabled
         return mAuthUser.isSSLEnabled() ? null : ENCRYPTION_PROPS;
     }
 
-    @Override
-    public boolean isEncryptionEnabled() {
+    @Override public boolean isEncryptionEnabled() {
         return mEncryptionEnabled;
     }
 
-    @Override
-    public InputStream unwrap(InputStream is) {
+    @Override public InputStream unwrap(InputStream is) {
         return new SaslInputStream(is, mSaslServer);
     }
 
-    @Override
-    public OutputStream wrap(OutputStream os) {
+    @Override public OutputStream wrap(OutputStream os) {
         return new SaslOutputStream(os, mSaslServer);
     }
 
-    @Override
-    public SaslServer getSaslServer() {
+    @Override public SaslServer getSaslServer() {
         return mSaslServer;
     }
 
-    @Override
-    public void dispose() {
+    @Override public void dispose() {
         debug("dispose called");
         try {
             mSaslServer.dispose();
@@ -231,8 +240,9 @@ public class GssAuthenticator extends Authenticator {
     }
 
     private class GssCallbackHandler implements CallbackHandler {
-        public void handle(Callback[] cbs)
-            throws IOException, UnsupportedCallbackException {
+        GssCallbackHandler()  { }
+
+        public void handle(Callback[] cbs) throws IOException, UnsupportedCallbackException {
             if (cbs == null || cbs.length != 1) {
                 throw new IOException("Bad callback");
             }
@@ -256,12 +266,12 @@ public class GssAuthenticator extends Authenticator {
 
     private void pp(String printName, String propName) {
         Object obj = mSaslServer.getNegotiatedProperty(propName);
-        if (obj != null) debug("Negotiated property %s = %s", printName, obj);
+        if (obj != null)
+            debug("Negotiated property %s = %s", printName, obj);
     }
 
-    private static void debug(String format, Object... args) {
-        if (DEBUG) {
+    static void debug(String format, Object... args) {
+        if (DEBUG)
             System.out.printf("[DEBUG GssAuthenticator] " + format + "\n", args);
-        }
     }
 }

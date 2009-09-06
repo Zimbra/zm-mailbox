@@ -62,8 +62,8 @@ class ImapAuthenticatorUser implements AuthenticatorUser {
     }
 
     public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
-        throws IOException {
-        canContinue = mHandler.authenticate(authorizationId, authenticationId, password, mTag, auth.getMechanism());
+    throws IOException {
+        canContinue = mHandler.authenticate(authorizationId, authenticationId, password, mTag, auth);
         return mHandler.isAuthenticated();
     }
 

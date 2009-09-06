@@ -54,7 +54,7 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
     public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
     throws IOException {
         try {
-            mHandler.authenticate(authorizationId, authenticationId, password, auth.getMechanism());
+            mHandler.authenticate(authorizationId, authenticationId, password, auth);
         } catch (Pop3CmdException e) {
             auth.sendFailed(e.getMessage());
             return false;

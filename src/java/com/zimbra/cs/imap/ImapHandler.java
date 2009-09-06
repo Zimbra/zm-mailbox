@@ -52,7 +52,6 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
-import com.zimbra.cs.security.sasl.AuthenticatorUtil;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
@@ -1135,7 +1134,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return cont;
     }
 
-    boolean authenticate(String username, String authenticateId, String password, String tag, String mechanism)
+    boolean authenticate(String username, String authenticateId, String password, String tag, Authenticator auth)
     throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         EnabledHack enabledHack = EnabledHack.NONE;
@@ -1149,22 +1148,21 @@ abstract class ImapHandler extends ProtocolHandler {
             }
         }
 
-        // for LOGIN, there's no distinction between authcid and authzid
+        String mechanism = auth != null ? auth.getMechanism() : null;
+        String command = auth != null ? "AUTHENTICATE" : "LOGIN";
+        // LOGIN is just another form of AUTHENTICATE PLAIN with authcid == authzid
         //   thus we need to set authcid *after* the EnabledHack suffix stripping
-        String command = mechanism != null ? "AUTHENTICATE" : "LOGIN";
-        if (command.equals("LOGIN"))
+        if (auth == null) {
+            auth = new PlainAuthenticator(new ImapAuthenticatorUser(this, tag));
             authenticateId = username;
+        }
 
         try {
-            Account acct;
-            if (GssAuthenticator.MECHANISM.equals(mechanism))
-                acct = AuthenticatorUtil.authenticateKrb5(username, authenticateId);
-            else if (ZimbraAuthenticator.MECHANISM.equals(mechanism))
-                acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
-            else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, 
-                        getOrigRemoteIpAddr(), getUserAgent());
+            // for some authenticators, actually do the authentication here
+            // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check 
+            Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, getOrigRemoteIpAddr(), getUserAgent());
             if (acct == null) {
+                // auth failure was represented by Authenticator.authenticate() returning null
                 sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;
             }

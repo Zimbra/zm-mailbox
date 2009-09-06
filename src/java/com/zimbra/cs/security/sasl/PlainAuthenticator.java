@@ -16,9 +16,18 @@
 package com.zimbra.cs.security.sasl;
 
 import javax.security.sasl.SaslServer;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PlainAuthenticator extends Authenticator {
     public static final String MECHANISM = "PLAIN";
@@ -27,14 +36,17 @@ public class PlainAuthenticator extends Authenticator {
         super(MECHANISM, user);
     }
 
-    public boolean initialize() { return true; }
-    public void dispose() {}
-    public boolean isEncryptionEnabled() { return false; }
-    public InputStream unwrap(InputStream is) { return null; }
-    public OutputStream wrap(OutputStream os) { return null; }
-    public SaslServer getSaslServer() { return null; }
+    @Override public boolean initialize()  { return true; }
+    @Override public void dispose()        { }
 
-    public void handle(byte[] data) throws IOException {
+    @Override public boolean isEncryptionEnabled()  { return false; }
+
+    @Override public InputStream unwrap(InputStream is)  { return null; }
+    @Override public OutputStream wrap(OutputStream os)  { return null; }
+
+    @Override public SaslServer getSaslServer()  { return null; }
+
+    @Override public void handle(byte[] data) throws IOException {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
@@ -58,5 +70,25 @@ public class PlainAuthenticator extends Authenticator {
         String authenticateId = message.substring(nul1 + 1, nul2);
         String password = message.substring(nul2 + 1);
         authenticate(authorizeId, authenticateId, password);
+    }
+
+    @Override public Account authenticate(String username, String authenticateId, String password,
+                                          AuthContext.Protocol protocol, String origRemoteIp, String userAgent)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId);
+        if (authAccount == null) {
+            ZimbraLog.account.info("authentication failed for " + authenticateId + " (no such account)");
+            return null;
+        }
+
+        // authenticate the authentication principal
+        Map<String, Object> authCtxt = new HashMap<String, Object>();
+        authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
+        authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, authenticateId);
+        authCtxt.put(AuthContext.AC_USER_AGENT, userAgent);
+        prov.authAccount(authAccount, password, protocol, authCtxt);
+
+        return authorize(authAccount, username, true);
     }
 }
