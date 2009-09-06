@@ -956,10 +956,10 @@ public class SoapSession extends Session {
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
             FolderNode remote = mbox.getFolderTree(octxt, new ItemId(mbox, mpt.getRemoteId()), false);
-            OperationContextData.addGranteeNames(octxt, remote);
             
             if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
+                OperationContextData.addGranteeNames(octxt, remote);
                 Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
                 mountpoints.put(iidTarget, subhierarchy);
                 // fault in a delegate session because there's actually something to listen on...

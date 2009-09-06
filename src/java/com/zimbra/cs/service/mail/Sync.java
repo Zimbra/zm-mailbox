@@ -90,14 +90,15 @@ public class Sync extends MailDocumentHandler {
 
         Set<Folder> visible = octxt.isDelegatedRequest(mbox) ? mbox.getVisibleFolders(octxt) : null;
 
+        FolderNode rootNode = null;
         if (root == null || iidFolder == null) {
             // resolve grantee names of all ACLs on the mailbox 
-            OperationContextData.setGranteeNames(octxt, mbox);
+            rootNode = mbox.getFolderTree(octxt, null, true);
         } else {
             // resolve grantee names of all ACLs on all sub-folders of the requested folder 
-            FolderNode rootNode = mbox.getFolderTree(octxt, iidFolder, true);
-            OperationContextData.addGranteeNames(octxt, rootNode);
+            rootNode = mbox.getFolderTree(octxt, iidFolder, true);
         }
+        OperationContextData.addGranteeNames(octxt, rootNode);
         
         // actually perform the sync
         synchronized (mbox) {

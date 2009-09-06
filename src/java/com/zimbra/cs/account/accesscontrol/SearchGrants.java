@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.naming.directory.Attributes;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -187,7 +189,7 @@ public class SearchGrants {
             mResults = results;
         }
 
-        public void visit(String dn, Map<String, Object> attrs) {
+        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
             GrantsOnTargetRaw sgr = new GrantsOnTargetRaw(attrs);
             mResults.addResult(sgr);
         }

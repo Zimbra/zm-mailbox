@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import javax.naming.directory.Attributes;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -1545,7 +1547,7 @@ public class RightChecker {
             mNameAttr = nameAttr;
         }
         
-        public void visit(String dn, Map<String, Object> attrs) {
+        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
             mNames.add((String)attrs.get(mNameAttr));
         }
         

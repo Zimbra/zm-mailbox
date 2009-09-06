@@ -64,10 +64,10 @@ public class GetFolder extends MailDocumentHandler {
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
 
         FolderNode rootnode = mbox.getFolderTree(octxt, iid, visible);
-        OperationContextData.addGranteeNames(octxt, rootnode);
 
         Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
+            OperationContextData.addGranteeNames(octxt, rootnode);
             Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
             if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
                 handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
