@@ -626,7 +626,7 @@ public class LdapUtil {
       }
 
       public static interface SearchLdapVisitor {
-          public void visit(String dn, Map<String, Object> attrs);
+          public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs);
       }
       
       public static void searchLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
@@ -656,7 +656,7 @@ public class LdapUtil {
                           SearchResult sr = (SearchResult) ne.nextElement();
                           String dn = sr.getNameInNamespace();
                           Attributes attrs = sr.getAttributes();
-                          visitor.visit(dn, LdapUtil.getAttrs(attrs));
+                          visitor.visit(dn, LdapUtil.getAttrs(attrs), attrs);
                       }
                       cookie = zlc.getCookie();
                   } while (cookie != null);

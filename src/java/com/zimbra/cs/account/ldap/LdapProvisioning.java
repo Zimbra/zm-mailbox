@@ -5392,10 +5392,11 @@ public class LdapProvisioning extends Provisioning {
         
         NamedEntry entry;
         final String nameAttr;
+        final EntryType entryType = type;
         String base;
         String objectClass;
         
-        switch (type) {
+        switch (entryType) {
         case account:
             unresolvedIds = new HashSet<String>();
             for (String id : ids) {
@@ -5411,7 +5412,7 @@ public class LdapProvisioning extends Provisioning {
             break;
         case group:
             unresolvedIds = ids;
-            nameAttr = Provisioning.A_mail;
+            nameAttr = Provisioning.A_uid; // see dnToEmail
             base = mDIT.mailBranchBaseDN();
             objectClass = C_zimbraMailList;
             break;
@@ -5450,10 +5451,35 @@ public class LdapProvisioning extends Provisioning {
             return result;
         
         LdapUtil.SearchLdapVisitor visitor = new LdapUtil.SearchLdapVisitor() {
-            public void visit(String dn, Map<String, Object> attrs) {
+            public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
                 String id = (String)attrs.get(Provisioning.A_zimbraId);
-                String name = (String)attrs.get(nameAttr);
-                result.put(id, name);
+                
+                String name = null;
+                try {
+                    switch (entryType) {
+                    case account:
+                        name = LdapUtil.getAttrString(ldapAttrs, Provisioning.A_zimbraMailDeliveryAddress);
+                        if (name == null)
+                            name = mDIT.dnToEmail(dn, ldapAttrs);
+                        break;
+                    case group:
+                        name = mDIT.dnToEmail(dn, ldapAttrs);
+                        break;
+                    case cos:
+                        name = LdapUtil.getAttrString(ldapAttrs, Provisioning.A_cn);
+                        break;
+                    case domain: 
+                        name = LdapUtil.getAttrString(ldapAttrs, Provisioning.A_zimbraDomainName);
+                        break;
+                    }
+                } catch (ServiceException e) {
+                    name = null;
+                } catch (NamingException e) {
+                    name = null;
+                }
+                
+                if (name != null)
+                    result.put(id, name);
             }
         };
         
