@@ -43,7 +43,7 @@ public class SaslOutputStream extends OutputStream {
         mBuffer = new SaslOutputBuffer(securityLayer.getMaxSendSize());
     }
 
-    public void write(byte[] b, int off, int len) throws IOException {
+    @Override public void write(byte[] b, int off, int len) throws IOException {
         debug("write: enter len = %d", len);
         if ((off | len | (off + len) | (b.length - (off + len))) < 0) {
             throw new IndexOutOfBoundsException();
@@ -59,7 +59,7 @@ public class SaslOutputStream extends OutputStream {
         debug("write: exit");
     }
 
-    public void write(int b) throws IOException {
+    @Override public void write(int b) throws IOException {
         debug("write: enter b = %d", b);
         ensureBuffer();
         mBuffer.put((byte) b);
@@ -83,13 +83,13 @@ public class SaslOutputStream extends OutputStream {
         mBuffer.clear();
     }
 
-    public void flush() throws IOException {
+    @Override public void flush() throws IOException {
         if (DEBUG) debug("flushBuffer: size = %d", mBuffer.size());
         if (mBuffer.size() > 0) flushBuffer();
         mOutputStream.flush();
     }
 
-    public void close() throws IOException {
+    @Override public void close() throws IOException {
         flush();
         mOutputStream.close();
     }

@@ -43,7 +43,7 @@ public class SaslInputStream extends InputStream {
         mSecurityLayer = securityLayer;
     }
     
-    public int read(byte[] b, int off, int len) throws IOException {
+    @Override public int read(byte[] b, int off, int len) throws IOException {
         debug("read: enter len = %d", len);
         if ((off | len | (off + len) | (b.length - (off + len))) < 0) {
             throw new IndexOutOfBoundsException();
@@ -57,7 +57,7 @@ public class SaslInputStream extends InputStream {
         return len;
     }
 
-    public int read() throws IOException {
+    @Override public int read() throws IOException {
         return ensureBuffer() ? mBuffer.get() : -1;
     }
     
@@ -89,7 +89,7 @@ public class SaslInputStream extends InputStream {
         return true;
     }
 
-    public void close() throws IOException {
+    @Override public void close() throws IOException {
         mInputStream.close();
         mBuffer = null;
     }

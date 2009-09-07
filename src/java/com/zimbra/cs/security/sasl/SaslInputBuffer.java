@@ -16,7 +16,6 @@
 package com.zimbra.cs.security.sasl;
 
 import javax.security.sasl.SaslException;
-import javax.security.sasl.SaslServer;
 import java.nio.ByteBuffer;
 
 public class SaslInputBuffer {

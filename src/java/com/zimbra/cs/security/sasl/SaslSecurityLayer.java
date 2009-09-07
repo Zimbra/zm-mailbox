@@ -39,19 +39,19 @@ public abstract class SaslSecurityLayer {
 
     public static SaslSecurityLayer getInstance(final SaslClient client) {
         return new SaslSecurityLayer() {
-            public String getMechanismName() {
+            @Override public String getMechanismName() {
                 return client.getMechanismName();
             }
-            public Object getNegotiatedProperty(String name) {
+            @Override public Object getNegotiatedProperty(String name) {
                 return client.getNegotiatedProperty(name);
             }
-            public byte[] wrap(byte[] b, int off, int len) throws SaslException {
+            @Override public byte[] wrap(byte[] b, int off, int len) throws SaslException {
                 return client.wrap(b, off, len);
             }
-            public byte[] unwrap(byte[] b, int off, int len) throws SaslException {
+            @Override public byte[] unwrap(byte[] b, int off, int len) throws SaslException {
                 return client.unwrap(b, off, len);
             }
-            public void dispose() throws SaslException {
+            @Override public void dispose() throws SaslException {
                 client.dispose();
             }
         };
@@ -59,19 +59,19 @@ public abstract class SaslSecurityLayer {
 
     public static SaslSecurityLayer getInstance(final SaslServer server) {
         return new SaslSecurityLayer() {
-            public String getMechanismName() {
+            @Override public String getMechanismName() {
                 return server.getMechanismName();
             }
-            public Object getNegotiatedProperty(String name) {
+            @Override public Object getNegotiatedProperty(String name) {
                 return server.getNegotiatedProperty(name);
             }
-            public byte[] wrap(byte[] b, int off, int len) throws SaslException {
+            @Override public byte[] wrap(byte[] b, int off, int len) throws SaslException {
                 return server.wrap(b, off, len);
             }
-            public byte[] unwrap(byte[] b, int off, int len) throws SaslException {
+            @Override public byte[] unwrap(byte[] b, int off, int len) throws SaslException {
                 return server.unwrap(b, off, len);
             }
-            public void dispose() throws SaslException {
+            @Override public void dispose() throws SaslException {
                 server.dispose();
             }
         };
