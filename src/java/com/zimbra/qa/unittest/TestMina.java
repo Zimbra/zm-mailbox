@@ -87,6 +87,14 @@ public class TestMina extends TestCase {
         assertTrue(lb.isComplete());
         assertEquals(LINE+CRLF, lb.toString());
         assertEquals(LINE.length(), bb.remaining());
+        lb = new LineBuffer();
+        for (int i = 0; i < LINE.length(); i++) {
+            lb.parse(ByteBuffer.wrap(new byte[] { (byte) LINE.charAt(i) }));
+            assertFalse(lb.isComplete());
+        }
+        lb.parse(MinaUtil.toAsciiBytes(CRLF));
+        assertTrue(lb.isComplete());
+        assertEquals(LINE+CRLF, lb.toString());
     }
 
     public void testLineBuffer2() {
