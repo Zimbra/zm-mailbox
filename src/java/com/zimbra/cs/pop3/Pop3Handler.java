@@ -89,11 +89,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
     Pop3Handler(Pop3Server server) {
         super(server);
         mConfig = (Pop3Config) server.getConfig();
+        mStartedTLS = mConfig.isSSLEnabled();
     }
 
     Pop3Handler(MinaPop3Server server) {
         super(null);
         mConfig = (Pop3Config) server.getConfig();
+        mStartedTLS = mConfig.isSSLEnabled();
     }
 
     protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }

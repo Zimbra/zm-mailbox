@@ -40,7 +40,6 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         super(server);
         this.mSession = session;
         mOutputStream = new MinaIoSessionOutputStream(mSession);
-        mStartedTLS = mConfig.isSSLEnabled();
         mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getUnauthMaxIdleSeconds());
     }
 

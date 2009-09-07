@@ -17,7 +17,6 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
@@ -46,7 +45,6 @@ class TcpImapHandler extends ImapHandler {
 
         mInputStream = new TcpServerInputStream(connection.getInputStream());
         mOutputStream = new BufferedOutputStream(connection.getOutputStream());
-        mStartedTLS = mConfig.isSSLEnabled();
 
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("dropping connection because user services are disabled");
@@ -236,7 +234,7 @@ class TcpImapHandler extends ImapHandler {
         mOutputStream.flush();
     }
 
-    void sendLine(String line, boolean flush) throws IOException {
+    @Override void sendLine(String line, boolean flush) throws IOException {
         OutputStream os = mOutputStream;
         if (os == null)
             return;

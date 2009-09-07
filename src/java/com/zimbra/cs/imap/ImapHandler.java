@@ -119,11 +119,13 @@ abstract class ImapHandler extends ProtocolHandler {
     ImapHandler(MinaImapServer server) {
         super(null);
         mConfig = (ImapConfig) server.getConfig();
+        mStartedTLS = mConfig.isSSLEnabled();
     }
 
     ImapHandler(ImapServer server) {
         super(server);
         mConfig = (ImapConfig) server.getConfig();
+        mStartedTLS = mConfig.isSSLEnabled();
     }
 
     ImapCredentials getCredentials()  { return mCredentials; }
