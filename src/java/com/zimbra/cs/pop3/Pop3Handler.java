@@ -45,9 +45,6 @@ import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.net.InetAddress;
 
-/**
- * @author schemers
- */
 public abstract class Pop3Handler extends ProtocolHandler {
     static final int MIN_EXPIRE_DAYS = 31;
     static final int MAX_RESPONSE = 512;
@@ -612,7 +609,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
 
     protected boolean isSSLEnabled() {
-        return mConfig.isSSLEnabled();
+        return mStartedTLS;
     }
         
     private void doSTAT() throws Pop3CmdException, IOException {

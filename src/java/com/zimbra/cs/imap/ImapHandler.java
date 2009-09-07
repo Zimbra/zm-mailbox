@@ -128,7 +128,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
     ImapCredentials getCredentials()  { return mCredentials; }
 
-    public boolean isSSLEnabled()  { return mConfig.isSSLEnabled(); }
+    public boolean isSSLEnabled()  { return mStartedTLS; }
 
     public ImapConfig getConfig()  { return mConfig; }
 
