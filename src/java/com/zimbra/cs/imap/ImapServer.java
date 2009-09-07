@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.SynchronousQueue;
 
 /**
  * @author dkarp
@@ -41,7 +44,9 @@ import java.util.concurrent.Executors;
 public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     private static Server sImapServer;
     private static Server sImapSSLServer;
-    
+
+    private static final int MIN_THREADS = 10;
+    private static final int KEEP_ALIVE_TIME = 60;
     private static final String HANDLER_THREAD_NAME = "ImapHandler";
 
     private ImapServer(ImapConfig config) throws ServiceException {
@@ -76,8 +81,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         Server server;
         if (MinaImapServer.isEnabled()) {
             if (sHandlerThreadPool == null) {
-                sHandlerThreadPool = Executors.newFixedThreadPool(
-                    config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME));   
+                sHandlerThreadPool = newHandlerThreadPool(config);
             }
             try {
                 server = new MinaImapServer(config, sHandlerThreadPool);
@@ -97,6 +101,15 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         return server;
     }
 
+    private static ThreadPoolExecutor newHandlerThreadPool(ImapConfig config) {
+        return new ThreadPoolExecutor(
+            Math.min(config.getNumThreads(), MIN_THREADS),
+            config.getNumThreads(),
+            KEEP_ALIVE_TIME, TimeUnit.SECONDS,
+            new SynchronousQueue<Runnable>(),
+            new MinaThreadFactory(HANDLER_THREAD_NAME));
+    }
+    
     public synchronized static void shutdownImapServers() {
         if (sImapServer != null) {
             sImapServer.shutdown(10);
