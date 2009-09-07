@@ -102,6 +102,8 @@ public class VoiceConstants {
     public static final String E_CALL_WAITING               = "callwaiting";
     public static final String E_DO_NOT_DISTURB             = "donotdisturb";
     public static final String E_SELECTIVE_CALL_FORWARD     = "selectivecallforward";
+    public static final String E_SELECTIVE_CALL_ACCEPTANCE  = "selectivecallacceptance";
+    public static final String E_SELECTIVE_CALL_REJECTION   = "selectivecallrejection";
     public static final String E_VOICE_MAIL_PREFS           = "voicemailprefs";
     
     public static final String A_ACTIVE          = "a";
