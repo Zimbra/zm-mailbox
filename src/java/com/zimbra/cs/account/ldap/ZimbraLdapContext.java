@@ -118,6 +118,35 @@ public class ZimbraLdapContext {
         }
     }
     
+    /*
+     * For specifying a custom LDAP env that uses provided pool pref, connection timeout and read timeout settings 
+     */
+    public static class LdapConfig {
+        public static final Integer NO_TIMEOUT = 0; // wait infinitely
+        
+        private Boolean mUseConnPool;
+        private Integer mConnTimeout;
+        private Integer mReadTimeout;
+        
+        public LdapConfig(Boolean useConnPool, Integer connTimeout, Integer readTimeout) {
+            mUseConnPool = useConnPool;
+            mConnTimeout = connTimeout;
+            mReadTimeout = readTimeout;
+        }
+        
+        private String useConnPool() {
+            return (mUseConnPool == null) ? "true" : mUseConnPool.toString();
+        }
+        
+        private String connTimeout() {
+            return (mConnTimeout == null) ? LC.ldap_connect_timeout.value() : String.valueOf(mConnTimeout);
+        }
+        
+        private String readTimeout() {
+            return (mReadTimeout == null) ? LC.ldap_read_timeout.value() : String.valueOf(mReadTimeout);
+        }
+    }
+    
     static {
         
         sLdapURL = LC.ldap_url.value().trim();
@@ -240,17 +269,14 @@ public class ZimbraLdapContext {
         return sEnv;
     }
     
-    /*
-     * TODO: retire after OpenLDAP fix for bug 24168 is deployed
-     */
-    private static synchronized Hashtable getNonPooledEnv(boolean master) {
+    private static synchronized Hashtable getCustomEnv(boolean master, LdapConfig ldapConfig) {
         Hashtable<String, String> env = new Hashtable<String, String>(); 
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
         env.put(Context.REFERRAL, "follow");
-        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        env.put("com.sun.jndi.ldap.connect.timeout", ldapConfig.connTimeout());
+        env.put("com.sun.jndi.ldap.read.timeout", ldapConfig.readTimeout());
         
         if (ConnType.isSTARTTLS(master)) {
             env.put("com.sun.jndi.ldap.connect.pool", "false");
@@ -258,11 +284,16 @@ public class ZimbraLdapContext {
             if (master)
                 env.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
             else
-                env.put("com.sun.jndi.ldap.connect.pool", "false");
+                env.put("com.sun.jndi.ldap.connect.pool", ldapConfig.useConnPool());
             
             env.put(Context.SECURITY_AUTHENTICATION, "simple");
             env.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
             env.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+            
+            if (ConnType.isLDAPS(master)) {
+                if (LC.ssl_allow_untrusted_certs.booleanValue())
+                    env.put("java.naming.ldap.factory.socket", "com.zimbra.common.util.EasySSLSocketFactory");
+            }
         }
         
         return env;
@@ -311,22 +342,32 @@ public class ZimbraLdapContext {
      * Zimbra LDAP
      */
     public ZimbraLdapContext() throws ServiceException {
-        this(false);
+        this(false, null);
     }
 
     /*
      * Zimbra LDAP
      */
     public ZimbraLdapContext(boolean master) throws ServiceException {
-        this(master, true);
+        this(master, null);
     }
     
     /*
      * Zimbra LDAP
      */
     public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
+        // use custom ldap config if not using conn pool
+        this(master, useConnPool? null : new LdapConfig(useConnPool, null, null));
+    }
+    
+    /*
+     * Zimbra LDAP
+     * 
+     * Used only for upgrade, not in server production.
+     */
+    public ZimbraLdapContext(boolean master, LdapConfig ldapConfig) throws ServiceException {
         try {
-            Hashtable env = useConnPool? getDefaultEnv(master) : getNonPooledEnv(master);
+            Hashtable env = (ldapConfig==null)? getDefaultEnv(master) : getCustomEnv(master, ldapConfig);
             boolean startTLS = ConnType.isSTARTTLS(master);
             
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
@@ -731,13 +772,6 @@ public class ZimbraLdapContext {
         for (int i=0; i<mods.length; i++)
             sb.append(mods[i].toString() + ", ");
         return sb.toString();
-    }
-
-    /**
-     * @param args
-     */
-    public static void main(String[] args) throws Exception {
-        
     }
 
 }
