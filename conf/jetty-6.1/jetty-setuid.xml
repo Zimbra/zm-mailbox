@@ -101,5 +101,13 @@
   <Set name="uid"><Property name="zimbra_uid"/></Set>
   <Set name="gid"><Property name="zimbra_gid"/></Set>
 
+  <Call name="setRLimitNoFiles">
+    <Arg>
+        <New class="org.mortbay.setuid.RLimit">
+          <Set name="soft">65536</Set>
+          <Set name="hard">65536</Set>
+        </New>
+    </Arg>
+  </Call>
 </Configure>
 
