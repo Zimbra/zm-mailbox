@@ -23,9 +23,15 @@ import org.json.JSONException;
 public class ZPhone implements ToZJSONObject {
 
 	private String mName;
+	private String mCallerId;
+
+	public ZPhone(String name, String callerId) throws ServiceException {
+		mName = name;
+		mCallerId = name != null && name.equals(callerId) ? null : callerId;
+	}
 
 	public ZPhone(String name) throws ServiceException {
-		mName = name;
+		this(name, null);
 	}
 
 	public String getName() {
@@ -34,6 +40,10 @@ public class ZPhone implements ToZJSONObject {
 
 	public String getDisplay() {
 		return ZPhone.getDisplay(mName);
+	}
+
+	public String getCallerId() {
+		return mCallerId;
 	}
 
     public ZJSONObject toZJSONObject() throws JSONException {

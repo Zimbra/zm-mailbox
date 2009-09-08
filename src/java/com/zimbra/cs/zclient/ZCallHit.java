@@ -42,9 +42,9 @@ public class ZCallHit implements ZSearchHit {
 		for (Element el : e.listElements(VoiceConstants.E_CALLPARTY)) {
             String addressType = el.getAttribute(MailConstants.A_ADDRESS_TYPE, null);
             if (ZEmailAddress.EMAIL_TYPE_FROM.equals(addressType)) {
-                mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM));
+                mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM), el.getAttribute(MailConstants.A_PERSONAL, null));
             } else {
-				mRecipient = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM));
+				mRecipient = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM), el.getAttribute(MailConstants.A_PERSONAL, null));
 			}
         }
     }

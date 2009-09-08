@@ -49,7 +49,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         for (Element el : e.listElements(VoiceConstants.E_CALLPARTY)) {
             String t = el.getAttribute(MailConstants.A_ADDRESS_TYPE, null);
             if (ZEmailAddress.EMAIL_TYPE_FROM.equals(t)) {
-                mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM));
+                mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM), el.getAttribute(MailConstants.A_PERSONAL, null));
                 break;
             }
         }
@@ -65,7 +65,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
         result.mFlags = array[2];
         result.mDate = Long.parseLong(array[3]);
         result.mDuration = Long.parseLong(array[4]);
-        result.mCaller = new ZPhone(array[5]);
+        result.mCaller = new ZPhone(array[5], array[6]);
         result.mScore = 0;
         result.mSoundUrl =
             "/service/extension/velodrome/voice/~/voicemail?phone=" +
@@ -129,7 +129,8 @@ public class ZVoiceMailItemHit implements ZSearchHit {
 				flags + "/" +
                 mDate + "/" +
                 mDuration + "/" +
-                mCaller.getName();
+                mCaller.getName() + "/" +
+				mCaller.getCallerId();
     }
 
 	private void setFlag(char flagChar, boolean on) {
