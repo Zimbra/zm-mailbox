@@ -1,1 +1,1 @@
-jetty-6.1.5 tag with 2033:2035 patch from trunk
+jetty-6.1.5-z5.0 revision 1643 (JETTY-1100)
