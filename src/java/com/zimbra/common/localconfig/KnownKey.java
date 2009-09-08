@@ -189,17 +189,24 @@ public class KnownKey {
         mKnownKeys.put(key, this);
     }
 
-    public void setDoc(String doc) {
+    public KnownKey setDoc(String doc) {
         mDoc = doc;
+        return this;
     }
     
-    public void setDefault(String defaultValue) {
+    public KnownKey setDefault(String defaultValue) {
         mDefaultValue = defaultValue;
         mValue = null;
+        return this;
     }
-    
-    public void setForceToEdit(boolean value) {
+
+    public KnownKey setDefault(long defaultValue) {
+        return setDefault(String.valueOf(defaultValue));
+    }
+
+    public KnownKey setForceToEdit(boolean value) {
         mForceToEdit = value;
+        return this;
     }
     
     private void expand(LocalConfig lc) throws ConfigException {

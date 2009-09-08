@@ -338,6 +338,24 @@ public class LC {
     public static final KnownKey nio_pop3_enabled;
     public static final KnownKey nio_lmtp_enabled;
 
+    // NIO IMAP configuration settings. Move these to zimbra-attrs.xml once
+    // they have been finalized.
+
+    public static final KnownKey nio_imap_min_threads =
+        new KnownKey("nio_imap_min_threads").setDefault(20);
+    public static final KnownKey nio_imap_max_sessions =
+        new KnownKey("nio_imap_max_sessions").setDefault(200);
+    public static final KnownKey nio_imap_write_queue_low_watermark =
+        new KnownKey("nio_imap_write_queue_low_watermark").setDefault(64*1024);
+    public static final KnownKey nio_imap_write_queue_high_watermark =
+        new KnownKey("nio_imap_write_queue_high_watermark").setDefault(1024*1024);
+    public static final KnownKey nio_imap_write_timeout =
+        new KnownKey("nio_imap_write_timeout").setDefault(60);
+    public static final KnownKey nio_imap_max_chunk_size =
+        new KnownKey("nio_imap_max_chunk_size").setDefault(8*1024);
+    public static final KnownKey nio_imap_thread_keep_alive_time =
+        new KnownKey("nio_imap_thread_keep_alive_time").setDefault(60);
+    
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
     public static final KnownKey krb5_debug_enabled;
