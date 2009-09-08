@@ -4,7 +4,7 @@ import com.zimbra.common.service.ServiceException;
 
 public enum UpgradeTask {
     BUG_14531(ZimbraGalLdapFilterDef.class),
-    BUG_18277(DomainAdminRights.class),
+    BUG_18277(AdminRights.class),
     BUG_22033(ZimbraCreateTimestamp.class),
     BUG_27075(CosAndGlobalConfigDefault.class),   // e.g. -b 27075 5.0.12
     BUG_29978(DomainPublicServiceProtocolAndPort.class),

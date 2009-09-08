@@ -48,7 +48,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext.LdapConfig;
 
-public class DomainAdminRights extends LdapUpgrade {
+public class AdminRights extends LdapUpgrade {
     
     private static String[] sAdminUICompForAllDomainAdmins = new String[] {
         "accountListView",
@@ -62,7 +62,7 @@ public class DomainAdminRights extends LdapUpgrade {
         "cartBlancheUI"
     };
 
-    DomainAdminRights() throws ServiceException {
+    AdminRights() throws ServiceException {
     }
     
     @Override
