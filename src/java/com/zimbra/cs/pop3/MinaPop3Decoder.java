@@ -15,19 +15,29 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.cs.mina.LineBuffer;
+import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.MinaStats;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.ByteBuffer;
 
 public class MinaPop3Decoder extends ProtocolDecoderAdapter {
+    private final MinaStats stats;
     private final LineBuffer lbuf = new LineBuffer();
 
+    MinaPop3Decoder(MinaStats stats) {
+        this.stats = stats;
+    }
+    
     public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
         java.nio.ByteBuffer bb = in.buf();
         while (bb.hasRemaining()) {
             if (lbuf.parse(bb)) {
                 out.write(lbuf.toString().trim());
+                if (stats != null) {
+                    stats.receivedBytes.addAndGet(lbuf.size());
+                }
                 lbuf.reset();
             }
         }

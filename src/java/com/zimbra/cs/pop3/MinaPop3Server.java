@@ -47,7 +47,7 @@ public class MinaPop3Server extends MinaServer {
     @Override protected ProtocolCodecFactory getProtocolCodecFactory() {
         return new MinaCodecFactory(this) {
             public ProtocolDecoder getDecoder() {
-                return new MinaPop3Decoder();
+                return new MinaPop3Decoder(getStats());
             }
         };
     }

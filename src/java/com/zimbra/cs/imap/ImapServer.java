@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mina.MinaThreadFactory;
 import com.zimbra.cs.server.Server;
 import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
@@ -33,7 +34,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.SynchronousQueue;
@@ -45,8 +45,6 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     private static Server sImapServer;
     private static Server sImapSSLServer;
 
-    private static final int MIN_THREADS = 10;
-    private static final int KEEP_ALIVE_TIME = 60;
     private static final String HANDLER_THREAD_NAME = "ImapHandler";
 
     private ImapServer(ImapConfig config) throws ServiceException {
@@ -59,7 +57,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         return new TcpImapHandler(this);
     }
 
-    // not used?
+    // not used?                                             
     public static void bindServerSocket(String addr, int port, boolean ssl)
             throws IOException {
         NetUtil.bindServerSocket(addr, port, ssl, MinaImapServer.isEnabled(), null);
@@ -103,9 +101,9 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
 
     private static ThreadPoolExecutor newHandlerThreadPool(ImapConfig config) {
         return new ThreadPoolExecutor(
-            Math.min(config.getNumThreads(), MIN_THREADS),
+            Math.min(config.getNumThreads(), LC.nio_imap_min_threads.intValue()),
             config.getNumThreads(),
-            KEEP_ALIVE_TIME, TimeUnit.SECONDS,
+            LC.nio_imap_thread_keep_alive_time.intValue(), TimeUnit.SECONDS,
             new SynchronousQueue<Runnable>(),
             new MinaThreadFactory(HANDLER_THREAD_NAME));
     }

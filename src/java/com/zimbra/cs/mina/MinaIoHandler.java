@@ -27,24 +27,33 @@ import java.io.IOException;
  * new request has been received.
  */
 class MinaIoHandler implements IoHandler {
-    private MinaServer mServer;
+    private final MinaServer server;
+    private final MinaStats stats;
 
     private static final String MINA_HANDLER_ATTR = "MinaHandler";
-    
+
     MinaIoHandler(MinaServer server) {
-        this.mServer = server;
+        this.server = server;
+        stats = server.getStats();
     }
 
     public void sessionCreated(IoSession session) throws IOException {
-        session.setAttribute(MINA_HANDLER_ATTR, mServer.createHandler(session));
+        session.setAttribute(MINA_HANDLER_ATTR, server.createHandler(session));
     }
 
     public void sessionOpened(IoSession session) throws IOException {
         getMinaHandler(session).connectionOpened();
+        if (stats != null) {
+            stats.activeSessions.incrementAndGet();
+            stats.totalSessions.incrementAndGet();
+        }
     }
 
     public void sessionClosed(IoSession session) throws IOException {
         getMinaHandler(session).connectionClosed();
+        if (stats != null) {
+            stats.activeSessions.decrementAndGet();
+        }
     }
 
     public void sessionIdle(IoSession session, IdleStatus status) throws IOException{

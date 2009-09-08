@@ -15,21 +15,31 @@
 package com.zimbra.cs.lmtpserver;
 
 import com.zimbra.cs.mina.LineBuffer;
+import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.MinaStats;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.ByteBuffer;
 
 public class MinaLmtpDecoder extends ProtocolDecoderAdapter {
+    private final MinaStats stats;
     private final LineBuffer cmd = new LineBuffer(132);
     private LineBuffer data;
 
+    MinaLmtpDecoder(MinaStats stats) {
+        this.stats = stats;
+    }
+    
     public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
         java.nio.ByteBuffer bb = in.buf();
         while (bb.hasRemaining()) {
             if (data != null) {
                 // Receiving LMTP data...
                 if (data.parse(bb)) {
+                    if (stats != null) {
+                        stats.receivedBytes.addAndGet(data.size());
+                    }
                     out.write(data);
                     if (data.matches(".\r\n")) {
                         data = null;
@@ -40,8 +50,11 @@ public class MinaLmtpDecoder extends ProtocolDecoderAdapter {
                 }
             } else if (cmd.parse(bb)) {
                 String line = cmd.toString().trim();
-                cmd.reset();
                 out.write(line);
+                if (stats != null) {
+                    stats.receivedBytes.addAndGet(cmd.size());
+                }
+                cmd.reset();
                 if ("DATA".equalsIgnoreCase(getCommand(line))) {
                     data = new LineBuffer();
                 }

@@ -48,7 +48,7 @@ public class MinaLmtpServer extends MinaServer {
     protected ProtocolCodecFactory getProtocolCodecFactory() {
         return new MinaCodecFactory(this) {
             public ProtocolDecoder getDecoder() {
-                return new MinaLmtpDecoder();
+                return new MinaLmtpDecoder(getStats());
             }
         };
     }

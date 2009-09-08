@@ -15,16 +15,23 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.cs.mina.LineBuffer;
+import com.zimbra.cs.mina.MinaStats;
+import com.zimbra.common.localconfig.LC;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
 
 public class MinaImapDecoder extends ProtocolDecoderAdapter {
+    private final MinaStats stats;
     private final LineBuffer buf = new LineBuffer();
     private int count = -1;
 
-    private static final int MAX_BYTES = 8192;
+    private static final int MAX_BYTES = LC.nio_imap_max_chunk_size.intValue();
+
+    MinaImapDecoder(MinaStats stats) {
+        this.stats = stats;
+    }
 
     public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
         java.nio.ByteBuffer bb = in.buf();
@@ -34,13 +41,19 @@ public class MinaImapDecoder extends ProtocolDecoderAdapter {
                 byte[] b = new byte[len];
                 bb.get(b);
                 out.write(b);
+                if (stats != null) {
+                    stats.receivedBytes.addAndGet(len);
+                }
                 count -= len;
                 if (count == 0) {
                     count = -1;
                 }
             } else if (buf.parse(bb)) {
-                String line = buf.toString();
+                String line = buf.toString().trim();
                 out.write(line);
+                if (stats != null) {
+                    stats.receivedBytes.addAndGet(buf.size());
+                }
                 buf.reset();
                 try {
                     LiteralInfo li = LiteralInfo.parse(line);

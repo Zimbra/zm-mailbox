@@ -43,6 +43,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +58,7 @@ public abstract class MinaServer implements Server {
     protected final ExecutorService mHandlerThreadPool;
     protected final SocketAcceptor mSocketAcceptor;
     protected final ServerConfig mServerConfig;
+    protected final MinaStats mStats;
     
     private static SSLContext sslContext;
     private static String[] mSslEnabledCipherSuites;
@@ -80,7 +82,7 @@ public abstract class MinaServer implements Server {
         }
         return sslContext;
     }
-
+    
     private static SSLContext initSSLContext() throws Exception {
         KeyStore ks = KeyStore.getInstance("JKS");
         char[] pass = LC.mailboxd_keystore_password.value().toCharArray();
@@ -175,11 +177,16 @@ public abstract class MinaServer implements Server {
         mAcceptorConfig.setReuseAddress(true);
         mAcceptorConfig.setThreadModel(ThreadModel.MANUAL);
         mSocketAcceptor = new SocketAcceptor(NUM_IO_PROCESSORS, IO_THREAD_POOL);
+        mStats = new MinaStats(this);
     }
 
     protected MinaServer(ServerConfig config) throws IOException, ServiceException {
         this(config, Executors.newFixedThreadPool(
             config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME)));
+    }
+
+    public MinaStats getStats() {
+        return mStats;
     }
     
     /**
@@ -221,7 +228,6 @@ public abstract class MinaServer implements Server {
      */
     public void shutdown(int graceSecs) {
         getLog().info("Initiating shutdown");
-        SocketAddress addr = mChannel.socket().getLocalSocketAddress();
         // Would prefer to unbind first then cleanly close active connections,
         // but mina unbind seems to automatically close the active sessions
         // so we must close connections then unbind, which does expose us to
@@ -229,9 +235,9 @@ public abstract class MinaServer implements Server {
         long start = System.currentTimeMillis();
         long graceMSecs = graceSecs * 1000;
         // Close active sessions and handlers
-        closeSessions(addr, graceMSecs);
+        closeSessions(graceMSecs);
         // Unbind listener socket
-        mSocketAcceptor.unbind(addr);
+        mSocketAcceptor.unbind(getSocketAddress());
         // Shutdown protocol handler threads
         mHandlerThreadPool.shutdown();
         // Wait remaining grace period for handlers to cleanly terminate
@@ -248,10 +254,10 @@ public abstract class MinaServer implements Server {
         mHandlerThreadPool.shutdownNow();
     }
 
-    private void closeSessions(SocketAddress addr, long timeout) {
+    private void closeSessions(long timeout) {
         // Close currently open sessions and get active handlers
         List<MinaHandler> handlers = new ArrayList<MinaHandler>();
-        for (IoSession session : mSocketAcceptor.getManagedSessions(addr)) {
+        for (IoSession session : getSessions()) {
             getLog().info("Closing session = " + session);
             MinaHandler handler = MinaIoHandler.getMinaHandler(session);
             if (handler != null) handlers.add(handler);
@@ -267,6 +273,14 @@ public abstract class MinaServer implements Server {
                 getLog().warn("Error closing handler: %s", handler, e);
             }
         }
+    }
+
+    public Set<IoSession> getSessions() {
+        return mSocketAcceptor.getManagedSessions(getSocketAddress());
+    }
+
+    private SocketAddress getSocketAddress() {
+        return mChannel.socket().getLocalSocketAddress();
     }
 
     /**

@@ -26,8 +26,11 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
+import java.lang.management.ManagementFactory;
 
 /**
  * MINA-based IMAP server implementation.
@@ -51,11 +54,20 @@ public class MinaImapServer extends MinaServer {
     protected ProtocolCodecFactory getProtocolCodecFactory() {
         return new MinaCodecFactory(this) {
             public ProtocolDecoder getDecoder() {
-                return new MinaImapDecoder();
+                return new MinaImapDecoder(getStats());
             }
         };
     }
 
     @Override
     public Log getLog() { return ZimbraLog.imap; }
+
+    public void registerMinaStatsMBean(String name) {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try {
+            mbs.registerMBean(getStats(), new ObjectName(name));
+        } catch (Exception e) {
+            ZimbraLog.imap.warn("Unable to register MinaStats mbean", e);
+        }
+    }
 }

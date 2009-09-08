@@ -27,16 +27,21 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
  * request to MINA handler.
  */
 public abstract class MinaCodecFactory implements ProtocolCodecFactory {
-    protected MinaServer mServer;
+    private final MinaServer server;
 
     protected MinaCodecFactory(MinaServer server) {
-        mServer = server;
+        this.server = server;
     }
 
     public ProtocolEncoder getEncoder() {
+        final MinaStats stats = server.getStats();
         return new ProtocolEncoderAdapter() {
             public void encode(IoSession session, Object msg, ProtocolEncoderOutput out) {
-                out.write((ByteBuffer) msg);
+                ByteBuffer bb = (ByteBuffer) msg;
+                if (stats != null) {
+                    stats.sentBytes.addAndGet(bb.remaining());
+                }
+                out.write(bb);
             }
         };
     }

@@ -16,6 +16,7 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
@@ -32,14 +33,16 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     private IoSession mSession;
     private MinaImapRequest mRequest;
 
-    // Maximum number of milliseconds to wait for last write operation to
-    // complete before we force close the session.
-    private static final long WRITE_TIMEOUT = 5000;
-
+    private static final long WRITE_TIMEOUT = LC.nio_imap_write_timeout.longValue() * 1000;
+    
     MinaImapHandler(MinaImapServer server, IoSession session) {
         super(server);
         this.mSession = session;
-        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        mOutputStream = new MinaIoSessionOutputStream(
+            mSession, LC.nio_imap_max_chunk_size.intValue())
+            .setHighWatermark(LC.nio_imap_write_queue_high_watermark.intValue())
+            .setLowWatermark(LC.nio_imap_write_queue_low_watermark.intValue())
+            .setTimeout(WRITE_TIMEOUT);
         mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getUnauthMaxIdleSeconds());
     }
 
@@ -130,7 +133,8 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
      * execution since requests are processed in sequence for any given
      * connection.
      */
-    @Override protected void dropConnection(boolean sendBanner) {
+    @Override
+    protected void dropConnection(boolean sendBanner) {
         dropConnection(sendBanner, WRITE_TIMEOUT);
     }
 
