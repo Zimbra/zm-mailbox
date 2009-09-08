@@ -199,6 +199,8 @@ public class ImapSync extends MailItemImport {
     }
 
     private void checkImportingSelf() throws IOException, ServiceException {
+        if (dataSource.isOffline())
+            return;
         try {
             IDInfo id = connection.id();
             if ("Zimbra".equalsIgnoreCase(id.getName())) {
