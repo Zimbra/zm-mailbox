@@ -53,12 +53,14 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 
 public class Message extends MailItem {
 
@@ -351,15 +353,15 @@ public class Message extends MailItem {
         }
     }
     
-    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, MailboxBlob mblob,
+    static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                           boolean unread, int flags, long tags, DraftInfo dinfo,
                           boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
     throws ServiceException, IOException {
-        return createInternal(id, folder, conv, pm, mblob, unread, flags, tags,
+        return createInternal(id, folder, conv, pm, staged, unread, flags, tags,
                               dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
     
-    protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, MailboxBlob mblob,
+    protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                                             boolean unread, int flags, long tags, DraftInfo dinfo,
                                             boolean noICal, ZVCalendar cal, CustomMetadataList extended, MessageCreateFactory fact)
     throws ServiceException, IOException {
@@ -413,11 +415,11 @@ public class Message extends MailItem {
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = mbox.generateIndexId(id);
-        data.locator     = mblob.getLocator();
+        data.locator     = staged.getStagedLocator();
         data.imapId      = id;
         data.date        = (int) (date / 1000);
-        data.size        = mblob.getSize();
-        data.setBlobDigest(mblob.getDigest());
+        data.size        = staged.getStagedSize();
+        data.setBlobDigest(staged.getStagedDigest());
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
@@ -715,6 +717,20 @@ public class Message extends MailItem {
                 }
             }
         }
+    }
+
+    void updateBlobData(MailboxBlob mblob) throws IOException, ServiceException {
+        long size = mblob.getSize();
+        if (getSize() == size && StringUtil.equal(getDigest(), mblob.getDigest()) && StringUtil.equal(getLocator(), mblob.getLocator()))
+            return;
+
+        mMailbox.updateSize(size - mData.size, true);
+        getFolder().updateSize(0, size - mData.size);
+
+        mData.size    = size;
+        mData.locator = mblob.getLocator();
+        mData.setBlobDigest(mblob.getDigest());
+        DbMailItem.saveBlobInfo(this);
     }
 
     @Override void setCustomData(CustomMetadata custom) throws ServiceException {

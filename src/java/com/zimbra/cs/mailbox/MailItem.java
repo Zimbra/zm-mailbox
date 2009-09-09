@@ -1503,14 +1503,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         MessageCache.purge(this);
 
         // update the object to reflect its new contents
-        long size = staged == null ? 0 : staged.getSize();
+        long size = staged == null ? 0 : staged.getStagedSize();
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, true);
             mData.size = size;
         }
         getFolder().updateSize(0, size - mData.size);
 
-        mData.setBlobDigest(staged == null ? null : staged.getDigest());
+        mData.setBlobDigest(staged == null ? null : staged.getStagedDigest());
         mData.date   = mMailbox.getOperationTimestamp();
         mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);

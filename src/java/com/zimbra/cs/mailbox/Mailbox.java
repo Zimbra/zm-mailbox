@@ -589,9 +589,9 @@ public class Mailbox {
      * @param session  The Session registering for notifications.
      * @throws ServiceException  If the mailbox is in maintenance mode. */
     public synchronized void addListener(Session session) throws ServiceException {
-        assert(session.getSessionId() != null);
         if (session == null)
             return;
+        assert(session.getSessionId() != null);
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
         if (!mListeners.contains(session))
@@ -4105,17 +4105,17 @@ public class Mailbox {
         }
     }
 
-    public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions opt)
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt)
     throws IOException, ServiceException {
-        return addMessage(octxt, pm, opt.getFolderId(), opt.getNoICal(), opt.getFlags(), opt.getTagString(),
-                          opt.getConversationId(), opt.getRecipientEmail(), opt.getCustomMetadata(), null);
+        return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTagString(),
+                          dopt.getConversationId(), dopt.getRecipientEmail(), dopt.getCustomMetadata(), null);
     }
     
-    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, DeliveryOptions opt)
+    public Message addMessage(OperationContext octxt, InputStream in, int sizeHint, Long receivedDate, DeliveryOptions dopt)
     throws IOException, ServiceException {
-        return addMessage(octxt, in, sizeHint, receivedDate, opt.getFolderId(), opt.getNoICal(),
-                          opt.getFlags(), opt.getTagString(), opt.getConversationId(), opt.getRecipientEmail(),
-                          opt.getCustomMetadata(), null);
+        return addMessage(octxt, in, sizeHint, receivedDate, dopt.getFolderId(), dopt.getNoICal(),
+                          dopt.getFlags(), dopt.getTagString(), dopt.getConversationId(), dopt.getRecipientEmail(),
+                          dopt.getCustomMetadata(), null);
     }
     
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
@@ -4382,35 +4382,7 @@ public class Mailbox {
                 }
             }
 
-            // step 3: write the redolog entries
-            if (dctxt.getShared()) {
-                if (dctxt.isFirst() && needRedo) {
-                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
-                    // Subsequent CreateMessage ops will reference this blob.  
-                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, dctxt.getMailboxIdList());
-                    storeRedoRecorder.start(getOperationTimestampMillis());
-                    storeRedoRecorder.setBlobBodyInfo(blob.getFile());
-                    storeRedoRecorder.log();
-                }
-                // Link to the file created by StoreIncomingBlob.
-                redoRecorder.setMessageLinkInfo(blob.getPath());
-            } else {
-                // Store the blob data inside the CreateMessage op.
-                redoRecorder.setMessageBodyInfo(blob.getFile());
-            }
-
-            // step 4: link to existing blob
-            StoreManager sm = StoreManager.getInstance();
-            MailboxBlob mblob = sm.link(staged, this, messageId, getOperationChangeID());
-            markOtherItemDirty(mblob);
-            
-            if (dctxt.getMailboxBlob() == null) {
-                // Set mailbox blob for in case we want to add the message to the
-                // message cache after delivery.
-                dctxt.setMailboxBlob(mblob);
-            }
-
-            // step 5: create the message and update the cache
+            // step 3: create the message and update the cache
             //         and if the message is also an invite, deal with the calendar item
             Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
             if (convTarget != null && debug)
@@ -4420,11 +4392,11 @@ public class Mailbox {
             ZVCalendar iCal = null;
             if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi))
                 iCal = cpi.cal;
-            msg = Message.create(messageId, folder, convTarget, pm, mblob, unread, flags, tags, dinfo, noICal, iCal, extended);
+            msg = Message.create(messageId, folder, convTarget, pm, staged, unread, flags, tags, dinfo, noICal, iCal, extended);
 
             redoRecorder.setMessageId(msg.getId());
 
-            // step 6: create a conversation for the message, if necessary
+            // step 4: create a conversation for the message, if necessary
             if (!DebugConfig.disableConversation && convTarget == null) {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
@@ -4478,6 +4450,36 @@ public class Mailbox {
                 redoRecorder.setConvFirstMsgId(-1);
             }
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
+
+            // step 5: write the redolog entries
+            if (dctxt.getShared()) {
+                if (dctxt.isFirst() && needRedo) {
+                    // Log entry in redolog for blob save.  Blob bytes are logged in the StoreIncoming entry.
+                    // Subsequent CreateMessage ops will reference this blob.  
+                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, dctxt.getMailboxIdList());
+                    storeRedoRecorder.start(getOperationTimestampMillis());
+                    storeRedoRecorder.setBlobBodyInfo(blob.getFile());
+                    storeRedoRecorder.log();
+                }
+                // Link to the file created by StoreIncomingBlob.
+                redoRecorder.setMessageLinkInfo(blob.getPath());
+            } else {
+                // Store the blob data inside the CreateMessage op.
+                redoRecorder.setMessageBodyInfo(blob.getFile());
+            }
+
+            // step 6: link to existing blob
+            MailboxBlob mblob = StoreManager.getInstance().link(staged, this, messageId, getOperationChangeID());
+            markOtherItemDirty(mblob);
+            // when we created the Message, we used the staged locator/size/digest;
+            //   make sure that data actually matches the final blob in the store
+            msg.updateBlobData(mblob);
+
+            if (dctxt.getMailboxBlob() == null) {
+                // Set mailbox blob for in case we want to add the message to the
+                // message cache after delivery.
+                dctxt.setMailboxBlob(mblob);
+            }
 
             // step 7: queue new message for inline indexing
             //        (don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't want to force message analysis!)
@@ -6300,11 +6302,14 @@ public class Mailbox {
                 long tags = Tag.tagsToBitmask(tagsStr);
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
 
+                Chat chat = Chat.create(itemId, getFolderById(folderId), pm, staged, false, flags, tags);
+                redoRecorder.setMessageId(chat.getId());
+                
                 MailboxBlob mblob = sm.link(staged, this, itemId, getOperationChangeID());
                 markOtherItemDirty(mblob);
-
-                Chat chat = Chat.create(itemId, getFolderById(folderId), pm, mblob, false, flags, tags);
-                redoRecorder.setMessageId(chat.getId());
+                // when we created the Chat, we used the staged locator/size/digest;
+                //   make sure that data actually matches the final blob in the store
+                chat.updateBlobData(mblob);
 
                 queueForIndexing(chat, false, docList);
                 success = true;

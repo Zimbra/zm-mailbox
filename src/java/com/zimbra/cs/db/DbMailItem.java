@@ -313,7 +313,7 @@ public class DbMailItem {
             stmt.setString(pos++, data.indexId);               // INDEX_ID
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
             if (data.locator != null)
-                stmt.setString(pos++, data.locator);          // VOLUME_ID
+                stmt.setString(pos++, data.locator);           // VOLUME_ID
             else
                 stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
@@ -857,6 +857,34 @@ public class DbMailItem {
                 throw MailServiceException.ALREADY_EXISTS(item.getName(), e);
             else
                 throw ServiceException.FAILURE("rewriting row data for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void saveBlobInfo(MailItem item) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
+                        " SET size = ?, blob_digest = ?, volume_id = ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            stmt.setLong(pos++, item.getSize());
+            stmt.setString(pos++, item.getDigest());
+            if (item.getLocator() != null)
+                stmt.setString(pos++, item.getLocator());
+            else
+                stmt.setNull(pos++, Types.TINYINT);
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("updating blob info for mailbox " + mbox.getId() + ", item " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }

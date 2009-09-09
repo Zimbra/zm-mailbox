@@ -84,7 +84,7 @@ public abstract class HttpStoreManager extends StoreManager {
         HttpBlobBuilder(Blob targetBlob)  { super(targetBlob); }
     }
 
-    @Override public BlobBuilder getBlobBuilder() throws IOException, ServiceException {
+    @Override public BlobBuilder getBlobBuilder() {
         return new HttpBlobBuilder(new HttpBlob(mIncoming.getNewIncomingFile()));
     }
 
@@ -131,8 +131,7 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
-    throws ServiceException {
+    @Override public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator) {
         return new HttpMailboxBlob(mbox, msgId, revision, locator);
     }
 
@@ -212,18 +211,18 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException {
+    @Override public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
         // link is a noop
         return renameTo(staged, destMbox, destMsgId, destRevision);
     }
 
-    @Override public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision)
-    throws IOException, ServiceException {
+    @Override public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
         // rename is a noop
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
         hsb.markInserted();
-        return new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getLocator()).setSize(hsb.getSize()).setDigest(hsb.getDigest());
+
+        MailboxBlob mblob = new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getStagedLocator());
+        return mblob.setSize(hsb.getStagedSize()).setDigest(hsb.getStagedDigest());
     }
 
     @Override public boolean delete(MailboxBlob mblob) throws IOException {
@@ -237,7 +236,7 @@ public abstract class HttpStoreManager extends StoreManager {
         // we only delete a staged blob if it hasn't already been added to the mailbox 
         if (hsb == null || hsb.isInserted())
             return true;
-        return delete(hsb.getMailbox(), hsb.getLocator());
+        return delete(hsb.getMailbox(), hsb.getStagedLocator());
     }
 
     private boolean delete(Mailbox mbox, String locator) throws IOException {
@@ -256,11 +255,11 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public boolean delete(Blob blob) throws IOException {
+    @Override public boolean delete(Blob blob) {
         return blob.getFile().delete();
     }
 
-    @Override public boolean deleteStore(Mailbox mbox) throws IOException, ServiceException {
+    @Override public boolean deleteStore(Mailbox mbox) {
         // TODO Auto-generated method stub
         return false;
     }

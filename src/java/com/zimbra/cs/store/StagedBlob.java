@@ -31,7 +31,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  *  is not always the case, however; {@link StoreManager#stage} may
  *  involve making a local copy of the original <code>Blob</code> or
  *  even pushing it out into the cloud. */
-public class StagedBlob {
+public abstract class StagedBlob {
     private final Mailbox mMailbox;
     private final String mDigest;
     private final long mSize;
@@ -46,11 +46,25 @@ public class StagedBlob {
         return mMailbox;
     }
 
-    public long getSize() {
+    /** Returns the logical size of the blob before it was staged. */
+    public long getOriginalSize() {
         return mSize;
     }
 
-    public String getDigest() {
+    /** Returns the digest of the blob before it was staged. */
+    public String getOriginalDigest() {
         return mDigest;
     }
+
+    /** Returns the logical size of the blob after it was staged. */
+    public long getStagedSize() {
+        return mSize;
+    }
+
+    /** Returns the digest of the blob after it was staged. */
+    public String getStagedDigest() {
+        return mDigest;
+    }
+
+    public abstract String getStagedLocator();
 }
