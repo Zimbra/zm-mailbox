@@ -197,7 +197,7 @@ public class RedoConfig {
     }
 
     private long mRedoLogCrashRecoveryLookbackSec;
-    private static final long D_REDOLOG_CRASH_RECOVERY_LOOKBACK_SEC = 10;
+    private static final long D_REDOLOG_CRASH_RECOVERY_LOOKBACK_SEC = 0;
     /**
      * This parameter is also related to running mysql with innodb_flush_log_at_trx_commit=0.
      * When recovering from a crash, mysql may not have the committed changes from roughly the last second. 

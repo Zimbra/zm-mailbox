@@ -33,7 +33,7 @@ public class ZAttrCalendarResource extends Account {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090902-1033 */
+    /* build: 6.0.0 jhahm 20090908-1744 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
