@@ -36,6 +36,11 @@
             <param-name>minGzipSize</param-name>
             <param-value>2048</param-value>
         </init-param>
+
+        <init-param>
+            <param-name>uncheckedPrintWriter</param-name>
+            <param-value>true</param-value>
+        </init-param>
     </filter>
 
     <filter-mapping>
