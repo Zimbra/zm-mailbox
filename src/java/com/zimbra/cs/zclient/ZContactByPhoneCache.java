@@ -17,6 +17,7 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.zclient.event.*;
 
@@ -37,8 +38,8 @@ public class ZContactByPhoneCache extends ZEventHandler {
 		public String getField() { return mField; }
 	}
 	private static List<String> sATTRS = Arrays.asList(
-			Contact.A_homePhone, Contact.A_homePhone2, Contact.A_mobilePhone,
-			Contact.A_otherPhone, Contact.A_workPhone, Contact.A_workPhone2);
+			ContactConstants.A_homePhone, ContactConstants.A_homePhone2, ContactConstants.A_mobilePhone,
+			ContactConstants.A_otherPhone, ContactConstants.A_workPhone, ContactConstants.A_workPhone2);
 
 
 	// Map of phone fields to contacts
