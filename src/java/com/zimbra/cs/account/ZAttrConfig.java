@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 jhahm 20090908-1744 */
+    /* build: 6.0.0 pshao 20090902-1033 */
 
     /**
      * RFC2256: descriptive information
@@ -17777,13 +17777,13 @@ public class ZAttrConfig extends Entry {
      * crash recovery; related to mysql parameter
      * innodb_flush_log_at_trx_commit=0
      *
-     * @return zimbraRedoLogCrashRecoveryLookbackSec, or 0 if unset
+     * @return zimbraRedoLogCrashRecoveryLookbackSec, or 10 if unset
      *
      * @since ZCS 6.0.0_BETA2
      */
     @ZAttr(id=1009)
     public int getRedoLogCrashRecoveryLookbackSec() {
-        return getIntAttr(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, 0);
+        return getIntAttr(Provisioning.A_zimbraRedoLogCrashRecoveryLookbackSec, 10);
     }
 
     /**
