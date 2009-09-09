@@ -36,13 +36,15 @@ public class GetVersionInfo extends AdminDocumentHandler {
         Element infoEl = response.addElement(AdminConstants.A_VERSION_INFO_INFO);
         
         String fullVersionInfo = BuildInfo.VERSION;
-        if (!StringUtil.isNullOrEmpty(BuildInfo.TYPE))
+        if (!StringUtil.isNullOrEmpty(BuildInfo.TYPE)) {
             fullVersionInfo = fullVersionInfo + "." + BuildInfo.TYPE;
-            
+            infoEl.addAttribute(AdminConstants.A_VERSION_INFO_TYPE, BuildInfo.TYPE);
+        }    
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_VERSION, fullVersionInfo);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_RELEASE, BuildInfo.RELEASE);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_DATE, BuildInfo.DATE);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_HOST, BuildInfo.HOST);
+        
         return response;
     }
 
