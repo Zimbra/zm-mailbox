@@ -4,6 +4,8 @@
 
     <property environment="env"/>
 
+    <property name="javac.target" value="1.5"/>
+
     <!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
           if set.  If not, default to "zimbra". -->
     <condition property="zimbra.user" value="${env.ZIMBRA_USER}">
@@ -354,7 +356,7 @@
 	            public static final String HOST = "${zimbra.buildinfo.host}";
             }
         </echo>
-        <javac destdir="${build.classes.dir}" debug="true" srcdir="${build.dir}/buildinfo">
+        <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
 
@@ -499,7 +501,7 @@
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
         <ant dir="${im.dir}" target="jar" inheritAll="false"/>
         <javac fork="true" memorymaximumsize="256m" destdir="${build.classes.dir}" debug="true"
-               classpathref="class.path">
+               classpathref="class.path" target="${javac.target}">
             <src refid="all.java.path"/>
         </javac>
         <antcall target="db-versions-init"/>
