@@ -1,6 +1,8 @@
 <project name="ZimbraCommon" default="jar">
 	
 	<!-- Properties -->
+
+	<property name="javac.target" value="1.5"/>
 	
 	<property name="jar.file" value="zimbracommon.jar" />
 	<property name="src.java.dir" location="src/java" />
@@ -34,7 +36,7 @@
 	</target>
 
 	<target name="compile" depends="build-init" description="Compiles the source code">
-		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
+		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
 			<src refid="all.java.path" />
 		</javac>
 	</target>
