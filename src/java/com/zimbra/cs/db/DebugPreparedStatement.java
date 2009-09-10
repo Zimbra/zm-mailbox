@@ -21,15 +21,11 @@ import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -37,16 +33,18 @@ import java.util.Calendar;
 import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
+import org.apache.commons.dbcp.DelegatingPreparedStatement;
+import org.apache.commons.dbcp.DelegatingConnection;
 
-class DebugPreparedStatement implements PreparedStatement {
+class DebugPreparedStatement extends DelegatingPreparedStatement {
 
     private static final int MAX_STRING_LENGTH = 1024;
     private static long sSlowSqlThreshold = Long.MAX_VALUE;
     
+    private final PreparedStatement mStmt;
     private String mSql;
-    private PreparedStatement mStmt;
     private long mStartTime;
-    
+
     /**
      * A list that implicitly resizes when {@link #set} is called.
      */
@@ -64,11 +62,12 @@ class DebugPreparedStatement implements PreparedStatement {
     }
     private List<Object> mParams = new AutoSizeList<Object>();
     
-    DebugPreparedStatement(PreparedStatement stmt, String sql) {
+    DebugPreparedStatement(DelegatingConnection conn, PreparedStatement stmt, String sql) {
+        super(conn, stmt);
         mStmt = stmt;
         mSql = sql;
     }
-    
+
     public static void setSlowSqlThreshold(long millis) {
         ZimbraLog.sqltrace.info("Setting slow SQL threshold to %dms.", millis);
         sSlowSqlThreshold = millis;
@@ -149,10 +148,14 @@ class DebugPreparedStatement implements PreparedStatement {
     }
     
     /////////// PreparedStatement implementation ///////////////
+
+    public boolean isClosed() {
+        return super.isClosed();
+    }
     
     public ResultSet executeQuery() throws SQLException {
         startTimer();
-        ResultSet rs = null;
+        ResultSet rs;
         try {
             rs = mStmt.executeQuery();
         } catch (SQLException e) {
@@ -165,7 +168,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public int executeUpdate() throws SQLException {
         startTimer();
-        int numRows = 0;
+        int numRows;
         try {
             numRows = mStmt.executeUpdate();
         } catch (SQLException e) {
@@ -182,37 +185,37 @@ class DebugPreparedStatement implements PreparedStatement {
     }
 
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-        mParams.set(parameterIndex, new Boolean(x));
+        mParams.set(parameterIndex, x);
         mStmt.setBoolean(parameterIndex, x);
     }
 
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        mParams.set(parameterIndex, new Byte(x));
+        mParams.set(parameterIndex, x);
         mStmt.setByte(parameterIndex, x);
     }
 
     public void setShort(int parameterIndex, short x) throws SQLException {
-        mParams.set(parameterIndex, new Short(x));
+        mParams.set(parameterIndex, x);
         mStmt.setShort(parameterIndex, x);
     }
 
     public void setInt(int parameterIndex, int x) throws SQLException {
-        mParams.set(parameterIndex, new Integer(x));
+        mParams.set(parameterIndex, x);
         mStmt.setInt(parameterIndex, x);
     }
 
     public void setLong(int parameterIndex, long x) throws SQLException {
-        mParams.set(parameterIndex, new Long(x));
+        mParams.set(parameterIndex, x);
         mStmt.setLong(parameterIndex, x);
     }
 
     public void setFloat(int parameterIndex, float x) throws SQLException {
-        mParams.set(parameterIndex, new Float(x));
+        mParams.set(parameterIndex, x);
         mStmt.setFloat(parameterIndex, x);
     }
 
     public void setDouble(int parameterIndex, double x) throws SQLException {
-        mParams.set(parameterIndex, new Double(x));
+        mParams.set(parameterIndex, x);
         mStmt.setDouble(parameterIndex, x);
     }
 
@@ -293,7 +296,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public boolean execute() throws SQLException {
         startTimer();
-        boolean result = false;
+        boolean result;
         try {
             result = mStmt.execute();
         } catch (SQLException e) {
@@ -302,10 +305,6 @@ class DebugPreparedStatement implements PreparedStatement {
         }
         log();
         return result;
-    }
-
-    public void addBatch() throws SQLException {
-        mStmt.addBatch();
     }
 
     public void setCharacterStream(int parameterIndex, Reader reader, int length)
@@ -334,10 +333,6 @@ class DebugPreparedStatement implements PreparedStatement {
         mStmt.setArray(i, x);
     }
 
-    public ResultSetMetaData getMetaData() throws SQLException {
-        return mStmt.getMetaData();
-    }
-
     public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setDate(parameterIndex, x, cal);
@@ -363,14 +358,10 @@ class DebugPreparedStatement implements PreparedStatement {
         mStmt.setURL(parameterIndex, x);
     }
 
-    public ParameterMetaData getParameterMetaData() throws SQLException {
-        return mStmt.getParameterMetaData();
-    }
-
     public ResultSet executeQuery(String sql) throws SQLException {
         mSql = sql;
         startTimer();
-        ResultSet rs = null;
+        ResultSet rs;
         try {
             rs = mStmt.executeQuery(sql);
         } catch (SQLException e) {
@@ -395,54 +386,6 @@ class DebugPreparedStatement implements PreparedStatement {
         return numRows;
     }
 
-    public void close() throws SQLException {
-        mStmt.close();
-    }
-
-    public int getMaxFieldSize() throws SQLException {
-        return mStmt.getMaxFieldSize();
-    }
-
-    public void setMaxFieldSize(int max) throws SQLException {
-        mStmt.setMaxFieldSize(max);
-    }
-
-    public int getMaxRows() throws SQLException {
-        return mStmt.getMaxRows();
-    }
-
-    public void setMaxRows(int max) throws SQLException {
-        mStmt.setMaxRows(max);
-    }
-
-    public void setEscapeProcessing(boolean enable) throws SQLException {
-        mStmt.setEscapeProcessing(enable);
-    }
-
-    public int getQueryTimeout() throws SQLException {
-        return mStmt.getQueryTimeout();
-    }
-
-    public void setQueryTimeout(int seconds) throws SQLException {
-        mStmt.setQueryTimeout(seconds);
-    }
-
-    public void cancel() throws SQLException {
-        mStmt.cancel();
-    }
-
-    public SQLWarning getWarnings() throws SQLException {
-        return mStmt.getWarnings();
-    }
-
-    public void clearWarnings() throws SQLException {
-        mStmt.clearWarnings();
-    }
-
-    public void setCursorName(String name) throws SQLException {
-        mStmt.setCursorName(name);
-    }
-
     public boolean execute(String sql) throws SQLException {
         mSql = sql;
         startTimer();
@@ -457,53 +400,9 @@ class DebugPreparedStatement implements PreparedStatement {
         return result;
     }
 
-    public ResultSet getResultSet() throws SQLException {
-        return mStmt.getResultSet();
-    }
-
-    public int getUpdateCount() throws SQLException {
-        return mStmt.getUpdateCount();
-    }
-
-    public boolean getMoreResults() throws SQLException {
-        return mStmt.getMoreResults();
-    }
-
-    public void setFetchDirection(int direction) throws SQLException {
-        mStmt.setFetchDirection(direction);
-    }
-
-    public int getFetchDirection() throws SQLException {
-        return mStmt.getFetchDirection();
-    }
-
-    public void setFetchSize(int rows) throws SQLException {
-        mStmt.setFetchSize(rows);
-    }
-
-    public int getFetchSize() throws SQLException {
-        return mStmt.getFetchSize();
-    }
-
-    public int getResultSetConcurrency() throws SQLException {
-        return mStmt.getResultSetConcurrency();
-    }
-
-    public int getResultSetType() throws SQLException {
-        return mStmt.getResultSetType();
-    }
-
-    public void addBatch(String sql) throws SQLException {
-        mStmt.addBatch(sql);
-    }
-
-    public void clearBatch() throws SQLException {
-        mStmt.clearBatch();
-    }
-
     public int[] executeBatch() throws SQLException {
         startTimer();
-        int[] result = null;
+        int[] result;
         try {
             result = mStmt.executeBatch();
         } catch (SQLException e) {
@@ -514,21 +413,9 @@ class DebugPreparedStatement implements PreparedStatement {
         return result;
     }
 
-    public Connection getConnection() throws SQLException {
-        return mStmt.getConnection();
-    }
-
-    public boolean getMoreResults(int current) throws SQLException {
-        return mStmt.getMoreResults(current);
-    }
-
-    public ResultSet getGeneratedKeys() throws SQLException {
-        return mStmt.getGeneratedKeys();
-    }
-
     public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
         startTimer();
-        int numRows = 0;
+        int numRows;
         try {
             numRows = mStmt.executeUpdate(sql, autoGeneratedKeys);
         } catch (SQLException e) {
@@ -541,7 +428,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
         startTimer();
-        int numRows = 0;
+        int numRows;
         try {
             numRows = mStmt.executeUpdate(sql, columnIndexes);
         } catch (SQLException e) {
@@ -554,7 +441,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public int executeUpdate(String sql, String[] columnNames) throws SQLException {
         startTimer();
-        int numRows = 0;
+        int numRows;
         try {
             numRows = mStmt.executeUpdate(sql, columnNames);
         } catch (SQLException e) {
@@ -567,7 +454,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
         startTimer();
-        boolean result = false;
+        boolean result;
         try {
             result = mStmt.execute(sql, autoGeneratedKeys);
         } catch (SQLException e) {
@@ -580,7 +467,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public boolean execute(String sql, int[] columnIndexes) throws SQLException {
         startTimer();
-        boolean result = false;
+        boolean result;
         try {
             result = mStmt.execute(sql, columnIndexes);
         } catch (SQLException e) {
@@ -593,7 +480,7 @@ class DebugPreparedStatement implements PreparedStatement {
 
     public boolean execute(String sql, String[] columnNames) throws SQLException {
         startTimer();
-        boolean result = false;
+        boolean result;
         try {
             result = mStmt.execute(sql, columnNames);
         } catch (SQLException e) {
@@ -602,9 +489,5 @@ class DebugPreparedStatement implements PreparedStatement {
         }
         log();
         return result;
-    }
-
-    public int getResultSetHoldability() throws SQLException {
-        return mStmt.getResultSetHoldability();
     }
 }
