@@ -622,6 +622,48 @@ Internally, the algorithm for deciding on cross domain ACL checking is:
         or
         user user1@P.com (grant: {id-of-adminB@X.com} usr rightFoo)
         
+   Note:
+       - target right inheritance from a group is based on target "being a member" in the group.
+       - target right inheritance from a domain is based on target "being in the domain".
+       
+       Therefore, being a member in a group in a different domain does NOT make the 
+       target inheirt rights from the domain of the group.
+       
+       For example:
+            group group@X.com has members user@X.com, user@Y.com
+            
+            then: 
+                - group@X.com can inherit grants granted on domain X.com, because 
+                  group@X.com is in domain X.com.
+                  e.g. if an admin is granted addDistributionListMember right on 
+                       domain X.com, the right is inherited on group@X.com
+                  
+                - user@X.com can inherit grants granted on domain X.com, because 
+                  user@X.com is in domain X.com.
+                  e.g. if an admin is granted changePassword right on 
+                       domain X.com, the right is inherited on user@X.com.
+                  
+                - user@Y.com CANNOT inherit grants granted on domain X.com, because 
+                  user@Y.com is NOT in domain Y.com.
+                  
+                - user@X.com and user@Y.com can inherit grants granted on group group@X.com, 
+                  because user@X.com and user@Y.com are members in group group@X.com.
+                  e.g. if an admin is granted changePassword right on group@X.com.
+                       the right is inherited on user@X.com and user@Y.com.
+                       
+                       There is no cross domain issue for inherited rights for user@X.com, 
+                       because user@X.com is in the same domain as the target(group@X.com) 
+                       from which the rights are inherited from.
+                       
+                       However, for user@Y.com, the inherited grants are effective only when
+                       one of the following is true:
+                       1. the admin is in domain Y.com, or
+                       2. the admin is in a domain that has crossDomainAdmin right on 
+                          domain Y.com
+                       
+                       Otherwise the inherited grants are not effective on user@Y.com.
+
+             
         
 6. Otherwise, deny.               
      
