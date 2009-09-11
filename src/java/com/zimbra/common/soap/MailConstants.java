@@ -43,6 +43,10 @@ public class MailConstants {
     public static final QName GET_METADATA_RESPONSE = QName.get("GetCustomMetadataResponse", NAMESPACE);
     public static final QName SET_METADATA_REQUEST = QName.get("SetCustomMetadataRequest", NAMESPACE);
     public static final QName SET_METADATA_RESPONSE = QName.get("SetCustomMetadataResponse", NAMESPACE);
+    public static final QName GET_MAILBOX_METADATA_REQUEST = QName.get("GetMailboxMetadataRequest", NAMESPACE);
+    public static final QName GET_MAILBOX_METADATA_RESPONSE = QName.get("GetMailboxMetadataResponse", NAMESPACE);
+    public static final QName SET_MAILBOX_METADATA_REQUEST = QName.get("SetMailboxMetadataRequest", NAMESPACE);
+    public static final QName SET_MAILBOX_METADATA_RESPONSE = QName.get("SetMailboxMetadataResponse", NAMESPACE);
 
     // conversations
     public static final QName GET_CONV_REQUEST = QName.get("GetConvRequest", NAMESPACE);
