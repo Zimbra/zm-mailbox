@@ -1025,7 +1025,7 @@ public class TarFormatter extends Formatter {
                 if (oldItem == null) {
                     fldr = createParent(context, fmap, path, Folder.TYPE_UNKNOWN);
                     newItem = fldr = mbox.createFolder(oc, f.getName(),
-                        fldr.getId(), f.getAttributes(), f.getDefaultView(),
+                        fldr.getId(), (byte)0, f.getDefaultView(),
                         f.getFlagBitmask(), f.getColor(), f.getUrl());
                     if (acl)
                         mbox.setPermissions(oc, fldr.getId(), f.getACL());
