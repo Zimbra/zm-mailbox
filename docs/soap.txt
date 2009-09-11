@@ -2502,6 +2502,33 @@ zimbra_noop_max_timeout)
 
 ---------------------------
 
+<SetMailboxMetadataRequest>
+  <meta section="{metadata-section-key}">
+    (<a n="{key}">{value}</a>)*
+  </meta>
+</SetMailboxMetadataRequest>
+
+<SetMailboxMetadataResponse/>
+
+    -- setting a mailbox metadata section but providing no key/value pairs
+       will remove the section from mailbox metadata
+
+    -- {metadata-section-key} must be no more than 36 characters long and must be
+       in the format of {namespace}:{section-name}.  currently the only valid
+       namespace is "zwc".
+
+<GetMailboxMetadataRequest>
+  <meta section="{metadata-section-key}"/>
+</GetMailboxMetadataRequest>
+
+<GetMailboxMetadataResponse>
+  <meta section="{metadata-section-key}">
+     (<a n="{key}">{value}</a>)*
+  </meta>
+</GetMailboxMetadataResponse>
+
+---------------------------
+
 <GetFilterRulesRequest/>
 
 <GetFilterRulesResponse>
