@@ -19,9 +19,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.activation.DataHandler;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -44,7 +42,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -119,12 +116,12 @@ public class SendDeliveryReport extends MailDocumentHandler {
             mpMDN.setHeader("Content-Type", "message/disposition-notification; charset=utf-8");
             multi.addBodyPart(mpMDN);
 
-            // part 3: original message
-            MimeBodyPart mpOriginal = new MimeBodyPart();
-            mpOriginal.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
-            mpOriginal.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
-            mpOriginal.setHeader("Content-Disposition", Part.ATTACHMENT);
-            multi.addBodyPart(mpOriginal);
+//            // part 3: original message
+//            MimeBodyPart mpOriginal = new MimeBodyPart();
+//            mpOriginal.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
+//            mpOriginal.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
+//            mpOriginal.setHeader("Content-Disposition", Part.ATTACHMENT);
+//            multi.addBodyPart(mpOriginal);
 
             report.setContent(multi);
             report.setHeader("Content-Type", multi.getContentType() + "; report-type=disposition-notification");
