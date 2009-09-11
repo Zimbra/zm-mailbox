@@ -36,6 +36,13 @@ public class PlainAuthenticator extends Authenticator {
         super(MECHANISM, user);
     }
 
+    // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
+    //              unless a strong encryption layer (such as the provided by TLS)
+    //              is active or backwards compatibility dictates otherwise."
+    @Override protected boolean isSupported() {
+        return mAuthUser.isSSLEnabled() || mAuthUser.allowCleartextLogin();
+    }
+
     @Override public boolean initialize()  { return true; }
     @Override public void dispose()        { }
 
@@ -47,9 +54,8 @@ public class PlainAuthenticator extends Authenticator {
     @Override public SaslServer getSaslServer()  { return null; }
 
     @Override public void handle(byte[] data) throws IOException {
-        if (isComplete()) {
+        if (isComplete())
             throw new IllegalStateException("Authentication already completed");
-        }
 
         // RFC 2595 6: "Non-US-ASCII characters are permitted as long as they are
         //              represented in UTF-8 [UTF-8]."

@@ -69,4 +69,12 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
     public boolean isSSLEnabled() {
         return mHandler.isSSLEnabled();
     }
+
+    public boolean allowCleartextLogin() {
+        return mHandler.mConfig.allowCleartextLogins();
+    }
+
+    public boolean isGssapiAvailable() {
+        return mHandler.mConfig.isSaslGssapiEnabled();
+    }
 }

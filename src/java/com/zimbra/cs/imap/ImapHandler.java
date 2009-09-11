@@ -52,7 +52,6 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
-import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.mail.FolderAction;
@@ -900,26 +899,27 @@ abstract class ImapHandler extends ProtocolHandler {
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
 
-        boolean authenticated = isAuthenticated();
-        String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
-        String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS") ? "" : " STARTTLS";
-        String plain    = !allowCleartextLogins() || authenticated || !extensionEnabled("AUTH=PLAIN") ? "" : " AUTH=PLAIN";
-        String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
-        String zimbra   = authenticated || !extensionEnabled("AUTH=" + ZimbraAuthenticator.MECHANISM) ? "" : " AUTH=" + ZimbraAuthenticator.MECHANISM;
-        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss + zimbra);
+        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1");
+
+        if (!isAuthenticated()) {
+            if (!mStartedTLS && !mConfig.allowCleartextLogins())
+                capability.append(" LOGINDISABLED");
+            if (!mStartedTLS && extensionEnabled("STARTTLS"))
+                capability.append(" STARTTLS");
+
+            AuthenticatorUser authUser = new ImapAuthenticatorUser(this, null);
+            for (String mechanism : Authenticator.listMechanisms()) {
+                if (mechanismEnabled(mechanism) && Authenticator.getAuthenticator(mechanism, authUser) != null)
+                    capability.append(" AUTH=").append(mechanism);
+            }
+        }
+
         for (String extension : SUPPORTED_EXTENSIONS) {
             if (extensionEnabled(extension))
                 capability.append(' ').append(extension);
         }
 
         return capability.toString();
-    }
-
-    // TODO Remove this debugging option for final release
-    private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
-
-    private boolean isGssAuthEnabled() {
-        return (GSS_ENABLED || mConfig.isSaslGssapiEnabled()) && extensionEnabled("AUTH=GSSAPI");
     }
 
     boolean extensionEnabled(String extension) {
@@ -942,12 +942,15 @@ abstract class ImapHandler extends ProtocolHandler {
         return true;
     }
 
+    private boolean mechanismEnabled(String mechanism) {
+        return extensionEnabled("AUTH=" + mechanism);
+    }
+
     boolean doNOOP(String tag) throws IOException {
         sendNotifications(true, false);
         sendOK(tag, "NOOP completed");
         return CONTINUE_PROCESSING;
     }
-
 
     // RFC 2971 3: "The sole purpose of the ID extension is to enable clients and servers
     //              to exchange information on their implementations for the purposes of
@@ -1072,26 +1075,16 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         AuthenticatorUser authUser = new ImapAuthenticatorUser(this, tag);
-        if (PlainAuthenticator.MECHANISM.equals(mechanism) && mechanismEnabled(mechanism)) {
-            // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
-            //              unless a strong encryption layer (such as the provided by TLS)
-            //              is active or backwards compatibility dictates otherwise."
-            if (!allowCleartextLogins()) {
-                sendNO(tag, "cleartext logins disabled");
-                return CONTINUE_PROCESSING;
-            }
-            mAuthenticator = new PlainAuthenticator(authUser);
-        } else if (GssAuthenticator.MECHANISM.equals(mechanism) && isGssAuthEnabled()) {
-            mAuthenticator = new GssAuthenticator(authUser);
-            mAuthenticator.setConnection(mConnection);
-        } else if (ZimbraAuthenticator.MECHANISM.equals(mechanism) && mechanismEnabled(mechanism)) {
-            mAuthenticator = new ZimbraAuthenticator(authUser);
-        } else {
-            // no other AUTHENTICATE mechanisms are supported yet
-            sendNO(tag, "mechanism not supported");
+        Authenticator auth = Authenticator.getAuthenticator(mechanism, authUser);
+        // auth is null if you're not permitted to use that mechanism (including needing TLS layer)
+        //   also check to make sure the auth mechanism hasn't been disabled on the server
+        if (auth == null || !mechanismEnabled(mechanism)) {
+            sendNO(tag, "mechanism not supported: " + mechanism);
             return CONTINUE_PROCESSING;
         }
 
+        mAuthenticator = auth;
+        mAuthenticator.setConnection(mConnection);
         if (!mAuthenticator.initialize()) {
             mAuthenticator = null;
             return CONTINUE_PROCESSING;
@@ -1108,19 +1101,11 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private boolean mechanismEnabled(String mechanism) {
-        return extensionEnabled("AUTH=" + mechanism);
-    }
-
-    private boolean allowCleartextLogins() {
-        return mStartedTLS || mConfig.allowCleartextLogins();
-    }
-
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (!allowCleartextLogins()) {
+        if (!mStartedTLS && !mConfig.allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }

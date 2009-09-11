@@ -74,4 +74,12 @@ class ImapAuthenticatorUser implements AuthenticatorUser {
     public boolean isSSLEnabled() {
         return mHandler.isSSLEnabled();
     }
+
+    public boolean allowCleartextLogin() {
+        return mHandler.getConfig().allowCleartextLogins();
+    }
+
+    public boolean isGssapiAvailable() {
+        return mHandler.getConfig().isSaslGssapiEnabled();
+    }
 }

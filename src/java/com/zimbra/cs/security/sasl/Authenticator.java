@@ -24,12 +24,55 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 
 import java.net.Socket;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.security.sasl.SaslServer;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public abstract class Authenticator {
+    static interface AuthenticatorFactory {
+        public Authenticator getAuthenticator(AuthenticatorUser authUser);
+    }
+
+    private static final Map<String, AuthenticatorFactory> mRegisteredMechanisms = new LinkedHashMap<String, AuthenticatorFactory>();
+    private static Collection<String> mMechanismList = Collections.emptyList();
+
+    static {
+        registerMechanism(PlainAuthenticator.MECHANISM, new AuthenticatorFactory() {
+            public Authenticator getAuthenticator(AuthenticatorUser authUser)  { return new PlainAuthenticator(authUser); }
+        });
+        registerMechanism(GssAuthenticator.MECHANISM, new AuthenticatorFactory() {
+            public Authenticator getAuthenticator(AuthenticatorUser authUser)  { return new GssAuthenticator(authUser); }
+        });
+        registerMechanism(ZimbraAuthenticator.MECHANISM, new AuthenticatorFactory() {
+            public Authenticator getAuthenticator(AuthenticatorUser authUser)  { return new ZimbraAuthenticator(authUser); }
+        });
+    }
+
+    public static void registerMechanism(String mechanism, AuthenticatorFactory authFactory) {
+        mRegisteredMechanisms.put(mechanism.toUpperCase(), authFactory);
+        mMechanismList = Collections.unmodifiableCollection(mRegisteredMechanisms.keySet());
+    }
+
+    public static Authenticator getAuthenticator(String mechanism, AuthenticatorUser authUser) {
+        AuthenticatorFactory authFactory = mRegisteredMechanisms.get(mechanism.toUpperCase());
+        if (authFactory == null)
+            return null;
+        Authenticator auth = authFactory.getAuthenticator(authUser);
+        return auth.isSupported() ? auth : null;
+    }
+
+    public static Collection<String> listMechanisms() {
+        return mMechanismList;
+    }
+
+
     protected final String mProtocol;
     protected final String mMechanism;
     protected final AuthenticatorUser mAuthUser;
@@ -42,6 +85,10 @@ public abstract class Authenticator {
         mMechanism = mechanism;
         mAuthUser  = authUser;
     }
+
+    /** Whether this Authenticator is valid for the server/protocol/etc. as
+     *  constrained by its AuthenticatorUser. */
+    protected abstract boolean isSupported();
 
     public abstract boolean initialize() throws IOException;
 

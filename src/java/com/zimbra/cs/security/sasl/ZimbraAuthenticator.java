@@ -36,6 +36,9 @@ public class ZimbraAuthenticator extends Authenticator {
         super(MECHANISM, user);
     }
 
+    // X-ZIMBRA is supported in all protocols (IMAP, POP, etc.)
+    @Override protected boolean isSupported()  { return true; }
+
     @Override public boolean initialize()  { return true; }
     @Override public void dispose()        { }
 

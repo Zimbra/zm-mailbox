@@ -31,9 +31,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
-import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
-import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
@@ -54,10 +52,6 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private static final String TERMINATOR = ".";
     private static final int TERMINATOR_C = '.';    
     private static final byte[] TERMINATOR_BYTE = { '.' };
-
-    private static final String MECHANISM_PLAIN = PlainAuthenticator.MECHANISM;
-    private static final String MECHANISM_GSSAPI = GssAuthenticator.MECHANISM;
-    private static final String MECHANISM_ZIMBRA = ZimbraAuthenticator.MECHANISM;
     
     // Connection specific data
     protected Pop3Config mConfig;
@@ -483,7 +477,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         if (password.length() > 1024)
             throw new Pop3CmdException("password length too long");
 
-        authenticate(null, mUser, password, null);
+        authenticate(mUser, null, password, null);
         sendOK("server ready");
     }
 
@@ -502,39 +496,25 @@ public abstract class Pop3Handler extends ProtocolHandler {
         String initialResponse = i > 0 ? arg.substring(i + 1) : null;
 
         AuthenticatorUser authUser = new Pop3AuthenticatorUser(this);
-        if (MECHANISM_PLAIN.equals(mechanism)) {
-            if (!allowCleartextLogins()) {
-                sendERR("cleartext logins disabled");
-                return;
-            }
-            mAuthenticator = new PlainAuthenticator(authUser);
-        } else if (MECHANISM_ZIMBRA.equals(mechanism)) {
-            if (!allowCleartextLogins()) {
-                sendERR("cleartext logins disabled");
-                return;
-            }
-            mAuthenticator = new ZimbraAuthenticator(authUser);
-        } else if (MECHANISM_GSSAPI.equals(mechanism) && isGssAuthEnabled()) {
-            mAuthenticator = new GssAuthenticator(authUser);
-            mAuthenticator.setConnection(mConnection);
-        } else {
+        Authenticator auth = Authenticator.getAuthenticator(mechanism, authUser);
+        // auth is null if you're not permitted to use that mechanism (including needing TLS layer)
+        if (auth == null) {
             sendERR("mechanism not supported");
             return;
         }
 
+        mAuthenticator = auth;
+        mAuthenticator.setConnection(mConnection);
         if (!mAuthenticator.initialize()) {
             mAuthenticator = null;
             return;
         }
+
         if (initialResponse != null) {
             continueAuthentication(initialResponse);
         } else {
             sendContinuation("");
         }
-    }
-
-    private boolean allowCleartextLogins() {
-        return mStartedTLS || mConfig.allowCleartextLogins() || mConfig.isSSLEnabled();
     }
     
     private boolean continueAuthentication(String response) throws IOException {
@@ -552,13 +532,6 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
     private boolean isAuthenticated() {
         return mState != STATE_AUTHORIZATION && mAccountId != null;
-    }
-
-    // TODO Remove this debugging option for final release
-    private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
-
-    private boolean isGssAuthEnabled() {
-        return GSS_ENABLED || mConfig.isSaslGssapiEnabled();
     }
     
     protected void authenticate(String username, String authenticateId, String password, Authenticator auth)
@@ -606,7 +579,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
 
     private void checkIfLoginPermitted() throws Pop3CmdException {
-        if (!allowCleartextLogins())
+        if (!mStartedTLS && !mConfig.allowCleartextLogins()) 
             throw new Pop3CmdException("only valid after entering TLS mode");        
     }
 
@@ -745,12 +718,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
         }
         sendLine("SASL" + getSaslCapabilities(), false);
         if (mState != STATE_TRANSACTION) {
-            sendLine("EXPIRE "+MIN_EXPIRE_DAYS+" USER", false);
+            sendLine("EXPIRE " + MIN_EXPIRE_DAYS + " USER", false);
         } else {
             if (mExpire == 0)
                 sendLine("EXPIRE NEVER", false);                
             else
-                sendLine("EXPIRE "+mExpire, false);
+                sendLine("EXPIRE " + mExpire, false);
         }
         sendLine("XOIP", false);
         // TODO: VERSION INFO
@@ -778,9 +751,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
 
     private String getSaslCapabilities() {
+        AuthenticatorUser authUser = new Pop3AuthenticatorUser(this);
         StringBuilder sb = new StringBuilder();
-        if (allowCleartextLogins()) sb.append(" PLAIN X-ZIMBRA");
-        if (isGssAuthEnabled()) sb.append(" GSSAPI");
+        for (String mechanism : Authenticator.listMechanisms()) {
+            if (Authenticator.getAuthenticator(mechanism, authUser) != null)
+                sb.append(' ').append(mechanism);
+        }
         return sb.toString();
     }
     

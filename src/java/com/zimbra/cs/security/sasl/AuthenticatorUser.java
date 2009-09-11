@@ -83,7 +83,7 @@ public interface AuthenticatorUser {
      * @throws IOException if an I/O error occurred
      */
     boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
-        throws IOException;
+    throws IOException;
 
     /**
      * Returns the logger to be used by the authenticator.
@@ -95,7 +95,23 @@ public interface AuthenticatorUser {
     /**
      * Returns true if SSL encryption is enabled for the connection.
      *
-     * @return if SSL encryption has been enabled, false otherwise
+     * @return true if SSL encryption has been enabled, false otherwise
      */
     boolean isSSLEnabled();
+
+    /**
+     * Returns true if plain username/password login is permitted without
+     * SSL encryption active.
+     *
+     * @return true if login is permitted without SSL encryption, false otherwise
+     */
+    boolean allowCleartextLogin();
+
+    /**
+     * Returns true if plain username/password login is permitted without
+     * SSL encryption active.
+     *
+     * @return true if login is permitted without SSL encryption, false otherwise
+     */
+    boolean isGssapiAvailable();
 }

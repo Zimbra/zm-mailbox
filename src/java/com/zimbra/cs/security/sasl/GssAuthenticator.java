@@ -61,10 +61,12 @@ public class GssAuthenticator extends Authenticator {
         LC.krb5_debug_enabled.booleanValue() || Boolean.getBoolean(KRB5_DEBUG_ENABLED_PROP);
 
     public static final String MECHANISM = "GSSAPI";
+
+    // TODO Remove this debugging option for final release
+    private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
     
     // SASL properties to enable encryption
-    private static final Map<String, String> ENCRYPTION_PROPS =
-        new HashMap<String, String>();
+    private static final Map<String, String> ENCRYPTION_PROPS = new HashMap<String, String>();
 
     static {
         ENCRYPTION_PROPS.put(Sasl.QOP, QOP_AUTH + "," + QOP_AUTH_INT + "," + QOP_AUTH_CONF);
@@ -78,6 +80,11 @@ public class GssAuthenticator extends Authenticator {
 
     public GssAuthenticator(AuthenticatorUser user) {
         super(MECHANISM, user);
+    }
+
+    // GSSAPI is switched on and off by protocol via LDAP settings
+    @Override protected boolean isSupported() {
+        return GSS_ENABLED || mAuthUser.isGssapiAvailable();
     }
 
     @Override public boolean initialize() throws IOException {
@@ -99,7 +106,7 @@ public class GssAuthenticator extends Authenticator {
         }
 
         KerberosPrincipal kp = new KerberosPrincipal(getProtocol() + '/' + host);
-        debug("kerberos principle = %s", kp);
+        debug("kerberos principal = %s", kp);
         Subject subject = getSubject(keytab, kp);
         if (subject == null) {
             sendFailed();
