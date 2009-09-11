@@ -57,6 +57,10 @@ public class HeaderUtils {
             byte[] dbuffer = new byte[word.length];
             int dsize = decoder.read(dbuffer);
             return new String(dbuffer, 0, dsize, normalizeCharset(charset));
+        } catch (OutOfMemoryError oome) {
+            throw oome;
+        } catch (Error e) {            // bug 40926 - catch java.lang.Error thrown by String class for invalid charset issues 
+            return null;
         } catch (Exception e) {
             return null;
         }
