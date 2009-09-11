@@ -73,7 +73,12 @@ public class UrlNamespace {
 			index = url.indexOf('/');
 			if (index == -1)
 				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-			url = url.substring(index);
+			try {
+                url = URLDecoder.decode(url.substring(index), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                ZimbraLog.dav.debug("can't decode url %s", url, e);
+                url = (url.substring(index));
+            }
 		}
 		String path = url;
 		int lastPos = path.length() - 1;

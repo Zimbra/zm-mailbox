@@ -35,22 +35,20 @@ public class Move extends DavMethod {
 	}
 	
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
-		String destination = ctxt.getRequest().getHeader(DavProtocol.HEADER_DESTINATION);
-		if (destination == null)
-			throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
 		DavResource rs = ctxt.getRequestedResource();
-		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, destination);
-		if (!(col instanceof MailItemResource))
-			throw new DavException("cannot move", HttpServletResponse.SC_BAD_REQUEST, null);
+        if (!(rs instanceof MailItemResource))
+            throw new DavException("cannot copy", HttpServletResponse.SC_BAD_REQUEST, null);
+		Collection col = getDestinationCollection(ctxt);
 		MailItemResource mir = (MailItemResource) rs;
 		mir.move(ctxt, col);
 
-		renameIfNecessary(ctxt, mir, destination, col);
+		renameIfNecessary(ctxt, mir, col);
 		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 	
-	protected void renameIfNecessary(DavContext ctxt, DavResource rs, String dest, MailItemResource destCollection) throws DavException {
+	protected void renameIfNecessary(DavContext ctxt, DavResource rs, MailItemResource destCollection) throws DavException {
 		String oldName = ctxt.getItem();
+		String dest = getDestination(ctxt);
 		int begin, end;
 		end = dest.length();
 		if (dest.endsWith("/"))
@@ -59,5 +57,19 @@ public class Move extends DavMethod {
 		String newName = dest.substring(begin+1, end);
 		if (!oldName.equals(newName))
 			rs.rename(ctxt, newName, destCollection);
+	}
+	
+	protected String getDestination(DavContext ctxt) throws DavException {
+        String destination = ctxt.getRequest().getHeader(DavProtocol.HEADER_DESTINATION);
+        if (destination == null)
+            throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
+        return destination;
+	}
+	protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
+	    try {
+	        return UrlNamespace.getCollectionAtUrl(ctxt, getDestination(ctxt));
+	    } catch (Exception e) {
+	        throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
+	    }
 	}
 }
