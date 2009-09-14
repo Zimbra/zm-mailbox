@@ -237,6 +237,7 @@ public class DbPool {
          */
         @Override public java.sql.Connection createConnection() throws SQLException {
             java.sql.Connection conn = super.createConnection();
+            System.out.println("XXXX new connection");
             return new DebugConnection(conn);
         }
     }
