@@ -14,10 +14,6 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.cs.mailclient.util.Ascii;
-import com.zimbra.cs.mailclient.util.LimitInputStream;
-import com.zimbra.cs.mailclient.MailOutputStream;
-
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
@@ -25,6 +21,7 @@ import java.io.DataInputStream;
 import java.io.OutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 
 /**
  * IMAP literal data type.
@@ -124,7 +121,9 @@ public final class Literal extends ImapData {
             return String.format("[literal %d bytes]", size);
         }
         try {
-            return Ascii.toString(getBytes());
+            return new String(getBytes(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalError("UTF-8 charset not found");
         } catch (IOException e) {
             throw new IllegalStateException(
                 "I/O error while reading literal bytes", e);

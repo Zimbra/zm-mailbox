@@ -25,6 +25,7 @@ import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.ResponseText;
+import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.util.DateUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.store.MailboxBlob;
@@ -144,7 +145,7 @@ public class ImapAppender {
         // If not found then server must have de-duped the message. This
         // is certainly possible with GMail. Search through the entire mailbox
         // for possible matches and hope it's not too slow :(
-        List<Long> uids = connection.uidSearch(getSearchString(mi));
+        List<Long> uids = connection.uidSearch(getSearchParams(mi));
         Iterator<Long> it = uids.iterator();
         while (it.hasNext()) {
             List<Long> found = findUids(nextSeq(it, 5), mi);
@@ -157,14 +158,16 @@ public class ImapAppender {
         return -1;
     }
 
-    private String getSearchString(MessageInfo mi) throws MessagingException {
-        Formatter fmt = new Formatter();
-        fmt.format("SENTON \"%s\"", DateUtil.toImapDateTime(mi.mm.getSentDate()));
+    private Object[] getSearchParams(MessageInfo mi) throws MessagingException {
+        List<Object> params = new ArrayList<Object>();
+        params.add("SENTON");
+        params.add(mi.mm.getSentDate());
         String subj = mi.mm.getSubject();
         if (subj != null) {
-            fmt.format(" SUBJECT \"%s\"", subj);
+            params.add("SUBJECT");
+            params.add(ImapData.asAString(subj));
         }
-        return fmt.toString();
+        return params.toArray();
     }
 
     private String nextSeq(Iterator<Long> it, int count) {

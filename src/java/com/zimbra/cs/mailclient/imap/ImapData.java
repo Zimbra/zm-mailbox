@@ -19,6 +19,7 @@ import com.zimbra.cs.mailclient.util.Ascii;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Iterator;
 
@@ -38,7 +39,7 @@ public abstract class ImapData {
         case QUOTED:
             return new Quoted(s);
         case LITERAL:
-            return new Literal(Ascii.getBytes(s));
+            return new Literal(encodeUtf8(s));
         }
         return null;
     }
@@ -49,7 +50,7 @@ public abstract class ImapData {
     
     public static ImapData asString(String s) {
         return s.length() <= 64 && Chars.isText(s) ?
-            new Quoted(s) : new Literal(Ascii.getBytes(s));
+            new Quoted(s) : new Literal(encodeUtf8(s));
     }
 
     private static Type getType(String s) {
@@ -67,6 +68,15 @@ public abstract class ImapData {
             }
         }
         return type;
+    }
+
+    private static byte[] encodeUtf8(String s) {
+        try {
+            return s.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalError("UTF-8 charset not found");
+        }
+
     }
     
     public static String asSequenceSet(List<? extends Number> ids) {
