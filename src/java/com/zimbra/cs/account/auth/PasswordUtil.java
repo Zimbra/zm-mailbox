@@ -60,26 +60,26 @@ public class PasswordUtil {
     
     
     /*
-     * SHA (unseeded)
+     * SHA1 (unseeded)
      */
     public static class SHA1 {
         
         private static String SHA1_ENCODING = "{SHA1}";
         
-        public static boolean isSHA(String encodedPassword) {
+        public static boolean isSHA1(String encodedPassword) {
             return encodedPassword.startsWith(SHA1_ENCODING);
         }
         
-        public static boolean verifySHA(String encodedPassword, String password) {
+        public static boolean verifySHA1(String encodedPassword, String password) {
             if (!encodedPassword.startsWith(SHA1_ENCODING))
                 return false;
             byte[] encodedBuff = encodedPassword.substring(SHA1_ENCODING.length()).getBytes();
             byte[] buff = Base64.decodeBase64(encodedBuff);
-            String generated = generateSHA(password);
+            String generated = generateSHA1(password);
             return generated.equals(encodedPassword);
         }
         
-        public static String generateSHA(String password) {
+        public static String generateSHA1(String password) {
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA1");
                 md.update(password.getBytes("UTF-8"));
