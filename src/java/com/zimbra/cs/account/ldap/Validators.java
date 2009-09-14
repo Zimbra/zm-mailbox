@@ -54,6 +54,18 @@ public class Validators {
         private long mNextCheck;
         private long mLastUserCount; // PFN: this isn't counted per-domain, is it?
         
+        public void refresh() {
+            setNextCheck(0);
+        }
+        
+        private synchronized void setNextCheck(long nextCheck) {
+            mNextCheck = nextCheck;
+        }
+        
+        private synchronized long getNextCheck() {
+            return mNextCheck;
+        }
+        
         public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
             if (args.length < 1) return;
             if (!action.equals("createAccount") || !(args[0] instanceof String))
@@ -89,10 +101,11 @@ public class Validators {
 
             long maxAccount = Long.parseLong(limit);
             long now = System.currentTimeMillis();
-            if (now > mNextCheck) {
+            if (now > getNextCheck()) {
                 mLastUserCount = prov.countAccounts(domain);
-                mNextCheck = (maxAccount - mLastUserCount) > NUM_ACCT_THRESHOLD ? 
+                long nextCheck = (maxAccount - mLastUserCount) > NUM_ACCT_THRESHOLD ? 
                         LDAP_CHECK_INTERVAL : 0;
+                setNextCheck(nextCheck);
             }
             
             if (maxAccount <= mLastUserCount)
@@ -132,6 +145,10 @@ public class Validators {
      */
     @SuppressWarnings("unchecked")
     private static class DomainMaxAccountsValidator implements ProvisioningValidator {
+        
+        public void refresh() {
+            // do nothing
+        }
         
         public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
             

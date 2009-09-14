@@ -1726,6 +1726,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
 
     public static enum CacheEntryType {
+        // on ldap entries
+        locale,
+        skin,
+        license,
+        
+        // ldap entries
         account,
         group,
         config,
@@ -1766,23 +1772,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException;
-
-    public void flushCache(String type, CacheEntry[] entries) throws ServiceException {
-        CacheEntryType cet = null;
-        try {
-            cet = CacheEntryType.fromString(type);
-        } catch (ServiceException e) {
-            // see if it a registered extension
-            CacheExtension ce = CacheExtension.getHandler(type.toString());
-            if (ce != null) {
-                ce.flushCache();
-                return;
-            } else
-                throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
-        }
-        
-        flushCache(cet, entries);    
-    }
     
     public static class CountAccountResult {
         public static class CountAccountByCos {
@@ -1889,7 +1878,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
-    // TODO: consolidate with CacheEntryType in main
+    // TODO: consolidate with CacheType in main
     public static enum EntryType {
         account,
         group,

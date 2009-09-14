@@ -251,6 +251,7 @@ public class LdapProvisioning extends Provisioning {
 
     public static interface ProvisioningValidator {
     	public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException;
+    	public void refresh();
     }
     
     private static List<ProvisioningValidator> sValidators;
@@ -270,6 +271,12 @@ public class LdapProvisioning extends Provisioning {
     	for (ProvisioningValidator v : sValidators) {
     		v.validate(this, action, args);
     	}
+    }
+    
+    public static void refreshValidators() {
+        for (ProvisioningValidator v : sValidators) {
+            v.refresh();
+        }
     }
 
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)

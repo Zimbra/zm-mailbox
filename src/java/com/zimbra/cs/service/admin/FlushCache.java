@@ -27,15 +27,17 @@ import javax.servlet.ServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -62,37 +64,64 @@ public class FlushCache extends AdminDocumentHandler {
         checkRight(zsc, context, localServer, Admin.R_flushCache);
         
         Element eCache = request.getElement(AdminConstants.E_CACHE);
-        String type = eCache.getAttribute(AdminConstants.A_TYPE);
-        boolean nonEntry = false; 
-	    if (type.contains("zimlet")) {
-	        FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
-	    }
-        if (type.contains("skin")) {
-        	nonEntry = true;
-            SkinUtil.flushSkinCache();
-            FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
-        }
-        if (type.contains("locale")) {
-        	nonEntry = true;
-            L10nUtil.flushLocaleCache();
-        }
+        String typeStr = eCache.getAttribute(AdminConstants.A_TYPE);
         
-        if(!nonEntry) {
-            List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
-            CacheEntry[] entries = null;
-            if (eEntries.size() > 0) {
-                entries = new CacheEntry[eEntries.size()];
-                int i = 0;
-                for (Element eEntry : eEntries) {
-                    entries[i++] = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
-                                                  eEntry.getText());
-                }
+        String[] types = typeStr.split(",");
+        
+        for (String type : types) {
+            CacheEntryType cacheType = null;
+            
+            try {
+                cacheType = CacheEntryType.fromString(type);
+                doFlush(context, cacheType, eCache);
+            } catch (ServiceException e) {
+                // see if it a registered extension
+                CacheExtension ce = CacheExtension.getHandler(type);
+                if (ce != null)
+                    ce.flushCache();
+                else
+                    throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
             }
-            Provisioning.getInstance().flushCache(type, entries);
         }
 
         Element response = zsc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
         return response;
+    }
+    
+    private void doFlush(Map<String, Object> context, CacheEntryType cacheType, Element eCache) throws ServiceException {
+        
+        switch (cacheType) {
+        case skin:
+            SkinUtil.flushSkinCache();
+            FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
+            break;
+        case locale:
+            L10nUtil.flushLocaleCache();
+            break;
+        case license:
+            flushLdapCache(CacheEntryType.config, eCache); // refresh global config for parsed license
+            LdapProvisioning.refreshValidators();          // refresh other bits of cached license data
+            break;
+        case zimlet:
+            FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
+            // fall through to also flush ldap entries
+        default:
+            flushLdapCache(cacheType, eCache);
+        }
+    }
+    
+    private void flushLdapCache(CacheEntryType cacheType, Element eCache) throws ServiceException {
+        List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
+        CacheEntry[] entries = null;
+        if (eEntries.size() > 0) {
+            entries = new CacheEntry[eEntries.size()];
+            int i = 0;
+            for (Element eEntry : eEntries) {
+                entries[i++] = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
+                                              eEntry.getText());
+            }
+        }
+        Provisioning.getInstance().flushCache(cacheType, entries);
     }
     
 	static void sendFlushRequest(Map<String,Object> context,
@@ -129,11 +158,6 @@ public class FlushCache extends AdminDocumentHandler {
 			}
 		}
 	}
-
-    @Override
-    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_flushCache);
-    }
     
     public static void flushChacheOnServer(Server server,ZimbraSoapContext zsc,String cacheType) throws ServiceException, IOException {
 		String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
@@ -142,5 +166,10 @@ public class FlushCache extends AdminDocumentHandler {
 		XMLElement req = new XMLElement(AdminConstants.FLUSH_CACHE_REQUEST);
 		req.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, cacheType);
 		mTransport.invoke(req);		
+    }
+
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_flushCache);
     }
 }
