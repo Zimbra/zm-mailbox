@@ -126,8 +126,8 @@ public abstract class AuthMechanism {
             if (encodedPassword == null)
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
 
-            if (LdapUtil.isSSHA(encodedPassword)) {
-                if (LdapUtil.verifySSHA(encodedPassword, password))
+            if (PasswordUtil.SSHA.isSSHA(encodedPassword)) {
+                if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password))
                     return; // good password, RETURN
                 else {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password"); 

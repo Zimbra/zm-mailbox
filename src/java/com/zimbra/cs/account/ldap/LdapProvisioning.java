@@ -99,6 +99,7 @@ import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
+import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
 import com.zimbra.cs.account.gal.GalOp;
@@ -3119,7 +3120,7 @@ public class LdapProvisioning extends Provisioning {
             int sepIndex = history[i].indexOf(':');
             if (sepIndex != -1)  {
                 String encoded = history[i].substring(sepIndex+1);
-                if (LdapUtil.verifySSHA(encoded, newPassword))
+                if (PasswordUtil.SSHA.verifySSHA(encoded, newPassword))
                     throw AccountServiceException.PASSWORD_RECENTLY_USED();
             }            
         }
@@ -3271,7 +3272,7 @@ public class LdapProvisioning extends Provisioning {
 
         if (userPassword == null) {
             checkPasswordStrength(newPassword, null, cos, attrs);
-            userPassword = LdapUtil.generateSSHA(newPassword, null);
+            userPassword = PasswordUtil.SSHA.generateSSHA(newPassword, null);
         }
         attrs.put(Provisioning.A_userPassword, userPassword);
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
@@ -3314,7 +3315,7 @@ public class LdapProvisioning extends Provisioning {
             checkHistory(newPassword, newHistory);
         }
 
-        String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
+        String encodedPassword = PasswordUtil.SSHA.generateSSHA(newPassword, null);
         
         // unset it so it doesn't take up space...
         if (mustChange)
