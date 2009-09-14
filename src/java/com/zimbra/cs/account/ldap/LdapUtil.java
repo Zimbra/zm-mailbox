@@ -95,9 +95,6 @@ public class LdapUtil {
 
     final static String EARLIEST_SYNC_TOKEN = "19700101000000Z";
 
-    private static int SALT_LEN = 4; // to match LDAP SSHA password encoding
-    private static String ENCODING = "{SSHA}";
-
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
@@ -154,45 +151,6 @@ public class LdapUtil {
         }
         if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
         ldapAuthenticate(url, requireStartTLS, resultDn, password); 
-    }
-    
-    public static boolean isSSHA(String encodedPassword) {
-        return encodedPassword.startsWith(ENCODING);
-    }
-    
-    public static boolean verifySSHA(String encodedPassword, String password) {
-        if (!encodedPassword.startsWith(ENCODING))
-            return false;
-        byte[] encodedBuff = encodedPassword.substring(ENCODING.length()).getBytes();
-        byte[] buff = Base64.decodeBase64(encodedBuff);
-        if (buff.length <= SALT_LEN)
-            return false;
-        int slen = (buff.length == 28) ? 8 : SALT_LEN;
-        byte[] salt = new byte[slen];
-        System.arraycopy(buff, buff.length-slen, salt, 0, slen);
-        String generated = generateSSHA(password, salt);
-        return generated.equals(encodedPassword);
-    }
-    
-    public static String generateSSHA(String password, byte[] salt) {
-           try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
-            if (salt == null) {
-                salt = new byte[SALT_LEN];
-                SecureRandom sr = new SecureRandom();
-                sr.nextBytes(salt);
-            } 
-            md.update(password.getBytes());
-            md.update(salt);
-            byte[] digest = md.digest();
-            byte[] buff = new byte[digest.length + salt.length];
-            System.arraycopy(digest, 0, buff, 0, digest.length);
-            System.arraycopy(salt, 0, buff, digest.length, salt.length);
-            return ENCODING + new String(Base64.encodeBase64(buff));
-        } catch (NoSuchAlgorithmException e) {
-            // this shouldn't happen unless JDK is foobar
-            throw new RuntimeException(e);
-        }
     }
     
     public static String generateUUID() {
@@ -1066,9 +1024,6 @@ public class LdapUtil {
     }
 
     public static void main(String args[]) throws NamingException, ServiceException {
-
-        System.out.println(verifySSHA("{SSHA}igJikWhEzFPLvXp4TNY1NADGOQPNjjWJ","test123"));
-        System.out.println(verifySSHA("{SSHA}t14kg+LsEEtb6/3xj+PPYGHv+496XwslfHaxUQ==","welcome123!"));
         
 /*
         Date now = new Date();
