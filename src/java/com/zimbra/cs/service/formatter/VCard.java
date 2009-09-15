@@ -41,13 +41,14 @@ import com.zimbra.common.mime.MimeConstants;
 
 public class VCard {
 
+    public String uid;
     public String fn;
     public String formatted;
     public Map<String, String> fields;
     public List<Attachment> attachments;
 
-    private VCard(String xfn, String xformatted, Map<String, String> xfields, List<Attachment> xattachments) {
-        fn = xfn;  formatted = xformatted;  fields = xfields;  attachments = xattachments;
+    private VCard(String xfn, String xformatted, Map<String, String> xfields, List<Attachment> xattachments, String xuid) {
+        fn = xfn;  formatted = xformatted;  fields = xfields;  attachments = xattachments;  uid = xuid;
     }
 
     public ParsedContact asParsedContact() throws ServiceException {
@@ -56,7 +57,7 @@ public class VCard {
 
 
     private static final Set<String> PROPERTY_NAMES = new HashSet<String>(Arrays.asList(new String[] {
-            "BEGIN", "FN", "N", "NICKNAME", "PHOTO", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END"
+            "BEGIN", "FN", "N", "NICKNAME", "PHOTO", "BDAY", "ADR", "TEL", "EMAIL", "URL", "ORG", "TITLE", "NOTE", "AGENT", "END", "UID"
     }));
 
     static final Map<String, String> PARAM_ABBREVIATIONS = new HashMap<String, String>();
@@ -184,6 +185,7 @@ public class VCard {
         VCardProperty vcprop = new VCardProperty();
         int depth = 0;
         int cardstart = 0, emails = 0;
+        String uid = null;
         for (int start = 0, pos = 0, lines = 0, limit = vcard.length(); pos < limit; lines++) {
             // unfold the next line in the vcard
             String line = "", name = null, value = null;
@@ -227,7 +229,8 @@ public class VCard {
                     // finished a vCard; add to list if non-empty
                     if (!fields.isEmpty()) {
                         Contact.normalizeFileAs(fields);
-                        cards.add(new VCard(fields.get(ContactConstants.A_fullName), vcard.substring(cardstart, pos), fields, attachments));
+                        cards.add(new VCard(fields.get(ContactConstants.A_fullName), vcard.substring(cardstart, pos), fields, attachments, uid));
+                        uid = null;
                     }
                 }
                 continue;
@@ -268,6 +271,7 @@ public class VCard {
             else if (name.equals("NOTE"))      fields.put(ContactConstants.A_notes, vcfDecode(value));
             else if (name.equals("EMAIL") && emails < EMAIL_FIELDS.length)
                 fields.put(EMAIL_FIELDS[emails++], vcfDecode(value));
+            else if (name.equals("UID")) uid = value;
         }
 
         return cards;
@@ -497,13 +501,14 @@ public class VCard {
             } catch (ServiceException e) { }
         }
 
+        String uid = getUid(con);
         if (vcattrs == null || vcattrs.contains("REV"))
             sb.append("REV:").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date(con.getDate()))).append("\r\n");
         if (vcattrs == null || vcattrs.contains("UID"))
-            sb.append("UID:").append(getUid(con)).append("\r\n");
+            sb.append("UID:").append(uid).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
         sb.append("END:VCARD\r\n");
-        return new VCard(fn, sb.toString(), fields, attachments);
+        return new VCard(fn, sb.toString(), fields, attachments, uid);
     }
 
     public static String getUid(Contact con) {
