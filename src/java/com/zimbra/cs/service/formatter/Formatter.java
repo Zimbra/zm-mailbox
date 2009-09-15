@@ -164,10 +164,10 @@ public abstract class Formatter {
             case MailItem.TYPE_TASK:
                 return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
             case MailItem.TYPE_CONTACT:
-                return context.targetMailbox.getContactList(context.opContext, folder.getId());
+                return context.targetMailbox.getContactList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
-                return context.targetMailbox.getDocumentList(context.opContext, folder.getId());
+                return context.targetMailbox.getDocumentList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
             default:
                 return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
         }
