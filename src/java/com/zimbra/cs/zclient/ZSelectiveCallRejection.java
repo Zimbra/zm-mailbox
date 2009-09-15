@@ -24,42 +24,42 @@ import com.zimbra.common.soap.VoiceConstants;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZSelectiveCallForwarding extends ZCallFeature {
+public class ZSelectiveCallRejection extends ZCallFeature {
 
-    private List<String> mForwardFrom;
+    private List<String> mRejectFrom;
 
-    public ZSelectiveCallForwarding(String name) {
+    public ZSelectiveCallRejection(String name) {
         super(name);
-        mForwardFrom = new ArrayList<String>();        
+        mRejectFrom = new ArrayList<String>();        
     }
 
-    public List<String> getForwardFrom() {
-        return new ArrayList<String>(mForwardFrom);
+    public List<String> getRejectFrom() {
+        return new ArrayList<String>(mRejectFrom);
     }
 
-    public synchronized void setForwardFrom(List<String> list) {
-        mForwardFrom.clear();
-        mForwardFrom.addAll(list);
+    public synchronized void setRejectFrom(List<String> list) {
+        mRejectFrom.clear();
+        mRejectFrom.addAll(list);
     }
 
     public synchronized void assignFrom(ZCallFeature that) {
         super.assignFrom(that);
-        if (that instanceof ZSelectiveCallForwarding) {
-            this.mForwardFrom = new ArrayList<String>(((ZSelectiveCallForwarding)that).mForwardFrom);
+        if (that instanceof ZSelectiveCallRejection) {
+            this.mRejectFrom = new ArrayList<String>(((ZSelectiveCallRejection)that).mRejectFrom);
         }
     }
 
     synchronized void fromElement(Element element) throws ServiceException {
         super.fromElement(element);
-        mForwardFrom = new ArrayList<String>();
+        mRejectFrom = new ArrayList<String>();
         for (Element fromEl : element.listElements(VoiceConstants.E_PHONE)) {
-            mForwardFrom.add(fromEl.getAttribute(VoiceConstants.A_PHONE_NUMBER));
+            mRejectFrom.add(fromEl.getAttribute(VoiceConstants.A_PHONE_NUMBER));
         }
     }
 
     void toElement(Element element) throws ServiceException {
         super.toElement(element);
-	for (String name : mForwardFrom) {
+	for (String name : mRejectFrom) {
             Element fromEl = element.addElement(VoiceConstants.E_PHONE);
             fromEl.addAttribute(VoiceConstants.A_PHONE_NUMBER, name);
             fromEl.addAttribute(VoiceConstants.A_ACTIVE, "true");

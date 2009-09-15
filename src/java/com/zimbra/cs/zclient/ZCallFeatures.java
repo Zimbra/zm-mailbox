@@ -48,6 +48,12 @@ public class ZCallFeatures {
         this.addFeature(VoiceConstants.E_CALL_FORWARD);
         this.addFeature(VoiceConstants.E_SELECTIVE_CALL_FORWARD);
         this.addFeature(VoiceConstants.E_VOICE_MAIL_PREFS);
+	
+	this.addFeature(VoiceConstants.E_CALL_FORWARD_BUSY_LINE);
+	this.addFeature(VoiceConstants.E_CALL_FORWARD_NO_ANSWER);
+	this.addFeature(VoiceConstants.E_CALL_WAITING);
+	
+	this.addFeature(VoiceConstants.E_SELECTIVE_CALL_REJECTION);
 
         List<Element> elements = e.listElements(VoiceConstants.E_CALL_FEATURE);
         for (Element element : elements) {
@@ -64,6 +70,8 @@ public class ZCallFeatures {
         if (!mCallFeaturesLoaded) {
             mCallFeaturesLoaded = true;
             mMbox.loadCallFeatures(this);
+	    
+	    this.getSubscribedFeatures();
         }
     }
 
@@ -78,15 +86,21 @@ public class ZCallFeatures {
     public ZSelectiveCallForwarding getSelectiveCallForwarding() {
         return (ZSelectiveCallForwarding) getFeature(VoiceConstants.E_SELECTIVE_CALL_FORWARD);
     }
+    
+    public ZSelectiveCallRejection getSelectiveCallRejection() {
+        return (ZSelectiveCallRejection) getFeature(VoiceConstants.E_SELECTIVE_CALL_REJECTION);
+    }
 
     public ZVoiceMailPrefs getVoiceMailPrefs() {
         return (ZVoiceMailPrefs) getFeature(VoiceConstants.E_VOICE_MAIL_PREFS);
     }
-
+    
     public synchronized ZCallFeature addFeature(String name) {
         ZCallFeature result;
         if (VoiceConstants.E_SELECTIVE_CALL_FORWARD.equals(name)) {
             result = new ZSelectiveCallForwarding(name);
+        } else if (VoiceConstants.E_SELECTIVE_CALL_REJECTION.equals(name)) {
+            result = new ZSelectiveCallRejection(name);
         } else if (VoiceConstants.E_VOICE_MAIL_PREFS.equals(name)) {
             result = new ZVoiceMailPrefs(name);
         } else {
@@ -97,7 +111,13 @@ public class ZCallFeatures {
     }
 
     public Collection<ZCallFeature> getAllFeatures() {
-        return mCallFeatures.values();
+    
+	// Remove these lines and uncomment the last when selective call rejection has been implemented in the soap interface
+	HashMap<String, ZCallFeature> m = new HashMap<String, ZCallFeature>(mCallFeatures);
+	m.remove(VoiceConstants.E_SELECTIVE_CALL_REJECTION);
+	return m.values();
+	
+        //return mCallFeatures.values();
     }
 
     public boolean isEmpty() {

@@ -33,26 +33,94 @@ public class ZVoiceMailPrefs extends ZCallFeature {
     }
 
     public String getEmailNotificationAddress() {
-		String address = this.get(VoiceConstants.A_vmPrefEmailNotifAddress);
-		return address == null ? "" : address;
+	String address = this.get(VoiceConstants.A_vmPrefEmailNotifAddress);
+	return address == null ? "" : address;
     }
 
     public void setEmailNotificationAddress(String address) {
         mMap.put(VoiceConstants.A_vmPrefEmailNotifAddress, address);
     }
 
+    public boolean getPlayDateAndTimeInMsgEnv() {
+	return this.getBoolean(VoiceConstants.A_vmPrefPlayDateAndTimeInMsgEnv);
+    }
+    
+    public void setPlayDateAndTimeInMsgEnv(boolean value) {
+	mMap.put(VoiceConstants.A_vmPrefPlayDateAndTimeInMsgEnv, value ? "true":"false");
+    }
+    
+    public boolean getAutoPlayNewMsgs() {
+	return this.getBoolean(VoiceConstants.A_vmPrefAutoPlayNewMsgs);
+    }
+    
+    public void setAutoPlayNewMsgs(boolean value) {
+	mMap.put(VoiceConstants.A_vmPrefAutoPlayNewMsgs, value ? "true":"false");
+    }
+    
+    public String getPromptLevel() {
+	return this.get(VoiceConstants.A_vmPrefPromptLevel);
+    }
+    
+    public void setPromptLevel(String level) {
+	if (level.equals("RAPID") || level.equals("STANDARD") || level.equals("EXTENDED"))
+	    mMap.put(VoiceConstants.A_vmPrefPromptLevel, level);
+    }
+    
+    public boolean getPlayCallerNameInMsgEnv() {
+	return this.getBoolean(VoiceConstants.A_vmPrefPlayCallerNameInMsgEnv);
+    }
+    
+    public void setPlayCallerNameInMsgEnv(boolean value) {
+	mMap.put(VoiceConstants.A_vmPrefPlayCallerNameInMsgEnv, value ? "true":"false");
+    }
+    
+    public boolean getSkipPinEntry() {
+	return this.getBoolean(VoiceConstants.A_vmPrefSkipPinEntry);
+    }
+    
+    public void setSkipPinEntry(boolean value) {
+	mMap.put(VoiceConstants.A_vmPrefSkipPinEntry, value ? "true":"false");
+    }
+    
+    public String getUserLocale() {
+	return this.get(VoiceConstants.A_vmPrefUserLocale);
+    }
+    
+    public void setUserLocale(String locale) {
+	mMap.put(VoiceConstants.A_vmPrefUserLocale, locale);
+    }
+    
+    public String getAnsweringLocale() {
+	return this.get(VoiceConstants.A_vmPrefAnsweringLocale);
+    }
+    
+    public void setAnsweringLocale(String locale) {
+	mMap.put(VoiceConstants.A_vmPrefAnsweringLocale, locale);
+    }
+    
+
     public String get(String key) {
         return mMap.get(key);
     }
+    
 
-	public long getLong(String name) {
-		String v = get(name);
-		try {
-			return v == null ? -1 : Long.parseLong(v);
-		} catch (NumberFormatException e) {
-			return -1;
-		}
+    public long getLong(String name) {
+	String v = get(name);
+	try {
+		return v == null ? -1 : Long.parseLong(v);
+	} catch (NumberFormatException e) {
+		return -1;
 	}
+    }
+    
+    public boolean getBoolean(String name) {
+	String v = get(name);
+	try {
+		return (v != null && (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("yes") || Integer.parseInt(v) != 0));
+	} catch (NumberFormatException e) {
+		return false;
+	}
+    }
 
     public synchronized void assignFrom(ZCallFeature that) {
         super.assignFrom(that);

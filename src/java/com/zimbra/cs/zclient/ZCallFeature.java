@@ -42,14 +42,14 @@ public class ZCallFeature {
     public void setIsSubscribed(boolean isSubscribed) { mIsSubscribed = isSubscribed; }
 
     public boolean getIsActive() { return mIsActive; }
-	public void setIsActive(boolean isActive) { mIsActive = isActive; }
+    public void setIsActive(boolean isActive) { mIsActive = isActive; }
 
-	public String getData(String key) { return mData.get(key); }
-	public void setData(String key, String value) { mData.put(key, value); }
+    public String getData(String key) { return mData.get(key); }
+    public void setData(String key, String value) { mData.put(key, value); }
     public void clearData() { mData.clear(); }
 
-	public String getName() { return mName; }
-	public void setName(String name) { mName = name; }
+    public String getName() { return mName; }
+    public void setName(String name) { mName = name; }
 
     public synchronized void assignFrom(ZCallFeature that) {
         this.mName = that.mName;
@@ -74,9 +74,9 @@ public class ZCallFeature {
         }
     }
     void toElement(Element element) throws ServiceException {
-        element.addAttribute(VoiceConstants.A_SUBSCRIBED, true);
+	element.addAttribute(VoiceConstants.A_SUBSCRIBED, true);
         element.addAttribute(VoiceConstants.A_ACTIVE, mIsActive);
-        for (String key : mData.keySet()) {
+	for (String key : mData.keySet()) {
             Element subEl = element.addElement(key);
             String value = mData.get(key);
             if (value != null) {

@@ -19,8 +19,25 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import org.json.JSONException;
+import java.util.regex.Pattern;
 
 public class ZPhone implements ToZJSONObject {
+
+	public static final String INVALID_PHNUM_OWN_PHONE_NUMBER = "voice.INVALID_PHNUM_OWN_PHONE_NUMBER";
+	public static final String INVALID_PHNUM_INTERNATIONAL_NUMBER = "voice.INVALID_PHNUM_INTERNATIONAL_NUMBER";
+	public static final String INVALID_PHNUM_BAD_NPA = "voice.INVALID_PHNUM_BAD_NPA";
+	public static final String INVALID_PHNUM_BAD_LINE = "voice.INVALID_PHNUM_BAD_LINE";
+	public static final String INVALID_PHNUM_EMERGENCY_ASSISTANCE = "voice.INVALID_PHNUM_EMERGENCY_ASSISTANCE";
+	public static final String INVALID_PHNUM_DIRECTORY_ASSISTANCE = "voice.INVALID_PHNUM_DIRECTORY_ASSISTANCE";
+	public static final String INVALID_PHNUM_BAD_FORMAT = "voice.INVALID_PHNUM_BAD_FORMAT";
+	public static final String VALID = "voice.OK";
+	
+	public static final Pattern CHECK_INTERNATIONAL = Pattern.compile("^0\\d*");
+	public static final Pattern CHECK_NPA = Pattern.compile("^1?(900)|(500)|(700)|(976)");
+	public static final Pattern CHECK_LINE = Pattern.compile("^1?\\d{3}555\\d*");
+	public static final Pattern CHECK_EMERGENCY_ASSISTANCE = Pattern.compile("^1?911\\d*");
+	public static final Pattern CHECK_DIRECTORY_ASSISTANCE = Pattern.compile("^1?411\\d*");
+	public static final Pattern CHECK_FORMAT = Pattern.compile("^1?[2-9]\\d{9}$");
 
 	private String mName;
 	private String mCallerId;
@@ -40,6 +57,10 @@ public class ZPhone implements ToZJSONObject {
 
 	public String getDisplay() {
 		return ZPhone.getDisplay(mName);
+	}
+
+	public String getValidity() {
+		return ZPhone.validate(mName);
 	}
 
 	public String getCallerId() {
@@ -68,6 +89,10 @@ public class ZPhone implements ToZJSONObject {
         }
         if (doIt) {
             StringBuilder builder = new StringBuilder();
+		    if (offset>0) {
+				builder.append(name, 0, offset);
+				builder.append("-");
+		    }
             builder.append('(');
             builder.append(name, offset, offset + 3);
             builder.append(") ");
@@ -92,5 +117,37 @@ public class ZPhone implements ToZJSONObject {
             }
         }
         return builder.toString();
+    }
+
+    public static String validate(String number) {
+		number = ZPhone.getName(number);
+	    
+		if (number.charAt(0) == '1')
+		    number = number.substring(1);
+		
+		if (ZPhone.CHECK_INTERNATIONAL.matcher(number).matches()) {
+		    return ZPhone.INVALID_PHNUM_INTERNATIONAL_NUMBER;
+		}
+									
+		if (ZPhone.CHECK_NPA.matcher(number).matches()) {
+		    return ZPhone.INVALID_PHNUM_BAD_NPA;
+		}
+																	
+		if (ZPhone.CHECK_LINE.matcher(number).matches()) {
+			return ZPhone.INVALID_PHNUM_BAD_LINE;
+		}
+																				
+		if (ZPhone.CHECK_EMERGENCY_ASSISTANCE.matcher(number).matches()) {
+			return ZPhone.INVALID_PHNUM_EMERGENCY_ASSISTANCE;
+		}
+																						
+		if (ZPhone.CHECK_DIRECTORY_ASSISTANCE.matcher(number).matches()) {
+			return ZPhone.INVALID_PHNUM_DIRECTORY_ASSISTANCE;
+		}
+																										    
+		if (!ZPhone.CHECK_FORMAT.matcher(number).matches()) {
+			return ZPhone.INVALID_PHNUM_BAD_FORMAT;
+		}
+		return ZPhone.VALID;
     }
 }
