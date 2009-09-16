@@ -402,6 +402,10 @@ public class Volume {
         }
     }
 
+    /**
+     * Returns the volume with the given id.
+     * @throws VolumeServiceException if no such volume exists
+     */
     public static Volume getById(short id) throws ServiceException {
     	Volume v = null;
         Short key = new Short(id);
@@ -655,6 +659,14 @@ public class Volume {
     private String mIncomingMsgDir;
     private IncomingDirectory mIncoming;
 
+    // Based on default settings, there are 256 directories.  We
+    // write blobs for id's 0-4095 to directory 0, 4096-8191 to directory
+    // 1, etc.  After filling directory 256, we wrap around and write
+    // 1048576-1052671 to directory 0 and so on.
+    
+    // Number of dirs: 2 ^ groupBits (2 ^ 8 = 256 by default)
+    // Number of files per dir before wraparound: 2 ^ bits (2 ^ 12 = 4096 by default)
+    
     private short mMboxGroupBits;
     private short mMboxBits;
     private short mFileGroupBits;
