@@ -29,7 +29,16 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.*;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BlobBuilder;
+import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.FileDescriptorCache;
+import com.zimbra.cs.store.IncomingDirectory;
+import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
+import com.zimbra.cs.store.StorageCallback;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.UncompressedFileCache;
 import com.zimbra.znative.IO;
 
 public class FileBlobStore extends StoreManager {
@@ -100,33 +109,39 @@ public class FileBlobStore extends StoreManager {
 
     private VolumeMailboxBlob copy(Blob src, Mailbox destMbox, int destMsgId, int destRevision, Volume destVolume)
     throws IOException, ServiceException {
+        File srcFile = src.getFile();
+        if (!srcFile.exists()) {
+            throw new IOException(srcFile.getPath() + " does not exist");
+        }
+
         String srcPath = src.getPath();
         File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolume.getId(), false);
         String destPath = dest.getAbsolutePath();
+
+        if (ZimbraLog.store.isDebugEnabled()) {
+            long srcSize = srcFile.length();
+            long srcRawSize = src.getRawSize();
+            ZimbraLog.store.debug("Copying %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
+                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destMsgId);
+        }
+
         ensureParentDirExists(dest);
 
         boolean destCompressed;
         if (destVolume.getCompressBlobs()) {
-            if (src.isCompressed() || src.getFile().length() <= destVolume.getCompressionThreshold()) {
-                FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+            if (src.isCompressed() || srcFile.length() <= destVolume.getCompressionThreshold()) {
+                FileUtil.copy(srcFile, dest, !DebugConfig.disableMessageStoreFsync);
                 destCompressed = src.isCompressed();
             } else {
-                FileUtil.compress(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+                FileUtil.compress(srcFile, dest, !DebugConfig.disableMessageStoreFsync);
                 destCompressed = true;
             }
         } else {
             if (src.isCompressed())
-                FileUtil.uncompress(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+                FileUtil.uncompress(srcFile, dest, !DebugConfig.disableMessageStoreFsync);
             else
-                FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+                FileUtil.copy(srcFile, dest, !DebugConfig.disableMessageStoreFsync);
             destCompressed = false;
-        }
-
-        if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("copied id=" + destMsgId +
-                                      " mbox=" + destMbox.getId() +
-                                   " oldpath=" + srcPath + 
-                                   " newpath=" + destPath);
         }
 
         VolumeBlob newBlob = (VolumeBlob) new VolumeBlob(dest, destVolume.getId()).copyCachedDataFrom(src).setCompressed(destCompressed);
@@ -148,9 +163,22 @@ public class FileBlobStore extends StoreManager {
 
     public VolumeMailboxBlob link(Blob src, Mailbox destMbox, int destMsgId, int destRevision, short destVolumeId)
     throws IOException, ServiceException {
+        File srcFile = src.getFile();
+        if (!srcFile.exists()) {
+            throw new IOException(srcFile.getPath() + " does not exist.");
+        }
+
         File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolumeId, false);
         String srcPath = src.getPath();
         String destPath = dest.getAbsolutePath();
+        
+        if (ZimbraLog.store.isDebugEnabled()) {
+            long srcSize = srcFile.length();
+            long srcRawSize = src.getRawSize();
+            ZimbraLog.store.debug("Linking %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
+                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destMsgId);
+        }
+
         ensureParentDirExists(dest);
 
         short srcVolumeId = ((VolumeBlob) src).getVolumeId();
@@ -188,14 +216,7 @@ public class FileBlobStore extends StoreManager {
         } else {
             // src and dest are on different volumes and can't be hard linked.
             // Do a copy instead.
-            FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
-        }
-
-        if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("linked id=" + destMsgId +
-                                      " mbox=" + destMbox.getId() +
-                                   " oldpath=" + srcPath + 
-                                   " newpath=" + destPath);
+            FileUtil.copy(srcFile, dest, !DebugConfig.disableMessageStoreFsync);
         }
 
         String destLocator = Short.toString(destVolumeId);
@@ -209,10 +230,20 @@ public class FileBlobStore extends StoreManager {
         VolumeBlob blob = ((VolumeStagedBlob) src).getLocalBlob();
         File srcFile = blob.getFile();
         String srcPath = srcFile.getAbsolutePath();
-
+        if (!srcFile.exists()) {
+            throw new IOException(srcFile.getPath() + " does not exist.");
+        }
+        
         File destFile = getMailboxBlobFile(destMbox, destMsgId, destRevision, volume.getId(), false);
         String destPath = destFile.getAbsolutePath();
         ensureParentDirExists(destFile);
+
+        if (ZimbraLog.store.isDebugEnabled()) {
+            long srcSize = srcFile.length();
+            long srcRawSize = blob.getRawSize();
+            ZimbraLog.store.debug("Renaming %s (size=%d, raw size=%d) to %s for mailbox %d, id %d.",
+                srcPath, srcSize, srcRawSize, destPath, destMbox.getId(), destMsgId);
+        }
 
         short srcVolumeId = blob.getVolumeId();
         if (srcVolumeId == volume.getId()) {
@@ -231,13 +262,6 @@ public class FileBlobStore extends StoreManager {
             // Can't rename across volumes.  Copy then delete instead.
             FileUtil.copy(srcFile, destFile, !DebugConfig.disableMessageStoreFsync);
             srcFile.delete();
-        }
-
-        if (ZimbraLog.store.isDebugEnabled()) {
-            ZimbraLog.store.debug("renamed id=" + destMsgId +
-                                       " mbox=" + destMbox.getId() +
-                                    " oldpath=" + srcPath +
-                                    " newpath=" + destPath);
         }
 
         VolumeBlob vblob = (VolumeBlob) new VolumeBlob(destFile, volume.getId()).copyCachedDataFrom(blob);
@@ -318,18 +342,23 @@ public class FileBlobStore extends StoreManager {
         return (file.exists() ? file : null);
     }
 
-    private static String getBlobPath(Mailbox mbox, int msgId, int revision, short volumeId)
+    public static String getBlobPath(Mailbox mbox, int msgId, int revision, short volumeId)
     throws ServiceException {
         Volume vol = Volume.getById(volumeId);
         String path = vol.getBlobDir(mbox.getId(), msgId);
         int buflen = path.length() + 15 + (revision < 0 ? 0 : 11);
 
         StringBuffer sb = new StringBuffer(buflen);
-        sb.append(path).append(File.separator).append(msgId);
+        sb.append(path).append(File.separator);
+        appendFilename(sb, msgId, revision);
+        return sb.toString();
+    }
+    
+    public static void appendFilename(StringBuffer sb, int itemId, int revision) {
+        sb.append(itemId);
         if (revision >= 0)
             sb.append('-').append(revision);
         sb.append(".msg");
-        return sb.toString();
     }
 
     private static void ensureDirExists(File dir) throws IOException {

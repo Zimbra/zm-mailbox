@@ -1163,6 +1163,39 @@ Notes:
 
 -----------------------------
 
+<CheckBlobConsistencyRequest [checkSize="0|1"]/>
+  <volume id="..." />*
+  <mbox id="..." />*
+</CheckBlobConsistencyRequest>
+
+<CheckBlobConsistencyResponse>
+  <missingBlobs>
+    <mbox id="...">
+      <item id="{id}" volumeId="{id}" blobPath="{path}" s="{size}" />+
+    </mbox>*
+  </missingBlobs>
+  <unexpectedBlobs>
+    <mbox id="...">
+      <blob path="{path}" s="{size} />+
+    </mbox>*
+  </unexpectedBlobs>
+  <incorrectSize>
+    <mbox id="...">
+      <item id="{id}" volumeId="{id}" blobPath="{path}" s="{size}" fileDataSize="{size}" fileSize="{size}" />+
+    </mbox>*
+  </incorrectSize>
+</CheckBlobConsistencyResponse>
+
+Checks for items that have no blob, blobs that have no item, and items that
+have an incorrect blob size stored in their metadata.  If no volumes are
+specified, all volumes are checked.  If no mailboxes are specified, all
+mailboxes are checked.  Blob sizes are checked by default.  Set checkSize
+to 0 to avoid the CPU overhead of uncompressing compressed blobs in order to
+calculate size.
+
+
+-----------------------------
+
 <CreateDistributionListRequest>
   <name>...</name>
   <a n="...">...</a>+
