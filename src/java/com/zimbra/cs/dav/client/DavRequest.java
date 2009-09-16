@@ -17,6 +17,7 @@ package com.zimbra.cs.dav.client;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -29,6 +30,7 @@ import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 
@@ -38,6 +40,7 @@ public class DavRequest {
 		mUri = uri;
 		mMethod = method;
 		mDepth = Depth.zero;
+		mHeaders = new ArrayList<Pair<String,String>>();
 	}
 
 	public Document getRequestMessage() {
@@ -75,6 +78,15 @@ public class DavRequest {
 			return;
 		mDoc.getRootElement().add(e);
 	}
+	
+	public void addRequestHeader(String name, String value) {
+	    mHeaders.add(new Pair<String,String>(name, value));
+	}
+	
+	public ArrayList<Pair<String,String>> getRequestHeaders() {
+	    return mHeaders;
+	}
+	
 	public void setDepth(Depth d) {
 		mDepth = d;
 	}
@@ -170,6 +182,7 @@ public class DavRequest {
 	private String mRedirectUrl;
 	private String mMethod;
 	private Depth mDepth;
+	private ArrayList<Pair<String,String>> mHeaders;
 	
 	private static final String PROPFIND = "PROPFIND";
 	private static final String REPORT = "REPORT";

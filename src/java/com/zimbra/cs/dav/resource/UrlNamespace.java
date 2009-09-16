@@ -62,25 +62,7 @@ public class UrlNamespace {
 	
 	/* Returns Collection at the specified URL. */
 	public static Collection getCollectionAtUrl(DavContext ctxt, String url) throws DavException {
-		if (url.startsWith("http")) {
-			int index = url.indexOf(DavServlet.DAV_PATH);
-			if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
-				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-			index += DavServlet.DAV_PATH.length() + 1;
-			url = url.substring(index);
-			
-			// skip user.
-			index = url.indexOf('/');
-			if (index == -1)
-				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-			try {
-                url = URLDecoder.decode(url.substring(index), "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                ZimbraLog.dav.debug("can't decode url %s", url, e);
-                url = (url.substring(index));
-            }
-		}
-		String path = url;
+		String path = getURI(url);
 		int lastPos = path.length() - 1;
 		if (path.endsWith("/"))
 			lastPos--;
@@ -97,6 +79,7 @@ public class UrlNamespace {
 
 	/* Returns DavResource at the specified URL. */
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
+	    url = getURI(url);
         if (url.indexOf(PRINCIPALS_PATH) >= 0)
             return getPrincipalAtUrl(ctxt, url);
 		int index = url.indexOf(DavServlet.DAV_PATH);
@@ -111,6 +94,21 @@ public class UrlNamespace {
 		return getResourceAt(ctxt, user, path);
 	}
 
+	private static String getURI(String url) throws DavException {
+        if (url.startsWith("http")) {
+            int index = url.indexOf(DavServlet.DAV_PATH);
+            if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
+                throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+            url = url.substring(index);
+        }
+        try {
+            url = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.dav.debug("can't decode url %s", url, e);
+        }
+        return url;
+	}
+	
     public static DavResource getPrincipalAtUrl(DavContext ctxt, String url) throws DavException {
         ZimbraLog.dav.debug("getPrincipalAtUrl");
         String name = ctxt.getAuthAccount().getName();

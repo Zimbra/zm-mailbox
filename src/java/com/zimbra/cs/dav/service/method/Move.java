@@ -47,6 +47,8 @@ public class Move extends DavMethod {
 	}
 	
 	protected void renameIfNecessary(DavContext ctxt, DavResource rs, MailItemResource destCollection) throws DavException {
+	    if (!(rs instanceof Collection))
+	        return;
 		String oldName = ctxt.getItem();
 		String dest = getDestination(ctxt);
 		int begin, end;
@@ -67,6 +69,9 @@ public class Move extends DavMethod {
 	}
 	protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
 	    try {
+	        DavResource r = UrlNamespace.getResourceAtUrl(ctxt, getDestination(ctxt));
+	        if (r instanceof Collection)
+	            return ((Collection)r);
 	        return UrlNamespace.getCollectionAtUrl(ctxt, getDestination(ctxt));
 	    } catch (Exception e) {
 	        throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
