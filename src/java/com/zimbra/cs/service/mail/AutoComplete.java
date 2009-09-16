@@ -31,20 +31,15 @@ public class AutoComplete extends MailDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
     	ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		Account account = getRequestedAccount(getZimbraSoapContext(context));
-
-		if (!canAccessAccount(zsc, account))
-			throw ServiceException.PERM_DENIED("can not access account");
-
-		String n = request.getAttribute(MailConstants.A_NAME);
-		while (n.endsWith("*"))
-			n = n.substring(0, n.length() - 1);
+    	Account account = getRequestedAccount(getZimbraSoapContext(context));
+        
+    	String n = request.getAttribute(MailConstants.A_NAME);
+    	while (n.endsWith("*"))
+    	    n = n.substring(0, n.length() - 1);
+        
         int limit = account.getContactAutoCompleteMaxResults();
-		ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
-		ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
-		boolean includeGal = request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
-		autoComplete.setIncludeGal(includeGal);
-		AutoCompleteResult result = autoComplete.query(n, folders, limit);
+        
+		AutoCompleteResult result = query(request, zsc, account, false, n, limit);		
 		Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
 		toXML(response, result, zsc.getAuthtokenAccountId());
 		
@@ -65,8 +60,19 @@ public class AutoComplete extends MailDocumentHandler {
 		}
 		return array;
 	}
+		
+	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, boolean excludeGal, String name, int limit) throws ServiceException {
+       if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+       
+       ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
+       ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
+       boolean includeGal = !excludeGal && request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
+       autoComplete.setIncludeGal(includeGal);
+       return autoComplete.query(name, folders, limit);
+	}
 	
-	private void toXML(Element response, AutoCompleteResult result, String authAccountId) {
+	protected void toXML(Element response, AutoCompleteResult result, String authAccountId) {
 		response.addAttribute(MailConstants.A_CANBECACHED, result.canBeCached);
 		for (ContactEntry entry : result.entries) {
 	        Element cn = response.addElement(MailConstants.E_MATCH);
