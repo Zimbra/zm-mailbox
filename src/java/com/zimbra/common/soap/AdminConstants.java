@@ -166,6 +166,8 @@ public class AdminConstants {
     public static final QName GET_CURRENT_VOLUMES_RESPONSE = QName.get("GetCurrentVolumesResponse", NAMESPACE);
     public static final QName SET_CURRENT_VOLUME_REQUEST = QName.get("SetCurrentVolumeRequest", NAMESPACE);
     public static final QName SET_CURRENT_VOLUME_RESPONSE = QName.get("SetCurrentVolumeResponse", NAMESPACE);
+    public static final QName CHECK_BLOB_CONSISTENCY_REQUEST = QName.get("CheckBlobConsistencyRequest", NAMESPACE);
+    public static final QName CHECK_BLOB_CONSISTENCY_RESPONSE = QName.get("CheckBlobConsistencyResponse", NAMESPACE);
 
     public static final QName CREATE_DISTRIBUTION_LIST_REQUEST = QName.get("CreateDistributionListRequest", NAMESPACE);
     public static final QName CREATE_DISTRIBUTION_LIST_RESPONSE = QName.get("CreateDistributionListResponse", NAMESPACE);
@@ -561,6 +563,18 @@ public class AdminConstants {
     public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
     public static final String A_VOLUME_IS_CURRENT = "isCurrent";
+    
+    // Blob consistency check
+    public static final String E_MISSING_BLOBS = "missingBlobs";
+    public static final String E_ITEM = "item";
+    public static final String A_BLOB_PATH = "blobPath";
+    public static final String E_UNEXPECTED_BLOBS = "unexpectedBlobs";
+    public static final String E_BLOB = "blob";
+    public static final String E_INCORRECT_SIZE = "incorrectSize";
+    public static final String A_FILE_DATA_SIZE = "fileDataSize";
+    public static final String A_FILE_SIZE = "fileSize";
+    public static final String A_CHECK_SIZE = "checkSize";
+    public static final String A_VOLUME_ID = "volumeId";
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
