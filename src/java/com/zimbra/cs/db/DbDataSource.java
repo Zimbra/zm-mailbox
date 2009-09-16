@@ -117,8 +117,6 @@ public class DbDataSource {
     public static void updateMapping(DataSource ds, DataSourceItem item) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
 
-    	assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         ZimbraLog.datasource.debug("Updating mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
 
         synchronized (getSynchronizer(mbox)) {
@@ -536,8 +534,6 @@ public class DbDataSource {
     public static DataSourceItem getReverseMapping(DataSource ds, String remoteId) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
 
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         int folderId = 0;
         int itemId = 0;
         Metadata md = null;
@@ -584,9 +580,6 @@ public class DbDataSource {
     
     public static Collection<DataSourceItem> getMappings(DataSource ds, Collection<Integer> ids) throws ServiceException {
         Mailbox mbox = ds.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         int folderId = 0;
         int itemId = 0;
         String remoteId = null;
@@ -642,9 +635,6 @@ public class DbDataSource {
 
     public static Collection<DataSourceItem> getReverseMappings(DataSource ds, Collection<String> remoteIds) throws ServiceException {
     	Mailbox mbox = ds.getMailbox();
-
-        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
-
         int folderId = 0;
         int itemId = 0;
         String remoteId;

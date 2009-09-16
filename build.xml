@@ -56,6 +56,7 @@
     <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
     <property name="dist.dir" location="build/dist"/>
+    <property name="dist.db.dir" location="build/dist/db"/>
     <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
     <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
     <property name="warfilename" value="service.war"/>
@@ -98,6 +99,12 @@
     <property name="lmtpinject.numthreads" value="2"/>
 
     <property name="zimbra.home.dir" location="/opt/zimbra"/>
+
+    <property name="zimbra.derby.dir" location="${zimbra.home.dir}/derby"/>
+    <property name="zimbra.index.dir" location="${zimbra.home.dir}/index"/>
+    <property name="zimbra.store.dir" location="${zimbra.home.dir}/store"/>
+    <property name="zimbra.sqlite.dir" location="${zimbra.home.dir}/sqlite"/>
+
     <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
     <property name="jetty.conf.dir" value="${jetty.home.dir}/etc"/>
     <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
@@ -106,7 +113,7 @@
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
-	<property name="memcached.jar" value="memcached-2.3.1.jar"/>
+    <property name="memcached.jar" value="memcached-2.3.1.jar"/>
 
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
@@ -124,15 +131,15 @@
         </and>
     </condition>
 
-	<condition property="db.driver.jar" value="sqlitejdbc*.jar">
-		<isset property="db-sqlite"/>
-	</condition>
-	<condition property="db.driver.jar" value="derby*.jar">
-		<isset property="db-derby"/>
-	</condition>
-	<condition property="db.driver.jar" value="mysql-connector-java*.jar">
-		<isset property="db-mysql"/>
-	</condition>
+    <condition property="db.driver.jar" value="derby*.jar">
+	<isset property="db-derby"/>
+    </condition>
+    <condition property="db.driver.jar" value="mysql-connector-java*.jar">
+	<isset property="db-mysql"/>
+    </condition>
+    <condition property="db.driver.jar" value="sqlitejdbc*.jar">
+	<isset property="db-sqlite"/>
+    </condition>
 
     <condition property="is-windows">
         <os family="windows"/>
@@ -477,6 +484,12 @@
         </java>
     </target>
 
+    <target name="derby-versions-init" if="db-derby">
+        <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-o ${build.dir}"/>
+        </java>
+    </target>
+
     <target name="mysql-versions-init" if="db-mysql">
         <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
@@ -485,12 +498,6 @@
 
     <target name="sqlite-versions-init" if="db-sqlite">
         <java classname="com.zimbra.cs.db.SQLite" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-o ${build.dir}"/>
-        </java>
-    </target>
-
-    <target name="derby-versions-init" if="db-derby">
-        <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
         </java>
     </target>
@@ -519,21 +526,21 @@
         <delete dir="${build.dir}"/>
     </target>
 	
-	<target name="clean-opt-zimbra">
-		<!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
+    <target name="clean-opt-zimbra">
+	<!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
     	<delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
-		<delete failonerror="false">
-            <fileset dir="${jetty.home.dir}/common/lib"
-        		includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,jdavmail*,json.jar,testng*.jar,jython*.jar"/>
-		</delete>
-	</target>
+	<delete failonerror="false">
+	    <fileset dir="${jetty.home.dir}/common/lib"
+		includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,jdavmail*,json.jar,testng*.jar,jython*.jar"/>
+	</delete>
+    </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
     <property name="war.include" value="slf4j*.jar, *jsieve*.jar, lucene*.jar, ant-tar*.jar"/>
 
-   <target name="war" depends="jar">
+    <target name="war" depends="jar">
         <echo>war.include=${war.include}</echo>
         <war warfile="${warfile}" webxml="${war.web.xml}">
             <fileset dir="WebRoot"/>
@@ -719,13 +726,15 @@
         </copy>
 
         <!-- db schema -->
-        <copy todir="${dist.dir}/db" overwrite="true">
+	<antcall target="db-versions-init" />
+        <copy todir="${dist.db.dir}" overwrite="true">
             <fileset dir="${src.dir}/db" includes="*.sql"/>
+            <fileset dir="${db.schema.dir}" includes="*.sql"/>
+	    <fileset dir="${build.dir}" includes="*.sql"/>
+	    <filterset>
+		<filter token="ZIMBRA_HOME" value="${zimbra.home.dir}"/>
+	    </filterset>
         </copy>
-        <copy todir="${dist.dir}/db" overwrite="true">
-            <fileset dir="${db.schema.dir}" includes="db.sql,create_database.sql"/>
-        </copy>
-        <copy todir="${dist.dir}/db" file="${build.dir}/versions-init.sql" overwrite="true"/>
 
         <!-- wikis -->
         <copy todir="${dist.dir}/wiki" overwrite="true">
@@ -1030,6 +1039,18 @@
 
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
 
+    <target name="derby-init" if="db-derby">
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f" />
+        </java>
+
+        <delete dir="${zimbra.derby.dir}"/>
+
+        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
+            <arg file="${dist.db.dir}/init.sql" />
+        </java>
+    </target>
+
     <target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql" print="false"/>
@@ -1040,46 +1061,22 @@
     </target>
 
     <target name="sqlite-init" if="db-sqlite">
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
-        </java>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e debug_disable_mailbox_group=true -f" />
-        </java>
+	<!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, which breaks the <sql/> task. -->
+	<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+	    <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml" />
+	    <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
+	</java>
+	<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+	    <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml" />
+	    <arg line="-e debug_disable_mailbox_group=true -f" />
+	</java>
 
-        <delete dir="${zimbra.home.dir}/sqlite"/>
-        <mkdir dir="${zimbra.home.dir}/sqlite"/>
-        <!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, which breaks the <sql/> task. -->
-        <echo>Copying pre-created database to ${zimbra.home.dir}/sqlite/zimbra.db</echo>
-        <copy todir="${zimbra.home.dir}/sqlite" file="${db.schema.dir}/zimbra.db"/>
-        <chmod perm="o+w" file="${db.schema.dir}/zimbra.db"/>
-<!--        <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
-                 classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
-            <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
-                 classpathref="class.path" onerror="abort" src="${db.schema.dir}/wildfire.sql"/>
-            <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
-                 classpathref="class.path" onerror="abort" src="${src.dir}/db/default-volumes.sql"/>
-            <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
-                 classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/> -->
-    </target>
+	<delete dir="${zimbra.sqlite.dir}"/>
+	<mkdir dir="${zimbra.sqlite.dir}"/>
 
-    <target name="derby-init" if="db-derby">
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f" />
-        </java>
-
-        <delete dir="${zimbra.home.dir}/derby"/>
-        <echo file="${build.dir}/derbyij.sql">
-            CONNECT 'jdbc:derby:${zimbra.home.dir}/derby;create=true';
-            RUN '${db.schema.dir}/db.sql';
-            RUN '${db.schema.dir}/wildfire.sql';
-        	RUN '${src.dir}/db/default-volumes.sql';
-            RUN '${build.dir}/versions-init.sql';
-            EXIT;
-        </echo>
-        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
-            <arg file="${build.dir}/derbyij.sql" />
-        </java>
+	<exec executable="sqlite3" dir="${zimbra.sqlite.dir}" failonerror="true" input="${dist.db.dir}/init.sql">
+	    <arg line="zimbra.db"/>
+	</exec>
     </target>
 
     <target name="ldap-setup-preauth">
