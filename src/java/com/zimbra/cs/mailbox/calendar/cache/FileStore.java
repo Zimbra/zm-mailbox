@@ -18,10 +18,14 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -36,7 +40,7 @@ public class FileStore {
     private static final int FILE_GROUP_BITS = 8;
     private static final int FILE_BITS = 12;
 
-    private static final int CURRENT_VERSION = 2;
+    private static final int CURRENT_VERSION = 3;
     private static final String FN_VERSION = "ver";
     private static final String FN_CALDATA = "calData";
     private static final String FN_MODSEQ = "modSeq";
@@ -129,13 +133,17 @@ public class FileStore {
     private static void saveToFile(File file, String str) throws ServiceException {
         File tmpFile = new File(file.getAbsolutePath() + ".tmp");
         try {
-            FileWriter fw = null;
+            Writer writer = null;
+            FileOutputStream fos = null;
             try {
-                fw = new FileWriter(tmpFile);
-                fw.write(str);
+                fos = new FileOutputStream(tmpFile);
+                writer = new OutputStreamWriter(fos, "utf-8");
+                writer.write(str);
             } finally {
-                if (fw != null)
-                    fw.close();
+                if (writer != null)
+                    writer.close();
+                else if (fos != null)
+                    fos.close();
             }
             tmpFile.renameTo(file);
         } catch (IOException e) {
@@ -153,18 +161,22 @@ public class FileStore {
                     return null;
                 }
                 char[] buf = new char[(int) length];
-                FileReader fr = null;
+                Reader reader = null;
+                FileInputStream fis = null;
                 try {
-                    fr = new FileReader(file);
-                    int bytesRead = fr.read(buf);
+                    fis = new FileInputStream(file);
+                    reader = new InputStreamReader(fis, "utf-8");
+                    int bytesRead = reader.read(buf);
                     if (bytesRead < length)
                         throw ServiceException.FAILURE(
                                 "Read " + bytesRead + " bytes when expecting " + length +
                                 " bytes, from file " + file.getAbsolutePath(), null);
                     return new String(buf);
                 } finally {
-                    if (fr != null)
-                        fr.close();
+                    if (reader != null)
+                        reader.close();
+                    else if (fis != null)
+                        fis.close();
                 }
             } catch (FileNotFoundException e) {
                 return null;
