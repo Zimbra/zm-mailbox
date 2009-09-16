@@ -216,8 +216,11 @@ public class ZimbraSoapContext {
                 mRequestedAccountId = null;
             } else if (key.equals(HeaderConstants.BY_NAME)) {
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
+                
+                // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_ACCOUNT
                 if (account == null)
-                    throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+                    throw ServiceException.PERM_DENIED("can not access account");
+                
                 mRequestedAccountId = account.getId();
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 mRequestedAccountId = value;
