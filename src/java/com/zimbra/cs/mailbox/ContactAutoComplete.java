@@ -67,6 +67,10 @@ public class ContactAutoComplete {
 				emails.add(email);
 			}
 		}
+		public void appendEntries(AutoCompleteResult result) {
+		    for (ContactEntry entry : result.entries)
+		        addEntry(entry);
+		}
 		private HashSet<String> emails;
 	}
     public static class ContactEntry implements Comparable<ContactEntry> {
