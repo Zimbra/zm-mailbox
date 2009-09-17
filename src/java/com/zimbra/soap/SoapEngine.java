@@ -402,7 +402,8 @@ public class SoapEngine {
 
                     // also, make sure that the target account (if any) is active
                     if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
-                        Account target = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
+                        Account target = DocumentHandler.getRequestedAccount(zsc);
+                        
                         // treat the account as inactive if (a) it doesn't exist, (b) it's in maintenance mode, or (c) we're non-admins and it's not "active"
                         boolean inactive = target == null || target.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE);
                         if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))

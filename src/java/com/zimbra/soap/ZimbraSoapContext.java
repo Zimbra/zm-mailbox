@@ -209,13 +209,15 @@ public class ZimbraSoapContext {
                 mRequestedAccountId = null;
             } else if (key.equals(HeaderConstants.BY_NAME)) {
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
-                
-                // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_ACCOUNT
                 if (account == null)
-                    throw ServiceException.PERM_DENIED("can not access account");
+                    throw ServiceException.DEFEND_ACCOUNT_HARVEST();
                 
                 mRequestedAccountId = account.getId();
             } else if (key.equals(HeaderConstants.BY_ID)) {
+                Account account = prov.get(AccountBy.id, value, mAuthToken);
+                if (account == null)
+                    throw ServiceException.DEFEND_ACCOUNT_HARVEST();
+                
                 mRequestedAccountId = value;
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown value for by: " + key, null);
@@ -335,7 +337,7 @@ public class ZimbraSoapContext {
     public String getRequestedAccountId() {
         return (mRequestedAccountId != null ? mRequestedAccountId : mAuthTokenAccountId);
     } 
-
+    
     /** Returns the id of the account in the auth token.  Operations should
      *  normally use {@link #getRequestedAccountId}, as that's the context
      *  that the operations is executing in. */
@@ -353,7 +355,7 @@ public class ZimbraSoapContext {
     /** Returns whether the authenticated user is the same as the user whose
      *  context the operation is set to execute in. */
     public boolean isDelegatedRequest() {
-        return !mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId());
+        return mAuthTokenAccountId != null && !mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId());
     }
 
     public boolean isUsingAdminPrivileges() {
