@@ -44,6 +44,16 @@ import com.zimbra.cs.db.DbPool.PoolConfig;
 
 public class SQLite extends Db {
 
+    private Map<Db.Error, String> mErrorCodes;
+
+    SQLite() {
+        mErrorCodes = new HashMap<Db.Error, String>(6);
+        //mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        "");
+        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            "column id is not unique");
+        //mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    "");
+        //mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, "");
+    }
+    
     @Override boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
             case AVOID_OR_IN_WHERE_CLAUSE:   return false;
@@ -71,7 +81,8 @@ public class SQLite extends Db {
 
     @Override boolean compareError(SQLException e, Error error) {
         // XXX: the SQLite JDBC driver doesn't yet expose SQLite error codes, which sucks
-        return false;
+        String code = mErrorCodes.get(error);
+        return code != null && code.equals(e.getMessage());
     }
 
     @Override String forceIndexClause(String index) {
