@@ -628,15 +628,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     public int getModifiedSequence() {
         return mData.modMetadata;
     }
-    
-    /**
-     * Similar to getModifiedSequence(), the mod_content value tracks changes to the 'content'
-     * of the item but does not change when purely dynamic things change (e.g. tags/flags)
-     * @return
-     */
-    public int getModifiedContentSequence() {
-        return mData.modContent;
-    }
 
     /** Returns the item's size as it counts against mailbox quota.  For items
      *  that have a blob, this is the size in bytes of the raw blob. */

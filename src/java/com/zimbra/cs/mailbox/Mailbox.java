@@ -1052,7 +1052,7 @@ public class Mailbox {
         // if no data is provided then we ALWAYS batch
         if (data != null && indexImmediately()) {
             if (item.getIndexId() != null)
-                mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, item.getModifiedContentSequence(), data));
+                mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, item.getSavedSequence(), data));
         } else {
             // increment index deferred count
             int oldCount = mCurrentChange.idxDeferred == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferred;
