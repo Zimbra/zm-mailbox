@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090902-1033 */
+    /* build: 6.0.0 pshao 20090917-0910 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -12966,7 +12966,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @return zimbraPrefAccountTreeOpen, or true if unset
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1048)
     public boolean isPrefAccountTreeOpen() {
@@ -12979,7 +12979,7 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraPrefAccountTreeOpen new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1048)
     public void setPrefAccountTreeOpen(boolean zimbraPrefAccountTreeOpen) throws com.zimbra.common.service.ServiceException {
@@ -12995,7 +12995,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1048)
     public Map<String,Object> setPrefAccountTreeOpen(boolean zimbraPrefAccountTreeOpen, Map<String,Object> attrs) {
@@ -13009,7 +13009,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1048)
     public void unsetPrefAccountTreeOpen() throws com.zimbra.common.service.ServiceException {
@@ -13024,7 +13024,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1048)
     public Map<String,Object> unsetPrefAccountTreeOpen(Map<String,Object> attrs) {

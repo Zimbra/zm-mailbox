@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090902-1033 */
+    /* build: 6.0.0 pshao 20090917-0910 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4940,7 +4940,7 @@ public class ZAttrProvisioning {
     /**
      * whether or not account tree is expanded
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1048)
     public static final String A_zimbraPrefAccountTreeOpen = "zimbraPrefAccountTreeOpen";
@@ -6937,7 +6937,7 @@ public class ZAttrProvisioning {
     /**
      * value for envelope from (MAIL FROM) in spam report
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public static final String A_zimbraSpamReportEnvelopeFrom = "zimbraSpamReportEnvelopeFrom";

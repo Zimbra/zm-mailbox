@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090902-1033 */
+    /* build: 6.0.0 pshao 20090917-0910 */
 
     /**
      * RFC2256: descriptive information
@@ -25451,7 +25451,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraSpamReportEnvelopeFrom, or null if unset
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public String getSpamReportEnvelopeFrom() {
@@ -25464,7 +25464,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraSpamReportEnvelopeFrom new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public void setSpamReportEnvelopeFrom(String zimbraSpamReportEnvelopeFrom) throws com.zimbra.common.service.ServiceException {
@@ -25480,7 +25480,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public Map<String,Object> setSpamReportEnvelopeFrom(String zimbraSpamReportEnvelopeFrom, Map<String,Object> attrs) {
@@ -25494,7 +25494,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public void unsetSpamReportEnvelopeFrom() throws com.zimbra.common.service.ServiceException {
@@ -25509,7 +25509,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.1
+     * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public Map<String,Object> unsetSpamReportEnvelopeFrom(Map<String,Object> attrs) {

@@ -4635,12 +4635,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to show link to offline version in the web UI top bar</desc>
 </attr>
 
-<attr id="1048" name="zimbraPrefAccountTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.1">
+<attr id="1048" name="zimbraPrefAccountTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.2">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not account tree is expanded</desc>
 </attr>
 
-<attr id="1049" name="zimbraSpamReportEnvelopeFrom" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="6.0.1">
+<attr id="1049" name="zimbraSpamReportEnvelopeFrom" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="6.0.2">
   <desc>value for envelope from (MAIL FROM) in spam report</desc>
 </attr>
 
