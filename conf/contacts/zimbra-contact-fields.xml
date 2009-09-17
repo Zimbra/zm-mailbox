@@ -115,7 +115,8 @@ translate the value of into Zimbra tag.
         <column name="Email" field="email"/>
         <column name="Category" type="tag"/>
         <column name="Distribution Lists"/>
-        <column name="Messenger ID"/>
+	    <!-- TODO: map "screenname" to "yahoo://screenname" -->
+        <column name="Messenger ID" field="imAddress1"/>
         <column name="Home" field="homePhone"/>
         <column name="Work" field="workPhone"/>
         <column name="Pager" field="pager"/>
@@ -148,15 +149,17 @@ translate the value of into Zimbra tag.
         <column name="Custom 3" field="custom3"/>
         <column name="Custom 4" field="custom4"/>
         <column name="Comments" field="notes"/>
-        <column name="Messenger ID1"/>
-        <column name="Messenger ID2"/>
-        <column name="Messenger ID3"/>
-        <column name="Messenger ID4"/>
-        <column name="Messenger ID5"/>
-        <column name="Messenger ID6"/>
-        <column name="Messenger ID7"/>
-        <column name="Messenger ID8"/>
-        <column name="Messenger ID9"/>
+	    <!-- TODO: map "screenname" to "yahoo://screenname" -->
+        <column name="Messenger ID1" field="imAddress2"/>
+        <column name="Messenger ID2" field="imAddress3"/>
+        <column name="Messenger ID3" field="imAddress4"/>
+        <column name="Messenger ID4" field="imAddress5"/>
+        <column name="Messenger ID5" field="imAddress6"/>
+        <column name="Messenger ID6" field="imAddress7"/>
+        <column name="Messenger ID7" field="imAddress8"/>
+        <column name="Messenger ID8" field="imAddress9"/>
+        <column name="Messenger ID9" field="imAddress10"/>
+	    <!-- TODO: [Q] can we merge these into imAddress#, collapsing empty ones? -->
         <column name="Skype ID"/>
         <column name="IRC ID"/>
         <column name="ICQ ID"/>

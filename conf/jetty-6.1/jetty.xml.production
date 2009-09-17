@@ -33,13 +33,14 @@
     <!-- HTTPBEGIN -->
     <Call name="addConnector">
       <Arg>
-          <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
-            <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
-            <Set name="maxIdleTime">30000</Set>
-	    <Set name="lowResourceMaxIdleTime">1000</Set>
-            <Set name="Acceptors">2</Set>
-            <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
-          </New>
+        <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set> 
+          <Set name="confidentialPort">%%zimbraMailSSLPort%%</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+        </New>
       </Arg>
     </Call>
     <!-- HTTPEND -->
@@ -50,11 +51,13 @@
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
+          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
@@ -72,11 +75,13 @@
       <Arg>
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set>
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
           <Set name="Acceptors">2</Set>
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">@@mailboxd_keystore_password@@</Set>
+          <Set name="KeyPassword">@@mailboxd_keystore_password@@</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
               %%zimbraSSLExcludeCipherSuitesXML%%
@@ -86,19 +91,20 @@
       </Arg>
     </Call>
 
-	<!-- =============================================================== -->
-	<!-- Extension port                                                  -->
-	<!-- =============================================================== -->
-	<Call name="addConnector">
-		<Arg>
-		<New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
-			<Set name="Port">7072</Set>
-			<Set name="maxIdleTime">30000</Set>
-			<Set name="lowResourceMaxIdleTime">1000</Set>
-			<Set name="Acceptors">2</Set>
-		</New>
-		</Arg>
-	</Call>
+    <!-- =============================================================== -->
+    <!-- Extension port                                                  -->
+    <!-- =============================================================== -->
+    <Call name="addConnector">
+      <Arg>
+        <New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
+          <Set name="Port">7072</Set>
+          <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
+          <Set name="maxIdleTime">30000</Set>
+          <Set name="lowResourceMaxIdleTime">1000</Set>
+          <Set name="Acceptors">2</Set>
+        </New>
+      </Arg>
+    </Call>
 
     <!-- =========================================================== -->
     <!-- Set handler Collection Structure                            --> 
@@ -121,6 +127,7 @@
         <Call name="addRewriteRule"><Arg>/zimbraAdmin/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraAdminURL%%/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/*</Arg><Arg>%%zimbraMailURL%%</Arg></Call>
@@ -174,11 +181,11 @@
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
       <Get name="errorHandler">
         <Call name="addErrorPage">
-          <Arg type="int">500</Arg>
+          <Arg type="int">400</Arg>
           <Arg type="int">599</Arg>
-          <Arg type="String">/public/5xx.html</Arg>
+          <Arg type="String">/public/error.jsp</Arg>
         </Call>
-      </Get>
+      </Get>  
     </New>
 
 
@@ -198,6 +205,24 @@
       </Get>
     </New>
 
+    <New id="zimlet" class="org.mortbay.jetty.webapp.WebAppContext">
+      <Arg><Ref id="Contexts"/></Arg>
+      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimlet</Arg>
+      <Arg>/zimlet</Arg>
+      <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
+      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
+      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimlet</Set>
+      <Set name="baseResource">
+        <New class="org.mortbay.resource.ResourceCollection">
+          <Set name="resources">
+            <Array type="String">
+              <Item><SystemProperty name="jetty.home" default="."/>/webapps/zimlet</Item>
+              <Item><SystemProperty name="jetty.home" default="."/>/../zimlets-deployed</Item>
+            </Array>
+          </Set>
+        </New>
+      </Set>
+    </New>
 
     <!-- =========================================================== -->
     <!-- Configure the context deployer                              -->
@@ -284,6 +309,7 @@
           <Set name="append">true</Set>
           <Set name="extended">true</Set>
           <Set name="filenameDateFormat">yyyy-MM-dd</Set>
+          <Set name="preferProxiedForAddress">true</Set>
         </New>
       </Set>
     </Ref>
