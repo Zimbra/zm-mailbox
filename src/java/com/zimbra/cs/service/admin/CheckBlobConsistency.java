@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.BlobConsistencyChecker;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.store.file.Volume;
-import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CheckBlobConsistency extends AdminDocumentHandler {
@@ -85,46 +83,17 @@ public class CheckBlobConsistency extends AdminDocumentHandler {
             }
         }
         
+        boolean checkSize = request.getAttributeBool(AdminConstants.A_CHECK_SIZE, true);
+        
         // Check blobs and assemble response.
         Element response = zsc.createElement(AdminConstants.CHECK_BLOB_CONSISTENCY_RESPONSE);
-        Element missing = response.addElement(AdminConstants.E_MISSING_BLOBS);
-        Element incorrectSize = response.addElement(AdminConstants.E_INCORRECT_SIZE);
-        Element unexpectedBlobs = response.addElement(AdminConstants.E_UNEXPECTED_BLOBS);
         
         for (long mboxId : mailboxIds) {
             BlobConsistencyChecker checker = new BlobConsistencyChecker();
-            BlobConsistencyChecker.Results results = checker.check(volumeIds, mboxId, true);
-
-            if (!results.missingBlobs.isEmpty()) {
-                Element mboxEl = missing.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
-                for (BlobInfo blob : results.missingBlobs) {
-                    mboxEl.addElement(AdminConstants.E_ITEM)
-                    .addAttribute(AdminConstants.A_ID, blob.itemId)
-                    .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
-                    .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
-                    .addAttribute(AdminConstants.A_BLOB_PATH, blob.path);
-                }
-            }
-            if (!results.incorrectSize.isEmpty()) {
-                Element mboxEl = incorrectSize.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
-                for (BlobInfo blob : results.incorrectSize) {
-                    Element itemEl = mboxEl.addElement(AdminConstants.E_ITEM)
-                        .addAttribute(AdminConstants.A_ID, blob.itemId)
-                        .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
-                        .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId);
-                    itemEl.addElement(AdminConstants.E_BLOB)
-                        .addAttribute(AdminConstants.A_PATH, blob.path)
-                        .addAttribute(AdminConstants.A_SIZE, blob.fileDataSize)
-                        .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
-                }
-            }
-            if (!results.unexpectedFiles.isEmpty()) {
-                Element mboxEl = unexpectedBlobs.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
-                for (File file : results.unexpectedFiles) {
-                    mboxEl.addElement(AdminConstants.E_BLOB)
-                    .addAttribute(AdminConstants.A_PATH, file.getAbsolutePath())
-                    .addAttribute(AdminConstants.A_SIZE, file.length());
-                }
+            BlobConsistencyChecker.Results results = checker.check(volumeIds, mboxId, checkSize);
+            if (results.hasInconsistency()) {
+                Element mboxEl = response.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
+                results.toElement(mboxEl);
             }
         }
         

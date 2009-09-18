@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
@@ -50,9 +53,86 @@ public class BlobConsistencyChecker {
     }
     
     public static class Results {
+        public long mboxId;
         public Collection<BlobInfo> missingBlobs = new ArrayList<BlobInfo>();
-        public Collection<File> unexpectedFiles = new ArrayList<File>();
         public Collection<BlobInfo> incorrectSize = new ArrayList<BlobInfo>();
+        public Collection<BlobInfo> unexpectedBlobs = new ArrayList<BlobInfo>();
+
+        public Results() {
+        }
+        
+        public Results(Element mboxElement)
+        throws ServiceException {
+            if (!mboxElement.getName().equals(AdminConstants.E_MAILBOX)) {
+                throw ServiceException.INVALID_REQUEST("Unexpected element: " + mboxElement.getName(), null);
+            }
+            mboxId = mboxElement.getAttributeLong(AdminConstants.A_ID);
+            for (Element item : mboxElement.getElement(AdminConstants.E_MISSING_BLOBS).listElements(AdminConstants.E_ITEM)) {
+                BlobInfo blob = new BlobInfo();
+                blob.itemId = item.getAttributeLong(AdminConstants.A_ID);
+                blob.modContent = (int) item.getAttributeLong(AdminConstants.A_REVISION);
+                blob.dbSize = item.getAttributeLong(AdminConstants.A_SIZE);
+                blob.volumeId = (short) item.getAttributeLong(AdminConstants.A_VOLUME_ID);
+                blob.path = item.getAttribute(AdminConstants.A_BLOB_PATH);
+                missingBlobs.add(blob);
+            }
+            for (Element item : mboxElement.getElement(AdminConstants.E_INCORRECT_SIZE).listElements(AdminConstants.E_ITEM)) {
+                BlobInfo blob = new BlobInfo();
+                blob.itemId = item.getAttributeLong(AdminConstants.A_ID);
+                blob.modContent = (int) item.getAttributeLong(AdminConstants.A_REVISION);
+                blob.dbSize = item.getAttributeLong(AdminConstants.A_SIZE);
+                blob.volumeId = (short) item.getAttributeLong(AdminConstants.A_VOLUME_ID);
+                
+                Element blobEl = item.getElement(AdminConstants.E_BLOB);
+                blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
+                blob.fileDataSize = blobEl.getAttributeLong(AdminConstants.A_SIZE);
+                blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
+                incorrectSize.add(blob);
+            }
+            for (Element blobEl : mboxElement.getElement(AdminConstants.E_UNEXPECTED_BLOBS).listElements(AdminConstants.E_BLOB)) {
+                BlobInfo blob = new BlobInfo();
+                blob.volumeId = (short) blobEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
+                blob.path = blobEl.getAttribute(AdminConstants.A_PATH);
+                blob.fileSize = blobEl.getAttributeLong(AdminConstants.A_FILE_SIZE);
+                unexpectedBlobs.add(blob);
+            }
+        }
+        
+        public boolean hasInconsistency() {
+            return !(missingBlobs.isEmpty() && incorrectSize.isEmpty() && unexpectedBlobs.isEmpty());
+        }
+        
+        public void toElement(Element parent) {
+            Element missingEl = parent.addElement(AdminConstants.E_MISSING_BLOBS);
+            Element incorrectSizeEl = parent.addElement(AdminConstants.E_INCORRECT_SIZE);
+            Element unexpectedBlobsEl = parent.addElement(AdminConstants.E_UNEXPECTED_BLOBS);
+            
+            for (BlobInfo blob : missingBlobs) {
+                missingEl.addElement(AdminConstants.E_ITEM)
+                    .addAttribute(AdminConstants.A_ID, blob.itemId)
+                    .addAttribute(AdminConstants.A_REVISION, blob.modContent)
+                    .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
+                    .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
+                    .addAttribute(AdminConstants.A_BLOB_PATH, blob.path);
+            }
+            for (BlobInfo blob : incorrectSize) {
+                Element itemEl = incorrectSizeEl.addElement(AdminConstants.E_ITEM)
+                    .addAttribute(AdminConstants.A_ID, blob.itemId)
+                    .addAttribute(MailConstants.A_REVISION, blob.modContent)
+                    .addAttribute(AdminConstants.A_SIZE, blob.dbSize)
+                    .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId);
+                itemEl.addElement(AdminConstants.E_BLOB)
+                    .addAttribute(AdminConstants.A_PATH, blob.path)
+                    .addAttribute(AdminConstants.A_SIZE, blob.fileDataSize)
+                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
+            }
+            for (BlobInfo blob : unexpectedBlobs) {
+                unexpectedBlobsEl.addElement(AdminConstants.E_BLOB)
+                    .addAttribute(AdminConstants.A_VOLUME_ID, blob.volumeId)
+                    .addAttribute(AdminConstants.A_PATH, blob.path)
+                    .addAttribute(AdminConstants.A_FILE_SIZE, blob.fileSize);
+            }
+        }
     }
 
     private static final Log sLog = LogFactory.getLog(BlobConsistencyChecker.class);
@@ -109,7 +189,7 @@ public class BlobConsistencyChecker {
                         minId += (numGroups * filesPerGroup);
                     }
                     try {
-                        check(blobDir, blobsByName);
+                        check(volumeId, blobDir, blobsByName);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Unable to check " + blobDir, e);
                     }
@@ -128,7 +208,7 @@ public class BlobConsistencyChecker {
      * Reconciles blobs against the files in the given directory and adds any inconsistencies
      * to the current result set.
      */
-    private void check(String blobDirPath, Map<String, BlobInfo> blobsByName)
+    private void check(short volumeId, String blobDirPath, Map<String, BlobInfo> blobsByName)
     throws IOException {
         File blobDir = new File(blobDirPath);
         File[] files = blobDir.listFiles();
@@ -139,15 +219,13 @@ public class BlobConsistencyChecker {
         for (File file : files) {
             BlobInfo blob = blobsByName.remove(file.getName());
             if (blob == null) {
-                mResults.unexpectedFiles.add(file);
+                BlobInfo unexpected = new BlobInfo();
+                unexpected.volumeId = volumeId;
+                unexpected.path = file.getAbsolutePath();
+                unexpected.fileSize = file.length();
+                mResults.unexpectedBlobs.add(unexpected);
             } else if (mCheckSize) {
-                long size;
-                if (FileUtil.isGzipped(file)) {
-                    size = ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(file)));
-                } else {
-                    size = file.length();
-                }
-                blob.fileDataSize = size;
+                blob.fileDataSize = getDataSize(file);
                 blob.fileSize = file.length();
                 if (blob.dbSize != blob.fileDataSize) {
                     mResults.incorrectSize.add(blob);
@@ -158,6 +236,15 @@ public class BlobConsistencyChecker {
         // Any remaining items have missing blobs.
         for (BlobInfo blob : blobsByName.values()) {
             mResults.missingBlobs.add(blob);
+        }
+    }
+    
+    private static long getDataSize(File file)
+    throws IOException {
+        if (FileUtil.isGzipped(file)) {
+            return ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(file)));
+        } else {
+            return file.length();
         }
     }
 }

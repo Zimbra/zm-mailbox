@@ -1169,21 +1169,19 @@ Notes:
 </CheckBlobConsistencyRequest>
 
 <CheckBlobConsistencyResponse>
-  <missingBlobs>
-    <mbox id="...">
-      <item id="{id}" volumeId="{id}" blobPath="{path}" s="{size}" />+
-    </mbox>*
-  </missingBlobs>
-  <unexpectedBlobs>
-    <mbox id="...">
-      <blob path="{path}" s="{size} />+
-    </mbox>*
-  </unexpectedBlobs>
-  <incorrectSize>
-    <mbox id="...">
-      <item id="{id}" volumeId="{id}" blobPath="{path}" s="{size}" fileDataSize="{size}" fileSize="{size}" />+
-    </mbox>*
-  </incorrectSize>
+  <mbox id="...">
+    <missingBlobs>
+      <item id="{id}" rev="{n}" volumeId="{id}" blobPath="{path}" s="{data-size}" />*
+    </missingBlobs>
+    <unexpectedBlobs>
+      <blob volumeId="{id}" path="{path}" fileSize="{size} />*
+    </unexpectedBlobs>
+    <incorrectSize>
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">
+        <blob fileSize="{size}" s="{data-size}" path="{path}" /
+      </item>
+    </incorrectSize>
+  </mbox>*
 </CheckBlobConsistencyResponse>
 
 Checks for items that have no blob, blobs that have no item, and items that
