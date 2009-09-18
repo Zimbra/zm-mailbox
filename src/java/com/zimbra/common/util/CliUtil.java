@@ -15,6 +15,9 @@
 
 package com.zimbra.common.util;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+
 import com.zimbra.common.localconfig.LC;
 
 public class CliUtil {
@@ -30,5 +33,26 @@ public class CliUtil {
         ZimbraLog.toolSetupLog4j(defaultLogLevel, logFile, showThreads);
         if (LC.ssl_allow_untrusted_certs.booleanValue())
             EasySSLProtocolSocketFactory.init();
+    }
+
+    /**
+     * Looks up an <tt>Option</tt> by its short or long name.  This workaround is necessary
+     * because <tt>CommandLine.hasOption()</tt> doesn't support long option names.
+     */
+    public static Option getOption(CommandLine cl, String name) {
+        for (Option opt : cl.getOptions()) {
+            if (StringUtil.equal(opt.getOpt(), name) || StringUtil.equal(opt.getLongOpt(), name)) {
+                return opt;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns <tt>true</tt> if either a short or long option with the given name was
+     * specified on the command line.
+     */
+    public static boolean hasOption(CommandLine cl, String name) {
+        return (getOption(cl, name) != null);
     }
 }

@@ -520,6 +520,7 @@ public class AdminConstants {
     public static final String A_IS_DIRECTORY = "isDirectory";
     public static final String A_READABLE = "readable";
     public static final String A_WRITABLE = "writable";
+    public static final String A_REVISION = "rev";
 
     public static final String BY_ID = "id";
     public static final String BY_QUERY = "query";
