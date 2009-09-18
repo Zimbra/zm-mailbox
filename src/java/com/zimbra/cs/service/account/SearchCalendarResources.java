@@ -23,10 +23,12 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.AndOr;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
@@ -46,6 +48,10 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
+        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT,
+                Integer.MAX_VALUE);
+        if (limit == 0) limit = Integer.MAX_VALUE;
+        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
@@ -58,10 +64,11 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         filter.andWith(sFilterActiveResourcesOnly);
 
         Provisioning prov = Provisioning.getInstance();
-        List resources = prov.searchCalendarResources(prov.getDomain(account), filter, attrs, sortBy, sortAscending);
-        for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
-            CalendarResource resource = (CalendarResource) iter.next();
-            ToXML.encodeCalendarResource(response, resource);
+        List<NamedEntry> resources = prov.searchCalendarResources(prov.getDomain(account), filter, attrs, sortBy, sortAscending);
+        int i, limitMax = offset+limit;
+        for (i=offset; i < limitMax && i < resources.size(); i++) {
+            CalendarResource entry = (CalendarResource) resources.get(i);
+            ToXML.encodeCalendarResource(response, entry);
         }
         return response;
     }
