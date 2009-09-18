@@ -92,6 +92,7 @@
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraFeatureMailForwardingInFiltersEnabled"/>
     <a n="zimbraFeatureMailUpsellURL"/>
+    <a n="zimbraFeatureManageZimlets"/>
     <a n="zimbraFeatureMobileSyncEnabled"/>
     <a n="zimbraFeatureVoiceUpsellURL"/>
     <a n="zimbraForeignPrincipal"/>
