@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090917-0910 */
+    /* build: 6.0.0 pshao 20090918-1349 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2693,6 +2693,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=528)
     public static final String A_zimbraFeatureMailUpsellURL = "zimbraFeatureMailUpsellURL";
+
+    /**
+     * enable end-user to manage zimlets
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1051)
+    public static final String A_zimbraFeatureManageZimlets = "zimbraFeatureManageZimlets";
 
     /**
      * whether to enforce mobile policy

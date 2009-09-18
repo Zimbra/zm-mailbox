@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090917-0910 */
+    /* build: 6.0.0 pshao 20090918-1349 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8970,6 +8970,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureMailUpsellURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailUpsellURL, "");
+        return attrs;
+    }
+
+    /**
+     * enable end-user to manage zimlets
+     *
+     * @return zimbraFeatureManageZimlets, or true if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1051)
+    public boolean isFeatureManageZimlets() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureManageZimlets, true);
+    }
+
+    /**
+     * enable end-user to manage zimlets
+     *
+     * @param zimbraFeatureManageZimlets new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1051)
+    public void setFeatureManageZimlets(boolean zimbraFeatureManageZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageZimlets, zimbraFeatureManageZimlets ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable end-user to manage zimlets
+     *
+     * @param zimbraFeatureManageZimlets new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1051)
+    public Map<String,Object> setFeatureManageZimlets(boolean zimbraFeatureManageZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageZimlets, zimbraFeatureManageZimlets ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable end-user to manage zimlets
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1051)
+    public void unsetFeatureManageZimlets() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageZimlets, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable end-user to manage zimlets
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1051)
+    public Map<String,Object> unsetFeatureManageZimlets(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureManageZimlets, "");
         return attrs;
     }
 
