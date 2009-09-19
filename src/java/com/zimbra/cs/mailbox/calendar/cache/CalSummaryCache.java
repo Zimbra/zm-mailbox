@@ -248,11 +248,18 @@ public class CalSummaryCache {
                 // Still good.  Reuse it.
                 calData.addCalendarItem(existing);
             } else {
+                // Our item is either modified or deleted.  Refetch from backend to see which case it is.
                 CalendarItemData calItemData =
-                    fetchCalendarItemData(octxt, mbox, folderId, existing.getCalItemId(), rangeStart, rangeEnd);
-                if (calItemData != null)
-                    calData.addCalendarItem(calItemData);
+                    fetchCalendarItemData(octxt, mbox, folderId, calItemId, rangeStart, rangeEnd);
                 staleItemIds.remove(calItemId);
+                if (calItemData != null) {
+                    // Special check for renumbered item.  ZDesktop can renumber items and it causes a lookup
+                    // by old id to return a MailItem object having the new id.  We must ignore it here.  If
+                    // we don't, we'll end up with duplicates because the new id is also in the stale item ids
+                    // list.
+                    if (calItemData.getCalItemId() == calItemId)
+                        calData.addCalendarItem(calItemData);
+                }
             }
         }
         // Any stale items left in staleItemIds set are newly added items.
