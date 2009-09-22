@@ -16,6 +16,12 @@
 package com.zimbra.cs.account;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.IllegalAccessException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+// import java.net.IDN;  JDK1.6 only
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -31,24 +37,229 @@ import com.zimbra.cs.account.AttributeManager.IDNType;
 public class IDNUtil {
     public static final String ACE_PREFIX = "xn--";
     
+    private static abstract class ZimbraIDN {
+        private static final boolean sAllowUnassigned = true;
+        private static final boolean sUseSTD3ASCIIRules = false;
+        
+        private static final ZimbraIDN INSTANCE = ZimbraIDN.getInstance();
+        
+        private static ZimbraIDN getInstance() {
+            
+            ZimbraIDN instance = JavaIDN.getInstance(sAllowUnassigned, sUseSTD3ASCIIRules);
+            if (instance == null)
+                instance = new GnuIDN(sAllowUnassigned, sUseSTD3ASCIIRules);
+            
+            return instance;
+        }
+        
+        abstract String toASCII(String input) throws ServiceException;
+        abstract String toUnicode(String input) throws ServiceException;
+                
+        private static String convertToASCII(String input) {
+            try {
+                return INSTANCE.toASCII(input);
+            } catch (ServiceException e) {
+                // if for any reason it cannot be converted, just INFO log and return the input as is
+                ZimbraLog.account.info("domain [" + input + "] cannot be converted to ASCII", e);
+                return input;
+            }
+        }
+        
+        private static String convertToUnicode(String input) {
+            try {
+                return INSTANCE.toUnicode(input);
+            } catch (ServiceException e) {
+                // if for any reason it cannot be converted, just INFO log and return the input as is
+                ZimbraLog.account.info("domain [" + input + "] cannot be converted to Unicode", e);
+                return input;
+            }
+        }
+    }
+    
+    private static class JavaIDN extends ZimbraIDN {
+        private int mFlags;
+        private Method mMethodToASCII;
+        private Method mMethodToUnicode;
+        
+        // keep constant field value defined in java.net.IDN, since we are using java.reflect 
+        private int ALLOW_UNASSIGNED;      
+        private int USE_STD3_ASCII_RULES;
+        
+        private static JavaIDN getInstance(boolean allowUnassigned, boolean useSTD3ASCIIRules) {
+            try {
+                return new JavaIDN(allowUnassigned, useSTD3ASCIIRules);
+            } catch (ServiceException e) {
+            }
+            return null;
+        }
+        
+        /*
+         * Java IDN support is only in JDK 1.6
+         */
+        private JavaIDN(boolean allowUnassigned, boolean useSTD3ASCIIRules) throws ServiceException {
+            try {
+                Class cls = Class.forName("java.net.IDN");
+                mMethodToASCII = cls.getMethod("toASCII", String.class, Integer.TYPE);
+                mMethodToUnicode = cls.getMethod("toUnicode", String.class, Integer.TYPE);
+                Field fieldAllowUnassigned = cls.getField("ALLOW_UNASSIGNED");
+                Field fieldUseSTD3ASCIIRules = cls.getField("USE_STD3_ASCII_RULES");
+                
+                // just in case, should not happen if we get here
+                if (mMethodToASCII == null || mMethodToUnicode == null ||
+                    fieldAllowUnassigned == null || fieldUseSTD3ASCIIRules == null)
+                    throw ServiceException.FAILURE("JavaIDN not supported", null);
+                        
+                ALLOW_UNASSIGNED = fieldAllowUnassigned.getInt(null);
+                USE_STD3_ASCII_RULES = fieldUseSTD3ASCIIRules.getInt(null);
+                
+                mFlags = 0;
+                if (allowUnassigned)
+                    mFlags |= ALLOW_UNASSIGNED;
+                
+                if (useSTD3ASCIIRules)
+                    mFlags |= USE_STD3_ASCII_RULES;
+                
+                // all is well
+                return;
+                
+            } catch (ClassNotFoundException e) {
+            } catch (NoSuchMethodException e) {
+            } catch (NoSuchFieldException e) {
+            } catch (IllegalAccessException e) {
+            }
+            
+            // nope, no Java IDN
+            throw ServiceException.FAILURE("JavaIDN not supported", null);
+        }
+        
+        String toASCII(String input) throws ServiceException {
+            
+            /*
+             * change to just:  java.net.IDN.toASCII(input, mFlags) 
+             * after dev is all on 1.6.  Currently only production is on 1.6
+             */
+            
+            try {
+                return (String)mMethodToASCII.invoke(null, input, mFlags);
+            } catch (IllegalAccessException e) {
+                throw ServiceException.FAILURE("cannot convert to ASCII", e);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.FAILURE("cannot convert to ASCII", e);
+            } catch (InvocationTargetException e) {
+                throw ServiceException.FAILURE("cannot convert to ASCII", e);
+            }
+        }
+        
+        String toUnicode(String input) throws ServiceException {
+            
+            /*
+             * change to just:  java.net.IDN.toUnicode(input, mFlags) 
+             * after dev is all on 1.6.  Currently only production is on 1.6
+             */
+            
+            try {
+                return (String)mMethodToUnicode.invoke(null, input, mFlags);
+            } catch (IllegalAccessException e) {
+                throw ServiceException.FAILURE("cannot convert to Unicode", e);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.FAILURE("cannot convert to Unicode", e);
+            } catch (InvocationTargetException e) {
+                throw ServiceException.FAILURE("cannot convert to Unicode", e);
+            }
+        }
+
+    }
+    
+    /**
+     * Gateway to gnu IDNA methods.
+     * 
+     * gnu libind-1.0 methods:
+       public static String toASCII(String input,
+                             boolean allowUnassigned,
+                             boolean useSTD3ASCIIRules)
+
+       public static String toUnicode(String input,
+                               boolean allowUnassigned,
+                               boolean useSTD3ASCIIRules)
+                      
+       expects the input is only a label, NOT the entire domain name,
+       which is wrong according their javadoc.
+       
+       We copy-paste:       
+       public static String toASCII(String input)
+       public static String toUnicode(String input) 
+       
+       from IDNA.java, and make them sensitive to allowUnassigned/useSTD3ASCIIRules.
+       
+       A bit hacky.  The real fix should be using JDK1.6, which has IDN support 
+       in the java.net.IDN class.   In GnR, 1.6 is the JDK in production, but in 
+       dev JDK 1.5 is still around.   We should get rid of GNU libidn and just use 
+       the one in JDK1.6 at some point. 
+                               
+     */
+    private static class GnuIDN extends ZimbraIDN {
+        private boolean mAllowUnassigned;
+        private boolean mUseSTD3ASCIIRules;
+        
+        private GnuIDN(boolean allowUnassigned, boolean useSTD3ASCIIRules) {
+            mAllowUnassigned = allowUnassigned;
+            mUseSTD3ASCIIRules = useSTD3ASCIIRules;
+        }
+        
+        String toASCII(String input) throws ServiceException {
+            try {
+                StringBuffer o = new StringBuffer();
+                StringBuffer h = new StringBuffer();
+        
+                for (int i = 0; i < input.length(); i++) {
+                    char c = input.charAt(i);
+                    if (c == '.' || c == '\u3002' || c == '\uff0e' || c == '\uff61') {
+                        o.append(IDNA.toASCII(h.toString(), mAllowUnassigned, mUseSTD3ASCIIRules));
+                        o.append('.');
+                        h = new StringBuffer();
+                    } else {
+                        h.append(c);
+                    }
+                }
+                o.append(IDNA.toASCII(h.toString(), mAllowUnassigned, mUseSTD3ASCIIRules));
+                return o.toString();
+            } catch (IDNAException e) {
+                throw ServiceException.FAILURE("cannot convert to ASCII", e);
+            }
+        }
+        
+        String toUnicode(String input) {
+            StringBuffer o = new StringBuffer();
+            StringBuffer h = new StringBuffer();
+
+            for (int i = 0; i < input.length(); i++) {
+                char c = input.charAt(i);
+                if (c == '.' || c == '\u3002' || c == '\uff0e' || c == '\uff61') {
+                    o.append(IDNA.toUnicode(h.toString(), mAllowUnassigned, mUseSTD3ASCIIRules));
+                    o.append(c);
+                    h = new StringBuffer();
+                } else {
+                    h.append(c);
+                }
+          }
+          o.append(IDNA.toUnicode(h.toString(), mAllowUnassigned, mUseSTD3ASCIIRules));
+          return o.toString();
+        }
+    }
+
+    
     /*
      * convert an unicode domain name to ACE(ASCII Compatible Encoding)
      */
     public static String toAsciiDomainName(String name) {
-        String ascii = name;
-        try {
-            ascii = IDNA.toASCII(name);
-        } catch (IDNAException e) {
-            ZimbraLog.account.info("domain [" + name + "] cannot be converted to ASCII", e);
-        }
-        return ascii;
+        return ZimbraIDN.convertToASCII(name);
     }
     
     /*
      * convert an  ASCII domain name to unicode
      */
     public static String toUnicodeDomainName(String name) {
-        return IDNA.toUnicode(name);
+        return ZimbraIDN.convertToUnicode(name);
     }
     
     public static String toAsciiEmail(String emailAddress) throws ServiceException {
@@ -211,51 +422,5 @@ public class IDNUtil {
             return name;
         }
     }
-    
-    
-    private static void testEmailp(String unicode, IDNType idnType) {
-        System.out.println("\nTesting email with personal part, idn type = " + idnType + "\n");
-        
-        String emailp_u1 = unicode;
-        String emailp_a1 = toAscii(emailp_u1, idnType);
-        System.out.println("emailp_u1: " + emailp_u1);
-        System.out.println("emailp_a1: " + emailp_a1);
-        
-        String emailp_u2 = toUnicode(emailp_a1, idnType);
-        String emailp_a2 = toAscii(emailp_u2, idnType);
-        System.out.println("emailp_u2: " + emailp_u2);
-        System.out.println("emailp_a2: " + emailp_a2);
-        
-        if (emailp_u1.equals(emailp_u2) && emailp_a1.equals(emailp_a2))
-            System.out.println("\nyup!");
-        else
-            System.out.println("\nbad!");
-    }
-    
-    public static void main(String arsg[]) {
-        // String u1 = "abc.\u5f35\u611b\u73b2" + ".jp";
-        // String u1 = "abc.XYZ" + ".jp";
-        // String u1 = "my.xyz\u4e2d\u6587abc.com";
-        
-        String u1 = "\u4e2d\u6587.xyz\u4e2d\u6587abc.com";
-        String a1 = toAsciiDomainName(u1);
-        System.out.println("u1: " + u1);
-        System.out.println("a1: " + a1);
-        
-        String u2 = toUnicodeDomainName(u1);
-        String a2 = toAsciiDomainName(u2);
-        System.out.println("a2: " + a2);
-        if (a1.equals(a2) && u1.equals(u2))
-            System.out.println("\nyup!");
-        else
-            System.out.println("\nbad!");
-        
-        // System.out.println(toAscii("abc@xyz"));
-        
-        // with personal name
-        testEmailp("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
-        testEmailp("\u4e2d\u6587 <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
-        testEmailp("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
-        testEmailp("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>, cat dog <test@xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
-    }
+
 }

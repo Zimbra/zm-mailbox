@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090918-1349 */
+    /* build: 6.0.0 pshao 20090922-1116 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1271,6 +1271,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=428)
     public static final String A_zimbraAllowFromAddress = "zimbraAllowFromAddress";
+
+    /**
+     * whether creating domains, and renaming domains to a name, containing
+     * non-LDH (letter, digit, hyphen) characters is allowed
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1052)
+    public static final String A_zimbraAllowNonLDHCharsInDomain = "zimbraAllowNonLDHCharsInDomain";
 
     /**
      * Mailboxes in which the current account in archived. Multi-value attr

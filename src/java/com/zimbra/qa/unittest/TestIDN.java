@@ -15,12 +15,15 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
@@ -38,9 +41,12 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Domain;
@@ -51,18 +57,20 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestIDN extends TestCase {
-    private String TEST_ID;
+    private static String TEST_ID;
     private static String TEST_NAME = "test-IDN";
     private static String UNICODESTR = "\u4e2d\u6587";
     // private static String UNICODESTR = "\u5f35\u611b\u73b2";
     private static String PASSWORD = "test123";
-   
     
-    private Provisioning mProv;
-    private String BASE_DOMAIN_NAME;
-   
+    private static Provisioning mProv;
+    private static String BASE_DOMAIN_NAME;
+    
     public void setUp() throws Exception {
         
+        if (TEST_ID != null)
+            return;
+            
         TEST_ID = TestProvisioningUtil.genTestId();
         
         System.out.println("\nTest " + TEST_ID + " setting up...\n");
@@ -116,19 +124,19 @@ public class TestIDN extends TestCase {
         DL
     }
     
-    static enum IDNType {
+    static enum NameType {
         UNAME,
         ANAME,
     }
     
-    private NamedEntry createTest(EntryType entryType, IDNType by, IDNName name) throws Exception {
+    private NamedEntry createTest(EntryType entryType, NameType by, IDNName name) throws Exception {
         
         NamedEntry created = null;
         NamedEntry notCreated = null;
         
         String firstCreateBy = null;
         String thenCreateBy = null;
-        if (by == IDNType.UNAME) {
+        if (by == NameType.UNAME) {
             firstCreateBy = name.uName();
             thenCreateBy = name.aName();
         } else {
@@ -265,16 +273,15 @@ public class TestIDN extends TestCase {
         mProv.modifyAttrs(entry, attrs);
     }
     
-    void domainTest() throws Exception {
-        System.out.println("domainTest");
-        
+    public void testDomain() throws Exception {
+
         IDNName d1Name = new IDNName(makeDomainName("domain-1."));
         IDNName d2Name = new IDNName(makeDomainName("domain-2."));
         IDNName d2RenamedName = new IDNName(makeDomainName("domain-2-renamed."));
         
         // create domain with unicode name
-        Domain domain1 = (Domain)createTest(EntryType.DOMAIN, IDNType.UNAME, d1Name);
-        Domain domain2 = (Domain)createTest(EntryType.DOMAIN, IDNType.ANAME, d2Name);
+        Domain domain1 = (Domain)createTest(EntryType.DOMAIN, NameType.UNAME, d1Name);
+        Domain domain2 = (Domain)createTest(EntryType.DOMAIN, NameType.ANAME, d2Name);
         
         // get by name test
         getTest(EntryType.DOMAIN, domain1, d1Name);
@@ -292,9 +299,63 @@ public class TestIDN extends TestCase {
         */
         // getTest(EntryType.DOMAIN, domain2, d2RenamedName);
     }
+
+    private void doTestInvalidNames(String domainName, boolean expectedValid) throws Exception {
+        
+        boolean actualValid;
+        try {
+            Domain domain = mProv.createDomain(domainName, new HashMap<String, Object>());
+            actualValid = (domain != null);
+        } catch (ServiceException e) {
+            actualValid = false;
+        }
+        
+        assertEquals(expectedValid, actualValid);
+    }
     
-    public void accountTest() throws Exception {
-        System.out.println("accountTest");
+    public void testDomainInvalidNames() throws Exception {
+        
+        Config config = mProv.getConfig();
+        
+        // save he current value of zimbraAllowNonLDHCharsInDomain
+        String curAllowNonLDH = config.getAttr(Provisioning.A_zimbraAllowNonLDHCharsInDomain);
+        
+        // test values
+        String goodEnglish       = "good" + BASE_DOMAIN_NAME;
+        String goodIDN           = makeDomainName("good");
+        String LDHEnglish_comma  = "ldh'ldh" + BASE_DOMAIN_NAME;
+        String LDHIDN_comma      = makeDomainName("ldh'ldh");
+        
+        
+        // when zimbraAllowNonLDHCharsInDomain is TRUE
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, Provisioning.TRUE);
+        mProv.modifyAttrs(config, attrs);
+        
+        String prefix = "allowtest.";  // so that we don't run into doamin exist problem
+        doTestInvalidNames(prefix + goodEnglish, true);
+        doTestInvalidNames(prefix + goodIDN, true);
+        doTestInvalidNames(prefix + LDHEnglish_comma, true);
+        doTestInvalidNames(prefix + LDHIDN_comma, true);
+        
+        // when zimbraAllowNonLDHCharsInDomain is FALSE
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, Provisioning.FALSE);
+        mProv.modifyAttrs(config, attrs);
+        
+        prefix = "notallowtest.";
+        doTestInvalidNames(prefix + goodEnglish, true);
+        doTestInvalidNames(prefix + goodIDN, true);
+        doTestInvalidNames(prefix + LDHEnglish_comma, false);
+        doTestInvalidNames(prefix + LDHIDN_comma, false);
+        
+        // restore the orig config value back
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, curAllowNonLDH);
+        mProv.modifyAttrs(config, attrs);
+    }
+    
+    public void testAccount() throws Exception {
         
         IDNName domainName = new IDNName(makeDomainName("domain-acct-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
@@ -312,8 +373,8 @@ public class TestIDN extends TestCase {
          * account
          */
         // create test
-        Account acct1 = (Account)createTest(EntryType.ACCOUNT, IDNType.UNAME, acct1Name);
-        Account acct2 = (Account)createTest(EntryType.ACCOUNT, IDNType.ANAME, acct2Name);
+        Account acct1 = (Account)createTest(EntryType.ACCOUNT, NameType.UNAME, acct1Name);
+        Account acct2 = (Account)createTest(EntryType.ACCOUNT, NameType.ANAME, acct2Name);
 
         // get by name test
         getTest(EntryType.ACCOUNT, acct1, acct1Name);
@@ -347,8 +408,8 @@ public class TestIDN extends TestCase {
          * cr
          */
         // create test
-        CalendarResource cr1 = (CalendarResource)createTest(EntryType.CR, IDNType.UNAME, cr1Name);
-        CalendarResource cr2 = (CalendarResource)createTest(EntryType.CR, IDNType.ANAME, cr2Name);
+        CalendarResource cr1 = (CalendarResource)createTest(EntryType.CR, NameType.UNAME, cr1Name);
+        CalendarResource cr2 = (CalendarResource)createTest(EntryType.CR, NameType.ANAME, cr2Name);
 
         // get by name test
         getTest(EntryType.CR, cr1, cr1Name);
@@ -359,9 +420,8 @@ public class TestIDN extends TestCase {
         getTest(EntryType.CR, cr2, cr2RenamedName);
     }
     
-    public void distributionListTest() throws Exception {
-        System.out.println("distributionListTest");
-        
+    public void testDistributionList() throws Exception {
+       
         IDNName domainName = new IDNName(makeDomainName("domain-dl-test."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
@@ -377,8 +437,8 @@ public class TestIDN extends TestCase {
          * dl
          */
         // create test
-        DistributionList dl1 = (DistributionList)createTest(EntryType.DL, IDNType.UNAME, dl1Name);
-        DistributionList dl2 = (DistributionList)createTest(EntryType.DL, IDNType.ANAME, dl2Name);
+        DistributionList dl1 = (DistributionList)createTest(EntryType.DL, NameType.UNAME, dl1Name);
+        DistributionList dl2 = (DistributionList)createTest(EntryType.DL, NameType.ANAME, dl2Name);
 
         // get by name test
         getTest(EntryType.DL, dl1, dl1Name);
@@ -417,14 +477,13 @@ public class TestIDN extends TestCase {
         assertEquals(0, members.length);
     }
     
-    public void basicAuthTest() throws Exception {
-        System.out.println("basicAuthTest");
+    public void testBasicAuth() throws Exception {
         
         IDNName domainName = new IDNName(makeDomainName("basicAuthTest."));
         Domain domain = createDomain(domainName.uName(), domainName.uName());
         
         IDNName acctName = new IDNName("acct", domainName.uName());
-        Account acct = (Account)createTest(EntryType.ACCOUNT, IDNType.UNAME, acctName);
+        Account acct = (Account)createTest(EntryType.ACCOUNT, NameType.UNAME, acctName);
         
         HttpState initialState = new HttpState();
         
@@ -478,18 +537,104 @@ public class TestIDN extends TestCase {
          }
     }
     
-    public void testIDN() throws Exception {
-        domainTest();
-        accountTest();
-        distributionListTest();   
-        basicAuthTest();
-        System.out.println("\nTest " + TEST_ID + " done\n");
+
+    private void IDNUtilTest(String u1, String expectedAscii) {
+        boolean verbose = true;
+        
+        String a1 = IDNUtil.toAsciiDomainName(u1);
+        assertTrue(expectedAscii.equals(a1));
+        
+        printOutput(verbose, "u1: " + u1);
+        printOutput(verbose, "a1: " + a1);
+        
+        String u2 = IDNUtil.toUnicodeDomainName(u1);
+        String a2 = IDNUtil.toAsciiDomainName(u2);
+        printOutput(verbose, "u2: " + u2);
+        printOutput(verbose, "a2: " + a2);
+        assertTrue(a1.equals(a2) && u1.equals(u2));
+        
+        // now try the java.net.IDN, should get same result
+        // JDK1.6 only
+        /*
+        int flags = 0;
+        
+        String a1_java = IDN.toASCII(u1, flags);
+        printOutput(verbose, "u1: " + u1);
+        printOutput(verbose, "a1_java: " + a1_java);
+        
+        String u2_java = IDN.toUnicode(u1, flags);
+        String a2_java = IDN.toASCII(u2_java, flags);
+        printOutput(verbose, "u2_java: " + u2_java);
+        printOutput(verbose, "a2_java: " + a2_java);
+        assertTrue(a1_java.equals(a2_java) && u1.equals(u2_java));
+        // also., make sure the two libs produce same result
+        assertTrue(a1.equals(a1_java) && u2.equals(u2_java));
+        */
+        
+        printOutput(verbose, "");
     }
+    
+    /*
+     * run this test with both JRE1.5 and 1.6, should get same result
+     * 
+     */
+    public void testIDNUtil() throws Exception {
+        
+        IDNUtilTest("foobar.com", "foobar.com");
+        IDNUtilTest("\u4e2d\u6587.xyz\u4e2d\u6587abc.com", "xn--fiq228c.xn--xyzabc-dw7i870n.com");
+
+        // domain labels containing LDH characters
+        IDNUtilTest("foo'bar.com", "foo'bar.com");
+        IDNUtilTest("\u4e2d'\u6587.xyz\u4e2d\u6587abc.com", "xn--'-kq6a506e.xn--xyzabc-dw7i870n.com");
+    }
+        
+    private void emailpTest(String unicode, IDNType idnType) {
+        
+        boolean verbose = false;
+        printOutput(verbose, "\nTesting email with personal part, idn type = " + idnType + "\n");
+        
+        String emailp_u1 = unicode;
+        String emailp_a1 = IDNUtil.toAscii(emailp_u1, idnType);
+        printOutput(verbose, "emailp_u1: " + emailp_u1);
+        printOutput(verbose, "emailp_a1: " + emailp_a1);
+        
+        String emailp_u2 = IDNUtil.toUnicode(emailp_a1, idnType);
+        String emailp_a2 = IDNUtil.toAscii(emailp_u2, idnType);
+        printOutput(verbose, "emailp_u2: " + emailp_u2);
+        printOutput(verbose, "emailp_a2: " + emailp_a2);
+        
+        assertTrue(emailp_u1.equals(emailp_u2) && emailp_a1.equals(emailp_a2));
+    }
+    
+    public void testEmailp() throws Exception {
+        
+        // with personal name
+        emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
+        // emailpTest("\u4e2d\u6587 <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
+        emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
+        emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>, cat dog <test@xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
+    }
+    
+    private void printOutput(boolean verbose, String text) {
+        if (!verbose)
+            return;
+        
+        PrintStream ps = System.out;
+        try {
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(ps, "UTF-8"));
+            writer.write(text+"\n");
+            writer.flush();
+        } catch (UnsupportedEncodingException e) {
+            ps.println(text);
+        } catch (IOException e) {
+            ps.println(text);
+        }
+    }
+    
  
     public static void main(String[] args) throws Exception {
         /*
          * 
-         * cliSetup forces instanciating a SoapProvisioning, for now we want LdapProvisioning
          * SOAP: UTF-8 (multi bytes)
          * LDAP: UTF-8 (multi bytes)
          * Java: UTF-16 (2 bytes Unicode) 
@@ -497,13 +642,9 @@ public class TestIDN extends TestCase {
          *       integer that can represent a Unicode code point in the range U+0000 to U+FFFF, 
          *       or the code units of UTF-16.
          */
-        // TestUtil.cliSetup();
-        // TestUtil.runTest(new TestSuite(TestIDN.class));
-        
-        TestIDN t = new TestIDN();
-        t.setUp();
-        t.testIDN();
-        
+        // TestUtil.cliSetup();  // we don't want SOAPProvisoning, we want LdapProvisioning
+        CliUtil.toolSetup();
+        TestUtil.runTest(TestIDN.class);
     }
 
 }

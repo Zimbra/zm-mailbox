@@ -73,6 +73,7 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
@@ -1592,7 +1593,7 @@ public class LdapProvisioning extends Provisioning {
         name = name.toLowerCase().trim();
         name = IDNUtil.toAsciiDomainName(name);
 
-        validDomainName(name);
+        NameUtil.validNewDomainName(name);
 
         ZimbraLdapContext zlc = null;
         try {
@@ -2327,7 +2328,7 @@ public class LdapProvisioning extends Provisioning {
     public void renameDomain(String zimbraId, String newDomainName) throws ServiceException {
         newDomainName = newDomainName.toLowerCase().trim();
         newDomainName = IDNUtil.toAsciiDomainName(newDomainName);
-        validDomainName(newDomainName);
+        NameUtil.validNewDomainName(newDomainName);
 
         ZimbraLdapContext zlc = null;
 

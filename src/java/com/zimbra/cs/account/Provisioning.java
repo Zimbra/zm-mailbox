@@ -25,8 +25,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -1814,25 +1815,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public static void validEmailAddress(String addr) throws ServiceException {
-        try {
-            InternetAddress ia = new InternetAddress(addr, true);
-            // is this even needed?
-            // ia.validate();
-            if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
-                throw ServiceException.INVALID_REQUEST("invalid email address", null);
-        } catch (AddressException e) {
-            throw ServiceException.INVALID_REQUEST("invalid email address", e);
-        }
+        // delegate to NameUtil, should eventually delete this and refactor all call sites to call NameUtil
+        NameUtil.validEmailAddress(addr);
     }
 
-    public static void validDomainName(String domain) throws ServiceException {
-        String email = "test" + "@" + domain;
-        try {
-            validEmailAddress(email);
-        } catch (ServiceException e) {
-            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
-        }
-    }
     
     public static boolean isUUID(String value) {
         if (value.length() == 36 &&
