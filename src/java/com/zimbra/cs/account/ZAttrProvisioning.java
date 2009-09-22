@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090922-1116 */
+    /* build: 6.0.0 pshao 20090922-1137 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2479,10 +2479,34 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
 
     /**
+     * Docs features enabled in briefcase
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1055)
+    public static final String A_zimbraFeatureBriefcaseDocsEnabled = "zimbraFeatureBriefcaseDocsEnabled";
+
+    /**
      * whether to allow use of briefcase feature
      */
     @ZAttr(id=498)
     public static final String A_zimbraFeatureBriefcasesEnabled = "zimbraFeatureBriefcasesEnabled";
+
+    /**
+     * Slides features enabled in briefcase
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1054)
+    public static final String A_zimbraFeatureBriefcaseSlidesEnabled = "zimbraFeatureBriefcaseSlidesEnabled";
+
+    /**
+     * Spreadsheet features enabled in briefcase
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1053)
+    public static final String A_zimbraFeatureBriefcaseSpreadsheetEnabled = "zimbraFeatureBriefcaseSpreadsheetEnabled";
 
     /**
      * calendar features

@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090922-1116 */
+    /* build: 6.0.0 pshao 20090922-1137 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -6821,6 +6821,222 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureAdvancedSearchEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Docs features enabled in briefcase
+     *
+     * @return zimbraFeatureBriefcaseDocsEnabled, or true if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1055)
+    public boolean isFeatureBriefcaseDocsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseDocsEnabled, true);
+    }
+
+    /**
+     * Docs features enabled in briefcase
+     *
+     * @param zimbraFeatureBriefcaseDocsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1055)
+    public void setFeatureBriefcaseDocsEnabled(boolean zimbraFeatureBriefcaseDocsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseDocsEnabled, zimbraFeatureBriefcaseDocsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Docs features enabled in briefcase
+     *
+     * @param zimbraFeatureBriefcaseDocsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1055)
+    public Map<String,Object> setFeatureBriefcaseDocsEnabled(boolean zimbraFeatureBriefcaseDocsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseDocsEnabled, zimbraFeatureBriefcaseDocsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Docs features enabled in briefcase
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1055)
+    public void unsetFeatureBriefcaseDocsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseDocsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Docs features enabled in briefcase
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1055)
+    public Map<String,Object> unsetFeatureBriefcaseDocsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseDocsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Slides features enabled in briefcase
+     *
+     * @return zimbraFeatureBriefcaseSlidesEnabled, or true if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1054)
+    public boolean isFeatureBriefcaseSlidesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, true);
+    }
+
+    /**
+     * Slides features enabled in briefcase
+     *
+     * @param zimbraFeatureBriefcaseSlidesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1054)
+    public void setFeatureBriefcaseSlidesEnabled(boolean zimbraFeatureBriefcaseSlidesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, zimbraFeatureBriefcaseSlidesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Slides features enabled in briefcase
+     *
+     * @param zimbraFeatureBriefcaseSlidesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1054)
+    public Map<String,Object> setFeatureBriefcaseSlidesEnabled(boolean zimbraFeatureBriefcaseSlidesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, zimbraFeatureBriefcaseSlidesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Slides features enabled in briefcase
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1054)
+    public void unsetFeatureBriefcaseSlidesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Slides features enabled in briefcase
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1054)
+    public Map<String,Object> unsetFeatureBriefcaseSlidesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Spreadsheet features enabled in briefcase
+     *
+     * @return zimbraFeatureBriefcaseSpreadsheetEnabled, or true if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1053)
+    public boolean isFeatureBriefcaseSpreadsheetEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, true);
+    }
+
+    /**
+     * Spreadsheet features enabled in briefcase
+     *
+     * @param zimbraFeatureBriefcaseSpreadsheetEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1053)
+    public void setFeatureBriefcaseSpreadsheetEnabled(boolean zimbraFeatureBriefcaseSpreadsheetEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, zimbraFeatureBriefcaseSpreadsheetEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Spreadsheet features enabled in briefcase
+     *
+     * @param zimbraFeatureBriefcaseSpreadsheetEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1053)
+    public Map<String,Object> setFeatureBriefcaseSpreadsheetEnabled(boolean zimbraFeatureBriefcaseSpreadsheetEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, zimbraFeatureBriefcaseSpreadsheetEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Spreadsheet features enabled in briefcase
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1053)
+    public void unsetFeatureBriefcaseSpreadsheetEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Spreadsheet features enabled in briefcase
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1053)
+    public Map<String,Object> unsetFeatureBriefcaseSpreadsheetEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, "");
         return attrs;
     }
 

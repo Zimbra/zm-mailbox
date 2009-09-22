@@ -4659,4 +4659,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether creating domains, and renaming domains to a name, containing non-LDH (letter, digit, hyphen) characters is allowed</desc>
 </attr>
 
+<attr id="1053" name="zimbraFeatureBriefcaseSpreadsheetEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.2">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Spreadsheet features enabled in briefcase</desc>
+</attr>
+
+<attr id="1054" name="zimbraFeatureBriefcaseSlidesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.2">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Slides features enabled in briefcase</desc>
+</attr>
+
+<attr id="1055" name="zimbraFeatureBriefcaseDocsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.2">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Docs features enabled in briefcase</desc>
+</attr>
+
 </attrs>
