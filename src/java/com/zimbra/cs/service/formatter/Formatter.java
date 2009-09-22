@@ -322,9 +322,11 @@ public abstract class Formatter {
                     out.print(",\n\t");
                     out.print(SoapProtocol.SoapJS.soapFault(se));
                 }
-                for (ServiceException warning : w) {
-                    out.print(",\n\t");
-                    out.print(SoapProtocol.SoapJS.soapFault(warning));
+                if (w != null) {
+                    for (ServiceException warning : w) {
+                        out.print(",\n\t");
+                        out.print(SoapProtocol.SoapJS.soapFault(warning));
+                    }
                 }
                 out.println(");");
             }
