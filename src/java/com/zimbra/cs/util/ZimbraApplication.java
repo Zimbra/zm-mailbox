@@ -15,6 +15,7 @@
 package com.zimbra.cs.util;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -59,6 +60,8 @@ public class ZimbraApplication {
     public void startup() {}
 
     public void initialize(boolean forMailboxd) {}
+
+    public void initializeZimbraDb(boolean forMailboxd) throws ServiceException {}
 
     private boolean isShutdown;
 

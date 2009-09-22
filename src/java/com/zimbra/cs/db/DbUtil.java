@@ -16,8 +16,10 @@
 package com.zimbra.cs.db;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.db.DbPool.Connection;
 
 /**
@@ -320,7 +323,7 @@ public class DbUtil {
      * contains as many question marks as the number of elements in the
      * given array.  Used for generating SQL IN clauses.
      */
-    public static String suitableNumberOfVariables(Collection c)        { return DbUtil.suitableNumberOfVariables(c.size()); }
+    public static String suitableNumberOfVariables(Collection<?> c)        { return DbUtil.suitableNumberOfVariables(c.size()); }
 
     /**
      * Returns a string with the form <code>(?, ?, ?, ...)</code>.
@@ -346,8 +349,11 @@ public class DbUtil {
     throws IOException, ServiceException, SQLException {
         PreparedStatement stmt = null;
         String[] statements = parseScript(scriptReader);
+
         try {
             for (String sql : statements) {
+                if (sql.length() == 0)
+                    continue;
                 stmt = conn.prepareStatement(sql);
                 stmt.execute();
                 stmt.close();
@@ -359,17 +365,44 @@ public class DbUtil {
         } 
     }
     
+    private static String[] addScript(String s1[], String s2[]) {
+        if (s1 == null)
+            return s2;
+        
+        String temp[] = new String[s1.length + s2.length];
+        
+        System.arraycopy(s1, 0, temp, 0, s1.length);
+        System.arraycopy(s2, 0, temp, s1.length, s2.length);
+        return temp;
+    }
+
     /**
      * Parses a SQL script into separate SQL statements, separated by semicolons.
      * Removes comments that begin with <code>--</code> or <code>#</code>.
      */
-    public static String[] parseScript(Reader scriptReader)
-    throws IOException {
+    public static String[] parseScript(Reader scriptReader) throws IOException {
         StringBuilder buf = new StringBuilder();
         BufferedReader br = new BufferedReader(scriptReader);
         String line;
+        String ret[] = null;
+        
         while ((line = br.readLine()) != null) {
             line = removeComments(line);
+            if (line.startsWith(".")) {
+                // SQLite does not suport read statements so emulate them
+                if (line.endsWith(";"))
+                    line = line.substring(0, line.length() - 1);
+                if (line.startsWith(".read ")) {
+                    String sql;
+                    
+                    line = line.substring(".read".length());
+                    line = line.trim();
+                    line = line.replace("\"", "");
+                    sql = new String(ByteUtil.getContent(new File(line)));
+                    ret = addScript(ret, parseScript(new StringReader(sql)));
+                }
+                continue;
+            }
             buf.append(line);
             line = line.trim();
             if (line.length() == 0) {
@@ -379,8 +412,16 @@ public class DbUtil {
             buf.append('\n');
         }
         br.close();
-        String script = buf.toString();
-        return script.split("\\s*" + Db.getInstance().scriptCommandDelimiter() + "\\s*");
+        if (buf.length() != 0 || ret == null)
+            ret = addScript(ret, buf.toString().split("\\s*" +
+                Db.getInstance().scriptCommandDelimiter() + "\\s*"));
+        for (int i = 0; i < ret.length; i++) {
+            if (ret[i].startsWith("END")) {
+                ret[i - 1] += ";\n" + ret[i];
+                ret[i] = "";
+            }
+        }
+        return ret;
     }
 
     /**

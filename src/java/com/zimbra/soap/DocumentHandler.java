@@ -56,6 +56,7 @@ import java.util.Map;
 public abstract class DocumentHandler {
 
     private QName mResponseQName;
+    private static String LOCAL_HOST, LOCAL_HOST_ID;
 
     void setResponseQName(QName response) { mResponseQName = response; }
 
@@ -63,18 +64,27 @@ public abstract class DocumentHandler {
         return zc.createElement(mResponseQName);
     }
 
-    public static String LOCAL_HOST, LOCAL_HOST_ID;
-    static {
-        try {
-            Server localServer = Provisioning.getInstance().getLocalServer();
-            LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
-            LOCAL_HOST_ID = localServer.getId();
-        } catch (Exception e) {
-            Zimbra.halt("could not fetch local server name from LDAP for request proxying");
+    public static String getLocalHost() {
+        synchronized(LOCAL_HOST) {
+            if (LOCAL_HOST.length() == 0) {
+                try {
+                    Server localServer = Provisioning.getInstance().getLocalServer();
+                    LOCAL_HOST = localServer.getAttr(Provisioning.A_zimbraServiceHostname);
+                    LOCAL_HOST_ID = localServer.getId();
+                } catch (Exception e) {
+                    Zimbra.halt("could not fetch local server name from LDAP for request proxying");
+                }
+            }
         }
+        return LOCAL_HOST;
     }
 
-
+    public static String getLocalHostId() {
+        if (LOCAL_HOST_ID.length() == 0)
+            getLocalHost();
+        return LOCAL_HOST_ID;
+    }
+    
     /**
      * Guaranteed to be called by the engine before handle() is called.  If an exception is thrown,
      * then the handler() is *not* called. 
@@ -86,7 +96,6 @@ public abstract class DocumentHandler {
      * @return user-defined object which will be passed along to postHandle()
      * 
      */
-    @SuppressWarnings("unused")
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { return null; }
 
     /**
@@ -96,10 +105,8 @@ public abstract class DocumentHandler {
      */
     public void postHandle(Object userObj) { }
     
-    @SuppressWarnings("unused")
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
     
-    @SuppressWarnings("unused")
     public void postProxy(Element request, Element response, Map<String, Object> context) throws ServiceException {}
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;

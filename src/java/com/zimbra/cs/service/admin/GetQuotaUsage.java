@@ -176,7 +176,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
             ArrayList<AccountQuota> result = new ArrayList<AccountQuota>();
             
-            String query = String.format("(zimbraMailHost=%s)", LOCAL_HOST);
+            String query = String.format("(zimbraMailHost=%s)", getLocalHost());
             
             Provisioning prov = Provisioning.getInstance();
             int flags = Provisioning.SA_ACCOUNT_FLAG;

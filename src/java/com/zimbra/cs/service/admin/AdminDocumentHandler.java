@@ -25,7 +25,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -160,7 +159,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.id, rsrcId, zsc.getAuthToken());
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
-                    if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
+                    if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
                         return proxyRequest(request, context, server);
                 }
             }
@@ -171,7 +170,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText(), zsc.getAuthToken());
                 if (rsrc != null) {
                     Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
-                    if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
+                    if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
                         return proxyRequest(request, context, server);
                 }
             }
@@ -181,7 +180,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             String serverId = (xpath != null ? getXPath(request, xpath) : null);
             if (serverId != null) {
                 Server server = prov.get(ServerBy.id, serverId);
-                if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
+                if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
                     return proxyRequest(request, context, server);
             }
 
@@ -318,7 +317,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * here.  But we sanity check again, just in case.
      * -------------------
      */
-    protected AdminAccessControl checkRight(ZimbraSoapContext zsc, Map context, Entry target, Object needed) throws ServiceException {
+    protected AdminAccessControl checkRight(ZimbraSoapContext zsc,
+        Map<String, Object> context, Entry target, Object needed) throws ServiceException {
         AccessManager am = AccessManager.getInstance();
         
         //

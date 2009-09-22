@@ -21,6 +21,9 @@ import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -46,6 +49,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.znative.Util;
 
 /**
  * Class that encapsulates the initialization and shutdown of services needed
@@ -145,10 +149,16 @@ public class Zimbra {
 
         checkForClasses();
 
-        DbPool.loadSettings();
+        ZimbraApplication app = ZimbraApplication.getInstance();
 
+        DbPool.startup();
+
+        app.initializeZimbraDb(forMailboxd);
+        
         if (!Versions.checkVersions())
             Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
+
+        DbPool.loadSettings();
 
         String tzFilePath = LC.timezone_file.value();
         try {
@@ -158,6 +168,15 @@ public class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
+        if (Provisioning.getInstance() instanceof LdapProvisioning)
+            ZimbraLdapContext.waitForServer();
+        
+        try {
+            RightManager.getInstance();
+        } catch (ServiceException e) {
+            Util.halt("cannot initialize RightManager", e);
+        }
+            
         ZimbraHttpConnectionManager.startReaperThread();
 
         try {
@@ -168,7 +187,6 @@ public class Zimbra {
 
         MailboxManager.getInstance();
 
-        ZimbraApplication app = ZimbraApplication.getInstance();
         app.startup();
 
         if (app.supports(MemcachedConnector.class.getName()))

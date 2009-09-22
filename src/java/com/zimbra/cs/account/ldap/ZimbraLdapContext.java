@@ -18,6 +18,7 @@ package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
 import java.security.cert.Certificate;
+import java.util.Date;
 import java.util.Hashtable;
 
 import javax.naming.CompositeName;
@@ -85,6 +86,8 @@ public class ZimbraLdapContext {
     private LdapContext mDirContext;
     private StartTlsResponse mTlsResp;
     
+    private static final int CHECK_LDAP_SLEEP_MILLIS = 5000;
+
     private static enum ConnType {
         PLAIN,
         LDAPS,
@@ -217,7 +220,7 @@ public class ZimbraLdapContext {
         return false;
     }
     
-    private static synchronized Hashtable getDefaultEnv(boolean master) {
+    private static synchronized Hashtable<String, String> getDefaultEnv(boolean master) {
         Hashtable<String, String> sEnv = null;
         
         if (master) {
@@ -269,7 +272,7 @@ public class ZimbraLdapContext {
         return sEnv;
     }
     
-    private static synchronized Hashtable getCustomEnv(boolean master, LdapConfig ldapConfig) {
+    private static synchronized Hashtable<String, String> getCustomEnv(boolean master, LdapConfig ldapConfig) {
         Hashtable<String, String> env = new Hashtable<String, String>(); 
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -367,7 +370,7 @@ public class ZimbraLdapContext {
      */
     public ZimbraLdapContext(boolean master, LdapConfig ldapConfig) throws ServiceException {
         try {
-            Hashtable env = (ldapConfig==null)? getDefaultEnv(master) : getCustomEnv(master, ldapConfig);
+            Hashtable<String, String> env = (ldapConfig==null)? getDefaultEnv(master) : getCustomEnv(master, ldapConfig);
             boolean startTLS = ConnType.isSTARTTLS(master);
             
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
@@ -698,7 +701,7 @@ public class ZimbraLdapContext {
     }
     
     public void moveChildren(String oldDn, String newDn) throws ServiceException {
-        NamingEnumeration ne = null;        
+        NamingEnumeration<SearchResult> ne = null;        
         try {
             // find children under old DN and move them
             SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
@@ -706,7 +709,7 @@ public class ZimbraLdapContext {
             ne = searchDir(oldDn, query, sc);
             NameParser ldapParser = mDirContext.getNameParser("");            
             while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
+                SearchResult sr = ne.next();
                 String oldChildDn = sr.getNameInNamespace();
                 Name oldChildName = ldapParser.parse(oldChildDn);
                 Name newChildName = ldapParser.parse(newDn).add(oldChildName.get(oldChildName.size()-1));
@@ -723,14 +726,14 @@ public class ZimbraLdapContext {
     }
     
     public void deleteChildren(String dn) throws ServiceException {
-        NamingEnumeration ne = null;        
+        NamingEnumeration<SearchResult> ne = null;        
         try {
             // find children under old DN and remove them
             SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
             String query = "(objectclass=*)";
             ne = searchDir(dn, query, sc);
             while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
+                SearchResult sr = ne.next();
                 unbindEntry(sr.getNameInNamespace());
             }
         } catch (NamingException e) {
@@ -773,5 +776,25 @@ public class ZimbraLdapContext {
             sb.append(mods[i].toString() + ", ");
         return sb.toString();
     }
+
+    public static void waitForServer() {
+        while (true) {
+            ZimbraLdapContext zlc = null;
+            try {
+                zlc = new ZimbraLdapContext();
+                break;
+            } catch (ServiceException e) {
+                System.err.println(new Date() + ": error communicating with LDAP (will retry)");
+                e.printStackTrace();
+                try {
+                    Thread.sleep(CHECK_LDAP_SLEEP_MILLIS);
+                } catch (InterruptedException ie) {
+                }
+            } finally {
+                ZimbraLdapContext.closeContext(zlc);
+            }
+        }
+    }
+    
 
 }

@@ -111,7 +111,7 @@ public class ItemId {
         Account acctTarget = Provisioning.getInstance().get(AccountBy.id, mAccountId);
         if (acctTarget == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(mAccountId);
-        return DocumentHandler.LOCAL_HOST.equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
+        return DocumentHandler.getLocalHost().equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
     }
 
     /**

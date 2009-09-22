@@ -48,10 +48,7 @@ public class SQLite extends Db {
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
-        //mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        "");
-        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            "column id is not unique");
-        //mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    "");
-        //mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, "");
+        mErrorCodes.put(Db.Error.DUPLICATE_ROW, "column id is not unique");
     }
     
     @Override boolean supportsCapability(Db.Capability capability) {
@@ -88,10 +85,6 @@ public class SQLite extends Db {
     @Override String forceIndexClause(String index) {
         // don't think we can direct the sqlite optimizer...
         return "";
-    }
-
-    @Override public String scriptCommandDelimiter() {
-        return "%";
     }
 
     @Override String getIFNULLClause(String expr1, String expr2) {
@@ -181,17 +174,6 @@ public class SQLite extends Db {
         return sAttachedDatabases.get(getInnermostConnection(conn.getConnection()));
     }
 
-    private void recordAttachedDatabase(Connection conn, String dbname) {
-        LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
-        if (attachedDBs != null) {
-            attachedDBs.put(dbname, null);
-        } else {
-            attachedDBs = new LinkedHashMap<String, String>(MAX_ATTACHED_DATABASES * 3 / 2, (float) 0.75, true);
-            attachedDBs.put(dbname, null);
-            sAttachedDatabases.put(getInnermostConnection(conn.getConnection()), attachedDBs);
-        }
-    }
-    
     private java.sql.Connection getInnermostConnection(java.sql.Connection conn) {
         java.sql.Connection retVal = null;
         if (conn instanceof DebugConnection)
@@ -209,18 +191,18 @@ public class SQLite extends Db {
         // if we're using more databases than we're allowed to, detach the least recently used
         if (attachedDBs != null && attachedDBs.size() >= MAX_ATTACHED_DATABASES) {
             for (Iterator<String> it = attachedDBs.keySet().iterator(); attachedDBs.size() >= MAX_ATTACHED_DATABASES && it.hasNext(); ) {
-                if (detachDatabase(conn, it.next()))
+                String name = it.next();
+                
+                if (!name.equals("zimbra") && detachDatabase(conn, name))
                     it.remove();
             }
         }
-
         attachDatabase(conn, dbname);
-        recordAttachedDatabase(conn, dbname);
     }
 
-    @SuppressWarnings("unused")
     void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
         PreparedStatement stmt = null;
+        
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();
             if (!autocommit)
@@ -230,8 +212,20 @@ public class SQLite extends Db {
 
             if (!autocommit)
                 conn.getConnection().setAutoCommit(autocommit);
+        } catch (SQLException e) {
+            if (!"database is already attached".equals(e.getMessage()))
+                return;
         } finally {
             DbPool.quietCloseStatement(stmt);
+        }
+        
+        LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
+        if (attachedDBs != null) {
+            attachedDBs.put(dbname, null);
+        } else {
+            attachedDBs = new LinkedHashMap<String, String>(MAX_ATTACHED_DATABASES * 3 / 2, (float) 0.75, true);
+            attachedDBs.put(dbname, null);
+            sAttachedDatabases.put(getInnermostConnection(conn.getConnection()), attachedDBs);
         }
     }
 
@@ -271,8 +265,8 @@ public class SQLite extends Db {
         if (!new File(getDatabaseFilename(dbname)).exists())
             return false;
 
-        // XXX: since it's so easy to end up with an empty SQLite database, make sure that the tables we want are actually in there
-        //   (yes, this assumes that we're looking for a MBOXGROUP database, which is beyond the scope of this method's contract)
+        // since it's so easy to end up with an empty SQLite database, make
+        // sure that at least one table exists 
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -281,16 +275,17 @@ public class SQLite extends Db {
                 conn.getConnection().setAutoCommit(true);
 
             registerDatabaseInterest(conn, dbname);
-
-            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + dbname + ".sqlite_master WHERE type='table'");
+            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " +
+                (dbname.equals("zimbra") ? "" : dbname + ".") +
+                "sqlite_master WHERE type='table'");
             rs = stmt.executeQuery();
-            boolean complete = rs.next() ? (rs.getInt(1) >= DbMailbox.sTables.size()) : false;
+            boolean complete = rs.next() ? (rs.getInt(1) >= 1) : false;
 
             if (!autocommit)
                 conn.getConnection().setAutoCommit(autocommit);
             return complete;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("foo", e);
+            throw ServiceException.FAILURE("sqlite error", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

@@ -27,14 +27,8 @@ import java.util.TimerTask;
 
 import javax.servlet.http.HttpServlet;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
@@ -47,30 +41,9 @@ public class FirstServlet extends HttpServlet {
 
     private static final long serialVersionUID = -1660545976482412029L;
 
-    private static final int CHECK_LDAP_SLEEP_MILLIS = 10000;
-    
-    public static void checkLDAP() {
-        while (true) {
-            ZimbraLdapContext zlc = null;
-            try {
-                zlc = new ZimbraLdapContext();
-                return;
-            } catch (ServiceException e) {
-                System.err.println(new Date() + ": error communicating with LDAP (will retry)");
-                e.printStackTrace();
-                try {
-                    Thread.sleep(CHECK_LDAP_SLEEP_MILLIS);
-                } catch (InterruptedException ie) {
-                }
-            } finally {
-                ZimbraLdapContext.closeContext(zlc);
-            }
-        }
-    }
-    
     public void init() {
     	try {
-    		System.err.println("Zimbra server process is running as uid=" + Process.getuid() + " euid=" + Process.geteuid() + " gid=" + Process.getgid() + " egid=" + Process.getegid());
+    	    System.err.println("Zimbra server process is running as uid=" + Process.getuid() + " euid=" + Process.geteuid() + " gid=" + Process.getgid() + " egid=" + Process.getegid());
 
             if (Process.getuid() == 0) {
                 Util.halt("can not start server with uid of 0");
@@ -92,16 +65,6 @@ public class FirstServlet extends HttpServlet {
 
             SSLSocketFactoryManager.init();
 
-            DbPool.startup();
-            if (Provisioning.getInstance() instanceof LdapProvisioning)
-                checkLDAP();
-            
-            try {
-                RightManager.getInstance();
-            } catch (ServiceException e) {
-                Util.halt("cannot initialize RightManager", e);
-            }
-    		
             synchronized (mInitializedCondition) {
                 mInitialized = true;
                 mInitializedCondition.notifyAll();
