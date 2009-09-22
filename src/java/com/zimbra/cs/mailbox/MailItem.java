@@ -2855,7 +2855,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             sb.append(CN_VERSION).append(": ").append(mVersion).append(", ");
         if (mData.parentId > 0)
             sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
-        sb.append(CN_COLOR).append(": ").append(mRGBColor.getMappedColor()).append(", ");
+        if (mRGBColor != null)
+            sb.append(CN_COLOR).append(": ").append(mRGBColor.getMappedColor()).append(", ");
         if (mData.subject != null)
             sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
         if (getDigest() != null)

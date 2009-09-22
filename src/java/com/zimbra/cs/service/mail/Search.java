@@ -55,6 +55,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
@@ -103,6 +104,9 @@ public class Search extends MailDocumentHandler  {
 	        	return response;
 	        }
         }
+        
+        
+//        params.setMode(SearchResultMode.IDS); // HACK HACK TESTING DO NOT CHECK IN!
 
         ZimbraQueryResults results = doSearch(zsc, octxt, mbox, params);
 
@@ -196,8 +200,19 @@ public class Search extends MailDocumentHandler  {
             }
             boolean inline = (totalNumHits == 0 && expand == ExpandResults.FIRST) || expand == ExpandResults.ALL || expand.matches(hit.getParsedItemID());
             boolean addSortField = true;
-
+            
             Element e = null;
+            if (params.getMode() == SearchResultMode.IDS) {
+                if (hit instanceof ConversationHit) {
+                    // need to expand the contained messages
+                    e = response.addElement("hit");
+                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getItemId()));
+                } else {
+                    e = response.addElement("hit");
+                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getItemId()));
+                }
+            }  else {
+
             if (hit instanceof ConversationHit) {
                 ConversationHit ch = (ConversationHit) hit;
                 e = addConversationHit(ch, response, octxt, ifmt, params);
@@ -228,6 +243,8 @@ public class Search extends MailDocumentHandler  {
                 mLog.error("Got an unknown hit type putting search hits: "+hit);
                 continue;
             }
+            
+            }
 
             if (e != null && addSortField) {
                 e.addAttribute(MailConstants.A_SORT_FIELD, hit.getSortField(pager.getSortOrder()).toString());
@@ -254,15 +271,22 @@ public class Search extends MailDocumentHandler  {
 
     protected Element addConversationHit(ConversationHit ch, Element response, OperationContext octxt, ItemIdFormatter ifmt, SearchParams params)
     throws ServiceException {
-        Conversation conv = ch.getConversation();
-        MessageHit mh1 = ch.getFirstMessageHit();
-        Element c = ToXML.encodeConversationSummary(response, ifmt, octxt, conv, mh1 == null ? null : mh1.getMessage(), params.getWantRecipients());
-        if (ch.getScore() != 0)
-            c.addAttribute(MailConstants.A_SCORE, ch.getScore());
-
-        for (MessageHit mh : ch.getMessageHits())
-            c.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(mh.getMessage()));
-        return c;
+        if (params.getMode() == SearchResultMode.IDS) {
+            Element c = response.addElement(MailConstants.E_CONV);
+            for (MessageHit mh : ch.getMessageHits())
+                c.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(mh.getItemId()));
+            return c;
+        } else {
+            Conversation conv = ch.getConversation();
+            MessageHit mh1 = ch.getFirstMessageHit();
+            Element c = ToXML.encodeConversationSummary(response, ifmt, octxt, conv, mh1 == null ? null : mh1.getMessage(), params.getWantRecipients());
+            if (ch.getScore() != 0)
+                c.addAttribute(MailConstants.A_SCORE, ch.getScore());
+            
+            for (MessageHit mh : ch.getMessageHits())
+                c.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(mh.getMessage()));
+            return c;
+        }
     }
 
     /**

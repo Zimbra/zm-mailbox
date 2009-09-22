@@ -113,9 +113,10 @@ public final class MailboxIndex
 
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
+        // FIXME - this hack should be able to go away w/ the new SortBy implementation
         boolean isTaskSort = false;
         SortBy originalSort = params.getSortBy();
-        switch (originalSort) {
+        switch (originalSort.getType()) {
             case TASK_DUE_ASCENDING:
                 isTaskSort = true;
                 params.setSortBy(SortBy.DATE_DESCENDING);
@@ -157,7 +158,7 @@ public final class MailboxIndex
             ZimbraQueryResults results = zq.execute(/*octxt, proto*/);
 
             if (isTaskSort) {
-                results = new TaskSortingQueryResults(results, originalSort);
+                results = new ReSortingQueryResults(results, originalSort);
             }           
             return results;
         } catch (IOException e) {

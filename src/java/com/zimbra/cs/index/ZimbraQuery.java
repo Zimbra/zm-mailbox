@@ -57,6 +57,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -2797,7 +2798,8 @@ public final class ZimbraQuery {
             
             mResults = HitIdGrouper.Create(mResults, mParams.getSortBy());
             
-            if (!mParams.getIncludeTagDeleted() || mParams.getAllowableTaskStatuses()!=null) {
+            if ((!mParams.getIncludeTagDeleted() && mParams.getMode() != SearchResultMode.IDS)
+                            || mParams.getAllowableTaskStatuses()!=null) {
                 // we have to do some filtering of the result set 
                 FilteredQueryResults filtered = new FilteredQueryResults(mResults);
                 

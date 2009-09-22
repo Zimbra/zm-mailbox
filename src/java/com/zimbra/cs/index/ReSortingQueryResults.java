@@ -22,12 +22,13 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 
 /**
- * QueryResults wrapper that implements Sort-By-Task.  It does this by caching **ALL** 
- * hits and then sorting them.
+ * QueryResults wrapper that implements Re-Sorting.  It does this by caching **ALL** 
+ * hits and then sorting them.  It is used for the Task sorts as well as specially localized
+ * language sorts
  */
-public class TaskSortingQueryResults implements ZimbraQueryResults {
+public class ReSortingQueryResults implements ZimbraQueryResults {
 
-    TaskSortingQueryResults(ZimbraQueryResults results, SortBy desiredSort) throws ServiceException {
+    ReSortingQueryResults(ZimbraQueryResults results, SortBy desiredSort) throws ServiceException {
         mResults = results;
         mDesiredSort = desiredSort;
     }
@@ -120,57 +121,62 @@ public class TaskSortingQueryResults implements ZimbraQueryResults {
                 break;
             }
             
-            Comparator<ZimbraHit> comp;
-            switch (mDesiredSort) {
-                default:
-                case TASK_DUE_ASCENDING:
-                    comp = new Comparator<ZimbraHit>() {
-                        public int compare(ZimbraHit lhs, ZimbraHit rhs) {
-                            return TaskHit.compareByDueDate(true, lhs, rhs);
-                        }
-                    };
-                    break;
-                case TASK_DUE_DESCENDING:
-                    comp = new Comparator<ZimbraHit>() {
+        }
+        Comparator<ZimbraHit> comp;
+        switch (mDesiredSort.getType()) {
+            default:
+            case TASK_DUE_ASCENDING:
+                comp = new Comparator<ZimbraHit>() {
+                    public int compare(ZimbraHit lhs, ZimbraHit rhs) {
+                        return TaskHit.compareByDueDate(true, lhs, rhs);
+                    }
+                };
+                break;
+            case TASK_DUE_DESCENDING:
+                comp = new Comparator<ZimbraHit>() {
                         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
                             return TaskHit.compareByDueDate(false, lhs, rhs);
                         }
                     };
                     break;
-                case TASK_STATUS_ASCENDING:
-                    comp = new Comparator<ZimbraHit>() {
+            case TASK_STATUS_ASCENDING:
+                comp = new Comparator<ZimbraHit>() {
                         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
                             return TaskHit.compareByStatus(true, lhs, rhs);
                         }
                     };
                     break;
-                case TASK_STATUS_DESCENDING:
-                    comp = new Comparator<ZimbraHit>() {
+            case TASK_STATUS_DESCENDING:
+                comp = new Comparator<ZimbraHit>() {
                         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
                             return TaskHit.compareByStatus(false, lhs, rhs);
                         }
                     };
                     break;
-                case TASK_PERCENT_COMPLETE_ASCENDING:
-                    comp = new Comparator<ZimbraHit>() {
+            case TASK_PERCENT_COMPLETE_ASCENDING:
+                comp = new Comparator<ZimbraHit>() {
                         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
                             return TaskHit.compareByCompletionPercent(true, lhs, rhs);
                         }
                     };                        
                     break;
-                case TASK_PERCENT_COMPLETE_DESCENDING:
-                    comp = new Comparator<ZimbraHit>() {
+            case TASK_PERCENT_COMPLETE_DESCENDING:
+                comp = new Comparator<ZimbraHit>() {
                         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
                             return TaskHit.compareByCompletionPercent(false, lhs, rhs);
                         }
                     };                        
                     break;
-            }
-            Collections.sort(mHitBuffer, comp);
+            case NAME_LOCALIZED_ASCENDING:
+            case NAME_LOCALIZED_DESCENDING:
+                comp = ((LocalizedSortBy)mDesiredSort).getZimbraHitComparator();
+                break;
+                
         }
+        Collections.sort(mHitBuffer, comp);
     }
     
-    static final int MAX_BUFFERED_HITS = 5000;
+    static final int MAX_BUFFERED_HITS = 10000;
     
     private ZimbraQueryResults mResults;
     private SortBy mDesiredSort;

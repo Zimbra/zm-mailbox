@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.mime.ParsedAddress;
 
 import com.zimbra.common.util.Log;
@@ -63,7 +64,9 @@ public class MessageHit extends ZimbraHit {
         mMessageId = mailItemId;
         assert (mailItemId != 0);
         if (underlyingData != null) {
-            mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+            if (results.getSearchMode() != SearchResultMode.IDS) {
+                mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+            }
         }
     }
 
@@ -72,7 +75,9 @@ public class MessageHit extends ZimbraHit {
         mMessageId = mailItemId;
         assert (mailItemId != 0);
         if (underlyingData != null) {
-            mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+            if (results.getSearchMode() != SearchResultMode.IDS) {
+                mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+            }
         }
     }
     
@@ -125,18 +130,29 @@ public class MessageHit extends ZimbraHit {
 
     public String toString() {
         int convId = 0;
+        boolean convIdUnknown = false;
         try {
-            convId = getConversationId();
+            // don't load the message from the DB just to get the convid!
+            if (mConversationId == 0 && mMessage == null)
+                convIdUnknown = true;
+            else
+                convId = getConversationId();
         } catch (ServiceException e) {
             e.printStackTrace();
         }
         long size = 0;
         try {
-            size = getSize();
+            if (mCachedSize == -1 && mMessage == null)
+                size = -1;
+            else
+                size = getSize();
         } catch (ServiceException e) {
             e.printStackTrace();
         }
-        return "MS: " + super.toString() + " C" + convId + " M" + Integer.toString(getItemId()) + " S="+size;
+        if (mMessage == null)
+            return "MS: " + this.getItemId();
+        else
+            return "MS: " + super.toString() + " C" + (convIdUnknown ? "?" : convId) + " M" + Integer.toString(getItemId()) + " S="+size;
     }
 
     public long getSize() throws ServiceException {

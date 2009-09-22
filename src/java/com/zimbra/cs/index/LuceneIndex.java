@@ -44,6 +44,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.SyncToken;
@@ -460,49 +461,87 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     private final Object getLock() { return mMbidx.getLock(); }
 
     public Sort getSort(SortBy searchOrder) {
+        if (searchOrder == SortBy.NONE)
+            return null;
+        
         synchronized(getLock()) {
-            if (searchOrder != mLatestSortBy) { 
-                switch (searchOrder) {
-                    case NONE:
-                        return null;
-                    case DATE_DESCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
-                        mLatestSortBy = searchOrder;
+            if ((searchOrder.getCriterion() != mLatestSortBy.getCriterion()) ||
+                            (searchOrder.getDirection() != mLatestSortBy.getDirection())) {
+                String field;
+                int type;
+                boolean reverse = false;;
+                
+                if (searchOrder.getDirection() == SortDirection.DESCENDING)
+                    reverse = true;
+                
+                switch (searchOrder.getCriterion()) {
+                    case NAME:
+                    case NAME_NATURAL_ORDER:
+                    case SENDER:
+                        field = LuceneFields.L_SORT_NAME;
+                        type = SortField.STRING;
                         break;
-                    case DATE_ASCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, false));
-                        mLatestSortBy = searchOrder;
+                    case SUBJECT:
+                        field = LuceneFields.L_SORT_SUBJECT;
+                        type = SortField.STRING;
                         break;
-                    case SUBJ_DESCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
-                        mLatestSortBy = searchOrder;
+                    case SIZE:
+                        field = LuceneFields.L_SORT_SIZE;
+                        type = SortField.LONG;
                         break;
-                    case SUBJ_ASCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
-                        mLatestSortBy = searchOrder;
-                        break;
-                    case NAME_DESCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
-                        mLatestSortBy = searchOrder;
-                        break;
-                    case NAME_ASCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
-                        mLatestSortBy = searchOrder;
-                        break;
-                    case SIZE_DESCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, true));
-                        mLatestSortBy = searchOrder;
-                        break;
-                    case SIZE_ASCENDING:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, false));
-                        mLatestSortBy = searchOrder;
-                        break;
-                    case SCORE_DESCENDING:
-                        return null;
+                    case DATE:
                     default:
-                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
-                        mLatestSortBy = SortBy.DATE_ASCENDING;
+                        // default to DATE_DESCENDING!
+                        field = LuceneFields.L_SORT_DATE;
+                        type = SortField.STRING;
+                        reverse = true;;
+                        break;
                 }
+                
+                mLatestSort = new Sort(new SortField(field, type, reverse));
+                mLatestSortBy = searchOrder;
+//                
+//                switch (searchOrder) {
+//                    case NONE:
+//                        return null;
+//                    case DATE_DESCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case DATE_ASCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, false));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case SUBJ_DESCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case SUBJ_ASCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case NAME_DESCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case NAME_ASCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case SIZE_DESCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, true));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case SIZE_ASCENDING:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, false));
+//                        mLatestSortBy = searchOrder;
+//                        break;
+//                    case SCORE_DESCENDING:
+//                        return null;
+//                    default:
+//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
+//                        mLatestSortBy = SortBy.DATE_ASCENDING;
+//                }
             }
             return mLatestSort;
         }

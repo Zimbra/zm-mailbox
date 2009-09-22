@@ -96,7 +96,7 @@ public class TaskHit extends CalendarItemHit {
     }
     
     public Object getSortField(SortBy sortOrder) throws ServiceException {
-        switch (sortOrder) {
+        switch (sortOrder.getType()) {
             case TASK_DUE_ASCENDING:
             case TASK_DUE_DESCENDING:
                 return getDueTime();
@@ -112,7 +112,7 @@ public class TaskHit extends CalendarItemHit {
     }
     
     int compareBySortField(SortBy sortOrder, ZimbraHit other) throws ServiceException {
-        switch (sortOrder) {
+        switch (sortOrder.getType()) {
             case TASK_DUE_ASCENDING:
                 return compareByDueDate(true, this, other);
             case TASK_DUE_DESCENDING:

@@ -48,13 +48,15 @@ public final class ResultsPager
         // bug: 23427 -- TASK sorts are incompatible with cursors here so don't use the cursor
         //               at all
         boolean dontUseCursor = false;
-        switch (params.getSortBy()) {
+        switch (params.getSortBy().getType()) {
             case TASK_DUE_ASCENDING:
             case TASK_DUE_DESCENDING:
             case TASK_PERCENT_COMPLETE_ASCENDING:
             case TASK_PERCENT_COMPLETE_DESCENDING:
             case TASK_STATUS_ASCENDING:
             case TASK_STATUS_DESCENDING:
+            case NAME_LOCALIZED_ASCENDING:
+            case NAME_LOCALIZED_DESCENDING:
                 dontUseCursor = true;
         }
         

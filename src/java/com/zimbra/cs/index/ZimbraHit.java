@@ -75,7 +75,7 @@ public abstract class ZimbraHit
     }
 
     public Object getSortField(SortBy sortOrder) throws ServiceException {
-        switch (sortOrder) {
+        switch (sortOrder.getType()) {
             case NONE:
                 return "";
             case DATE_ASCENDING:
@@ -86,6 +86,8 @@ public abstract class ZimbraHit
                 return getSubject().toUpperCase();
             case NAME_ASCENDING:
             case NAME_DESCENDING:
+            case NAME_LOCALIZED_ASCENDING:
+            case NAME_LOCALIZED_DESCENDING:
                 return getName().toUpperCase();
             case SIZE_ASCENDING:
             case SIZE_DESCENDING: /* 5K...4K...3K...*/
@@ -165,7 +167,7 @@ public abstract class ZimbraHit
         long retVal = 0;
         final boolean dumpComp = false;
 
-        switch (sortOrder) {
+        switch (sortOrder.getType()) {
             case NONE:
                 throw new IllegalArgumentException("Illegal to use sort comparison on unsorted results");
             case DATE_ASCENDING:
@@ -203,6 +205,7 @@ public abstract class ZimbraHit
                 retVal = (getSubject().toUpperCase().compareTo(other.getSubject().toUpperCase()));
                 break;
             case NAME_ASCENDING:
+            case NAME_LOCALIZED_ASCENDING:
                 if (dumpComp) {
                     System.out.println("Comparing NameAsc: \""+getName()+"\" to \"" + other.getName()+"\"");
                 }
@@ -213,6 +216,7 @@ public abstract class ZimbraHit
                 retVal = -1 * (getName().toUpperCase().compareTo(other.getName().toUpperCase()));
                 break;
             case NAME_DESCENDING:
+            case NAME_LOCALIZED_DESCENDING:
                 if (dumpComp) {
                     System.out.println("Comparing NameDesc: \""+getName()+"\" to \"" + other.getName()+"\"");
                 }
@@ -338,13 +342,15 @@ public abstract class ZimbraHit
     }
 
     final void cacheSortField(SortBy sortType, Object sortKey) {
-        switch(sortType) {
+        switch(sortType.getType()) {
             case DATE_ASCENDING:
             case DATE_DESCENDING:
                 mCachedDate = ((Long) sortKey).longValue();
                 break;
             case NAME_ASCENDING:
+            case NAME_LOCALIZED_ASCENDING:
             case NAME_DESCENDING:
+            case NAME_LOCALIZED_DESCENDING:
                 mCachedName = (String) sortKey;
                 break;
             case SUBJ_ASCENDING:
