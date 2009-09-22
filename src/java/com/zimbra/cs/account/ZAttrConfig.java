@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090922-1137 */
+    /* build: 6.0.0 pshao 20090922-1353 */
 
     /**
      * RFC2256: descriptive information
@@ -26864,6 +26864,636 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetTableMaintenanceOperation(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTableMaintenanceOperation, "");
+        return attrs;
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * <p>Use getVersionCheckIntervalAsString to access value as a string.
+     *
+     * @see #getVersionCheckIntervalAsString()
+     *
+     * @return zimbraVersionCheckInterval in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public long getVersionCheckInterval() {
+        return getTimeInterval(Provisioning.A_zimbraVersionCheckInterval, 86400000L);
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @return zimbraVersionCheckInterval, or "1d" if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public String getVersionCheckIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraVersionCheckInterval, "1d");
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @param zimbraVersionCheckInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public void setVersionCheckInterval(String zimbraVersionCheckInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckInterval, zimbraVersionCheckInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @param zimbraVersionCheckInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public Map<String,Object> setVersionCheckInterval(String zimbraVersionCheckInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckInterval, zimbraVersionCheckInterval);
+        return attrs;
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public void unsetVersionCheckInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public Map<String,Object> unsetVersionCheckInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckInterval, "");
+        return attrs;
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * <p>Use getVersionCheckLastAttemptAsString to access value as a string.
+     *
+     * @see #getVersionCheckLastAttemptAsString()
+     *
+     * @return zimbraVersionCheckLastAttempt as Date, null if unset or unable to parse
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public Date getVersionCheckLastAttempt() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraVersionCheckLastAttempt, null);
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @return zimbraVersionCheckLastAttempt, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public String getVersionCheckLastAttemptAsString() {
+        return getAttr(Provisioning.A_zimbraVersionCheckLastAttempt, null);
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @param zimbraVersionCheckLastAttempt new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public void setVersionCheckLastAttempt(Date zimbraVersionCheckLastAttempt) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, DateUtil.toGeneralizedTime(zimbraVersionCheckLastAttempt));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @param zimbraVersionCheckLastAttempt new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public Map<String,Object> setVersionCheckLastAttempt(Date zimbraVersionCheckLastAttempt, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, DateUtil.toGeneralizedTime(zimbraVersionCheckLastAttempt));
+        return attrs;
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @param zimbraVersionCheckLastAttempt new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public void setVersionCheckLastAttemptAsString(String zimbraVersionCheckLastAttempt) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, zimbraVersionCheckLastAttempt);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @param zimbraVersionCheckLastAttempt new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public Map<String,Object> setVersionCheckLastAttemptAsString(String zimbraVersionCheckLastAttempt, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, zimbraVersionCheckLastAttempt);
+        return attrs;
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public void unsetVersionCheckLastAttempt() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public Map<String,Object> unsetVersionCheckLastAttempt(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, "");
+        return attrs;
+    }
+
+    /**
+     * last response of last Zimbra version check. This will be a short XML
+     * that will contain information about available updates.
+     *
+     * @return zimbraVersionCheckLastResponse, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1058)
+    public String getVersionCheckLastResponse() {
+        return getAttr(Provisioning.A_zimbraVersionCheckLastResponse, null);
+    }
+
+    /**
+     * last response of last Zimbra version check. This will be a short XML
+     * that will contain information about available updates.
+     *
+     * @param zimbraVersionCheckLastResponse new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1058)
+    public void setVersionCheckLastResponse(String zimbraVersionCheckLastResponse) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastResponse, zimbraVersionCheckLastResponse);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * last response of last Zimbra version check. This will be a short XML
+     * that will contain information about available updates.
+     *
+     * @param zimbraVersionCheckLastResponse new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1058)
+    public Map<String,Object> setVersionCheckLastResponse(String zimbraVersionCheckLastResponse, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastResponse, zimbraVersionCheckLastResponse);
+        return attrs;
+    }
+
+    /**
+     * last response of last Zimbra version check. This will be a short XML
+     * that will contain information about available updates.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1058)
+    public void unsetVersionCheckLastResponse() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastResponse, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * last response of last Zimbra version check. This will be a short XML
+     * that will contain information about available updates.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1058)
+    public Map<String,Object> unsetVersionCheckLastResponse(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastResponse, "");
+        return attrs;
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * <p>Use getVersionCheckLastSuccessAsString to access value as a string.
+     *
+     * @see #getVersionCheckLastSuccessAsString()
+     *
+     * @return zimbraVersionCheckLastSuccess as Date, null if unset or unable to parse
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public Date getVersionCheckLastSuccess() {
+        return getGeneralizedTimeAttr(Provisioning.A_zimbraVersionCheckLastSuccess, null);
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @return zimbraVersionCheckLastSuccess, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public String getVersionCheckLastSuccessAsString() {
+        return getAttr(Provisioning.A_zimbraVersionCheckLastSuccess, null);
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @param zimbraVersionCheckLastSuccess new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public void setVersionCheckLastSuccess(Date zimbraVersionCheckLastSuccess) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, DateUtil.toGeneralizedTime(zimbraVersionCheckLastSuccess));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @param zimbraVersionCheckLastSuccess new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public Map<String,Object> setVersionCheckLastSuccess(Date zimbraVersionCheckLastSuccess, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, DateUtil.toGeneralizedTime(zimbraVersionCheckLastSuccess));
+        return attrs;
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @param zimbraVersionCheckLastSuccess new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public void setVersionCheckLastSuccessAsString(String zimbraVersionCheckLastSuccess) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, zimbraVersionCheckLastSuccess);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @param zimbraVersionCheckLastSuccess new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public Map<String,Object> setVersionCheckLastSuccessAsString(String zimbraVersionCheckLastSuccess, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, zimbraVersionCheckLastSuccess);
+        return attrs;
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public void unsetVersionCheckLastSuccess() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public Map<String,Object> unsetVersionCheckLastSuccess(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, "");
+        return attrs;
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @return zimbraVersionCheckNotificationEmail, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1059)
+    public String getVersionCheckNotificationEmail() {
+        return getAttr(Provisioning.A_zimbraVersionCheckNotificationEmail, null);
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @param zimbraVersionCheckNotificationEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1059)
+    public void setVersionCheckNotificationEmail(String zimbraVersionCheckNotificationEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, zimbraVersionCheckNotificationEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @param zimbraVersionCheckNotificationEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1059)
+    public Map<String,Object> setVersionCheckNotificationEmail(String zimbraVersionCheckNotificationEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, zimbraVersionCheckNotificationEmail);
+        return attrs;
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1059)
+    public void unsetVersionCheckNotificationEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1059)
+    public Map<String,Object> unsetVersionCheckNotificationEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, "");
+        return attrs;
+    }
+
+    /**
+     * zimrbaId of the server that should perform the Zimbra version checks
+     *
+     * @return zimbraVersionCheckServer, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1061)
+    public String getVersionCheckServer() {
+        return getAttr(Provisioning.A_zimbraVersionCheckServer, null);
+    }
+
+    /**
+     * zimrbaId of the server that should perform the Zimbra version checks
+     *
+     * @param zimbraVersionCheckServer new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1061)
+    public void setVersionCheckServer(String zimbraVersionCheckServer) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckServer, zimbraVersionCheckServer);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimrbaId of the server that should perform the Zimbra version checks
+     *
+     * @param zimbraVersionCheckServer new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1061)
+    public Map<String,Object> setVersionCheckServer(String zimbraVersionCheckServer, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckServer, zimbraVersionCheckServer);
+        return attrs;
+    }
+
+    /**
+     * zimrbaId of the server that should perform the Zimbra version checks
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1061)
+    public void unsetVersionCheckServer() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckServer, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimrbaId of the server that should perform the Zimbra version checks
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1061)
+    public Map<String,Object> unsetVersionCheckServer(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckServer, "");
+        return attrs;
+    }
+
+    /**
+     * URL of the Zimbra version check script
+     *
+     * @return zimbraVersionCheckURL, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public String getVersionCheckURL() {
+        return getAttr(Provisioning.A_zimbraVersionCheckURL, null);
+    }
+
+    /**
+     * URL of the Zimbra version check script
+     *
+     * @param zimbraVersionCheckURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public void setVersionCheckURL(String zimbraVersionCheckURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckURL, zimbraVersionCheckURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the Zimbra version check script
+     *
+     * @param zimbraVersionCheckURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public Map<String,Object> setVersionCheckURL(String zimbraVersionCheckURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckURL, zimbraVersionCheckURL);
+        return attrs;
+    }
+
+    /**
+     * URL of the Zimbra version check script
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public void unsetVersionCheckURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the Zimbra version check script
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public Map<String,Object> unsetVersionCheckURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckURL, "");
         return attrs;
     }
 

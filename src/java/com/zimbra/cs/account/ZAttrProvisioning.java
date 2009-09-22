@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090922-1137 */
+    /* build: 6.0.0 pshao 20090922-1353 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -7185,6 +7185,65 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=399)
     public static final String A_zimbraVersion = "zimbraVersion";
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1060)
+    public static final String A_zimbraVersionCheckInterval = "zimbraVersionCheckInterval";
+
+    /**
+     * time Zimbra version was last checked
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1056)
+    public static final String A_zimbraVersionCheckLastAttempt = "zimbraVersionCheckLastAttempt";
+
+    /**
+     * last response of last Zimbra version check. This will be a short XML
+     * that will contain information about available updates.
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1058)
+    public static final String A_zimbraVersionCheckLastResponse = "zimbraVersionCheckLastResponse";
+
+    /**
+     * time Zimbra version was last checked successfully
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1057)
+    public static final String A_zimbraVersionCheckLastSuccess = "zimbraVersionCheckLastSuccess";
+
+    /**
+     * an email address to send mail to if Zimbra version check detects a new
+     * version
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1059)
+    public static final String A_zimbraVersionCheckNotificationEmail = "zimbraVersionCheckNotificationEmail";
+
+    /**
+     * zimrbaId of the server that should perform the Zimbra version checks
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1061)
+    public static final String A_zimbraVersionCheckServer = "zimbraVersionCheckServer";
+
+    /**
+     * URL of the Zimbra version check script
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public static final String A_zimbraVersionCheckURL = "zimbraVersionCheckURL";
 
     /**
      * An alias for this domain, used to determine default login domain based
