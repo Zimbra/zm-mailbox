@@ -375,23 +375,38 @@ public class StringUtil {
     // by the end.  There are three groups:  the beginning, KEY_NAME and the end.
     // Pattern.DOTALL is required in case one of the values in the map has a newline
     // in it.
-    private static Pattern templatePattern =
+    public static Pattern atPattern =
+        Pattern.compile("(.*)\\@([^\\@]+)\\@(.*)", Pattern.DOTALL);
+    
+    public static Pattern varPattern =
         Pattern.compile("(.*)\\$\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
     
     /**
-     * Substitutes all occurrences of the specified values into a template.  Keys
+     * Substitutes all occurrences of the specified values into a template. Keys
      * for the values are specified in the template as <code>${KEY_NAME}</code>.
      * @param template the template
-     * @param vars a <code>Map</code> filled with keys and values.
+     * @param vars a <code>Map</code> filled with keys and values
      * @return the template with substituted values
      */
     public static String fillTemplate(String template, Map<String, ? extends Object> vars) {
+        return fillTemplate(template, vars, varPattern);
+    }
+    
+    /**
+     * Substitutes all occurrences of the specified values into a template. Keys
+     * for the values are specified in the template as a regex <code>Pattern</code>.
+     * @param template the template
+     * @param vars a <code>Map</code> filled with keys and values
+     * @param pattern a <code>Pattern</code> to match tokens
+     * @return the template with substituted values
+     */
+    public static String fillTemplate(String template, Map<String, ? extends Object> vars, Pattern pattern) {
         if (template == null) {
             return null;
         }
         
         String line = template;
-        Matcher matcher = templatePattern.matcher(line);
+        Matcher matcher = pattern.matcher(line);
         
         // Substitute multiple variables per line
         while (matcher.matches()) {
