@@ -20,12 +20,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -50,6 +53,7 @@ public class DismissCalendarItemAlarm extends DocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
+        String acctId = mbox.getAccountId();
         Account authAcct = getAuthenticatedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
@@ -60,16 +64,29 @@ public class DismissCalendarItemAlarm extends DocumentHandler {
                 Element calItemElem = iter.next();
                 ItemId iid = new ItemId(calItemElem.getAttribute(MailConstants.A_ID), zsc);
                 long dismissedAt = calItemElem.getAttributeLong(MailConstants.A_CAL_ALARM_DISMISSED_AT);
-                int calItemId = iid.getId();
-                mbox.dismissCalendarItemAlarm(octxt, calItemId, dismissedAt);
 
-                CalendarItem calItem = mbox.getCalendarItemById(octxt, calItemId);
+                Mailbox ciMbox;  // mailbox for this calendar item; not necessarily same as requested mailbox
+                String ciAcctId = iid.getAccountId();
+                if (ciAcctId == null || ciAcctId.equals(acctId)) {
+                    ciMbox = mbox;
+                } else {
+                    // Item ID refers to another mailbox.  (possible with ZDesktop)
+                    // Let's see if it's a mailbox on local server.
+                    ciMbox = MailboxManager.getInstance().getMailboxByAccountId(ciAcctId, false);
+                    if (ciMbox == null)
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(ciAcctId);
+                }
+                int calItemId = iid.getId();
+                ciMbox.dismissCalendarItemAlarm(octxt, calItemId, dismissedAt);
+
+                CalendarItem calItem = ciMbox.getCalendarItemById(octxt, calItemId);
                 Element calItemRespElem;
                 if (calItem instanceof Appointment)
                     calItemRespElem = response.addElement(MailConstants.E_APPOINTMENT);
                 else
                     calItemRespElem = response.addElement(MailConstants.E_TASK);
-                calItemRespElem.addAttribute(MailConstants.A_CAL_ID, calItem.getId());
+                ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
+                calItemRespElem.addAttribute(MailConstants.A_CAL_ID, iid.toString(ifmt));
 
                 boolean hidePrivate = !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
                 boolean showAll = !hidePrivate || calItem.isPublic();
