@@ -414,7 +414,8 @@ public class ProvUtil implements HttpDebugListener {
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
         PUBLISH_DISTRIBUTION_LIST_SHARE_INFO("publishDistribtionListShareInfo", "pdlsi", "{+|-} {dl-name@domain|id} {owner-name|owner-id} [{folder-path|folder-id}]", Category.SHARE, 3, 4),
-        PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
+        PUSH_FREEBUSY("pushFreebusy", "pfb", "[account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
+        PUSH_FREEBUSY_DOMAIN("pushFreebusyDomain", "pfbd", "{domain}", Category.FREEBUSY, 1, 1),
         PURGE_ACCOUNT_CALENDAR_CACHE("purgeAccountCalendarCache", "pacc", "{name@domain|id} [...]", Category.CALENDAR, 1, Integer.MAX_VALUE),
         RECALCULATE_MAILBOX_COUNTS("recalculateMailboxCounts", "rmc", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
@@ -829,19 +830,18 @@ public class ProvUtil implements HttpDebugListener {
         case PUSH_FREEBUSY:
         {
         	FbCli fbcli = new FbCli();
-        	if (args.length == 2) {
-        		try {
-        			lookupDomain(args[1]);
-        			fbcli.pushFreeBusyForDomain(args[1]);
-        			return true;
-        		} catch (ServiceException se) {
-        		}
-        	}
 			HashSet<String> accounts = new HashSet<String>();
 			java.util.Collections.addAll(accounts, args);
 			accounts.remove(args[0]);
 			fbcli.pushFreeBusyForAccounts(accounts);
         	break;
+        }
+        case PUSH_FREEBUSY_DOMAIN:
+        {
+            FbCli fbcli = new FbCli();
+            lookupDomain(args[1]);
+            fbcli.pushFreeBusyForDomain(args[1]);
+            break;
         }
         case PURGE_ACCOUNT_CALENDAR_CACHE:
             doPurgeAccountCalendarCache(args);
