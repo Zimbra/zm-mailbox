@@ -725,16 +725,42 @@
             <fileset dir="${build.dir}/ldap-config" includes="*.schema"/>
         </copy>
 
-        <!-- db schema -->
+	<!-- db schema, config and jars -->
 	<antcall target="db-versions-init" />
         <copy todir="${dist.db.dir}" overwrite="true">
             <fileset dir="${src.dir}/db" includes="*.sql"/>
             <fileset dir="${db.schema.dir}" includes="*.sql"/>
 	    <fileset dir="${build.dir}" includes="*.sql"/>
 	    <filterset>
-		<filter token="ZIMBRA_HOME" value="${zimbra.home.dir}"/>
+		<filter token="ZIMBRA_HOME" value="${zimbra.home.dir}/"/>
+		<filter token="ZIMBRA_INSTALL" value="${zimbra.home.dir}/"/>
 	    </filterset>
         </copy>
+
+	<if>
+	    <isset property="db-derby"/>
+	    <then>
+		<copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
+		<copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
+		<copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
+		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+		    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+		    <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
+		</java>
+	    </then>
+	</if>
+	<if>
+	    <isset property="db-sqlite"/>
+	    <then>
+		<copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
+		    <fileset file="${common.jars.dir}/sqlite*.jar"/>
+		</copy>
+		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+		    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml" />
+		    <arg line="-e debug_disable_mailbox_group=true -f"/>
+		</java>
+	    </then>
+	</if>
 
         <!-- wikis -->
         <copy todir="${dist.dir}/wiki" overwrite="true">
@@ -1040,12 +1066,7 @@
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
 
     <target name="derby-init" if="db-derby">
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f" />
-        </java>
-
         <delete dir="${zimbra.derby.dir}"/>
-
         <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
             <arg file="${dist.db.dir}/init.sql" />
         </java>
@@ -1061,19 +1082,8 @@
     </target>
 
     <target name="sqlite-init" if="db-sqlite">
-	<!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, which breaks the <sql/> task. -->
-	<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-	    <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml" />
-	    <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
-	</java>
-	<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-	    <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml" />
-	    <arg line="-e debug_disable_mailbox_group=true -f" />
-	</java>
-
 	<delete dir="${zimbra.sqlite.dir}"/>
 	<mkdir dir="${zimbra.sqlite.dir}"/>
-
 	<exec executable="sqlite3" dir="${zimbra.sqlite.dir}" failonerror="true" input="${dist.db.dir}/init.sql">
 	    <arg line="zimbra.db"/>
 	</exec>
