@@ -113,8 +113,11 @@ public final class MailboxIndex
 
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
-        // FIXME - this hack should be able to go away w/ the new SortBy implementation
+        // FIXME - this hack (converting the sort) should be able to go away w/ the new SortBy 
+        //         implementation.  We still will need this switch so that we can wrap the 
+        //         results in the ReSortingQueryResults
         boolean isTaskSort = false;
+        boolean isLocalizedSort = false;
         SortBy originalSort = params.getSortBy();
         switch (originalSort.getType()) {
             case TASK_DUE_ASCENDING:
@@ -141,6 +144,9 @@ public final class MailboxIndex
                 isTaskSort = true;
                 params.setSortBy(SortBy.DATE_DESCENDING);
                 break;
+            case NAME_LOCALIZED_ASCENDING:
+            case NAME_LOCALIZED_DESCENDING:
+                isLocalizedSort = true;
         }
 
         ZimbraQuery zq = new ZimbraQuery(octxt, proto, mbox, params);
@@ -158,8 +164,11 @@ public final class MailboxIndex
             ZimbraQueryResults results = zq.execute(/*octxt, proto*/);
 
             if (isTaskSort) {
-                results = new ReSortingQueryResults(results, originalSort);
+                results = new ReSortingQueryResults(results, originalSort, null);
             }           
+            if (isLocalizedSort) {
+                results = new ReSortingQueryResults(results, originalSort, params);
+            }
             return results;
         } catch (IOException e) {
             zq.doneWithQuery();

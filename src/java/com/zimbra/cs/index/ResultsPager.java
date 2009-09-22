@@ -31,6 +31,14 @@ public final class ResultsPager
 {
     private ZimbraQueryResults mResults;
     private boolean mFixedOffset;
+    
+    // in cases where ReSortingQueryResults is simulating the cursor for us, we need to skip
+    // the passed-in cursor AND offset....otherwise pages will be skipped b/c we will end up
+    // skipping OFFSET entries into the cursor-narrowed return set.  Note that we can't just
+    // change the requested offset in SearchParams because that would cause the offset returned
+    // in <SearchResponse> to be incorrect.
+    private boolean mIgnoreOffsetHack = false;
+    
     private AbstractList<ZimbraHit> mBufferedHits = null;;
     private SearchParams mParams;
     private boolean mForward = true;
@@ -48,6 +56,7 @@ public final class ResultsPager
         // bug: 23427 -- TASK sorts are incompatible with cursors here so don't use the cursor
         //               at all
         boolean dontUseCursor = false;
+        boolean skipOffsetHack = false;
         switch (params.getSortBy().getType()) {
             case TASK_DUE_ASCENDING:
             case TASK_DUE_DESCENDING:
@@ -55,13 +64,18 @@ public final class ResultsPager
             case TASK_PERCENT_COMPLETE_DESCENDING:
             case TASK_STATUS_ASCENDING:
             case TASK_STATUS_DESCENDING:
+                dontUseCursor = true;
+                break;
             case NAME_LOCALIZED_ASCENDING:
             case NAME_LOCALIZED_DESCENDING:
                 dontUseCursor = true;
+                // for localized sorts, the cursor is actually simulated by the 
+                // ReSortingQueryResults....so we need to zero out the offset here
+                skipOffsetHack = true;
         }
         
         if (dontUseCursor || !params.hasCursor()) {
-            toRet = new ResultsPager(results, params, false, true);
+            toRet = new ResultsPager(results, params, false, true, skipOffsetHack);
         } else {
             // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
             // then we're going FORWARD, otherwise we're going BACKWARD
@@ -69,7 +83,7 @@ public final class ResultsPager
             if (params.getOffset() < params.getPrevOffset()) {
                 forward = false;
             }
-            toRet = new ResultsPager(results, params, true, forward);
+            toRet = new ResultsPager(results, params, true, forward, false);
         }
         return toRet;
     }
@@ -79,10 +93,11 @@ public final class ResultsPager
      *               otherwise requires cursor to be set
      * @throws ServiceException
      */
-    private ResultsPager(ZimbraQueryResults results, SearchParams params, boolean useCursor, boolean forward) throws ServiceException {
+    private ResultsPager(ZimbraQueryResults results, SearchParams params, boolean useCursor, boolean forward, boolean skipOffset) throws ServiceException {
         mResults = results;
         mParams = params;
         mFixedOffset = !useCursor;
+        mIgnoreOffsetHack = skipOffset;
         mForward = forward;
         assert(forward || !mFixedOffset); // only can go backward if using cursor 
         reset();
@@ -90,8 +105,11 @@ public final class ResultsPager
 
     public void reset() throws ServiceException {
         if (mFixedOffset) {
-            if (mParams.getOffset() > 0) {
-                mResults.skipToHit(mParams.getOffset()-1);
+            int offsetToUse = mParams.getOffset();
+            if (mIgnoreOffsetHack)
+                offsetToUse = 0;
+            if (offsetToUse > 0) {
+                mResults.skipToHit(offsetToUse-1);
             } else {
                 mResults.resetIterator();
             }
@@ -235,7 +253,7 @@ public final class ResultsPager
         return new DummyHit(strVal, strVal, dateVal, 0);
     }
     
-    private static class DummyHit extends ZimbraHit
+    static class DummyHit extends ZimbraHit
     {
         private int mItemId;
         private long mDate;
@@ -249,6 +267,10 @@ public final class ResultsPager
             mSubject = subject;
             mDate = date;
             mItemId = itemId;
+        }
+        
+        public String toString() {
+            return "DummyHit("+mName+","+mSubject+","+mDate+","+mItemId+")";
         }
         
         public long getDate() { return mDate; } 

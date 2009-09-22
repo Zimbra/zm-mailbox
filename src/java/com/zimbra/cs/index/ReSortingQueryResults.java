@@ -28,11 +28,12 @@ import com.zimbra.common.service.ServiceException;
  */
 public class ReSortingQueryResults implements ZimbraQueryResults {
 
-    ReSortingQueryResults(ZimbraQueryResults results, SortBy desiredSort) throws ServiceException {
+    ReSortingQueryResults(ZimbraQueryResults results, SortBy desiredSort, SearchParams params) throws ServiceException {
         mResults = results;
         mDesiredSort = desiredSort;
+        mParams = params;
     }
-
+    
     /* @see com.zimbra.cs.index.ZimbraQueryResults#doneWithSearchResults() */
     public void doneWithSearchResults() throws ServiceException {
         mResults.doneWithSearchResults();
@@ -106,22 +107,24 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
         return mHitBuffer;
     }
     
+    private boolean isTaskSort() {
+        switch (mDesiredSort.getType()) {
+            case TASK_DUE_ASCENDING:
+            case TASK_DUE_DESCENDING:
+            case TASK_STATUS_ASCENDING:
+            case TASK_STATUS_DESCENDING:
+            case TASK_PERCENT_COMPLETE_ASCENDING:
+            case TASK_PERCENT_COMPLETE_DESCENDING:
+                return true;
+        }
+        return false;
+    }
+    
     private void bufferAllHits() throws ServiceException {
         assert(mHitBuffer == null);
         mHitBuffer = new ArrayList<ZimbraHit>();
 
-        ZimbraHit cur;
-        while ((cur = mResults.getNext()) != null) {
-            
-            if (!(cur instanceof TaskHit) && !(cur instanceof ProxiedHit)) {
-                throw ServiceException.FAILURE("Invalid hit type, can only task-sort Tasks", null);
-            }
-            mHitBuffer.add(cur);
-            if (mHitBuffer.size() >= MAX_BUFFERED_HITS) {
-                break;
-            }
-            
-        }
+        // get the proper comparator
         Comparator<ZimbraHit> comp;
         switch (mDesiredSort.getType()) {
             default:
@@ -171,7 +174,50 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
             case NAME_LOCALIZED_DESCENDING:
                 comp = ((LocalizedSortBy)mDesiredSort).getZimbraHitComparator();
                 break;
+        }
+        
+
+        ZimbraHit cur;
+        while ((cur = mResults.getNext()) != null) {
+            
+            if (isTaskSort()) {
+                if (!(cur instanceof TaskHit) && !(cur instanceof ProxiedHit)) {
+                    throw ServiceException.FAILURE("Invalid hit type, can only task-sort Tasks", null);
+                }
+            }
+
+            boolean skipHit = false;
+            
+            // handle cursor filtering
+            if (mParams != null && mParams.hasCursor()) {
+                ZimbraHit firstHit = null;
+                if (mParams.getPrevSortValueStr() != null) 
+                    firstHit = new ResultsPager.DummyHit(mParams.getPrevSortValueStr(),
+                                                         mParams.getPrevSortValueStr(),
+                                                         mParams.getPrevSortValueLong(),
+                                                         mParams.getPrevMailItemId().getId());
                 
+                ZimbraHit endHit = null;
+                if (mParams.getEndSortValueStr() != null)
+                    endHit = new ResultsPager.DummyHit(mParams.getEndSortValueStr(),
+                                                       mParams.getEndSortValueStr(),
+                                                       mParams.getEndSortValueLong(),
+                                                       0);
+                
+                // fail if cur < first OR cur >= end 
+                if (firstHit != null && comp.compare(cur, firstHit) < 0)
+                    skipHit = true;
+                if (endHit != null && comp.compare(cur, endHit) >= 0)
+                    skipHit = true;
+            }
+
+            if (!skipHit)
+                mHitBuffer.add(cur);
+            
+            if (mHitBuffer.size() >= MAX_BUFFERED_HITS) {
+                break;
+            }
+            
         }
         Collections.sort(mHitBuffer, comp);
     }
@@ -182,4 +228,5 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
     private SortBy mDesiredSort;
     private List<ZimbraHit> mHitBuffer = null;
     private int mIterOffset = 0;
+    private SearchParams mParams = null;
 }

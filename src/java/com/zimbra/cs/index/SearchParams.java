@@ -172,11 +172,11 @@ public final class SearchParams implements Cloneable {
 
     public void setTypesStr(String groupByStr) throws ServiceException {
         mGroupByStr = groupByStr;
-        types = MailboxIndex.parseTypesString(getTypesStr());
+        byte[] typesToSet = MailboxIndex.parseTypesString(getTypesStr());
+        setTypesInternal(typesToSet);
     }
     
     public void setTypes(byte[] _types) { 
-        types = _types;
         boolean atFirst = true;
         StringBuilder s = new StringBuilder();
         for (byte b : _types) {
@@ -186,20 +186,50 @@ public final class SearchParams implements Cloneable {
             atFirst = false;
         }
         mGroupByStr = s.toString();
+        setTypesInternal(_types);
+    }
+    
+    private void setTypesInternal(byte[] _types) {
+        types = _types;
+        checkForLocalizedContactSearch();
+    }
+    
+    private void checkForLocalizedContactSearch() {
+        // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
+        if (types != null && types.length == 1 && types[0] == MailItem.TYPE_CONTACT) {
+            if (mLocale != null) {
+                if (mSortBy != null) {
+                    if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
+                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING, 
+                                                      null,
+                                                      SortBy.SortCriterion.NAME,
+                                                      SortBy.SortDirection.ASCENDING,
+                                                      mLocale);
+                    } else if (mSortBy.getType() == SortBy.Type.NAME_DESCENDING) {
+                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING, 
+                                                      null,
+                                                      SortBy.SortCriterion.NAME,
+                                                      SortBy.SortDirection.DESCENDING,
+                                                      mLocale);
+                    }
+                }
+            }
+        }
     }
 
     public void setSortBy(SortBy sortBy) {
         mSortBy = sortBy;
         mSortByStr = mSortBy.toString(); 
+        checkForLocalizedContactSearch();
     }
     public void setSortByStr(String sortByStr) { 
         mSortByStr = sortByStr;
-        mSortBy = SortBy.lookup(sortByStr);
-        if (mSortBy == null) {
-            mSortBy = SortBy.DATE_DESCENDING;
-            mSortByStr = mSortBy.toString();
-        }
+        SortBy sb = SortBy.lookup(sortByStr);
+        if (sb == null)
+            sb = SortBy.DATE_DESCENDING;
+        setSortBy(sb);
     }
+    
     public void setInlineRule(ExpandResults fetch) { mInlineRule = fetch; }
     public void setMarkRead(boolean read) { mMarkRead = read; }
     public void setMaxInlinedLength(int maxSize) { mMaxInlinedLength = maxSize; }
@@ -211,7 +241,10 @@ public final class SearchParams implements Cloneable {
     }
     public void setWantRecipients(boolean recips) { mRecipients = recips; }
     public void setTimeZone(TimeZone tz) { mTimeZone = tz; }
-    public void setLocale(Locale loc) { mLocale = loc; }
+    public void setLocale(Locale loc) { 
+        mLocale = loc;
+        checkForLocalizedContactSearch();
+    }
 
     public boolean hasCursor() { return mHasCursor; }
     public void setCursor(ItemId prevMailItemId, String prevSort, int prevOffset, String endSort) {
