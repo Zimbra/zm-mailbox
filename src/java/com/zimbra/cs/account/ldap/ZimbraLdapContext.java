@@ -445,8 +445,10 @@ public class ZimbraLdapContext {
         } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
             if (!startTLS) {
                 env.put(Context.SECURITY_AUTHENTICATION, "simple");
-                env.put(Context.SECURITY_PRINCIPAL, bindDn);
-                env.put(Context.SECURITY_CREDENTIALS, bindPassword);  
+                if (bindDn != null)
+                    env.put(Context.SECURITY_PRINCIPAL, bindDn);
+                if (bindPassword != null)
+                    env.put(Context.SECURITY_CREDENTIALS, bindPassword);  
             }
         } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
             env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
@@ -468,8 +470,10 @@ public class ZimbraLdapContext {
                 tlsNegotiate(mTlsResp);
     
                 mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
-                mDirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, bindDn);
-                mDirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, bindPassword);
+                if (bindDn != null)
+                    mDirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, bindDn);
+                if (bindPassword != null)
+                    mDirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, bindPassword);
             }
         } catch (NamingException e) {
             ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
