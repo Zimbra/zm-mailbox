@@ -489,14 +489,17 @@ public class DavServlet extends ZimbraServlet {
 		Provisioning prov = Provisioning.getInstance();
 		ItemId target = null;
 		String extraPath = null;
+		String requestPath = ctxt.getPath();
 		try {
 		    if (ctxt.getUser() == null)
+		        return false;
+		    if (requestPath == null || requestPath.length() < 2)
 		        return false;
 			Account account = prov.getAccountByName(ctxt.getUser());
 			if (account == null)
 				return false;
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(ctxt.getOperationContext(), Mailbox.ID_FOLDER_USER_ROOT, ctxt.getPath());
+			Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(ctxt.getOperationContext(), Mailbox.ID_FOLDER_USER_ROOT, requestPath);
 			Folder targetFolder = match.getFirst();
 			if (!(targetFolder instanceof Mountpoint))
 				return false;
