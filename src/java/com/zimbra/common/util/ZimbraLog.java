@@ -275,11 +275,16 @@ public class ZimbraLog {
      * the "zimbra.syncstate" logger. For sync client interface logs.
      */
     public static final Log syncstate = LogFactory.getLog("zimbra.syncstate");
-    
+
     /**
      * the "zimbra.wbxml" logger. For wbxml client interface logs.
      */
     public static final Log wbxml = LogFactory.getLog("zimbra.wbxml");
+    
+    /**
+     * the "zimbra.xsync" logger. For xsync client interface logs.
+     */
+    public static final Log xsync = LogFactory.getLog("zimbra.xsync");
     
     /**
      * the "zimbra.extensions" logger. For logging extension loading related info. 
