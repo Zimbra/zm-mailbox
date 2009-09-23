@@ -353,7 +353,7 @@ public class DavContext {
 			if (ctype == null)
                 name = getItem();
 			try {
-				mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, (ctype == null ? DavProtocol.XML_CONTENT_TYPE : ctype), mAuthAccount.getId());
+				mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId());
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());
 			} catch (ServiceException se) {
 				throw new DavException("can't save upload", se);
