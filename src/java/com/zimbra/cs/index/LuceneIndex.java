@@ -461,12 +461,13 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     private final Object getLock() { return mMbidx.getLock(); }
 
     public Sort getSort(SortBy searchOrder) {
-        if (searchOrder == SortBy.NONE)
+        if (searchOrder == null || searchOrder == SortBy.NONE)
             return null;
         
         synchronized(getLock()) {
-            if ((searchOrder.getCriterion() != mLatestSortBy.getCriterion()) ||
-                            (searchOrder.getDirection() != mLatestSortBy.getDirection())) {
+            if ((mLatestSortBy == null) ||
+                            ((searchOrder.getCriterion() != mLatestSortBy.getCriterion()) ||
+                                            (searchOrder.getDirection() != mLatestSortBy.getDirection()))) {
                 String field;
                 int type;
                 boolean reverse = false;;

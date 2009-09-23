@@ -114,7 +114,9 @@ public final class MailboxIndex
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
         // FIXME - this hack (converting the sort) should be able to go away w/ the new SortBy 
-        //         implementation.  We still will need this switch so that we can wrap the 
+        //         implementation, if the lower-level code was modified to use the SortBy.Criterion 
+        //         and SortBy.Direction data (instead of switching on the SortBy itself) 
+        //         We still will need this switch so that we can wrap the 
         //         results in the ReSortingQueryResults
         boolean isTaskSort = false;
         boolean isLocalizedSort = false;
