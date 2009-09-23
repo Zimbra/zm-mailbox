@@ -5239,6 +5239,11 @@ public class Mailbox {
         delete(octxt, new int[] { itemId }, type, null);
     }
 
+    /** Deletes the given item.
+     * 
+     * @param octxt operation context or <tt>null</tt>
+     * @param item the item
+     * @param tcon target constraint or <tt>null</tt> */
     public synchronized void delete(OperationContext octxt, MailItem item, TargetConstraint tcon) throws ServiceException {
         delete(octxt, new int[] { item.getId() }, item.getType(), tcon);
     }
@@ -5246,7 +5251,12 @@ public class Mailbox {
     /** Deletes the <tt>MailItem</tt> with the given id.  If there is no such
      *  <tt>MailItem</tt>, nothing happens and no error is generated.  If the
      *  id maps to an existing <tt>MailItem</tt> of an incompatible type,
-     *  however, an error is thrown. */
+     *  however, an error is thrown.
+     *  
+     *  @param octxt operation context or <tt>null</tt>
+     *  @param itemId item id
+     *  @param type item type or {@link MailItem#TYPE_UNKNOWN}
+     *  @param tcon target constraint or <tt>null</tt> */
     public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, tcon);
     }
@@ -5254,7 +5264,12 @@ public class Mailbox {
     /** Deletes the <tt>MailItem</tt>s with the given id.  If there is no
      *  <tt>MailItem</tt> for a given id, that id is ignored.  If the id maps
      *  to an existing <tt>MailItem</tt> of an incompatible type, however,
-     *  an error is thrown. */
+     *  an error is thrown.
+     *  
+    *  @param octxt operation context or <tt>null</tt>
+    *  @param itemIds item ids
+    *  @param type item type or {@link MailItem#TYPE_UNKNOWN}
+    *  @param tcon target constraint or <tt>null</tt> */
     public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
