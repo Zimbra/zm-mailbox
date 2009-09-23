@@ -15,8 +15,10 @@
 
 package com.zimbra.cs.store.file;
 
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -26,6 +28,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
@@ -40,12 +43,21 @@ public class BlobConsistencyUtil {
     private static final String LO_MAILBOXES = "mailboxes";
     private static final String LO_VOLUMES = "volumes";
     private static final String LO_SKIP_SIZE_CHECK = "skip-size-check";
+    private static final String LO_UNEXPECTED_BLOB_LIST = "unexpected-blob-list";
+    private static final String LO_MISSING_BLOB_DELETE_ITEM = "missing-blob-delete-item";
+    private static final String LO_EXPORT_DIR = "export-dir";
+    private static final String LO_NO_EXPORT = "no-export";
     
     private Options mOptions;
     private List<Long> mMailboxIds = new ArrayList<Long>();
     private List<Short> mVolumeIds = new ArrayList<Short>();
     private boolean mSkipSizeCheck = false;
     private boolean mVerbose = false;
+    private String mUnexpectedBlobList;
+    private PrintWriter mUnexpectedBlobWriter;
+    private boolean mMissingBlobDeleteItem = false;
+    private boolean mNoExport = false;
+    private String mExportDir;
     
     private BlobConsistencyUtil() {
         mOptions = new Options();
@@ -61,6 +73,18 @@ public class BlobConsistencyUtil {
         o = new Option("m", LO_MAILBOXES, true, "Specify which mailboxes to check");
         o.setArgName("mailbox-ids");
         mOptions.addOption(o);
+        
+        o = new Option(null, LO_UNEXPECTED_BLOB_LIST, true, "Write the paths of any unexpected blobs to a file.");
+        o.setArgName("path");
+        mOptions.addOption(o);
+        
+        mOptions.addOption(null, LO_MISSING_BLOB_DELETE_ITEM, false, "Delete any items that have a missing blob.");
+        
+        o = new Option(null, LO_EXPORT_DIR, true, "Target directory for database export files.");
+        o.setArgName("path");
+        mOptions.addOption(o);
+        
+        mOptions.addOption(null, LO_NO_EXPORT, false, "Delete items without exporting.");
     }
     
     private void usage(String errorMsg) {
@@ -72,7 +96,9 @@ public class BlobConsistencyUtil {
         }
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
-            "zmblobchk [options] start", null, mOptions, 2, 2, "\nid values are separated by commas.");
+            "zmblobchk [options] start", null, mOptions, 2, 2,
+            "\nThe \"start\" command is required, to avoid unintentionally running a blob check.  " +
+            "Id values are separated by commas.");
         System.exit(exitStatus);
     }
 
@@ -89,12 +115,10 @@ public class BlobConsistencyUtil {
         if (cl.getArgs().length == 0 || !cl.getArgs()[0].equals("start")) {
             usage(null);
         }
-        if (CliUtil.hasOption(cl, LO_VERBOSE)) {
-            mVerbose = true;
-        }
-        Option opt = CliUtil.getOption(cl, LO_VOLUMES);
-        if (opt != null) {
-            for (String id : opt.getValue().split(",")) {
+        
+        String volumeList = CliUtil.getOptionValue(cl, LO_VOLUMES);
+        if (volumeList != null) {
+            for (String id : volumeList.split(",")) {
                 try {
                     mVolumeIds.add(Short.parseShort(id));
                 } catch (NumberFormatException e) {
@@ -102,9 +126,10 @@ public class BlobConsistencyUtil {
                 }
             }
         }
-        opt = CliUtil.getOption(cl, LO_MAILBOXES);
-        if (opt != null) {
-            for (String id : opt.getValue().split(",")) {
+        
+        String mailboxList = CliUtil.getOptionValue(cl, LO_MAILBOXES);
+        if (mailboxList != null) {
+            for (String id : mailboxList.split(",")) {
                 try {
                     mMailboxIds.add(Long.parseLong(id));
                 } catch (NumberFormatException e) {
@@ -112,11 +137,30 @@ public class BlobConsistencyUtil {
                 }
             }
         }
+
         mSkipSizeCheck = CliUtil.hasOption(cl, LO_SKIP_SIZE_CHECK);
+        mVerbose = CliUtil.hasOption(cl, LO_VERBOSE);
+        mUnexpectedBlobList = CliUtil.getOptionValue(cl, LO_UNEXPECTED_BLOB_LIST);
+        mMissingBlobDeleteItem = CliUtil.hasOption(cl, LO_MISSING_BLOB_DELETE_ITEM);
+        mExportDir = CliUtil.getOptionValue(cl, LO_EXPORT_DIR);
+        
+        if (mMissingBlobDeleteItem) {
+            // --export-dir overrides --no-export
+            if (mExportDir == null) {
+                mNoExport = CliUtil.hasOption(cl, LO_NO_EXPORT);
+                if (!mNoExport) {
+                    usage("Please specify either " + LO_EXPORT_DIR + " or " + LO_NO_EXPORT + " when using " + LO_MISSING_BLOB_DELETE_ITEM);
+                }
+            }
+        }        
     }
     
     private void run()
     throws Exception {
+        if (mUnexpectedBlobList != null) {
+            mUnexpectedBlobWriter = new PrintWriter(new FileOutputStream(mUnexpectedBlobList), true);
+        }
+        
         CliUtil.toolSetup();
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
@@ -147,8 +191,33 @@ public class BlobConsistencyUtil {
                 System.out.format(
                     "Mailbox %d, volume %d, %s: unexpected blob.  File size is %d.\n",
                     results.mboxId, blob.volumeId, blob.path, blob.fileSize);
+                if (mUnexpectedBlobWriter != null) {
+                    mUnexpectedBlobWriter.println(blob.path);
+                }
+            }
+            
+            if (mMissingBlobDeleteItem && results.missingBlobs.size() > 0) {
+                exportAndDelete(prov, results);
             }
         }
+        
+        if (mUnexpectedBlobWriter != null) {
+            mUnexpectedBlobWriter.close();
+        }
+    }
+    
+    private void exportAndDelete(SoapProvisioning prov, BlobConsistencyChecker.Results results)
+    throws ServiceException {
+        System.out.format("Deleting %d items from mailbox %d.\n", results.missingBlobs.size(), results.mboxId);
+        
+        Element request = new XMLElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_REQUEST);
+        request.addAttribute(AdminConstants.A_EXPORT_DIR, mExportDir);
+        request.addAttribute(AdminConstants.A_EXPORT_FILENAME_PREFIX, "mbox" + results.mboxId + "_");
+        Element mboxEl = request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, results.mboxId);
+        for (BlobInfo blob : results.missingBlobs) {
+            mboxEl.addElement(AdminConstants.E_ITEM).addAttribute(AdminConstants.A_ID, blob.itemId);
+        }
+        prov.invoke(request);
     }
 
     public static void main(String[] args) {

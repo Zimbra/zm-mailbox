@@ -1191,7 +1191,23 @@ mailboxes are checked.  Blob sizes are checked by default.  Set checkSize
 to 0 to avoid the CPU overhead of uncompressing compressed blobs in order to
 calculate size.
 
+-----------------------------
 
+<ExportAndDeleteItemsRequest [exportDir="path"] [exportFilenamePrefix="name"]>
+  <mbox id="{id}">
+    <item id="{id}" />
+    ...
+  </mbox>
+</ExportAndDeleteItemsRequest>
+
+<ExportAndDeleteItemsResponse/>
+
+Exports the database data for the given items with SELECT INTO OUTFILE
+and deletes the items from the mailbox.  Exported filenames follow the
+pattern <prefix><table_name>.txt.  The files are written sqlExportDir.
+When sqlExportDir is not specified, data is not exported.  Export is
+only supported for MySQL.
+ 
 -----------------------------
 
 <CreateDistributionListRequest>

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -32,8 +33,7 @@ import com.zimbra.cs.store.file.BlobConsistencyChecker.BlobInfo;
 public class DbBlobConsistency {
     
     /**
-     * Returns blob info for items in the specified id range.  The key is the
-     * filename of the blob.
+     * Returns blob info for items in the specified id range.
      */
     public static Collection<BlobInfo> getBlobInfo(Connection conn, Mailbox mbox, long minId, long maxId, short volumeId)
     throws ServiceException {
@@ -60,6 +60,7 @@ public class DbBlobConsistency {
                 stmt.setLong(1, mbox.getId());
                 stmt.setLong(2, mbox.getId());
             }
+            Db.getInstance().enableStreaming(stmt);
             rs = stmt.executeQuery();
             while (rs.next()) {
                 BlobInfo info = new BlobInfo();
@@ -98,6 +99,69 @@ public class DbBlobConsistency {
             return rs.getLong(1);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting max id for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.quietCloseStatement(stmt);
+        }
+    }
+    
+    public static int getNumRows(Connection conn, Mailbox mbox, String tableName,
+                                 String idColName, Collection<Integer> itemIds)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(*) " +
+                "FROM " + DbMailbox.qualifyTableName(mbox, tableName) +
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                idColName + " IN (" + DbUtil.suitableNumberOfVariables(itemIds) + ") ");
+            int i = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setLong(i++, mbox.getId());
+            }
+            for (int id : itemIds) {
+                stmt.setInt(i++, id);
+            }
+            rs = stmt.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting number of rows for matching id's in " + tableName, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.quietCloseStatement(stmt);
+        }
+    }
+    
+    public static void export(Connection conn, Mailbox mbox, String tableName,
+                              String idColName, Collection<Integer> itemIds, String path)
+    throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        if (!(Db.getInstance() instanceof MySQL)) {
+            throw ServiceException.INVALID_REQUEST("export is only supported for MySQL", null);
+        }
+        ZimbraLog.sqltrace.info("Exporting %d items in table %s to %s.", itemIds.size(), tableName, path);
+        
+        try {
+            stmt = conn.prepareStatement("SELECT * " +
+                "FROM " + DbMailbox.qualifyTableName(mbox, tableName) +
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                idColName + " IN (" + DbUtil.suitableNumberOfVariables(itemIds) + ") " +
+                "INTO OUTFILE ?");
+            int i = 1;
+            if (!DebugConfig.disableMailboxGroups) {
+                stmt.setLong(i++, mbox.getId());
+            }
+            for (int id : itemIds) {
+                stmt.setInt(i++, id);
+            }
+            stmt.setString(i++, path);
+            rs = stmt.executeQuery();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("exporting table " + tableName + " to " + path, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.quietCloseStatement(stmt);
