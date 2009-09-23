@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090923-1532 */
+    /* build: 6.0.0 pshao 20090923-1541 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -594,6 +594,22 @@ public class ZAttrProvisioning {
         public boolean isText() { return this == text;}
         public boolean isHtml() { return this == html;}
         public boolean isSame() { return this == same;}
+    }
+
+    public static enum PrefGetMailAction {
+        update("update"),
+        default_("default");
+        private String mValue;
+        private PrefGetMailAction(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefGetMailAction fromString(String s) throws ServiceException {
+            for (PrefGetMailAction value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isUpdate() { return this == update;}
+        public boolean isDefault_() { return this == default_;}
     }
 
     public static enum PrefGroupMailBy {
@@ -5389,6 +5405,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=635)
     public static final String A_zimbraPrefGalSearchEnabled = "zimbraPrefGalSearchEnabled";
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public static final String A_zimbraPrefGetMailAction = "zimbraPrefGetMailAction";
 
     /**
      * how to group mail by default

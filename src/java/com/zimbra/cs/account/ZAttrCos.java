@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090923-1532 */
+    /* build: 6.0.0 pshao 20090923-1541 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -17180,6 +17180,137 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefGalSearchEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGalSearchEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @return zimbraPrefGetMailAction, or ZAttrProvisioning.PrefGetMailAction.default_ if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public ZAttrProvisioning.PrefGetMailAction getPrefGetMailAction() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefGetMailAction); return v == null ? ZAttrProvisioning.PrefGetMailAction.default_ : ZAttrProvisioning.PrefGetMailAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefGetMailAction.default_; }
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @return zimbraPrefGetMailAction, or "default" if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public String getPrefGetMailActionAsString() {
+        return getAttr(Provisioning.A_zimbraPrefGetMailAction, "default");
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @param zimbraPrefGetMailAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public void setPrefGetMailAction(ZAttrProvisioning.PrefGetMailAction zimbraPrefGetMailAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @param zimbraPrefGetMailAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public Map<String,Object> setPrefGetMailAction(ZAttrProvisioning.PrefGetMailAction zimbraPrefGetMailAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction.toString());
+        return attrs;
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @param zimbraPrefGetMailAction new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public void setPrefGetMailActionAsString(String zimbraPrefGetMailAction) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @param zimbraPrefGetMailAction new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public Map<String,Object> setPrefGetMailActionAsString(String zimbraPrefGetMailAction, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction);
+        return attrs;
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public void unsetPrefGetMailAction() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGetMailAction, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * action to perform for the get mail button in UI
+     *
+     * <p>Valid values: [update, default]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
+    public Map<String,Object> unsetPrefGetMailAction(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefGetMailAction, "");
         return attrs;
     }
 
