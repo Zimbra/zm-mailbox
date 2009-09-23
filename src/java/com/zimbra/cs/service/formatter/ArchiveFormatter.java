@@ -957,7 +957,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     
                     try {
                         oldChat = mbox.getChatById(oc, chat.getId());
-                        if (oldChat.getFolderId() != fldr.getFolderId())
+                        if (oldChat.getFolderId() != fldr.getId())
                             oldChat = null;
                     } catch (Exception e) {
                     }
@@ -999,7 +999,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     
                     try {
                         oldContact = mbox.getContactById(oc, ct.getId());
-                        if (oldContact.getFolderId() != fldr.getFolderId())
+                        if (oldContact.getFolderId() != fldr.getId())
                             oldContact = null;
                     } catch (Exception e) {
                     }
