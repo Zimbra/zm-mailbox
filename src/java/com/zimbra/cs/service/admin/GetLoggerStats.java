@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import com.zimbra.common.localconfig.LC;
@@ -39,10 +41,16 @@ import com.zimbra.soap.ZimbraSoapContext;
  * <GetLoggerStatsRequest>
  *   <!-- when hostname and stats are specified, fetch stats -->
  *   <hostname hn="hostname"/> <!-- optional, will list hosts otherwise -->
- *   <stats name="stat_group" [limit="1"]/><!-- optional, will list stat groups if host specified and stats unspecified,
+ *   <stats name="stat_group" [limit="1"]><!-- optional, will list stat groups if host specified and stats unspecified,
  *                                 will fetch given group for all hosts if hostname not specified
  *                                 if limit=X is specified, then the backend will attempt to limit the results to under
  *                                 500 records -->
+ *     <values>
+ *       <stat name="col1"/> <!-- optional, request specific counters only -->
+ *       <stat name="col2"/>
+ *       <stat name="col..."/>
+ *     </values>
+ *   </stats>
  *   <stats name="stat_group">1</stats><!-- optional, used in conjunction with hostname, list counters for
  *                                          the specified hostname and stat group -->
  *   <startTime time="ts"/><!-- optional, defaults to last day, both must be specified otherwise -->
@@ -122,6 +130,19 @@ public class GetLoggerStats extends AdminDocumentHandler {
             Element stats = request.getOptionalElement(AdminConstants.E_STATS);
             Element start = request.getOptionalElement(AdminConstants.E_START_TIME);
             Element end = request.getOptionalElement(AdminConstants.E_END_TIME);
+            Element values = null;
+            HashSet<String> counters = null;
+            if (stats != null) {
+                values = stats.getOptionalElement(AdminConstants.E_VALUES);
+                if (values != null) {
+                    List<Element> counterList = values.listElements(AdminConstants.E_STAT);
+                    if (counterList.size() > 0)
+                        counters = new HashSet<String>(counterList.size());
+                    for (Element e : counterList) {
+                        counters.add(e.getAttribute(AdminConstants.A_NAME));
+                    }
+                }
+            }
             
             if (host == null && stats == null) {
                 // list hosts
@@ -143,11 +164,11 @@ public class GetLoggerStats extends AdminDocumentHandler {
                     
                     startTime = start.getAttribute(AdminConstants.A_TIME);
                     endTime   = end.getAttribute(AdminConstants.A_TIME);
-                    fetchColumnData(response,
+                    fetchColumnData(response, counters,
                             stats.getAttribute(AdminConstants.A_NAME),
                             startTime, endTime, limit);
                 } else {
-                    fetchColumnData(response,
+                    fetchColumnData(response, counters,
                             stats.getAttribute(AdminConstants.A_NAME), limit);
                 }
             } else if (stats != null && host != null) {
@@ -174,12 +195,12 @@ public class GetLoggerStats extends AdminDocumentHandler {
 
                         startTime = start.getAttribute(AdminConstants.A_TIME);
                         endTime   = end.getAttribute(AdminConstants.A_TIME);
-                        fetchColumnData(response,
+                        fetchColumnData(response, counters,
                                 host.getAttribute(AdminConstants.A_HOSTNAME),
                                 stats.getAttribute(AdminConstants.A_NAME),
                                 startTime, endTime, limit);
                     } else {
-                        fetchColumnData(response,
+                        fetchColumnData(response, counters,
                                 host.getAttribute(AdminConstants.A_HOSTNAME),
                                 stats.getAttribute(AdminConstants.A_NAME), limit);
                     }
@@ -231,7 +252,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
             stat.addAttribute(AdminConstants.A_NAME, name);
         }
     }
-    static void fetchColumnData(Element response, String group,
+    static void fetchColumnData(Element response, Set<String> counters, String group,
             String start, String end, boolean limit)
     throws ServiceException {
         Iterator<String> results;
@@ -239,9 +260,9 @@ public class GetLoggerStats extends AdminDocumentHandler {
             results = execfetch("-c", "-f", group, "-s", start, "-e", end);
         else
             results = execfetch("-f", group, "-s", start, "-e", end);
-        populateResponseData(response, group, results);
+        populateResponseData(response, counters, group, results);
     }
-    static void fetchColumnData(Element response, String hostname, String group,
+    static void fetchColumnData(Element response, Set<String> counters, String hostname, String group,
             String start, String end, boolean limit)
     throws ServiceException {
         Iterator<String> results;
@@ -252,28 +273,28 @@ public class GetLoggerStats extends AdminDocumentHandler {
             results = execfetch("-h", hostname, "-f", group,
                     "-s", start, "-e", end);
         }
-        populateResponseData(response, hostname, group, results);
+        populateResponseData(response, counters, hostname, group, results);
     }
-    static void fetchColumnData(Element response, String group, boolean limit)
+    static void fetchColumnData(Element response, Set<String> counters, String group, boolean limit)
     throws ServiceException {
         Iterator<String> results;
         if (limit)
             results = execfetch("-c", "-f", group);
         else
             results = execfetch("-f", group);
-        populateResponseData(response, group, results);
+        populateResponseData(response, counters, group, results);
     }
-    static void fetchColumnData(Element response, String hostname, String group, boolean limit)
+    static void fetchColumnData(Element response, Set<String> counters, String hostname, String group, boolean limit)
     throws ServiceException {
         Iterator<String> results;
         if (limit)
             results = execfetch("-c", "-h", hostname, "-f", group);
         else
             results = execfetch("-h", hostname, "-f", group);
-        populateResponseData(response, hostname, group, results);
+        populateResponseData(response, counters, hostname, group, results);
     }
     
-    static void populateResponseData(Element response,
+    static void populateResponseData(Element response, Set<String> counters,
             String hostname, String group, Iterator<String> results)
     throws ServiceException {
         if (!results.hasNext())
@@ -297,6 +318,8 @@ public class GetLoggerStats extends AdminDocumentHandler {
                 Element values = stats.addElement(AdminConstants.E_VALUES);
                 values.addAttribute(AdminConstants.A_T, data[0]);
                 for (int i = 1, j = data.length; i < j; i++) {
+                    if (counters != null && counters.size() > 0 && !counters.contains(columns[i]))
+                        continue;
                     Element stat = values.addElement(AdminConstants.E_STAT);
                     stat.addAttribute(AdminConstants.A_NAME, columns[i]);
                     if (data[i] != null)
@@ -306,7 +329,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
         }
         
     }
-    static void populateResponseData(Element response, String group, Iterator<String> results)
+    static void populateResponseData(Element response, Set<String> counters, String group, Iterator<String> results)
     throws ServiceException {
         Element host = null;
         Element stats = null;
@@ -345,6 +368,8 @@ public class GetLoggerStats extends AdminDocumentHandler {
                 Element values = stats.addElement(AdminConstants.E_VALUES);
                 values.addAttribute(AdminConstants.A_T, data[0]);
                 for (int i = 1, j = data.length; i < j; i++) {
+                    if (counters != null && counters.size() > 0 && !counters.contains(columns[i]))
+                        continue;
                     Element stat = values.addElement(AdminConstants.E_STAT);
                     stat.addAttribute(AdminConstants.A_NAME, columns[i]);
                     if (data[i] != null)
