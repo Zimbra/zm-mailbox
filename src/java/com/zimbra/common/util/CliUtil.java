@@ -55,4 +55,17 @@ public class CliUtil {
     public static boolean hasOption(CommandLine cl, String name) {
         return (getOption(cl, name) != null);
     }
+    
+    /**
+     * Returns the value for the given option name.
+     * @param cl command line
+     * @param name either short or long option name
+     */
+    public static String getOptionValue(CommandLine cl, String name) {
+        Option opt = getOption(cl, name);
+        if (opt == null) {
+            return null;
+        }
+        return opt.getValue();
+    }
 }

@@ -168,6 +168,8 @@ public class AdminConstants {
     public static final QName SET_CURRENT_VOLUME_RESPONSE = QName.get("SetCurrentVolumeResponse", NAMESPACE);
     public static final QName CHECK_BLOB_CONSISTENCY_REQUEST = QName.get("CheckBlobConsistencyRequest", NAMESPACE);
     public static final QName CHECK_BLOB_CONSISTENCY_RESPONSE = QName.get("CheckBlobConsistencyResponse", NAMESPACE);
+    public static final QName EXPORT_AND_DELETE_ITEMS_REQUEST = QName.get("ExportAndDeleteItemsRequest", NAMESPACE);
+    public static final QName EXPORT_AND_DELETE_ITEMS_RESPONSE = QName.get("ExportAndDeleteItemsResponse", NAMESPACE);
 
     public static final QName CREATE_DISTRIBUTION_LIST_REQUEST = QName.get("CreateDistributionListRequest", NAMESPACE);
     public static final QName CREATE_DISTRIBUTION_LIST_RESPONSE = QName.get("CreateDistributionListResponse", NAMESPACE);
@@ -576,6 +578,8 @@ public class AdminConstants {
     public static final String A_FILE_SIZE = "fileSize";
     public static final String A_CHECK_SIZE = "checkSize";
     public static final String A_VOLUME_ID = "volumeId";
+    public static final String A_EXPORT_DIR = "exportDir";
+    public static final String A_EXPORT_FILENAME_PREFIX = "exportFilenamePrefix";
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
