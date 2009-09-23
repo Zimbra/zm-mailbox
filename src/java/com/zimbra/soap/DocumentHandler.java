@@ -56,7 +56,7 @@ import java.util.Map;
 public abstract class DocumentHandler {
 
     private QName mResponseQName;
-    private static String LOCAL_HOST, LOCAL_HOST_ID;
+    private static String LOCAL_HOST = "", LOCAL_HOST_ID = "";
 
     void setResponseQName(QName response) { mResponseQName = response; }
 
