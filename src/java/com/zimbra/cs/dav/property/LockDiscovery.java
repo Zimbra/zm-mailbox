@@ -70,7 +70,7 @@ public class LockDiscovery extends ResourceProperty {
 			lock.addElement(DavElements.E_DEPTH).setText(l.depth);
 			lock.addElement(DavElements.E_TIMEOUT).setText(l.getTimeoutStr());
 			if (l.owner != null)
-				lock.addElement(DavElements.E_OWNER).setText(l.owner);
+				lock.addElement(DavElements.E_OWNER).addElement(DavElements.E_HREF).setText(l.owner);
 			lock.addElement(DavElements.E_LOCKTOKEN).addElement(DavElements.E_HREF).setText(l.token);
 		}
 		return activelock;

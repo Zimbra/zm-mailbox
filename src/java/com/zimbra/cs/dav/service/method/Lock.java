@@ -78,10 +78,12 @@ public class Lock extends DavMethod {
 		}
 		String owner;
 		e = top.element(DavElements.E_OWNER);
-		if (e == null)
-			owner = ctxt.getAuthAccount().getName();
-		else
-			owner = (e.getText() != null) ? e.getText() : e.elementIterator().next().toString();
+		if (e != null && e.elementIterator(DavElements.E_HREF).hasNext()) {
+            Element ownerElem = (Element)e.elementIterator(DavElements.E_HREF).next();
+            owner = ownerElem.getText();
+		} else {
+            owner = ctxt.getAuthAccount().getName();
+		}
 		
 		LockMgr lockmgr = LockMgr.getInstance();
 		LockMgr.Lock lock = lockmgr.createLock(ctxt, owner, ctxt.getUri(), type, scope, d);
