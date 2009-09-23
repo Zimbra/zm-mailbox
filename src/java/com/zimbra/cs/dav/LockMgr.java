@@ -145,11 +145,8 @@ public class LockMgr {
 		if (!locks.contains(token))
 			return;
 		if (mLocks.containsKey(token)) {
-			Lock l = (Lock)mLocks.get(token);
-			if (l.owner.equals(ctxt.getAuthAccount().getName())) {
-				mLocks.remove(token);
-				locks.remove(token);
-			}
+            mLocks.remove(token);
+            locks.remove(token);
 		}
 	}
 }

@@ -41,5 +41,6 @@ public class Unlock extends DavMethod {
 				LockMgr.getInstance().deleteLock(ctxt, ctxt.getUri(), token.substring(1, len-1));
 		}
 		ctxt.getResponse().setStatus(HttpServletResponse.SC_NO_CONTENT);
+		ctxt.responseSent();
 	}
 }
