@@ -468,19 +468,25 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (id <= 0 || getSize() == 0)
             return null;
 
+        // leverage the fact that by default, the message's item id and its IMAP uid are identical
+        int sequence = uidSearch(id);
+        if (sequence >= 0 && sequence < mSequence.size()) {
+            ImapMessage i4msg = mSequence.get(sequence);
+            // slightly tricky: must check if message is expunged in order to catch the case of
+            //   using the web client to move the message out of the folder and back in before
+            //   the IMAP server can tell the client about the EXPUNGE from the first move
+            if (i4msg != null && i4msg.msgId == id && !i4msg.isExpunged())
+                return checkRemoved(i4msg);
+        }
+
+        // if item id and IMAP uid differ, the message goes in the "mMessageIds" map
         if (mMessageIds == null) {
-            // leverage the fact that by default, the message's item id and its IMAP uid are identical
-            int sequence = uidSearch(id);
-            if (sequence >= 0 && sequence < mSequence.size()) {
-                ImapMessage i4msg = mSequence.get(sequence);
-                if (i4msg != null && i4msg.msgId == id && !i4msg.isExpunged())
-                    return checkRemoved(i4msg);
-            }
             // lookup miss means we need to generate the item-id-to-imap-message mapping
-            mMessageIds = new HashMap<Integer, ImapMessage>(mSequence.size());
-            for (ImapMessage i4msg : mSequence)
-                if (i4msg != null)
+            mMessageIds = new HashMap<Integer, ImapMessage>();
+            for (ImapMessage i4msg : mSequence) {
+                if (i4msg != null && i4msg.msgId != i4msg.imapUid)
                     mMessageIds.put(i4msg.msgId, i4msg);
+            }
         }
         return checkRemoved(mMessageIds.get(new Integer(id)));
     }
@@ -532,8 +538,12 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     private void setIndex(ImapMessage i4msg, int position) {
         i4msg.sequence = position;
-        if (mMessageIds != null)
-            mMessageIds.put(new Integer(i4msg.msgId), i4msg);
+        if (mMessageIds != null) {
+            if (i4msg.msgId != i4msg.imapUid)
+                mMessageIds.put(new Integer(i4msg.msgId), i4msg);
+            else
+                mMessageIds.remove(new Integer(i4msg.msgId));
+        }
     }
 
     /** Cleans up all references to an ImapMessage from all the folder's data
@@ -901,9 +911,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             ImapMessage i4msg = lit.next();
             if (i4msg.isExpunged()) {
                 if (debug)  ZimbraLog.imap.debug("  ** removing: " + i4msg.msgId);
-                // uncache() removes pointers to the message from mUIDs;
-                //   if the message appears again in mSequence, it *must* be later
-                //   and the subsequent call to setIndex() will correctly set the mUIDs mapping
+                // uncache() removes pointers to the message from mMessageIds;
+                //   if the message appears again in mSequence, it *must* be later and the
+                //   subsequent call to setIndex() will correctly update the mMessageIds mapping
                 uncache(i4msg);
                 lit.remove();
                 // note that we can't send expunge notifications for messages the client doesn't know about yet...
