@@ -70,8 +70,6 @@ public class DataSourceManager {
         switch (ds.getType()) {
         case imap:
             return new ImapSync(ds);
-        case live:
-            return new LiveImport(ds);
         case pop3:
             return new Pop3Sync(ds);
         case rss:
