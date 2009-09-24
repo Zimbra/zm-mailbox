@@ -94,6 +94,7 @@ public class ScheduleOutbox extends Collection {
         }
 		Element scheduleResponse = ctxt.getDavResponse().getTop(DavElements.E_SCHEDULE_RESPONSE);
 		for (String rcpt : rcptArray) {
+		    rcpt = rcpt.trim();
 			ZimbraLog.dav.debug("recipient email: "+rcpt);
 			Element resp = scheduleResponse.addElement(DavElements.E_CALDAV_RESPONSE);
 			switch (req.getTok()) {
@@ -130,7 +131,6 @@ public class ScheduleOutbox extends Collection {
 			throw new DavException("can't parse date", HttpServletResponse.SC_BAD_REQUEST, pe);
 		}
 
-		rcpt = rcpt.trim();
 		ZimbraLog.dav.debug("rcpt: "+rcpt+", start: "+new Date(start)+", end: "+new Date(end));
 		
 		FreeBusy fb = null;

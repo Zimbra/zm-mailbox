@@ -40,6 +40,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
@@ -121,6 +122,8 @@ public abstract class MailItemResource extends DavResource {
 		mColor = item.getRgbColor();
 		setProperty(DavElements.E_DISPLAYNAME, item.getName());
 		addProperty(Acl.getPrincipalUrl(this));
+        if (ctxt.isSchedulingEnabled())
+            mDavCompliance.add(Compliance.calendar_schedule);
 	}
 	
 	public MailItemResource(String path, String acct) {

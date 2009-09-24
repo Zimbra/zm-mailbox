@@ -21,6 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavMethod;
 import com.zimbra.cs.dav.service.DavServlet;
 
@@ -33,6 +35,10 @@ public class Options extends DavMethod {
 		HttpServletResponse resp = ctxt.getResponse();
 		DavServlet.setAllowHeader(resp);
 		resp.setContentLength(0);
+		try {
+	        DavResource rs = ctxt.getRequestedResource();
+	        ctxt.setDavCompliance(DavProtocol.getComplianceString(rs.getComplianceList()));
+		} catch (Exception e) {}
 		sendResponse(ctxt);
 	}
 }

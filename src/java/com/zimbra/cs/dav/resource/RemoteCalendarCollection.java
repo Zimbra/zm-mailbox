@@ -24,7 +24,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -34,8 +33,6 @@ public class RemoteCalendarCollection extends RemoteCollection {
     public RemoteCalendarCollection(DavContext ctxt, Mountpoint mp) throws DavException, ServiceException {
         super(ctxt, mp);
 		Account acct = mp.getAccount();
-		if (ctxt.isSchedulingEnabled())
-			mDavCompliance.add(Compliance.calendar_schedule);
 
 		addResourceType(DavElements.E_CALENDAR);
 

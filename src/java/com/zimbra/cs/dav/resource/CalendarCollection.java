@@ -41,7 +41,6 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
@@ -79,8 +78,6 @@ public class CalendarCollection extends Collection {
 	public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		Account acct = f.getAccount();
-		if (ctxt.isSchedulingEnabled())
-			mDavCompliance.add(Compliance.calendar_schedule);
 
 		if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
 			addResourceType(DavElements.E_CALENDAR);
