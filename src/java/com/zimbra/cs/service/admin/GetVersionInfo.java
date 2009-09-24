@@ -45,6 +45,10 @@ public class GetVersionInfo extends AdminDocumentHandler {
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_DATE, BuildInfo.DATE);
         infoEl.addAttribute(AdminConstants.A_VERSION_INFO_HOST, BuildInfo.HOST);
         
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_MAJOR, BuildInfo.MAJORVERSION);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_MINOR, BuildInfo.MINORVERSION);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_MICRO, BuildInfo.MICROVERSION);
+        infoEl.addAttribute(AdminConstants.A_VERSION_INFO_PLATFORM, BuildInfo.PLATFORM);
         return response;
     }
 

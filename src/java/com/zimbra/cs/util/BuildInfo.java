@@ -30,6 +30,10 @@ public class BuildInfo {
     public static final String RELEASE;
     public static final String DATE;
     public static final String HOST;
+	public static final String PLATFORM;
+	public static final String MAJORVERSION;
+	public static final String MINORVERSION;
+	public static final String MICROVERSION;    
     
     public static final String FULL_VERSION;
 
@@ -39,6 +43,10 @@ public class BuildInfo {
         String release = "unknown";
         String date = "unknown";
         String host = "unknown";
+        String majorversion = "unknown";
+        String minorversion = "unknown";
+        String microversion = "unknown";
+        String platform = "unknown";        
         try {
             Class clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
             version = (String) clz.getField("VERSION").get(null);
@@ -46,6 +54,10 @@ public class BuildInfo {
             release = (String) clz.getField("RELEASE").get(null);
             date = (String) clz.getField("DATE").get(null);
             host = (String) clz.getField("HOST").get(null);
+            majorversion = (String) clz.getField("MAJORVERSION").get(null);
+            minorversion = (String) clz.getField("MINORVERSION").get(null);
+            microversion = (String) clz.getField("MICROVERSION").get(null);
+            platform = (String) clz.getField("PLATFORM").get(null);
         } catch (Exception e) {
             System.err.println("Exception occurred during introspecting; version information incomplete");
             e.printStackTrace();
@@ -55,7 +67,10 @@ public class BuildInfo {
         RELEASE = release;
         DATE = date;
         HOST = host;
-        
+        PLATFORM = platform;
+        MAJORVERSION = majorversion;
+        MINORVERSION = minorversion;
+        MICROVERSION = microversion;
         if (TYPE != null && TYPE.length() > 0) {
             // e.g. 6.0.0_BETA2_1542.RHEL4_64 20090529191053 20090529-1912 NETWORK
         	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE + " " + TYPE;
