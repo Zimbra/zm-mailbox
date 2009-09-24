@@ -476,7 +476,7 @@ public abstract class DocumentHandler {
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
         SoapEngine engine = (SoapEngine) context.get(SoapEngine.ZIMBRA_ENGINE);
-        boolean isLocal = LOCAL_HOST_ID.equalsIgnoreCase(server.getId());
+        boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
 
         if (isLocal)
             zsc.resetProxyAuthToken();
@@ -514,7 +514,7 @@ public abstract class DocumentHandler {
     public static Element proxyWithNotification(Element request, ProxyTarget proxy, ZimbraSoapContext zscProxy, Session localSession)
     throws ServiceException {
         Server server = proxy.getServer();
-        boolean isLocal = LOCAL_HOST_ID.equalsIgnoreCase(server.getId());
+        boolean isLocal = getLocalHostId().equalsIgnoreCase(server.getId());
 
         if (isLocal)
             zscProxy.resetProxyAuthToken();
