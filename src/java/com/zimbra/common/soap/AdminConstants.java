@@ -583,6 +583,10 @@ public class AdminConstants {
 
     public static final String A_VERSION_INFO_INFO = "info";
     public static final String A_VERSION_INFO_VERSION = "version";
+    public static final String A_VERSION_INFO_PLATFORM = "platform";
+    public static final String A_VERSION_INFO_MAJOR = "majorversion";
+    public static final String A_VERSION_INFO_MINOR = "minorversion";
+    public static final String A_VERSION_INFO_MICRO = "microversion";
     public static final String A_VERSION_INFO_RELEASE = "release";
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
