@@ -29,6 +29,9 @@ import java.util.ArrayList;
 
 public class ZCallFeatures {
 
+    public static final String SELECTIVE_CALL_FORWARD_LIST_FULL = "voice.SELECTIVE_CALL_FORWARD_LIST_FULL";
+    public static final String SELECTIVE_CALL_REJECT_LIST_FULL = "voice.SELECTIVE_CALL_REJECT_LIST_FULL";
+
     private ZMailbox mMbox;
     private ZPhone mPhone;
     private Map<String, ZCallFeature> mCallFeatures;
