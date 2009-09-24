@@ -455,7 +455,7 @@ public class ZMailbox implements ToZJSONObject {
             mTransport.setTargetAcctName(key);
     }
 
-    private Element newRequestElement(QName name) {
+    public Element newRequestElement(QName name) {
         if (mTransport.getRequestProtocol() == SoapProtocol.SoapJS) {
             return new JSONElement(name);
         } else {
