@@ -376,6 +376,7 @@ public class LC {
     public static final KnownKey zimbra_class_store;
     public static final KnownKey zimbra_class_application;
     public static final KnownKey zimbra_class_rulerewriterfactory;
+    public static final KnownKey zimbra_class_datasourcemanager;
     
     public static final KnownKey data_source_trust_self_signed_certs;
     public static final KnownKey data_source_fetch_size;
@@ -1243,6 +1244,7 @@ public class LC {
         zimbra_class_store = new KnownKey("zimbra_class_store", "com.zimbra.cs.store.file.FileBlobStore");
         zimbra_class_application = new KnownKey("zimbra_class_application", "com.zimbra.cs.util.ZimbraApplication");
         zimbra_class_rulerewriterfactory = new KnownKey("zimbra_class_rulerewriterfactory", "com.zimbra.cs.filter.RuleRewriterFactory");
+        zimbra_class_datasourcemanager = new KnownKey("zimbra_class_datasourcemanager", "com.zimbra.cs.datasource.DataSourceManager");
         
         data_source_trust_self_signed_certs = new KnownKey("data_source_trust_self_signed_certs", "false");
         data_source_fetch_size = new KnownKey("data_source_fetch_size", "5");
