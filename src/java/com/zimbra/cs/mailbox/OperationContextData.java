@@ -21,10 +21,12 @@ public abstract class OperationContextData {
         mOctxt = octxt;
     }
     
+    
     /**
      * 
-     * bug 35079: avoid potential excessive LDAP searches while XML
-     *            encoding folder ACLs 
+     * bug 35079, 39804: 
+     *     avoid potential excessive LDAP searches for grantee names
+     *     during XML encoding folder ACLs 
      * 
      * - collect grantee ids on all folder user shares of the mailbox
      * - resolve all ids into names (LDAP search if necessary)
@@ -41,17 +43,42 @@ public abstract class OperationContextData {
         GranteeNames data = getGranteeNames(octxt);
         if (data == null) {
             data = new GranteeNames(octxt);
-            octxt.SetCtxtData(GranteeNames.getKey(), data);
+            octxt.SetCtxtData(GranteeNames.KEY, data);
         } 
         data.addRootNode(node);
     }
     
     public static GranteeNames getGranteeNames(OperationContext octxt) {
-        if (octxt == null)
-            return null;
-        else
-            return (GranteeNames)octxt.getCtxtData(GranteeNames.getKey());
+        return (octxt == null) ? null : (GranteeNames)octxt.getCtxtData(GranteeNames.KEY);
     }
+    
+    public static void setRefreshBlockBound(OperationContext octxt, boolean isRefreshBlockBound) {
+        if (octxt == null)
+            return;
+        
+        RefreshBlockBound data = getRefreshBlockBound(octxt); 
+        if (data == null) {
+            data = new RefreshBlockBound(octxt);
+            octxt.SetCtxtData(RefreshBlockBound.KEY, data);
+        } 
+        data.setIsRefreshBlockBound(isRefreshBlockBound);
+    }
+        
+    private static RefreshBlockBound getRefreshBlockBound(OperationContext octxt) {
+        return (octxt == null) ? null : (RefreshBlockBound)octxt.getCtxtData(RefreshBlockBound.KEY);
+    }
+    
+    public static boolean isRefreshBlockBound(OperationContext octxt) {
+        if (octxt == null)
+            return false;
+        
+        RefreshBlockBound data = getRefreshBlockBound(octxt);
+        if (data == null)
+            return false;
+        
+        return data.isRefreshBlockBound();
+    }
+
     
     /**
      * 
@@ -59,9 +86,7 @@ public abstract class OperationContextData {
      *
      */
     public static class GranteeNames extends OperationContextData {
-        private static String getKey() {
-            return "GranteeNames";
-        }
+        private static final String KEY = "GranteeNames";
         
         private static final int USR_GRANTEES = 0;
         private static final int GRP_GRANTEES = 1;
@@ -235,4 +260,28 @@ public abstract class OperationContextData {
         }
 
     }
+    
+    /**
+     * 
+     * RefreshBlockBound
+     *
+     */
+    private static class RefreshBlockBound extends OperationContextData {
+        private static final String KEY = "RefreshBlockBound";
+        
+        private boolean mIsRefreshBlockBound;
+        
+        private RefreshBlockBound(OperationContext octxt) {
+            super(octxt);
+        }
+        
+        private void setIsRefreshBlockBound(boolean isRefreshBlockBound) {
+            mIsRefreshBlockBound = isRefreshBlockBound;
+        }
+        
+        private boolean isRefreshBlockBound() {
+            return mIsRefreshBlockBound;
+        }
+    }
+    
 }

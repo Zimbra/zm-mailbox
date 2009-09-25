@@ -910,14 +910,14 @@ public class SoapSession extends Session {
 
         // first, get the user's folder hierarchy
         FolderNode root = mbox.getFolderTree(octxt, null, false);
-        OperationContextData.addGranteeNames(octxt, root);
+        OperationContextData.setRefreshBlockBound(octxt, true);
         GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
 
         Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>();
         // for mountpoints pointing to this host, get the serialized folder subhierarchy
         expandLocalMountpoints(octxt, root, eRefresh.getFactory(), mountpoints);
         // for mountpoints pointing to other hosts, get the folder structure from the remote server
-        expandRemoteMountpoints(zsc, eRefresh.getFactory(), mountpoints);
+        expandRemoteMountpoints(octxt, zsc, eRefresh.getFactory(), mountpoints);
 
         // graft in subfolder trees from the other user's mailbox, making sure that mountpoints reflect the counts (etc.) of the target folder
         if (!mountpoints.isEmpty())
@@ -959,7 +959,8 @@ public class SoapSession extends Session {
             
             if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
-                OperationContextData.addGranteeNames(octxt, remote);
+                if (!OperationContextData.isRefreshBlockBound(octxt))
+                    OperationContextData.addGranteeNames(octxt, remote);
                 Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
                 mountpoints.put(iidTarget, subhierarchy);
                 // fault in a delegate session because there's actually something to listen on...
@@ -970,7 +971,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private void expandRemoteMountpoints(ZimbraSoapContext zsc, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+    private void expandRemoteMountpoints(OperationContext octxt, ZimbraSoapContext zsc, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
         Map<String, Server> remoteServers = null;
         Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
@@ -993,7 +994,7 @@ public class SoapSession extends Session {
         }
 
         if (remoteServers != null && !remoteServers.isEmpty()) {
-            Map<String, Element> remoteHierarchies = fetchRemoteHierarchies(zsc, remoteServers);
+            Map<String, Element> remoteHierarchies = fetchRemoteHierarchies(octxt, zsc, remoteServers);
             for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
                 // local mountpoints already have their targets serialized
                 if (mptinfo.getValue() != null)
@@ -1004,12 +1005,14 @@ public class SoapSession extends Session {
         }
     }
 
-    private Map<String, Element> fetchRemoteHierarchies(ZimbraSoapContext zsc, Map<String, Server> remoteServers) {
+    private Map<String, Element> fetchRemoteHierarchies(OperationContext octxt, ZimbraSoapContext zsc, Map<String, Server> remoteServers) {
         Map<String, Element> hierarchies = new HashMap<String, Element>();
 
         Element noop;
         try {
             noop = Element.create(zsc.getRequestProtocol(), MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
+            if (OperationContextData.isRefreshBlockBound(octxt))
+                noop.addAttribute(MailConstants.A_NEED_GRANTEE_NAME, false);
         } catch (ServiceException e) {
             // garbage in, nothing out...
             return hierarchies;
@@ -1275,7 +1278,7 @@ public class SoapSession extends Session {
                         if (item instanceof Mountpoint && mbox == item.getMailbox()) {
                             Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>(2);
                             expandLocalMountpoint(octxt, (Mountpoint) item, eCreated.getFactory(), mountpoints);
-                            expandRemoteMountpoints(zsc, eCreated.getFactory(), mountpoints);
+                            expandRemoteMountpoints(octxt, zsc, eCreated.getFactory(), mountpoints);
                             transferMountpointContents(elem, octxt, mountpoints);
                         }
                     } catch (ServiceException e) {

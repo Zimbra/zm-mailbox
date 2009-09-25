@@ -216,35 +216,44 @@ public class ToXML {
         if (acl == null)
             return eACL;
 
+        boolean needDispName = !OperationContextData.isRefreshBlockBound(octxt);
+        
+        
         for (ACL.Grant grant : acl.getGrants()) {
-            //
-            // Get name of the grantee
-            //
-
-            // 1. try getting the name from the Grant, the name is set on the Grant 
-            //    if we are in the path of proxying sharing in ZD
-            String name = grant.getGranteeName();
+            String name = null;
             byte granteeType = grant.getGranteeType();
-            if (name == null) {
-                // 2. (for bug 35079), see if the name is already resolved in the in the OperationContextData
-                OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames(octxt);
-                if (granteeNames != null)
-                    name = granteeNames.getNameById(grant.getGranteeId(), granteeType);
-                
-                // 3. lookup the name using the Provisioning interface, 
-                //    this *may* lead to a LDAP search if the id is not in cache
+            
+            if (needDispName) {
+                //
+                // Get name of the grantee
+                //
+    
+                // 1. try getting the name from the Grant, the name is set on the Grant 
+                //    if we are in the path of proxying sharing in ZD
+                name = grant.getGranteeName();
                 if (name == null) {
-                    NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), granteeType);
-                    if (nentry != null)
-                        name = nentry.getName();
+                    // 2. (for bug 35079), see if the name is already resolved in the in the OperationContextData
+                    OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames(octxt);
+                    if (granteeNames != null)
+                        name = granteeNames.getNameById(grant.getGranteeId(), granteeType);
+                    
+                    // 3. lookup the name using the Provisioning interface, 
+                    //    this *may* lead to a LDAP search if the id is not in cache
+                    if (name == null) {
+                        NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), granteeType);
+                        if (nentry != null)
+                            name = nentry.getName();
+                    }
                 }
             }
             
             Element eGrant = eACL.addElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                   .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
-                  .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                  .addAttribute(MailConstants.A_DISPLAY, name);
+                  .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
+            
+            if (needDispName)
+                eGrant.addAttribute(MailConstants.A_DISPLAY, name);
             
             if (granteeType == ACL.GRANTEE_KEY) {
                 if (exposeAclAccessKey)
