@@ -1598,7 +1598,7 @@ if nest="1" on the request, response looks like this:
 
 ----------
 
-<GetFolderRequest [visible="0|1"]>
+<GetFolderRequest [visible="0|1"] [needGranteeName="0|1"]>
   [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"]/>]
 </GetFolderRequest>
 
@@ -1612,6 +1612,9 @@ if nest="1" on the request, response looks like this:
                       folders you can't see (but *can* see >=1 subfolder) appear as <folder id="{id}" name="{name}"> hierarchy placeholders
 
   - if *no* folders are visible and visible=1, the response looks like <GetFolderResponse/>
+  
+  - if "needGranteeName" is 0, grantee names in in forlder grants (the d attribute in <grant>) are omitted.
+    default for needGranteeName is 1.
 
 <GetFolderResponse>
   <folder ...>
