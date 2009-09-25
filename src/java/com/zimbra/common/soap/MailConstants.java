@@ -392,6 +392,7 @@ public class MailConstants {
     public static final String A_PREFETCH = "prefetch";
     public static final String A_VERBOSE = "verbose";
     public static final String A_CSVFORMAT = "csvfmt";
+    public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
 
     // messages
     public static final String E_MIMEPART = "mp";
