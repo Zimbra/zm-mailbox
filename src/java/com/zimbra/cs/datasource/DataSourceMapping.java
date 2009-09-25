@@ -71,7 +71,7 @@ public class DataSourceMapping {
     public int getItemFlags() throws ServiceException {
         if (dsi.itemFlags == -1) {
             com.zimbra.cs.mailbox.Message localMsg =
-                ds.getMailbox().getMessageById(null, dsi.itemId);
+                DataSourceManager.getInstance().getMailbox(ds).getMessageById(null, dsi.itemId);
             dsi.itemFlags = localMsg.getFlagBitmask();
         }
         return dsi.itemFlags;

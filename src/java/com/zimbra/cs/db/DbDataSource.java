@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -57,7 +58,7 @@ public class DbDataSource {
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
 
     public static void addMapping(DataSource ds, DataSourceItem item) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -115,7 +116,7 @@ public class DbDataSource {
     }
 
     public static void updateMapping(DataSource ds, DataSourceItem item) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ZimbraLog.datasource.debug("Updating mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
 
@@ -149,7 +150,7 @@ public class DbDataSource {
     }
 
     public static void deleteMappings(DataSource ds, Collection<Integer> itemIds) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
 
@@ -186,7 +187,7 @@ public class DbDataSource {
     }
 
     public static void deleteAllMappings(DataSource ds) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s", ds.getName());
         synchronized (getSynchronizer(mbox)) {
@@ -217,7 +218,7 @@ public class DbDataSource {
     }
 
     public static void deleteMapping(DataSource ds, int itemId) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ZimbraLog.datasource.debug("Deleting mappings for dataSource %s itemId %d", ds.getName(), itemId);
 
@@ -251,7 +252,7 @@ public class DbDataSource {
     }
 
     public static Collection<DataSourceItem> deleteAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
@@ -295,7 +296,7 @@ public class DbDataSource {
     }
     
     public static Collection<DataSourceItem> getAllMappings(DataSource ds) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
@@ -339,7 +340,7 @@ public class DbDataSource {
     }
     
     public static Collection<DataSourceItem> getAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
         
@@ -387,7 +388,7 @@ public class DbDataSource {
     }
 
     public static Collection<DataSourceItem> getAllMappingsAndFlagsInFolder(DataSource ds, int folderId) throws ServiceException {
-        Mailbox mbox = ds.getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
@@ -442,7 +443,7 @@ public class DbDataSource {
 
     public static Collection<DataSourceItem> getAllMappingsForRemoteIdPrefix(DataSource ds, int folderId, String prefix)
     throws ServiceException {
-        Mailbox mbox = ds.getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	List<DataSourceItem> items = new ArrayList<DataSourceItem>();
 
@@ -485,7 +486,7 @@ public class DbDataSource {
     }
     
     public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         int folderId = 0;
         String remoteId = null;
@@ -532,7 +533,7 @@ public class DbDataSource {
     }
 
     public static DataSourceItem getReverseMapping(DataSource ds, String remoteId) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         int folderId = 0;
         int itemId = 0;
@@ -579,7 +580,7 @@ public class DbDataSource {
     }
     
     public static Collection<DataSourceItem> getMappings(DataSource ds, Collection<Integer> ids) throws ServiceException {
-        Mailbox mbox = ds.getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         int folderId = 0;
         int itemId = 0;
         String remoteId = null;
@@ -634,7 +635,7 @@ public class DbDataSource {
     }
 
     public static Collection<DataSourceItem> getReverseMappings(DataSource ds, Collection<String> remoteIds) throws ServiceException {
-    	Mailbox mbox = ds.getMailbox();
+    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         int folderId = 0;
         int itemId = 0;
         String remoteId;

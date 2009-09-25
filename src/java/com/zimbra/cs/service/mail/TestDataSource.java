@@ -99,7 +99,7 @@ public class TestDataSource extends MailDocumentHandler {
         }
         
         // import class
-        value = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSource.getDefaultImportClass(type));
+        value = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSourceManager.getDefaultImportClass(type));
         if (value != null) {
         	testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, value);
         }

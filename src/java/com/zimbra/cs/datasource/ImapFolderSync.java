@@ -128,7 +128,8 @@ class ImapFolderSync {
      */
     public ImapFolder syncFolder(Folder folder)
         throws ServiceException, IOException {
-        if (!ds.isSyncEnabled(folder)) {
+        DataSourceManager dsm = DataSourceManager.getInstance();
+        if (!dsm.isSyncEnabled(ds, folder)) {
             return null;
         }
         localFolder = new LocalFolder(mailbox, folder);
@@ -137,17 +138,17 @@ class ImapFolderSync {
             remoteFolder = new RemoteFolder(connection, tracker.getRemoteId());
             if (!remoteFolder.exists()) {
                 remoteFolder.info("folder was deleted");
-                if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
+                if (dsm.isSyncEnabled(ds, folder)) //only delete local if sync enabled
                     localFolder.delete();
                 imapSync.deleteFolderTracker(tracker);
                 tracker = null;
-            } else if (!ds.isSyncCapable(folder) && !localFolder.getPath().equals(tracker.getLocalPath())) {
+            } else if (!dsm.isSyncCapable(ds, folder) && !localFolder.getPath().equals(tracker.getLocalPath())) {
             	//we moved local into archive, so delete remote
                 if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
                     imapSync.deleteFolderTracker(tracker);
                 }
             }
-        } else if (ds.isSyncEnabled(folder)) {
+        } else if (dsm.isSyncEnabled(ds, folder)) {
             remoteFolder = createRemoteFolder(folder);
             if (remoteFolder == null) return null;
             try {
@@ -186,7 +187,8 @@ class ImapFolderSync {
      */
     public void syncMessages(boolean fullSync) throws ServiceException, IOException {
         if (tracker == null) return;
-        if (tracker.getUidValidity() == 0 || !ds.isSyncEnabled(localFolder.getFolder())) {
+        DataSourceManager dsm = DataSourceManager.getInstance();
+        if (tracker.getUidValidity() == 0 || !dsm.isSyncEnabled(ds, localFolder.getFolder())) {
             localFolder.debug("Synchronization disabled for this folder");
             tracker = null;
             return;
@@ -428,7 +430,8 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         // Check if local folder was deleted
         localFolder = LocalFolder.fromId(mailbox, tracker.getItemId());
-        if (localFolder == null || (!ds.isSyncCapable(localFolder.getFolder()) &&
+        DataSourceManager dsm = DataSourceManager.getInstance();
+        if (localFolder == null || (!dsm.isSyncCapable(ds, localFolder.getFolder()) &&
         		                    !localFolder.getPath().equals(tracker.getLocalPath()))) {
             LOG.debug("Local folder '%s' was deleted", tracker.getLocalPath());
             if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
@@ -928,7 +931,7 @@ class ImapFolderSync {
         } catch (MailServiceException.NoSuchItemException e) {
             return false;
         }
-        if (!ds.isSyncEnabled(folder)) return false;
+        if (!DataSourceManager.getInstance().isSyncEnabled(ds, folder)) return false;
         int fid = folder.getId();
         ImapFolderCollection trackedFolders = imapSync.getTrackedFolders();
         ImapFolder folderTracker = trackedFolders.getByItemId(fid);
@@ -1064,7 +1067,7 @@ class ImapFolderSync {
                 try {
                     if (ds.isOffline()) {
                         // Disable sync on folder
-                        SyncUtil.setSyncEnabled(ds.getMailbox(), itemId, false);
+                        SyncUtil.setSyncEnabled(DataSourceManager.getInstance().getMailbox(ds), itemId, false);
                     }
                 } catch (MailServiceException.NoSuchItemException ex) {
                     // Ignore if local folder has been deleted
@@ -1118,7 +1121,7 @@ class ImapFolderSync {
             ds.reportError(localFolder.getId(), error, ServiceException.FAILURE(error, null));
             try {
                 // Disable sync on folder
-                SyncUtil.setSyncEnabled(ds.getMailbox(), localFolder.getId(), false);
+                SyncUtil.setSyncEnabled(DataSourceManager.getInstance().getMailbox(ds), localFolder.getId(), false);
             } catch (MailServiceException.NoSuchItemException e) {
                 // Ignore if local folder has been deleted
             }

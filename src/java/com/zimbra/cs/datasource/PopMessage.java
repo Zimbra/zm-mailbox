@@ -52,7 +52,7 @@ public class PopMessage extends DataSourceMapping {
         
         if (mappings.isEmpty()) {
             Map<Integer, String> oldMappings = DbPop3Message.getMappings(
-                ds.getMailbox(), ds.getId());
+                DataSourceManager.getInstance().getMailbox(ds), ds.getId());
 
             for (Integer itemId : oldMappings.keySet()) {
                 String uid = oldMappings.get(itemId);
@@ -65,7 +65,7 @@ public class PopMessage extends DataSourceMapping {
                 }
             }
             if (!oldMappings.isEmpty())
-                DbPop3Message.deleteUids(ds.getMailbox(), ds.getName());
+                DbPop3Message.deleteUids(DataSourceManager.getInstance().getMailbox(ds), ds.getName());
         } else {
             for (DataSourceItem mapping : mappings)
                 matchingMsgs.add(new PopMessage(ds, mapping));

@@ -27,6 +27,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.gal.GalImport;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -63,7 +64,7 @@ public class SyncGalAccount extends AdminDocumentHandler {
 		    	boolean reset = dsElem.getAttributeBool(AdminConstants.A_RESET, false);
 		    	int fid = ds.getFolderId();
 		    	
-		    	DataImport di = ds.getDataImport();
+		    	DataImport di = DataSourceManager.getInstance().getDataImport(ds);
 		    	if (di instanceof GalImport)
 		    		((GalImport)di).importGal(fid, (reset ? reset : fullSync), reset);
 		    }

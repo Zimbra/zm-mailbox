@@ -28,6 +28,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -116,7 +117,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         }
         
         // import class
-        String importClass = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSource.getDefaultImportClass(type));
+        String importClass = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSourceManager.getDefaultImportClass(type));
         if (importClass != null) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
         }

@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.db.DbPool.Connection;
@@ -114,7 +115,7 @@ public class DbImapFolder {
      */
     public static void updateImapFolder(ImapFolder imapFolder)
     throws ServiceException {
-        Mailbox mbox = imapFolder.getDataSource().getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(imapFolder.getDataSource());
         Connection conn = null;
         PreparedStatement stmt = null;
         try {

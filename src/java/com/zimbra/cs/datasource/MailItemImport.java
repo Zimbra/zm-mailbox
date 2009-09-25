@@ -37,7 +37,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
     
     protected MailItemImport(DataSource ds) throws ServiceException {
         dataSource = ds;
-        mbox = ds.getMailbox();
+        mbox = DataSourceManager.getInstance().getMailbox(ds);
     }
 
     protected void validateDataSource() throws ServiceException {

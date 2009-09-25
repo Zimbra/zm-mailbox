@@ -96,7 +96,7 @@ public class ImapFolder extends DataSourceFolderMapping {
     
     public List<Integer> getNewMessageIds() throws ServiceException {
         Collection<DataSourceItem> mappings = getMappingsAndFlags(ds, getItemId());
-        Mailbox mbox = ds.getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
         List<Integer> allIds = mbox.listItemIds(mbox.getOperationContext(),
             MailItem.TYPE_MESSAGE, getItemId());
         List<Integer> newIds = new ArrayList<Integer>();
@@ -119,7 +119,7 @@ public class ImapFolder extends DataSourceFolderMapping {
         ImapFolderCollection ifc = new ImapFolderCollection();
 
         if (mappings.size() == 0) {
-            Mailbox mbox = ds.getMailbox();
+            Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
             
             ZimbraLog.datasource.info("Upgrading IMAP data for %s", ds.getName());
             DbDataSource.deleteAllMappings(ds);

@@ -41,7 +41,7 @@ public class RssImport implements DataImport {
     }
     
     public void importData(List<Integer> folderIds, boolean fullSync) throws ServiceException {
-        Mailbox mbox = mDataSource.getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(mDataSource);
         int folderId = mDataSource.getFolderId();
         try {
             mbox.getFolderById(null, folderId);
@@ -55,7 +55,7 @@ public class RssImport implements DataImport {
 
     public void test()
     throws ServiceException {
-        Mailbox mbox = mDataSource.getMailbox();
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(mDataSource);
         int folderId = mDataSource.getFolderId();
         
         Folder folder = mbox.getFolderById(null, folderId);

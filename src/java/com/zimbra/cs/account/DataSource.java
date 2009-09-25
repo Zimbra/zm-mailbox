@@ -35,12 +35,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.datasource.CalDavDataImport;
 import com.zimbra.cs.datasource.SyncState;
-import com.zimbra.cs.gal.GalImport;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 
 /**
  * @author schemers
@@ -88,32 +83,6 @@ public class DataSource extends AccountProperty {
             throws ServiceException;
     }
 
-    public static String getDefaultImportClass(Type ds) {
-    	switch (ds) {
-    	case caldav:
-    		return CalDavDataImport.class.getName();
-    	case gal:
-    		return GalImport.class.getName();
-    	}
-    	return null;
-    }
-    
-    @SuppressWarnings("unused")
-    public DataImport getDataImport() throws ServiceException {
-        String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, getDefaultImportClass(mType));
-        if (val != null) {
-            try {
-                Object di = Class.forName(val).getConstructor(DataSource.class).newInstance(this);
-                if (di instanceof DataImport)
-                    return (DataImport) di;
-                ZimbraLog.account.error("Class "+val+" configured for DataSource "+getName()+" is not an instance of DataImport");
-            } catch (Exception e) {
-                ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource "+getName(), e);
-            }
-        }
-        return null;
-    }
-    
     public static final String CT_CLEARTEXT = "cleartext";
     public static final String CT_SSL = "ssl";
     
@@ -340,14 +309,6 @@ public class DataSource extends AccountProperty {
     	return false;
     }
     
-    public boolean isSyncCapable(Folder folder) {
-    	return true;
-    }
-    
-    public boolean isSyncEnabled(Folder folder) {
-    	return true;
-    }
-    
     /**
      * Check if a local folder is setup to sync with remote folder
      * 
@@ -394,10 +355,6 @@ public class DataSource extends AccountProperty {
 
     public void reportError(int itemId, String error, Exception e) {
         // Do nothing by default...
-    }
-    
-    public Mailbox getMailbox() throws ServiceException {
-        return MailboxManager.getInstance().getMailboxByAccount(getAccount());
     }
     
     private static byte[] randomSalt() {
@@ -489,5 +446,3 @@ public class DataSource extends AccountProperty {
         System.out.println(decryptData(dataSourceId, enc));
     }
 }
-
-

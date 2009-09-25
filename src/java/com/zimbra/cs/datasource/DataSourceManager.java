@@ -24,6 +24,7 @@ import java.util.Map;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -35,16 +36,87 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalImport;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 
-
 public class DataSourceManager {
+    
+    private static DataSourceManager sInstance;
+    
     // accountId -> dataSourceId -> ImportStatus
     private static final Map<String, Map<String, ImportStatus>> sImportStatus =
         new HashMap<String, Map<String, ImportStatus>>();
+
+    public DataSourceManager() {
+    }
+    
+    public boolean isSyncCapable(DataSource ds, Folder folder) {
+        return true;
+    }
+    
+    public boolean isSyncEnabled(DataSource ds, Folder folder) {
+        return true;
+    }
+    
+    public static DataSourceManager getInstance() {
+        if (sInstance == null) {
+            String className = LC.zimbra_class_datasourcemanager.value();
+            if (!StringUtil.isNullOrEmpty(className)) {
+                try {
+                    try {
+                        sInstance = (DataSourceManager) Class.forName(className).newInstance();
+                    } catch (ClassNotFoundException cnfe) {
+                        // ignore and look in extensions
+                        sInstance = (DataSourceManager) ExtensionUtil.findClass(className).newInstance();
+                    }
+                } catch (Exception e) {
+                    ZimbraLog.system.error("Unable to initialize %s.", className, e);
+                }
+            }
+            if (sInstance == null) {
+                sInstance = new DataSourceManager();
+                ZimbraLog.datasource.info("Initialized %s.", sInstance.getClass().getName());
+            }
+        }
+        
+        return sInstance;
+    }
+    
+    public Mailbox getMailbox(DataSource ds)
+    throws ServiceException {
+        return MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
+    }
+    
+    @SuppressWarnings("unused")
+    public DataImport getDataImport(DataSource ds) throws ServiceException {
+        DataSource.Type type = ds.getType();
+        String val = ds.getAttr(Provisioning.A_zimbraDataSourceImportClassName, getDefaultImportClass(type));
+        if (val != null) {
+            try {
+                Object di = Class.forName(val).getConstructor(DataSource.class).newInstance(this);
+                if (di instanceof DataImport)
+                    return (DataImport) di;
+                ZimbraLog.account.error("Class "+val+" configured for DataSource " + ds.getName() + " is not an instance of DataImport");
+            } catch (Exception e) {
+                ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource " + ds.getName(), e);
+            }
+        }
+        return null;
+    }
+    
+    public static String getDefaultImportClass(DataSource.Type ds) {
+    	switch (ds) {
+    	case caldav:
+    		return CalDavDataImport.class.getName();
+    	case gal:
+    		return GalImport.class.getName();
+    	}
+    	return null;
+    }
 
     /*
      * Tests connecting to a data source.  Do not actually create the
@@ -62,9 +134,10 @@ public class DataSourceManager {
         }        
     }
 
+    @SuppressWarnings("unchecked")
     private static DataImport newDataImport(DataSource ds)
         throws ServiceException {
-    	DataImport di = ds.getDataImport();
+    	DataImport di = getInstance().getDataImport(ds);
     	if (di != null)
     		return di;
         switch (ds.getType()) {
@@ -147,7 +220,7 @@ public class DataSourceManager {
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
-            if (ds.getMailbox().getMailboxLock() != null) {
+            if (DataSourceManager.getInstance().getMailbox(ds).getMailboxLock() != null) {
                 ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
                 return;
             }            
