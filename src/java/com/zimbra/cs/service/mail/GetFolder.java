@@ -70,6 +70,8 @@ public class GetFolder extends MailDocumentHandler {
         if (rootnode != null) {
             if (needGranteeName)
                 OperationContextData.addGranteeNames(octxt, rootnode);
+            else
+                OperationContextData.setNeedGranteeName(octxt, false);
             Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
             if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
                 handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			

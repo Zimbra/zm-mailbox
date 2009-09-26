@@ -40,11 +40,7 @@ public abstract class OperationContextData {
         if (octxt == null || node == null)
             return;
         
-        GranteeNames data = getGranteeNames(octxt);
-        if (data == null) {
-            data = new GranteeNames(octxt);
-            octxt.SetCtxtData(GranteeNames.KEY, data);
-        } 
+        GranteeNames data = getOrInitGranteeNames(octxt);
         data.addRootNode(node);
     }
     
@@ -52,33 +48,33 @@ public abstract class OperationContextData {
         return (octxt == null) ? null : (GranteeNames)octxt.getCtxtData(GranteeNames.KEY);
     }
     
-    public static void setRefreshBlockBound(OperationContext octxt, boolean isRefreshBlockBound) {
+    public static void setNeedGranteeName(OperationContext octxt, boolean needGranteeName) {
         if (octxt == null)
             return;
         
-        RefreshBlockBound data = getRefreshBlockBound(octxt); 
-        if (data == null) {
-            data = new RefreshBlockBound(octxt);
-            octxt.SetCtxtData(RefreshBlockBound.KEY, data);
-        } 
-        data.setIsRefreshBlockBound(isRefreshBlockBound);
-    }
-        
-    private static RefreshBlockBound getRefreshBlockBound(OperationContext octxt) {
-        return (octxt == null) ? null : (RefreshBlockBound)octxt.getCtxtData(RefreshBlockBound.KEY);
+        GranteeNames data = getOrInitGranteeNames(octxt);
+        data.setNeedGranteeName(needGranteeName);
     }
     
-    public static boolean isRefreshBlockBound(OperationContext octxt) {
+    public static boolean getNeedGranteeName(OperationContext octxt) {
         if (octxt == null)
-            return false;
+            return true;
         
-        RefreshBlockBound data = getRefreshBlockBound(octxt);
+        GranteeNames data = getGranteeNames(octxt);
         if (data == null)
-            return false;
+            return true;
         
-        return data.isRefreshBlockBound();
+        return data.needGranteeName();
     }
-
+        
+    private static GranteeNames getOrInitGranteeNames(OperationContext octxt) {
+        GranteeNames data = getGranteeNames(octxt);
+        if (data == null) {
+            data = new GranteeNames(octxt);
+            octxt.SetCtxtData(GranteeNames.KEY, data);
+        } 
+        return data;
+    }
     
     /**
      * 
@@ -94,6 +90,8 @@ public abstract class OperationContextData {
         private static final int DOM_GRANTEES = 3;
         private static final int NUM_GRANTEE_TYPES = 4;
         
+        private boolean mNeedGranteeName = true;
+        
         private Set<Mailbox.FolderNode> mUnresolvedRootNodes; // unresolved root nodes
         private Set<Mailbox.FolderNode> mResolvedRootNodes;   // resolved root nodes
         
@@ -102,6 +100,14 @@ public abstract class OperationContextData {
        
         private GranteeNames(OperationContext octxt) {
             super(octxt);
+        }
+        
+        private void setNeedGranteeName(boolean needGranteeName) {
+            mNeedGranteeName = needGranteeName;
+        }
+        
+        private boolean needGranteeName() {
+            return mNeedGranteeName;
         }
         
         private void addRootNode(Mailbox.FolderNode node) {
@@ -260,28 +266,5 @@ public abstract class OperationContextData {
         }
 
     }
-    
-    /**
-     * 
-     * RefreshBlockBound
-     *
-     */
-    private static class RefreshBlockBound extends OperationContextData {
-        private static final String KEY = "RefreshBlockBound";
-        
-        private boolean mIsRefreshBlockBound;
-        
-        private RefreshBlockBound(OperationContext octxt) {
-            super(octxt);
-        }
-        
-        private void setIsRefreshBlockBound(boolean isRefreshBlockBound) {
-            mIsRefreshBlockBound = isRefreshBlockBound;
-        }
-        
-        private boolean isRefreshBlockBound() {
-            return mIsRefreshBlockBound;
-        }
-    }
-    
+
 }

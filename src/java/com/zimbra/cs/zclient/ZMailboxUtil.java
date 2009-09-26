@@ -375,8 +375,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GET_FILTER_RULES("getFilterRules", "gfrl", "", "get filter rules", Category.FILTER,  0, 0),
         GET_FOLDER("getFolder", "gf", "{folder-path}", "get folder", Category.FOLDER, 1, 1, O_VERBOSE),
-        // uncomment for debug only
-        GET_FOLDER_REQUEST("getFolderRequest", "gfr", "{folder-id}", "get folder request", Category.FOLDER, 1, 1, O_VERBOSE),
+        GET_FOLDER_REQUEST("getFolderRequest", "gfr", "{folder-id}", "get folder request (always issues a GetFolderRequest)", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),

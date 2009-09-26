@@ -910,7 +910,7 @@ public class SoapSession extends Session {
 
         // first, get the user's folder hierarchy
         FolderNode root = mbox.getFolderTree(octxt, null, false);
-        OperationContextData.setRefreshBlockBound(octxt, true);
+        OperationContextData.setNeedGranteeName(octxt, false);
         GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
 
         Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>();
@@ -959,7 +959,7 @@ public class SoapSession extends Session {
             
             if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                 ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
-                if (!OperationContextData.isRefreshBlockBound(octxt))
+                if (OperationContextData.getNeedGranteeName(octxt))
                     OperationContextData.addGranteeNames(octxt, remote);
                 Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
                 mountpoints.put(iidTarget, subhierarchy);
@@ -1011,7 +1011,7 @@ public class SoapSession extends Session {
         Element noop;
         try {
             noop = Element.create(zsc.getRequestProtocol(), MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
-            if (OperationContextData.isRefreshBlockBound(octxt))
+            if (!OperationContextData.getNeedGranteeName(octxt))
                 noop.addAttribute(MailConstants.A_NEED_GRANTEE_NAME, false);
         } catch (ServiceException e) {
             // garbage in, nothing out...

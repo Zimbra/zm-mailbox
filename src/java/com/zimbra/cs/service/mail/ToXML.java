@@ -216,8 +216,7 @@ public class ToXML {
         if (acl == null)
             return eACL;
 
-        boolean needDispName = !OperationContextData.isRefreshBlockBound(octxt);
-        
+        boolean needDispName = OperationContextData.getNeedGranteeName(octxt);
         
         for (ACL.Grant grant : acl.getGrants()) {
             String name = null;
