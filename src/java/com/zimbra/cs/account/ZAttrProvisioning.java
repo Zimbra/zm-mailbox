@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090923-1541 */
+    /* build: 6.0.2 pshao 20090927-2033 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5411,7 +5411,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public static final String A_zimbraPrefGetMailAction = "zimbraPrefGetMailAction";
 
     /**
@@ -7216,7 +7216,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public static final String A_zimbraVersionCheckInterval = "zimbraVersionCheckInterval";
 
     /**
@@ -7245,20 +7245,55 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVersionCheckLastSuccess = "zimbraVersionCheckLastSuccess";
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * template used to construct the body of an Zimbra version check
+     * notification message
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1059)
+    @ZAttr(id=1066)
+    public static final String A_zimbraVersionCheckNotificationBody = "zimbraVersionCheckNotificationBody";
+
+    /**
+     * email address to send mail to for the Zimbra version check
+     * notification message
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1063)
     public static final String A_zimbraVersionCheckNotificationEmail = "zimbraVersionCheckNotificationEmail";
+
+    /**
+     * from address for the Zimbra version check notification message
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1064)
+    public static final String A_zimbraVersionCheckNotificationEmailFrom = "zimbraVersionCheckNotificationEmailFrom";
+
+    /**
+     * template used to construct the subject of an Zimbra version check
+     * notification message
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1065)
+    public static final String A_zimbraVersionCheckNotificationSubject = "zimbraVersionCheckNotificationSubject";
+
+    /**
+     * whether to send a notification message if Zimbra version check detects
+     * a new version
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public static final String A_zimbraVersionCheckSendNotifications = "zimbraVersionCheckSendNotifications";
 
     /**
      * zimrbaId of the server that should perform the Zimbra version checks
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1061)
+    @ZAttr(id=1060)
     public static final String A_zimbraVersionCheckServer = "zimbraVersionCheckServer";
 
     /**
@@ -7266,7 +7301,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1062)
+    @ZAttr(id=1061)
     public static final String A_zimbraVersionCheckURL = "zimbraVersionCheckURL";
 
     /**

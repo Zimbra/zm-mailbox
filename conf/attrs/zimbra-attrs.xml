@@ -4686,24 +4686,41 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>last response of last Zimbra version check.  This will be a short XML that will contain information about available updates.</desc>
 </attr>
 
-<attr id="1059" name="zimbraVersionCheckNotificationEmail" type="cs_emailp" cardinality="single" optionalIn="globalConfig" since="6.0.2">
-  <desc>an email address to send mail to if Zimbra version check detects a new version</desc>
-</attr>
-
-<attr id="1060" name="zimbraVersionCheckInterval" type="duration" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+<attr id="1059" name="zimbraVersionCheckInterval" type="duration" cardinality="single" optionalIn="globalConfig" since="6.0.2">
   <globalConfigValue>1d</globalConfigValue>
   <desc>an email address to send mail to if Zimbra version check detects a new version</desc>
 </attr>
 
-<attr id="1061" name="zimbraVersionCheckServer" type="id" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+<attr id="1060" name="zimbraVersionCheckServer" type="id" cardinality="single" optionalIn="globalConfig" since="6.0.2">
   <desc>zimrbaId of the server that should perform the Zimbra version checks</desc>
 </attr>
 
-<attr id="1062" name="zimbraVersionCheckURL" type="string" max="256" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+<attr id="1061" name="zimbraVersionCheckURL" type="string" max="256" cardinality="single" optionalIn="globalConfig" since="6.0.2">
   <desc>URL of the Zimbra version check script </desc>
 </attr>
 
-<attr id="1063" name="zimbraPrefGetMailAction" type="enum" value="default,update" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.2">
+<attr id="1062" name="zimbraVersionCheckSendNotifications" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether to send a notification message if Zimbra version check detects a new version</desc>
+</attr>
+
+<attr id="1063" name="zimbraVersionCheckNotificationEmail" type="cs_emailp" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <desc>email address to send mail to for the Zimbra version check notification message</desc>
+</attr>
+
+<attr id="1064" name="zimbraVersionCheckNotificationEmailFrom" type="string" max="1000" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <desc>from address for the Zimbra version check notification message</desc>
+</attr>
+
+<attr id="1065" name="zimbraVersionCheckNotificationSubject" type="string" max="1000" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <desc>template used to construct the subject of an Zimbra version check notification message</desc>
+</attr>
+
+<attr id="1066" name="zimbraVersionCheckNotificationBody" type="string" max="10000" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <desc>template used to construct the body of an Zimbra version check notification message</desc>
+</attr>
+
+<attr id="1067" name="zimbraPrefGetMailAction" type="enum" value="default,update" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.2">
   <defaultCOSValue>default</defaultCOSValue>
   <desc>action to perform for the get mail button in UI</desc>
 </attr>

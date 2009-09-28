@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090923-1541 */
+    /* build: 6.0.2 pshao 20090927-2033 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -17192,7 +17192,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public ZAttrProvisioning.PrefGetMailAction getPrefGetMailAction() {
         try { String v = getAttr(Provisioning.A_zimbraPrefGetMailAction); return v == null ? ZAttrProvisioning.PrefGetMailAction.default_ : ZAttrProvisioning.PrefGetMailAction.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefGetMailAction.default_; }
     }
@@ -17206,7 +17206,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public String getPrefGetMailActionAsString() {
         return getAttr(Provisioning.A_zimbraPrefGetMailAction, "default");
     }
@@ -17221,7 +17221,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public void setPrefGetMailAction(ZAttrProvisioning.PrefGetMailAction zimbraPrefGetMailAction) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction.toString());
@@ -17239,7 +17239,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public Map<String,Object> setPrefGetMailAction(ZAttrProvisioning.PrefGetMailAction zimbraPrefGetMailAction, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction.toString());
@@ -17256,7 +17256,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public void setPrefGetMailActionAsString(String zimbraPrefGetMailAction) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction);
@@ -17274,7 +17274,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public Map<String,Object> setPrefGetMailActionAsString(String zimbraPrefGetMailAction, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGetMailAction, zimbraPrefGetMailAction);
@@ -17290,7 +17290,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public void unsetPrefGetMailAction() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGetMailAction, "");
@@ -17307,7 +17307,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1063)
+    @ZAttr(id=1067)
     public Map<String,Object> unsetPrefGetMailAction(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefGetMailAction, "");

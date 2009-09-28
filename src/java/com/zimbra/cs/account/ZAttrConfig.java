@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090923-1541 */
+    /* build: 6.0.2 pshao 20090927-2033 */
 
     /**
      * RFC2256: descriptive information
@@ -26879,7 +26879,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public long getVersionCheckInterval() {
         return getTimeInterval(Provisioning.A_zimbraVersionCheckInterval, 86400000L);
     }
@@ -26892,7 +26892,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public String getVersionCheckIntervalAsString() {
         return getAttr(Provisioning.A_zimbraVersionCheckInterval, "1d");
     }
@@ -26906,7 +26906,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public void setVersionCheckInterval(String zimbraVersionCheckInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckInterval, zimbraVersionCheckInterval);
@@ -26923,7 +26923,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public Map<String,Object> setVersionCheckInterval(String zimbraVersionCheckInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckInterval, zimbraVersionCheckInterval);
@@ -26938,7 +26938,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public void unsetVersionCheckInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckInterval, "");
@@ -26954,7 +26954,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1060)
+    @ZAttr(id=1059)
     public Map<String,Object> unsetVersionCheckInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckInterval, "");
@@ -27277,28 +27277,105 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * template used to construct the body of an Zimbra version check
+     * notification message
+     *
+     * @return zimbraVersionCheckNotificationBody, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1066)
+    public String getVersionCheckNotificationBody() {
+        return getAttr(Provisioning.A_zimbraVersionCheckNotificationBody, null);
+    }
+
+    /**
+     * template used to construct the body of an Zimbra version check
+     * notification message
+     *
+     * @param zimbraVersionCheckNotificationBody new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1066)
+    public void setVersionCheckNotificationBody(String zimbraVersionCheckNotificationBody) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationBody, zimbraVersionCheckNotificationBody);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the body of an Zimbra version check
+     * notification message
+     *
+     * @param zimbraVersionCheckNotificationBody new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1066)
+    public Map<String,Object> setVersionCheckNotificationBody(String zimbraVersionCheckNotificationBody, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationBody, zimbraVersionCheckNotificationBody);
+        return attrs;
+    }
+
+    /**
+     * template used to construct the body of an Zimbra version check
+     * notification message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1066)
+    public void unsetVersionCheckNotificationBody() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationBody, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the body of an Zimbra version check
+     * notification message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1066)
+    public Map<String,Object> unsetVersionCheckNotificationBody(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationBody, "");
+        return attrs;
+    }
+
+    /**
+     * email address to send mail to for the Zimbra version check
+     * notification message
      *
      * @return zimbraVersionCheckNotificationEmail, or null if unset
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1059)
+    @ZAttr(id=1063)
     public String getVersionCheckNotificationEmail() {
         return getAttr(Provisioning.A_zimbraVersionCheckNotificationEmail, null);
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * email address to send mail to for the Zimbra version check
+     * notification message
      *
      * @param zimbraVersionCheckNotificationEmail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1059)
+    @ZAttr(id=1063)
     public void setVersionCheckNotificationEmail(String zimbraVersionCheckNotificationEmail) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, zimbraVersionCheckNotificationEmail);
@@ -27306,8 +27383,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * email address to send mail to for the Zimbra version check
+     * notification message
      *
      * @param zimbraVersionCheckNotificationEmail new value
      * @param attrs existing map to populate, or null to create a new map
@@ -27315,7 +27392,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1059)
+    @ZAttr(id=1063)
     public Map<String,Object> setVersionCheckNotificationEmail(String zimbraVersionCheckNotificationEmail, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, zimbraVersionCheckNotificationEmail);
@@ -27323,14 +27400,14 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * email address to send mail to for the Zimbra version check
+     * notification message
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1059)
+    @ZAttr(id=1063)
     public void unsetVersionCheckNotificationEmail() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, "");
@@ -27338,18 +27415,244 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * email address to send mail to for the Zimbra version check
+     * notification message
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1059)
+    @ZAttr(id=1063)
     public Map<String,Object> unsetVersionCheckNotificationEmail(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmail, "");
+        return attrs;
+    }
+
+    /**
+     * from address for the Zimbra version check notification message
+     *
+     * @return zimbraVersionCheckNotificationEmailFrom, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1064)
+    public String getVersionCheckNotificationEmailFrom() {
+        return getAttr(Provisioning.A_zimbraVersionCheckNotificationEmailFrom, null);
+    }
+
+    /**
+     * from address for the Zimbra version check notification message
+     *
+     * @param zimbraVersionCheckNotificationEmailFrom new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1064)
+    public void setVersionCheckNotificationEmailFrom(String zimbraVersionCheckNotificationEmailFrom) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmailFrom, zimbraVersionCheckNotificationEmailFrom);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * from address for the Zimbra version check notification message
+     *
+     * @param zimbraVersionCheckNotificationEmailFrom new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1064)
+    public Map<String,Object> setVersionCheckNotificationEmailFrom(String zimbraVersionCheckNotificationEmailFrom, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmailFrom, zimbraVersionCheckNotificationEmailFrom);
+        return attrs;
+    }
+
+    /**
+     * from address for the Zimbra version check notification message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1064)
+    public void unsetVersionCheckNotificationEmailFrom() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmailFrom, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * from address for the Zimbra version check notification message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1064)
+    public Map<String,Object> unsetVersionCheckNotificationEmailFrom(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationEmailFrom, "");
+        return attrs;
+    }
+
+    /**
+     * template used to construct the subject of an Zimbra version check
+     * notification message
+     *
+     * @return zimbraVersionCheckNotificationSubject, or null if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1065)
+    public String getVersionCheckNotificationSubject() {
+        return getAttr(Provisioning.A_zimbraVersionCheckNotificationSubject, null);
+    }
+
+    /**
+     * template used to construct the subject of an Zimbra version check
+     * notification message
+     *
+     * @param zimbraVersionCheckNotificationSubject new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1065)
+    public void setVersionCheckNotificationSubject(String zimbraVersionCheckNotificationSubject) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationSubject, zimbraVersionCheckNotificationSubject);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the subject of an Zimbra version check
+     * notification message
+     *
+     * @param zimbraVersionCheckNotificationSubject new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1065)
+    public Map<String,Object> setVersionCheckNotificationSubject(String zimbraVersionCheckNotificationSubject, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationSubject, zimbraVersionCheckNotificationSubject);
+        return attrs;
+    }
+
+    /**
+     * template used to construct the subject of an Zimbra version check
+     * notification message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1065)
+    public void unsetVersionCheckNotificationSubject() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationSubject, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template used to construct the subject of an Zimbra version check
+     * notification message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1065)
+    public Map<String,Object> unsetVersionCheckNotificationSubject(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckNotificationSubject, "");
+        return attrs;
+    }
+
+    /**
+     * whether to send a notification message if Zimbra version check detects
+     * a new version
+     *
+     * @return zimbraVersionCheckSendNotifications, or true if unset
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public boolean isVersionCheckSendNotifications() {
+        return getBooleanAttr(Provisioning.A_zimbraVersionCheckSendNotifications, true);
+    }
+
+    /**
+     * whether to send a notification message if Zimbra version check detects
+     * a new version
+     *
+     * @param zimbraVersionCheckSendNotifications new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public void setVersionCheckSendNotifications(boolean zimbraVersionCheckSendNotifications) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckSendNotifications, zimbraVersionCheckSendNotifications ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to send a notification message if Zimbra version check detects
+     * a new version
+     *
+     * @param zimbraVersionCheckSendNotifications new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public Map<String,Object> setVersionCheckSendNotifications(boolean zimbraVersionCheckSendNotifications, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckSendNotifications, zimbraVersionCheckSendNotifications ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to send a notification message if Zimbra version check detects
+     * a new version
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public void unsetVersionCheckSendNotifications() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckSendNotifications, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to send a notification message if Zimbra version check detects
+     * a new version
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.2
+     */
+    @ZAttr(id=1062)
+    public Map<String,Object> unsetVersionCheckSendNotifications(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraVersionCheckSendNotifications, "");
         return attrs;
     }
 
@@ -27360,7 +27663,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1061)
+    @ZAttr(id=1060)
     public String getVersionCheckServer() {
         return getAttr(Provisioning.A_zimbraVersionCheckServer, null);
     }
@@ -27373,7 +27676,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1061)
+    @ZAttr(id=1060)
     public void setVersionCheckServer(String zimbraVersionCheckServer) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckServer, zimbraVersionCheckServer);
@@ -27389,7 +27692,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1061)
+    @ZAttr(id=1060)
     public Map<String,Object> setVersionCheckServer(String zimbraVersionCheckServer, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckServer, zimbraVersionCheckServer);
@@ -27403,7 +27706,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1061)
+    @ZAttr(id=1060)
     public void unsetVersionCheckServer() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckServer, "");
@@ -27418,7 +27721,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1061)
+    @ZAttr(id=1060)
     public Map<String,Object> unsetVersionCheckServer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckServer, "");
@@ -27432,7 +27735,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1062)
+    @ZAttr(id=1061)
     public String getVersionCheckURL() {
         return getAttr(Provisioning.A_zimbraVersionCheckURL, null);
     }
@@ -27445,7 +27748,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1062)
+    @ZAttr(id=1061)
     public void setVersionCheckURL(String zimbraVersionCheckURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckURL, zimbraVersionCheckURL);
@@ -27461,7 +27764,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1062)
+    @ZAttr(id=1061)
     public Map<String,Object> setVersionCheckURL(String zimbraVersionCheckURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckURL, zimbraVersionCheckURL);
@@ -27475,7 +27778,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1062)
+    @ZAttr(id=1061)
     public void unsetVersionCheckURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckURL, "");
@@ -27490,7 +27793,7 @@ public class ZAttrConfig extends Entry {
      *
      * @since ZCS 6.0.2
      */
-    @ZAttr(id=1062)
+    @ZAttr(id=1061)
     public Map<String,Object> unsetVersionCheckURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraVersionCheckURL, "");
