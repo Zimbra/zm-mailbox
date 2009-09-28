@@ -18,6 +18,9 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 public class AdminConstants {
+
+    public static final String ADMIN_SERVICE_URI = "/service/admin/soap/";
+
     public static final String NAMESPACE_STR = "urn:zimbraAdmin";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
 

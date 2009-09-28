@@ -20,6 +20,8 @@ import org.dom4j.QName;
 
 public class AccountConstants {
 
+    public static final String USER_SERVICE_URI  = "/service/soap/";
+
     public static final String NAMESPACE_STR = "urn:zimbraAccount";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
 
@@ -200,6 +202,4 @@ public class AccountConstants {
     
     // XMPPComponent APIs
     public static final String E_XMPP_COMPONENT = "xmppcomponent";
-    
-
 }
