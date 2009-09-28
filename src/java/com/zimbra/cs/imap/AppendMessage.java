@@ -1,6 +1,5 @@
 package com.zimbra.cs.imap;
 
-import com.sun.mail.dsn.MessageHeaders;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
@@ -19,6 +18,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
+import javax.mail.internet.MailDateFormat;
 import javax.mail.MessagingException;
 
 import java.util.Arrays;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedInputStream;
+import java.text.ParseException;
 
 /**
  * Encapsulates append message data for an APPEND request.
@@ -200,15 +203,27 @@ class AppendMessage {
     }
 
     private static Date getSentDate(Blob content) throws IOException {
-        InputStream is = content.getInputStream();
+        InputStream is = new BufferedInputStream(content.getInputStream());
         try {
             // inefficient, but must be done before creating the ParsedMessage
-            return new MessageHeaders(is).getSentDate();
+            return getSentDate(new InternetHeaders(is));
         } catch (MessagingException e) {
             return null;
         } finally {
             ByteUtil.closeStream(is);
         }
+    }
+
+    public static Date getSentDate(InternetHeaders ih) throws MessagingException {
+	String s = ih.getHeader("Date", null);
+	if (s != null) {
+            try {
+                return new MailDateFormat().parse(s);
+	    } catch (ParseException pex) {
+		return null;
+	    }
+	}
+	return null;
     }
 
     private ImapCredentials getCredentials() {
