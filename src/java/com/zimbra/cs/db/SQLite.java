@@ -79,7 +79,7 @@ public class SQLite extends Db {
     @Override boolean compareError(SQLException e, Error error) {
         // XXX: the SQLite JDBC driver doesn't yet expose SQLite error codes, which sucks
         String code = mErrorCodes.get(error);
-        return code != null && code.equals(e.getMessage());
+        return code != null && e.getMessage().contains(code);
     }
 
     @Override String forceIndexClause(String index) {
