@@ -42,7 +42,7 @@ public final class Chars {
         for (int i = 0x21; i < 0x7f; i++) {
             ATOM_CHARS[i] = ASTRING_CHARS[i] = TAG_CHARS[i] = FETCH_CHARS[i] = true;
         }
-        for (int i = 1; i < 0xff; i++) {
+        for (int i = 0x01; i < 0x80; i++) {
             TEXT_CHARS[i] = true;
         }
         set(ATOM_CHARS, ATOM_SPECIALS, false);
@@ -59,20 +59,20 @@ public final class Chars {
         }
     }
 
-    public static boolean isDigit(char c) {
-        return NUMBER_CHARS[c];
+    public static boolean isNumber(char c) {
+        return c < 256 && NUMBER_CHARS[c];
     }
 
     public static boolean isTextChar(char c) {
-        return TEXT_CHARS[c];
+        return c < 256 && TEXT_CHARS[c];
     }
 
     public static boolean isAtomChar(char c) {
-        return ATOM_CHARS[c];    
+        return c < 256 && ATOM_CHARS[c];    
     }
     
     public static boolean isAStringChar(char c) {
-        return ASTRING_CHARS[c];
+        return c < 256 && ASTRING_CHARS[c];
     }
     
     public static boolean isQuotedSpecialChar(char c) {
@@ -98,8 +98,8 @@ public final class Chars {
     public static long getNumber(String s) {
         long n = 0;
         for (int i = 0; i < s.length(); i++) {
-            int c = s.charAt(i);
-            if (!NUMBER_CHARS[c]) return -1;
+            char c = s.charAt(i);
+            if (!isNumber(c)) return -1;
             n = n * 10 + (c - '0');
             if (n > 0xffffffffL) return -1;
         }
@@ -108,7 +108,8 @@ public final class Chars {
     
     public static boolean isValid(String s, boolean[] chars) {
         for (int i = 0; i < s.length(); i++) {
-            if (!chars[s.charAt(i) & 0xff]) return false;
+            char c = s.charAt(i);
+            if (c > 255 || !chars[c]) return false;
         }
         return true;
     }

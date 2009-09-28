@@ -26,7 +26,6 @@ import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.ResponseText;
 import com.zimbra.cs.mailclient.imap.ImapData;
-import com.zimbra.cs.mailclient.util.DateUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
@@ -160,13 +159,18 @@ public class ImapAppender {
 
     private Object[] getSearchParams(MessageInfo mi) throws MessagingException {
         List<Object> params = new ArrayList<Object>();
-        params.add("SENTON");
-        params.add(mi.mm.getSentDate());
         String subj = mi.mm.getSubject();
         if (subj != null) {
+            ImapData data = ImapData.asString(subj);
+            if (data.isLiteral()) {
+                params.add("CHARSET");
+                params.add("UTF-8");
+            }
             params.add("SUBJECT");
-            params.add(ImapData.asAString(subj));
+            params.add(data);
         }
+        params.add("SENTON");
+        params.add(mi.mm.getSentDate());
         return params.toArray();
     }
 

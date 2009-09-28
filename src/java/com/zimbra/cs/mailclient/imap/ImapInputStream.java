@@ -165,7 +165,7 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public boolean isNumber() throws IOException {
-        return !isEOF() && Chars.isDigit(peekChar());
+        return !isEOF() && Chars.isNumber(peekChar());
     }
     
     public long readNZNumber() throws IOException {

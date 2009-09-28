@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 import org.apache.log4j.Logger;
 import org.apache.commons.codec.binary.Base64;
 
@@ -104,7 +103,7 @@ public final class ImapConnection extends MailConnection {
 
     @Override
     protected void sendLogin(String user, String pass) throws IOException {
-        newRequest(CAtom.LOGIN, asAString(user), asAString(pass)).sendCheckStatus();
+        newRequest(CAtom.LOGIN, ImapData.asAString(user), ImapData.asAString(pass)).sendCheckStatus();
     }
 
     @Override
