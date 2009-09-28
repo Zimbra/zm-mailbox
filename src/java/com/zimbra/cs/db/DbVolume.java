@@ -26,6 +26,7 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -309,7 +310,7 @@ public class DbVolume {
         short id = rs.getShort(CN_ID);
         short type = rs.getShort(CN_TYPE);
         String name = rs.getString(CN_NAME);
-        String path = rs.getString(CN_PATH);
+        String path = Volume.getAbsolutePath(rs.getString(CN_PATH));
         short mboxGroupBits = rs.getShort(CN_MAILBOX_GROUP_BITS);
         short mboxBits = rs.getShort(CN_MAILBOX_BITS);
         short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);

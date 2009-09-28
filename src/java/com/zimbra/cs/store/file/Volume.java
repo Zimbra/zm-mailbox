@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -144,6 +145,8 @@ public class Volume {
         if (path == null || path.length() < 1)
             throw VolumeServiceException.INVALID_REQUEST(
                     "Missing volume path");
+        
+        path = getAbsolutePath(path);
 
         // Make sure path is not a subdirectory of an existing volume.
         // Note this check doesn't work on Windows when path contains
@@ -570,7 +573,12 @@ public class Volume {
                 redoRecorder.abort();
         }
     }
-
+    
+    public static String getAbsolutePath(String path) {
+    	return LC.zimbra_relative_volume_path.booleanValue() ?
+    		LC.zimbra_home.value() + File.separator + path : path;
+    }
+    
     /**
      * Make sure the path is an absolute path, and remove all "." and ".."
      * from it.  This is similar to File.getCanonicalPath() except symbolic
@@ -590,6 +598,11 @@ public class Volume {
     throws VolumeServiceException {
         if (path == null || path.length() < 1)
             throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
+        
+        // skip normalization for relative path
+        if (LC.zimbra_relative_volume_path.booleanValue())
+        	return path;
+        
         StringBuffer newPath = new StringBuffer();
         if (path.matches("^[a-zA-Z]:[/\\\\].*$")) {
             // windows path with drive letter
