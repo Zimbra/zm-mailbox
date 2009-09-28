@@ -107,6 +107,8 @@ public class CalDavDataImport extends MailItemImport {
         return getDataSource().getDecryptedPassword();
     }
     
+    protected byte getDefaultColor() { return 0; }
+    
     protected String getPrincipalUrl() {
     	DataSource ds = getDataSource();
     	String attrs[] = ds.getMultiAttr(Provisioning.A_zimbraDataSourceAttribute);
@@ -225,7 +227,7 @@ public class CalDavDataImport extends MailItemImport {
 				}
 				
 				if (folder == null)
-					folder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, DEFAULT_FOLDER_FLAGS, (byte)0, null);
+					folder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, DEFAULT_FOLDER_FLAGS, getDefaultColor(), null);
 				
 				f.itemId = folder.getId();
 				f.folderId = folder.getFolderId();
