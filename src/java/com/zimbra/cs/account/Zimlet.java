@@ -17,9 +17,6 @@ package com.zimbra.cs.account;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.cs.zimlet.ZimletHandler;
-import com.zimbra.cs.zimlet.ZimletUtil;
-
 public class Zimlet extends NamedEntry {
 	public Zimlet(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, null, prov);
@@ -51,10 +48,6 @@ public class Zimlet extends NamedEntry {
     
     public String getHandlerClassName() {
         return getAttr(Provisioning.A_zimbraZimletHandlerClass);
-    }
-    
-    public ZimletHandler getHandler() {
-        return ZimletUtil.getHandler(getName());
     }
     
     public String getHandlerConfig() {

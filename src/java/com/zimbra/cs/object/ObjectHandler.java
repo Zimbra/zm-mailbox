@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.zimlet.ZimletConfig;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletHandler;
+import com.zimbra.cs.zimlet.ZimletUtil;
 
 /**
  * @author schemers
@@ -48,7 +49,7 @@ public class ObjectHandler {
 
     private ObjectHandler(Zimlet obj) throws ObjectHandlerException, ZimletException {
         mObjectType = obj;
-    	mHandlerObject = (ZimletHandler) obj.getHandler();
+    	mHandlerObject = (ZimletHandler) ZimletUtil.getHandler(obj.getName());
     	if (mHandlerObject == null) {
     		throw new ObjectHandlerException("null handler for "+obj.getType());
     	}
