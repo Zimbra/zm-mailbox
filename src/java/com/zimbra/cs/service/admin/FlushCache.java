@@ -41,7 +41,6 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -160,7 +159,7 @@ public class FlushCache extends AdminDocumentHandler {
 	}
     
     public static void flushChacheOnServer(Server server,ZimbraSoapContext zsc,String cacheType) throws ServiceException, IOException {
-		String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+		String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 		SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
 		mTransport.setAuthToken(zsc.getRawAuthToken());
 		XMLElement req = new XMLElement(AdminConstants.FLUSH_CACHE_REQUEST);

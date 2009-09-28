@@ -53,6 +53,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
@@ -101,7 +102,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -543,7 +543,7 @@ public class ProvUtil implements HttpDebugListener {
                 ZimbraLdapContext.forceMasterURL();
         } else {
             SoapProvisioning sp = new SoapProvisioning();            
-            sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+AdminConstants.ADMIN_SERVICE_URI);
             if (mDebug != SoapDebugLevel.none) 
                 sp.soapSetHttpTransportDebugListener(this);
             
@@ -1035,7 +1035,7 @@ public class ProvUtil implements HttpDebugListener {
         case SOAP:
             // HACK FOR NOW
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:" + mPort + ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapSetURI("https://localhost:" + mPort + AdminConstants.ADMIN_SERVICE_URI);
             sp.soapZimbraAdminAuthenticate();
             mProv = sp;
             break;
@@ -3317,7 +3317,7 @@ public class ProvUtil implements HttpDebugListener {
             boolean success = false;
             try {
                 SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + ZimbraServlet.ADMIN_SERVICE_URI);
+                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
                 if (mDebug != SoapDebugLevel.none)
                     sp.soapSetHttpTransportDebugListener(this);
                 if (mAccount != null && mPassword != null)
@@ -3358,7 +3358,7 @@ public class ProvUtil implements HttpDebugListener {
             int port = server.getSecond();
             try {
                 SoapProvisioning sp = new SoapProvisioning();
-                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + ZimbraServlet.ADMIN_SERVICE_URI);
+                sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + hostname + ":" + port + AdminConstants.ADMIN_SERVICE_URI);
                 if (mDebug != SoapDebugLevel.none)
                     sp.soapSetHttpTransportDebugListener(this);
                 if (mAccount != null && mPassword != null)

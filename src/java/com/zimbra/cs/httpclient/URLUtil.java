@@ -33,7 +33,8 @@ import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 
 /**
  * @author jhahm
@@ -52,11 +53,11 @@ public class URLUtil {
      * @see getMailURL()
      */
     public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
-        return URLUtil.getServiceURL(server, ZimbraServlet.USER_SERVICE_URI, preferSSL);
+        return URLUtil.getServiceURL(server, AccountConstants.USER_SERVICE_URI, preferSSL);
     }
     
     public static String getSoapPublicURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
-        return URLUtil.getPublicURLForDomain(server, domain, ZimbraServlet.USER_SERVICE_URI, preferSSL);  
+        return URLUtil.getPublicURLForDomain(server, domain, AccountConstants.USER_SERVICE_URI, preferSSL);  
     }
     
     /**
@@ -102,7 +103,7 @@ public class URLUtil {
     public static String getAdminURL(String hostname) {
         int port = (int) LC.zimbra_admin_service_port.longValue();
         StringBuffer sb = new StringBuffer(128);
-        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(ZimbraServlet.ADMIN_SERVICE_URI);
+        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(AdminConstants.ADMIN_SERVICE_URI);
         return sb.toString();
     }
     
@@ -114,7 +115,7 @@ public class URLUtil {
      * @return
      */
     public static String getAdminURL(Server server) {
-        return getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+        return getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
     }
     
     /**

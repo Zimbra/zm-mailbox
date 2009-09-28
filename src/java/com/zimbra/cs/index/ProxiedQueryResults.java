@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -277,7 +276,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             } catch (ServiceException e) { }
         }
         if (baseurl == null)
-            baseurl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
+            baseurl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
         ProxyTarget proxy = new ProxyTarget(server, mAuthToken, baseurl + qnrequest.getName());
 
         ZimbraSoapContext zscProxy, zscInbound = mSearchParams.getRequestContext();

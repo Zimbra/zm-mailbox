@@ -23,6 +23,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
@@ -32,7 +33,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class AccountUtil {
 
@@ -190,7 +190,7 @@ public class AccountUtil {
 
     public static String getSoapUri(Account account) {
         String base = getBaseUri(account);
-        return (base == null ? null : base + ZimbraServlet.USER_SERVICE_URI);
+        return (base == null ? null : base + AccountConstants.USER_SERVICE_URI);
     }
 
     public static String getBaseUri(Account account) {

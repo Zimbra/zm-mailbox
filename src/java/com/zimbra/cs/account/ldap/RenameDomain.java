@@ -26,6 +26,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -43,7 +44,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 
 class RenameDomain {
@@ -886,7 +886,7 @@ class RenameDomain {
         for (Server server : mProv.getAllServers(Provisioning.SERVICE_MAILBOX)) {
             
             try {
-                adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
+                adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
             } catch (ServiceException e) {
                 warn(e, "flushCacheOnAllServers", "", "type=[%s]", type);
                 continue; 

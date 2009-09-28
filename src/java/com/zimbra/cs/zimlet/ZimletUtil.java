@@ -61,7 +61,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
@@ -1379,7 +1378,7 @@ public class ZimletUtil {
 		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener, boolean flushCache) throws ServiceException {
 			mTransport = null;
 			try {
-				String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
 				
 				// auth if necessary
@@ -1421,7 +1420,7 @@ public class ZimletUtil {
 		public void undeployZimletOnServer(String zimlet, Server server) throws ServiceException {
 			mTransport = null;
 			try {
-				String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+				String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
 				mTransport = new SoapHttpTransport(adminUrl);
 				
 				// auth if necessary
@@ -1453,7 +1452,7 @@ public class ZimletUtil {
         public void configureZimletOnServer(byte[] config, Server server) throws ServiceException {
             mTransport = null;
             try {
-                String adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI);
+                String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
                 mTransport = new SoapHttpTransport(adminUrl);
                 
                 // auth if necessary

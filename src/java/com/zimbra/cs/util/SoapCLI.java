@@ -45,7 +45,6 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.client.LmcSession;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 /**
  * For command line interface utilities that are SOAP clients and need to authenticate with
@@ -191,7 +190,7 @@ public abstract class SoapCLI {
      * @throws ServiceException
      */
     protected LmcSession auth() throws SoapFaultException, IOException, ServiceException {
-        URL url = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
+        URL url = new URL("https", mHost, mPort, AdminConstants.ADMIN_SERVICE_URI);
         mServerUrl = url.toExternalForm();
         SoapTransport trans = getTransport();
         mAuth = false;
@@ -222,7 +221,7 @@ public abstract class SoapCLI {
         if (zAuthToken == null)
             return auth();
             
-        URL url = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
+        URL url = new URL("https", mHost, mPort, AdminConstants.ADMIN_SERVICE_URI);
         mServerUrl = url.toExternalForm();
         SoapTransport trans = getTransport();
         mAuth = false;

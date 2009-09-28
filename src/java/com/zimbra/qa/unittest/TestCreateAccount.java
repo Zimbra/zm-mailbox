@@ -21,13 +21,13 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class TestCreateAccount extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();;
@@ -82,7 +82,7 @@ public class TestCreateAccount extends TestCase {
         String server = LC.zimbra_zmprov_default_soap_server.value();
         int port = LC.zimbra_admin_service_port.intValue();
         
-        sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+server+":"+port+ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+server+":"+port+AdminConstants.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
         return sp;            
     }

@@ -74,9 +74,6 @@ public class ZimbraServlet extends HttpServlet {
 
     private static Log mLog = LogFactory.getLog(ZimbraServlet.class);
 
-    public static final String USER_SERVICE_URI  = "/service/soap/";
-    public static final String ADMIN_SERVICE_URI = "/service/admin/soap/";
-
     public static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
     public static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
 

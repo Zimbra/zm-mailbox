@@ -17,11 +17,11 @@ package com.zimbra.cs.script;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 
 public class ScriptUtil {
@@ -60,7 +60,7 @@ public class ScriptUtil {
         
         String uri = options.getSoapURI();
         if (uri == null) {
-            uri = LC.zimbra_admin_service_scheme.value() + "localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI;
+            uri = LC.zimbra_admin_service_scheme.value() + "localhost:7071" + AdminConstants.ADMIN_SERVICE_URI;
         }
         sp.soapSetURI(uri);
         

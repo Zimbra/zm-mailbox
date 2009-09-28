@@ -408,7 +408,7 @@ public class SpamExtract {
 
     public static String getSoapURL(Server server, boolean admin) throws ServiceException {
         String url = getServerURL(server, admin).toString();
-        String file = admin ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
+        String file = admin ? AdminConstants.ADMIN_SERVICE_URI : AccountConstants.USER_SERVICE_URI;
         return url + file;
     }
 

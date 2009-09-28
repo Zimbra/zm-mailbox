@@ -15,55 +15,6 @@
 
 package com.zimbra.cs.account.soap;
 
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
-import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.Log.Level;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.GlobalGrant;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ShareInfo;
-import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
-import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.zclient.ZClientException;
-import com.zimbra.cs.zclient.ZMailbox;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -73,9 +24,37 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Map.Entry;
+
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Log.Level;
+import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
+import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
+import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.zclient.ZClientException;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -214,7 +193,7 @@ public class SoapProvisioning extends Provisioning {
     public static String getLocalConfigURI() {
         String server = LC.zimbra_zmprov_default_soap_server.value();
         int port = LC.zimbra_admin_service_port.intValue();
-        return LC.zimbra_admin_service_scheme.value()+server+":"+port+ ZimbraServlet.ADMIN_SERVICE_URI;
+        return LC.zimbra_admin_service_scheme.value()+server+":"+port+ AdminConstants.ADMIN_SERVICE_URI;
     }
 
     /**
@@ -645,19 +624,6 @@ public class SoapProvisioning extends Provisioning {
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         return new SoapAccountInfo(invoke(req));
     }
-
-    public ZMailbox.Options getMailboxOptions(AccountBy by, String key, int lifetimeSeconds) throws ServiceException {
-        SoapAccountInfo sai = getAccountInfo(by, key);
-        DelegateAuthResponse dar = delegateAuth(by, key, lifetimeSeconds > 0 ? lifetimeSeconds: 60*60*24);
-        return new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
-    }
-
-    public ZMailbox getMailbox(AccountBy by, String key) throws ServiceException {
-        return new ZMailbox(getMailboxOptions(by, key, 60*60*24));
-    }
-
-    public ZMailbox getMailboxByName(String name) throws ServiceException { return getMailbox(AccountBy.name, name); }
-    public ZMailbox getMailboxById(String id) throws ServiceException { return getMailbox(AccountBy.id, id); }
 
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {

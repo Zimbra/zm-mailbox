@@ -24,6 +24,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.Disposition;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
@@ -43,7 +44,6 @@ import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
@@ -4832,7 +4832,7 @@ public class ZMailbox implements ToZJSONObject {
                 url = uri.toString();
             }
 
-            String service = (uri.getPort() == ADMIN_PORT) ? ZimbraServlet.ADMIN_SERVICE_URI : ZimbraServlet.USER_SERVICE_URI;
+            String service = (uri.getPort() == ADMIN_PORT) ? AdminConstants.ADMIN_SERVICE_URI : AccountConstants.USER_SERVICE_URI;
             if (uri.getPath() == null || uri.getPath().length() <= 1) {
                 if (url.charAt(url.length()-1) == '/')
                     url = url.substring(0, url.length()-1) + service;

@@ -51,9 +51,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.wiki.WikiServiceException;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.zclient.ZFolder;
@@ -544,7 +544,7 @@ public abstract class WikiUtil {
         username = cl.getOptionValue("u", defaultUsername);
 
         SoapProvisioning sp = new SoapProvisioning();
-        sp.soapSetURI("https://"+server+":"+LC.zimbra_admin_service_port.intValue()+ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapSetURI("https://"+server+":"+LC.zimbra_admin_service_port.intValue()+AdminConstants.ADMIN_SERVICE_URI);
         sp.soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
 
         WikiUtil prog = WikiUtil.getInstance(sp);

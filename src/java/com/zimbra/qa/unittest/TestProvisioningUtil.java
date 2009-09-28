@@ -25,13 +25,13 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class TestProvisioningUtil extends TestCase {
     
@@ -193,14 +193,14 @@ public class TestProvisioningUtil extends TestCase {
     
     public static SoapProvisioning getSoapProvisioning() throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();
-        sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
         return sp;
     }
     
     public static SoapProvisioning getSoapProvisioning(String userName, String password) throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();
-        sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         sp.soapAdminAuthenticate(userName, password);
         return sp;
     }

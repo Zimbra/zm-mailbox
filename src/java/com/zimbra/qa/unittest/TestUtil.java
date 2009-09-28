@@ -75,7 +75,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZContact;
@@ -157,7 +156,7 @@ extends Assert {
             port = 80;
             scheme = "http";
         }
-        return scheme + "://localhost:" + port + ZimbraServlet.USER_SERVICE_URI;
+        return scheme + "://localhost:" + port + AccountConstants.USER_SERVICE_URI;
     }
 
     public static String getAdminSoapUrl() {
@@ -168,7 +167,7 @@ extends Assert {
             ZimbraLog.test.error("Unable to get admin SOAP port", e);
             port = LC.zimbra_admin_service_port.intValue();
         }
-        return "https://localhost:" + port + ZimbraServlet.ADMIN_SERVICE_URI;
+        return "https://localhost:" + port + AdminConstants.ADMIN_SERVICE_URI;
     }
 
     public static LmcSession getSoapSession(String userName)
@@ -453,7 +452,7 @@ extends Assert {
         if (!sIsCliInitialized) {
             CliUtil.toolSetup();
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
             sp.soapZimbraAdminAuthenticate();
             Provisioning.setInstance(sp);
             SoapTransport.setDefaultUserAgent("Zimbra Unit Tests", BuildInfo.VERSION);
@@ -512,7 +511,7 @@ extends Assert {
         // so that both the account and mailbox are deleted.
         if (!(prov instanceof SoapProvisioning)) {
             SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
             sp.soapZimbraAdminAuthenticate();
             prov = sp;
         }

@@ -29,6 +29,7 @@ import java.util.TreeMap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -46,7 +47,6 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 import junit.framework.AssertionFailedError;
@@ -170,7 +170,7 @@ public class TestRenameDomain  extends TestCase {
         mLdapProv = (LdapProvisioning)prov;
         
         mSoapProv = new SoapProvisioning();
-        mSoapProv.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        mSoapProv.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         mSoapProv.soapZimbraAdminAuthenticate();
     }
     

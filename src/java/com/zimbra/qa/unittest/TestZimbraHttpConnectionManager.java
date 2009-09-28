@@ -35,13 +35,13 @@ import org.apache.commons.httpclient.params.HttpConnectionParams;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 import junit.framework.TestCase;
 
@@ -528,7 +528,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         String uri = LC.zimbra_admin_service_scheme.value() + 
                      LC.zimbra_zmprov_default_soap_server.value() + ":" +
                      LC.zimbra_admin_service_port.intValue() + 
-                     ZimbraServlet.ADMIN_SERVICE_URI;
+                     AdminConstants.ADMIN_SERVICE_URI;
         sp.soapSetURI(uri);
         try {
             sp.getDomainInfo(DomainBy.name, "phoebe.mac");

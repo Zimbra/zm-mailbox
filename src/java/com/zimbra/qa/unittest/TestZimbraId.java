@@ -27,6 +27,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
@@ -39,7 +40,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class TestZimbraId extends TestCase {
     
@@ -72,7 +72,7 @@ public class TestZimbraId extends TestCase {
         
         // init SoapPovisioning instance
         sSoapProv = new SoapProvisioning();
-        sSoapProv.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        sSoapProv.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         try {
             sSoapProv.soapZimbraAdminAuthenticate();
         } catch (Exception e) {

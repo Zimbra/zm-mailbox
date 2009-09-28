@@ -78,7 +78,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.util.BuildInfo;
@@ -550,6 +552,13 @@ public class ZMailboxUtil implements DebugListener {
         initCommands();
     }
 
+    private ZMailbox.Options getMailboxOptions(SoapProvisioning prov, AccountBy by, String key, int lifetimeSeconds)
+    throws ServiceException {
+        SoapAccountInfo sai = prov.getAccountInfo(by, key);
+        DelegateAuthResponse dar = prov.delegateAuth(by, key, lifetimeSeconds > 0 ? lifetimeSeconds: 60*60*24);
+        return new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+    }
+
     /*
      * called when sm command is embeded in zmprov
      */
@@ -561,7 +570,7 @@ public class ZMailboxUtil implements DebugListener {
         }
         mMbox = null; //make sure to null out current value so if select fails any further ops will fail
         mMailboxName = targetAccount;
-        ZMailbox.Options options = prov.getMailboxOptions(AccountBy.name, mMailboxName, 60*60*24);
+        ZMailbox.Options options = getMailboxOptions(prov, AccountBy.name, mMailboxName, 60*60*24);
         options.setRequestProtocol(mRequestProto);
         options.setResponseProtocol(mResponseProto);
         options.setTimeout(mTimeout);
