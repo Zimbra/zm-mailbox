@@ -4226,8 +4226,9 @@ public class Mailbox {
         if (blob == null) {
             InputStream in = null;
             try {
+                int size = pm.getRawSize();
                 in = pm.getRawInputStream();
-                blob = sm.storeIncoming(in, pm.getRawSize(), null);
+                blob = sm.storeIncoming(in, size, null);
             } finally {
                 ByteUtil.closeStream(in);
             }
