@@ -45,6 +45,7 @@ import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -54,7 +55,6 @@ import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.zclient.ZClientException;
 
 public class SoapProvisioning extends Provisioning {
 

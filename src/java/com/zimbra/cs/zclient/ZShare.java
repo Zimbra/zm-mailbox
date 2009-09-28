@@ -17,6 +17,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZFolder.View;
 import org.dom4j.DocumentException;
 import org.json.JSONException;

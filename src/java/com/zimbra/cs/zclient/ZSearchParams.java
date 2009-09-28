@@ -18,6 +18,7 @@ package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import org.json.JSONException;
 

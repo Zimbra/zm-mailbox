@@ -18,6 +18,8 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.zclient.ZClientException;
+
 import org.json.JSONException;
 
 import java.util.Arrays;

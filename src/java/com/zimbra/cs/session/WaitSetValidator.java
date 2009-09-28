@@ -41,7 +41,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.cs.zclient.ZClientException;
+import com.zimbra.common.zclient.ZClientException;
 
 /**
  * Test utility for verifying the state of a running wait set
