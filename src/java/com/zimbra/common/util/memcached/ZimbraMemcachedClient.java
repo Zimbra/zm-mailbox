@@ -349,10 +349,11 @@ public class ZimbraMemcachedClient {
      * Default expiry and timeout are used.
      * @param key
      * @param value
+     * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
      * @return
      */
-    public boolean put(String key, Object value) {
-        return put(key, value, DEFAULT_EXPIRY, DEFAULT_TIMEOUT);
+    public boolean put(String key, Object value, boolean waitForAck) {
+        return put(key, value, DEFAULT_EXPIRY, DEFAULT_TIMEOUT, waitForAck);
     }
 
     /**
@@ -361,9 +362,10 @@ public class ZimbraMemcachedClient {
      * @param value
      * @param expirySec expiry in seconds
      * @param timeout in millis
+     * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
      * @return
      */
-    public boolean put(String key, Object value, int expirySec, long timeout) {
+    public boolean put(String key, Object value, int expirySec, long timeout, boolean waitForAck) {
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
@@ -374,18 +376,22 @@ public class ZimbraMemcachedClient {
         }
         if (client == null) return false;
         Future<Boolean> future = client.set(key, expirySec, value);
-        Boolean success = null;
-        try {
-            success = future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            ZimbraLog.misc.warn("memcached set timed out after " + timeout + "ms", e);
-            future.cancel(false);
-        } catch (InterruptedException e) {
-            ZimbraLog.misc.warn("InterruptedException during memcached set operation", e);
-        } catch (ExecutionException e) {
-            ZimbraLog.misc.warn("ExecutionException during memcached set operation", e);
+        if (waitForAck) {
+            Boolean success = null;
+            try {
+                success = future.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                ZimbraLog.misc.warn("memcached set timed out after " + timeout + "ms", e);
+                future.cancel(false);
+            } catch (InterruptedException e) {
+                ZimbraLog.misc.warn("InterruptedException during memcached set operation", e);
+            } catch (ExecutionException e) {
+                ZimbraLog.misc.warn("ExecutionException during memcached set operation", e);
+            }
+            return success != null && success.booleanValue();
+        } else {
+            return true;
         }
-        return success != null && success.booleanValue();
     }
 
     // remove
@@ -394,19 +400,21 @@ public class ZimbraMemcachedClient {
      * Removes the value for given key.
      * Default timeout is used.
      * @param key
+     * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
      * @return
      */
-    public boolean remove(String key) {
-        return remove(key, DEFAULT_TIMEOUT);
+    public boolean remove(String key, boolean waitForAck) {
+        return remove(key, DEFAULT_TIMEOUT, waitForAck);
     }
 
     /**
      * Removes the value for given key.
      * @param key
      * @param timeout in millis
+     * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
      * @return
      */
-    public boolean remove(String key, long timeout) {
+    public boolean remove(String key, long timeout, boolean waitForAck) {
         Boolean success = null;
         MemcachedClient client;
         synchronized (this) {
@@ -416,17 +424,21 @@ public class ZimbraMemcachedClient {
         }
         if (client == null) return false;
         Future<Boolean> future = client.delete(key);
-        try {
-            success = future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            ZimbraLog.misc.warn("memcached delete timed out after " + timeout + "ms", e);
-            future.cancel(false);
-        } catch (InterruptedException e) {
-            ZimbraLog.misc.warn("InterruptedException during memcached delete operation", e);
-        } catch (ExecutionException e) {
-            ZimbraLog.misc.warn("ExecutionException during memcached delete operation", e);
+        if (waitForAck) {
+            try {
+                success = future.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                ZimbraLog.misc.warn("memcached delete timed out after " + timeout + "ms", e);
+                future.cancel(false);
+            } catch (InterruptedException e) {
+                ZimbraLog.misc.warn("InterruptedException during memcached delete operation", e);
+            } catch (ExecutionException e) {
+                ZimbraLog.misc.warn("ExecutionException during memcached delete operation", e);
+            }
+            return success != null && success.booleanValue();
+        } else {
+            return true;
         }
-        return success != null && success.booleanValue();
     }
 
     // simple wrapper around a byte[]
@@ -638,10 +650,11 @@ public class ZimbraMemcachedClient {
      * Default expiry and timeout are used.
      * @param key
      * @param value
+     * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
      * @return
      */
-    public boolean putBigByteArray(String key, byte[] value) {
-        return putBigByteArray(key, value, DEFAULT_EXPIRY, DEFAULT_TIMEOUT);
+    public boolean putBigByteArray(String key, byte[] value, boolean waitForAck) {
+        return putBigByteArray(key, value, DEFAULT_EXPIRY, DEFAULT_TIMEOUT, waitForAck);
     }
 
     /**
@@ -684,9 +697,10 @@ public class ZimbraMemcachedClient {
      * @param value
      * @param expirySec expiry in seconds
      * @param timeout in millis
+     * @param waitForAck if true, block until ack'd or timeout; if false, return immediately
      * @return
      */
-    public boolean putBigByteArray(String key, byte[] value, int expirySec, long timeout) {
+    public boolean putBigByteArray(String key, byte[] value, int expirySec, long timeout, boolean waitForAck) {
         MemcachedClient client;
         synchronized (this) {
             client = mMCDClient;
@@ -724,19 +738,21 @@ public class ZimbraMemcachedClient {
                 String chunkKey = chunkKeyPrefix + i;
                 ByteArray byteArray = chunks.getChunk(i);
                 Future<Boolean> future = client.set(chunkKey, expirySec, byteArray, bat);
-                Boolean success = null;
-                try {
-                    success = future.get(timeout, TimeUnit.MILLISECONDS);
-                } catch (TimeoutException e) {
-                    ZimbraLog.misc.warn("memcached set timed out after " + timeout + "ms", e);
-                    future.cancel(false);
-                } catch (InterruptedException e) {
-                    ZimbraLog.misc.warn("InterruptedException during memcached set operation", e);
-                } catch (ExecutionException e) {
-                    ZimbraLog.misc.warn("ExecutionException during memcached set operation", e);
+                if (waitForAck) {
+                    Boolean success = null;
+                    try {
+                        success = future.get(timeout, TimeUnit.MILLISECONDS);
+                    } catch (TimeoutException e) {
+                        ZimbraLog.misc.warn("memcached set timed out after " + timeout + "ms", e);
+                        future.cancel(false);
+                    } catch (InterruptedException e) {
+                        ZimbraLog.misc.warn("InterruptedException during memcached set operation", e);
+                    } catch (ExecutionException e) {
+                        ZimbraLog.misc.warn("ExecutionException during memcached set operation", e);
+                    }
+                    if (success == null || !success.booleanValue())
+                        return false;
                 }
-                if (success == null || !success.booleanValue())
-                    return false;
             }
 
             // Put the table of contents as the main value.  Do this after all chunks have been
@@ -756,18 +772,22 @@ public class ZimbraMemcachedClient {
 
         // Put the main value.
         Future<Boolean> future = client.set(key, expirySec, mainValue, bat);
-        Boolean success = null;
-        try {
-            success = future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            ZimbraLog.misc.warn("memcached set timed out after " + timeout + "ms", e);
-            future.cancel(false);
-        } catch (InterruptedException e) {
-            ZimbraLog.misc.warn("InterruptedException during memcached set operation", e);
-        } catch (ExecutionException e) {
-            ZimbraLog.misc.warn("ExecutionException during memcached set operation", e);
+        if (waitForAck) {
+            Boolean success = null;
+            try {
+                success = future.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                ZimbraLog.misc.warn("memcached set timed out after " + timeout + "ms", e);
+                future.cancel(false);
+            } catch (InterruptedException e) {
+                ZimbraLog.misc.warn("InterruptedException during memcached set operation", e);
+            } catch (ExecutionException e) {
+                ZimbraLog.misc.warn("ExecutionException during memcached set operation", e);
+            }
+            return success != null && success.booleanValue();
+        } else {
+            return true;
         }
-        return success != null && success.booleanValue();
     }
 
     /**

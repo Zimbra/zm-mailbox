@@ -55,15 +55,23 @@ public class BigByteArrayMemcachedMap<K extends MemcachedKey, V> {
 
     private ZimbraMemcachedClient mClient;
     private ByteArraySerializer<V> mSerializer;
+    private boolean mAckWrites;
 
     /**
      * Creates a map using a memcached client and serializer.
      * @param client
      * @param serializer
+     * @param ackWrites if false, put and remove operations return immediately, without waiting for an ack
+     *                  if true, put and remove operations block until ack or timeout
      */
-    public BigByteArrayMemcachedMap(ZimbraMemcachedClient client, ByteArraySerializer<V> serializer) {
+    public BigByteArrayMemcachedMap(ZimbraMemcachedClient client, ByteArraySerializer<V> serializer, boolean ackWrites) {
         mClient = client;
         mSerializer = serializer;
+        mAckWrites = ackWrites;
+    }
+
+    public BigByteArrayMemcachedMap(ZimbraMemcachedClient client, ByteArraySerializer<V> serializer) {
+        this(client, serializer, true);
     }
 
     /**
@@ -92,7 +100,7 @@ public class BigByteArrayMemcachedMap<K extends MemcachedKey, V> {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
         byte[] data = mSerializer.serialize(value);
-        mClient.putBigByteArray(kval, data);
+        mClient.putBigByteArray(kval, data, mAckWrites);
     }
 
     /**
@@ -103,7 +111,7 @@ public class BigByteArrayMemcachedMap<K extends MemcachedKey, V> {
     public void remove(K key) throws ServiceException {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
-        mClient.remove(kval);
+        mClient.remove(kval, mAckWrites);
     }
 
     /**
@@ -115,7 +123,7 @@ public class BigByteArrayMemcachedMap<K extends MemcachedKey, V> {
         for (K key : keys) {
             String prefix = key.getKeyPrefix();
             String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
-            mClient.remove(kval);
+            mClient.remove(kval, mAckWrites);
         }
     }
 }

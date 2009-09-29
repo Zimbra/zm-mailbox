@@ -65,15 +65,23 @@ public class MemcachedMap<K extends MemcachedKey, V> {
 
     private ZimbraMemcachedClient mClient;
     private MemcachedSerializer<V> mSerializer;
+    private boolean mAckWrites;
 
     /**
      * Creates a map using a memcached client and serializer.
      * @param client
      * @param serializer
+     * @param ackWrites if false, put and remove operations return immediately, without waiting for an ack
+     *                  if true, put and remove operations block until ack or timeout
      */
-    public MemcachedMap(ZimbraMemcachedClient client, MemcachedSerializer<V> serializer) {
+    public MemcachedMap(ZimbraMemcachedClient client, MemcachedSerializer<V> serializer, boolean ackWrites) {
         mClient = client;
         mSerializer = serializer;
+        mAckWrites = ackWrites;
+    }
+
+    public MemcachedMap(ZimbraMemcachedClient client, MemcachedSerializer<V> serializer) {
+        this(client, serializer, true);
     }
 
     /**
@@ -134,7 +142,7 @@ public class MemcachedMap<K extends MemcachedKey, V> {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
         Object valobj = mSerializer.serialize(value);
-        mClient.put(kval, valobj);
+        mClient.put(kval, valobj, mAckWrites);
     }
 
     /**
@@ -156,7 +164,7 @@ public class MemcachedMap<K extends MemcachedKey, V> {
     public void remove(K key) throws ServiceException {
         String prefix = key.getKeyPrefix();
         String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
-        mClient.remove(kval);
+        mClient.remove(kval, mAckWrites);
     }
 
     /**
@@ -168,7 +176,7 @@ public class MemcachedMap<K extends MemcachedKey, V> {
         for (K key : keys) {
             String prefix = key.getKeyPrefix();
             String kval = prefix != null ? prefix + key.getKeyValue() : key.getKeyValue();
-            mClient.remove(kval);
+            mClient.remove(kval, mAckWrites);
         }
     }
 }
