@@ -26,4 +26,6 @@ public class MemcachedKeyPrefix {
     public static final String CAL_SUMMARY          = "zmCalSumry" + DELIMITER;
 
     public static final String EFFECTIVE_FOLDER_ACL = "zmEffFolderACL" + DELIMITER;
+
+    public static final String MBOX_FOLDERS_TAGS    = "zmFldrsTags" + DELIMITER;
 }

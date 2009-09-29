@@ -92,6 +92,7 @@ import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -1455,7 +1456,32 @@ public class Mailbox {
         try {
             Map<MailItem.UnderlyingData, Long> folderData = new HashMap<MailItem.UnderlyingData, Long>();
             Map<MailItem.UnderlyingData, Long> tagData    = new HashMap<MailItem.UnderlyingData, Long>();
-            MailboxData stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
+            MailboxData stats = null;
+
+            // Load folders and tags from memcached if we can.
+            boolean loadedFromMemcached = false;
+            if (!initial && !DebugConfig.disableFoldersTagsCache) {
+                FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
+                FoldersTags ftData = ftCache.get(this);
+                if (ftData != null) {
+                    List<Metadata> foldersMeta = ftData.getFolders();
+                    for (Metadata meta : foldersMeta) {
+                        UnderlyingData ud = new UnderlyingData();
+                        ud.deserialize(meta);
+                        folderData.put(ud, -1L);
+                    }
+                    List<Metadata> tagsMeta = ftData.getTags();
+                    for (Metadata meta : tagsMeta) {
+                        UnderlyingData ud = new UnderlyingData();
+                        ud.deserialize(meta);
+                        tagData.put(ud, -1L);
+                    }
+                    loadedFromMemcached = true;
+                }
+            }
+
+            if (!loadedFromMemcached)
+                stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
 
             boolean persist = stats != null;
             if (stats != null) {
@@ -1502,11 +1528,28 @@ public class Mailbox {
                 if (persist)
                     tag.saveTagCounts();
             }
+
+            if (!loadedFromMemcached && !DebugConfig.disableFoldersTagsCache)
+                cacheFoldersTagsToMemcached();
         } catch (ServiceException e) {
             mTagCache = null;
             mFolderCache = null;
             throw e;
         }
+    }
+
+    synchronized void cacheFoldersTagsToMemcached() throws ServiceException {
+        List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
+        List<Tag> tagList = new ArrayList<Tag>();
+        for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
+            // A tag is cached twice, once by its id and once by name.  Dedupe.
+            if (entry.getKey() instanceof String) {
+                tagList.add(entry.getValue());
+            }
+        }
+        FoldersTags ftData = new FoldersTags(folderList, tagList);
+        FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
+        ftCache.put(this, ftData);
     }
 
     public synchronized void recalculateFolderAndTagCounts() throws ServiceException {

@@ -256,6 +256,72 @@ public abstract class MailItem implements Comparable<MailItem> {
             metadataChanged(mbox);
             modContent = modMetadata;
         }
+
+        private static final String FN_ID           = "id";
+        private static final String FN_TYPE         = "tp";
+        private static final String FN_PARENT_ID    = "pid";
+        private static final String FN_FOLDER_ID    = "fid";
+        private static final String FN_INDEX_ID     = "idx";
+        private static final String FN_IMAP_ID      = "imap";
+        private static final String FN_LOCATOR      = "loc";
+        private static final String FN_BLOB_DIGEST  = "dgst";
+        private static final String FN_DATE         = "dt";
+        private static final String FN_SIZE         = "sz";
+        private static final String FN_UNREAD_COUNT = "uc";
+        private static final String FN_FLAGS        = "fg";
+        private static final String FN_TAGS         = "tg";
+        private static final String FN_SUBJECT      = "sbj";
+        private static final String FN_NAME         = "nm";
+        private static final String FN_METADATA     = "meta";
+        private static final String FN_MOD_METADATA = "modm";
+        private static final String FN_MOD_CONTENT  = "modc";
+        private static final String FN_DATE_CHANGED = "dc";
+
+        Metadata serialize() {
+            Metadata meta = new Metadata();
+            meta.put(FN_ID, id);
+            meta.put(FN_TYPE, type);
+            meta.put(FN_PARENT_ID, parentId);
+            meta.put(FN_FOLDER_ID, folderId);
+            meta.put(FN_INDEX_ID, indexId);
+            meta.put(FN_IMAP_ID, imapId);
+            meta.put(FN_LOCATOR, locator);
+            meta.put(FN_BLOB_DIGEST, blobDigest);
+            meta.put(FN_DATE, date);
+            meta.put(FN_SIZE, size);
+            meta.put(FN_UNREAD_COUNT, unreadCount);
+            meta.put(FN_FLAGS, flags);
+            meta.put(FN_TAGS, tags);
+            meta.put(FN_SUBJECT, subject);
+            meta.put(FN_NAME, name);
+            meta.put(FN_METADATA, metadata);
+            meta.put(FN_MOD_METADATA, modMetadata);
+            meta.put(FN_MOD_CONTENT, modContent);
+            meta.put(FN_DATE_CHANGED, dateChanged);
+            return meta;
+        }
+
+        void deserialize(Metadata meta) throws ServiceException {
+            id = (int) meta.getLong(FN_ID, 0);
+            type = (byte) meta.getLong(FN_TYPE, 0);
+            parentId = (int) meta.getLong(FN_PARENT_ID, -1);
+            folderId = (int) meta.getLong(FN_FOLDER_ID, -1);
+            indexId = meta.get(FN_INDEX_ID, null);
+            imapId = (int) meta.getLong(FN_IMAP_ID, -1);
+            locator = meta.get(FN_LOCATOR, null);
+            blobDigest = meta.get(FN_BLOB_DIGEST, null);
+            date = (int) meta.getLong(FN_DATE, 0);
+            size = meta.getLong(FN_SIZE, 0);
+            unreadCount = (int) meta.getLong(FN_UNREAD_COUNT, 0);
+            flags = (int) meta.getLong(FN_FLAGS, 0);
+            tags = meta.getLong(FN_TAGS, 0);
+            subject = meta.get(FN_SUBJECT, null);
+            name = meta.get(FN_NAME, null);
+            metadata = meta.get(FN_METADATA, null);
+            modMetadata = (int) meta.getLong(FN_MOD_METADATA, 0);
+            modContent = (int) meta.getLong(FN_MOD_CONTENT, 0);
+            dateChanged = (int) meta.getLong(FN_DATE_CHANGED, 0);
+        }
     }
 
     public static final class TargetConstraint {
@@ -2866,5 +2932,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         sb.append(CN_DATE).append(": ").append(mData.date).append(", ");
         sb.append(CN_REVISION).append(": ").append(mData.modContent).append(", ");
         return sb;
+    }
+
+    Metadata serializeUnderlyingData() {
+        Metadata meta = mData.serialize();
+        // metadata
+        Metadata metaMeta = new Metadata();
+        encodeMetadata(metaMeta);
+        meta.put(UnderlyingData.FN_METADATA, metaMeta.toString());
+        return meta;
     }
 }

@@ -143,6 +143,10 @@ public class DebugConfig {
 
     public static boolean forceMimeConvertersForCalendarBlobs;
 
+    /** If true, disable the memcached-based folders/tags cache of mailboxes.
+     */
+    public static boolean disableFoldersTagsCache;
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -186,6 +190,8 @@ public class DebugConfig {
         disableCalendarTZMatchByRule = booleanValue("debug_disable_calendar_tz_match_by_rule", false);
 
         forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
+
+        disableFoldersTagsCache = booleanValue("debug_disable_folders_tags_cache", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
