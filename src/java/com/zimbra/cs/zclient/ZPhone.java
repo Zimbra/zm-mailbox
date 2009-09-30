@@ -44,7 +44,7 @@ public class ZPhone implements ToZJSONObject {
 
     public ZPhone(String name, String callerId) throws ServiceException {
         mName = name;
-        mCallerId = callerId != null && (callerId.equals(name) || callerId.equals("Unavailable")) ? null : callerId;
+        mCallerId = callerId != null && (callerId.equals(name) || callerId.equalsIgnoreCase("Unavailable")) ? null : callerId;
     }
 
     public ZPhone(String name) throws ServiceException {
