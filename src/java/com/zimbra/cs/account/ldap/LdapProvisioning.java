@@ -5672,6 +5672,29 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
+    // Only called from renameDomain for now
+    void renameXMPPComponent(String zimbraId, String newName) throws ServiceException {
+        LdapXMPPComponent comp = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
+        if (comp == null)
+            throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(zimbraId);
+
+        newName = newName.toLowerCase().trim();
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+            String newDn = mDIT.xmppcomponentNameToDN(newName);
+            zlc.renameEntry(comp.getDN(), newDn);
+            // remove old comp from cache
+            sXMPPComponentCache.remove(comp);
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.IM_COMPONENT_EXISTS(newName);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to rename XMPPComponent: "+zimbraId, e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
     
     //
     // rights
