@@ -603,14 +603,15 @@ public class TestIDN extends TestCase {
         printOutput(verbose, "emailp_u2: " + emailp_u2);
         printOutput(verbose, "emailp_a2: " + emailp_a2);
         
-        assertTrue(emailp_u1.equals(emailp_u2) && emailp_a1.equals(emailp_a2));
+        assertTrue(emailp_u1.equals(emailp_u2));
+        assertTrue(emailp_a1.equals(emailp_a2));
     }
     
     public void testEmailp() throws Exception {
         
         // with personal name
         emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
-        // emailpTest("\u4e2d\u6587 <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
+        emailpTest("\"\u4e2d\u6587\" <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.emailp);
         emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
         emailpTest("foo bar <test@\u4e2d\u6587.xyz\u4e2d\u6587abc.com>, cat dog <test@xyz\u4e2d\u6587abc.com>", IDNType.cs_emailp);
     }

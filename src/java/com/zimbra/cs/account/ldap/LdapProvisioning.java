@@ -730,8 +730,6 @@ public class LdapProvisioning extends Provisioning {
                                   boolean restoring,
                                   Map<String, Object> origAttrs) throws ServiceException {
         
-        validEmailAddress(emailAddress);
-        
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
     	
@@ -740,6 +738,13 @@ public class LdapProvisioning extends Provisioning {
         if (parts.length != 2)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
         
+        String localPart = parts[0];
+        String domain = parts[1];
+        domain = IDNUtil.toAsciiDomainName(domain);
+        emailAddress = localPart + "@" + domain;
+        
+        validEmailAddress(emailAddress);
+        
         if (restoring) {
             validate("createAccount", emailAddress, additionalObjectClasses, origAttrs);
             validate("createAccountCheckDomainCosAndFeature", emailAddress, origAttrs);
@@ -747,11 +752,6 @@ public class LdapProvisioning extends Provisioning {
             validate("createAccount", emailAddress, additionalObjectClasses, acctAttrs);
             validate("createAccountCheckDomainCosAndFeature", emailAddress, acctAttrs);
         }
-        
-        String localPart = parts[0];
-        String domain = parts[1];
-        domain = IDNUtil.toAsciiDomainName(domain);
-        emailAddress = localPart + "@" + domain;
             
         HashMap attrManagerContext = new HashMap();
         if (acctAttrs == null) {
@@ -1370,8 +1370,6 @@ public class LdapProvisioning extends Provisioning {
     
     private void addAliasInternal(NamedEntry entry, String alias) throws ServiceException {
 
-        validEmailAddress(alias);
-
         String targetDomainName = null;
         if (entry instanceof Account)
             targetDomainName = ((Account)entry).getDomainName();
@@ -1382,6 +1380,8 @@ public class LdapProvisioning extends Provisioning {
 
         alias = alias.toLowerCase().trim();
         alias = IDNUtil.toAsciiEmail(alias);
+        
+        validEmailAddress(alias);
 
         String parts[] = alias.split("@");
         String aliasName = parts[0];
@@ -2634,8 +2634,6 @@ public class LdapProvisioning extends Provisioning {
 
     public DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException {
 
-        validEmailAddress(listAddress);
-
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(listAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
 
@@ -2649,6 +2647,8 @@ public class LdapProvisioning extends Provisioning {
         String domain = parts[1];
         domain = IDNUtil.toAsciiDomainName(domain);
         listAddress = localPart + "@" + domain;
+        
+        validEmailAddress(listAddress);
 
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);

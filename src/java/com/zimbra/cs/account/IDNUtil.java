@@ -20,6 +20,8 @@ import java.lang.IllegalAccessException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // import java.net.IDN;  JDK1.6 only
 
@@ -308,7 +310,13 @@ public class IDNUtil {
             return name;
         }
     }
-    
+
+    /*
+    this doesn't work since JavaMail1.4 if name contains IDN, even when strict is false.
+    We have to parse ourselves, convert the domain to ACE, then put together an InternetAddress,
+    then use its toString method.
+    */
+    /*
     private static String toAsciiWithPersonalPart(String name) {
         try {
             InternetAddress ia = new InternetAddress(name, true);
@@ -318,20 +326,82 @@ public class IDNUtil {
             try {
                 ia = new InternetAddress(asciiAddr, ia.getPersonal(), MimeConstants.P_CHARSET_UTF8);
                 
-                /*
-                 * note, if personal part contains non-ascii chars, it will be 
-                 * converted (by InternetAddress.toString()) to RFC 2047 encoded address.
-                 * The resulting string contains only US-ASCII characters, and
-                 * hence is mail-safe.
-                 * 
-                 * e.g. a personal part: \u4e2d\u6587
-                 *      will be converted to =?utf-8?B?5Lit5paH?=
-                 *      and stored in LDAP in the encoded form
-                 */
+                //
+                // note, if personal part contains non-ascii chars, it will be 
+                // converted (by InternetAddress.toString()) to RFC 2047 encoded address.
+                // The resulting string contains only US-ASCII characters, and
+                // hence is mail-safe.
+                // 
+                // e.g. a personal part: \u4e2d\u6587
+                //      will be converted to =?utf-8?B?5Lit5paH?=
+                //      and stored in LDAP in the encoded form
+                //
                 return ia.toString(); 
             } catch (UnsupportedEncodingException e) {
                 ZimbraLog.account.info("cannot convert to ascii, returning original addr: [" + name + "]", e);
             }
+        } catch (AddressException e) {
+            ZimbraLog.account.info("cannot convert to ascii, returning original addr: [" + name + "]", e);
+        }
+        
+        return name;
+    }
+    */
+    
+    /*
+     * parse the address into 4 parts:
+     *   1. chars before the @
+     *   2. the @
+     *   3. chars after the @ and before the next >
+     *   4. remaining chars (will be empty string if no remaining chars)
+     *   
+     *   If an input is matched, part 3 is the domain name
+     *   
+     *  e.g.
+        test.com ==> don't match
+        @test.com ==> don't match
+        @test.com>aaa ==> don't match
+        user@test.com>aaa ==> [1 user][2 @][3 test.com][4 >aaa]
+        foo bar <user@test.com> ==> [1 foo bar <user][2 @][3 test.com][4 >]
+        foo bar <user@test.com ==> [1 foo bar <user][2 @][3 test.com][4 ]
+     *   
+     */
+    private static Pattern S_DOMAIN = Pattern.compile("(.+)(@)([^>]*)(.*)");
+    
+    private static String toAsciiWithPersonalPart(String name) {
+        
+        String asciiName = name;
+            
+        // extract out the domain, convert it to ACE, and put it back
+        Matcher m = S_DOMAIN.matcher(name);
+        if (m.matches() && m.groupCount() == 4) {
+            // if matches(), then groupCount() must be 4 according to our regex, just to be safe
+            String domain = m.group(3);
+            String asciiDomain = toAsciiDomainName(domain);
+                
+            // put everything back
+            asciiName = m.group(1) + m.group(2) + asciiDomain + m.group(4);
+        }
+        try {
+            InternetAddress ia = new InternetAddress(asciiName);
+            
+            String personal = ia.getPersonal();
+            if (personal != null)
+                ia =  new InternetAddress(ia.getAddress(), personal, MimeConstants.P_CHARSET_UTF8);
+                
+            /*
+             * note, if personal part contains non-ascii chars, it will be 
+             * converted (by InternetAddress.toString()) to RFC 2047 encoded address.
+             * The resulting string contains only US-ASCII characters, and
+             * hence is mail-safe.
+             * 
+             * e.g. a personal part: \u4e2d\u6587
+             *      will be converted to =?utf-8?B?5Lit5paH?=
+             *      and stored in LDAP in the encoded form
+             */
+            return ia.toString(); 
+        } catch (UnsupportedEncodingException e) {    
+            ZimbraLog.account.info("cannot convert to ascii, returning original addr: [" + name + "]", e);
         } catch (AddressException e) {
             ZimbraLog.account.info("cannot convert to ascii, returning original addr: [" + name + "]", e);
         }
@@ -421,6 +491,31 @@ public class IDNUtil {
         } catch (ServiceException e) {
             return name;
         }
+    }
+    
+    
+
+    
+    private static void regexTest(String input) {
+        System.out.print(input + " ==> ");
+        Matcher m = S_DOMAIN.matcher(input);
+        if (m.matches()) {
+            int groupsMatched = m.groupCount();
+            for (int i = 1; i <= groupsMatched; i++)
+                System.out.print("[" + i + " " + m.group(i) + "]");
+            System.out.println();
+        } else
+            System.out.println("don't match");
+        
+    }
+    
+    public static void main(String[] args) {
+        regexTest("test.com");
+        regexTest("@test.com");
+        regexTest("@test.com>aaa");
+        regexTest("user@test.com>aaa");
+        regexTest("foo bar <user@test.com>");
+        regexTest("foo bar <user@test.com");
     }
 
 }

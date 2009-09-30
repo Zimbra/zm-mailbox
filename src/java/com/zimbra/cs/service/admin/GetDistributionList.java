@@ -121,7 +121,7 @@ public class GetDistributionList extends AdminDocumentHandler {
     public static Element encodeDistributionList(Element e, DistributionList d, boolean hideZMFA, Set<String> reqAttrs, 
             AttrRightChecker attrRightChecker) throws ServiceException {
         Element distributionList = e.addElement(AdminConstants.E_DL);
-        distributionList.addAttribute(AdminConstants.A_NAME, d.getName());
+        distributionList.addAttribute(AdminConstants.A_NAME, d.getUnicodeName());
         distributionList.addAttribute(AdminConstants.A_ID,d.getId());
         encodeDistributionListAttrs(distributionList, d.getUnicodeAttrs(), hideZMFA, reqAttrs, attrRightChecker);
         return distributionList;
