@@ -43,7 +43,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -67,7 +69,8 @@ public class TestRenameDomain  extends TestCase {
     private static int NUM_DLS_TOP     = 2;
     private static int NUM_DOMAINS     = 3;
     private static int NUM_SUB_DOMAINS = 2;  // number of sub domains under the old domain(domain to be renamed)
-     
+    private static int NUM_XMPPCOMPONENTS = 3; 
+    
     /*
      * NUM_IDENTITIES and NUM_DATASOURCES must be >= NUM_SIGNATURES, each identity/datasource get one signature of the same index.
      * identities and datasources that do not have corresponding signature will get no signature. 
@@ -213,6 +216,11 @@ public class TestRenameDomain  extends TestCase {
         
         for (int i = 0; i < NUM_DOMAINS; i++)     
             setupDLs(i);
+        
+        // create XMPPComponents pointing/not pointing to the domain to be renamed
+        Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
+        for (int i = 0; i < NUM_XMPPCOMPONENTS; i++)     
+            createXMPPComponent(i, oldDomain);
 
     }
         
@@ -244,6 +252,10 @@ public class TestRenameDomain  extends TestCase {
         
     private String DOMAIN_NAME(int index) {
         return DOMAIN_NAME(LEAF_DOMAIN_NAME(index));
+    }
+    
+    private String XMPPCOMPONENT_NAME(int index, String domainName) {
+        return "xmppcomponent-" + index + "." + domainName;
     }
     
     private String ACCOUNT_LOCAL(int index) {
@@ -423,6 +435,21 @@ public class TestRenameDomain  extends TestCase {
         return acct;
     }
     
+    private XMPPComponent createXMPPComponent(int xmppIndex, Domain domain) throws Exception {
+        
+        Server server = mProv.getLocalServer();
+        
+        String routableName = XMPPCOMPONENT_NAME(xmppIndex, domain.getName());
+        
+        Map<String, Object> xmppAttrs = new HashMap<String, Object>();
+        xmppAttrs.put(Provisioning.A_zimbraXMPPComponentClassName, "myclass");
+        xmppAttrs.put(Provisioning.A_zimbraXMPPComponentCategory, "mycategory");
+        xmppAttrs.put(Provisioning.A_zimbraXMPPComponentType, "mytype");
+        
+        XMPPComponent xmpp = mProv.createXMPPComponent(routableName, domain, server, xmppAttrs);
+        return xmpp;
+    }
+    
     /*
      * create and setup entries in the domain
      */
@@ -570,11 +597,12 @@ public class TestRenameDomain  extends TestCase {
         dumpAttrs(attrsIn, null);
     }
     
-    private void dumpStrings(Collection<String> strings) {
+    private void dumpStrings(String notes, Collection<String> strings) {
 
         List<String> sorted = new ArrayList<String>(strings);
         Collections.sort(sorted);
         System.out.println();
+        System.out.println(notes);
         
         for (String s : sorted)
             System.out.println(s);
@@ -643,10 +671,12 @@ public class TestRenameDomain  extends TestCase {
         oldAttrs.remove(Provisioning.A_dc);
         oldAttrs.remove(Provisioning.A_o);
         oldAttrs.remove(Provisioning.A_zimbraDomainName);
+        oldAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
 
         newAttrs.remove(Provisioning.A_dc);
         newAttrs.remove(Provisioning.A_o);
         newAttrs.remove(Provisioning.A_zimbraDomainName);
+        newAttrs.remove(Provisioning.A_zimbraCreateTimestamp);
         
         for (Map.Entry<String, Object> oldAttr : oldAttrs.entrySet()) {
             String oldKey = oldAttr.getKey();
@@ -659,8 +689,13 @@ public class TestRenameDomain  extends TestCase {
                 Set<String> newV = new HashSet(Arrays.asList((String[])newValue));
                 TestProvisioningUtil.verifyEquals(oldV, newV);
                 
-            } else if (oldValue instanceof String){
-                assertEquals(oldValue, newValue);
+            } else if (oldValue instanceof String) {
+                try {
+                    assertEquals(oldValue, newValue);
+                } catch (AssertionFailedError e) {
+                    System.out.println("Attribute " + " " + oldKey + " does not match!");
+                    throw e;
+                }
             }
         }
     }
@@ -714,8 +749,8 @@ public class TestRenameDomain  extends TestCase {
         // verify all our aliases are there
         Set<String> actualEntries = namedEntryListToNameSet(list);
         
-        // dumpStrings(expectedEntries);
-        // dumpStrings(actualEntries);
+        // dumpStrings("expectedEntries", expectedEntries);
+        // dumpStrings("actualEntries", actualEntries);
         TestProvisioningUtil.verifyEquals(expectedEntries, actualEntries);
         
         verifyEntryAttrs(list);
@@ -912,6 +947,26 @@ public class TestRenameDomain  extends TestCase {
         }
     }
     
+    private void verifyXMPPComponent(int index, Domain newDomain) throws Exception {
+        String newRoutableName = XMPPCOMPONENT_NAME(index, newDomain.getName());
+        
+        XMPPComponent xmpp = mProv.get(Provisioning.XMPPComponentBy.name, newRoutableName);
+        assertNotNull(xmpp);
+        
+        String domainId = newDomain.getId();
+        String xmppDomainId = xmpp.getAttr(Provisioning.A_zimbraDomainId);
+        assertEquals(domainId, xmppDomainId);
+    }
+    
+    private void verifyXMPPComponents() throws Exception {
+        
+        Domain newDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
+        
+        for (int i = 0; i < NUM_XMPPCOMPONENTS; i++) {
+            verifyXMPPComponent(i, newDomain);
+        }
+    }
+    
     // TODO: 
     //  - stop the rename at different stages and test the restart
    
@@ -936,7 +991,22 @@ public class TestRenameDomain  extends TestCase {
         setSoapProv();
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
-        verifyOtherDomains();        
+        verifyOtherDomains(); 
+        
+        /*
+         * A little testing hack here:
+         * SOAP newDomain.getName() would return the unicode domain name.
+         * But SOAP GetXMPPComponent currently has a bug that it doesn't first 
+         * translates the name to ASCII before looking for it.  
+         * 
+         * (see verifyXMPPComponent)
+         * 
+         * The verify fails if domain name contains IDN.
+         * 
+         * To work around, use LdapProvisioning
+         */
+        setLdapProv();
+        verifyXMPPComponents();
         
     }
     

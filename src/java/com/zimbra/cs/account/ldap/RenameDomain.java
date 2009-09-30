@@ -42,6 +42,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 
@@ -149,7 +150,12 @@ class RenameDomain {
         endRenameDomain(newDomain, mOldDomainId);
         
         /*
-         * 6. flush account cache on all servers
+         * 6. fixup ZMPPComponments pointing to the renamed domain
+         */
+        fixupXMPPComponents();
+        
+        /*
+         * 7. flush account cache on all servers
          */
         flushCacheOnAllServers(CacheEntryType.account);
     }
@@ -879,6 +885,22 @@ class RenameDomain {
         }
     }
     
+    private void fixupXMPPComponents() throws ServiceException{
+        
+        int domainLen = mOldDomainName.length();
+        
+        for (XMPPComponent xmpp : mProv.getAllXMPPComponents()) {
+            if (mOldDomainId.equals(xmpp.getDomainId())) {
+                String curName = xmpp.getName();
+                if (curName.endsWith(mOldDomainName)) {
+                    String newName = curName.substring(0, curName.length() - domainLen) + mNewDomainName;
+                    debug("Renaming XMPP component " + curName + " to " + newName);
+                    mProv.renameXMPPComponent(xmpp.getId(), newName);
+                }
+            }
+        }
+    }
+    
     private void flushCacheOnAllServers(CacheEntryType type) throws ServiceException {
         SoapProvisioning soapProv = new SoapProvisioning();
         String adminUrl = null;
@@ -920,6 +942,10 @@ class RenameDomain {
     private static void debug(String format, Object ... objects) {
         if (sRenameDomainLog.isDebugEnabled())
             sRenameDomainLog.debug(String.format(format, objects));
+    }
+    
+    private static void info(String format, Object ... objects) {
+        sRenameDomainLog.info(String.format(format, objects));
     }
 
 }
