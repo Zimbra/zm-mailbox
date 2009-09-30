@@ -28,7 +28,6 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -221,24 +220,39 @@ public class URLUtil {
     
     static {
         sUrlEscapeMap.put(' ', "%20");
-        sUrlEscapeMap.put('"', "%22");
-        sUrlEscapeMap.put('\'', "%27");
-        sUrlEscapeMap.put('{', "%7B");
-        sUrlEscapeMap.put('}', "%7D");
-        sUrlEscapeMap.put(';', "%3B");
-        sUrlEscapeMap.put('?', "%3F");
         sUrlEscapeMap.put('!', "%21");
-        sUrlEscapeMap.put(':', "%3A");
-        sUrlEscapeMap.put('@', "%40");
+        sUrlEscapeMap.put('"', "%22");
         sUrlEscapeMap.put('#', "%23");
+        sUrlEscapeMap.put('$', "%24");
         sUrlEscapeMap.put('%', "%25");
         sUrlEscapeMap.put('&', "%26");
-        sUrlEscapeMap.put('=', "%3D");
-        sUrlEscapeMap.put('+', "%2B");
-        sUrlEscapeMap.put('$', "%24");
-        sUrlEscapeMap.put(',', "%2C");
+        sUrlEscapeMap.put('\'', "%27");
+        sUrlEscapeMap.put('?', "%3F");
+        sUrlEscapeMap.put('[', "%5B");
+        sUrlEscapeMap.put('\\', "%5C");
+        sUrlEscapeMap.put(']', "%5D");
+        sUrlEscapeMap.put('^', "%5E");
+        sUrlEscapeMap.put('{', "%7B");
+        sUrlEscapeMap.put('|', "%7C");
+        sUrlEscapeMap.put('}', "%7D");
     }
     
+    /**
+     * urlEscape method will encode '?' and '&', so make sure
+     * the passed in String does not have query string in it.
+     * Or call urlEscape on each segment and append query
+     * String afterwards.
+     * 
+     * from RFC 3986:
+     * 
+     * pchar       = unreserved / pct-encoded / sub-delims / ":" / "@"
+     *
+     * sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
+     *                   / "*" / "+" / "," / ";" / "="
+     *
+     * unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *
+     */
 	public static String urlEscape(String str) {
 		// rfc 2396 url escape.
 		StringBuilder buf = null;

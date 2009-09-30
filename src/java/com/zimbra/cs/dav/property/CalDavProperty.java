@@ -194,18 +194,10 @@ public class CalDavProperty extends ResourceProperty {
 				
 			}
 			if (homeSets == null || homeSets.length == 0) {
-				// iCal doesn't recognize properly encoded calendar-home-set
-				// see bug 37508
-				//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/"));
-				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-				e.setText(DavServlet.DAV_PATH + "/" + user + "/");
-				mChildren.add(e);
+				mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/"));
 			} else {
 				for (String calHome : homeSets) {
-					//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/"));
-					Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-					e.setText(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/");
-					mChildren.add(e);
+					mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/"));
 				}
 			}
 		}
@@ -214,26 +206,14 @@ public class CalDavProperty extends ResourceProperty {
 	private static class ScheduleInboxURL extends CalDavProperty {
 		public ScheduleInboxURL(String user) {
 			super(DavElements.E_SCHEDULE_INBOX_URL);
-			// iCal doesn't recognize properly encoded calendar-home-set
-			// see bug 37508
-			//mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Inbox/"));
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(DavServlet.DAV_PATH + "/" + user + "/Inbox/");
-			mChildren.add(e);
+			mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Inbox/"));
 		}
 	}
 	
 	private static class ScheduleOutboxURL extends CalDavProperty {
 		public ScheduleOutboxURL(String user) {
 			super(DavElements.E_SCHEDULE_OUTBOX_URL);
-		}
-		public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
-			Element outbox = super.toElement(ctxt, parent, nameOnly);
-			// iCal doesn't recognize properly encoded calendar-home-set
-			// see bug 37508
-			Element e = outbox.addElement(DavElements.E_HREF);
-			e.setText(DavServlet.DAV_PATH + "/" + ctxt.getAuthAccount().getName() + "/Sent/");
-			return outbox;
+			mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/Sent/"));
 		}
 	}
 	
