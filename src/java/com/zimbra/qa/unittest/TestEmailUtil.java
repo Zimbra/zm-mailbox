@@ -65,9 +65,7 @@ public class TestEmailUtil extends TestCase
      */
     public void testParseAddressHeader()
     throws Exception {
-        InternetAddress[] addresses =
-            Mime.parseAddressHeader("(Test) <djoe@zimbra.com>,djoe@zimbra.com (Test)");
-        assertEquals(0, addresses.length);
+        Mime.parseAddressHeader("(Test) <djoe@zimbra.com>,djoe@zimbra.com (Test)");
     }
     
     private boolean isRfc822Message(String content)
