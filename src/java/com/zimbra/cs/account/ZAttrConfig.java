@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2 pshao 20090927-2033 */
+    /* build: 6.0.2 pshao 20090930-2143 */
 
     /**
      * RFC2256: descriptive information
@@ -8221,13 +8221,13 @@ public class ZAttrConfig extends Entry {
     /**
      * Whether to enable http debug handler on a server
      *
-     * @return zimbraHttpDebugHandlerEnabled, or false if unset
+     * @return zimbraHttpDebugHandlerEnabled, or true if unset
      *
      * @since ZCS 6.0.0_GA
      */
     @ZAttr(id=1043)
     public boolean isHttpDebugHandlerEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraHttpDebugHandlerEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraHttpDebugHandlerEnabled, true);
     }
 
     /**
