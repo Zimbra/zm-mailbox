@@ -334,18 +334,27 @@
         <condition property="zimbra.buildinfo.platform" value="${native.os}">
             <not><isset property="${zimbra.buildinfo.platform}"/></not>
         </condition>        
-        <condition property="zimbra.buildinfo.majorversion" value="6">
-            <not><isset property="${zimbra.buildinfo.majorversion}"/></not>
-        </condition>        
-        <condition property="zimbra.buildinfo.minorversion" value="0">
-            <not><isset property="${zimbra.buildinfo.minorversion}"/></not>
-        </condition>        
-        <condition property="zimbra.buildinfo.microversion" value="2">
-            <not><isset property="${zimbra.buildinfo.microversion}"/></not>
-        </condition>        
         <condition property="zimbra.buildinfo.version" value="6.0.2">
             <not><isset property="${zimbra.buildinfo.version}"/></not>
         </condition>
+  
+    	  <propertyregex property="zimbra.buildinfo.majorversion"
+    	              input="${zimbra.buildinfo.version}"
+    	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+    	              select="\1"
+    	              casesensitive="false" />
+
+      	  <propertyregex property="zimbra.buildinfo.minorversion"
+      	              input="${zimbra.buildinfo.version}"
+      	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+      	              select="\2"
+      	              casesensitive="false" />
+
+    	  <propertyregex property="zimbra.buildinfo.microversion"
+    	              input="${zimbra.buildinfo.version}"
+    	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+    	              select="\3"
+    	              casesensitive="false" />
         <condition property="zimbra.buildinfo.type" value="">
             <not><isset property="${zimbra.buildinfo.type}"/></not>
         </condition>
