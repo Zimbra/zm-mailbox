@@ -143,6 +143,7 @@ public class MailConstants {
     public static final QName CREATE_APPOINTMENT_EXCEPTION_REQUEST = QName.get("CreateAppointmentExceptionRequest", NAMESPACE);
     public static final QName MODIFY_APPOINTMENT_REQUEST = QName.get("ModifyAppointmentRequest", NAMESPACE);
     public static final QName CANCEL_APPOINTMENT_REQUEST = QName.get("CancelAppointmentRequest", NAMESPACE);
+    public static final QName FORWARD_APPOINTMENT_REQUEST = QName.get("ForwardAppointmentRequest", NAMESPACE);
     public static final QName ADD_APPOINTMENT_INVITE_REQUEST = QName.get("AddAppointmentInviteRequest", NAMESPACE);
     public static final QName ADD_APPOINTMENT_INVITE_RESPONSE = QName.get("AddAppointmentInviteResponse", NAMESPACE);
     public static final QName COUNTER_APPOINTMENT_REQUEST = QName.get("CounterAppointmentRequest", NAMESPACE);
