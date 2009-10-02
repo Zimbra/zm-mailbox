@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
@@ -38,6 +39,10 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.index.ContactHit;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Document;
@@ -156,7 +161,7 @@ public class UrlNamespace {
 		java.util.Collection<DavResource> rss = getResources(ctxt, user, path, false);
 		if (rss.size() > 0)
 			return rss.iterator().next();
-		throw new DavException("no DAV resource for "+path, HttpServletResponse.SC_NOT_FOUND, null);
+		return null;
 	}
 
 	public static java.util.Collection<DavResource> getResources(DavContext ctxt, String user, String path, boolean includeChildren) throws DavException {
@@ -386,6 +391,27 @@ public class UrlNamespace {
                     index = uid.indexOf(':');
                     if (index > 0) {
                         item = mbox.getContactById(octxt, Integer.parseInt(uid.substring(index+1)));
+                    } else {
+                        ZimbraQueryResults zqr = null;
+                        StringBuilder query = new StringBuilder();
+                        query.append("#").append(ContactConstants.A_vCardUID).append(":");
+                        query.append(uid);
+                        try {
+                            zqr = mbox.search(ctxt.getOperationContext(), query.toString(), new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 10);
+                            if (zqr.hasNext()) {
+                                ZimbraHit hit = zqr.getNext();
+                                if (hit instanceof ContactHit) {
+                                    item = ((ContactHit)hit).getContact();
+                                }
+                            }
+                        } catch (Exception e) {
+                            ZimbraLog.dav.error("can't search for: uid="+uid, e);
+                        } finally {
+                            if (zqr != null)
+                                try {
+                                    zqr.doneWithSearchResults();
+                                } catch (ServiceException e) {}
+                        }
                     }
                 } catch (UnsupportedEncodingException e) {
                     ZimbraLog.dav.warn("Can't decode URL %s", path);

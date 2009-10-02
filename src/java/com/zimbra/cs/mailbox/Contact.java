@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -647,6 +648,47 @@ public class Contact extends MailItem {
             sb.append(", ").append(entry.getKey()).append(": ").append(entry.getValue());
         sb.append("}");
         return sb.toString();
+    }
+    
+    public String getVCardUID() {
+        return mFields.get(ContactConstants.A_vCardUID);
+    }
+    
+    public String getXProp(String xprop) {
+        return getXProps().get(xprop);
+    }
+    
+    public Map<String,String> getXProps() {
+        HashMap<String,String> xprops = new HashMap<String,String>();
+        String xpropStr = mFields.get(ContactConstants.A_vCardXProps);
+        if (xpropStr != null) {
+            try {
+                JSONObject xpropObj = new JSONObject(xpropStr);
+                @SuppressWarnings("unchecked")
+                Iterator iter = xpropObj.keys();
+                while (iter.hasNext()) {
+                    String key = (String)iter.next();
+                    xprops.put(key, xpropObj.get(key).toString());
+                }
+            } catch (JSONException e) {
+                ZimbraLog.mailop.debug("can't get xprop %s", xpropStr, e);
+            }
+        }
+        return xprops;
+    }
+    
+    // xprops are not automatically added to the Contact object
+    // as a distinct attribute. the xprops are encoded into JSONObject, 
+    // then added as ContactConstants.a_vCardXProps attr to the map.
+    public static String encodeXProps(Map<String,String> xprops) {
+        JSONObject jsonobj = new JSONObject();
+        try {
+            for (String s : xprops.keySet())
+                jsonobj.put(s, xprops.get(s));
+        } catch (JSONException e) {
+            ZimbraLog.mailop.debug("can't encode xprops to JSONObject", e);
+        }
+        return jsonobj.toString();
     }
     
     private static final String ZMVAL = "ZMVAL";

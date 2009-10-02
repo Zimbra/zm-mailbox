@@ -180,6 +180,7 @@ public class VCard {
         List<VCard> cards = new ArrayList<VCard>();
 
         Map<String, String> fields = new HashMap<String, String>();
+        Map<String, String> xprops = new HashMap<String, String>();
         List<Attachment> attachments = new ArrayList<Attachment>();
 
         VCardProperty vcprop = new VCardProperty();
@@ -213,24 +214,30 @@ public class VCard {
 
             if (name.equals("")) {
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
+            } else if (name.startsWith("X-")) {
+                xprops.put(name, vcfDecode(vcprop.getValue()));
             } else if (!PROPERTY_NAMES.contains(name)) {
                 continue;
             } else if (name.equals("BEGIN")) {
                 if (++depth == 1) {
                     // starting a top-level vCard; reset state
                     fields = new HashMap<String, String>();
+                    xprops = new HashMap<String,String>();
                     attachments = new ArrayList<Attachment>();
                     cardstart = linestart;
                     emails = 0;
+                    uid = null;
                 }
                 continue;
             } else if (name.equals("END")) {
                 if (depth > 0 && depth-- == 1) {
+                    if (!xprops.isEmpty())
+                        fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(xprops));
+                    
                     // finished a vCard; add to list if non-empty
                     if (!fields.isEmpty()) {
                         Contact.normalizeFileAs(fields);
                         cards.add(new VCard(fields.get(ContactConstants.A_fullName), vcard.substring(cardstart, pos), fields, attachments, uid));
-                        uid = null;
                     }
                 }
                 continue;
@@ -372,10 +379,10 @@ public class VCard {
 
 
     public static VCard formatContact(Contact con) {
-        return formatContact(con, null);
+        return formatContact(con, null, false);
     }
     
-    public static VCard formatContact(Contact con, Collection<String> vcattrs) {
+    public static VCard formatContact(Contact con, Collection<String> vcattrs, boolean includeXProps) {
         Map<String, String> fields = con.getFields();
         List<Attachment> attachments = con.getAttachments();
         List<String> emails = con.getEmailAddresses();
@@ -507,11 +514,19 @@ public class VCard {
         if (vcattrs == null || vcattrs.contains("UID"))
             sb.append("UID:").append(uid).append("\r\n");
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
+        if (includeXProps) {
+            Map<String,String> xprops = con.getXProps();
+            for (String key : xprops.keySet())
+                sb.append(key).append(":").append(xprops.get(key)).append("\r\n");
+        }
         sb.append("END:VCARD\r\n");
         return new VCard(fn, sb.toString(), fields, attachments, uid);
     }
 
     public static String getUid(Contact con) {
+        String uid = con.get(ContactConstants.A_vCardUID);
+        if (uid != null)
+            return uid;
         return con.getMailbox().getAccountId() + ":" + con.getId();
     }
     

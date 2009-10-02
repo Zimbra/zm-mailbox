@@ -44,9 +44,7 @@ public class CardDavProperty extends ResourceProperty {
     private static class AddressbookHomeSet extends CardDavProperty {
         public AddressbookHomeSet(String user) {
             super(DavElements.CardDav.E_ADDRESSBOOK_HOME_SET);
-            Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-            e.setText(DavServlet.DAV_PATH + "/" + user + "/");
-            mChildren.add(e);
+            mChildren.add(createHref(DavServlet.DAV_PATH + "/" + user + "/"));
         }
     }
     

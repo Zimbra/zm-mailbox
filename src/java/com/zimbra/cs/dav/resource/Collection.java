@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -153,49 +154,9 @@ public class Collection extends MailItemResource {
 
         FileUploadServlet.Upload upload = ctxt.getUpload();
         String ctype = upload.getContentType();
-        // create vcard if content type is text/vcard
         if (ctype != null && ctype.startsWith(DavProtocol.VCARD_CONTENT_TYPE)) {
-            String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), MimeConstants.P_CHARSET_UTF8);
-            try {
-                boolean newlyCreated = false;
-                DavResource res = null;
-                for (VCard vcard : VCard.parseVCard(buf)) {
-                    if (vcard.fields.isEmpty())
-                        continue;
-                    String uid = vcard.uid;
-                    Contact c = null;
-                    // check for existing contact
-                    int index = 0;
-                    if (uid != null)
-                        index = uid.indexOf(':');
-                    if (index > 0 && mOwnerId.equals(uid.substring(0, index))) {
-                        try {
-                            c = mbox.getContactById(ctxt.getOperationContext(), Integer.parseInt(uid.substring(index+1)));
-                        } catch (ServiceException e) {
-                            if (!(e instanceof NoSuchItemException))
-                                throw new DavException("cannot get item ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
-                            newlyCreated = true;
-                        }
-                    }
-                    if (c == null) {
-                        String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-                        if (ifnonematch == null)
-                            throw new DavException("item does not exists", HttpServletResponse.SC_CONFLICT);
-                        c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), mId, null);
-                    } else {
-                        String etag = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_MATCH);
-                        String itemEtag = MailItemResource.getEtag(c);
-                        if (etag != null && !etag.equals(itemEtag))
-                            throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
-                        mbox.modifyContact(ctxt.getOperationContext(), c.getId(), vcard.asParsedContact());
-                    }
-                    res = new AddressObject(ctxt, c);
-                    res.mNewlyCreated = newlyCreated;
-                }
-                return res;
-            } catch (ServiceException e) {
-                throw new DavException("cannot parse vcard ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
-            }
+            // create vcard if content type is text/vcard
+            return createVCard(ctxt, name);
         }
         String author = ctxt.getAuthAccount().getName();
         try {
@@ -221,6 +182,45 @@ public class Collection extends MailItemResource {
         }
     }
 
+    protected DavResource createVCard(DavContext ctxt, String name) throws DavException, IOException {
+        FileUploadServlet.Upload upload = ctxt.getUpload();
+        String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), MimeConstants.P_CHARSET_UTF8);
+        Mailbox mbox = null;
+        try {
+            mbox = getMailbox(ctxt);
+            DavResource res = null;
+            for (VCard vcard : VCard.parseVCard(buf)) {
+                if (vcard.fields.isEmpty())
+                    continue;
+                String uid = vcard.uid;
+                Contact c = null;
+                // check for existing contact
+                if (uid != null) {
+                    vcard.fields.put(ContactConstants.A_vCardUID, uid);
+                    res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
+                }
+                if (res == null) {
+                    String ifnonematch = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
+                    if (ifnonematch == null)
+                        throw new DavException("item does not exists", HttpServletResponse.SC_CONFLICT);
+                    c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), mId, null);
+                    res = new AddressObject(ctxt, c);
+                    res.mNewlyCreated = true;
+                } else {
+                    String etag = ctxt.getRequest().getHeader(DavProtocol.HEADER_IF_MATCH);
+                    String itemEtag = res.getEtag();
+                    if (etag != null && !etag.equals(itemEtag))
+                        throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
+                    mbox.modifyContact(ctxt.getOperationContext(), ((MailItemResource)res).getId(), vcard.asParsedContact());
+                    res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
+                }
+            }
+            return res;
+        } catch (ServiceException e) {
+            throw new DavException("cannot parse vcard ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+        }
+    }
+    
     @Override public void delete(DavContext ctxt) throws DavException {
         String user = ctxt.getUser();
         String path = ctxt.getPath();

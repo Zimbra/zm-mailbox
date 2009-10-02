@@ -63,12 +63,12 @@ public class AddressObject extends MailItemResource {
     
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
-        return VCard.formatContact(contact).formatted;
+        return VCard.formatContact(contact, null, true).formatted;
     }
     public String toVCard(DavContext ctxt, java.util.Collection<String> attrs) throws ServiceException, DavException {
         if (attrs == null || attrs.isEmpty())
             return toVCard(ctxt);
         Contact contact = (Contact)getMailItem(ctxt);
-        return VCard.formatContact(contact, attrs).formatted;
+        return VCard.formatContact(contact, attrs, true).formatted;
     }
 }
