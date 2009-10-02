@@ -91,21 +91,36 @@ public class DataSourceManager {
         return MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
     }
     
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unchecked" })
     public DataImport getDataImport(DataSource ds) throws ServiceException {
-        DataSource.Type type = ds.getType();
-        String val = ds.getAttr(Provisioning.A_zimbraDataSourceImportClassName, getDefaultImportClass(type));
-        if (val != null) {
+        switch (ds.getType()) {
+        case pop3:
+            return new Pop3Sync(ds);
+        case imap:
+            return new ImapSync(ds);
+        case caldav:
+            return new CalDavDataImport(ds);
+        case rss:
+        case cal:
+            return new RssImport(ds);
+        case gal:
+            return new GalImport(ds);
+        case xsync:
             try {
-                Object di = Class.forName(val).getConstructor(DataSource.class).newInstance(this);
-                if (di instanceof DataImport)
-                    return (DataImport) di;
-                ZimbraLog.account.error("Class "+val+" configured for DataSource " + ds.getName() + " is not an instance of DataImport");
-            } catch (Exception e) {
-                ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource " + ds.getName(), e);
+                String className = LC.data_source_xsync_class.value();
+                if (className != null && className.length() > 0) {
+                    Class cmdClass = Class.forName(className);
+                    Constructor constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+                    return (DataImport)constructor.newInstance(new Object[] {ds});
+                }
+            } catch (Exception x) {
+                ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
             }
+        default:
+            // yab is handled by OfflineDataSourceManager
+            throw new IllegalArgumentException(
+                "Unknown data import type: " + ds.getType());
         }
-        return null;
     }
     
     public static String getDefaultImportClass(DataSource.Type ds) {
@@ -125,47 +140,13 @@ public class DataSourceManager {
     public static void test(DataSource ds) throws ServiceException {
         ZimbraLog.datasource.info("Testing: %s", ds);
         try {
-        	DataImport di = newDataImport(ds);
+        	DataImport di = getInstance().getDataImport(ds);
         	di.test();
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
         } catch (ServiceException x) {
         	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
             throw x;
         }        
-    }
-
-    @SuppressWarnings("unchecked")
-    private static DataImport newDataImport(DataSource ds)
-        throws ServiceException {
-    	DataImport di = getInstance().getDataImport(ds);
-    	if (di != null)
-    		return di;
-        switch (ds.getType()) {
-        case imap:
-            return new ImapSync(ds);
-        case pop3:
-            return new Pop3Sync(ds);
-        case rss:
-            return new RssImport(ds);
-        case gal:
-            return new GalImport(ds);
-        case cal:
-            return new RssImport(ds);
-        case xsync:
-        	try {
-	        	String className = LC.data_source_xsync_class.value();
-	        	if (className != null && className.length() > 0) {
-					Class cmdClass = Class.forName(className);
-					Constructor constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
-					return (DataImport)constructor.newInstance(new Object[] {ds});
-	        	}
-        	} catch (Exception x) {
-        		ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
-        	}
-        default:
-            throw new IllegalArgumentException(
-                "Unknown data import type: " + ds.getType());
-        }
     }
 
     public static List<ImportStatus> getImportStatus(Account account)
@@ -235,7 +216,7 @@ public class DataSourceManager {
 
         try {
             ZimbraLog.datasource.info("Importing data for data source '%s'", ds.getName());
-            newDataImport(ds).importData(folderIds, fullSync);
+            getInstance().getDataImport(ds).importData(folderIds, fullSync);
             success = true;
             resetErrorStatus(ds);
         } catch (ServiceException x) {
