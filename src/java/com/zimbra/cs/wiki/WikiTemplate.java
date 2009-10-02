@@ -207,73 +207,71 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public static final String sCLASSATTR = "class";
 		
 		public enum TokenType { TEXT, WIKLET, WIKILINK, COMMENT };
+		
 		public static void parse(String str, List<Token> tokens) throws IllegalArgumentException {
-			Token.parse(str, 0, tokens);
-		}
-		public static void parse(String str, int pos, List<Token> tokens) throws IllegalArgumentException {
-			Token tok = null;
-			int padding = 2;
-			int end = pos;
-			int lastPos = str.length() - 1;
-			if (pos >= lastPos)
-				return;
-			if (str.startsWith("<!--", pos)) {
-				// HTML comments are left intact for ALE (spreadsheet) to work
-				end = str.indexOf("-->", pos);
-				if (end > 0) {
-					end += 3;
-					tok = new Token(str.substring(pos, end), TokenType.COMMENT);
-				}
-			} else if (str.startsWith("{{", pos)) {
-				end = str.indexOf("}}", pos);
-				if (end > 0) {
-					tok = new Token(str.substring(pos+2, end), TokenType.WIKLET);
-					end += padding;
-				}
-			} else if (str.startsWith("[[", pos)) {
-				end = str.indexOf("]]", pos);
-				if (end > 0) {
-					tok = new Token(str.substring(pos+2, end), TokenType.WIKILINK);
-					end += padding;
-				}
-			} else if (str.startsWith("<wiklet", pos)) {
-				end = str.indexOf(">", pos);
-				if (end > 0) {
-					if (str.charAt(end-1) == '/') {
-						padding = 1;
-					} else {
-						int endSection = str.indexOf("</wiklet>", end);
-						padding = endSection - end + 9;
-					}
-					tok = new Token(str.substring(pos+1, end), TokenType.WIKLET);
-					end += padding;
-				}
-			}
-			
-			if (tok == null) {
-				end = pos+1;
-				while (end < lastPos) {
-					if (str.startsWith("<!--", end) ||
-					    str.startsWith("{{", end) ||
-					    str.startsWith("[[", end) ||
-					    str.startsWith("<wiklet", end)) {
-						break;
-					}
-					end++;
-				}
-				if (end == lastPos)
-					end = str.length();
-				if (end > pos)
-				    tok = new Token(str.substring(pos, end), TokenType.TEXT);
-			}
-			
-			if (tok != null)
-				tokens.add(tok);
+		    int len = str.length();
+		    for (int pos = 0; pos < len; ) {
+	            Token tok = null;
+	            int padding = 2;
+	            int end = pos;
+	            int lastPos = len - 1;
+	            if (pos >= lastPos)
+	                return;
+	            if (str.startsWith("<!--", pos)) {
+	                // HTML comments are left intact for ALE (spreadsheet) to work
+	                end = str.indexOf("-->", pos);
+	                if (end > 0) {
+	                    end += 3;
+	                    tok = new Token(str.substring(pos, end), TokenType.COMMENT);
+	                }
+	            } else if (str.startsWith("{{", pos)) {
+	                end = str.indexOf("}}", pos);
+	                if (end > 0) {
+	                    tok = new Token(str.substring(pos+2, end), TokenType.WIKLET);
+	                    end += padding;
+	                }
+	            } else if (str.startsWith("[[", pos)) {
+	                end = str.indexOf("]]", pos);
+	                if (end > 0) {
+	                    tok = new Token(str.substring(pos+2, end), TokenType.WIKILINK);
+	                    end += padding;
+	                }
+	            } else if (str.startsWith("<wiklet", pos)) {
+	                end = str.indexOf(">", pos);
+	                if (end > 0) {
+	                    if (str.charAt(end-1) == '/') {
+	                        padding = 1;
+	                    } else {
+	                        int endSection = str.indexOf("</wiklet>", end);
+	                        padding = endSection - end + 9;
+	                    }
+	                    tok = new Token(str.substring(pos+1, end), TokenType.WIKLET);
+	                    end += padding;
+	                }
+	            }
+	            
+	            if (tok == null) {
+	                end = pos+1;
+	                while (end < lastPos) {
+	                    if (str.startsWith("<!--", end) ||
+	                        str.startsWith("{{", end) ||
+	                        str.startsWith("[[", end) ||
+	                        str.startsWith("<wiklet", end)) {
+	                        break;
+	                    }
+	                    end++;
+	                }
+	                if (end == lastPos)
+	                    end = len;
+	                if (end > pos)
+	                    tok = new Token(str.substring(pos, end), TokenType.TEXT);
+	            }
+	            
+	            if (tok != null)
+	                tokens.add(tok);
 
-			if (end == -1 || end >= str.length())
-				return;
-			
-			Token.parse(str, end, tokens);
+	            pos = end;
+		    }
 		}
 		
 		public Token(String text, TokenType type) {
