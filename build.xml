@@ -334,7 +334,7 @@
         <condition property="zimbra.buildinfo.platform" value="${native.os}">
             <not><isset property="${zimbra.buildinfo.platform}"/></not>
         </condition>        
-        <condition property="zimbra.buildinfo.version" value="6.0.2">
+        <condition property="zimbra.buildinfo.version" value="6.0.2_BETA1_1111.${native.os}">
             <not><isset property="${zimbra.buildinfo.version}"/></not>
         </condition>
   
@@ -355,6 +355,28 @@
     	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
     	              select="\3"
     	              casesensitive="false" />
+    	              
+  	  <propertyregex property="zimbra.buildinfo.relclass"
+  	              input="${zimbra.buildinfo.version}"
+  	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
+  	              select="\4"
+  	              casesensitive="false" />
+    	  <propertyregex property="zimbra.buildinfo.relnum"
+    	              input="${zimbra.buildinfo.version}"
+    	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)([0-9]+)(\.|_)?"
+    	              select="\5"
+    	              casesensitive="false" />
+    	
+  	  <propertyregex property="zimbra.buildinfo.buildnum"
+  	              input="${zimbra.buildinfo.version}"
+  	              regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z0-9]+)(\.|_)?([0-9]+)?"
+  	              select="\6"
+  	              casesensitive="false" />
+        
+        <condition property="zimbra.buildinfo.relnum" value="0">
+            <not><isset property="${zimbra.buildinfo.relnum}"/></not>
+        </condition>  	              
+    	                  	                  	              
         <condition property="zimbra.buildinfo.type" value="">
             <not><isset property="${zimbra.buildinfo.type}"/></not>
         </condition>
@@ -381,6 +403,9 @@
             	public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
             	public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
             	public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
+            	public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
+            	public static final String RELNUM = "${zimbra.buildinfo.relnum}";
+            	public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
 	            public static final String VERSION = "${zimbra.buildinfo.version}";
 	            public static final String TYPE = "${zimbra.buildinfo.type}";
 	            public static final String RELEASE = "${zimbra.buildinfo.release}";
