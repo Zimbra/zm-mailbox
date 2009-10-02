@@ -6154,7 +6154,10 @@ public class Mailbox {
             int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / 1000);
             int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / 1000);
             DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
-            DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
+            
+            // TODO: reenamble tombstone purging once we're able to add the client
+            // support described in bug 12965.
+            // DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
             success = true;
         } finally {
             endTransaction(success);
