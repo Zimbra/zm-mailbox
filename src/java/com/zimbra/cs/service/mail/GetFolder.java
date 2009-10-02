@@ -109,7 +109,10 @@ public class GetFolder extends MailDocumentHandler {
             eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
 
             for (Element eRemote : proxied.listElements()) {
-                eRoot.addElement(eRemote.detach());
+                if (eRemote.getName().equals(MailConstants.E_ACL))
+                    eRoot.addUniqueElement(eRemote.detach());
+                else
+                    eRoot.addElement(eRemote.detach());
             }
         }
     }
