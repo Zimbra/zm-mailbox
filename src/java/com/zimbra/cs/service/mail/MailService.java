@@ -116,6 +116,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST, new CreateAppointmentException());
         dispatcher.registerHandler(MailConstants.MODIFY_APPOINTMENT_REQUEST, new ModifyAppointment());
         dispatcher.registerHandler(MailConstants.CANCEL_APPOINTMENT_REQUEST, new CancelAppointment());
+        dispatcher.registerHandler(MailConstants.FORWARD_APPOINTMENT_REQUEST, new ForwardAppointment());
         dispatcher.registerHandler(MailConstants.ADD_APPOINTMENT_INVITE_REQUEST, new AddAppointmentInvite());
         dispatcher.registerHandler(MailConstants.COUNTER_APPOINTMENT_REQUEST, new CounterAppointment());
         dispatcher.registerHandler(MailConstants.DECLINE_COUNTER_APPOINTMENT_REQUEST, new DeclineCounterAppointment());

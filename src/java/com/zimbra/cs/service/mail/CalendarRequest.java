@@ -438,7 +438,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     // Check if invite is relevant after the given time.  Invite is relevant if its DTSTART
     // or RECURRENCE-ID comes after the reference time.  For all-day appointment, look back
     // 24 hours to account for possible TZ difference.
-    private static boolean inviteIsAfterTime(Invite inv, long time) {
+    protected static boolean inviteIsAfterTime(Invite inv, long time) {
         long startUtc = 0;
         ParsedDateTime dtStart = inv.getStartTime();
         if (dtStart != null)

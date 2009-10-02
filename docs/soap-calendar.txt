@@ -1040,6 +1040,29 @@ OR
 
 //////////////////////////////////////////////////////////////////////
 //
+// ForwardAppointment
+//
+// Used by an attendee to forward an instance or entire appointment to
+// another user who is not already an attendee.
+//
+//
+<ForwardAppointmentRequest id="item id">
+  [<tz .../>]             // definition for TZID referenced by DATETIME in <exceptId>
+  [<exceptId DATETIME/>]  // RECURRENCE-ID if forwarding a single instance of a recurring appointment
+  <m>
+    <e t="f" .../>  // From
+    <e t="t" .../>+ // To
+    <su>...</su>    // Subject
+    <mp>...</mp>    // plain/html texts
+  </m>
+</ForwardAppointmentRequest>
+
+<ForwardAppointmentResponse/>
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
 // GetAppointment
 //
 // Returns the metadata info for each Invite that makes up this appointment.
