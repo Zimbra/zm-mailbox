@@ -2024,8 +2024,6 @@ public class ToXML {
             return MailConstants.E_DS_POP3;
         case caldav:
             return MailConstants.E_DS_CALDAV;
-        case live:
-            return MailConstants.E_DS_LIVE;
         case yab:
             return MailConstants.E_DS_YAB;
         case rss:
