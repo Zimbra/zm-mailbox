@@ -122,6 +122,10 @@ public class ContactConstants {
     public static final String A_otherCustom3 = "otherCustom3";
     public static final String A_otherCustom4 = "otherCustom4";
     // end
+    
+    // vCard fields that need to be preserved
+    public static final String A_vCardUID    = "vcardUID";
+    public static final String A_vCardXProps = "vcardXProps";
 
     public static final String TYPE_GROUP = "group";
 
@@ -204,7 +208,9 @@ public class ContactConstants {
         otherCustom1,
         otherCustom2,
         otherCustom3,
-        otherCustom4;
+        otherCustom4,
+        vCardUID,
+        vCardXProps;
 
         public static Attr fromString(String s) throws ServiceException {
             try {
