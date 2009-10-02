@@ -955,15 +955,17 @@ public class DbMailItem {
 
     /**
      * Deletes rows from <tt>open_conversation</tt> whose items are older than
-     * the specified number of of milliseconds.
+     * the given date.
+     * 
+     * @param mbox the mailbox
+     * @param beforeDate the cutoff date in seconds
      */
-    public static void closeOldConversations(Mailbox mbox, long timeoutMillis) throws ServiceException {
+    public static void closeOldConversations(Mailbox mbox, int beforeDate) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
-        long cutoff = (System.currentTimeMillis() - timeoutMillis) / 1000;
-        ZimbraLog.purge.debug("Closing conversations dated before %d.", cutoff);
+        ZimbraLog.purge.debug("Closing conversations dated before %d.", beforeDate);
         try {
             String mailboxJoin = (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = open_conversation.mailbox_id");
             stmt = conn.prepareStatement("DELETE FROM " + getConversationTableName(mbox) +
@@ -974,13 +976,13 @@ public class DbMailItem {
                 "  AND date < ?)");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setLong(pos++, cutoff); 
+            stmt.setInt(pos++, beforeDate); 
             int numRows = stmt.executeUpdate();
             if (numRows > 0) {
-                ZimbraLog.purge.info("Closed %d conversations dated before %d.", numRows, cutoff);
+                ZimbraLog.purge.info("Closed %d conversations dated before %d.", numRows, beforeDate);
             }
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("closing open conversations dated before " + cutoff, e);
+            throw ServiceException.FAILURE("closing open conversations dated before " + beforeDate, e);
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -1659,7 +1661,38 @@ public class DbMailItem {
         }
     }
 
-
+    /**
+     * Deletes tombstones dated earlier than the given timestamp.
+     * 
+     * @param mbox the mailbox
+     * @param beforeDate timestamp in seconds
+     * @return the number of tombstones deleted
+     */
+    public static int purgeTombstones(Mailbox mbox, int beforeDate)
+    throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        
+        try {
+            stmt = conn.prepareStatement(
+                "DELETE FROM " + getTombstoneTableName(mbox) +
+                " WHERE " + IN_THIS_MAILBOX_AND + "date < ?");
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setLong(pos++, beforeDate);
+            int numRows = stmt.executeUpdate();
+            if (numRows > 0) {
+                ZimbraLog.mailbox.info("Purged %d tombstones dated before %d.", numRows, beforeDate);
+            }
+            return numRows;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("purging tombstones with date before " + beforeDate, null);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
     private static final String FOLDER_TYPES         = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ')';
     private static final String FOLDER_AND_TAG_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ')';
     private static final String MESSAGE_TYPES        = "(" + MailItem.TYPE_MESSAGE + ',' + MailItem.TYPE_CHAT + ')';

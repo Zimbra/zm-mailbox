@@ -19,12 +19,16 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -49,6 +53,8 @@ public class TestPurge extends TestCase {
     
     private String mOriginalUseChangeDateForTrash;
     
+    private long mOriginalTombstoneAge;
+    
     long mPurgedTimestamp = System.currentTimeMillis() - (2 * Constants.MILLIS_PER_MONTH);
     long mLaterCutoff = mPurgedTimestamp + Constants.MILLIS_PER_HOUR;
     long mMiddleTimestamp = mLaterCutoff + Constants.MILLIS_PER_HOUR;
@@ -72,6 +78,8 @@ public class TestPurge extends TestCase {
         
         mOriginalUseChangeDateForTrash =
             account.getAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash);
+        
+        mOriginalTombstoneAge = LC.tombstone_max_age_ms.longValue();
     }
     
     /**
@@ -368,6 +376,78 @@ public class TestPurge extends TestCase {
         }
     }
     
+    /**
+     * Confirms that tombstones get purged correctly (bug 12965).
+     */
+    public void testTombstones()
+    throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message msg = TestUtil.addMessage(mbox, NAME_PREFIX + " testTombstones");
+
+        // Clear out the tombstone table.
+        LC.tombstone_max_age_ms.setDefault("0");
+        mbox.purgeMessages(null);
+        assertEquals(0, getNumTombstones(mbox));
+        
+        // Delete message to write the tombstone.
+        mbox.beginTrackingSync();
+        mbox.delete(null, msg.getId(), msg.getType());
+        assertEquals(1, getNumTombstones(mbox));
+        
+        // Set tombstone age to 1 month, run purge, make sure tombstone wasn't deleted.
+        LC.tombstone_max_age_ms.setDefault(Long.toString(Constants.MILLIS_PER_MONTH));
+        mbox.purgeMessages(null);
+        assertEquals(1, getNumTombstones(mbox));
+        
+        // Set tombstone age to 0, run purge, make sure tombstone was deleted.
+        LC.tombstone_max_age_ms.setDefault("0");
+        Thread.sleep(Constants.MILLIS_PER_SECOND);
+        mbox.purgeMessages(null);
+        assertEquals(0, getNumTombstones(mbox));
+    }
+    
+    /**
+     * Confirms that old conversations get purged correctly.
+     */
+    public void testConversations()
+    throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        
+        // Create original message and reply.
+        String subject = NAME_PREFIX + " testConversations";
+        Message original = TestUtil.addMessage(mbox, subject);
+        Message reply = TestUtil.addMessage(mbox, "RE: " + subject);
+        int convId = original.getConversationId();
+        assertEquals(convId, reply.getConversationId());
+        assertEquals(1, getNumConversations(mbox, convId));
+        
+        // Set conversation age to 1 month, run purge, make sure the conversation is still open.
+        LC.conversation_max_age_ms.setDefault(Long.toString(Constants.MILLIS_PER_MONTH));
+        mbox.purgeMessages(null);
+        assertEquals(1, getNumConversations(mbox, convId));
+        
+        // Set conversation age to 0, run purge, make sure the conversation was closed.
+        LC.conversation_max_age_ms.setDefault("0");
+        Thread.sleep(Constants.MILLIS_PER_SECOND);
+        mbox.purgeMessages(null);
+        assertEquals(0, getNumConversations(mbox, convId));
+    }
+    
+    private int getNumConversations(Mailbox mbox, int convId)
+    throws ServiceException {
+        DbResults results = DbUtil.executeQuery(
+            "SELECT COUNT(*) FROM " + DbMailItem.getConversationTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND conv_id = " + convId);
+        return results.getInt(1);
+    }
+    
+    private int getNumTombstones(Mailbox mbox)
+    throws ServiceException {
+        DbResults results = DbUtil.executeQuery(
+            "SELECT COUNT(*) FROM " + DbMailItem.getTombstoneTableName(mbox) + " WHERE mailbox_id = " + mbox.getId());
+        return results.getInt(1);
+    }
+    
     private Message alterUnread(Message msg, boolean unread)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
@@ -389,7 +469,7 @@ public class TestPurge extends TestCase {
     
     public void tearDown()
     throws Exception {
-        cleanUp();
+        LC.tombstone_max_age_ms.setDefault(Long.toString(mOriginalTombstoneAge));
         
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -403,7 +483,9 @@ public class TestPurge extends TestCase {
         attrs.put(Provisioning.A_zimbraPrefJunkLifetime, mOriginalUserJunkLifetime);
         attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, mOriginalUseChangeDateForTrash);
         Provisioning.getInstance().modifyAttrs(account, attrs);
-    }
+
+        cleanUp();
+}
     
     private void cleanUp()
     throws Exception {

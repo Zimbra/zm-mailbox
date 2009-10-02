@@ -6151,7 +6151,10 @@ public class Mailbox {
             if (tombstones != null && !tombstones.isEmpty())
                 DbMailItem.writeTombstones(this, tombstones);
 
-            DbMailItem.closeOldConversations(this, LC.conversation_max_age_ms.longValue());
+            int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / 1000);
+            int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / 1000);
+            DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
+            DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
             success = true;
         } finally {
             endTransaction(success);
