@@ -687,7 +687,6 @@ public class MailConstants {
     public static final String E_DS = "dsrc";
     public static final String E_DS_POP3 = "pop3";
     public static final String E_DS_IMAP = "imap";
-    public static final String E_DS_LIVE = "live";
     public static final String E_DS_CALDAV = "caldav";
     public static final String E_DS_YAB = "yab";
     public static final String E_DS_RSS = "rss";
