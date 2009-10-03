@@ -1189,10 +1189,16 @@ public class ToXML {
         } else {
             try {
                 byte[] raw = msg.getContent();
-                if (!ByteUtil.isASCII(raw))
-                    content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
-                else
+                if (!ByteUtil.isASCII(raw)) {
+                    if (!mustInline) {
+                        content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
+                    } else {
+                        // Assume the data is utf-8.
+                        content.setText(new String(raw, "utf-8"));
+                    }
+                } else {
                     content.setText(new String(raw, "US-ASCII"));
+                }
             } catch (IOException ex) {
                 throw ServiceException.FAILURE(ex.getMessage(), ex);
             }

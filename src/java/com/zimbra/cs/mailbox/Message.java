@@ -458,10 +458,12 @@ public class Message extends MailItem {
         OperationContext octxt = getMailbox().getOperationContext();
 
         // Is this invite intended for me?  If not, we don't want to auto-apply it.
+        String intendedForAddress = null;
         boolean intendedForMe = true;
         try {
             String headerVal = pm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
             if (headerVal != null && headerVal.length() > 0) {
+                intendedForAddress = headerVal;
                 intendedForMe = AccountUtil.addressMatchesAccount(acct, headerVal);
                 if (!intendedForMe)
                     mCalendarIntendedFor = headerVal;
@@ -557,6 +559,41 @@ public class Message extends MailItem {
 
         Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
+            // Bug 38550/41239: If ORGANIZER is missing, set it to email sender.  If that sender
+            // is the same user as the recipient, don't set organizer and clear attendees instead.
+            // We don't want to set organizer to receiving user unless we're absolutely certain
+            // it's the correct organizer.
+            if (!cur.hasOrganizer() && cur.hasOtherAttendees()) {
+                String fromEmail = pm.getSenderEmail(true);
+                if (fromEmail != null) {
+                    boolean dangerousSender = false;
+                    // Is sender == recipient?  If so, clear attendees.
+                    if (intendedForAddress != null) {
+                        if (intendedForAddress.equalsIgnoreCase(fromEmail)) {
+                            ZimbraLog.calendar.info(
+                                    "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
+                            cur.clearAttendees();
+                            dangerousSender = true;
+                        }
+                    } else if (AccountUtil.addressMatchesAccount(acct, fromEmail)) {
+                        ZimbraLog.calendar.info(
+                                "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
+                        cur.clearAttendees();
+                        dangerousSender = true;
+                    }
+                    if (!dangerousSender) {
+                        ZOrganizer org = new ZOrganizer(fromEmail, null);
+                        String senderEmail = pm.getSenderEmail(false);
+                        if (senderEmail != null && !senderEmail.equalsIgnoreCase(fromEmail))
+                            org.setSentBy(senderEmail);
+                        cur.setOrganizer(org);
+                        ZimbraLog.calendar.info(
+                                "Got malformed invite that lists attendees without specifying an organizer.  " +
+                                "Defaulting organizer to: " + org.toString());
+                    }
+                }
+            }
+
             cur.setLocalOnly(false);
             String uid = cur.getUid();
             boolean addRevision;

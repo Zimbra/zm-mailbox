@@ -17,15 +17,21 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import javax.mail.MessagingException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class AddCalendarItemInvite extends CalendarRequest {
@@ -56,7 +62,54 @@ public class AddCalendarItemInvite extends CalendarRequest {
             if (f != Mailbox.ID_FOLDER_TRASH && f != Mailbox.ID_FOLDER_SPAM)
                 folderId = f;
         }
-        
+
+        // Bug 38550/41239: If ORGANIZER is missing, set it to email sender.  If that sender
+        // is the same user as the recipient, don't set organizer and clear attendees instead.
+        // We don't want to set organizer to receiving user unless we're absolutely certain
+        // it's the correct organizer.
+        if (!inv.hasOrganizer() && inv.hasOtherAttendees()) {
+            if (scid.mPm == null) {
+                ZimbraLog.calendar.info(
+                        "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
+                inv.clearAttendees();
+            } else {
+                String fromEmail = scid.mPm.getSenderEmail(true);
+                if (fromEmail != null) {
+                    boolean dangerousSender = false;
+                    // Is sender == recipient?  If so, clear attendees.
+                    String intendedForAddress;
+                    try {
+                        intendedForAddress = scid.mPm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
+                    } catch (MessagingException e) {
+                        throw ServiceException.FAILURE("error parsing message", e);
+                    }
+                    if (intendedForAddress != null && intendedForAddress.length() > 0) {
+                        if (intendedForAddress.equalsIgnoreCase(fromEmail)) {
+                            ZimbraLog.calendar.info(
+                                    "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
+                            inv.clearAttendees();
+                            dangerousSender = true;
+                        }
+                    } else if (AccountUtil.addressMatchesAccount(acct, fromEmail)) {
+                        ZimbraLog.calendar.info(
+                                "Got malformed invite without organizer.  Clearing attendees to prevent inadvertent cancels.");
+                        inv.clearAttendees();
+                        dangerousSender = true;
+                    }
+                    if (!dangerousSender) {
+                        ZOrganizer org = new ZOrganizer(fromEmail, null);
+                        String senderEmail = scid.mPm.getSenderEmail(false);
+                        if (senderEmail != null && !senderEmail.equalsIgnoreCase(fromEmail))
+                            org.setSentBy(senderEmail);
+                        inv.setOrganizer(org);
+                        ZimbraLog.calendar.info(
+                                "Got malformed invite that lists attendees without specifying an organizer.  " +
+                                "Defaulting organizer to: " + org.toString());
+                    }
+                }
+            }
+        }
+
         int[] ids = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
 
         Element response = getResponseElement(zsc);

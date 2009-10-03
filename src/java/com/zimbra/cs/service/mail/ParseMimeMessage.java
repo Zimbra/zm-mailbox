@@ -98,7 +98,12 @@ public class ParseMimeMessage {
 
         Element contentElement = msgElem.getElement(MailConstants.E_CONTENT);
 
-        byte[] content = contentElement.getText().getBytes();
+        byte[] content;
+        try {
+            content = contentElement.getText().getBytes("utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("encoding error", e);
+        }
         long maxSize = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
         if (content.length > maxSize)
             throw ServiceException.INVALID_REQUEST("inline message too large", null);
