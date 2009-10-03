@@ -113,7 +113,7 @@ public class BufferStreamRequestEntity extends BufferStream implements
         File file = getFile();
         
         if (rawBuf != null)
-            out.write(rawBuf.getFirst(), 0, rawBuf.getSecond());
+            out.write(rawBuf.getFirst(), 0, rawBuf.getFirst().length);
         if (file != null) {
             byte buf[] = new byte[32 * 1024];
             FileInputStream fis = new FileInputStream(file);
