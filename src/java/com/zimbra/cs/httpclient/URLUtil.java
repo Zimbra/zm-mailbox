@@ -219,18 +219,16 @@ public class URLUtil {
     
     static {
         sUrlEscapeMap.put(' ', "%20");
-        sUrlEscapeMap.put('!', "%21");
         sUrlEscapeMap.put('"', "%22");
         sUrlEscapeMap.put('#', "%23");
-        sUrlEscapeMap.put('$', "%24");
         sUrlEscapeMap.put('%', "%25");
         sUrlEscapeMap.put('&', "%26");
-        sUrlEscapeMap.put('\'', "%27");
         sUrlEscapeMap.put('?', "%3F");
         sUrlEscapeMap.put('[', "%5B");
         sUrlEscapeMap.put('\\', "%5C");
         sUrlEscapeMap.put(']', "%5D");
         sUrlEscapeMap.put('^', "%5E");
+        sUrlEscapeMap.put('`', "%60");
         sUrlEscapeMap.put('{', "%7B");
         sUrlEscapeMap.put('|', "%7C");
         sUrlEscapeMap.put('}', "%7D");
