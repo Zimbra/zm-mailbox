@@ -34,7 +34,8 @@ public class BuildInfo {
 	public static final String MAJORVERSION;
 	public static final String MINORVERSION;
 	public static final String MICROVERSION;    
-    
+	public static final String BUILDNUM;
+	
     public static final String FULL_VERSION;
 
     static {
@@ -46,7 +47,8 @@ public class BuildInfo {
         String majorversion = "unknown";
         String minorversion = "unknown";
         String microversion = "unknown";
-        String platform = "unknown";        
+        String platform = "unknown";
+        String buildnum = "buildnum";
         try {
             Class clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
             version = (String) clz.getField("VERSION").get(null);
@@ -58,6 +60,7 @@ public class BuildInfo {
             minorversion = (String) clz.getField("MINORVERSION").get(null);
             microversion = (String) clz.getField("MICROVERSION").get(null);
             platform = (String) clz.getField("PLATFORM").get(null);
+            buildnum = (String) clz.getField("BUILDNUM").get(null);
         } catch (Exception e) {
             System.err.println("Exception occurred during introspecting; version information incomplete");
             e.printStackTrace();
@@ -71,6 +74,7 @@ public class BuildInfo {
         MAJORVERSION = majorversion;
         MINORVERSION = minorversion;
         MICROVERSION = microversion;
+        BUILDNUM = buildnum;
         if (TYPE != null && TYPE.length() > 0) {
             // e.g. 6.0.0_BETA2_1542.RHEL4_64 20090529191053 20090529-1912 NETWORK
         	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE + " " + TYPE;
@@ -101,21 +105,22 @@ public class BuildInfo {
         private int mMajor;
         private int mMinor;
         private int mPatch;
+        private int mBuildNum;
         private Release mRel;
         private int mRelNum;
         private String mVersion;
         
         /**
          * 
-         * @param version String in the format of {major number}.{minor number}.{patch number}_{release}{release number}
+         * @param version String in the format of {major number}.{minor number}.{patch number}_{release}{release number}_{buildnumber}
          * 
          * e.g.
          *     6
          *     6.0
          *     6.0.0
-         *     6.0.0_BETA1
-         *     6.0.0_RC1
-         *     6.0.0_GA
+         *     6.0.0_BETA1_1234
+         *     6.0.0_RC1_1234
+         *     6.0.0_GA_1234
          */
         public Version(String version) throws ServiceException {
             mVersion = version;
@@ -125,10 +130,14 @@ public class BuildInfo {
             }
                 
             String ver = version;
-            int underscoreAt = version.lastIndexOf('_');
+            int underscoreAt = version.indexOf('_');
+            int lastUnderscoreAt = version.lastIndexOf('_');
+            if(lastUnderscoreAt == -1 || lastUnderscoreAt == underscoreAt)
+            	lastUnderscoreAt = version.length()-1;
+            
             if (underscoreAt != -1) {
                 ver = version.substring(0, underscoreAt);
-                String rel = version.substring(underscoreAt+1);
+                String rel = version.substring(underscoreAt+1,lastUnderscoreAt);
                 Matcher matcher = mPattern.matcher(version);
                 if (matcher.find()) {
                     mRel = Release.fromString(matcher.group(1));
@@ -136,6 +145,11 @@ public class BuildInfo {
                     if (!StringUtil.isNullOrEmpty(relNum))
                         mRelNum = Integer.parseInt(relNum);
                 }
+                
+                if (lastUnderscoreAt != (version.length()-1)) {
+                	mBuildNum = Integer.parseInt(version.substring(lastUnderscoreAt+1));
+                }            
+                
             }
             
             String[] parts = ver.split("\\.");
