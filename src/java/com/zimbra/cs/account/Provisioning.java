@@ -1177,7 +1177,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         private int mFlags;
         private int mMaxResults;
         private boolean mConvertIDNToAscii;
-
+        private boolean mOnMaster;
 
         public Domain getDomain() {
             return mDomain;
@@ -1249,6 +1249,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         public void setConvertIDNToAscii(boolean convertIDNToAscii) {
             mConvertIDNToAscii = convertIDNToAscii;
+        }
+        
+        public boolean getOnMaster() {
+            return mOnMaster;
+        }
+        
+        public void setOnMaster(boolean onMaster) {
+            mOnMaster = onMaster;
         }
     }
 

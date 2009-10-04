@@ -90,6 +90,7 @@ public abstract class OperationContextData {
         private static final int DOM_GRANTEES = 3;
         private static final int NUM_GRANTEE_TYPES = 4;
         
+        private boolean mEncounteredLDAPFailure = false;
         private boolean mNeedGranteeName = true;
         
         private Set<Mailbox.FolderNode> mUnresolvedRootNodes; // unresolved root nodes
@@ -192,6 +193,7 @@ public abstract class OperationContextData {
                 } catch (ServiceException e) {
                     // log a warning, return an empty map, and let the flow continue
                     ZimbraLog.mailbox.warn("cannot lookup user grantee names", e);
+                    mEncounteredLDAPFailure = true; // so that we don't mark grants invalid
                 }
                 
                 if (result != null) {
@@ -241,6 +243,9 @@ public abstract class OperationContextData {
             }
         }
         
+        public static final String EMPTY_NAME = "";
+        public static final String INVALID_GRANT = new String("***INVALID***");
+        
         public String getNameById(String id, byte granteeType) {
             resolveIfNecessary();
             
@@ -256,9 +261,20 @@ public abstract class OperationContextData {
                     String name = mIdsToNamesMap[idx].get(id);
                     // We've searched but didn't find the id, the grantee might have been deleted,
                     // return empty string so caller won't try to search for it again (bug 39804).
-                    if (name == null)
-                        return "";
-                    else
+                    if (name == null) {
+                        // - if encountered temporary LDAP failures when we searched, the grantee
+                        //   probably still exists, return empty string.
+                        // - if no LDAP failure was encountered, but the name is not found, return 
+                        //   a "hint" that this grant could be invalid.  Note, it is only a hint because 
+                        //   glitches like an not synced LDAP replica can return us "not found" without 
+                        //   throwing a NamingException, which is caught and returned from our LDAP code 
+                        //   as a ServiceException.  
+                        // See http://bugzilla.zimbra.com/show_bug.cgi?id=39806#c4 
+                        if (mEncounteredLDAPFailure)
+                            return EMPTY_NAME;
+                        else
+                            return INVALID_GRANT;
+                    } else
                         return name;
                 }
             } else

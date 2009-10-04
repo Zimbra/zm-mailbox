@@ -1069,7 +1069,8 @@ public class LdapProvisioning extends Provisioning {
                 new String[] {base},
                 flags,
                 maxResults,
-                true);
+                true,
+                false);
     }
 
     private static class NamedEntryComparator implements Comparator<NamedEntry> {
@@ -1129,7 +1130,8 @@ public class LdapProvisioning extends Provisioning {
                                    String[] bases,
                                    int flags,
                                    int maxResults,
-                                   boolean useConnPool)
+                                   boolean useConnPool,
+                                   boolean useMaster)
     throws ServiceException {
         final List<NamedEntry> result = new ArrayList<NamedEntry>();
 
@@ -1140,10 +1142,10 @@ public class LdapProvisioning extends Provisioning {
         };
 
         if (bases == null || bases.length == 0)
-            searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool, false);
+            searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool, useMaster);
         else {
             for (String base : bases)
-                searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool, false);
+                searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool, useMaster);
         }
 
         NamedEntryComparator comparator = new NamedEntryComparator(Provisioning.getInstance(), sortAttr, sortAscending);
@@ -4349,7 +4351,8 @@ public class LdapProvisioning extends Provisioning {
                              bases, 
                              options.getFlags(), 
                              options.getMaxResults(),
-                             useConnPool);
+                             useConnPool,
+                             options.getOnMaster());
     }
 
     @Override
@@ -6148,7 +6151,8 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
     
-    public void searchNamesForIds(Set<String> unresolvedIds, String base, String objectClass, String returnAttrs[], LdapUtil.SearchLdapVisitor visitor) throws ServiceException {
+    public void searchNamesForIds(Set<String> unresolvedIds, String base, String objectClass, String returnAttrs[], 
+            LdapUtil.SearchLdapVisitor visitor) throws ServiceException {
         
         final int batchSize = 10;  // num ids per search
         final String queryStart = "(&(objectClass=" + objectClass + ")(";
@@ -6162,7 +6166,7 @@ public class LdapProvisioning extends Provisioning {
             query.append("|(" + Provisioning.A_zimbraId + "=" + id + ")");
             if ((++i) % batchSize == 0) {
                 query.append(queryEnd);
-                LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
+                LdapUtil.searchLdap(base, query.toString(), returnAttrs, false, visitor);
                 query.setLength(0);
                 query.append(queryStart);
             }
@@ -6171,7 +6175,7 @@ public class LdapProvisioning extends Provisioning {
         // one more search if there are remainding
         if (query.length() != queryStart.length()) {
             query.append(queryEnd);
-            LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
+            LdapUtil.searchLdap(base, query.toString(), returnAttrs, false, visitor);
         }
     }
     

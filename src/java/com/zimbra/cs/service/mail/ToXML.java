@@ -236,7 +236,7 @@ public class ToXML {
                     if (granteeNames != null)
                         name = granteeNames.getNameById(grant.getGranteeId(), granteeType);
                     
-                    // 3. lookup the name using the Provisioning interface, 
+                    // 3. fallback to the old way to lookup the name using the Provisioning interface, 
                     //    this *may* lead to a LDAP search if the id is not in cache
                     if (name == null) {
                         NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), granteeType);
@@ -251,8 +251,16 @@ public class ToXML {
                   .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
                   .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
             
-            if (needDispName)
-                eGrant.addAttribute(MailConstants.A_DISPLAY, name);
+            if (needDispName) {
+                // Note: use == instead of equals, the if returns true if and only if INVALID_GRANT and name 
+                // refer to the same object 
+                if (OperationContextData.GranteeNames.INVALID_GRANT == name) {
+                    eGrant.addAttribute(MailConstants.A_INVALID, true);
+                    eGrant.addAttribute(MailConstants.A_DISPLAY, OperationContextData.GranteeNames.EMPTY_NAME);
+                } else {
+                    eGrant.addAttribute(MailConstants.A_DISPLAY, name);
+                }
+            }
             
             if (granteeType == ACL.GRANTEE_KEY) {
                 if (exposeAclAccessKey)

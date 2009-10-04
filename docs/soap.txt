@@ -1838,7 +1838,7 @@ originally intended.
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update|[!]syncon" [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon" [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [rgb="{rgb-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [pw="..."] [key="..."]/>]
@@ -1882,6 +1882,12 @@ Actions:
     - revoke access from {grantee-zimbra-id} 
         (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
         or use "99999999-9999-9999-9999-999999999999" to revoke acces granted to "pub" )
+        
+  <action op="revokeorphangrants" id="{folder-id}" zid="{grantee-zimbra-id}" gt="{grantee-type}"/>
+    - revoke orphan grants on the folder hierarchy granted to the grantee specified by zid and gt
+      "orphan grant" is a grant whose grantee object is deleted/non-existing.  Server will throw
+      INVALID_REQUEST if zid points to an existing object, 
+      Only supported if gt is usr|grp|cos|dom; otherwise server will throw INVALID_REQUEST.
 
   <action op="url" id="{list}" url="{target-url}" [excludeFreeBusy="{exclude-free-busy-boolean}"]/>
     - set the synchronization url on the folder to {target-url}, empty the folder, and\
@@ -3225,7 +3231,7 @@ granteeType = usr | grp | guest
 
 <GetEffectivePermsRequest>
   <folder l="{folder-id}"/>]
-</GetFolderRequest>
+</GetEffectivePermsRequest>
 
 returns the effective permissions of the specified folder
 

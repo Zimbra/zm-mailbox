@@ -15,13 +15,9 @@
 
 package com.zimbra.cs.account.ldap;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
@@ -32,8 +28,6 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.stats.ZimbraPerf;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.naming.AuthenticationException;
 import javax.naming.CompositeName;
@@ -64,13 +58,9 @@ import javax.naming.ldap.Rdn;
 import javax.security.auth.login.LoginException;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
-import java.security.SecureRandom;
 
 import java.util.ArrayList;
 import java.util.Arrays;
