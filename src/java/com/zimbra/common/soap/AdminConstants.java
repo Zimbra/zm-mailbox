@@ -594,7 +594,10 @@ public class AdminConstants {
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
     public static final String A_VERSION_INFO_TYPE = "type";
-
+    public static final String A_VERSION_INFO_RELCLASS = "relclass";
+    public static final String A_VERSION_INFO_RELNUM = "relnum";    
+    public static final String A_VERSION_INFO_BUILDNUM = "buildnum";
+    
     public static final String E_LICENSE_EXPIRATION = "expiration";
     public static final String A_LICENSE_EXPIRATION_DATE = "date";
 
