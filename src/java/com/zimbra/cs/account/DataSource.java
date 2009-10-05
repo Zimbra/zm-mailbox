@@ -47,7 +47,7 @@ public class DataSource extends AccountProperty {
     private static final byte[] VERSION = { 1 };
     private static final String SIMPLE_CLASS_NAME =
         StringUtil.getSimpleClassName(DataSource.class.getName());
-    
+
     public enum Type {
         pop3, imap, caldav, yab, rss, cal, gal, xsync;
         
@@ -283,23 +283,30 @@ public class DataSource extends AccountProperty {
     //IMAP datasources can override these
     
     /**
-     * Match well known remote path to a local path if mapping exists.
+     * Map well known remote path to a local path if mapping exists.
      * 
      * @param remotePath remote path 
      * @return local path if mapping exists; null if not
      */
-    public String matchKnownLocalPath(String remotePath) {
+    public String mapRemoteToLocalPath(String remotePath) {
     	return null;
     }
     
     /**
-     * Match local path to a well known remote path if mapping exists.
+     * Map local path to a well known remote path if mapping exists.
      * 
      * @param localPath local path
      * @return remote path if mapping exists ; null if not
      */
-    public String matchKnownRemotePath(String localPath) {
+    public String mapLocalToRemotePath(String localPath) {
     	return null;
+    }
+
+    /**
+     * Returns true if remote path should be ignored.
+     */
+    public boolean ignoreRemotePath(String remotePath) {
+        return false;
     }
     
     public boolean isSyncInboxOnly() {

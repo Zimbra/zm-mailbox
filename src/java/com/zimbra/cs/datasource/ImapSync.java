@@ -374,11 +374,11 @@ public class ImapSync extends MailItemImport {
             relativePath = StringUtil.join("/", parts);
         }
         relativePath = ILLEGAL_FOLDER_CHARS.matcher(relativePath).replaceAll("_");
-        
-        String zimbraPath = dataSource.matchKnownLocalPath(relativePath);
-        if ("".equals(zimbraPath)) {
+
+        if (dataSource.ignoreRemotePath(relativePath)) {
             return null; // Do not synchronize folder
         }
+        String zimbraPath = dataSource.mapRemoteToLocalPath(relativePath);
         if (zimbraPath == null) {
             // Remove leading slashes and append to root folder
             while (relativePath.startsWith("/")) {
@@ -401,10 +401,7 @@ public class ImapSync extends MailItemImport {
         if (!localRootFolder.isDescendant(folder)) {
             return null;
         }
-        String imapPath = dataSource.matchKnownRemotePath(folder.getPath());
-        if ("".equals(imapPath)) {
-            return null; // Ignore folder
-        }
+        String imapPath = dataSource.mapLocalToRemotePath(folder.getPath());
         if (imapPath == null) {
             if (folder.getId() < com.zimbra.cs.mailbox.Mailbox.FIRST_USER_ID) {
                 return null;
