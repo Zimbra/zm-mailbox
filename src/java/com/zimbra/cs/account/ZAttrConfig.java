@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2 pshao 20090930-2143 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091005-1455 */
 
     /**
      * RFC2256: descriptive information
@@ -27280,13 +27280,13 @@ public class ZAttrConfig extends Entry {
      * template used to construct the body of an Zimbra version check
      * notification message
      *
-     * @return zimbraVersionCheckNotificationBody, or null if unset
+     * @return zimbraVersionCheckNotificationBody, or "${BEGIN_PREFIX}The following updates were found:${NEWLINE}${NEWLINE}${END_PREFIX}${BEGIN_UPDATE}${UPDATE_COUNTER}.  ${IS_CRITICAL}.  Version: ${UPDATE_VERSION}, URL: ${UPDATE_URL}${NEWLINE}${NEWLINE}${END_UPDATE}${BEGIN_SIGNATURE}Zimbra Updater${NEWLINE}${END_SIGNATURE}" if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1066)
     public String getVersionCheckNotificationBody() {
-        return getAttr(Provisioning.A_zimbraVersionCheckNotificationBody, null);
+        return getAttr(Provisioning.A_zimbraVersionCheckNotificationBody, "${BEGIN_PREFIX}The following updates were found:${NEWLINE}${NEWLINE}${END_PREFIX}${BEGIN_UPDATE}${UPDATE_COUNTER}.  ${IS_CRITICAL}.  Version: ${UPDATE_VERSION}, URL: ${UPDATE_URL}${NEWLINE}${NEWLINE}${END_UPDATE}${BEGIN_SIGNATURE}Zimbra Updater${NEWLINE}${END_SIGNATURE}");
     }
 
     /**
@@ -27506,13 +27506,13 @@ public class ZAttrConfig extends Entry {
      * template used to construct the subject of an Zimbra version check
      * notification message
      *
-     * @return zimbraVersionCheckNotificationSubject, or null if unset
+     * @return zimbraVersionCheckNotificationSubject, or "${IS_CRITICAL} updates are available for your Zimbra server" if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1065)
     public String getVersionCheckNotificationSubject() {
-        return getAttr(Provisioning.A_zimbraVersionCheckNotificationSubject, null);
+        return getAttr(Provisioning.A_zimbraVersionCheckNotificationSubject, "${IS_CRITICAL} updates are available for your Zimbra server");
     }
 
     /**

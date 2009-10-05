@@ -4713,10 +4713,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1065" name="zimbraVersionCheckNotificationSubject" type="string" max="1000" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <globalConfigValue>${IS_CRITICAL} updates are available for your Zimbra server</globalConfigValue>
   <desc>template used to construct the subject of an Zimbra version check notification message</desc>
 </attr>
 
 <attr id="1066" name="zimbraVersionCheckNotificationBody" type="string" max="10000" cardinality="single" optionalIn="globalConfig" since="6.0.2">
+  <globalConfigValue>${BEGIN_PREFIX}The following updates were found:${NEWLINE}${NEWLINE}${END_PREFIX}${BEGIN_UPDATE}${UPDATE_COUNTER}.  ${IS_CRITICAL}.  Version: ${UPDATE_VERSION}, URL: ${UPDATE_URL}${NEWLINE}${NEWLINE}${END_UPDATE}${BEGIN_SIGNATURE}Zimbra Updater${NEWLINE}${END_SIGNATURE}</globalConfigValue>
   <desc>template used to construct the body of an Zimbra version check notification message</desc>
 </attr>
 
