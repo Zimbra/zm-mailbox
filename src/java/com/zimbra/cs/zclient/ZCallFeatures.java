@@ -31,6 +31,8 @@ public class ZCallFeatures {
 
     public static final String SELECTIVE_CALL_FORWARD_LIST_FULL = "voice.SELECTIVE_CALL_FORWARD_LIST_FULL";
     public static final String SELECTIVE_CALL_REJECT_LIST_FULL = "voice.SELECTIVE_CALL_REJECT_LIST_FULL";
+    public static final String SELECTIVE_CALL_FORWARD_ALREADY_IN_LIST = "voice.SELECTIVE_CALL_FORWARD_ALREADY_IN_LIST";
+    public static final String SELECTIVE_CALL_REJECT_ALREADY_IN_LIST = "voice.SELECTIVE_CALL_REJECT_ALREADY_IN_LIST";
 
     private ZMailbox mMbox;
     private ZPhone mPhone;
