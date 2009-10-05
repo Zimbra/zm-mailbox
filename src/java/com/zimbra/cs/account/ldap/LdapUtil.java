@@ -587,14 +587,14 @@ public class LdapUtil {
           public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs);
       }
       
-      public static void searchLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
+      public static void searchLdap(String base, String query, String[] returnAttrs, boolean useConnPool, boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
           
           int maxResults = 0; // no limit
           ZimbraLdapContext zlc = null; 
           int numModified = 0;
           
           try {
-              zlc = new ZimbraLdapContext(useMaster, false);  // do not use connection pool
+              zlc = new ZimbraLdapContext(useMaster, useConnPool);
               
               SearchControls searchControls =
                   new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);

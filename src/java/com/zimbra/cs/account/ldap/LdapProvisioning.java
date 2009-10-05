@@ -5499,12 +5499,15 @@ public class LdapProvisioning extends Provisioning {
         StringBuilder query = new StringBuilder();
         query.append(queryStart);
         
+        boolean useConnPool = true;
+        boolean useMaster = false;
+        
         int i = 0;
         for (String id : unresolvedIds) {
             query.append("|(" + Provisioning.A_zimbraId + "=" + id + ")");
             if ((++i) % batchSize == 0) {
                 query.append(queryEnd);
-                LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
+                LdapUtil.searchLdap(base, query.toString(), returnAttrs, useConnPool, useMaster, visitor);
                 query.setLength(0);
                 query.append(queryStart);
             }
@@ -5513,7 +5516,7 @@ public class LdapProvisioning extends Provisioning {
         // one more search if there are remainding
         if (query.length() != queryStart.length()) {
             query.append(queryEnd);
-            LdapUtil.searchLdap(base, query.toString(), returnAttrs, true, visitor);
+            LdapUtil.searchLdap(base, query.toString(), returnAttrs, useConnPool, useMaster, visitor);
         }
     }
     
