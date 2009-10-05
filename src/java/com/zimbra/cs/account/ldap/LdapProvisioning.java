@@ -1158,8 +1158,9 @@ public class LdapProvisioning extends Provisioning {
         searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true, false);
     }
 
-    public void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults,
-                              boolean useConnPool, boolean useMaster) throws ServiceException {
+    public void searchObjects(String query, String returnAttrs[], String base, int flags, 
+            NamedEntry.Visitor visitor, int maxResults,
+            boolean useConnPool, boolean useMaster) throws ServiceException {
 
         ZimbraLdapContext zlc = null;
         try {
@@ -1182,6 +1183,8 @@ public class LdapProvisioning extends Provisioning {
             if ((flags & Provisioning.SO_NO_FIXUP_RETURNATTRS) == 0)
                 returnAttrs = fixReturnAttrs(returnAttrs, flags);
 
+            boolean setAccountDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == 0;
+            
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
@@ -1214,11 +1217,16 @@ public class LdapProvisioning extends Provisioning {
                         if (dn.endsWith(configBranchBaseDn) && !objectclass.contains(C_zimbraDomain) && !objectclass.contains(C_zimbraCOS))
                             continue;
 
-                        if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeAccount(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraAlias)) visitor.visit(makeAlias(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults(), this));
-                        else if (objectclass.contains(C_zimbraCOS)) visitor.visit(new LdapCos(dn, attrs, this));
+                        if (objectclass == null || objectclass.contains(C_zimbraAccount)) 
+                            visitor.visit(makeAccount(dn, attrs, setAccountDefaults, this));
+                        else if (objectclass.contains(C_zimbraAlias)) 
+                            visitor.visit(makeAlias(dn, attrs, this));
+                        else if (objectclass.contains(C_zimbraMailList)) 
+                            visitor.visit(makeDistributionList(dn, attrs, this));
+                        else if (objectclass.contains(C_zimbraDomain)) 
+                            visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults(), this));
+                        else if (objectclass.contains(C_zimbraCOS)) 
+                            visitor.visit(new LdapCos(dn, attrs, this));
                     }
                     cookie = zlc.getCookie();
                 } while (cookie != null);
@@ -3964,6 +3972,10 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Account makeAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
+        return makeAccount(dn, attrs, true, prov);
+    }
+    
+    private Account makeAccount(String dn, Attributes attrs, boolean setAccountDefaults, LdapProvisioning prov) throws NamingException, ServiceException {
         Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (a == null) || a.contains(AccountCalendarUserType.USER.toString());
         
@@ -3972,12 +3984,20 @@ public class LdapProvisioning extends Provisioning {
             emailAddress = mDIT.dnToEmail(dn, attrs);
         
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) : new LdapCalendarResource(dn, emailAddress, attrs, null, this);
-        Cos cos = getCOS(acct);
+        
+        if (setAccountDefaults)
+            setAccountDefaults(acct);
+        
+        return acct;
+    }
+    
+    public void setAccountDefaults(Account acct) throws ServiceException {
+        Cos cos = getCOS(acct); // will set cos if not set yet
         acct.setDefaults(cos.getAccountDefaults());
+        
         Domain domain = getDomain(acct);
         if (domain != null)
             acct.setSecondaryDefaults(domain.getAccountDefaults());
-        return acct;
     }
     
     private Alias makeAlias(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {

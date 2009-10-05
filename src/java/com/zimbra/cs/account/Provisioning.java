@@ -720,6 +720,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     /** do not fixup return attrs for searchObject, should only be used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x80;
+    
+    /** 
+     *  do not set account defaults in makeAccount
+     *  
+     *  bug 36017
+     *  
+     *  only used from the admin SearchDirectory SOAP, where large number of accounts are 
+     *  returned from Provisioning.searchDirectory.  In the extreme case where the accounts 
+     *  span many different domains, the admin console UI would be unresponsive.  
+     *  
+     *  Domain is needed for:
+     *    - determine the cos if cos is not set on the account
+     *    - account secondary default
+     *  
+     *  SearchDirectory is responsible for setting the defaults when it pages 
+     *  account found back to the SOAP client.
+     */
+    public static final int SO_NO_ACCOUNT_DEFAULTS = 0x100;
 
     /**
      * Takes a string repsrenting the objects to search for and returns a bit mask of SA_* flags for the given string.

@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
@@ -52,6 +53,8 @@ public class SearchDirectory extends AdminDocumentHandler {
 
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
+    
+    private static final String SEARCH_DIRECTORY_ACCOUNT_DATA = "SearchDirectoryAccount";
 
     public static final int MAX_SEARCH_RESULTS = 5000;
     
@@ -144,6 +147,17 @@ public class SearchDirectory extends AdminDocumentHandler {
         
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
+        
+        // bug 36017.  
+        // do not set secondary defaults (inherited attrs from domain) for accounts
+        // we set the secondary defaults when accounts are paged back to the SOAP client.
+        //
+        // Account object returned from Provisioning.searchDirectory are not cached anywhere,
+        // they are just referenced here.
+        //
+        
+        flags |= Provisioning.SO_NO_ACCOUNT_DEFAULTS;
+        
         if (session != null) {
             accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, maxResults, rightChecker);
         } else {
@@ -160,16 +174,30 @@ public class SearchDirectory extends AdminDocumentHandler {
             accounts = rightChecker.getAllowed(accounts);
         }
 
+        LdapProvisioning ldapProv = null;
+        if (prov instanceof LdapProvisioning)
+            ldapProv = (LdapProvisioning)prov;
 
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
             
             boolean applyDefault = true;
-            if (entry instanceof Account)
+            
+            if (entry instanceof Account) {
                 applyDefault = applyCos;
-            else if (entry instanceof Domain)
+                
+                if (ldapProv != null) {
+                    Boolean isDefaultSet = (Boolean)entry.getCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA);
+                    if (isDefaultSet == null || isDefaultSet == Boolean.FALSE) {
+                        ldapProv.setAccountDefaults((Account)entry);
+                        entry.setCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA, Boolean.TRUE);
+                    }
+                }
+                
+            } else if (entry instanceof Domain) {
                 applyDefault = applyConfig;
+            }
             
             encodeEntry(prov, response, entry, applyDefault, reqAttrs, aac);
         }          
