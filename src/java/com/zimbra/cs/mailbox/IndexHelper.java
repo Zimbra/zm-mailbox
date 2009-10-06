@@ -139,6 +139,7 @@ public class IndexHelper {
      */
     void setIndexImmediatelyMode() {
         if (Thread.holdsLock(getMailbox())) {
+            // can't actually flip the bit b/c of deadlock - do it asynchronously
             Thread t = new Thread() {
                 public void run() {
                     try {
@@ -157,10 +158,10 @@ public class IndexHelper {
         } else {
             synchronized(mIndexImmediatelyModeLock) {
                 mInIndexImmediatelyMode++;
-                if (mInIndexImmediatelyMode > 1)
-                    return;
-                indexDeferredItems();
             }
+            // we have to force the index to completely catch up here as we cannot 
+            // index immediately if the index is behind 
+            indexDeferredItems();
         }
     }
 
