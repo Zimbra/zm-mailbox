@@ -110,14 +110,20 @@ public class GalSearchConfig {
         
 		switch (op) {
 		case sync:
-			filterName = (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResourceSync" : "zimbraAccountSync";
+			filterName = 
+                (stype == GAL_SEARCH_TYPE.ALL) ? "zimbraSync" :
+			    (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResourceSync" : "zimbraAccountSync";
 			break;
 		case search:
-			filterName = (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResources" : "zimbraAccounts";
+			filterName = 
+                (stype == GAL_SEARCH_TYPE.ALL) ? "zimbraSearch" :
+			    (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResources" : "zimbraAccounts";
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
 			break;
 		case autocomplete:
-			filterName = (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResourceAutoComplete" : "zimbraAccountAutoComplete";
+			filterName = 
+                (stype == GAL_SEARCH_TYPE.ALL) ? "zimbraAutoComplete" :
+			    (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResourceAutoComplete" : "zimbraAccountAutoComplete";
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
 			break;
 		}
