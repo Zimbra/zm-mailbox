@@ -141,6 +141,7 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.upgrade.ContactUpgrade;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
@@ -453,6 +454,12 @@ public class Mailbox {
             if (!getVersion().atLeast(1, 5)) {
                 mIndexHelper.indexAllDeferredFlagItems();            
             }
+
+			// bug 41144: map "workEmail" contact fields to "email"
+			if (!getVersion().atLeast(1, 6)) {
+				ContactUpgrade.upgradeContactsTo1_6(this);
+				updateVersion(new MailboxVersion((short) 1, (short) 6));
+			}
 
     		// done!
     		mInitializationComplete = true;
