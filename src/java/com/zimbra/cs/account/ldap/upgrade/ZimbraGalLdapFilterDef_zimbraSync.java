@@ -7,9 +7,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
-public class ZimbraGalLdapFilterDef extends LdapUpgrade {
+public class ZimbraGalLdapFilterDef_zimbraSync extends LdapUpgrade {
     
-    ZimbraGalLdapFilterDef() throws ServiceException {
+    ZimbraGalLdapFilterDef_zimbraSync() throws ServiceException {
     }
     
     @Override
@@ -22,7 +22,7 @@ public class ZimbraGalLdapFilterDef extends LdapUpgrade {
         Map<String, Object> attr = new HashMap<String, Object>();
         attr.put("+" + Provisioning.A_zimbraGalLdapFilterDef, value);
         
-        System.out.println("Adding zimbraSync to global config " + Provisioning.A_zimbraGalLdapFilterDef);
+        System.out.println("Adding zimbraSync filter to global config " + Provisioning.A_zimbraGalLdapFilterDef);
         mProv.modifyAttrs(config, attr);
     }
 }

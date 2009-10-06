@@ -112,7 +112,7 @@ abstract class LdapUpgrade {
     }
     
     private static String getCommandUsage() {
-        return "com.zimbra.cs.util.LdapUpgrade <options> [args]";
+        return "com.zimbra.cs.account.ldap.upgrade.LdapUpgrade <options> [args]";
     }
     
     static void usage() {

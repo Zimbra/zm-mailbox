@@ -3,7 +3,7 @@ package com.zimbra.cs.account.ldap.upgrade;
 import com.zimbra.common.service.ServiceException;
 
 public enum UpgradeTask {
-    BUG_14531(ZimbraGalLdapFilterDef.class),
+    BUG_14531(ZimbraGalLdapFilterDef_zimbraSync.class),
     BUG_18277(AdminRights.class),
     BUG_22033(ZimbraCreateTimestamp.class),
     BUG_27075(CosAndGlobalConfigDefault.class),   // e.g. -b 27075 5.0.12
@@ -12,7 +12,8 @@ public enum UpgradeTask {
     BUG_31694(ZimbraMessageCacheSize.class),
     BUG_32557(DomainObjectClassAmavisAccount.class),
     BUG_32719(ZimbraHsmPolicy.class),
-    BUG_33814(ZimbraMtaAuthEnabled.class);
+    BUG_33814(ZimbraMtaAuthEnabled.class),
+    BUG_41000(ZimbraGalLdapFilterDef_zimbraAutoComplete_zimbraSearch.class);
     
     private Class mUpgradeClass;
     
