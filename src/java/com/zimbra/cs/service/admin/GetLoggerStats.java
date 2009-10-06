@@ -17,13 +17,15 @@ package com.zimbra.cs.service.admin;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import com.zimbra.common.localconfig.LC;
@@ -383,12 +385,17 @@ public class GetLoggerStats extends AdminDocumentHandler {
     static Iterator<String> execfetch(String... args) throws ServiceException {
         BufferedReader in = null;
         try {
-            ArrayList<String> cmdline = new ArrayList<String>();
-            cmdline.add(ZMRRDFETCH);
-            cmdline.addAll(Arrays.asList(args));
-            ProcessBuilder pb = new ProcessBuilder(cmdline);
-            final Process p = pb.start();
-            in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            final Socket socket = new Socket(InetAddress.getByName(null), 10663); // TODO magic number, move to localconfig
+            final PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "utf-8"));
+            
+            StringBuilder cmdline = new StringBuilder();
+            for (String arg : args) {
+                cmdline.append(arg).append(" ");
+            }
+            cmdline.setLength(cmdline.length() - 1);
+            out.println(cmdline.toString());
+            out.flush();
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             final BufferedReader inbr = in;
             
             // there is a stream leak here if not read until the end
@@ -407,7 +414,9 @@ public class GetLoggerStats extends AdminDocumentHandler {
                     
                     if (line == null) {
                         try {
+                            out.close();
                             inbr.close();
+                            socket.close();
                             isClosed = true;
                         }
                         catch (IOException e) { } // ignore
