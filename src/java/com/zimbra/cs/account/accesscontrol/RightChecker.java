@@ -1562,7 +1562,7 @@ public class RightChecker {
         String[] returnAttrs = new String[] {Provisioning.A_mail};
         
         Visitor visitor = new Visitor(Provisioning.A_mail);
-        LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
+        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
     
@@ -1572,7 +1572,7 @@ public class RightChecker {
         String[] returnAttrs = new String[] {Provisioning.A_zimbraMailDeliveryAddress};
         
         Visitor visitor = new Visitor(Provisioning.A_zimbraMailDeliveryAddress);
-        LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
+        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
     

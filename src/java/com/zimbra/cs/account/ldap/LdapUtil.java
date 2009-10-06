@@ -592,14 +592,22 @@ public class LdapUtil {
           public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs);
       }
       
-      public static void searchLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
+      public static void searchLdapOnMaster(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
+          searchLdap(base, query, returnAttrs, true, visitor);
+      }
+
+      public static void searchLdapOnReplica(String base, String query, String[] returnAttrs, SearchLdapVisitor visitor) throws ServiceException {
+          searchLdap(base, query, returnAttrs, false, visitor);
+      }
+              
+      private static void searchLdap(String base, String query, String[] returnAttrs, boolean useMaster, SearchLdapVisitor visitor) throws ServiceException {
           
           int maxResults = 0; // no limit
           ZimbraLdapContext zlc = null; 
           int numModified = 0;
           
           try {
-              zlc = new ZimbraLdapContext(useMaster, false);  // do not use connection pool
+              zlc = new ZimbraLdapContext(useMaster);
               
               SearchControls searchControls =
                   new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);

@@ -234,7 +234,7 @@ public class SearchGrants {
        
        SearchGrantsResults results = new SearchGrantsResults(mProv);
        SearchGrantVisitor visitor = new SearchGrantVisitor(results);
-       LdapUtil.searchLdap(base, query, returnAttrs, true, visitor);
+       LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
        
        return results;
    }
