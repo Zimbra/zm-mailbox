@@ -246,6 +246,7 @@ public class LC {
     public static final KnownKey derby_properties;
 
     public final static KnownKey logger_data_directory;
+    public final static KnownKey logger_zmrrdfetch_port;
     public static final KnownKey logger_mysql_directory;
     public static final KnownKey logger_mysql_data_directory;
     public static final KnownKey logger_mysql_socket;
@@ -949,6 +950,7 @@ public class LC {
 
         logger_data_directory = new KnownKey("logger_data_directory");
         logger_data_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "data");
+        logger_zmrrdfetch_port = new KnownKey("logger_zmrrdfetch_port", "10663");
 
         logger_mysql_directory = new KnownKey("logger_mysql_directory");
         logger_mysql_directory.setDefault("${zimbra_home}" + FS + "logger" + FS + "mysql");
