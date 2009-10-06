@@ -385,7 +385,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
     static Iterator<String> execfetch(String... args) throws ServiceException {
         BufferedReader in = null;
         try {
-            final Socket socket = new Socket(InetAddress.getByName(null), 10663); // TODO magic number, move to localconfig
+            final Socket socket = new Socket(InetAddress.getByName(null), LC.logger_zmrrdfetch_port.intValue()); // TODO magic number, move to localconfig
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "utf-8"));
             
             StringBuilder cmdline = new StringBuilder();
