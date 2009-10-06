@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091005-1455 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091005-2140 */
 
     /**
      * RFC2256: descriptive information
@@ -27731,13 +27731,13 @@ public class ZAttrConfig extends Entry {
     /**
      * URL of the Zimbra version check script
      *
-     * @return zimbraVersionCheckURL, or null if unset
+     * @return zimbraVersionCheckURL, or "http://www.zimbra.com/aus/admin/zimbraAdminVersionCheck.php" if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1061)
     public String getVersionCheckURL() {
-        return getAttr(Provisioning.A_zimbraVersionCheckURL, null);
+        return getAttr(Provisioning.A_zimbraVersionCheckURL, "http://www.zimbra.com/aus/admin/zimbraAdminVersionCheck.php");
     }
 
     /**
