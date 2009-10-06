@@ -129,11 +129,8 @@ public class SearchConv extends Search {
         } else {
             try {
                 Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
-                
-                proxyRequest.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
-                proxyRequest.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
-                proxyRequest.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
-                proxyRequest.addAttribute(MailConstants.A_QUERY_LIMIT, params.getLimit());
+
+                params.encodeParams(proxyRequest);
                 proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
                 proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
                 
