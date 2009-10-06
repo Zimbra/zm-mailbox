@@ -894,12 +894,12 @@
 
     <target name="reset-all" description="Reset the world plus jetty" depends="clean-all">
         <antcall target="reset-the-world"/>
-        <ant dir="../Zimlet" target="clean" inheritAll="false"/>
-        <ant dir="../Zimlet" target="deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
+        <ant dir="../Zimlet" target="clean" inheritAll="false"/>
+        <ant dir="../Zimlet" target="deploy" inheritAll="false"/>
     </target>
 
     <!-- There are two ways to reset the world:
