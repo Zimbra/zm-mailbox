@@ -536,7 +536,7 @@ public class ProvUtil implements HttpDebugListener {
         initCommands();
     }
     
-    public void initProvisioning() throws ServiceException, IOException {
+    public void initProvisioning() throws ServiceException {
         if (mUseLdap) {
             mProv = Provisioning.getInstance();
             if (mUseLdapMaster)
@@ -1215,10 +1215,17 @@ public class ProvUtil implements HttpDebugListener {
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = null;
         String category = null;
-        if (alo.args.length >= 2) {
-            acct = lookupAccount(alo.args[1]);
+        if (alo.args.length == 2) {
+            // Hack: determine if it's an account or category, based on the name.
+            String arg = alo.args[1];
+            if (arg.startsWith("zimbra.") || arg.startsWith("com.zimbra")) {
+                category = arg;
+            } else {
+                acct = lookupAccount(alo.args[1]);
+            }
         }
         if (alo.args.length == 3) {
+            acct = lookupAccount(alo.args[1]);
             category = alo.args[2];
         }
         sp.removeAccountLoggers(acct, category, alo.server);
