@@ -866,6 +866,8 @@
         <mkdir dir="${jetty.home.dir}/work/service"/>
         <mkdir dir="${jetty.home.dir}/work/zimbra"/>
         <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
+        <mkdir dir="${jetty.home.dir}/webapps/zimlet"/>
+        <mkdir dir="${zimbra.home.dir}/zimlets-deployed"/>
     </target>
 
     <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
@@ -1590,8 +1592,6 @@
     </target>
 
     <target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
-        <mkdir dir="${zimbra.home.dir}/zimlets-deployed"/>
-        <mkdir dir="${jetty.home.dir}/webapps/zimlet"/>
         <echo>Waiting for jetty to start</echo>
         <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
             <http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
