@@ -127,7 +127,7 @@ public class BigByteBuffer extends OutputStream {
 				
 				int b = 0;
 				if (offset < memBuf.length)
-					b = memBuf[offset];
+					b = (int)memBuf[offset] & 0xFF;
 				else {
 					try {
 						if (bufFileIn == null) {
