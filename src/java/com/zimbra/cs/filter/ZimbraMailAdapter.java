@@ -535,7 +535,7 @@ public class ZimbraMailAdapter implements MailAdapter
     {
         String[] headers = mParsedMessage.getHeaders(name);
         
-        if (sAddrHdrs.contains(name.toLowerCase()))
+        if (headers != null && sAddrHdrs.contains(name.toLowerCase()))
             return handleIDN(name, headers);
         else
             return (headers == null ? new ArrayList(0) : Arrays.asList(headers));
