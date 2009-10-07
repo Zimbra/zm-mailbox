@@ -409,6 +409,8 @@ public class DavContext {
 			if (mRequestedResource != null)
 				ZimbraLog.addToContext(ZimbraLog.C_NAME, mRequestedResource.getOwner());
 		}
+		if (mRequestedResource == null)
+		    throw new DavException("no DAV resource at "+mUri, HttpServletResponse.SC_NOT_FOUND, null);
 		return mRequestedResource;
 	}
 	
