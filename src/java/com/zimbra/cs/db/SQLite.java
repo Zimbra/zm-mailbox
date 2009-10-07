@@ -98,8 +98,11 @@ public class SQLite extends Db {
 
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
         Map<String, String> pragmas = getCustomPragmas();
-
+        String cacheSize = LC.get("sqlite_cache_size");
         LinkedList<java.sql.Connection> connections = new LinkedList<java.sql.Connection>();
+        
+        if (cacheSize != null)
+            cacheSize = "1500";
         for (int i = 0; i < poolSize; i++) {
             java.sql.Connection conn = pool.getConnection();
             if (i == 0)
@@ -107,14 +110,14 @@ public class SQLite extends Db {
 
             try {
                 conn.setAutoCommit(true);
+                pragma(conn, "cache_size", cacheSize);
+                pragma(conn, "default_cache_size", cacheSize);
                 pragma(conn, "page_size", "4096");
                 pragma(conn, "default_page_size", "4096");
-                pragma(conn, "synchronous", "NORMAL");
                 pragma(conn, "fullfsync", "0");
-                pragma(conn, "journal_mode", "PERSIST");
-//                pragma(conn, "locking_mode", "EXCLUSIVE");
+                pragma(conn, "journal_mode", "TRUNCATE");
                 pragma(conn, "legacy_file_format", "OFF");
-//                pragma(conn, "read_uncommitted", "1");
+                pragma(conn, "synchronous", "NORMAL");
 
                 for (Map.Entry<String, String> pragma : pragmas.entrySet())
                     pragma(conn, pragma.getKey(), pragma.getValue());
