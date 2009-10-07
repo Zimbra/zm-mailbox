@@ -173,19 +173,26 @@ public abstract class WikiPage {
         Domain domain = prov.getDomain(acct);
 		template = "/Template/" + template;
 
-		WikiPage page = getCachedTemplate(domain, template);
-		if (page != null)
-			return page;
+		WikiPage page = null;
+		if (domain != null) {
+		    page = getCachedTemplate(domain, template);
+		    if (page != null)
+		        return page;
         
-		String domainWiki = domain.getAttr(Provisioning.A_zimbraNotebookAccount, null);
-		if (domainWiki != null)
-			page = WikiPage.findTemplatePage(ctxt, domainWiki, template);
+		    String domainWiki = domain.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+		    if (domainWiki != null)
+		        page = WikiPage.findTemplatePage(ctxt, domainWiki, template);
+		}
+		
 		if (page == null) {
 			String defaultWiki = prov.getConfig().getAttr(Provisioning.A_zimbraNotebookAccount, null);
 			if (defaultWiki != null)
 				page = WikiPage.findTemplatePage(ctxt, defaultWiki, template);
 		}
-		cacheTemplate(domain, template, page);
+		
+		if (domain != null)
+		    cacheTemplate(domain, template, page);
+		
 		return page;
 	}
 	
