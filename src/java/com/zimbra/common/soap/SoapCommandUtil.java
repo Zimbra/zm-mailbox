@@ -18,26 +18,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.cli2.Argument;
-import org.apache.commons.cli2.CommandLine;
-import org.apache.commons.cli2.DisplaySetting;
-import org.apache.commons.cli2.Group;
-import org.apache.commons.cli2.Option;
-import org.apache.commons.cli2.OptionException;
-import org.apache.commons.cli2.builder.ArgumentBuilder;
-import org.apache.commons.cli2.builder.DefaultOptionBuilder;
-import org.apache.commons.cli2.builder.GroupBuilder;
-import org.apache.commons.cli2.commandline.Parser;
-import org.apache.commons.cli2.util.HelpFormatter;
-import org.apache.commons.cli2.validation.EnumValidator;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
@@ -61,6 +54,21 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         LC.zimbra_admin_service_port.intValue());
     private static final String DEFAULT_URL = "http://" + LC.zimbra_zmprov_default_soap_server.value() + "/service/soap";
 
+    private static final String LO_HELP = "help";
+    private static final String LO_MAILBOX = "mailbox";
+    private static final String LO_TARGET = "target";
+    private static final String LO_ADMIN = "admin";
+    private static final String LO_PASSWORD = "password";
+    private static final String LO_PASSFILE = "passfile";
+    private static final String LO_URL = "url";
+    private static final String LO_ZADMIN = "zadmin";
+    private static final String LO_VERBOSE = "verbose";
+    private static final String LO_NO_OP = "no-op";
+    private static final String LO_SELECT = "select";
+    private static final String LO_JSON = "json";
+    private static final String LO_FILE = "file";
+    private static final String LO_TYPE = "type";
+
     private static final String TYPE_MAIL = "mail";
     private static final String TYPE_ADMIN = "admin";
     private static final String TYPE_ACCOUNT = "account";
@@ -78,7 +86,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         sTypeToNamespace.put(TYPE_OFFLINE, Namespace.get("urn:zimbraOffline"));
     }
     
-    private Group mOptions;
+    private Options mOptions = new Options();
     private String mUrl;
     private String mType;
     private Namespace mNamespace;
@@ -86,7 +94,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mAdminAccountName;
     private String mTargetAccountName;
     private String mPassword;
-    private List<String> mPaths;
+    private String[] mPaths;
     private String mAuthToken;
     private int mVerbose = 0;
     private boolean mUseSession = false;
@@ -98,144 +106,124 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private PrintStream mOut;
 
     SoapCommandUtil() {
+        // Initialize options.
+        mOptions.addOption(new Option("h", LO_HELP, false, "Display this help message.")); 
+        
+        Option opt = new Option("m", LO_MAILBOX, true, "Send mail and account requests to this account.  " +
+            "Also used for authentication if -a and -z are not specified.");
+        opt.setArgName("account-name");
+        mOptions.addOption(opt);
+        
+        opt = new Option(null, LO_TARGET, true, "Target account name to which requests will be sent.  " +
+            "Only used for non-admin sessions.");
+        opt.setArgName("account-name");
+        mOptions.addOption(opt);
+        
+        opt = new Option("a", LO_ADMIN, true, "Admin account name to authenticate as.");
+        opt.setArgName("account-name");
+        mOptions.addOption(opt);
+
+        opt = new Option("p", LO_PASSWORD, true, "Password.");
+        opt.setArgName("password");
+        mOptions.addOption(opt);
+        
+        opt = new Option("P", LO_PASSFILE, true, "Read password from file.");
+        opt.setArgName("path");
+        mOptions.addOption(opt);
+        
+        opt = new Option("u", LO_URL, true, "SOAP service URL, usually " +
+                "http[s]://host:port/service/soap or https://host:port/service/admin/soap.");
+        opt.setArgName("url");
+        
+        mOptions.addOption(new Option("z", LO_ZADMIN, false, "Authenticate with zimbra admin name/password from localconfig."));
+        mOptions.addOption(new Option("v", LO_VERBOSE, false, 
+            "Print the SOAP request and other status information. Specify twice for fully verbose output."));
+        mOptions.addOption(new Option("n", LO_NO_OP, false, "Print the SOAP request only.  Don't send it."));
+        
+        opt = new Option(null, LO_SELECT, true, "Select an element or attribute from the response.");
+        opt.setArgName("xpath");
+        mOptions.addOption(opt);
+        
+        mOptions.addOption(new Option(null, LO_JSON, false, "Use JSON instead of XML."));
+        
+        opt = new Option("f", LO_FILE, true, "Read request from file.");
+        opt.setArgName("path");
+        mOptions.addOption(opt);
+        
+        opt = new Option("t", LO_TYPE, true,
+            "SOAP request type (mail, account, admin, im, mobile).  Default is admin, or mail if mailbox is specified.");
+        opt.setArgName("type");
+        mOptions.addOption(opt);
+
         try {
             mOut = new PrintStream(System.out, true, "utf-8");
         } catch (UnsupportedEncodingException e) {}
     }
 
-    @SuppressWarnings("unchecked")
-    private void parseCommandLine(String[] args) {
+    private void usage(String errorMsg) {
+        int exitStatus = 0;
         
-        DefaultOptionBuilder obuilder = new DefaultOptionBuilder();
-        ArgumentBuilder abuilder = new ArgumentBuilder();
-        Argument name = abuilder.withName("name").withMinimum(1).withMaximum(1).create();
-        Argument noArgs = abuilder.withMinimum(0).withMaximum(0).create();
-        
-        // Initialize options
-        Option help = obuilder 
-            .withLongName("help").withShortName("h").withDescription("Print usage information.").create();
-        Option mailbox = obuilder
-            .withLongName("mailbox").withShortName("m")
-            .withDescription("Mailbox account name.  mail and account requests are sent to this account.  " +
-                "Also used for authentication if -a and -z are not specified.")
-            .withArgument(name).create();
-        Option target = obuilder
-            .withLongName("target").withArgument(name)
-            .withDescription("Target account name to which requests will be sent.  Only used for non-admin sessions.").create();
-        Option admin = obuilder
-            .withLongName("admin").withShortName("a").withDescription("Admin account name to authenticate as.")
-            .withArgument(name).create();
-        Option password = obuilder
-            .withLongName("password").withShortName("p").withDescription("Password.")
-            .withArgument(abuilder.withMinimum(1).withMaximum(1).withName("pass").create()).create();
-        Option passFile = obuilder
-            .withLongName("passfile").withShortName("P").withDescription("Read password from file.")
-            .withArgument(abuilder.withName("path").withMinimum(1).withMaximum(1).create()).create();
-        Option url = obuilder
-            .withLongName("url").withShortName("u").withDescription(
-                "SOAP service url, usually http[s]://host:port/service/soap or https://host:port/service/admin/soap.")
-            .withArgument(abuilder.withName("url").withMinimum(1).withMaximum(1).create()).create();
-        Option zadmin = obuilder
-            .withLongName("zadmin").withShortName("z").withArgument(noArgs)
-            .withDescription("Authenticate with zimbra admin name/password from localconfig.").create();
-        Option verbose = obuilder
-            .withLongName("verbose").withShortName("v").withArgument(noArgs)
-            .withDescription("Print the SOAP request and other status information. Specify twice for fully verbose output.").create();
-        Option noOp = obuilder
-            .withLongName("no-op").withShortName("n").withArgument(noArgs)
-            .withDescription("Print the SOAP request only.  Don't send it.").create();
-        Option select = obuilder
-            .withLongName("select").withDescription("Select element(s) or an attribute from the response.")
-            .withArgument(abuilder.withMinimum(1).withMaximum(1).withName("path").create()).create();
-        Option json = obuilder
-            .withLongName("json").withArgument(noArgs)
-            .withDescription("Use JSON instead of XML.").create();
-        Option file = obuilder
-            .withLongName("file").withShortName("f").withDescription("Read request from file.")
-            .withArgument(abuilder.withName("file-path").withMinimum(1).withMaximum(1).create()).create();
-        Option paths = abuilder.withName("path")
-            .withDescription("Element or attribute path and value.  Roughly follows XPath syntax: " +
-                "[/]element1[/element2][/..][/@attr][=value].").create();
-        
-        // Types option
-        Set<String> validTypes = new HashSet<String>();
-        validTypes.add("mail"); validTypes.add("account"); validTypes.add("admin"); validTypes.add("im"); validTypes.add("mobile"); validTypes.add("offline");
-        Argument typeArg = abuilder
-            .withName("type").withValidator(new EnumValidator(validTypes))
-            .withMinimum(1).withMaximum(1).create();
-        Option type = obuilder
-            .withLongName("type").withShortName("t")
-            .withArgument(typeArg)
-            .withDescription("SOAP request type (mail, account, admin, im, mobile).  Default is admin.")
-            .create();
-        
-        // Initialize option group
-        GroupBuilder gbuilder = new GroupBuilder();
-        mOptions = gbuilder
-            .withName("options")
-            .withOption(help)
-            .withOption(mailbox)
-            .withOption(target)
-            .withOption(admin)
-            .withOption(zadmin)
-            .withOption(password)
-            .withOption(passFile)
-            .withOption(type)
-            .withOption(url)
-            .withOption(verbose)
-            .withOption(noOp)
-            .withOption(paths)
-            .withOption(select)
-            .withOption(json)
-            .withOption(file)
-            .create();
-
-        // Parse command line
-        Parser parser = new Parser();
-        parser.setGroup(mOptions);
-        parser.setHelpOption(help);
-        CommandLine cl = null;
-        
-        try {
-            cl = parser.parse(args);
-        } catch (OptionException e) {
-            usage(null);
+        if (errorMsg != null) {
+            System.err.println(errorMsg);
+            exitStatus = 1;
         }
-        if (cl == null) {
+        HelpFormatter format = new HelpFormatter();
+        format.printHelp(new PrintWriter(System.err, true), 80,
+            "zmsoap [options] xpath1 [xpath2 xpath3 ...]", null, mOptions, 2, 2,
+            "Element paths roughly follow XPath syntax.  " +
+            "The path of each subsequent element is relative to the previous one.  " +
+            "To navigate up the element tree, use \"../\" in the path.  " +
+            "To specify attributes on the current element, use one or more @attr=val " +
+            "arguments.  To specify element text, use \"path/to/element=text\".\n" +
+            "Example: zmsoap -z GetAccountInfoRequest/account=user1 @by=name");
+            System.exit(exitStatus);
+    }
+
+    
+    private void parseCommandLine(String[] args)
+    throws ParseException {
+        // Parse command line
+        GnuParser parser = new GnuParser();
+        CommandLine cl = parser.parse(mOptions, args);
+        
+        if (CliUtil.hasOption(cl, LO_HELP)) {
             usage(null);
         }
         
         // Set member variables
-        if (cl.hasOption(passFile)) {
-            String path = (String) cl.getValue(passFile);
+        String val = CliUtil.getOptionValue(cl, LO_PASSFILE);
+        if (val != null) {
+            String path = CliUtil.getOptionValue(cl, LO_PASSFILE);
             try {
                 mPassword = StringUtil.readSingleLineFromFile(path);
             } catch (IOException e) {
                 usage("Cannot read password from file: " + e.getMessage());
             }
         }
-        if (cl.hasOption(password)) {
-            mPassword = (String) cl.getValue(password);
+        if (CliUtil.hasOption(cl, LO_PASSWORD)) {
+            mPassword = CliUtil.getOptionValue(cl, LO_PASSWORD);
         }
-        mMailboxName = (String) cl.getValue(mailbox);
-        mAdminAccountName = (String) cl.getValue(admin);
+        mAdminAccountName = CliUtil.getOptionValue(cl, LO_ADMIN);
 
-        if (!cl.hasOption(admin) && cl.hasOption(zadmin)) {
+        if (!CliUtil.hasOption(cl, LO_ADMIN) && CliUtil.hasOption(cl, LO_ZADMIN)) {
             mAdminAccountName = LC.zimbra_ldap_user.value();
-            if (!cl.hasOption(password)) {
+            if (!CliUtil.hasOption(cl, LO_PASSWORD)) {
                 mPassword = LC.zimbra_ldap_password.value();
             }
         }
-        mMailboxName = (String) cl.getValue(mailbox);
         
+        mMailboxName = CliUtil.getOptionValue(cl, LO_MAILBOX);
         if (mMailboxName == null && mAdminAccountName == null) {
             usage("Authentication account not specified.");
         }
         
-        if (cl.hasOption(type)) {
-            mType = (String) cl.getValue(type);
+        if (CliUtil.hasOption(cl, LO_TYPE)) {
+            mType = CliUtil.getOptionValue(cl, LO_TYPE);
+            if (!sTypeToNamespace.containsKey(mType)) {
+                usage("Invalid type: " + mType);
+            }
             if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) && mMailboxName == null) {
-                usage("Mailbox must be specified for mail or account requests.");
+                usage("Mailbox must be specified for mail, account, and im requests.");
             }
         } else {
             if (mMailboxName != null) {
@@ -246,9 +234,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
         mNamespace = sTypeToNamespace.get(mType);
         
-        if (cl.hasOption(url)) {
-            mUrl = (String) cl.getValue(url);
-        } else {
+        mUrl = CliUtil.getOptionValue(cl, LO_URL);
+        if (mUrl == null) {
             if (mAdminAccountName != null) {
                 mUrl = DEFAULT_ADMIN_URL;  
             } else {
@@ -256,19 +243,25 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             }
         }
 
-        if (cl.hasOption(target)) {
+        if (CliUtil.hasOption(cl, LO_TARGET)) {
             if (mAdminAccountName != null) {
                 usage("--target option cannot be used with admin authentication.");
             }
-            mTargetAccountName = (String) cl.getValue(target);
+            mTargetAccountName = CliUtil.getOptionValue(cl, LO_TARGET);
         }
         
-        mPaths = cl.getValues(paths);
-        mVerbose = cl.getOptionCount(verbose);
-        mNoOp = cl.hasOption(noOp);
-        mSelect = (String) cl.getValue(select);
-        mUseJson = cl.hasOption(json);
-        mFilePath = (String) cl.getValue(file);
+        mVerbose = 0;
+        for (Option opt : cl.getOptions()) {
+            if (StringUtil.equal(opt.getLongOpt(), LO_VERBOSE)) {
+                mVerbose++;
+            }
+        }
+        
+        mPaths = cl.getArgs();
+        mNoOp = CliUtil.hasOption(cl, LO_NO_OP);
+        mSelect = CliUtil.getOptionValue(cl, LO_SELECT);
+        mUseJson = CliUtil.hasOption(cl, LO_JSON);
+        mFilePath = CliUtil.getOptionValue(cl, LO_FILE);
         mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
     }
     
@@ -282,22 +275,6 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (mVerbose > 1) {
             mOut.println(DomUtil.toString(envelope.toXML(), true));
         }
-    }
-    
-    private void usage(String errorMsg) {
-        if (errorMsg != null) {
-            System.err.format("%s\n\n", errorMsg);
-        }
-        HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.setGroup(mOptions);
-        helpFormatter.setShellCommand("zmsoap");
-        helpFormatter.getFullUsageSettings().remove(DisplaySetting.DISPLAY_GROUP_EXPANDED);
-        try {
-            helpFormatter.print();
-        } catch (IOException e2) {
-            e2.printStackTrace();
-        }
-        System.exit(1);
     }
     
     private void adminAuth()
@@ -376,10 +353,10 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             // Read from file.
             in = new FileInputStream(mFilePath);
             location = mFilePath;
-        } else if (mPaths.size() > 0) {
+        } else if (mPaths.length > 0) {
             // Build request from command line.
-            for (int i = 0; i < mPaths.size(); i++) {
-                element = processPath(element, mPaths.get(i));
+            for (String path : mPaths) {
+                element = processPath(element, path);
             }
         } else if (System.in.available() > 0) {
             // Read from stdin.
@@ -405,8 +382,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         // Find the root.
         Element request = element;
         if (request == null) {
-            System.err.println("No request element specified.");
-            System.exit(1);
+            usage("No request element specified.");
         }
         while (request.getParent() != null) {
             request = request.getParent();
@@ -547,7 +523,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("zmsoap", null);
         SoapCommandUtil app = new SoapCommandUtil();
-        app.parseCommandLine(args);
+        try {
+            app.parseCommandLine(args);
+        } catch (ParseException e) {
+            app.usage(e.getMessage());
+        }
         
         try {
             app.run();
