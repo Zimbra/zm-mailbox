@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -37,7 +38,6 @@ import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
@@ -105,6 +105,7 @@ public abstract class ArchiveFormatter extends Formatter {
     public abstract interface ArchiveOutputStream {
         public void close() throws IOException;
         public void closeEntry() throws IOException;
+        public OutputStream getOutputStream();
         public int getRecordSize();
         public ArchiveOutputEntry newOutputEntry(String path, String name,
             int type, long date);
@@ -473,15 +474,14 @@ public abstract class ArchiveFormatter extends Formatter {
                     for (String part : context.getPart().split(",")) {
                         BufferStream bs;
                         MimePart mp = Mime.getMimePart(mm, part);
-                        Pair<byte[], Integer> pr;
-                        int sz;
+                        long sz;
                         
                         if (mp == null)
                             throw MailServiceException.NO_SUCH_PART(part);
                         name = Mime.getFilename(mp);
                         sz = mp.getSize();
                         if (sz == -1)
-                            sz = (int)miSize;
+                            sz = miSize;
                         if (name == null) {
                             name = "attachment";
                         } else {
@@ -492,15 +492,15 @@ public abstract class ArchiveFormatter extends Formatter {
                                 name = name.substring(0, dot);
                             }
                         }
-                        bs = new BufferStream(sz, sz * 4, sz * 4);
+                        bs = new BufferStream(sz, 1024 * 1024);
                         bs.readFrom(mp.getInputStream());
-                        pr = bs.getRawBuffer();
                         aoe = aos.newOutputEntry(getEntryName(mi, "", name,
                             ext, names), MailItem.getNameForType(mi),
                             mi.getType(), mi.getDate());
-                        aoe.setSize(pr.getSecond());
+                        sz = bs.getSize();
+                        aoe.setSize(sz);
                         aos.putNextEntry(aoe);
-                        aos.write(pr.getFirst(), 0, pr.getSecond());
+                        bs.copyTo(aos.getOutputStream());
                         bs.close();
                         aos.closeEntry();
                     }

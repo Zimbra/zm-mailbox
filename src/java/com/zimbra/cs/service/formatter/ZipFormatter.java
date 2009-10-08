@@ -91,6 +91,7 @@ public class ZipFormatter extends ArchiveFormatter {
         }
         public void close() throws IOException { os.close(); }
         public void closeEntry() throws IOException { os.closeEntry(); }
+        public OutputStream getOutputStream() { return os; }
         public int getRecordSize() { return 2048; }
         public ArchiveOutputEntry newOutputEntry(String path, String name,
             int type, long date) {

@@ -83,6 +83,7 @@ public class TarFormatter extends ArchiveFormatter {
         }
         public void close() throws IOException { os.close(); }
         public void closeEntry() throws IOException { os.closeEntry(); }
+        public OutputStream getOutputStream() { return os; }
         public int getRecordSize() { return os.getRecordSize(); }
         public ArchiveOutputEntry newOutputEntry(String path, String name,
             int type, long date) {
