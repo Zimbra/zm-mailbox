@@ -84,6 +84,92 @@ public class BufferStream extends OutputStream {
         maxSize = maxMem = 0;
     }
 
+    public void copyTo(OutputStream os) throws IOException {
+        if (buf != null)
+            os.write(buf, 0, size <= buf.length ? (int)size : buf.length);
+        if (file != null) {
+            byte tmp[] = new byte[32 * 1024];
+            FileInputStream fis = new FileInputStream(file);
+            int in;
+
+            try {
+                while ((in = fis.read(tmp)) != -1)
+                    os.write(tmp, 0, in);
+            } finally {
+                fis.close();
+            }
+        }
+    }
+    
+    protected void finalize() throws Throwable {
+        release();
+        super.finalize();
+    }
+    
+    public byte[] getBuffer() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
+        if (buf != null && buf.length > size) {
+            byte newBuf[] = new byte[(int)size];
+            
+            System.arraycopy(buf, 0, newBuf, 0, (int)size);
+            buf = newBuf;
+        }
+        return buf;
+    }
+
+    public File getFile() throws IOException { 
+        sync();
+        return file;
+    }
+    
+    public InputStream getInputStream() throws IOException {
+        sync();
+        if (size > maxSize)
+            throw new EOFException("data exceeds copy capacity");
+        if (buf == null)
+            return file == null ? new ByteArrayInputStream(new byte[0]) :
+                new FileInputStream(file);
+
+        InputStream in = new ByteArrayInputStream(buf, 0, (int)Math.min(
+            buf.length, size));
+        
+        return file == null ? in : new SequenceInputStream(in, new
+            FileInputStream(file));
+    }
+    
+    public int getMaxMem() { return maxMem; }
+    
+    public long getMaxSize() { return maxSize; }
+    
+    public byte[] getRawBuffer() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
+        return buf;
+    }
+
+    public long getSize() {
+        try {
+            sync();
+        } catch (IOException e) {
+        }
+        return size;
+    }
+    
+    public boolean isPartial() { return size > maxMem && file == null; }
+
+    public boolean isSequenced() { return sequenced; }
+
+    public boolean isSpooled() { return file != null; }
+
+    public static BufferStream newFixedBufferStream(int len) {
+        return new BufferStream(len, len, len);
+    }
+
     public long readFrom(InputStream is) throws IOException {
         return readFrom(is, Long.MAX_VALUE);
     }
@@ -132,75 +218,6 @@ public class BufferStream extends OutputStream {
         return out;
     }
     
-    protected void finalize() throws Throwable {
-        release();
-        super.finalize();
-    }
-    
-    public byte[] getBuffer() {
-        try {
-            sync();
-        } catch (IOException e) {
-        }
-        if (buf != null && buf.length > size) {
-            byte newBuf[] = new byte[(int)size];
-            
-            System.arraycopy(buf, 0, newBuf, 0, (int)size);
-            buf = newBuf;
-        }
-        return buf;
-    }
-
-    public File getFile() throws IOException { 
-        sync();
-        return file;
-    }
-    
-    public static BufferStream newFixedBufferStream(int len) {
-        return new BufferStream(len, len, len);
-    }
-
-    public InputStream getInputStream() throws IOException {
-        sync();
-        if (size > maxSize)
-            throw new EOFException("data exceeds copy capacity");
-        if (buf == null)
-            return file == null ? new ByteArrayInputStream(new byte[0]) :
-                new FileInputStream(file);
-
-        InputStream in = new ByteArrayInputStream(buf, 0, (int)Math.min(
-            buf.length, size));
-        
-        return file == null ? in : new SequenceInputStream(in, new
-            FileInputStream(file));
-    }
-    
-    public int getMaxMem() { return maxMem; }
-    
-    public long getMaxSize() { return maxSize; }
-    
-    public Pair<byte[], Integer> getRawBuffer() {
-        try {
-            sync();
-        } catch (IOException e) {
-        }
-        return size == 0 ? null : new Pair<byte[], Integer>(buf, (int)size);
-    }
-
-    public long getSize() {
-        try {
-            sync();
-        } catch (IOException e) {
-        }
-        return size;
-    }
-    
-    public boolean isSequenced() { return sequenced; }
-
-    public boolean isSpooled() { return file != null; }
-
-    public boolean isPartial() { return size > maxMem && file == null; }
-
     public void release() {
         if (file != null) {
             try {
