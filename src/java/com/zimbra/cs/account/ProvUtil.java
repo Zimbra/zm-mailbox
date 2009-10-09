@@ -170,8 +170,12 @@ public class ProvUtil implements HttpDebugListener {
 
     private void usage(Command.Via violatedVia) {
         if (mCommand != null) {
-            if (violatedVia == null)
+            if (violatedVia == null) {
                 System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+                CommandHelp extraHelp = mCommand.getExtraHelp();
+                if (extraHelp != null)
+                    extraHelp.printHelp();
+            }
             else {
                 if (violatedVia == Command.Via.ldap)
                     System.out.printf("%s %s\n", mCommand.getName(), ERR_VIA_LDAP_ONLY);
@@ -233,16 +237,12 @@ public class ProvUtil implements HttpDebugListener {
         }
         
         static void help(Category cat) {
-            try {
-                if (cat == CALENDAR)
-                    helpCALENDAR();
-                else if (cat == RIGHT)
-                    helpRIGHT();
-                else if (cat == LOG)
-                    helpLOG();
-            } catch (ServiceException e) {
-                e.printStackTrace();
-            }
+            if (cat == CALENDAR)
+                helpCALENDAR();
+            else if (cat == RIGHT)
+                helpRIGHT();
+            else if (cat == LOG)
+                helpLOG();
         }
         
         static void helpCALENDAR() {
@@ -257,7 +257,36 @@ public class ProvUtil implements HttpDebugListener {
             System.out.println("    op = " + sb.toString());
         }
         
-        static void helpRIGHT() throws ServiceException {
+        static void helpRIGHT() {
+            helpRIGHTCommon();
+            helpRIGHTRights(true);
+        }
+        
+        static void helpRIGHTCommand() {
+            helpRIGHTCommon();
+            helpRIGHTRights(false);
+        }
+        
+        static void helpRIGHTRights(boolean printRights) {
+            // rights
+            System.out.println();
+            System.out.println("    {right}: if right is prefixed with a '-', it means negative right, i.e., specifically deny");
+            
+            if (printRights) {
+                try {
+                    for (com.zimbra.cs.account.accesscontrol.Right r : RightManager.getInstance().getAllAdminRights().values())
+                        System.out.println("        " + r.getName());
+                } catch (ServiceException e) {
+                    System.out.println("cannot get RightManager instance: " + e.getMessage());
+                }
+            } else {
+                System.out.println("             for complete list of rights, do \"zmprov [-l] gar\"");
+            }
+            
+            System.out.println();
+        }
+        
+        static void helpRIGHTCommon() {
             
             // target types
             System.out.println();
@@ -272,8 +301,9 @@ public class ProvUtil implements HttpDebugListener {
                 if (tts[i].needsTargetIdentity())
                     ttNeedsTargetIdentity.append(tts[i].getCode() + " ");
             }
-            System.out.println("    target-type = " + tt.toString());
-            System.out.println("        {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity + ",");
+            System.out.println("    {target-type} = " + tt.toString());
+            System.out.println();
+            System.out.println("    {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity + ",");
             System.out.println("        otherwise {target-id|target-name} should not be specified");
             
             // grantee types
@@ -287,15 +317,7 @@ public class ProvUtil implements HttpDebugListener {
                     gt.append(gts[i].getCode());
                 }
             }
-            System.out.println("    grantee-type = " + gt.toString());
-            
-            // rights
-            System.out.println();
-            System.out.println("    right: (if right is prefixed with a '-', it means negative right, i.e., specifically deny)");
-            for (com.zimbra.cs.account.accesscontrol.Right r : RightManager.getInstance().getAllAdminRights().values()) {
-                System.out.println("        " + r.getName());
-            }
-            System.out.println();
+            System.out.println("    {grantee-type} = " + gt.toString());
         }
         
         static void helpLOG() {
@@ -316,6 +338,17 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
     
+    // TODO: refactor to own class
+    interface CommandHelp {
+        public void printHelp();
+    }
+    
+    static class RightCommandHelp implements CommandHelp {
+        public void printHelp() {
+            Category.helpRIGHTCommand();
+        }
+    }
+    
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
@@ -323,7 +356,7 @@ public class ProvUtil implements HttpDebugListener {
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
         CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
-        CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4),
+        CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} {right}", Category.RIGHT, 3, 4, null, new RightCommandHelp()),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
@@ -381,13 +414,13 @@ public class ProvUtil implements HttpDebugListener {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
-        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5),
+        GET_EFFECTIVE_RIGHTS("getEffectiveRights", "ger", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 1, 5, null, new RightCommandHelp()),
         
         // for testing the provisioning interface only, comment out after testing, the soap is only used by admin console
         GET_CREATE_OBJECT_ATTRS("getCreateObjectAttrs", "gcoa", "{target-type} {domain-id|domain-name} {cos-id|cos-name} {grantee-id|grantee-name}", Category.RIGHT, 3, 4),
         
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueueInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
-        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 2, 7),
+        GET_GRANTS("getGrants", "gg", "[-t {target-type} [{target-id|target-name}]] [-g {grantee-type} {grantee-id|grantee-name} [{0|1 (whether to include grants granted to groups the grantee belongs)}]]", Category.RIGHT, 2, 7, null, new RightCommandHelp()),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_PUBLISHED_DISTRIBUTION_LIST_SHARE_INFO("getPublishedDistributionListShareInfo", "gpdlsi", "{dl-name|dl-id} [{owner-name|owner-id}]", Category.SHARE, 1, 2),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
@@ -396,7 +429,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
+        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5, null, new RightCommandHelp()),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -428,7 +461,7 @@ public class ProvUtil implements HttpDebugListener {
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
-        REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5),
+        REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5, null, new RightCommandHelp()),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
         SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
@@ -448,6 +481,7 @@ public class ProvUtil implements HttpDebugListener {
         private String mName;
         private String mAlias;
         private String mHelp;
+        private CommandHelp mExtraHelp;
         private Category mCat;
         private int mMinArgLength = 0;
         private int mMaxArgLength = Integer.MAX_VALUE;
@@ -460,6 +494,7 @@ public class ProvUtil implements HttpDebugListener {
         public String getName() { return mName; }
         public String getAlias() { return mAlias; }
         public String getHelp() { return mHelp; }
+        public CommandHelp getExtraHelp() { return mExtraHelp; }
         public Category getCategory() { return mCat; }
         public boolean hasHelp() { return mHelp != null; }
         public boolean checkArgsLength(String args[]) {
@@ -497,6 +532,17 @@ public class ProvUtil implements HttpDebugListener {
             mMinArgLength = minArgLength;
             mMaxArgLength = maxArgLength;     
             mVia = via;
+        }
+        
+        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, Via via, CommandHelp extraHelp)  {
+            mName = name;
+            mAlias = alias;
+            mHelp = help;
+            mCat = cat;
+            mMinArgLength = minArgLength;
+            mMaxArgLength = maxArgLength;     
+            mVia = via;
+            mExtraHelp = extraHelp;
         }
         
     }
