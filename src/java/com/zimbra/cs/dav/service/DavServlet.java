@@ -105,7 +105,7 @@ public class DavServlet extends ZimbraServlet {
 		addMethod(new Acl());
 	}
 
-	private void addMethod(DavMethod method) {
+	protected void addMethod(DavMethod method) {
 		sMethods.put(method.getName(), method);
 	}
 	
