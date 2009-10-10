@@ -128,6 +128,12 @@ public abstract class Db {
         // default is to do nothing
     }
 
+    /** Callback invoked immediately after a new connection is created for
+     *  the pool. */
+    @SuppressWarnings("unused")
+    void postCreate(java.sql.Connection conn) throws SQLException {
+        // default is to do nothing
+    }
 
     /** Callback invoked immediately before a connection is fetched from
      *  the pool and returned to the user. */

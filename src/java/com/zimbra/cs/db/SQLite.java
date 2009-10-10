@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 
@@ -45,6 +44,8 @@ import com.zimbra.cs.db.DbPool.PoolConfig;
 public class SQLite extends Db {
 
     private Map<Db.Error, String> mErrorCodes;
+    private String cacheSize;
+    Map<String, String> pragmas;
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
@@ -97,39 +98,33 @@ public class SQLite extends Db {
 
 
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
-        Map<String, String> pragmas = getCustomPragmas();
-        String cacheSize = LC.get("sqlite_cache_size");
-        LinkedList<java.sql.Connection> connections = new LinkedList<java.sql.Connection>();
         
+        cacheSize = LC.get("sqlite_cache_size");
         if (cacheSize != null)
-            cacheSize = "1500";
-        for (int i = 0; i < poolSize; i++) {
-            java.sql.Connection conn = pool.getConnection();
-            if (i == 0)
-                ZimbraLog.dbconn.info("sqlite driver running in " + conn.getMetaData().getDriverVersion() + " mode");
-
-            try {
-                conn.setAutoCommit(true);
-                pragma(conn, "cache_size", cacheSize);
-                pragma(conn, "default_cache_size", cacheSize);
-                pragma(conn, "page_size", "4096");
-                pragma(conn, "default_page_size", "4096");
-                pragma(conn, "fullfsync", "0");
-                pragma(conn, "journal_mode", "TRUNCATE");
-                pragma(conn, "legacy_file_format", "OFF");
-                pragma(conn, "synchronous", "NORMAL");
-
-                for (Map.Entry<String, String> pragma : pragmas.entrySet())
-                    pragma(conn, pragma.getKey(), pragma.getValue());
-            } finally {
-                connections.add(conn);
-                conn.setAutoCommit(false);
-            }
-        }
-        for (java.sql.Connection conn : connections)
-            conn.close();
-
+            cacheSize = "2000";
+        pragmas = getCustomPragmas();
+        ZimbraLog.dbconn.info("sqlite driver running with " + cacheSize + " page cache");
         super.startup(pool, poolSize);
+    }
+
+    void postCreate(java.sql.Connection conn) throws SQLException {
+        try {
+            conn.setAutoCommit(true);
+            pragma(conn, "cache_size", cacheSize);
+            pragma(conn, "default_cache_size", cacheSize);
+            pragma(conn, "page_size", "4096");
+            pragma(conn, "default_page_size", "4096");
+            pragma(conn, "encoding", "\"UTF-8\"");
+            pragma(conn, "fullfsync", "OFF");
+            pragma(conn, "journal_mode", "PERSIST");
+            pragma(conn, "legacy_file_format", "OFF");
+            pragma(conn, "synchronous", "NORMAL");
+
+            for (Map.Entry<String, String> pragma : pragmas.entrySet())
+                pragma(conn, pragma.getKey(), pragma.getValue());
+        } finally {
+            conn.setAutoCommit(false);
+        }
     }
 
     private void pragma(java.sql.Connection conn, String key, String value) throws SQLException {
@@ -143,15 +138,15 @@ public class SQLite extends Db {
 
     private Map<String, String> getCustomPragmas() {
         String propsfile = LC.get("sqlite_pragma_file");
+        
         if (propsfile == null || propsfile.trim().equals(""))
             return Collections.emptyMap();
-
         try {
             Properties props = new Properties();
+            
             props.load(new FileInputStream(propsfile));
             ZimbraLog.dbconn.info("reading custom sqlite pragmas from conf file: " + propsfile);
-
-            Map<String, String> pragmas = new HashMap<String, String>(props.size() * 3 / 2);
+            pragmas = new HashMap<String, String>(props.size() * 3 / 2);
             for (Map.Entry<Object, Object> foo : props.entrySet()) {
                 String key = (String) foo.getKey(), value = (String) foo.getValue();
                 pragmas.put(key, value);
