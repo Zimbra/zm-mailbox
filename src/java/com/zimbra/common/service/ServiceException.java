@@ -299,8 +299,13 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException PROXY_ERROR(Throwable cause, String url) {
-        return new ServiceException("error while proxying request to target server " + (cause != null ? cause.getMessage() : "unknown reason"), 
+        return new ServiceException("error while proxying request to target server: " + (cause != null ? cause.getMessage() : "unknown reason"), 
                 PROXY_ERROR, RECEIVERS_FAULT, cause, new InternalArgument(URL, url, Argument.Type.STR));
+    }
+
+    public static ServiceException PROXY_ERROR(String statusLine, String url) {
+        return new ServiceException("error while proxying request to target server: " + statusLine, 
+                PROXY_ERROR, RECEIVERS_FAULT, new InternalArgument(URL, url, Argument.Type.STR));
     }
 
     public static ServiceException TOO_MANY_HOPS() {

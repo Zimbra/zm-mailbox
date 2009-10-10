@@ -19,6 +19,7 @@
 package com.zimbra.common.soap;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 
@@ -311,10 +312,10 @@ public abstract class SoapTransport {
      * and passes <code>false</code> and <code>false</code>.
      *
      * @throws IOException
-     * @throws SoapFaultException
+     * @throws ServiceException 
      *
      */
-    public final Element invoke(Element document) throws SoapFaultException, IOException {
+    public final Element invoke(Element document) throws IOException, ServiceException {
     	return invoke(document, false, false, null);
     }
 
@@ -322,10 +323,10 @@ public abstract class SoapTransport {
      * Sends the specified SOAP envelope.  Envelope is sent as is.  (raw mode)
      * @param envelope
      * @return
-     * @throws SoapFaultException
      * @throws IOException
+     * @throws ServiceException 
      */
-    public final Element invokeRaw(Element envelope) throws SoapFaultException, IOException {
+    public final Element invokeRaw(Element envelope) throws IOException, ServiceException {
     	return invoke(envelope, true, false, null);
     }
 
@@ -334,10 +335,10 @@ public abstract class SoapTransport {
      * session on the server.
      * @param document
      * @return
-     * @throws SoapFaultException
      * @throws IOException
+     * @throws ServiceException 
      */
-    public final Element invokeWithoutSession(Element document) throws SoapFaultException, IOException {
+    public final Element invokeWithoutSession(Element document) throws IOException, ServiceException {
     	return invoke(document, false, true, null);
     }
 
@@ -349,8 +350,9 @@ public abstract class SoapTransport {
      * a &lt;soap:Envelope&gt; element, otherwise it wraps it in an envelope/body.
      * 
      * If <tt>noSession</tt> is true, no session object is created/accessed for this request.
+     * @throws ServiceException 
      */
-    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws SoapFaultException, IOException {
+    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException {
     	return invoke(document, raw, noSession, requestedAccountId, null, null);
     }
 
@@ -362,7 +364,7 @@ public abstract class SoapTransport {
      * detect modify conflict.
      */
     public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
-    	throws SoapFaultException, IOException;
+    	throws ServiceException, IOException;
     
     /**
      * Sets the number of milliseconds to wait when reading data 

@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.Header;
@@ -43,6 +45,7 @@ import org.apache.commons.httpclient.URI;
 import org.dom4j.ElementHandler;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -60,14 +63,14 @@ public class SoapHttpTransport extends SoapTransport {
     private static boolean defaultKeepAlive = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getKeepAlive();
     private static int defaultRetryCount = LC.httpclient_soaphttptransport_retry_count.intValue();
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
-    
+
     public interface HttpDebugListener {
         public void sendSoapMessage(PostMethod postMethod, Element envelope);
         public void receiveSoapMessage(PostMethod postMethod, Element envelope);
     }
-    
-    public String toString() { 
-        return "SoapHTTPTransport(uri="+mUri+")";
+
+    @Override public String toString() { 
+        return "SoapHTTPTransport(uri=" + mUri + ")";
     }
 
     /**
@@ -79,9 +82,9 @@ public class SoapHttpTransport extends SoapTransport {
      * synchronization.
      */
     public SoapHttpTransport(String uri) {
-    	this(uri, null, 0);
+        this(uri, null, 0);
     }
-    
+
     /**
      * Create a new SoapHttpTransport object for the specified URI, with specific
      *  proxy information.
@@ -91,9 +94,9 @@ public class SoapHttpTransport extends SoapTransport {
      * @param proxyPort port of proxy
      */
     public SoapHttpTransport(String uri, String proxyHost, int proxyPort) {
-    	this(uri, proxyHost, proxyPort, null, null);
+        this(uri, proxyHost, proxyPort, null, null);
     }
-    
+
     /**
      * Create a new SoapHttpTransport object for the specified URI, with specific
      *  proxy information including proxy auth credentials.
@@ -104,25 +107,22 @@ public class SoapHttpTransport extends SoapTransport {
      * @param proxyUser username for proxy auth
      * @param proxyPass password for proxy auth
      */
-    public SoapHttpTransport(String uri, String proxyHost, int proxyPort,
-        String proxyUser, String proxyPass) {
-    	super();
+    public SoapHttpTransport(String uri, String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
+        super();
         mUri = uri;
         try {
             mURI = new URI(uri, false);
         } catch (Exception e) {
         }
-    	if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
-    	    mHostConfig = new HostConfiguration();
+        if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
+            mHostConfig = new HostConfiguration();
             mHostConfig.setHost(mURI);
             mHostConfig.setProxy(proxyHost, proxyPort);
-    	    if (proxyUser != null && proxyUser.length() > 0 && proxyPass != null &&
-    	        proxyPass.length() > 0) {
-    	        mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-    	        mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort),
-    	            new UsernamePasswordCredentials(proxyUser, proxyPass));
-    	    }
-    	}
+            if (proxyUser != null && proxyUser.length() > 0 && proxyPass != null && proxyPass.length() > 0) {
+                mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+                mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
+            }
+        }
     }
 
     public void setHttpDebugListener(HttpDebugListener listener) {
@@ -143,7 +143,7 @@ public class SoapHttpTransport extends SoapTransport {
             mHostConfig = null;
         }
     }
-    
+
     public Map<String, String> getCustomHeaders() {
         if (mCustomHeaders == null)
             mCustomHeaders = new HashMap<String, String>();
@@ -159,7 +159,7 @@ public class SoapHttpTransport extends SoapTransport {
         mKeepAlive = keepAlive;
     }
 
-   
+
     /**
      * The number of times the invoke method retries 
      *
@@ -180,7 +180,7 @@ public class SoapHttpTransport extends SoapTransport {
      * Sets the number of milliseconds to wait when reading data 
      * during a invoke call. 
      */
-    public void setTimeout(int newTimeout) {
+    @Override public void setTimeout(int newTimeout) {
         mTimeout = newTimeout < 0 ? defaultTimeout : newTimeout;
     }
 
@@ -191,7 +191,7 @@ public class SoapHttpTransport extends SoapTransport {
     public int getTimeout() {
         return mTimeout;
     }
-    
+
     /**
      *  Gets the URI
      */
@@ -199,22 +199,21 @@ public class SoapHttpTransport extends SoapTransport {
         return mUri;
     }
 
+    @Override
     public Element invoke(Element document, boolean raw, boolean noSession,
-        String requestedAccountId, String changeToken, String tokenType) 
-        throws SoapFaultException, IOException, HttpException {
-        return invoke(document, raw, noSession, requestedAccountId, changeToken,
-            tokenType, null);
+            String requestedAccountId, String changeToken, String tokenType) 
+    throws IOException, HttpException, ServiceException {
+        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
     }
-    
+
     public Element invoke(Element document, boolean raw, boolean noSession,
-        String requestedAccountId, String changeToken, String tokenType,
-        Map<String, ElementHandler> saxHandlers) throws SoapFaultException,
-        IOException, HttpException {
-        Map<String, String> cookieMap = getAuthToken() == null ? null :
-            getAuthToken().cookieMap(false);
+            String requestedAccountId, String changeToken, String tokenType,
+            Map<String, ElementHandler> saxHandlers)
+    throws IOException, HttpException, ServiceException {
+        Map<String, String> cookieMap = getAuthToken() == null ? null : getAuthToken().cookieMap(false);
         HttpState state = null;
         PostMethod method = null;
-        
+
         try {
             // Assemble post method.  Append document name, so that the request
             // type is written to the access log.
@@ -231,13 +230,11 @@ public class SoapHttpTransport extends SoapTransport {
                 uri += '/';
             uri += getDocumentName(document);
             method = new PostMethod(uri + query);
-            
+
             // Set user agent if it's specified.
             String agentName = getUserAgentName();
-            
             if (agentName != null) {
                 String agentVersion = getUserAgentVersion();
-                
                 if (agentVersion != null)
                     agentName += " " + agentVersion;
                 method.setRequestHeader(new Header("User-Agent", agentName));
@@ -245,18 +242,16 @@ public class SoapHttpTransport extends SoapTransport {
 
             // the content-type charset will determine encoding used
             // when we set the request body
-            method.setRequestHeader("Content-Type",
-                getRequestProtocol().getContentType());
+            method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
             if (getClientIp() != null)
                 method.setRequestHeader(RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
 
-            Element soapReq = generateSoapMessage(document, raw, noSession,
-                requestedAccountId, changeToken, tokenType);
+            Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
             HttpMethodParams params = method.getParams();
-            
+
             method.setRequestEntity(new StringRequestEntity(soapMessage, null, "UTF-8"));
-    	
+
             if (getRequestProtocol().hasSOAPActionHeader())
                 method.setRequestHeader("SOAPAction", mUri);
 
@@ -264,61 +259,56 @@ public class SoapHttpTransport extends SoapTransport {
                 for (Map.Entry<String, String> entry : mCustomHeaders.entrySet())
                     method.setRequestHeader(entry.getKey(), entry.getValue());
             }
-            
+
             if (cookieMap != null) {
                 for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
                     if (state == null)
                         state = new HttpState();
-                    state.addCookie(new Cookie(method.getURI().getHost(),
-                        ck.getKey(), ck.getValue(), "/", null, false));
+                    state.addCookie(new Cookie(method.getURI().getHost(), ck.getKey(), ck.getValue(), "/", null, false));
                 }
             }
 
             if (mHttpDebugListener != null)
                 mHttpDebugListener.sendSoapMessage(method, soapReq);
-            
-            params.setCookiePolicy(state == null ? CookiePolicy.IGNORE_COOKIES :
-                CookiePolicy.BROWSER_COMPATIBILITY);
-            params.setParameter(HttpMethodParams.RETRY_HANDLER,
-                new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
+
+            params.setCookiePolicy(state == null ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
+            params.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
             params.setSoTimeout(mTimeout);
             params.setVersion(HttpVersion.HTTP_1_1);
-            method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" :
-                "Close");
+            method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
 
-            mClient.executeMethod(mHostConfig, method, state);
+            int responseCode = mClient.executeMethod(mHostConfig, method, state);
+            if (responseCode != HttpServletResponse.SC_OK)
+                throw ServiceException.PROXY_ERROR(method.getStatusLine().toString(), uri);
 
             // Read the response body.  Use the stream API instead of the byte[]
             // version to avoid HTTPClient whining about a large response.        
-            InputStreamReader reader = new InputStreamReader(
-                method.getResponseBodyAsStream(), SoapProtocol.getCharset());
+            InputStreamReader reader = new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
             String responseStr = "";
-            
+
             try {
                 if (saxHandlers != null) {
                     parseLargeSoapResponse(reader, saxHandlers);
                     return null;
                 } else {
-                    responseStr = ByteUtil.getContent(reader,
-                        (int)method.getResponseContentLength(), false);
+                    responseStr = ByteUtil.getContent(reader, (int) method.getResponseContentLength(), false);
                     Element soapResp = parseSoapResponse(responseStr, raw);
-                    
+
                     if (mHttpDebugListener != null)
                         mHttpDebugListener.receiveSoapMessage(method, soapResp);
                     return soapResp;
                 }
             } catch (SoapFaultException x) {
-            	// attach request/response to the exception and rethrow
-            	x.setFaultRequest(soapMessage);
-            	x.setFaultResponse(responseStr.substring(0, Math.min(10240,
-            	    responseStr.length())));
-            	throw x;
+                // attach request/response to the exception and rethrow
+                x.setFaultRequest(soapMessage);
+                x.setFaultResponse(responseStr.substring(0, Math.min(10240, responseStr.length())));
+                throw x;
             }
         } finally {
             // Release the connection to the connection manager
             if (method != null)
                 method.releaseConnection();  
-            
+
             // really not necessary if running in the server because the reaper thread 
             // of our connection manager will take care it.  
             // if called from CLI, all connections will be closed when the CLI
@@ -327,7 +317,7 @@ public class SoapHttpTransport extends SoapTransport {
                 mClient.getHttpConnectionManager().closeIdleConnections(0); 
         }
     }
-    
+
     /**
      * Returns the document name.  If the given document is an <tt>Envelope</tt>
      * element, returns the name of the first child of the <tt>Body</tt> subelement.
