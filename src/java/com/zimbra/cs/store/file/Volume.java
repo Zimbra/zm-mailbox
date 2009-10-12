@@ -674,7 +674,7 @@ public class Volume {
 
     // Based on default settings, there are 256 directories.  We
     // write blobs for id's 0-4095 to directory 0, 4096-8191 to directory
-    // 1, etc.  After filling directory 256, we wrap around and write
+    // 1, etc.  After filling directory 255, we wrap around and write
     // 1048576-1052671 to directory 0 and so on.
     
     // Number of dirs: 2 ^ groupBits (2 ^ 8 = 256 by default)
