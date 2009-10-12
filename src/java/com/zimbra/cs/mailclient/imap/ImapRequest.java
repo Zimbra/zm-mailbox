@@ -77,6 +77,19 @@ public class ImapRequest {
     public boolean isAuthenticate() {
         return CAtom.AUTHENTICATE.atom().equals(cmd);
     }
+
+    public boolean isIdle() {
+        return CAtom.IDLE.atom().equals(cmd);
+    }
+
+    public boolean isSelectOrExamine() {
+        switch (cmd.getCAtom()) {
+        case SELECT: case EXAMINE:
+            return true;
+        default:
+            return false;
+        }
+    }
     
     public ImapResponse send() throws IOException {
         try {

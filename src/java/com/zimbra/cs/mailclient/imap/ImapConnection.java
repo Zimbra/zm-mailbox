@@ -146,6 +146,25 @@ public final class ImapConnection extends MailConnection {
         newRequest(CAtom.NOOP).sendCheckStatus();
     }
 
+    public void noop(ResponseHandler handler) throws IOException {
+        ImapRequest req = newRequest(CAtom.NOOP);
+        req.setResponseHandler(handler);
+        req.sendCheckStatus();
+    }
+
+    public void idle(ResponseHandler handler) throws IOException {
+        ImapRequest req = newRequest(CAtom.IDLE);
+        req.setResponseHandler(handler);
+        ImapResponse res = req.send();
+        if (res != null) {
+            if (res.isOK()) {
+                throw new MailException(
+                    "Expected IDLE continuation but got final response");
+            }
+            req.checkStatus(res);
+        }
+    }
+
     public void check() throws IOException {
         newRequest(CAtom.CHECK).sendCheckStatus();
     }
@@ -381,12 +400,10 @@ public final class ImapConnection extends MailConnection {
         final List<Long> results = new ArrayList<Long>();
         ImapRequest req = newRequest(cmd, params);
         req.setResponseHandler(new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
+            public void handleResponse(ImapResponse res) {
                 if (res.getCCode() == CAtom.SEARCH) {
                     results.addAll((List<Long>) res.getData());
-                    return true;
                 }
-                return false;
             }
         });
         req.sendCheckStatus();
@@ -461,15 +478,20 @@ public final class ImapConnection extends MailConnection {
     }
 
     // Called from ImapRequest
-    synchronized ImapResponse sendRequest(ImapRequest req)
-        throws IOException {
+    synchronized ImapResponse sendRequest(ImapRequest req) throws IOException {
         if (isClosed()) {
             throw new IOException("Connection is closed");
+        }
+        if (request != null) {
+            throw new IllegalStateException("Request already pending");
+        }
+        if (req.isIdle()) {
+            return sendIdle(req);
         }
         request = req;
         try {
             try {
-                req.write((ImapOutputStream) mailOut);
+                req.write(getImapOutputStream());
             } catch (LiteralException e) {
                 return e.res;
             }
@@ -488,6 +510,68 @@ public final class ImapConnection extends MailConnection {
         } finally {
             request = null;
         }
+    }
+
+    public synchronized boolean isIdling() {
+        return request != null && request.isIdle();
+    }
+
+    private ImapResponse sendIdle(ImapRequest req) throws IOException {
+        request = req;
+        try {
+            req.write(getImapOutputStream());
+            ImapResponse res = waitForResponse();
+            if (res.isTagged()) {
+                return res;
+            }
+            assert res.isContinuation();
+            Thread t = new Thread(new Runnable() {
+                public void run() {
+                    idleHandler();
+                }
+            });
+            t.setName("IMAP IDLE thread");
+            t.setDaemon(true);
+            t.start();
+        } catch (IOException e) {
+            request = null;
+        }
+        return null;
+    }
+    
+    private void idleHandler() {
+        try {
+            ImapResponse res = waitForResponse();
+            if (res.isContinuation()) {
+                throw new IOException("Unexpected continuation response");
+            }
+            assert res.isTagged();
+        } catch (IOException e) {
+            getLogger().error("IDLE failed", e);
+        }
+        synchronized (this) {
+            request = null;
+            notifyAll();
+        }
+    }
+
+    public synchronized void stopIdle() throws IOException {
+        if (isIdling()) {
+            ImapOutputStream out = getImapOutputStream();
+            out.writeLine("DONE");
+            out.flush();
+            while (isIdling()) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
+            }
+        }
+    }
+
+    private ImapOutputStream getImapOutputStream() {
+        return (ImapOutputStream) mailOut;
     }
 
     // Called from ImapRequest
@@ -569,9 +653,7 @@ public final class ImapConnection extends MailConnection {
             return false;
         }
         if (res.isUntagged()) {
-            if (processUntagged(res)) {
-                return true;
-            }
+            processUntagged(res);
             res.dispose(); // Clean up associated literal data
 
         }
@@ -583,7 +665,7 @@ public final class ImapConnection extends MailConnection {
             }
         } else if (res.getCCode() == CAtom.CAPABILITY) {
             capabilities = (ImapCapabilities) res.getData();
-        } else if (mailbox != null) {
+        } else if (mailbox != null && !request.isSelectOrExamine()) {
             mailbox.handleResponse(res);
         }
         return res.isUntagged();
@@ -594,13 +676,10 @@ public final class ImapConnection extends MailConnection {
      * response otherwise returns false.
      */
     private boolean processUntagged(ImapResponse res) throws IOException {
-        assert request != null;
         ResponseHandler handler = request.getResponseHandler();
         if (handler != null) {
             try {
-                if (handler.handleResponse(res)) {
-                    return true;
-                }
+                handler.handleResponse(res);
             } catch (Throwable e) {
                 throw new MailException("Exception in response handler", e);
             }

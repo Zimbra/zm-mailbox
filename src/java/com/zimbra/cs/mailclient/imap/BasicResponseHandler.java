@@ -34,11 +34,9 @@ public class BasicResponseHandler implements ResponseHandler {
     }
 
     @SuppressWarnings("unchecked")
-    public boolean handleResponse(ImapResponse res) {
+    public void handleResponse(ImapResponse res) {
         if (res.getCode().equals(code)) {
             results.add(res.getData());
-            return true;
         }
-        return false;
     }
 }

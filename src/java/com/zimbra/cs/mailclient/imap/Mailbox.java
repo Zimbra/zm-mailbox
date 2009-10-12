@@ -98,49 +98,46 @@ public final class Mailbox implements ResponseHandler {
         }
     }
 
-    public boolean handleResponse(ImapResponse res) {
+    public void handleResponse(ImapResponse res) {
         switch (res.getCCode()) {
         case EXISTS:
             exists = res.getNumber();
-            return true;
+            break;
         case RECENT:
             recent = res.getNumber();
-            return true;
+            break;
         case FLAGS:
             flags = (Flags) res.getData();
-            return true;
+            break;
         case OK:
-            return handleResponseText(res.getResponseText());
-        default:
-            return false;
+            handleResponseText(res.getResponseText());
+            break;
         }
     }
 
-    private boolean handleResponseText(ResponseText rt) {
+    private void handleResponseText(ResponseText rt) {
         long n;
         switch (rt.getCCode()) {
         case UNSEEN:
             unseen = (Long) rt.getData();
-            return true;
+            break;
         case UIDNEXT:
             n = (Long) rt.getData();
             if (n > 0) uidNext = n;     // bug 38521
-            return true;
+            break;
         case UIDVALIDITY:
             n = (Long) rt.getData();
             if (n > 0) uidValidity = n; // bug 38521
-            return true;
+            break;
         case PERMANENTFLAGS:
             permanentFlags = (Flags) rt.getData();
-            return true;
+            break;
         case READ_WRITE:
             access = CAtom.READ_WRITE;
-            return true;
+            break;
         case READ_ONLY:
             access = CAtom.READ_ONLY;
-            return true;
-        default:
-            return false;
+            break;
         }
     }
 

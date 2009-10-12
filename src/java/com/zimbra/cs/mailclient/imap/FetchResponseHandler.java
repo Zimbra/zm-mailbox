@@ -25,7 +25,7 @@ public abstract class FetchResponseHandler implements ResponseHandler {
         this(true);
     }
 
-    public boolean handleResponse(ImapResponse res) throws Exception {
+    public void handleResponse(ImapResponse res) throws Exception {
         if (res.getCCode() == CAtom.FETCH) {
             MessageData md = (MessageData) res.getData();
             try {
@@ -33,9 +33,7 @@ public abstract class FetchResponseHandler implements ResponseHandler {
             } finally {
                 if (dispose) md.dispose();
             }
-            return true;
         }
-        return false;
     }
 
     public abstract void handleFetchResponse(MessageData md) throws Exception;

@@ -42,7 +42,6 @@ import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailConfig;
-import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.datasource.ImapAppender;
 
@@ -51,10 +50,15 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.BufferedReader;
+import java.io.Writer;
+import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
 import java.util.Random;
+import java.net.Socket;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -161,6 +165,67 @@ public class TestImapClient {
     }
 
     @Test
+    public void testIdle() throws Exception {
+        login();
+        assertFalse(connection.isIdling());
+        final AtomicLong exists = new AtomicLong(-1);
+        // Start IDLE...
+        connection.idle(new ResponseHandler() {
+            public void handleResponse(ImapResponse res) {
+                System.out.println("XXX res = " + res);
+                if (res.getCCode() == CAtom.EXISTS) {
+                    synchronized (exists) {
+                        exists.set(res.getNumber());
+                    }
+                }
+            }
+        });
+        assertTrue(connection.isIdling());
+        // Send test message
+        sendTestMessage();
+        // Wait for message delivery...
+        synchronized (exists) {
+            while (exists.get() <= 0) {
+                exists.wait();
+            }
+        }
+        // Stop IDLE...
+        connection.stopIdle();
+        // Check mailbox status
+        Mailbox mb = connection.getMailbox();
+        assertEquals(mb.getExists(), exists.get());
+    }
+
+    private void sendTestMessage() throws IOException {
+        Socket sock = new Socket("localhost", 7025);
+        Writer out = new OutputStreamWriter(sock.getOutputStream());
+        BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+        smtpSend(in, out, "LHLO localhost");
+        smtpSend(in, out, "MAIL FROM: <user1@localhost>");
+        smtpSend(in, out, "RCPT TO: <user1>");
+        smtpSend(in, out, "DATA");
+        smtpSend(in, out, "Hello, world\r\n.\r\n");
+        smtpSend(in, out, "QUIT");
+    }
+
+    private static void smtpSend(BufferedReader in, Writer out, String cmd) throws IOException {
+        System.out.println("SMTP C: " + cmd);
+        out.write(cmd);
+        out.write("\r\n");
+        out.flush();
+        String line;
+        while ((line = in.readLine()) != null) {
+            System.out.println("SMTP S: " + line);
+            if (line.matches("5.. .*")) {
+                throw new IOException("SMTP command failed: " + line);
+            }
+            if (!line.matches("2..-.*")) {
+                return;
+            }
+        }
+    }
+    
+    @Test
     public void testAppend() throws Exception {
         login();
         Mailbox mb = connection.select("INBOX");
@@ -207,8 +272,8 @@ public class TestImapClient {
         Mailbox mb = connection.select("INBOX");
         final AtomicLong count = new AtomicLong(mb.getExists());
         connection.uidFetch("1:*", "(FLAGS INTERNALDATE RFC822.SIZE ENVELOPE BODY BODY.PEEK[])", new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) throws Exception {
-                if (res.getCCode() != CAtom.FETCH) return false;
+            public void handleResponse(ImapResponse res) throws Exception {
+                if (res.getCCode() != CAtom.FETCH) return;
                 MessageData md = (MessageData) res.getData();
                 assertNotNull(md);
                 Envelope env = md.getEnvelope();
@@ -235,7 +300,6 @@ public class TestImapClient {
                 // assertNotNull(body[0].getBytes());
                 count.decrementAndGet();
                 System.out.printf("Fetched uid = %s\n", md.getUid());
-                return true;
             }
         });
         assertEquals(0, count.longValue());
