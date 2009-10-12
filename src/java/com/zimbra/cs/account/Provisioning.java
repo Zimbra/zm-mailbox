@@ -1965,6 +1965,24 @@ public abstract class Provisioning {
     
     /** do not fixup return attrs for searchObject, should only be used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x80;
+    
+    /** 
+     *  do not set account defaults in makeAccount
+     *  
+     *  bug 36017, 41533
+     *  
+     *  only used from the admin SearchDirectory and GetQuotaUsage SOAPs, where large number of accounts are 
+     *  returned from Provisioning.searchDirectory.  In the extreme case where the accounts 
+     *  span many different domains, the admin console UI/zmprov would seem to be be unresponsive.  
+     *  
+     *  Domain is needed for:
+     *    - determine the cos if cos is not set on the account
+     *    - account secondary default
+     *  
+     *  Caller is responsible for setting the defaults when it needs them.
+     */
+    public static final int SO_NO_ACCOUNT_DEFAULTS = 0x100;            // do not set defaults and secondary defaults in makeAccount
+    public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x200;  // do not set secondary defaults in makeAccount
 
     public static final String A_amavisBypassSpamChecks = "amavisBypassSpamChecks";
 
