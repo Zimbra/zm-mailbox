@@ -32,6 +32,7 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -47,22 +48,26 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.CliUtil;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.mail.ItemAction;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.soap.*;
 
 public class SpamExtract {
 
@@ -95,7 +100,7 @@ public class SpamExtract {
             mLog.error(errmsg);
         }
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("SpamExtract [options] ",
+        formatter.printHelp("zmspamextract [options] ",
             "where [options] are one of:", mOptions,
             "SpamExtract retrieve messages that may have been marked as spam or not spam in the Zimbra Web Client.");
         System.exit((errmsg == null) ? 0 : 1);
@@ -297,6 +302,7 @@ public class SpamExtract {
     }        
     
     private static int mExtractIndex;
+    private static final int MAX_BUFFER_SIZE = 10 * 1024 * 1024;
     
     private static void extractMessage0(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) throws IOException, MessagingException {
         gm.setPath(path);
@@ -305,22 +311,14 @@ public class SpamExtract {
         if (gm.getStatusCode() != HttpStatus.SC_OK) {
             throw new IOException("HTTP GET failed: " + gm.getPath() + ": " + gm.getStatusCode() + ": " + gm.getStatusText());
         }
-    
-        InputStream is = null;
-        MimeMessage mm = null;
-        try {
-            is = gm.getResponseBodyAsStream();
-            mm = new MimeMessage(mJMSession, is);
-        } finally {
-            ByteUtil.closeStream(is);
-        }
-        
+
         if (raw) {
+            // Write the message as-is.
             File file = new File(outdir, mOutputPrefix + "-" + mExtractIndex++);
             OutputStream os = null;
             try {
                 os = new BufferedOutputStream(new FileOutputStream(file)); 
-                mm.writeTo(os);
+                ByteUtil.copy(gm.getResponseBodyAsStream(), true, os, false);
                 if (mVerbose) mLog.info("Wrote: " + file);
             } catch (java.io.IOException e) {
                 String fileName = outdir + "/" + mOutputPrefix + "-" + mExtractIndex;
@@ -333,9 +331,31 @@ public class SpamExtract {
             return;
         }
 
+        // Write the attached message to the output directory.
+        BufferStream buffer = new BufferStream(gm.getResponseContentLength(), MAX_BUFFER_SIZE);
+        buffer.setSequenced(false);
+        MimeMessage mm = null;
+        SharedFileInputStream sfis = null;
+        try {
+            ByteUtil.copy(gm.getResponseBodyAsStream(), true, buffer, false);
+            if (buffer.isSpooled()) {
+                sfis = new SharedFileInputStream(buffer.getFile());
+                mm = new MimeMessage(mJMSession, sfis);
+            } else {
+                mm = new MimeMessage(mJMSession, buffer.getInputStream());
+            }
+            writeAttachedMessages(mm, outdir, gm.getPath());
+        } finally {
+            ByteUtil.closeStream(sfis);
+        }
+        
+    }
+    
+    private static void writeAttachedMessages(MimeMessage mm, File outdir, String msgUri)
+    throws IOException, MessagingException {
         // Not raw - ignore the spam report and extract messages that are in attachments...
         if (!(mm.getContent() instanceof MimeMultipart)) {
-            mLog.warn("Spam/notspam messages must have attachments (skipping " + gm.getPath() + ")");
+            mLog.warn("Spam/notspam messages must have attachments (skipping " + msgUri + ")");
             return;
         }
         
@@ -363,7 +383,7 @@ public class SpamExtract {
         
         if (!foundAtleastOneAttachedMessage) {
             String msgid = mm.getHeader("Message-ID", " ");
-            mLog.warn("message uri=" + gm.getPath() + " message-id=" + msgid + " had no attachments");
+            mLog.warn("message uri=" + msgUri + " message-id=" + msgid + " had no attachments");
         }
     }
         
