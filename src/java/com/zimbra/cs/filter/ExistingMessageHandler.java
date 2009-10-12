@@ -42,7 +42,7 @@ extends FilterHandler {
     private int mMessageId;
     private MimeMessage mMimeMessage;
     private ParsedMessage mParsedMessage;
-    private boolean mDeleteOriginal = true;
+    private boolean mDeleteOriginal = false;
     private boolean mFiltered = false;
     
     public ExistingMessageHandler(Mailbox mbox, int messageId) {
@@ -94,7 +94,6 @@ extends FilterHandler {
     throws ServiceException {
         ZimbraLog.filter.info("Discarding existing message with id %d.", mMessageId);
         mMailbox.delete(null, mMessageId, MailItem.TYPE_MESSAGE);
-        mDeleteOriginal = false;
         mFiltered = true;
     }
 
@@ -105,7 +104,6 @@ extends FilterHandler {
         ZimbraLog.filter.debug("Implicitly keeping existing message %d.", mMessageId);
         Message msg = mMailbox.getMessageById(null, mMessageId);
         updateTagsAndFlagsIfNecessary(msg, flagBitmask, tags);
-        mDeleteOriginal = false;
         return msg;
     }
 
@@ -115,7 +113,6 @@ extends FilterHandler {
         ZimbraLog.filter.debug("Explicitly keeping existing message %d.", mMessageId);
         Message msg = mMailbox.getMessageById(null, mMessageId);
         updateTagsAndFlagsIfNecessary(msg, flagBitmask, tags);
-        mDeleteOriginal = false;
         return msg;
     }
     
@@ -139,7 +136,6 @@ extends FilterHandler {
         if (currentFolder.getPath().equalsIgnoreCase(folderPath)) {
             ZimbraLog.filter.debug("Ignoring fileinto action for message %d.  It is already in %s.",
                 mMessageId, folderPath);
-            mDeleteOriginal = false;
             return null;
         }
         
@@ -162,6 +158,7 @@ extends FilterHandler {
             mMailbox.getAccount().getName(), folderPath, flagBitmask, tags);
         if (id != null) {
             mFiltered = true;
+            mDeleteOriginal = true;
         }
         return id;
     }

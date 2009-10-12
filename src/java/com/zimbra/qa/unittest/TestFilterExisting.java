@@ -39,6 +39,7 @@ import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
@@ -59,6 +60,7 @@ extends TestCase {
     private static final String FOLDER1_RULE_NAME = NAME_PREFIX + " folder1";
     private static final String FOLDER2_RULE_NAME = NAME_PREFIX + " folder2";
     private static final String DISCARD_RULE_NAME = NAME_PREFIX + " discard";
+    private static final String REDIRECT_RULE_NAME = NAME_PREFIX + " redirect";
 
     private ZFilterRules mOriginalRules;
 
@@ -223,6 +225,25 @@ extends TestCase {
         assertEquals(0, messages.size());
     }
     
+    public void testRedirect()
+    throws Exception {
+        // Add message
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String subject = NAME_PREFIX + " test redirect";
+        String id = TestUtil.addMessage(mbox, subject);
+        String query = "in:inbox subject:\"" + subject + "\"";
+        
+        // Run the keep and discard rules, and make sure the message was kept.
+        Set<String> affectedIds = runRules(new String[] { REDIRECT_RULE_NAME }, id, null);
+        assertEquals(0, affectedIds.size());
+        TestUtil.getMessage(mbox, query);
+        
+        // Make sure that the redirect action was ignored, and the message
+        // does not exist in user2's mailbox.
+        ZMailbox mbox2 = TestUtil.getZMailbox("user2");
+        assertEquals(0, TestUtil.search(mbox2, "in: inbox subject:\"" + subject + "\"").size());
+    }
+    
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -316,6 +337,14 @@ extends TestCase {
         actions.add(new ZDiscardAction());
         rules.add(new ZFilterRule(DISCARD_RULE_NAME, true, false, conditions, actions));
 
+        // If subject contains "redirect", redirect to user2.  This rule should
+        // be ignored when applied to existing messages.
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "redirect"));
+        actions.add(new ZRedirectAction(TestUtil.getAddress("user2")));
+        rules.add(new ZFilterRule(REDIRECT_RULE_NAME, true, false, conditions, actions));
+        
         // Save rules
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.saveFilterRules(new ZFilterRules(rules));
