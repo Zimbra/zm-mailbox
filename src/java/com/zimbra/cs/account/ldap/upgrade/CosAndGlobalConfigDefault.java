@@ -147,6 +147,9 @@ public class CosAndGlobalConfigDefault extends LdapUpgrade {
         Map<String, Object> attrValues = new HashMap<String, Object>();
         for (String attr : attrs) {
             AttributeInfo ai = am.getAttributeInfo(attr);
+            if (ai == null)
+                continue;
+            
             BuildInfo.Version attrVersion = ai.getSince();
             
             if (needsUpgrade(am, attr, attrVersion)) {    

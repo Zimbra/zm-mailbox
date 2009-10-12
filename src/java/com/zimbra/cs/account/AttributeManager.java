@@ -26,6 +26,7 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.callback.IDNCallback;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 import org.apache.commons.cli.CommandLine;
@@ -110,9 +111,24 @@ public class AttributeManager {
     
     private static AttributeManager mInstance;
 
+    // contains attrs defined in one of the zimbra .xml files (currently zimbra attrs and some of the amavis attrs) 
+    // these attrs have AttributeInfo
+    // 
+    // Note: does *not* contains attrs defiend in the extensions(attrs in OCs specified in global config ***ExtraObjectClass)
+    //
+    // Extension attr names are in the class -> attrs maps:
+    //     mClassToAttrsMap, mClassToLowerCaseAttrsMap, mClassToAllAttrsMap maps.
+    //
     private Map<String, AttributeInfo> mAttrs = new HashMap<String, AttributeInfo>();
     
     private Map<String, ObjectClassInfo> mOCs = new HashMap<String, ObjectClassInfo>();
+    
+    // only direct attrs
+    private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
+    private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
+    
+    // direct attrs and attrs from included objectClass's
+    private Map<AttributeClass, Set<String>> mClassToAllAttrsMap = new HashMap<AttributeClass, Set<String>>();
     
     private AttributeCallback mIDNCallback = new IDNCallback();
 
@@ -130,6 +146,10 @@ public class AttributeManager {
             if (mInstance.hasErrors()) {
             	throw ServiceException.FAILURE(mInstance.getErrors(), null);
             }
+            
+            mInstance.getLdapSchemaExtensionAttrs();
+            mInstance.computeClassToAllAttrsMap();
+            
             return mInstance;
         }
     }
@@ -170,7 +190,7 @@ public class AttributeManager {
     		}
     	}
     	
-    	computeClassToAllAttrsMap();
+    	
     }
     
     private List<String> mErrors = new LinkedList<String>();
@@ -206,6 +226,7 @@ public class AttributeManager {
 
         String group = root.attributeValue(A_GROUP);
         String groupIdStr = root.attributeValue(A_GROUP_ID);
+        
         if (group == null ^ groupIdStr == null) {
             error(null, file, A_GROUP + " and " + A_GROUP_ID + " both have to be both specified");
         }
@@ -731,13 +752,6 @@ public class AttributeManager {
     /*
      * Support for lookup by class
      */
-
-    // only direct attrs
-    private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
-    private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
-    
-    // direct attrs and attrs from included objectClass's
-    private Map<AttributeClass, Set<String>> mClassToAllAttrsMap = new HashMap<AttributeClass, Set<String>>();
     
     private void initClassToAttrsMap() {
         for (AttributeClass klass : AttributeClass.values()) {
@@ -925,10 +939,6 @@ public class AttributeManager {
     
     public Set<String> getAllAttrsInClass(AttributeClass klass) {
         return mClassToAllAttrsMap.get(klass);
-    }
-
-    Set<String> getAllAttrs() {
-        return mAttrs.keySet();
     }
     
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {
@@ -2319,6 +2329,69 @@ public class AttributeManager {
         result.append(String.format("    }%n"));
     }
 
+    private synchronized void getLdapSchemaExtensionAttrs() throws ServiceException {
+        getExtraObjectClassAttrs(AttributeClass.account, Provisioning.A_zimbraAccountExtraObjectClass);
+        getExtraObjectClassAttrs(AttributeClass.calendarResource, Provisioning.A_zimbraCalendarResourceExtraObjectClass);
+        getExtraObjectClassAttrs(AttributeClass.cos, Provisioning.A_zimbraCosExtraObjectClass);
+        getExtraObjectClassAttrs(AttributeClass.domain, Provisioning.A_zimbraDomainExtraObjectClass);
+        getExtraObjectClassAttrs(AttributeClass.server, Provisioning.A_zimbraServerExtraObjectClass);
+    }
+    
+    private void getExtraObjectClassAttrs(AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
+        Config config = Provisioning.getInstance().getConfig();
+        
+        String[] extraObjectClasses = config.getMultiAttr(extraObjectClassAttr);
+
+        if (extraObjectClasses.length > 0) {
+            Set<String> attrsInOCs = mClassToAttrsMap.get(AttributeClass.account);
+            getAttrsInOCs(extraObjectClasses, attrsInOCs);
+        }
+    }
+    
+    private void getAttrsInOCs(String[] ocs, Set<String> attrsInOCs) throws ServiceException {
+        
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+            DirContext schema = zlc.getSchema();
+          
+            Map<String, Object> attrs;
+            for (String oc : ocs) {
+                attrs = null;
+                try {
+                    DirContext ocSchema = (DirContext)schema.lookup("ClassDefinition/" + oc);
+                    Attributes attributes = ocSchema.getAttributes("");
+                    attrs = LdapUtil.getAttrs(attributes);
+                } catch (NamingException e) {
+                    ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
+                }
+                
+                if (attrs == null)
+                    continue;
+                
+                for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+                    String attrName = attr.getKey();
+                    if ("MAY".compareToIgnoreCase(attrName) == 0 || "MUST".compareToIgnoreCase(attrName) == 0) {
+                        Object value = attr.getValue();
+                        if (value instanceof String)
+                            attrsInOCs.add((String)value);
+                        else if (value instanceof String[]) {
+                            for (String v : (String[])value)
+                                attrsInOCs.add(v);
+                        }
+                    }
+                }
+              
+            }          
+
+        } catch (NamingException e) {
+            ZimbraLog.account.debug("unable to load LDAP schema extension", e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    
     static class CLOptions {
         
         private static String get(String key, String defaultValue) {

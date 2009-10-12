@@ -3101,8 +3101,14 @@ public class ProvUtil implements HttpDebugListener {
         AttributeManager am = AttributeManager.getInstance();
         
         if (descArgs.mAttr != null) {
+            //
+            // specific attr
+            //
             specificAttr = descArgs.mAttr;
         } else if (descArgs.mAttrClass != null) {
+            //
+            // attrs in a class
+            //
             attrs = new TreeSet<String>(am.getAllAttrsInClass(descArgs.mAttrClass));
             if (descArgs.mNonInheritedOnly) {
                 Set<String> inheritFrom = null;
@@ -3131,6 +3137,9 @@ public class ProvUtil implements HttpDebugListener {
                 TreeSet<String> netAttrs = new TreeSet<String>();
                 for (String attr : attrs) {
                     AttributeInfo ai = am.getAttributeInfo(attr);
+                    if (ai == null)
+                        continue;
+                    
                     Set<AttributeClass> requiredIn = ai.getRequiredIn();
                     Set<AttributeClass> optionalIn = ai.getOptionalIn();
                     if ((requiredIn == null || requiredIn.size() == 1) &&
@@ -3141,23 +3150,38 @@ public class ProvUtil implements HttpDebugListener {
             }
             
         } else {
-            attrs = new TreeSet<String>(am.getAllAttrs());
+            //
+            // all attrs
+            //
+            
+            // am.getAllAttrs() only contains attrs with AttributeInfo
+            // not extension attrs
+            // attrs = new TreeSet<String>(am.getAllAttrs());
+            
+            // attr sets for each AttributeClass contain attrs in the extensions, use them
+            attrs = new TreeSet<String>();
+            for (AttributeClass ac : AttributeClass.values()) {
+                attrs.addAll(am.getAllAttrsInClass(ac));
+            }
         }
         
         if (specificAttr != null) {
             AttributeInfo ai = am.getAttributeInfo(specificAttr);
-            if (ai == null)
-                throw ServiceException.INVALID_REQUEST("no such attribute: " + specificAttr, null);
+            if (ai == null) {
+                System.out.println("no attribute info for " + specificAttr);
+                // throw ServiceException.INVALID_REQUEST("no such attribute: " + specificAttr, null);
+            } else {
             
-            System.out.println(ai.getName());
-            
-            // description
-            String desc = ai.getDescription();
-            System.out.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    "));
-            System.out.println();
-            
-            for (DescribeArgs.Field f : DescribeArgs.Field.values()) {
-                System.out.format("    %15s : %s\n", f.name(), DescribeArgs.Field.print(f, ai));
+                System.out.println(ai.getName());
+                
+                // description
+                String desc = ai.getDescription();
+                System.out.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    "));
+                System.out.println();
+                
+                for (DescribeArgs.Field f : DescribeArgs.Field.values()) {
+                    System.out.format("    %15s : %s\n", f.name(), DescribeArgs.Field.print(f, ai));
+                }
             }
             System.out.println();
             
@@ -3165,6 +3189,11 @@ public class ProvUtil implements HttpDebugListener {
             String indent = "    ";
             for (String attr : attrs) {
                 AttributeInfo ai = am.getAttributeInfo(attr);
+                if (ai == null) {
+                    System.out.println(attr + " (no attribute info)");
+                    continue;
+                }
+                    
                 String attrName = ai.getName();  // camel case name
                 System.out.println(attrName);
                 /* for tracking progress of bug 26161
