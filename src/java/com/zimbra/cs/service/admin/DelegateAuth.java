@@ -99,6 +99,7 @@ public class DelegateAuth extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
+        notes.add("This right is needed for an delegated admin to login to users mailboxes to view and manage their mailboxes.");
     }
     
     /*
