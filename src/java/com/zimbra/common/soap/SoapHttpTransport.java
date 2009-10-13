@@ -278,7 +278,9 @@ public class SoapHttpTransport extends SoapTransport {
             method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
 
             int responseCode = mClient.executeMethod(mHostConfig, method, state);
-            if (responseCode != HttpServletResponse.SC_OK)
+            // SOAP allows for "200" on success and "500" on failure;
+            //   real server issues will probably be "503" or "404"
+            if (responseCode != HttpServletResponse.SC_OK && responseCode != HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
                 throw ServiceException.PROXY_ERROR(method.getStatusLine().toString(), uri);
 
             // Read the response body.  Use the stream API instead of the byte[]
