@@ -1561,7 +1561,7 @@ public class ProvUtil implements HttpDebugListener {
     /*
      * prov is always LdapProvisioning here
      */
-    private void doGetAllAccounts(Provisioning prov, Domain domain, Server server, final boolean verbose, final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
+    private void doGetAllAccounts(LdapProvisioning ldapProv, Domain domain, Server server, final boolean verbose, final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
@@ -1570,13 +1570,19 @@ public class ProvUtil implements HttpDebugListener {
                     System.out.println(entry.getName());                        
             }
         };
-        prov.getAllAccounts(domain, server, visitor);
+        
+        if (verbose && applyDefault)
+            ldapProv.getAllAccounts(domain, server, visitor);
+        else
+            ldapProv.getAllAccountsNoDefaults(domain, server, visitor);
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
         
         if (!(mProv instanceof LdapProvisioning))
             throwLdapOnly();
+        
+        LdapProvisioning ldapProv = (LdapProvisioning)mProv;
         
         boolean verbose = false;
         boolean applyDefault = true;
@@ -1621,23 +1627,20 @@ public class ProvUtil implements HttpDebugListener {
             usage();
             return;
         }
-        
-        // always use LDAP
-        Provisioning prov = Provisioning.getInstance();
 
         Server server = null;
         if (s != null)
             server = lookupServer(s);
                 
         if (d == null) {
-            List domains = prov.getAllDomains();
+            List domains = ldapProv.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                doGetAllAccounts(prov, domain, server, verbose, applyDefault, null);
+                doGetAllAccounts(ldapProv, domain, server, verbose, applyDefault, null);
             }
         } else {
-            Domain domain = lookupDomain(d, prov);
-            doGetAllAccounts(prov, domain, server, verbose, applyDefault, null);
+            Domain domain = lookupDomain(d, ldapProv);
+            doGetAllAccounts(ldapProv, domain, server, verbose, applyDefault, null);
         }
     }    
 

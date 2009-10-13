@@ -4248,6 +4248,15 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
+        getAllAccountsInternal(d, s, visitor, false);
+    }
+    
+    
+    public void getAllAccountsNoDefaults(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
+        getAllAccountsInternal(d, s, visitor, true);
+    }
+    
+    private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, boolean noDefaults) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
         String filter = mDIT.filterAccountsByDomain(d, false);
         if (s != null) {
@@ -4257,7 +4266,11 @@ public class LdapProvisioning extends Provisioning {
             else
                 filter = "(&" + serverFilter + filter + ")";
         }
-        searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
+        
+        int flags = Provisioning.SA_ACCOUNT_FLAG;
+        if (noDefaults)
+            flags |= SO_NO_ACCOUNT_DEFAULTS;
+        searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, visitor, 0);
     }
 
     @Override
