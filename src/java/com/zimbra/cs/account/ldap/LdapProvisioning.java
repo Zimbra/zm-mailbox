@@ -1182,8 +1182,6 @@ public class LdapProvisioning extends Provisioning {
 
             if ((flags & Provisioning.SO_NO_FIXUP_RETURNATTRS) == 0)
                 returnAttrs = fixReturnAttrs(returnAttrs, flags);
-
-            boolean setAccountDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == 0;
             
             SearchControls searchControls =
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
@@ -1218,7 +1216,7 @@ public class LdapProvisioning extends Provisioning {
                             continue;
 
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) 
-                            visitor.visit(makeAccount(dn, attrs, setAccountDefaults, this));
+                            visitor.visit(makeAccount(dn, attrs, flags, this));
                         else if (objectclass.contains(C_zimbraAlias)) 
                             visitor.visit(makeAlias(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraMailList)) 
@@ -3972,10 +3970,10 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Account makeAccount(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
-        return makeAccount(dn, attrs, true, prov);
+        return makeAccount(dn, attrs, 0, prov);
     }
     
-    private Account makeAccount(String dn, Attributes attrs, boolean setAccountDefaults, LdapProvisioning prov) throws NamingException, ServiceException {
+    private Account makeAccount(String dn, Attributes attrs, int flags, LdapProvisioning prov) throws NamingException, ServiceException {
         Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (a == null) || a.contains(AccountCalendarUserType.USER.toString());
         
@@ -3985,16 +3983,29 @@ public class LdapProvisioning extends Provisioning {
         
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) : new LdapCalendarResource(dn, emailAddress, attrs, null, this);
         
-        if (setAccountDefaults)
-            setAccountDefaults(acct);
+        setAccountDefaults(acct, flags);
         
         return acct;
     }
     
-    public void setAccountDefaults(Account acct) throws ServiceException {
+    public void setAccountDefaults(Account acct, int flags) throws ServiceException {
+        boolean dontSetDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_DEFAULTS;
+        if (dontSetDefaults)
+            return;
+        
+        // 
+        // set primary default
+        //
         Cos cos = getCOS(acct); // will set cos if not set yet
         acct.setDefaults(cos.getAccountDefaults());
         
+        boolean dontSetSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
+        if (dontSetSecondaryDefaults)
+            return;
+            
+        //
+        // set secondary default
+        //
         Domain domain = getDomain(acct);
         if (domain != null)
             acct.setSecondaryDefaults(domain.getAccountDefaults());

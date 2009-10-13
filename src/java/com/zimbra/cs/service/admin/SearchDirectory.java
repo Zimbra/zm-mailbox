@@ -149,13 +149,13 @@ public class SearchDirectory extends AdminDocumentHandler {
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         
         // bug 36017.  
-        // do not set secondary defaults (inherited attrs from domain) for accounts
-        // we set the secondary defaults when accounts are paged back to the SOAP client.
+        // See comment for Provisioning.SO_NO_ACCOUNT_DEFAULTS
+        // 
+        // We set defaults when accounts are paged back to the SOAP client.
         //
         // Account object returned from Provisioning.searchDirectory are not cached anywhere,
         // they are just referenced here.
         //
-        
         flags |= Provisioning.SO_NO_ACCOUNT_DEFAULTS;
         
         if (session != null) {
@@ -186,15 +186,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             
             if (entry instanceof Account) {
                 applyDefault = applyCos;
-                
-                if (ldapProv != null) {
-                    Boolean isDefaultSet = (Boolean)entry.getCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA);
-                    if (isDefaultSet == null || isDefaultSet == Boolean.FALSE) {
-                        ldapProv.setAccountDefaults((Account)entry);
-                        entry.setCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA, Boolean.TRUE);
-                    }
-                }
-                
+                setAccountDefaults(ldapProv, (Account)entry);
             } else if (entry instanceof Domain) {
                 applyDefault = applyConfig;
             }
@@ -205,6 +197,17 @@ public class SearchDirectory extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, accounts.size());
         return response;
+    }
+    
+    private void setAccountDefaults(LdapProvisioning ldapProv, Account entry) throws ServiceException {
+        if (ldapProv == null)
+            return;
+        
+        Boolean isDefaultSet = (Boolean)entry.getCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA);
+        if (isDefaultSet == null || isDefaultSet == Boolean.FALSE) {
+            ldapProv.setAccountDefaults((Account)entry, 0);
+            entry.setCachedData(SEARCH_DIRECTORY_ACCOUNT_DATA, Boolean.TRUE);
+        }
     }
     
     static void encodeEntry(Provisioning prov, Element parent, NamedEntry entry, boolean applyDefault, Set<String> reqAttrs, AdminAccessControl aac) 

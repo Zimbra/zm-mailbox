@@ -47,7 +47,6 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     public static final String SORT_TOTAL_USED = "totalUsed";
     public static final String SORT_QUOTA_LIMIT = "quotaLimit";
     public static final String SORT_ACCOUNT = "account";
-        
     private static final String QUOTA_USAGE_CACHE_KEY = "GetQuotaUsage";
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -179,7 +178,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             String query = String.format("(zimbraMailHost=%s)", getLocalHost());
             
             Provisioning prov = Provisioning.getInstance();
-            int flags = Provisioning.SA_ACCOUNT_FLAG;
+            int flags = Provisioning.SA_ACCOUNT_FLAG | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
             List<NamedEntry> accounts;
             Domain d = mDomainId.equals("") ? null : prov.get(DomainBy.id, mDomainId);
             if (d != null) {
@@ -187,13 +186,13 @@ public class GetQuotaUsage extends AdminDocumentHandler {
             } else {
                 accounts = prov.searchAccounts(query, null, null, true, flags);
             }
-
+            
             Map<String, Long> quotaUsed = MailboxManager.getInstance().getMailboxSizes(accounts);
 
             for (Object obj: accounts) {
                 if (!(obj instanceof Account))continue;
-                AccountQuota aq = new AccountQuota();            
                 Account acct = (Account) obj;
+                AccountQuota aq = new AccountQuota();            
                 aq.id = acct.getId();
                 aq.name = acct.getName();
                 aq.quotaLimit = acct.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
