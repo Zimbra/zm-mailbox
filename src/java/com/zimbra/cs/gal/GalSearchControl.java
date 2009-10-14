@@ -167,9 +167,6 @@ public class GalSearchControl {
 	
 	private void generateSearchQuery(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
 		String query = mParams.getQuery();
-		String[] tokens = query.split(" ");
-		if (tokens.length == 2 && tokens[1].length() == 1)
-			query = tokens[0];
 		Provisioning.GAL_SEARCH_TYPE type = mParams.getType();
 		StringBuilder searchQuery = new StringBuilder();
         if (query.length() > 0)
