@@ -147,7 +147,7 @@ public class AttributeManager {
             	throw ServiceException.FAILURE(mInstance.getErrors(), null);
             }
             
-            mInstance.getLdapSchemaExtensionAttrs();
+            // mInstance.getLdapSchemaExtensionAttrs();
             mInstance.computeClassToAllAttrsMap();
             
             return mInstance;
