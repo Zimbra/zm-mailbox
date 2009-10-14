@@ -763,6 +763,8 @@ public class DbMailbox {
 
             return mbd;
         } catch (SQLException e) {
+            if (Db.errorMatches(e, Db.Error.NO_SUCH_TABLE))
+                return null;
             throw ServiceException.FAILURE("fetching stats on mailbox " + mailboxId, e);
         } finally {
             DbPool.closeResults(rs);
