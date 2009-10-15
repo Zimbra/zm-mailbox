@@ -32,6 +32,8 @@ import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcCheckSpellingRequest;
 import com.zimbra.cs.client.soap.LmcCheckSpellingResponse;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMailbox.CheckSpellingResult;
+import com.zimbra.cs.zclient.ZMailbox.Misspelling;
 
 /**
  * @author bburtin
@@ -49,25 +51,33 @@ public class TestSpellCheck extends TestCase {
         "consciousness.";
         
     private String[] mOriginalDictionaries;
+    private boolean mAvailable = false;
     
     public void setUp()
     throws Exception {
         mOriginalDictionaries = Provisioning.getInstance().getLocalServer().getSpellAvailableDictionary();
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling("test");
+        mAvailable = result.getIsAvailable();
+        if (!mAvailable) {
+            ZimbraLog.test.info("Spell checking service is not available.  Skipping tests.");
+        }
     }
+    
 
     public void testCheckSpelling() throws Exception {
+        if (!mAvailable) {
+            return;
+        }
+        
         // Send the request
         LmcSession session = TestUtil.getSoapSession(USER_NAME);
         LmcCheckSpellingRequest req = new LmcCheckSpellingRequest(TEXT);
         req.setSession(session);
         LmcCheckSpellingResponse response =
             (LmcCheckSpellingResponse)req.invoke(TestUtil.getSoapUrl());
-        
-        if (!response.isAvailable()) {
-            ZimbraLog.test.debug(
-                "Unable to test spell checking because the service is not available.");
-            return;
-        }
+        assertTrue(response.isAvailable());
         
         // Verify the response
         Map<String, String[]> map = new HashMap<String, String[]>();
@@ -110,6 +120,44 @@ public class TestSpellCheck extends TestCase {
         assertEquals(2, actual.size());
         actual.removeAll(expected);
         assertEquals(0, actual.size());
+    }
+    
+    /**
+     * Confirms that spell checking doesn't bomb on unexpected characters.
+     */
+    public void testUnexpectedCharacters()
+    throws Exception {
+        if (!mAvailable) {
+            return;
+        }
+        
+        // bug 41760 - non-breaking space
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling("one \u00a0tuo two");
+        assertEquals(1, result.getMisspellings().size());
+    }
+    
+    /**
+     * Confirms that accented characters are handled correctly (bug 41394).
+     */
+    public void testSpanish()
+    throws Exception {
+        if (!mAvailable) {
+            return;
+        }
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling("reunion", "es");
+        assertEquals(1, result.getMisspellings().size());
+        Misspelling misspelling = result.getMisspellings().get(0);
+        assertEquals("reunion", misspelling.getWord());
+        String expected = "reuni" + "\u00f3" + "n";
+        for (String suggestion : misspelling.getSuggestions()) {
+            if (suggestion.equals(expected)) {
+                return;
+            }
+        }
+        fail("Could not find expected suggestion '" + expected + "'");
     }
     
     public void tearDown()

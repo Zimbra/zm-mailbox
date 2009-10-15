@@ -3674,10 +3674,18 @@ public class ZMailbox implements ToZJSONObject {
 	}
 
 	public synchronized CheckSpellingResult checkSpelling(String text) throws ServiceException {
-		Element req = newRequestElement(MailConstants.CHECK_SPELLING_REQUEST);
-		req.setText(text);
-		Element response = invoke(req);
-		return new CheckSpellingResult(response);
+	    return checkSpelling(text, null);
+	}
+	
+	public synchronized CheckSpellingResult checkSpelling(String text, String dictionary)
+	throws ServiceException {
+        Element req = newRequestElement(MailConstants.CHECK_SPELLING_REQUEST);
+        if (dictionary != null) {
+            req.addAttribute(MailConstants.A_DICTIONARY, dictionary);
+        }
+        req.setText(text);
+        Element response = invoke(req);
+        return new CheckSpellingResult(response);
 	}
 
     public void createIdentity(ZIdentity identity) throws ServiceException {
