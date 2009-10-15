@@ -38,6 +38,7 @@ public class ZPhone implements ToZJSONObject {
     public static final Pattern CHECK_EMERGENCY_ASSISTANCE = Pattern.compile("^1?911\\d*");
     public static final Pattern CHECK_DIRECTORY_ASSISTANCE = Pattern.compile("^1?411\\d*");
     public static final Pattern CHECK_FORMAT = Pattern.compile("^1?[2-9]\\d{9}$");
+    public static final Pattern CHECK_INVALID_CHARS = Pattern.compile(".*[^\\d\\s\\(\\)\\-\\.].*");
 
     private String mName;
     private String mCallerId;
@@ -77,8 +78,9 @@ public class ZPhone implements ToZJSONObject {
         return ZJSONObject.toString(this);
     }
 
-    public static String getDisplay(String name) {
+    public static String getDisplay(String number) {
         // Handles familiar usa-style numbers only for now...
+	String name = ZPhone.getName(number);
         int offset = 0;
         boolean doIt = false;
         if (name.length() == 10) {
@@ -120,6 +122,11 @@ public class ZPhone implements ToZJSONObject {
     }
 
     public static String validate(String number) {
+
+	if (ZPhone.CHECK_INVALID_CHARS.matcher(number).matches()) {
+	    return ZPhone.INVALID_PHNUM_BAD_FORMAT;
+	}
+
         number = ZPhone.getName(number);
 
         if (number.length() == 0) {
