@@ -2102,7 +2102,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimbraId of child accounts</desc>
 </attr>
 
-<attr id="450" name="zimbraChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" deprecatedSince="5.0 D4">
+<attr id="450" name="zimbraChildVisibleAccount" type="id" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" deprecatedSince="5.0">
   <deprecateDesc> deprecated in favor of user-settable attribute zimbraPrefChildVisibleAccount </deprecateDesc>
   <desc>zimbraId of visible child accounts</desc>
 </attr>
