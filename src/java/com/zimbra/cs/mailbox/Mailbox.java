@@ -362,7 +362,7 @@ public class Mailbox {
     }
 
     // This class handles all the indexing internals for the Mailbox
-    private IndexHelper mIndexHelper = new IndexHelper(this);
+    protected IndexHelper mIndexHelper = new IndexHelper(this);
 
     /**
      * Upcall from the indexing subsystem when indexing has completed for the specified items.
