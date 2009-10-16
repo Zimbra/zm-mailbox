@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091006-1433 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091016-1614 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9371,6 +9371,83 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetLocale(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLocale, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages that can be processed by
+     * ApplyFilterRulesRequest. A negative value means no limit.
+     *
+     * @return zimbraMailApplyFilterRulesMaxMessages, or 1000 if unset
+     *
+     * @since ZCS 6.0.3
+     */
+    @ZAttr(id=1068)
+    public int getMailApplyFilterRulesMaxMessages() {
+        return getIntAttr(Provisioning.A_zimbraMailApplyFilterRulesMaxMessages, 1000);
+    }
+
+    /**
+     * Maximum number of messages that can be processed by
+     * ApplyFilterRulesRequest. A negative value means no limit.
+     *
+     * @param zimbraMailApplyFilterRulesMaxMessages new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.3
+     */
+    @ZAttr(id=1068)
+    public void setMailApplyFilterRulesMaxMessages(int zimbraMailApplyFilterRulesMaxMessages) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailApplyFilterRulesMaxMessages, Integer.toString(zimbraMailApplyFilterRulesMaxMessages));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages that can be processed by
+     * ApplyFilterRulesRequest. A negative value means no limit.
+     *
+     * @param zimbraMailApplyFilterRulesMaxMessages new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.3
+     */
+    @ZAttr(id=1068)
+    public Map<String,Object> setMailApplyFilterRulesMaxMessages(int zimbraMailApplyFilterRulesMaxMessages, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailApplyFilterRulesMaxMessages, Integer.toString(zimbraMailApplyFilterRulesMaxMessages));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages that can be processed by
+     * ApplyFilterRulesRequest. A negative value means no limit.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.3
+     */
+    @ZAttr(id=1068)
+    public void unsetMailApplyFilterRulesMaxMessages() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailApplyFilterRulesMaxMessages, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages that can be processed by
+     * ApplyFilterRulesRequest. A negative value means no limit.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.3
+     */
+    @ZAttr(id=1068)
+    public Map<String,Object> unsetMailApplyFilterRulesMaxMessages(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailApplyFilterRulesMaxMessages, "");
         return attrs;
     }
 

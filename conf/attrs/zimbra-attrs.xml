@@ -4730,5 +4730,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>action to perform for the get mail button in UI</desc>
 </attr>
 
+<attr id="1068" name="zimbraMailApplyFilterRulesMaxMessages" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.3">
+  <defaultCOSValue>1000</defaultCOSValue>
+  <desc>Maximum number of messages that can be processed by ApplyFilterRulesRequest.
+        A negative value means no limit.
+  </desc>
+</attr>
 
 </attrs>
