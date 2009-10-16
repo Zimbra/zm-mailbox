@@ -743,7 +743,7 @@
 
         <!-- lib: ignore absence of DLL for windows -->
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
-            <fileset dir="${common.jars.dir}" includes="*.jar" excludes="servlet-api.jar"/>
+            <fileset dir="${common.jars.dir}" includes="*.jar"/>
         </copy>
         <copy todir="${dist.dir}/lib/jars" overwrite="true">
             <fileset dir="${im.jars.dir}" includes="*.jar"/>
