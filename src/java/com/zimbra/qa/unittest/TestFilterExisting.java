@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZFilterAction;
@@ -242,6 +243,65 @@ extends TestCase {
         // does not exist in user2's mailbox.
         ZMailbox mbox2 = TestUtil.getZMailbox("user2");
         assertEquals(0, TestUtil.search(mbox2, "in: inbox subject:\"" + subject + "\"").size());
+    }
+    
+    private class RunRule
+    implements Runnable {
+
+        private String mRuleName;
+        private String mIdList;
+        private Exception mError;
+        
+        private RunRule(String ruleName, String idList) {
+            mRuleName = ruleName;
+            mIdList = idList;
+        }
+
+        public void run() {
+            try {
+                runRules(new String[] { mRuleName }, mIdList, null);
+            } catch (Exception e) {
+                mError = e;
+            }
+        }
+        
+        private Exception getError() {
+            return mError;
+        }
+    }
+
+    /**
+     * Simultaneously flags and discards the same set of messages (bug 41609).
+     */
+    public void testSimultaneous()
+    throws Exception {
+        // Add messages.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        List<String> msgIds = new ArrayList<String>();
+        for (int i = 1; i <= 10; i++) {
+            msgIds.add(TestUtil.addMessage(mbox, NAME_PREFIX + " discard flag " + i));
+        }
+        String idList = StringUtil.join(",", msgIds);
+        
+        // Start two threads that simultaneously process the same set of messages.
+        RunRule runDiscard = new RunRule(DISCARD_RULE_NAME, idList);
+        RunRule runFlag = new RunRule(FLAG_RULE_NAME, idList);
+        Thread discardThread = new Thread(runDiscard);
+        Thread flagThread = new Thread(runFlag);
+        discardThread.start();
+        flagThread.start();
+        discardThread.join();
+        flagThread.join();
+        
+        // Make sure there were no errors.
+        Exception e = runDiscard.getError();
+        if (e != null) {
+            fail(e.toString());
+        }
+        e = runFlag.getError();
+        if (e != null) {
+            fail(e.toString());
+        }
     }
     
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)

@@ -34,7 +34,9 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -124,10 +126,26 @@ public class ApplyFilterRules extends MailDocumentHandler {
             throw ServiceException.INVALID_REQUEST(msg, null);
         }
         
+        ZimbraLog.filter.info("Applying filter rules to %s existing messages.", messageIds.size());
+        
         // Apply filter rules.
         for (int id : messageIds) {
-            if (RuleManager.applyRulesToExistingMessage(mbox, id, node)) {
-                affectedIds.add(id);
+            // Synchronize on the mailbox to make sure two threads don't operate
+            // on the same message simultaneously.
+            synchronized (mbox) {
+                Message msg = null;
+                try {
+                    msg = mbox.getMessageById(null, id);
+                } catch (NoSuchItemException e) {
+                    // Message was deleted since the search was done (bug 41609).
+                    ZimbraLog.filter.info("Skipping message %d: %s.", id, e.toString());
+                }
+                
+                if (msg != null) {
+                    if (RuleManager.applyRulesToExistingMessage(mbox, id, node)) {
+                        affectedIds.add(id);
+                    }
+                }
             }
         }
         
