@@ -104,7 +104,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return msg;
     }
 
-    protected MailConfig.Security getSecurity(DataSource.ConnectionType type) {
+    protected static MailConfig.Security getSecurity(DataSource.ConnectionType type) {
         if (type != null) {
             switch (type) {
             case cleartext:

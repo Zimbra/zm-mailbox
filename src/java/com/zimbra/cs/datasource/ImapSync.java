@@ -93,9 +93,8 @@ public class ImapSync extends MailItemImport {
         return syncedFolders.get(folderId);
     }
 
-    private ImapConfig getImapConfig(DataSource ds) {
+    public static ImapConfig getImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
-        
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
@@ -107,7 +106,7 @@ public class ImapSync extends MailItemImport {
         config.setUseLiteralPlus(false);
         if (ds.isDebugTraceEnabled()) {
             config.setDebug(true);
-            enableTrace(config);
+            enableTrace(config, ds);
         }
         config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
         return config;
@@ -116,7 +115,7 @@ public class ImapSync extends MailItemImport {
     public synchronized void test() throws ServiceException {
         validateDataSource();
         setTimeout(LC.javamail_imap_test_timeout.intValue());
-        enableTrace(connection.getImapConfig());
+        enableTrace(connection.getImapConfig(), dataSource);
         try {
             connect();
         } finally {
@@ -130,11 +129,11 @@ public class ImapSync extends MailItemImport {
         config.setConnectTimeout(timeout);
     }
     
-    private void enableTrace(ImapConfig config) {
+    private static void enableTrace(ImapConfig config, DataSource ds) {
         config.setTrace(true);
         config.setMaxLiteralTraceSize(
-            dataSource.getIntAttr(Provisioning.A_zimbraDataSourceMaxTraceSize, 64));
-        if (dataSource.isOffline()) {
+            ds.getIntAttr(Provisioning.A_zimbraDataSourceMaxTraceSize, 64));
+        if (ds.isOffline()) {
             config.setTraceStream(
                 new PrintStream(new LogOutputStream(ZimbraLog.imap), true));
         } else {
