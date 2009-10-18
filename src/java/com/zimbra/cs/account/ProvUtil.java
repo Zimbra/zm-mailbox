@@ -231,7 +231,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
-        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
+        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name|id|foreignPrincipal} {by} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
