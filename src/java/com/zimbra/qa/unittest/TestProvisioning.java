@@ -2000,7 +2000,7 @@ public class TestProvisioning extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("INFO");
+        CliUtil.toolSetup("WARN");
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.zmprov-l");
         // TestUtil.runTest(new TestSuite(TestProvisioning.class));
 

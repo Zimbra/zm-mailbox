@@ -112,6 +112,12 @@ public abstract class Entry implements ToZJSONObject {
         resetData();
     }
     
+    public synchronized void setDefaults(Map<String,Object> defaults, Map<String,Object> secondaryDefaults) {
+        mDefaults = defaults;
+        mSecondaryDefaults = secondaryDefaults;
+        resetData();
+    }
+    
     public synchronized void setSecondaryDefaults(Map<String,Object> secondaryDefaults) {
         mSecondaryDefaults = secondaryDefaults;
         resetData();

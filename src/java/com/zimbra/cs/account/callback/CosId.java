@@ -35,28 +35,6 @@ public class CosId extends AttributeCallback {
             throws ServiceException {
         
         validateCosId(attrsToModify, attrName);
-        
-        /*
-         * if zimbraDomainDefaultCOSId is being changed, will return at the 
-         * (entry instanceof Account) check.
-         * we can't invalidate the cos cache on account for all accounts 
-         * in the domain.
-         */
-        
-        if (entry == null || isCreate)
-            return;
-        
-        if (!(entry instanceof Account))
-            return;
-          
-        // zimbraCOSId on account
-        Provisioning prov = Provisioning.getInstance();
-        if (!(prov instanceof LdapProvisioning))
-            return;
-        
-        Account acct = (Account)entry;
-        LdapProvisioning ldapProv = (LdapProvisioning)prov;
-        ldapProv.removeFromCache(acct);
     }
     
     private void validateCosId(Map attrsToModify, String attrName) throws ServiceException {
