@@ -322,7 +322,71 @@ public class LdapProvisioning extends Provisioning {
         refreshEntry(e, null, this);
     }
 
-    void refreshEntry(Entry entry, ZimbraLdapContext initZlc, LdapProvisioning prov)
+    void refreshEntry(Entry entry, ZimbraLdapContext initZlc, LdapProvisioning prov) throws ServiceException {
+
+        ZimbraLdapContext zlc = initZlc;
+        try {
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            String dn = ((LdapEntry)entry).getDN();
+            Attributes attributes = zlc.getAttributes(dn);
+            Map<String, Object> attrs = LdapUtil.getAttrs(attributes);
+            
+            Map<String,Object> defaults = null;
+            Map<String,Object> secondaryDefaults = null;
+        
+            if (entry instanceof Account) {
+                //
+                // We can get here from either modifyAttrsInternal or reload path. 
+                //
+                // If we got here from modifyAttrsInternal, zimbraCOSId on account 
+                // might have been changed, added, removed, but entry now still contains 
+                // the old attrs.  Create a temp Account object from the new attrs, and then 
+                // use the same cos of the temp Account object for our entry object.
+                //
+                // If we got here from reload, attrs are likely not changed, the callsites 
+                // just want a refreshed object.  For this case it's best if we still 
+                // always resolve the COS correctly.  makeAccount is a cheap call and won't
+                // add any overhead like loading cos/domain from LDAP: even if cos/domain 
+                // has to be loaded (because not in cache) in the getCOS(temp) call, it's 
+                // just the same as calling (buggy) getCOS(entry) before.
+                //
+                // We only need the temp object for the getCOS call, don't need to setup
+                // primary/secondary defaults on the temp object because: 
+                //     zimbraCOSId is only on account(of course), and that's all needed 
+                //     for determining the COS for the account in the getCOS call: if 
+                //     zimbraCOSId is not set on account, it will fallback to the domain 
+                //     default COS, then fallback to the system default COS.
+                //
+                Account temp = makeAccountNoDefaults(dn, attributes, prov);
+                Cos cos = prov.getCOS(temp);
+                if (cos != null) 
+                    defaults = cos.getAccountDefaults();
+                Domain domain = prov.getDomain((Account)entry);
+                if (domain != null)
+                    secondaryDefaults = domain.getAccountDefaults();
+            } else if (entry instanceof Domain) {
+                defaults = prov.getConfig().getDomainDefaults();
+            } else if (entry instanceof Server) {
+                defaults = prov.getConfig().getServerDefaults();            
+            }
+                
+            if (defaults == null && secondaryDefaults == null)
+                entry.setAttrs(attrs);
+            else 
+                entry.setAttrs(attrs, defaults, secondaryDefaults);    
+            
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to refresh entry", e);
+        } finally {
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
+        }            
+           
+    }
+    
+    // TODO: not in use, delete after the new code is settled for a while 
+    void refreshEntry_old(Entry entry, ZimbraLdapContext initZlc, LdapProvisioning prov)
     throws ServiceException {
         ZimbraLdapContext zlc = initZlc;
         try {
@@ -356,7 +420,8 @@ public class LdapProvisioning extends Provisioning {
                 ZimbraLdapContext.closeContext(zlc);
         }
     }
-
+ 
+    
     /**
      * Status check on LDAP connection.  Search for global config entry.
      */
@@ -3589,6 +3654,10 @@ public class LdapProvisioning extends Provisioning {
         return makeAccount(dn, attrs, 0, prov);
     }
     
+    private Account makeAccountNoDefaults(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
+        return makeAccount(dn, attrs, Provisioning.SO_NO_ACCOUNT_DEFAULTS | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS, prov);
+    }
+    
     private Account makeAccount(String dn, Attributes attrs, int flags, LdapProvisioning prov) throws NamingException, ServiceException {
         Attribute a = attrs.get(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (a == null) || a.contains(CalendarUserType.USER.toString());
@@ -3608,23 +3677,26 @@ public class LdapProvisioning extends Provisioning {
         boolean dontSetDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_DEFAULTS;
         if (dontSetDefaults)
             return;
-        
-        // 
-        // set primary default
-        //
-        Cos cos = getCOS(acct); // will set cos if not set yet
-        acct.setDefaults(cos.getAccountDefaults());
-        
+         
         boolean dontSetSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
-        if (dontSetSecondaryDefaults)
-            return;
-            
-        //
-        // set secondary default
-        //
-        Domain domain = getDomain(acct);
-        if (domain != null)
-            acct.setSecondaryDefaults(domain.getAccountDefaults());
+      
+        Cos cos = getCOS(acct); // will set cos if not set yet
+        
+        Map<String, Object> defaults = null;
+        if (cos != null)
+            defaults = cos.getAccountDefaults();
+
+        if (dontSetSecondaryDefaults) {
+            // set only primary defaults
+            acct.setDefaults(defaults);
+        } else {
+            // set primary and secondary defaults
+            Map<String, Object> secondaryDefaults = null;
+            Domain domain = getDomain(acct);
+            if (domain != null)
+                secondaryDefaults = domain.getAccountDefaults();
+            acct.setDefaults(defaults, secondaryDefaults);
+        }
     }
     
     private Alias makeAlias(String dn, Attributes attrs, LdapProvisioning prov) throws NamingException, ServiceException {
