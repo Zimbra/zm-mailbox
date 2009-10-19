@@ -31,6 +31,39 @@ import com.zimbra.cs.mailbox.Mailbox;
 public class DbImapFolder {
 
     static final String TABLE_IMAP_FOLDER = "imap_folder";
+
+
+    public static ImapFolder getImapFolder(Mailbox mbox, DataSource ds, int itemId)
+        throws ServiceException {
+        
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DbPool.getConnection(mbox);
+            stmt = conn.prepareStatement(
+                "SELECT local_path, remote_path, uid_validity" +
+                " FROM " + getTableName(mbox) +
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ? ");
+            int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
+            stmt.setInt(pos, itemId);
+            rs = stmt.executeQuery();
+            if (!rs.next()) return null;
+            String localPath = rs.getString("local_path");
+            String remotePath = rs.getString("remote_path");
+            Long uidValidity = rs.getLong("uid_validity");
+            if (rs.wasNull()) {
+                uidValidity = null;
+            }
+            return new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get IMAP folder data", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
     
     /**
      * Returns a <tt>List</tt> of <tt>ImapFolders</tt> for the given <tt>DataSource</tt>.
