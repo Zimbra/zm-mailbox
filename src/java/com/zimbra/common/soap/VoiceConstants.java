@@ -22,10 +22,6 @@ public class VoiceConstants {
     
     public static final String NAMESPACE_STR = "urn:zimbraVoice";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
-    
-    // tester for voice soap request conventions
-    public static final QName VOICE_SERVICE_TESTER_REQUEST  = QName.get("VoiceServiceTesterRequest", NAMESPACE);
-    public static final QName VOICE_SERVICE_TESTER_RESPONSE = QName.get("VoiceServiceTesterResponse", NAMESPACE);
 
     public static final QName GET_VOICE_MAIL_PREFS_REQUEST  = QName.get("GetVoiceMailPrefsRequest", NAMESPACE);
     public static final QName GET_VOICE_MAIL_PREFS_RESPONSE = QName.get("GetVoiceMailPrefsResponse", NAMESPACE);
