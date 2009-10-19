@@ -1331,21 +1331,6 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
-        // If newInvite doesn't require a blob part, check if there's an existing blob part with
-        // the same invId.  If so, it needs to be removed.
-        boolean hadBlobPart = false;
-        if (!newInvite.hasBlobPart()) {
-            Invite[] oldInvs = getInvites(newInvite.getMailItemId());
-            if (oldInvs != null) {
-                for (Invite oldInv : oldInvs) {
-                    if (oldInv.hasBlobPart()) {
-                        hadBlobPart = true;
-                        break;
-                    }
-                }
-            }
-        }
-
         // If modifying recurrence series (rather than an instance) and the
         // start time (HH:MM:SS) is changing, we need to update the time
         // component of RECURRENCE-ID in all exception instances.
@@ -1705,11 +1690,22 @@ public abstract class CalendarItem extends MailItem {
                         mData.flags &= ~Flag.BITMASK_ATTACHED;
                     }
 
+                    // Did the appointment have a blob before the change?
+                    boolean hadBlobPart = false;
+                    Invite[] oldInvs = getInvites();
+                    if (oldInvs != null) {
+                        for (Invite oldInv : oldInvs) {
+                            if (oldInv.hasBlobPart()) {
+                                hadBlobPart = true;
+                                break;
+                            }
+                        }
+                    }
                     // Update blob if adding a new ParsedMessage or if there is already a blob, in which
                     // case we may have to delete a section from it.
                     boolean newInvHasBlobPart = newInvite.hasBlobPart();
                     if (hadBlobPart || newInvHasBlobPart) {
-                        if (addNewOne && newInvHasBlobPart) {
+                        if (addNewOne) {
                             modifyBlob(toRemove, discardExistingInvites, toUpdate, pm, newInvite,
                                        isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
                         } else {
@@ -1719,7 +1715,7 @@ public abstract class CalendarItem extends MailItem {
                                        isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
                         }
                         // TIM: modifyBlob will save the metadata for us as a side-effect
-//                      saveMetadata();                        
+//                      saveMetadata();
                     } else {
                         markItemModified(Change.MODIFIED_INVITE);
                         try {
