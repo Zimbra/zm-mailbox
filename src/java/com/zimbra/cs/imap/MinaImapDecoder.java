@@ -49,7 +49,7 @@ public class MinaImapDecoder extends ProtocolDecoderAdapter {
                     count = -1;
                 }
             } else if (buf.parse(bb)) {
-                String line = buf.toString().trim();
+                String line = buf.getLine();
                 out.write(line);
                 if (stats != null) {
                     stats.receivedBytes.addAndGet(buf.size());

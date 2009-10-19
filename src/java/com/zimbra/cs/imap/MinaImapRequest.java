@@ -48,6 +48,7 @@ public class MinaImapRequest extends ImapRequest {
     }
 
     private void parseLiteral(byte[] b) throws IOException, ImapParseException {
+        //System.out.println("XXX parseLiteral: len = " + b.length);
         assert b.length <= literalCount;
         if (isMaxRequestSizeExceeded()) {
             literalCount -= Math.min(literalCount, b.length);
@@ -64,6 +65,7 @@ public class MinaImapRequest extends ImapRequest {
     }
 
     private void parseCommand(String line) throws IOException, ImapParseException {
+        //System.out.println("XXX parseCommand: line = |" + line + "|");
         incrementSize(line.length());
         addPart(line);
         LiteralInfo li;

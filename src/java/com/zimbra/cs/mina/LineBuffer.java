@@ -85,13 +85,28 @@ public class LineBuffer {
     }
     
     public String toString() {
+        return toString(size());
+    }
+
+    public String getLine() {
+        if (!isComplete()) {
+            throw new IllegalStateException("Line not complete");
+        }
+        int len = buf.limit();
+        if (len > 0 && buf.get(len - 1) == '\n') {
+            while (--len > 0 && buf.get(len - 1) == '\r') ;
+        }
+        return toString(len);
+    }
+
+    public String toString(int len) {
         try {
-            return new String(buf.array(), buf.arrayOffset(), size(), "ASCII");
+            return new String(buf.array(), buf.arrayOffset(), len, "ASCII");
         } catch (UnsupportedEncodingException e) {
             throw new InternalError("ASCII charset missing");
         }
     }
-
+    
     public boolean isComplete() {
         return complete;
     }

@@ -83,7 +83,31 @@ public class TestImap {
     }
 
     @Test
-    public void testCatenate() throws Exception {
+    public void testCatenateSimple() throws Exception {
+        assertTrue(connection.hasCapability("CATENATE"));
+        assertTrue(connection.hasCapability("UIDPLUS"));
+        String part1 = simpleMessage("test message");
+        String part2 = "more text\r\n";
+        AppendMessage am = new AppendMessage(
+            null, null, literal(part1), literal(part2));
+        AppendResult res = connection.append("INBOX", am);
+        connection.select("INBOX");
+        byte[] body = fetchBody(res.getUid());
+        assertArrayEquals("content mismatch", bytes(part1 + part2), body);
+    }
+
+
+    @Test
+    public void testCatenateSimpleNoLiteralPlus() throws Exception {
+        withLiteralPlus(false, new RunnableTest() {
+            public void run() throws Exception {
+                testCatenateSimple();
+            }
+        });
+    }
+
+    @Test
+    public void testCatenateUrl() throws Exception {
         assertTrue(connection.hasCapability("CATENATE"));
         assertTrue(connection.hasCapability("UIDPLUS"));
         String msg1 = simpleMessage("test message");
@@ -97,15 +121,6 @@ public class TestImap {
         connection.select("INBOX");
         byte[] b2 = fetchBody(res2.getUid());
         assertArrayEquals("content mismatch", bytes(msg2), b2);
-    }
-
-    @Test
-    public void testCatenateNoLiteralPlus() throws Exception {
-        withLiteralPlus(false, new RunnableTest() {
-            public void run() throws Exception {
-                testCatenate();
-            }
-        });
     }
 
     @Test
