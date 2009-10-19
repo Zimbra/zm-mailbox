@@ -20,7 +20,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
-class LogOutputStream extends OutputStream {
+public class LogOutputStream extends OutputStream {
     private final Log log;
     private final ByteArrayOutputStream baos;
     private boolean closed;
