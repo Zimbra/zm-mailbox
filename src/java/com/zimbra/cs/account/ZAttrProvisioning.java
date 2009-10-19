@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091016-1614 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091019-1022 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3785,15 +3785,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=20)
     public static final String A_zimbraMailAlias = "zimbraMailAlias";
-
-    /**
-     * Maximum number of messages that can be processed by
-     * ApplyFilterRulesRequest. A negative value means no limit.
-     *
-     * @since ZCS 6.0.3
-     */
-    @ZAttr(id=1068)
-    public static final String A_zimbraMailApplyFilterRulesMaxMessages = "zimbraMailApplyFilterRulesMaxMessages";
 
     /**
      * Maximum number of entries for per user black list. This restricts the
