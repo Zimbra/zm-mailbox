@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -168,8 +169,11 @@ public class Zimbra {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
         }
 
-        if (Provisioning.getInstance() instanceof LdapProvisioning)
+        Provisioning prov = Provisioning.getInstance();
+        if (prov instanceof LdapProvisioning) {
             ZimbraLdapContext.waitForServer();
+            AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)prov);
+        }
         
         try {
             RightManager.getInstance();

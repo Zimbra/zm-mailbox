@@ -587,6 +587,10 @@ public class ProvUtil implements HttpDebugListener {
             mProv = Provisioning.getInstance();
             if (mUseLdapMaster)
                 ZimbraLdapContext.forceMasterURL();
+            
+            if (mProv instanceof LdapProvisioning)
+                AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)mProv);
+            
         } else {
             SoapProvisioning sp = new SoapProvisioning();            
             sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+AdminConstants.ADMIN_SERVICE_URI);

@@ -26,6 +26,7 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.callback.IDNCallback;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
@@ -130,6 +131,8 @@ public class AttributeManager {
     // direct attrs and attrs from included objectClass's
     private Map<AttributeClass, Set<String>> mClassToAllAttrsMap = new HashMap<AttributeClass, Set<String>>();
     
+    private boolean mLdapSchemaExtensionInited = false;
+    
     private AttributeCallback mIDNCallback = new IDNCallback();
 
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
@@ -147,7 +150,6 @@ public class AttributeManager {
             	throw ServiceException.FAILURE(mInstance.getErrors(), null);
             }
             
-            // mInstance.getLdapSchemaExtensionAttrs();
             mInstance.computeClassToAllAttrsMap();
             
             return mInstance;
@@ -2329,16 +2331,33 @@ public class AttributeManager {
         result.append(String.format("    }%n"));
     }
 
-    private synchronized void getLdapSchemaExtensionAttrs() throws ServiceException {
-        getExtraObjectClassAttrs(AttributeClass.account, Provisioning.A_zimbraAccountExtraObjectClass);
-        getExtraObjectClassAttrs(AttributeClass.calendarResource, Provisioning.A_zimbraCalendarResourceExtraObjectClass);
-        getExtraObjectClassAttrs(AttributeClass.cos, Provisioning.A_zimbraCosExtraObjectClass);
-        getExtraObjectClassAttrs(AttributeClass.domain, Provisioning.A_zimbraDomainExtraObjectClass);
-        getExtraObjectClassAttrs(AttributeClass.server, Provisioning.A_zimbraServerExtraObjectClass);
+    public static void loadLdapSchemaExtensionAttrs(LdapProvisioning prov) {
+        synchronized(AttributeManager.class) {
+            try {
+                AttributeManager theInstance = AttributeManager.getInstance();
+                theInstance.getLdapSchemaExtensionAttrs(prov);
+                theInstance.computeClassToAllAttrsMap();  // recompute the ClassToAllAttrsMap 
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to load LDAP schema extensions", e);
+            }
+        }
     }
     
-    private void getExtraObjectClassAttrs(AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
+    private void getLdapSchemaExtensionAttrs(LdapProvisioning prov) throws ServiceException {
+        if (mLdapSchemaExtensionInited)
+            return;
+        
+        mLdapSchemaExtensionInited = true;
+        
+        getExtraObjectClassAttrs(prov, AttributeClass.account, Provisioning.A_zimbraAccountExtraObjectClass);
+        getExtraObjectClassAttrs(prov, AttributeClass.calendarResource, Provisioning.A_zimbraCalendarResourceExtraObjectClass);
+        getExtraObjectClassAttrs(prov, AttributeClass.cos, Provisioning.A_zimbraCosExtraObjectClass);
+        getExtraObjectClassAttrs(prov, AttributeClass.domain, Provisioning.A_zimbraDomainExtraObjectClass);
+        getExtraObjectClassAttrs(prov, AttributeClass.server, Provisioning.A_zimbraServerExtraObjectClass);
+    }
+    
+    private void getExtraObjectClassAttrs(LdapProvisioning prov, AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
+        Config config = prov.getConfig();
         
         String[] extraObjectClasses = config.getMultiAttr(extraObjectClassAttr);
 
