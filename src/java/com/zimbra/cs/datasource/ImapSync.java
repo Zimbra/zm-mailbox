@@ -212,8 +212,15 @@ public class ImapSync extends MailItemImport {
         } catch (CommandFailedException e) {
             // Skip check if ID command fails
         }
-
     }
+
+    public void checkIsEnabled() throws ServiceException {
+        if (!getDataSource().isManaged()) {
+            throw ServiceException.FAILURE(
+                "Import aborted because data source has been deleted or disabled", null);
+        }
+    }
+    
     private void syncFolders(List<Integer> folderIds, boolean fullSync)
         throws ServiceException, IOException {
         if (dataSource.isOffline()) {
@@ -247,6 +254,7 @@ public class ImapSync extends MailItemImport {
 
     private void syncRemoteFolders(List<ListData> folders) throws ServiceException {
         for (ListData ld : folders) {
+            checkIsEnabled();
             try {
                 ImapFolderSync ifs = new ImapFolderSync(this);
                 ImapFolder tracker = ifs.syncFolder(ld);
@@ -261,6 +269,7 @@ public class ImapSync extends MailItemImport {
 
     private void syncLocalFolders(List<Folder> folders) throws ServiceException {
         for (Folder folder : folders) {
+            checkIsEnabled();
             int id = folder.getId();
             if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
                 try {
@@ -285,6 +294,7 @@ public class ImapSync extends MailItemImport {
         // folders, otherwise sync messages for all folders.
         int lastModSeq = getMailbox().getLastChangeID();
         for (ImapFolderSync ifs : syncedFolders.values()) {
+            checkIsEnabled();
             LocalFolder folder = ifs.getLocalFolder();
             int folderId = folder.getId();
             try {

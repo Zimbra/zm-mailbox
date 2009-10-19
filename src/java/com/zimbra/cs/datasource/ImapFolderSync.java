@@ -711,6 +711,7 @@ class ImapFolderSync {
         removeSkippedUids(uids);
         Iterator<Long> ui = uids.iterator();
         while (ui.hasNext()) {
+            imapSync.checkIsEnabled();
             fetchMessages(nextFetchSeq(ui), uidsToDelete);
             // Send pending messages if any...
             ds.checkPendingMessages();

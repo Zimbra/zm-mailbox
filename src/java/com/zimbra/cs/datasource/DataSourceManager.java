@@ -20,12 +20,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -46,10 +49,33 @@ import com.zimbra.cs.mailbox.ScheduledTaskManager;
 public class DataSourceManager {
     
     private static DataSourceManager sInstance;
-    
+
     // accountId -> dataSourceId -> ImportStatus
     private static final Map<String, Map<String, ImportStatus>> sImportStatus =
         new HashMap<String, Map<String, ImportStatus>>();
+
+    // Bug: 40799
+    // Methods to keep track of managed data sources so we can easily detect
+    // when a data source has been removed while syncing
+    
+    private static final ConcurrentMap<Object, Boolean> sManagedDataSources =
+        new ConcurrentHashMap<Object, Boolean>();
+
+    private static Object key(String accountId, String dataSourceId) {
+        return new Pair<String, String>(accountId, dataSourceId);
+    }
+
+    public static void addManaged(DataSource ds) {
+        sManagedDataSources.putIfAbsent(key(ds.getAccountId(), ds.getId()), true);
+    }
+
+    public static void deleteManaged(String accountId, String dataSourceId) {
+        sManagedDataSources.remove(key(accountId, dataSourceId));
+    }
+    
+    public static boolean isManaged(DataSource ds) {
+        return sManagedDataSources.containsKey(key(ds.getAccountId(), ds.getId()));
+    }
 
     public DataSourceManager() {
     }
@@ -193,8 +219,9 @@ public class DataSourceManager {
      */
     public static void importData(DataSource ds, List<Integer> folderIds,
                                   boolean fullSync) throws ServiceException {
-        ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
         
+        ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
+
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
                 ZimbraLog.datasource.info("Attempted to start import while " +
@@ -214,6 +241,8 @@ public class DataSourceManager {
         boolean success = false;
         String error = null;
 
+        addManaged(ds);
+        
         try {
             ZimbraLog.datasource.info("Importing data for data source '%s'", ds.getName());
             getInstance().getDataImport(ds).importData(folderIds, fullSync);
@@ -266,14 +295,14 @@ public class DataSourceManager {
         StringBuilder buf = new StringBuilder();
         boolean isFirst = true;
         while (t != null) {
-			// HACK: go with JavaMail error message
-			if (t.getClass().getName().startsWith("javax.mail.")) {
-				String msg = t.getMessage();
-				if (msg == null) {
-				    msg = t.toString();
-				}
-				return msg;
-			}
+            // HACK: go with JavaMail error message
+            if (t.getClass().getName().startsWith("javax.mail.")) {
+                String msg = t.getMessage();
+                if (msg == null) {
+                    msg = t.toString();
+                }
+                return msg;
+            }
             if (isFirst) {
                 isFirst = false;
             } else {
@@ -314,6 +343,7 @@ public class DataSourceManager {
                 "Account %s was deleted for data source %s.  Deleting scheduled task.",
                 accountId, dsId);
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+            deleteManaged(accountId, dsId);
             // Don't have mailbox ID, so we'll have to wait for the task to run and clean itself up.
             return;
         }
@@ -328,6 +358,7 @@ public class DataSourceManager {
                 "Data source %s was deleted.  Deleting scheduled task.", dsId);
             ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+            deleteManaged(accountId, dsId);
             return;
         }
         if (!ds.isEnabled()) {

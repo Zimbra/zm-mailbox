@@ -36,6 +36,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.SyncState;
+import com.zimbra.cs.datasource.DataSourceManager;
 
 /**
  * @author schemers
@@ -95,6 +96,17 @@ public class DataSource extends AccountProperty {
     
     public Type getType() {
         return mType;
+    }
+
+    /**
+     * Returns true if this data source is currently being managed by
+     * DataSourceManager. Can be used to check if data source or account
+     * has been removed while importing so we can abort sync.
+     *  
+     * @return true if data source is currently being managed
+     */
+    public boolean isManaged() {
+        return DataSourceManager.isManaged(this);
     }
     
     public boolean isEnabled() { return getBooleanAttr(Provisioning.A_zimbraDataSourceEnabled, false); }
