@@ -67,6 +67,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -1608,7 +1609,9 @@ public class Mailbox {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
                 DbMailbox.clearMailboxContent(this);
-                DbMailbox.deleteMailbox(conn, this);
+                synchronized (DbMailbox.getSynchronizer()) {
+                    DbMailbox.deleteMailbox(conn, this);
+                }
 
                 // Remove all data related to this mailbox from memcached, so the data doesn't
                 // get used by another user later by mistake if/when mailbox id gets reused.

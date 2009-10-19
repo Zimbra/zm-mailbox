@@ -83,12 +83,10 @@ public class DeleteAccount extends AdminDocumentHandler {
         Mailbox mbox = Provisioning.onLocalServer(account) ? 
                 MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
                 
-        IMPersona.deleteIMPersona(account.getName());
-        prov.deleteAccount(id);
-
         if (mbox != null)
             mbox.deleteMailbox();
-
+        IMPersona.deleteIMPersona(account.getName());
+        prov.deleteAccount(id);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
 
