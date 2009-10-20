@@ -458,11 +458,13 @@ public class Message extends MailItem {
         OperationContext octxt = getMailbox().getOperationContext();
 
         // Is this invite intended for me?  If not, we don't want to auto-apply it.
+        boolean isForwardedInvite = false;
         String intendedForAddress = null;
         boolean intendedForMe = true;
         try {
             String headerVal = pm.getMimeMessage().getHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, null);
             if (headerVal != null && headerVal.length() > 0) {
+                isForwardedInvite = true;
                 intendedForAddress = headerVal;
                 intendedForMe = AccountUtil.addressMatchesAccount(acct, headerVal);
                 if (!intendedForMe)
@@ -731,7 +733,7 @@ public class Message extends MailItem {
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward calendar reply emails.  Only forward request emails.
         // Don't forward the message being added to Sent folder.
-        if (intendedForMe && isOrganizerMethod && folderId != Mailbox.ID_FOLDER_SENT) {
+        if (!isForwardedInvite && intendedForMe && isOrganizerMethod && folderId != Mailbox.ID_FOLDER_SENT) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();
@@ -741,14 +743,22 @@ public class Message extends MailItem {
             if (needToForward) {
                 String[] forwardTo = acct.getPrefCalendarForwardInvitesTo();
                 if (forwardTo != null && forwardTo.length > 0) {
-                    MimeMessage mmOrig = pm.getMimeMessage();
-                    if (mmOrig != null) {
-                        String origSender = pm.getSenderEmail(false);
-                        String forwarder = AccountUtil.getCanonicalAddress(acct);
-                        MimeMessage mm = CalendarMailSender.createForwardedInviteMessage(mmOrig, origSender, forwarder, forwardTo);
-                        if (mm != null) {
-                            ItemId origMsgId = new ItemId(getMailbox(), getId());
-                            CalendarMailSender.sendInviteForwardMessage(octxt, getMailbox(), origMsgId, mm);
+                    List<String> sanitizedTo = new ArrayList<String>();
+                    for (String fwd : forwardTo) {
+                        // Prevent forwarding to self.
+                        if (!AccountUtil.addressMatchesAccount(acct, fwd))
+                            sanitizedTo.add(fwd);
+                    }
+                    if (!sanitizedTo.isEmpty()) {
+                        MimeMessage mmOrig = pm.getMimeMessage();
+                        if (mmOrig != null) {
+                            String origSender = pm.getSenderEmail(false);
+                            String forwarder = AccountUtil.getCanonicalAddress(acct);
+                            MimeMessage mm = CalendarMailSender.createForwardedInviteMessage(mmOrig, origSender, forwarder, sanitizedTo.toArray(new String[0]));
+                            if (mm != null) {
+                                ItemId origMsgId = new ItemId(getMailbox(), getId());
+                                CalendarMailSender.sendInviteForwardMessage(octxt, getMailbox(), origMsgId, mm);
+                            }
                         }
                     }
                 }
