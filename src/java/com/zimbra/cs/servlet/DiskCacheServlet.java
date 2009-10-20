@@ -78,18 +78,24 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
 	public void service(ServletRequest req, ServletResponse resp)
 	throws IOException, ServletException {
-		Boolean flushCache = (Boolean)req.getAttribute(FlushCache.FLUSH_CACHE);
-		if (flushCache != null && flushCache.booleanValue()) {
-			if (ZimbraLog.misc.isDebugEnabled()) {
-				ZimbraLog.misc.debug("flushing "+getClass().getName()+" cache");
-			}
-			boolean deleteFiles = true; // TODO: Should we skip the delete?
-			clearCache(deleteFiles);
-			return;
-		}
+	    if (flushCache(req))
+	        return;
 		super.service(req, resp);
 	}
 
+	protected boolean flushCache(ServletRequest req) {
+        Boolean flushCache = (Boolean)req.getAttribute(FlushCache.FLUSH_CACHE);
+        if (flushCache != null && flushCache.booleanValue()) {
+            if (ZimbraLog.misc.isDebugEnabled()) {
+                ZimbraLog.misc.debug("flushing "+getClass().getName()+" cache");
+            }
+            boolean deleteFiles = true; // TODO: Should we skip the delete?
+            clearCache(deleteFiles);
+            return true;
+        }
+        return false;
+	}
+	
 	//
 	// Protected methods
 	//

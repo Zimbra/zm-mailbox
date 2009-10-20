@@ -73,10 +73,16 @@ public class ZimletResources
     // HttpServlet methods
     //
 
-    public void doGet(HttpServletRequest req, HttpServletResponse resp)
+    public void service(ServletRequest request, ServletResponse response)
             throws IOException, ServletException {
+        if (flushCache(request))
+            return;
+        
         ZimbraLog.clearContext();
 
+        HttpServletRequest req = (HttpServletRequest)request;
+        HttpServletResponse resp = (HttpServletResponse)response;
+        
         String uri = req.getRequestURI();
         String pathInfo = req.getPathInfo();
         
