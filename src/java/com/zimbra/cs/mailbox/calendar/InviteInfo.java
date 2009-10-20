@@ -21,10 +21,11 @@
 package com.zimbra.cs.mailbox.calendar;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 
-public class InviteInfo implements Comparable {
+public class InviteInfo implements Comparable<InviteInfo> {
     private int mMsgId; // ID of the MESSAGE which this invite was originally encoded in 
     private int mComponentId; // component number in that message
     private RecurId mRecurrenceId; // RECURID, in the iCal (rfc2445) sense
@@ -47,23 +48,34 @@ public class InviteInfo implements Comparable {
     public boolean equals(Object o) {
         if (!(o instanceof InviteInfo)) return false;
         InviteInfo other = (InviteInfo) o;
-        if (mMsgId == other.mMsgId
-                && mComponentId == other.mComponentId) {
-            return true;
-        } else {
-            return false;
-        }
+        return
+            mMsgId == other.mMsgId &&
+            mComponentId == other.mComponentId &&
+            StringUtil.equal(mMethod, other.mMethod) &&
+            ((mRecurrenceId == null && other.mRecurrenceId == null) ||
+             (mRecurrenceId != null && mRecurrenceId.equals(other.mRecurrenceId)));
     }
-    
-    public int compareTo(Object o) {
-        if (o == null) return 1;  // null sorts first
-        InviteInfo other = (InviteInfo) o;
+
+    public int compareTo(InviteInfo other) {
+        if (other == null) return 1;  // null sorts first
         int toRet = mMsgId - other.mMsgId;
         if (toRet == 0) {
             toRet = mComponentId - other.mComponentId;
             if (toRet == 0) {
-                assert ((mRecurrenceId == null && other.mRecurrenceId == null) ||
-                        (mRecurrenceId!=null && mRecurrenceId.equals(other.mRecurrenceId)));
+                String rid = mRecurrenceId != null ? mRecurrenceId.toString() : null;
+                String ridOther = other.mRecurrenceId != null ? other.mRecurrenceId.toString() : null;
+                if (rid != null) {
+                    toRet = rid.compareTo(ridOther);
+                } else if (ridOther != null) {
+                    toRet = ridOther.compareTo(rid) * (-1);
+                }
+                if (toRet == 0) {
+                    if (mMethod != null) {
+                        toRet = mMethod.compareTo(other.mMethod);
+                    } else if (other.mMethod != null) {
+                        toRet = other.mMethod.compareTo(mMethod) * (-1);
+                    }
+                }
             }
         }
         return toRet;

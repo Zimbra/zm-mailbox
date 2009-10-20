@@ -1008,13 +1008,12 @@ public abstract class CalendarItem extends MailItem {
     public Invite getInvite(InviteInfo id) {
         for (Invite inv : mInvites) {
             InviteInfo inf = new InviteInfo(inv);
-            if (inf.compareTo(id) == 0) {
+            if (inf.equals(id))
                 return inv;
-            }
         }
         return null;
     }
-    
+
     public Invite getInvite(int invId, int compNum) {
         for (Invite inv : mInvites) {
             if (inv.getMailItemId() == invId && inv.getComponentNum() == compNum) {
