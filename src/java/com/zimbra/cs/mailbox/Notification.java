@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -266,7 +267,24 @@ implements LmtpCallback {
             SMTPMessage out = new SMTPMessage(JMSession.getSession());
             
             // From
-            out.setFrom(AccountUtil.getFriendlyEmailAddress(account));
+            InternetAddress fromAddress;
+            String prefAddress = account.getPrefFromAddress();
+            if (prefAddress != null) {
+                // Get address from user prefs.
+                fromAddress = new InternetAddress(prefAddress);
+                String prefDisplay = account.getPrefFromDisplay();
+                if (prefDisplay != null) {
+                    try {
+                        fromAddress.setPersonal(prefDisplay, MimeConstants.P_CHARSET_UTF8);
+                    } catch (UnsupportedEncodingException e) {
+                        throw ServiceException.FAILURE("Unable to set From address", e);
+                    }
+                }
+            } else {
+                // Get adddress from account.
+                fromAddress = AccountUtil.getFriendlyEmailAddress(account);
+            }
+            out.setFrom(fromAddress);
             
             // Reply-To
             String replyTo = account.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
@@ -308,8 +326,9 @@ implements LmtpCallback {
                 out.setEnvelopeFrom(account.getName());
             }
 
-            Transport.send(out);
-            
+            MailSender sender = mbox.getMailSender();
+            sender.setSaveToSent(false);
+            sender.sendMimeMessage(null, mbox, out);
             ZimbraLog.mailbox.info("outofoffice sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
             
             // Save so we will not send to again
