@@ -577,6 +577,7 @@ public class AdminConstants {
     public static final String E_UNEXPECTED_BLOBS = "unexpectedBlobs";
     public static final String E_BLOB = "blob";
     public static final String E_INCORRECT_SIZE = "incorrectSize";
+    public static final String E_INCORRECT_REVISION = "incorrectRevision";
     public static final String A_FILE_DATA_SIZE = "fileDataSize";
     public static final String A_FILE_SIZE = "fileSize";
     public static final String A_CHECK_SIZE = "checkSize";
