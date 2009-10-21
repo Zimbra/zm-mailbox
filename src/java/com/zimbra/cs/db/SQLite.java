@@ -96,8 +96,11 @@ public class SQLite extends Db {
 
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
         
-        cacheSize = LC.get("sqlite_cache_size");
-        ZimbraLog.dbconn.info("sqlite driver running with " + cacheSize + " page cache");
+        cacheSize = LC.sqlite_cache_size.value();
+        if (cacheSize.equals("0"))
+            cacheSize = null;
+        ZimbraLog.dbconn.info("sqlite driver running with " + (cacheSize == null ?
+            "default" : cacheSize) + " page cache");
         super.startup(pool, poolSize);
     }
 
@@ -106,6 +109,9 @@ public class SQLite extends Db {
             conn.setAutoCommit(true);
             if (cacheSize != null)
                 pragma(conn, "cache_size", cacheSize);
+            pragma(conn, "encoding", "\"UTF-8\"");
+            pragma(conn, "fullfsync", "OFF");
+            pragma(conn, "journal_mode", "PERSIST");
             pragma(conn, "synchronous", "NORMAL");
         } finally {
             conn.setAutoCommit(false);
