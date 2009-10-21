@@ -1737,7 +1737,8 @@ public class Invite {
                                 // ignore all other sub components
                             }
                         }
-    
+
+                        boolean sawIntendedFreeBusy = false;
                         for (ZProperty prop : comp.mProperties) {
                             // Skip properties with missing value.  There may be parameters specified, but
                             // it's still wrong to send a property without value.  They can only lead to
@@ -1864,10 +1865,16 @@ public class Invite {
                                 }
                                 break;
                             case TRANSP:
-                                if (isEvent) {
+                                // TRANSP is examined only when intended F/B is not supplied.
+                                if (isEvent && !sawIntendedFreeBusy) {
                                     String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
-                                    if (transp!=null) {
+                                    if (transp != null) {
                                         newInv.setTransparency(transp);
+                                        // Derive intended F/B from TRANSP.
+                                        if (newInv.isTransparent())
+                                            newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
+                                        else
+                                            newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_BUSY);
                                     }
                                 }
                                 break;
@@ -1883,10 +1890,17 @@ public class Invite {
                                 }
                                 break;
                             case X_MICROSOFT_CDO_INTENDEDSTATUS:
+                                sawIntendedFreeBusy = true;
                                 if (isEvent) {
                                     String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
-                                    if (fb != null)
+                                    if (fb != null) {
                                         newInv.setFreeBusy(fb);
+                                        // Intended F/B takes precedence over TRANSP.
+                                        if (IcalXmlStrMap.FBTYPE_FREE.equals(fb))
+                                            newInv.setTransparency(IcalXmlStrMap.TRANSP_TRANSPARENT);
+                                        else
+                                            newInv.setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
+                                    }
                                 }
                                 break;
                             case PRIORITY:

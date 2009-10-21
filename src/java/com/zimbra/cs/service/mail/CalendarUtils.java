@@ -1022,16 +1022,28 @@ public class CalendarUtils {
 
         if (newInv.isEvent()) {
             // FreeBusy
-            String fb = element.getAttribute(MailConstants.A_APPT_FREEBUSY,
-                    IcalXmlStrMap.FBTYPE_BUSY);
-            newInv.setFreeBusy(fb);
-    
-            // TRANSPARENCY
-            String transp = element.getAttribute(MailConstants.A_APPT_TRANSPARENCY,
-                    IcalXmlStrMap.TRANSP_OPAQUE);
-            validateAttr(IcalXmlStrMap.sTranspMap, MailConstants.A_APPT_TRANSPARENCY,
-                    transp);
-            newInv.setTransparency(transp);
+            String fb = element.getAttribute(MailConstants.A_APPT_FREEBUSY, null);
+            if (fb != null) {
+                newInv.setFreeBusy(fb);
+                // Intended F/B takes precedence over TRANSP.
+                if (IcalXmlStrMap.FBTYPE_FREE.equals(fb))
+                    newInv.setTransparency(IcalXmlStrMap.TRANSP_TRANSPARENT);
+                else
+                    newInv.setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
+            } else {
+                // TRANSP is examined only when intended F/B is not supplied.
+                String transp = element.getAttribute(MailConstants.A_APPT_TRANSPARENCY,
+                        IcalXmlStrMap.TRANSP_OPAQUE);
+                validateAttr(IcalXmlStrMap.sTranspMap, MailConstants.A_APPT_TRANSPARENCY,
+                        transp);
+                newInv.setTransparency(transp);
+
+                // Derive intended F/B from transparency.
+                if (newInv.isTransparent())
+                    newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
+                else
+                    newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_BUSY);
+            }
         }
 
         if (newInv.isTodo()) {
