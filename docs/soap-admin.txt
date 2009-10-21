@@ -1177,10 +1177,15 @@ Notes:
       <blob volumeId="{id}" path="{path}" fileSize="{size} />*
     </unexpectedBlobs>
     <incorrectSize>
-      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">
-        <blob fileSize="{size}" s="{data-size}" path="{path}" /
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
+        <blob fileSize="{size}" s="{data-size}" path="{path}" />
       </item>
     </incorrectSize>
+    <incorrectRevision>
+      <item id="{id}" rev="{n}" volumeId="{id}" s="{size}">*
+        <blob fileSize="{size}" path="{path}" rev="{n}" />
+      </item>
+    </incorrectRevision>
   </mbox>*
 </CheckBlobConsistencyResponse>
 

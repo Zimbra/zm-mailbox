@@ -15,10 +15,10 @@
 
 package com.zimbra.cs.store.file;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -45,6 +45,7 @@ public class BlobConsistencyUtil {
     private static final String LO_SKIP_SIZE_CHECK = "skip-size-check";
     private static final String LO_UNEXPECTED_BLOB_LIST = "unexpected-blob-list";
     private static final String LO_MISSING_BLOB_DELETE_ITEM = "missing-blob-delete-item";
+    private static final String LO_INCORRECT_REVISION_RENAME_FILE = "incorrect-revision-rename-file";
     private static final String LO_EXPORT_DIR = "export-dir";
     private static final String LO_NO_EXPORT = "no-export";
     
@@ -58,6 +59,7 @@ public class BlobConsistencyUtil {
     private boolean mMissingBlobDeleteItem = false;
     private boolean mNoExport = false;
     private String mExportDir;
+    private boolean mIncorrectRevisionRenameFile = false;
     
     private BlobConsistencyUtil() {
         mOptions = new Options();
@@ -85,6 +87,8 @@ public class BlobConsistencyUtil {
         mOptions.addOption(o);
         
         mOptions.addOption(null, LO_NO_EXPORT, false, "Delete items without exporting.");
+        mOptions.addOption(new Option(null, LO_INCORRECT_REVISION_RENAME_FILE, false,
+            "Rename the file on disk when the revision number doesn't match."));
     }
     
     private void usage(String errorMsg) {
@@ -152,7 +156,9 @@ public class BlobConsistencyUtil {
                     usage("Please specify either " + LO_EXPORT_DIR + " or " + LO_NO_EXPORT + " when using " + LO_MISSING_BLOB_DELETE_ITEM);
                 }
             }
-        }        
+        }
+        
+        mIncorrectRevisionRenameFile = CliUtil.hasOption(cl, LO_INCORRECT_REVISION_RENAME_FILE);
     }
     
     private void run()
@@ -175,6 +181,7 @@ public class BlobConsistencyUtil {
         
         Element response = prov.invoke(request);
         for (Element mboxEl : response.listElements(AdminConstants.E_MAILBOX)) {
+            // Print results.
             BlobConsistencyChecker.Results results = new BlobConsistencyChecker.Results(mboxEl);
             for (BlobInfo blob : results.missingBlobs) {
                 System.out.format("Mailbox %d, item %d, rev %d, volume %d, %s: blob not found.\n",
@@ -195,9 +202,30 @@ public class BlobConsistencyUtil {
                     mUnexpectedBlobWriter.println(blob.path);
                 }
             }
+            for (BlobInfo blob : results.incorrectModContent) {
+                System.out.format(
+                    "Mailbox %d, item %d, rev %d, volume %d, %s: file has incorrect revision.\n",
+                    results.mboxId, blob.itemId, blob.modContent, blob.volumeId, blob.path);
+            }
             
+            // Fix inconsistencies.
             if (mMissingBlobDeleteItem && results.missingBlobs.size() > 0) {
                 exportAndDelete(prov, results);
+            }
+            if (mIncorrectRevisionRenameFile) {
+                for (BlobInfo blob : results.incorrectModContent) {
+                    File file = new File(blob.path);
+                    File dir = file.getParentFile();
+                    if (dir != null) {
+                        File newFile = new File(dir, FileBlobStore.getFilename((int) blob.itemId, blob.modContent));
+                        System.out.format("Renaming %s to %s.\n", file.getAbsolutePath(), newFile.getAbsolutePath());
+                        if (!file.renameTo(newFile)) {
+                            System.err.format("Unable to rename %s to %s.\n", file.getAbsolutePath(), newFile.getAbsolutePath());
+                        }
+                    } else {
+                        System.err.format("Could not determine parent directory of %s.\n", file.getAbsolutePath());
+                    }
+                }
             }
         }
         

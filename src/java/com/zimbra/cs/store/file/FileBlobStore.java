@@ -360,6 +360,12 @@ public class FileBlobStore extends StoreManager {
             sb.append('-').append(revision);
         sb.append(".msg");
     }
+    
+    public static String getFilename(int itemId, int revision) {
+        StringBuffer buf = new StringBuffer();
+        appendFilename(buf, itemId, revision);
+        return buf.toString();
+    }
 
     private static void ensureDirExists(File dir) throws IOException {
         if (!FileUtil.mkdirs(dir))
