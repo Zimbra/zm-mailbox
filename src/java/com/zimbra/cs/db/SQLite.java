@@ -16,15 +16,12 @@ package com.zimbra.cs.db;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -45,7 +42,6 @@ public class SQLite extends Db {
 
     private Map<Db.Error, String> mErrorCodes;
     private String cacheSize;
-    Map<String, String> pragmas;
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
@@ -101,9 +97,6 @@ public class SQLite extends Db {
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
         
         cacheSize = LC.get("sqlite_cache_size");
-        if (cacheSize != null)
-            cacheSize = "2000";
-        pragmas = getCustomPragmas();
         ZimbraLog.dbconn.info("sqlite driver running with " + cacheSize + " page cache");
         super.startup(pool, poolSize);
     }
@@ -111,18 +104,9 @@ public class SQLite extends Db {
     void postCreate(java.sql.Connection conn) throws SQLException {
         try {
             conn.setAutoCommit(true);
-            pragma(conn, "cache_size", cacheSize);
-            pragma(conn, "default_cache_size", cacheSize);
-            pragma(conn, "page_size", "4096");
-            pragma(conn, "default_page_size", "4096");
-            pragma(conn, "encoding", "\"UTF-8\"");
-            pragma(conn, "fullfsync", "OFF");
-            pragma(conn, "journal_mode", "PERSIST");
-            pragma(conn, "legacy_file_format", "OFF");
+            if (cacheSize != null)
+                pragma(conn, "cache_size", cacheSize);
             pragma(conn, "synchronous", "NORMAL");
-
-            for (Map.Entry<String, String> pragma : pragmas.entrySet())
-                pragma(conn, pragma.getKey(), pragma.getValue());
         } finally {
             conn.setAutoCommit(false);
         }
@@ -135,31 +119,6 @@ public class SQLite extends Db {
         } finally {
             DbPool.quietCloseStatement(stmt);
         }
-    }
-
-    private Map<String, String> getCustomPragmas() {
-        String propsfile = LC.get("sqlite_pragma_file");
-        
-        if (propsfile == null || propsfile.trim().equals(""))
-            return Collections.emptyMap();
-        try {
-            Properties props = new Properties();
-            
-            props.load(new FileInputStream(propsfile));
-            ZimbraLog.dbconn.info("reading custom sqlite pragmas from conf file: " + propsfile);
-            pragmas = new HashMap<String, String>(props.size() * 3 / 2);
-            for (Map.Entry<Object, Object> foo : props.entrySet()) {
-                String key = (String) foo.getKey(), value = (String) foo.getValue();
-                pragmas.put(key, value);
-                ZimbraLog.dbconn.info("  found custom pragma: '" + key + "' => '" + value + "'");
-            }
-            return pragmas;
-        } catch (FileNotFoundException x) {
-            ZimbraLog.dbconn.info("no sqlite pragma conf file found; will use standard config");
-        } catch (IOException x) {
-            ZimbraLog.dbconn.warn("exception reading from sqlite pragma conf file (" + propsfile + "); will use standard config", x);
-        }
-        return Collections.emptyMap();
     }
 
     private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
