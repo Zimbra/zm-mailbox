@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -145,6 +146,8 @@ public class PublicICalServlet extends ZimbraServlet {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error initializing request context");
                 return;
             }
+        } else {
+            authAccount = ACL.ANONYMOUS_ACCT;
         }
 
         FreeBusyQuery fbQuery = new FreeBusyQuery(req, zsc, authAccount, rangeStart, rangeEnd, null);
