@@ -1118,6 +1118,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraSSLExcludeCipherSuites = "zimbraSSLExcludeCipherSuites";
     
+    public static final String A_zimbraSaslGssapiRequiresTls = "zimbraSaslGssapiRequiresTls";
+    
     public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
     public static final String A_zimbraImapBindPort = "zimbraImapBindPort";
     public static final String A_zimbraImapBindOnStartup = "zimbraImapBindOnStartup";
