@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091019-1022 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091022-1209 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -6732,6 +6732,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=724)
     public static final String A_zimbraReverseProxyWorkerProcesses = "zimbraReverseProxyWorkerProcesses";
+
+    /**
+     * whether TLS is required for IMAP/POP GSSAPI auth
+     *
+     * @since ZCS 5.0.21
+     */
+    @ZAttr(id=1068)
+    public static final String A_zimbraSaslGssapiRequiresTls = "zimbraSaslGssapiRequiresTls";
 
     /**
      * Maximum number of scheduled tasks that can run simultaneously.
