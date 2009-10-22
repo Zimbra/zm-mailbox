@@ -20,6 +20,7 @@ package com.zimbra.cs.pop3;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -537,6 +538,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     protected void authenticate(String username, String authenticateId, String password, Authenticator auth)
     throws Pop3CmdException {
         String type = auth != null ? "authentication" : "login";
+        String mechanism = auth != null ? auth.getMechanism() : "LOGIN";
         try {
             // LOGIN is just another form of AUTH PLAIN with authcid == authzid
             if (auth == null) {
@@ -553,20 +555,19 @@ public abstract class Pop3Handler extends ProtocolHandler {
                 throw new Pop3CmdException("pop access not enabled for account");
             mAccountId = acct.getId();
             mAccountName = acct.getName();
-            
+
             ZimbraLog.addAccountNameToContext(mAccountName);
-            ZimbraLog.pop.info("user " + mAccountName + " authenticated, mechanism=" + type);
-            
+            ZimbraLog.pop.info("user " + mAccountName + " authenticated, mechanism=" + mechanism + (mStartedTLS ? " [TLS]" : ""));
+
             Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(acct);
             mMbx = new Pop3Mailbox(mailbox, acct, mQuery);
             mState = STATE_TRANSACTION;
-            mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / (1000*60*60*24));
-            if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS) mExpire = MIN_EXPIRE_DAYS;
+            mExpire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / Constants.MILLIS_PER_DAY);
+            if (mExpire > 0 && mExpire < MIN_EXPIRE_DAYS)
+                mExpire = MIN_EXPIRE_DAYS;
         } catch (ServiceException e) {
-            // need to catch and mask these two
             String code = e.getCode();
-            if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) ||
-                code.equals(AccountServiceException.AUTH_FAILED)) {
+            if (code.equals(AccountServiceException.NO_SUCH_ACCOUNT) || code.equals(AccountServiceException.AUTH_FAILED)) {
                 throw new Pop3CmdException("invalid username/password");
             } else if (code.equals(AccountServiceException.CHANGE_PASSWORD)) {
                 throw new Pop3CmdException("your password has expired");

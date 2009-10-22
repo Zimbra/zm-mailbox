@@ -1199,10 +1199,12 @@ abstract class ImapHandler extends ProtocolHandler {
         mCredentials = new ImapCredentials(account, hack);
         if (mCredentials.isLocal())
             mCredentials.getMailbox().beginTrackingImap();
-        
+
         ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
-        ZimbraLog.imap.info("user " + mCredentials.getUsername() + " authenticated, mechanism=" + (mechanism == null ? "LOGIN" : mechanism));
-        
+        ZimbraLog.imap.info("user " + mCredentials.getUsername() + " authenticated, " +
+                            "mechanism=" + (mechanism == null ? "LOGIN" : mechanism) +
+                            (mStartedTLS ? " [TLS]" : ""));
+
         return mCredentials;
     }
 
