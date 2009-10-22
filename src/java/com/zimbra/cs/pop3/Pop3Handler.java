@@ -566,7 +566,16 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
 
     private boolean isGssAuthEnabled() {
-        return GSS_ENABLED || mConfig.isSaslGssapiEnabled();
+        if (!GSS_ENABLED && !mConfig.isSaslGssapiEnabled())
+            return false;
+
+        // check whether this server requires encryption for GSSAPI
+        try {
+            return isSSLEnabled() || !Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraSaslGssapiRequiresTls, false);
+        } catch (ServiceException e) {
+            ZimbraLog.security.warn("could not determine whether TLS encryption is required for GSSAPI auth; defaulting to FALSE", e);
+            return false;
+        }
     }
     
     protected void authenticate(String username, String authenticateId, String password, String mechanism)
