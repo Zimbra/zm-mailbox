@@ -82,9 +82,19 @@ public class GssAuthenticator extends Authenticator {
         super(MECHANISM, user);
     }
 
-    // GSSAPI is switched on and off by protocol via LDAP settings
     @Override protected boolean isSupported() {
-        return GSS_ENABLED || mAuthUser.isGssapiAvailable();
+        // GSSAPI is switched on and off on a per-protocol basis via LDAP settings
+        if (!GSS_ENABLED && !mAuthUser.isGssapiAvailable())
+            return false;
+
+        // check whether this server requires encryption for GSSAPI
+        try {
+            return mAuthUser.isSSLEnabled() ||
+                   !Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraSaslGssapiRequiresTls, false);
+        } catch (ServiceException e) {
+            ZimbraLog.security.warn("could not determine whether TLS encryption is required for GSSAPI auth; defaulting to FALSE", e);
+            return false;
+        }
     }
 
     @Override public boolean initialize() throws IOException {
