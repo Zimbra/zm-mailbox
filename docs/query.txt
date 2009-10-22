@@ -88,8 +88,9 @@ larger:1M
 is:flagged
 not is:flagged
 not in:junk
+-is:read
 
-
+- is a synonym for "not" and may immediately precede a field
 
 Fields
 --------
