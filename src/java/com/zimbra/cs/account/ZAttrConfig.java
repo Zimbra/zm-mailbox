@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091022-1209 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091022-1311 */
 
     /**
      * RFC2256: descriptive information
@@ -23527,7 +23527,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraSaslGssapiRequiresTls, or false if unset
      *
-     * @since ZCS 5.0.21
+     * @since ZCS 5.0.20
      */
     @ZAttr(id=1068)
     public boolean isSaslGssapiRequiresTls() {
@@ -23540,7 +23540,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraSaslGssapiRequiresTls new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 5.0.21
+     * @since ZCS 5.0.20
      */
     @ZAttr(id=1068)
     public void setSaslGssapiRequiresTls(boolean zimbraSaslGssapiRequiresTls) throws com.zimbra.common.service.ServiceException {
@@ -23556,7 +23556,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 5.0.21
+     * @since ZCS 5.0.20
      */
     @ZAttr(id=1068)
     public Map<String,Object> setSaslGssapiRequiresTls(boolean zimbraSaslGssapiRequiresTls, Map<String,Object> attrs) {
@@ -23570,7 +23570,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 5.0.21
+     * @since ZCS 5.0.20
      */
     @ZAttr(id=1068)
     public void unsetSaslGssapiRequiresTls() throws com.zimbra.common.service.ServiceException {
@@ -23585,7 +23585,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 5.0.21
+     * @since ZCS 5.0.20
      */
     @ZAttr(id=1068)
     public Map<String,Object> unsetSaslGssapiRequiresTls(Map<String,Object> attrs) {

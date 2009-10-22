@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091022-1209 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091022-1311 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -6736,7 +6736,7 @@ public class ZAttrProvisioning {
     /**
      * whether TLS is required for IMAP/POP GSSAPI auth
      *
-     * @since ZCS 5.0.21
+     * @since ZCS 5.0.20
      */
     @ZAttr(id=1068)
     public static final String A_zimbraSaslGssapiRequiresTls = "zimbraSaslGssapiRequiresTls";
