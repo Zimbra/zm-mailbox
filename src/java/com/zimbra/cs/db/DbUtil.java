@@ -444,4 +444,15 @@ public class DbUtil {
         }
         return sqlLine;
     }
+
+    /**
+     * Returns a string that optimizes SQL WHERE IN clauses to an operator when
+     * the parm list is a single entry. IN can prevent some DBs like sqlite from
+     * choosing proper indexes
+     */
+    public static String whereIn(String column, boolean in, int size) {
+        if (size == 1)
+            return column + (in ? " = ?" : " <> ?");
+        return column + (in ? " IN" : " NOT IN") + suitableNumberOfVariables(size);
+    }
 }

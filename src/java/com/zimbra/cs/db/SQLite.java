@@ -107,24 +107,31 @@ public class SQLite extends Db {
     void postCreate(java.sql.Connection conn) throws SQLException {
         try {
             conn.setAutoCommit(true);
-            if (cacheSize != null)
-                pragma(conn, "cache_size", cacheSize);
-            pragma(conn, "encoding", "\"UTF-8\"");
-            pragma(conn, "fullfsync", "OFF");
-            pragma(conn, "journal_mode", "PERSIST");
-            pragma(conn, "synchronous", "NORMAL");
+            pragmas(conn, null);
         } finally {
             conn.setAutoCommit(false);
         }
     }
 
-    private void pragma(java.sql.Connection conn, String key, String value) throws SQLException {
+    private void pragma(java.sql.Connection conn, String dbname, String key, String value) throws SQLException {
         PreparedStatement stmt = null;
+        
         try {
-            (stmt = conn.prepareStatement("PRAGMA " + key + " = " + value)).execute();
+            (stmt = conn.prepareStatement("PRAGMA " +
+                (dbname == null || dbname.equals("zimbra") ? "" : dbname + ".") +
+                key + " = " + value)).execute();
         } finally {
             DbPool.quietCloseStatement(stmt);
         }
+    }
+
+    void pragmas(java.sql.Connection conn, String dbname) throws SQLException {
+        if (cacheSize != null)
+            pragma(conn, dbname, "cache_size", cacheSize);
+        pragma(conn, dbname, "encoding", "\"UTF-8\"");
+        pragma(conn, dbname, "fullfsync", "OFF");
+        pragma(conn, dbname, "journal_mode", "PERSIST");
+        pragma(conn, dbname, "synchronous", "NORMAL");
     }
 
     private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
@@ -173,12 +180,14 @@ public class SQLite extends Db {
                 conn.getConnection().setAutoCommit(true);
 
             (stmt = conn.prepareStatement("ATTACH DATABASE \"" + getDatabaseFilename(dbname) + "\" AS " + dbname)).execute();
+            pragmas(conn.getConnection(), dbname);
 
             if (!autocommit)
                 conn.getConnection().setAutoCommit(autocommit);
         } catch (SQLException e) {
             if (!"database is already attached".equals(e.getMessage()))
                 return;
+            ZimbraLog.dbconn.error("database " + dbname + " attach failed", e);
         } finally {
             DbPool.quietCloseStatement(stmt);
         }

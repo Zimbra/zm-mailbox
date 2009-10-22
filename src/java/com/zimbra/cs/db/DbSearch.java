@@ -438,7 +438,7 @@ public class DbSearch {
         if (ListUtil.isEmpty(c.types)) {
             statement.append("type NOT IN " + DbMailItem.NON_SEARCHABLE_TYPES);
         } else {
-            statement.append("type IN ").append(DbUtil.suitableNumberOfVariables(c.types));
+            statement.append(DbUtil.whereIn("type", true, c.types.size()));
             num += c.types.size();
         }
         
@@ -915,12 +915,7 @@ public class DbSearch {
      */
     private static final int encode(StringBuilder statement, String column, boolean truthiness, Collection<?> c) {
         if (!ListUtil.isEmpty(c)) {
-            statement.append(" AND ").append(column);
-            if (truthiness)
-                statement.append(" IN");
-            else
-                statement.append(" NOT IN");
-            statement.append(DbUtil.suitableNumberOfVariables(c));
+            statement.append(" AND ").append(DbUtil.whereIn(column, truthiness, c.size()));
             return c.size();
         }
         return 0;
@@ -936,12 +931,7 @@ public class DbSearch {
      */
     private static final int encode(StringBuilder statement, String column, boolean truthiness, byte[] c) {
         if (c != null && c.length > 0) {
-            statement.append(" AND ").append(column);
-            if (truthiness)
-                statement.append(" IN");
-            else
-                statement.append(" NOT IN");
-            statement.append(DbUtil.suitableNumberOfVariables(c));
+            statement.append(" AND ").append(DbUtil.whereIn(column, truthiness, c.length));
             return c.length;
         }
         return 0;
