@@ -71,7 +71,7 @@ public class DbDataSource {
 
         synchronized (getSynchronizer(mbox)) {
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("INSERT INTO ");
                 sb.append(getTableName(mbox));
@@ -124,7 +124,7 @@ public class DbDataSource {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("UPDATE ");
                 sb.append(getTableName(mbox));
@@ -158,7 +158,7 @@ public class DbDataSource {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("DELETE FROM ");
                 sb.append(getTableName(mbox));
@@ -194,7 +194,7 @@ public class DbDataSource {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("DELETE FROM ");
                 sb.append(getTableName(mbox));
@@ -226,7 +226,7 @@ public class DbDataSource {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("DELETE FROM ");
                 sb.append(getTableName(mbox));
@@ -262,7 +262,7 @@ public class DbDataSource {
     	    Connection conn = null;
     	    PreparedStatement stmt = null;
     	    try {
-    	        conn = DbPool.getConnection();
+    	        conn = DbPool.getConnection(mbox);
     	        String dataSourceTable = getTableName(mbox);
     	        String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : dataSourceTable + ".mailbox_id = ? AND ";
     	        StringBuilder sb = new StringBuilder();
@@ -307,7 +307,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;        
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT item_id, folder_id, remote_id, metadata FROM ");
                 sb.append(getTableName(mbox));
@@ -351,7 +351,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
 
                 String thisTable = getTableName(mbox);
                 String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
@@ -402,7 +402,7 @@ public class DbDataSource {
                 String thisTable = getTableName(mbox);
                 String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
                 String MBOX_JOIN = DebugConfig.disableMailboxGroups ? " " : thisTable + ".mailbox_id = mi.mailbox_id AND ";
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT item_id, remote_id, ").append(thisTable).append(".metadata, mi.unread, mi.flags FROM ");
                 sb.append(thisTable);
@@ -452,7 +452,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 String db = DbMailbox.getDatabaseName(mbox);
                 String dst = db + ".data_source_item";
                 String mit = db + ".mail_item";
@@ -499,7 +499,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT folder_id, remote_id, metadata FROM ");
                 sb.append(getTableName(mbox));
@@ -546,7 +546,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 StringBuilder sb = new StringBuilder();
                 sb.append("SELECT item_id, folder_id, metadata FROM ");
                 sb.append(getTableName(mbox));
@@ -595,7 +595,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 for (List<Integer> curIds : splitIds) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("SELECT item_id, remote_id, folder_id, metadata FROM ");
@@ -650,7 +650,7 @@ public class DbDataSource {
             PreparedStatement stmt = null;
             ResultSet rs = null;
             try {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(mbox);
                 for (List<String> curIds : splitIds) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("SELECT item_id, remote_id, folder_id, metadata FROM ");
