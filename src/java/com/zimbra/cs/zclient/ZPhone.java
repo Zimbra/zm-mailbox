@@ -34,10 +34,10 @@ public class ZPhone implements ToZJSONObject {
 	
     public static final Pattern CHECK_INTERNATIONAL = Pattern.compile("^0\\d*");
     public static final Pattern CHECK_NPA = Pattern.compile("^1?(900)|(500)|(700)|(976)");
-    public static final Pattern CHECK_LINE = Pattern.compile("^1?\\d{3}555\\d*");
+    public static final Pattern CHECK_LINE = Pattern.compile("^1?(\\d{3})?5551212\\d*");
     public static final Pattern CHECK_EMERGENCY_ASSISTANCE = Pattern.compile("^1?911\\d*");
     public static final Pattern CHECK_DIRECTORY_ASSISTANCE = Pattern.compile("^1?411\\d*");
-    public static final Pattern CHECK_FORMAT = Pattern.compile("^1?[2-9]\\d{9}$");
+    public static final Pattern CHECK_FORMAT = Pattern.compile("^1?([2-9]\\d{9})|(555\\d{4})$");
     public static final Pattern CHECK_INVALID_CHARS = Pattern.compile(".*[^\\d\\s\\(\\)\\-\\.].*");
 
     private String mName;
@@ -88,6 +88,9 @@ public class ZPhone implements ToZJSONObject {
         } else if ((name.length() == 11) && (name.charAt(0) == '1')) {
             doIt = true;
             offset = 1;
+        } else if (name.length() == 7) {
+                doIt = true;
+                offset = -3;
         }
         if (doIt) {
             StringBuilder builder = new StringBuilder();
@@ -95,9 +98,11 @@ public class ZPhone implements ToZJSONObject {
                 builder.append(name, 0, offset);
                 builder.append("-");
             }
-            builder.append('(');
-            builder.append(name, offset, offset + 3);
-            builder.append(") ");
+            if (offset>-3) {
+                builder.append('(');
+                builder.append(name, offset, offset + 3);
+                builder.append(") ");
+            }
             builder.append(name, offset + 3, offset + 6);
             builder.append('-');
             builder.append(name, offset + 6, offset + 10);
@@ -105,7 +110,7 @@ public class ZPhone implements ToZJSONObject {
         } else {
             return name;
         }
-	}
+    }
 
     public static String getName(String display) {
         if (display == null) {
@@ -123,7 +128,7 @@ public class ZPhone implements ToZJSONObject {
 
     public static String validate(String number) {
 
-	if (ZPhone.CHECK_INVALID_CHARS.matcher(number).matches()) {
+	if (number == null || ZPhone.CHECK_INVALID_CHARS.matcher(number).matches()) {
 	    return ZPhone.INVALID_PHNUM_BAD_FORMAT;
 	}
 
@@ -133,29 +138,26 @@ public class ZPhone implements ToZJSONObject {
             return ZPhone.INVALID_PHNUM_BAD_FORMAT;
         }
 
-        if (number.charAt(0) == '1')
-            number = number.substring(1);
-
         if (ZPhone.CHECK_INTERNATIONAL.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_INTERNATIONAL_NUMBER;
         }
-									
+	
         if (ZPhone.CHECK_NPA.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_BAD_NPA;
         }
-																	
+	
         if (ZPhone.CHECK_LINE.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_BAD_LINE;
         }
-																				
+	
         if (ZPhone.CHECK_EMERGENCY_ASSISTANCE.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_EMERGENCY_ASSISTANCE;
         }
-																						
+	
         if (ZPhone.CHECK_DIRECTORY_ASSISTANCE.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_DIRECTORY_ASSISTANCE;
         }
-																										    
+	
         if (!ZPhone.CHECK_FORMAT.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_BAD_FORMAT;
         }
