@@ -44,11 +44,30 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         
         private int mValue;
 
+		private static final long[] OLD_COLORS = {
+			0x000000, 0x0000FF, 0x008284, 0x008200, 0x840084,
+			0xFF0000, 0x848200, 0xFF0084, 0x848284, 0xFF8000
+		};
+
         public int getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
             try {
-                return Color.values()[Integer.parseInt(s)];
+				com.zimbra.cs.mailbox.MailItem.Color color = s.startsWith("#")
+					? new com.zimbra.cs.mailbox.MailItem.Color(s.substring(1))
+					: new com.zimbra.cs.mailbox.MailItem.Color(Long.parseLong(s));
+				int mapped = color.getMappedColor();
+				if (!color.hasMapping()) {
+					long rgb = color.getRgb();
+					for (int i = 0; i < OLD_COLORS.length; i++) {
+						long c = OLD_COLORS[i];
+						if (rgb == c) {
+							mapped = i;
+							break;
+						}
+					}
+				}
+                return Color.values()[mapped];
             } catch (NumberFormatException e) {
             } catch (IndexOutOfBoundsException e) {
             }
@@ -66,7 +85,8 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
 
     public ZTag(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
-        mColor = Color.fromString(e.getAttribute(MailConstants.A_COLOR, "0"));
+		String rgb = e.getAttribute(MailConstants.A_RGB);
+		mColor = Color.fromString(rgb != null ? rgb : e.getAttribute(MailConstants.A_COLOR, "0"));
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
