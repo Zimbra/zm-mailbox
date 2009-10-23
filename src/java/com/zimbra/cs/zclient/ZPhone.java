@@ -34,7 +34,7 @@ public class ZPhone implements ToZJSONObject {
 	
     public static final Pattern CHECK_INTERNATIONAL = Pattern.compile("^0\\d*");
     public static final Pattern CHECK_NPA = Pattern.compile("^1?(900)|(500)|(700)|(976)");
-    public static final Pattern CHECK_LINE = Pattern.compile("^1?(\\d{3})?5551212\\d*");
+    public static final Pattern CHECK_LINE = Pattern.compile("^(1?\\d{3})?5551212\\d*");
     public static final Pattern CHECK_EMERGENCY_ASSISTANCE = Pattern.compile("^1?911\\d*");
     public static final Pattern CHECK_DIRECTORY_ASSISTANCE = Pattern.compile("^1?411\\d*");
     public static final Pattern CHECK_FORMAT = Pattern.compile("^1?([2-9]\\d{9})|(555\\d{4})$");
