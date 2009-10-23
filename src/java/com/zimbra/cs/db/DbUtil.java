@@ -455,4 +455,12 @@ public class DbUtil {
             return column + (in ? " = ?" : " <> ?");
         return column + (in ? " IN" : " NOT IN") + suitableNumberOfVariables(size);
     }
+
+    public static String whereIn(String column, int size) {
+        return whereIn(column, true, size);
+    }
+    
+    public static String whereNotIn(String column, int size) {
+        return whereIn(column, false, size);
+    }
 }

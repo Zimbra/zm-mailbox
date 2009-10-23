@@ -164,8 +164,8 @@ public class DbDataSource {
                 sb.append(getTableName(mbox));
                 sb.append(" WHERE ");
                 sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-                sb.append(" data_source_id = ? AND item_id IN ");
-                sb.append(DbUtil.suitableNumberOfVariables(itemIds));
+                sb.append(" data_source_id = ? AND ");
+                sb.append(DbUtil.whereIn("item_id", itemIds.size()));
                 stmt = conn.prepareStatement(sb.toString());
 
                 int i = 1;
@@ -602,8 +602,8 @@ public class DbDataSource {
                     sb.append(getTableName(mbox));
                     sb.append(" WHERE ");
                     sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-                    sb.append("  data_source_id = ? AND item_id IN ");
-                    sb.append(DbUtil.suitableNumberOfVariables(curIds));
+                    sb.append(" data_source_id = ? AND ");
+                    sb.append(DbUtil.whereIn("item_id", curIds.size()));
                     stmt = conn.prepareStatement(sb.toString());
                     int i = 1;
                     i = DbMailItem.setMailboxId(stmt, mbox, i);
@@ -657,8 +657,8 @@ public class DbDataSource {
                     sb.append(getTableName(mbox));
                     sb.append(" WHERE ");
                     sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-                    sb.append("  data_source_id = ? AND remote_id IN ");
-                    sb.append(DbUtil.suitableNumberOfVariables(curIds));
+                    sb.append(" data_source_id = ? AND ");
+                    sb.append(DbUtil.whereIn("remote_id", curIds.size()));
                     stmt = conn.prepareStatement(sb.toString());
                     int i = 1;
                     i = DbMailItem.setMailboxId(stmt, mbox, i);

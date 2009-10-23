@@ -530,7 +530,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                             " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 stmt.setInt(pos++, folder.getId());
                 stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -566,7 +566,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET index_id = id" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
@@ -607,7 +607,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), children.length - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 if (parent == null || parent instanceof VirtualConversation)
                     stmt.setNull(pos++, Types.INTEGER);
@@ -1144,7 +1144,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), itemIDs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
                             " SET " + primaryUpdate + updateChangeID +
-                            " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND " + DbUtil.whereIn("id", count));
 
                 int pos = 1;
                 stmt.setLong(pos++, tag.getBitmask());
@@ -1227,7 +1227,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET unread = ?, mod_metadata = ?, change_date = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND " + relation +
-                        "  AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE));
+                        "  AND " + typeIn(MailItem.TYPE_MESSAGE));
             int pos = 1;
             stmt.setInt(pos++, unread ? 1 : 0);
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -1263,8 +1263,8 @@ public class DbMailItem {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET unread = ?, mod_metadata = ?, change_date = ?" +
                             " WHERE " + IN_THIS_MAILBOX_AND + "unread = ?" +
-                            "  AND id IN " + DbUtil.suitableNumberOfVariables(count) +
-                            "  AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE));
+                            "  AND " + DbUtil.whereIn("id", count) +
+                            "  AND " + typeIn(MailItem.TYPE_MESSAGE));
                 int pos = 1;
                 stmt.setInt(pos++, unread ? 1 : 0);
                 stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -1342,7 +1342,7 @@ public class DbMailItem {
                         int count = Math.min(Db.getINClauseBatchSize(), convIDs.size() - i);
                         stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(folder) +
                                 " SET size = size - ?, metadata = NULL, mod_metadata = ?, change_date = ?" +
-                                " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count) +
+                                " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count) +
                                 "  AND type = " + MailItem.TYPE_CONVERSATION);
                         pos = 1;
                         stmt.setInt(pos++, update.getKey());
@@ -1392,7 +1392,8 @@ public class DbMailItem {
                     int count = Math.min(Db.getINClauseBatchSize(), ids.size() - i);
                     stmt = conn.prepareStatement("UPDATE " + table + ", " +
                                 "(SELECT parent_id pid, COUNT(*) count FROM " + getMailItemTableName(mbox) +
-                                " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND parent_id IS NOT NULL GROUP BY parent_id) AS x" +
+                                " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count) +
+                                " AND parent_id IS NOT NULL GROUP BY parent_id) AS x" +
                                 " SET size = size - count, metadata = NULL, mod_metadata = ?, change_date = ?" +
                                 " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.TYPE_CONVERSATION);
                     int pos = 1;
@@ -1407,7 +1408,7 @@ public class DbMailItem {
                 }
             } else {
                 stmt = conn.prepareStatement("SELECT parent_id, COUNT(*) FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(ids) + "AND parent_id IS NOT NULL" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", ids.size()) + "AND parent_id IS NOT NULL" +
                         " GROUP BY parent_id");
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
@@ -1428,7 +1429,7 @@ public class DbMailItem {
                 for (Map.Entry<Integer, List<Integer>> update : counts.entrySet()) {
                     stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET size = size - ?, metadata = NULL, mod_metadata = ?, change_date = ?" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(update.getValue()) +
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", update.getValue().size()) +
                             " AND type = " + MailItem.TYPE_CONVERSATION);
                     pos = 1;
                     stmt.setInt(pos++, update.getKey());
@@ -1468,7 +1469,7 @@ public class DbMailItem {
             for (int i = 0; i < candidates.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), candidates.size() - i);
                 stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND size <= 0");
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count) + " AND size <= 0");
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
@@ -1529,7 +1530,7 @@ public class DbMailItem {
             try {
                 int count = Math.min(Db.getINClauseBatchSize(), targets.size() - i);
                 stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
@@ -1701,17 +1702,16 @@ public class DbMailItem {
 
     static final String NON_SEARCHABLE_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ',' + MailItem.TYPE_CONVERSATION + ')';
 
-    private static String typeConstraint(byte type) {
+    private static String typeIn(byte type) {
         if (type == MailItem.TYPE_FOLDER)
-            return FOLDER_TYPES;
+            return "type IN " + FOLDER_TYPES;
         else if (type == MailItem.TYPE_MESSAGE)
-            return MESSAGE_TYPES;
+            return "type IN " + MESSAGE_TYPES;
         else if (type == MailItem.TYPE_DOCUMENT)
-            return DOCUMENT_TYPES;
+            return "type IN " + DOCUMENT_TYPES;
         else
-            return "(" + type + ')';
+            return "type = " + type;
     }
-
 
     public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, Map<UnderlyingData, Long> folderData, Map<UnderlyingData, Long> tagData, boolean reload)
     throws ServiceException {
@@ -1854,7 +1854,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(mbox, " mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + typeConstraint(type) + DbSearch.sortQuery(sort));
+                    " WHERE " + IN_THIS_MAILBOX_AND + typeIn(type) + DbSearch.sortQuery(sort));
             if (type == MailItem.TYPE_MESSAGE)
                 Db.getInstance().enableStreaming(stmt);
             setMailboxId(stmt, mbox, 1);
@@ -1980,7 +1980,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(folder.getMailbox(), " mi") +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND " + typeIn(type) +
                         DbSearch.sortQuery(sort));
             if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS && type == MailItem.TYPE_MESSAGE) {
                 Db.getInstance().enableStreaming(stmt);
@@ -2085,7 +2085,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), ids.size() - i);
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                             " FROM " + getMailItemTableName(mbox, "mi") +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
@@ -2127,7 +2127,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getMailItemTableName(mbox, "mi") +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + typeConstraint(type) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND " + typeIn(type) +
                         " AND " + Db.equalsSTRING("name"));
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
@@ -2195,7 +2195,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : "type IN " + typeConstraint(type);
+            String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type NOT IN " + NON_SEARCHABLE_TYPES : typeIn(type);
             stmt = conn.prepareStatement("SELECT id, type, folder_id" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "mod_metadata > ? AND " + typeConstraint +
@@ -2248,7 +2248,7 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
                 stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tags" +
                         " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "parent_id IN " + DbUtil.suitableNumberOfVariables(count));
+                        " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++) {
@@ -2349,10 +2349,10 @@ public class DbMailItem {
             String constraint;
             String dateColumn = (useChangeDate ? "change_date" : "date");
             if (globalMessages)
-                constraint = dateColumn + " < ? AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE);
+                constraint = dateColumn + " < ? AND " + typeIn(MailItem.TYPE_MESSAGE);
             else
                 constraint = dateColumn + " < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
-                             " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
+                             " AND " + DbUtil.whereIn("folder_id", folders.size());
             if (unread != null)
                 constraint += " AND unread = ?";
 
@@ -2413,8 +2413,8 @@ public class DbMailItem {
             if (flagsets != null && flagsets.isEmpty())
                 return info;
 
-            String flagconstraint = flagsets == null ? "" : " AND flags IN" + DbUtil.suitableNumberOfVariables(flagsets);
-            String folderconstraint = folders == null ? "" : " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
+            String flagconstraint = flagsets == null ? "" : " AND " + DbUtil.whereIn("flags", flagsets.size());
+            String folderconstraint = folders == null ? "" : " AND " + DbUtil.whereIn("folder_id", folders.size());
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
@@ -2552,7 +2552,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("SELECT mi.id, mi.folder_id, rev.size, rev.mod_content, rev.volume_id, rev.blob_digest " +
                     " FROM " + getMailItemTableName(mbox, "mi") + ", " + getRevisionTableName(mbox, "rev") +
-                    " WHERE mi.id = rev.item_id AND mi.id IN " + DbUtil.suitableNumberOfVariables(versioned) +
+                    " WHERE mi.id = rev.item_id AND " + DbUtil.whereIn("mi.id", versioned.size()) +
                     (DebugConfig.disableMailboxGroups ? "" : " AND mi.mailbox_id = ? AND mi.mailbox_id = rev.mailbox_id"));
             int pos = 1;
             for (int vid : versioned)
@@ -2631,7 +2631,7 @@ public class DbMailItem {
             for (int i = 0; i < indexIDs.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), indexIDs.size() - i);
                 stmt = conn.prepareStatement("SELECT index_id FROM " + getMailItemTableName(mbox) +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "index_id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("index_id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
@@ -3028,12 +3028,12 @@ public class DbMailItem {
                 int count = Math.min(Db.getINClauseBatchSize(), uids.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
                             " SET index_id = id" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                         " WHERE mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
                         (DebugConfig.disableMailboxGroups ? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
-                		" AND ci.uid IN " + DbUtil.suitableNumberOfVariables(count));
+                		" AND " + DbUtil.whereIn("ci.uid", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
@@ -3083,15 +3083,15 @@ public class DbMailItem {
 
         String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
         String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
-        String typeList = (type == MailItem.TYPE_UNKNOWN ? CALENDAR_TYPES : typeConstraint(type));
+        String typeConstraint = type == MailItem.TYPE_UNKNOWN ? "type IN " + CALENDAR_TYPES : typeIn(type);
 
         String excludeFolderPart = "";
         if (excludeFolderIds != null && excludeFolderIds.length > 0) 
-            excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
+            excludeFolderPart = " AND " + DbUtil.whereNotIn("folder_id", excludeFolderIds.length);
 
         PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
                     " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
-                    " WHERE mi.id = ci.item_id" + endConstraint + startConstraint + " AND mi.type IN " + typeList +
+                    " WHERE mi.id = ci.item_id" + endConstraint + startConstraint + " AND mi." + typeConstraint +
                     (DebugConfig.disableMailboxGroups? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
                     (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
 

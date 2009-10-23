@@ -154,7 +154,7 @@ public class DbPop3Message {
                 stmt = conn.prepareStatement(
                     "SELECT uid FROM " + getTableName(mbox) +
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?" +
-                    " AND uid IN " + DbUtil.suitableNumberOfVariables(curIds));
+                    " AND " + DbUtil.whereIn("uid", curIds.size()));
                 int pos = 1;
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setString(pos++, ds.getId());

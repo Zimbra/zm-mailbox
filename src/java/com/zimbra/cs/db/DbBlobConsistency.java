@@ -115,7 +115,7 @@ public class DbBlobConsistency {
             stmt = conn.prepareStatement("SELECT COUNT(*) " +
                 "FROM " + DbMailbox.qualifyTableName(mbox, tableName) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
-                idColName + " IN (" + DbUtil.suitableNumberOfVariables(itemIds) + ") ");
+                DbUtil.whereIn(idColName, itemIds.size()));
             int i = 1;
             if (!DebugConfig.disableMailboxGroups) {
                 stmt.setLong(i++, mbox.getId());
@@ -149,8 +149,8 @@ public class DbBlobConsistency {
             stmt = conn.prepareStatement("SELECT * " +
                 "FROM " + DbMailbox.qualifyTableName(mbox, tableName) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
-                idColName + " IN (" + DbUtil.suitableNumberOfVariables(itemIds) + ") " +
-                "INTO OUTFILE ?");
+                DbUtil.whereIn(idColName, itemIds.size()) +
+                " INTO OUTFILE ?");
             int i = 1;
             if (!DebugConfig.disableMailboxGroups) {
                 stmt.setLong(i++, mbox.getId());
