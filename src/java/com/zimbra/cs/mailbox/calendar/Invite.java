@@ -1960,6 +1960,24 @@ public class Invite {
                             }
                         }
     
+                        if (!addRecurs.isEmpty() || !subRecurs.isEmpty()) {
+                            // We have a recurrence.  Make sure DTSTART is not null.
+                            ParsedDateTime st = newInv.getStartTime();
+                            if (st == null) {
+                                ParsedDateTime et = newInv.getEndTime();
+                                if (et != null) {
+                                    if (et.hasTime())
+                                        st = et.add(ParsedDuration.NEGATIVE_ONE_SECOND);
+                                    else
+                                        st = et.add(ParsedDuration.NEGATIVE_ONE_DAY);
+                                    newInv.setDtStart(st);
+                                } else {
+                                    // Both DTSTART and DTEND are unspecified.  Recurrence makes no sense!
+                                    throw ServiceException.INVALID_REQUEST("recurrence used without DTSTART", null);
+                                }
+                            }
+                        }
+
                         InviteInfo inviteInfo = new InviteInfo(newInv);
                         List<IRecurrence> addRules = new ArrayList<IRecurrence>();
                         if (addRecurs.size() > 0) {

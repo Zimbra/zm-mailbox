@@ -1095,6 +1095,21 @@ public class CalendarUtils {
                 throw ServiceException.INVALID_REQUEST(
                         "No <recur> allowed in an exception", null);
             }
+            // Ensure DTSTART is set if doing recurrence.
+            ParsedDateTime st = newInv.getStartTime();
+            if (st == null) {
+                ParsedDateTime et = newInv.getEndTime();
+                if (et != null) {
+                    if (et.hasTime())
+                        st = et.add(ParsedDuration.NEGATIVE_ONE_SECOND);
+                    else
+                        st = et.add(ParsedDuration.NEGATIVE_ONE_DAY);
+                    newInv.setDtStart(st);
+                } else {
+                    // Both DTSTART and DTEND are unspecified.  Recurrence makes no sense!
+                    throw ServiceException.INVALID_REQUEST("recurrence used without DTSTART", null);
+                }
+            }
             Recurrence.IRecurrence recurrence = parseRecur(
                     recur, tzMap, newInv.getStartTime(), newInv.getEndTime(),
                     newInv.getDuration(), newInv.getRecurId());
