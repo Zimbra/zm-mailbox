@@ -22,9 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
 
 import com.zimbra.common.localconfig.LC;
@@ -160,22 +158,18 @@ public class FileStore {
                             length, MAX_CACHE_FILE_LEN, file.getAbsolutePath());
                     return null;
                 }
-                char[] buf = new char[(int) length];
-                Reader reader = null;
+                byte[] buf = new byte[(int) length];
                 FileInputStream fis = null;
                 try {
                     fis = new FileInputStream(file);
-                    reader = new InputStreamReader(fis, "utf-8");
-                    int bytesRead = reader.read(buf);
+                    int bytesRead = fis.read(buf);
                     if (bytesRead < length)
                         throw ServiceException.FAILURE(
                                 "Read " + bytesRead + " bytes when expecting " + length +
                                 " bytes, from file " + file.getAbsolutePath(), null);
-                    return new String(buf);
+                    return new String(buf, "utf-8");
                 } finally {
-                    if (reader != null)
-                        reader.close();
-                    else if (fis != null)
+                    if (fis != null)
                         fis.close();
                 }
             } catch (FileNotFoundException e) {

@@ -17,7 +17,7 @@
 package com.zimbra.cs.mailbox.util;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.PreparedStatement;
@@ -243,19 +243,19 @@ public class MetadataDump {
     private static String loadFromFile(File file) throws ServiceException {
         try {
             long length = file.length();
-            char[] buf = new char[(int) length];
-            FileReader fr = null;
+            byte[] buf = new byte[(int) length];
+            FileInputStream fis = null;
             try {
-                fr = new FileReader(file);
-                int bytesRead = fr.read(buf);
+                fis = new FileInputStream(file);
+                int bytesRead = fis.read(buf);
                 if (bytesRead < length)
                     throw ServiceException.FAILURE(
                             "Read " + bytesRead + " bytes when expecting " + length +
                             " bytes, from file " + file.getAbsolutePath(), null);
-                return new String(buf);
+                return new String(buf, "utf-8");
             } finally {
-                if (fr != null)
-                    fr.close();
+                if (fis != null)
+                    fis.close();
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while reading from " + file.getAbsolutePath(), e);
