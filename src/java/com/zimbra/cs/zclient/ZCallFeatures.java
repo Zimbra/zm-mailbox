@@ -116,13 +116,7 @@ public class ZCallFeatures {
     }
 
     public Collection<ZCallFeature> getAllFeatures() {
-    
-	// Remove these lines and uncomment the last when selective call rejection has been implemented in the soap interface
-	HashMap<String, ZCallFeature> m = new HashMap<String, ZCallFeature>(mCallFeatures);
-	m.remove(VoiceConstants.E_SELECTIVE_CALL_REJECTION);
-	return m.values();
-	
-        //return mCallFeatures.values();
+        return mCallFeatures.values();
     }
 
     public boolean isEmpty() {
