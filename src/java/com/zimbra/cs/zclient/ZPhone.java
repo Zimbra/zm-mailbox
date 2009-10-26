@@ -35,9 +35,10 @@ public class ZPhone implements ToZJSONObject {
     public static final Pattern CHECK_INTERNATIONAL = Pattern.compile("^0\\d*");
     public static final Pattern CHECK_NPA = Pattern.compile("^1?(900)|(500)|(700)|(976)");
     public static final Pattern CHECK_LINE = Pattern.compile("^(1?\\d{3})?5551212\\d*");
+    public static final Pattern CHECK_FIVES = Pattern.compile("^(1?\\d{3})?55501\\d{2}\\d*");
     public static final Pattern CHECK_EMERGENCY_ASSISTANCE = Pattern.compile("^1?911\\d*");
     public static final Pattern CHECK_DIRECTORY_ASSISTANCE = Pattern.compile("^1?411\\d*");
-    public static final Pattern CHECK_FORMAT = Pattern.compile("^(1?[2-9]\\d{9})|(555\\d{4})$");
+    public static final Pattern CHECK_FORMAT = Pattern.compile("^1?[2-9]\\d{9}$");
     public static final Pattern CHECK_INVALID_CHARS = Pattern.compile(".*[^\\d\\s\\(\\)\\-\\.].*");
 
     private String mName;
@@ -147,6 +148,10 @@ public class ZPhone implements ToZJSONObject {
         }
 	
         if (ZPhone.CHECK_LINE.matcher(number).matches()) {
+            return ZPhone.INVALID_PHNUM_BAD_LINE;
+        }
+	
+        if (ZPhone.CHECK_FIVES.matcher(number).matches()) {
             return ZPhone.INVALID_PHNUM_BAD_LINE;
         }
 	
