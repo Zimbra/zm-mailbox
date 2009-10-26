@@ -388,7 +388,8 @@ public class Invite {
             meta.put(FN_CLASS, inv.getClassProp());
         meta.put(FN_CLASS_SETBYME, inv.classPropSetByMe());
         meta.put(FN_STATUS, inv.getStatus());
-        meta.put(FN_APPT_FREEBUSY, inv.getFreeBusy());
+        if (inv.hasFreeBusy())
+            meta.put(FN_APPT_FREEBUSY, inv.getFreeBusy());
         meta.put(FN_TRANSP, inv.getTransparency());
         meta.put(FN_START, inv.mStart);
         meta.put(FN_END, inv.mEnd);
@@ -554,7 +555,7 @@ public class Invite {
         String classProp = meta.get(FN_CLASS, IcalXmlStrMap.CLASS_PUBLIC);
         boolean classPropSetByMe = meta.getBool(FN_CLASS_SETBYME, false);
         String status = meta.get(FN_STATUS, IcalXmlStrMap.STATUS_CONFIRMED);
-        String freebusy = meta.get(FN_APPT_FREEBUSY, IcalXmlStrMap.FBTYPE_BUSY);
+        String freebusy = meta.get(FN_APPT_FREEBUSY, null);
         String transp = meta.get(FN_TRANSP, IcalXmlStrMap.TRANSP_OPAQUE);
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
@@ -1026,7 +1027,8 @@ public class Invite {
     public void setName(String name) { mName = name; }
     public String getStatus() { return mStatus; }
     public void setStatus(String status) { mStatus = status; }
-    public String getFreeBusy() { return mFreeBusy; }
+    public boolean hasFreeBusy() { return mFreeBusy != null; }
+    public String getFreeBusy() { return mFreeBusy != null ? mFreeBusy : IcalXmlStrMap.FBTYPE_BUSY; }
     public void setFreeBusy(String fb) { mFreeBusy = fb; }
     public String getTransparency() { return mTransparency; }
     public boolean isTransparent() { return IcalXmlStrMap.TRANSP_TRANSPARENT.equals(mTransparency); }
@@ -1075,8 +1077,6 @@ public class Invite {
     }
 
     public String getFreeBusyActual() {
-        assert(mFreeBusy != null);
-        
         return partStatToFreeBusyActual(mPartStat);
     }
     
@@ -1089,16 +1089,17 @@ public class Invite {
      * setting.
      * @return
      */
-    public String partStatToFreeBusyActual(String partStat) 
-    {
+    public String partStatToFreeBusyActual(String partStat) {
+        String fb = getFreeBusy();
+
         // If event itself is FBTYPE_FREE, it doesn't matter whether
         // invite was accepted or declined.  It shows up as free time.
-        if (IcalXmlStrMap.FBTYPE_FREE.equals(mFreeBusy))
+        if (IcalXmlStrMap.FBTYPE_FREE.equals(fb))
             return IcalXmlStrMap.FBTYPE_FREE;
         
         // If invite was accepted, use event's free-busy status.
         if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat))
-            return mFreeBusy;
+            return fb;
         
         // If invite was received but user hasn't acted on it yet
         // (NEEDS_ACTION), or if the user tentatively accepted it,
@@ -1118,7 +1119,7 @@ public class Invite {
                 IcalXmlStrMap.STATUS_CANCELLED.equals(mStatus))
             return IcalXmlStrMap.FBTYPE_FREE;
         
-        return mFreeBusy;
+        return fb;
     }
     
     /**
@@ -1210,7 +1211,7 @@ public class Invite {
         sb.append(", status: ").append(getStatus());
         sb.append(", partStat: ").append(getPartStat());
         sb.append(", rsvp: ").append(getRsvp());
-        sb.append(", freeBusy: ").append(getFreeBusy());
+        sb.append(", freeBusy: ").append(mFreeBusy);
         sb.append(", transp: ").append(getTransparency());
         sb.append(", class: ").append(getClassProp());
         sb.append(", classSetByMe: ").append(classPropSetByMe());
@@ -1263,7 +1264,7 @@ public class Invite {
     // all of these are loaded from / stored in the meta
     protected String mUid;
     protected String mStatus = IcalXmlStrMap.STATUS_CONFIRMED;
-    protected String mFreeBusy = IcalXmlStrMap.FBTYPE_BUSY;  // (F)ree, (B)usy, (T)entative, (U)navailable
+    protected String mFreeBusy = null;
     protected String mTransparency = IcalXmlStrMap.TRANSP_OPAQUE;  // transparent or opaque
     protected String mClass = IcalXmlStrMap.CLASS_PUBLIC;  // public, private, confidential
     protected boolean mClassSetByMe;
@@ -1870,11 +1871,10 @@ public class Invite {
                                     String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
                                     if (transp != null) {
                                         newInv.setTransparency(transp);
-                                        // Derive intended F/B from TRANSP.
+                                        // If transparent, set intended f/b to free.
+                                        // If opaque, don't set intended f/b because there are multiple possibilities.
                                         if (newInv.isTransparent())
                                             newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
-                                        else
-                                            newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_BUSY);
                                     }
                                 }
                                 break;

@@ -3658,6 +3658,21 @@ public class Mailbox {
                         }
                     }
                 }
+
+                // If modifying an existing calendar item, inherit intended f/b from old version
+                // if new version doesn't specify it.  (bug 41002)
+                if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
+                    Invite currSeries = calItem.getDefaultInviteOrNull();
+                    for (SetCalendarItemData scid : scidList) {
+                        if (!scid.mInv.hasFreeBusy()) {
+                            Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
+                            if (currInv == null)  // Inherit from series as fallback.
+                                currInv = currSeries;
+                            if (currInv != null && currInv.hasFreeBusy())
+                                scid.mInv.setFreeBusy(currInv.getFreeBusy());
+                        }
+                    }
+                }
             }
 
             redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);

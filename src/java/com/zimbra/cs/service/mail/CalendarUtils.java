@@ -1038,11 +1038,10 @@ public class CalendarUtils {
                         transp);
                 newInv.setTransparency(transp);
 
-                // Derive intended F/B from transparency.
+                // If transparent, set intended f/b to free.
+                // If opaque, don't set intended f/b because there are multiple possibilities.
                 if (newInv.isTransparent())
                     newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
-                else
-                    newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_BUSY);
             }
         }
 
