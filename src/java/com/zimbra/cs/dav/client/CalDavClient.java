@@ -138,6 +138,23 @@ public class CalDavClient extends WebDavClient {
 		return appt;
 	}
 	
+	public Appointment getEtag(String url) throws IOException, DavException {
+	    Appointment appt = new Appointment(url, null);
+        DavRequest propfind = DavRequest.PROPFIND(url);
+        propfind.setDepth(Depth.zero);
+        propfind.addRequestProp(DavElements.E_GETETAG);
+        propfind.addRequestProp(DavElements.E_RESOURCETYPE);
+        Collection<DavObject> response = sendMultiResponseRequest(propfind);
+        for (DavObject obj : response) {
+            String href = obj.getHref();
+            if (href.equals(url)) {
+                appt.etag = obj.getPropertyText(DavElements.E_GETETAG);
+                return appt;
+            }
+        }
+        return appt;
+	}
+	
 	public String sendCalendarData(Appointment appt) throws IOException, DavException {
 		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes("UTF-8"), MimeConstants.CT_TEXT_CALENDAR, appt.etag, null);
 		String etag = resp.getHeader(DavProtocol.HEADER_ETAG);

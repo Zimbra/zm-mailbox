@@ -63,6 +63,13 @@ public class CalDavDataImport extends MailItemImport {
 	private static final int DEFAULT_FOLDER_FLAGS = Flag.flagsToBitmask("#");
 	
 	private CalDavClient mClient;
+
+	private static class CalendarFolder {
+	    public int id;
+	    public Folder folder;
+	    public boolean ctagMatched;
+	    public CalendarFolder(int fid) { id = fid; }
+	}
 	
     public CalDavDataImport(DataSource ds) throws ServiceException {
     	super(ds);
@@ -70,15 +77,19 @@ public class CalDavDataImport extends MailItemImport {
 	
     public void importData(List<Integer> folderIds, boolean fullSync)
     throws ServiceException {
+        ArrayList<CalendarFolder> folders = new ArrayList<CalendarFolder>();
     	try {
         	mbox.beginTrackingSync();
-        	if (folderIds == null)
-        		folderIds = syncFolders();
+        	if (folderIds != null)
+        	    for (int fid : folderIds)
+        	        folders.add(new CalendarFolder(fid));
+        	else
+        		folders = syncFolders();
         	OperationContext octxt = new OperationContext(mbox);
-        	for (int fid : folderIds) {
-            	Folder syncFolder = mbox.getFolderById(octxt, fid);
-            	if (syncFolder.getDefaultView() == MailItem.TYPE_APPOINTMENT)
-            	    sync(octxt, syncFolder);
+        	for (CalendarFolder f : folders) {
+            	f.folder = mbox.getFolderById(octxt, f.id);
+            	if (f.folder.getDefaultView() == MailItem.TYPE_APPOINTMENT)
+            	    sync(octxt, f);
         	}
     	} catch (DavException e) {
     		throw ServiceException.FAILURE("error importing CalDAV data", e);
@@ -177,8 +188,8 @@ public class CalDavDataImport extends MailItemImport {
 		return folders;
     }
     
-    private List<Integer> syncFolders() throws ServiceException, IOException, DavException {
-    	ArrayList<Integer> ret = new ArrayList<Integer>();
+    private ArrayList<CalendarFolder> syncFolders() throws ServiceException, IOException, DavException {
+    	ArrayList<CalendarFolder> ret = new ArrayList<CalendarFolder>();
     	DataSource ds = getDataSource();
 		CalDavClient client = getClient();
 		Map<String,DavObject> calendars = client.getCalendars();
@@ -196,6 +207,8 @@ public class CalDavDataImport extends MailItemImport {
 			DataSourceItem f = allFolders.get(url);
 			if (f == null)
 				f = new DataSourceItem(0, 0, url, null);
+            CalendarFolder cf = new CalendarFolder(f.itemId);
+            ret.add(cf);
 			Folder folder = null;
 			if (f.itemId != 0) {
 				// check if the folder was deleted
@@ -236,6 +249,7 @@ public class CalDavDataImport extends MailItemImport {
 				if (ctag != null)
 					f.md.put(METADATA_KEY_CTAG, ctag);
 				f.remoteId = url;
+				cf.id = f.itemId;
 		    	mbox.setSyncDate(octxt, folder.getId(), mbox.getLastChangeID());
 				DbDataSource.addMapping(ds, f);
 			} else if (f.md == null) {
@@ -247,6 +261,14 @@ public class CalDavDataImport extends MailItemImport {
 				if (ctag != null)
 					f.md.put(METADATA_KEY_CTAG, ctag);
 				DbDataSource.addMapping(ds, f);
+			} else if (ctag != null) {
+			    String oldctag = f.md.get(METADATA_KEY_CTAG, null);
+			    if (ctag.equals(oldctag)) {
+			        cf.ctagMatched = true;
+			    } else {
+			        f.md.put(METADATA_KEY_CTAG, ctag);
+			        DbDataSource.updateMapping(ds, f);
+			    }
 			}
 			String fname = folder.getName();
 			if (!fname.equals(name)) {
@@ -256,14 +278,6 @@ public class CalDavDataImport extends MailItemImport {
         		} catch (ServiceException e) {
         			ZimbraLog.datasource.warn("folder rename failed", e);
         		}
-			}
-			if (ctag != null) {
-				String oldctag = f.md.get(METADATA_KEY_CTAG, null);
-				if (!ctag.equals(oldctag)) {
-					ret.add(f.itemId);
-					f.md.put(METADATA_KEY_CTAG, ctag);
-					DbDataSource.updateMapping(ds, f);
-				}
 			}
 			allFolders.remove(url);
 		}
@@ -376,8 +390,13 @@ public class CalDavDataImport extends MailItemImport {
     		// push modified appt
     		ZimbraLog.datasource.debug("pushModify: sending appointment %s", item.remoteId);
     		String etag = putAppointment((CalendarItem)mitem, item);
+    		if (etag == null) {
+    		    Appointment appt = mClient.getEtag(item.remoteId);
+    		    etag = appt.etag;
+    		}
+    		    
     		item.md.put(METADATA_KEY_ETAG, etag);
-    		DbDataSource.addMapping(ds, item);
+    		DbDataSource.updateMapping(ds, item);
     	} else {
     		ZimbraLog.datasource.warn("pushModify: unrecognized item type for %d: %s", itemId, type);
     		return;
@@ -467,12 +486,14 @@ public class CalDavDataImport extends MailItemImport {
     	OperationContext octxt = new OperationContext(mbox);
     	MailItem mi = null;
     	boolean isStale = false;
+    	boolean isCreate = false;
     	if (dsItem.md == null && item.status != Status.deleted) {
     		dsItem.md = new Metadata();
     		dsItem.md.put(METADATA_KEY_TYPE, METADATA_TYPE_APPOINTMENT);
     	}
     	if (dsItem.itemId == 0) {
     		isStale = true;
+    		isCreate = true;
     	} else {
         	String etag = dsItem.md.get(METADATA_KEY_ETAG, null);
         	try {
@@ -547,9 +568,13 @@ public class CalDavDataImport extends MailItemImport {
     		}
     		mi = mbox.setCalendarItem(octxt, where.getId(), 0, 0,
     				main, exceptions, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
-    		dsItem.itemId = mi.getId();
-    		dsItem.folderId = mi.getFolderId();
-    		DbDataSource.addMapping(ds, dsItem);
+            dsItem.itemId = mi.getId();
+            dsItem.folderId = mi.getFolderId();
+    		if (isCreate) {
+                DbDataSource.addMapping(ds, dsItem);
+    		} else {
+                DbDataSource.updateMapping(ds, dsItem);
+    		}
     	} else {
         	ZimbraLog.datasource.debug("Appointment up to date %s", item.href);
         	try {
@@ -563,9 +588,10 @@ public class CalDavDataImport extends MailItemImport {
     	}
     	return mi;
     }
-    private void sync(OperationContext octxt, Folder syncFolder) throws ServiceException, IOException, DavException {
+    private void sync(OperationContext octxt, CalendarFolder cf) throws ServiceException, IOException, DavException {
+        Folder syncFolder = cf.folder;
     	int lastSync = (int)syncFolder.getLastSyncDate();
-    	int currentSync = 0;
+    	int currentSync = lastSync;
     	boolean allDone = false;
     	HashMap<Integer,Integer> modifiedFromRemote = new HashMap<Integer,Integer>();
     	ArrayList<Integer> deletedFromRemote = new ArrayList<Integer>();
@@ -573,7 +599,6 @@ public class CalDavDataImport extends MailItemImport {
     	// loop through as long as there are un'synced local changes
     	while (!allDone) {
     		allDone = true;
-    		currentSync = mbox.getLastChangeID();
     		
     		// push local deletion
     		List<Integer> deleted = new ArrayList<Integer>();
@@ -612,6 +637,9 @@ public class CalDavDataImport extends MailItemImport {
     			allDone = false;
     		}
     		
+    		if (cf.ctagMatched)
+    		    break;
+    		
     		// pull in the changes from the remote server
     		List<RemoteItem> remoteItems = getRemoteItems(syncFolder);
     		for (RemoteItem item : remoteItems) {
@@ -623,8 +651,8 @@ public class CalDavDataImport extends MailItemImport {
     					modifiedFromRemote.put(localItem.getId(), localItem.getModifiedSequence());
     			}
     		}
-
-    		lastSync = currentSync;
+            currentSync = mbox.getLastChangeID();
+            lastSync = currentSync;
     	}
     	mbox.setSyncDate(octxt, syncFolder.getId(), currentSync);
     }
