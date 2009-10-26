@@ -427,8 +427,10 @@ public class DbSearch {
         c.checkDates();
         
         // if there are no possible matches, short-circuit here...
-        if (c.automaticEmptySet()) {
-            encodeBooleanValue(statement, false); 
+        TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
+        if (c.automaticEmptySet() || tc.noMatches) {
+            statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ?
+                "FALSE" : "0=1"); 
             return num;
         }
         
@@ -438,17 +440,12 @@ public class DbSearch {
         if (ListUtil.isEmpty(c.types)) {
             statement.append("type NOT IN " + DbMailItem.NON_SEARCHABLE_TYPES);
         } else {
-            statement.append(DbUtil.whereIn("type", true, c.types.size()));
+            statement.append(DbUtil.whereIn("type", c.types.size()));
             num += c.types.size();
         }
         
         num += encode(statement, "mi.type", false, c.excludeTypes);
         num += encode(statement, "mi.type", inCalTable, calTypes);
-
-        // Determine the set of matching tags
-        TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
-        if (tc.noMatches)
-            encodeBooleanValue(statement, false);
 
         // if hasTags is NULL then nothing
         // if hasTags is TRUE then !=0
@@ -860,22 +857,6 @@ public class DbSearch {
         return param;
     }
     
-    private static final void encodeBooleanValue(StringBuilder statement, boolean truthiness) {
-        if (truthiness) {
-            if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
-                statement.append(" AND TRUE");
-            } else {
-                statement.append(" AND 1=1");
-            }
-        } else {
-            if (Db.supports(Db.Capability.BOOLEAN_DATATYPE)) {
-                statement.append(" AND FALSE");
-            } else {
-                statement.append(" AND 0=1");
-            }
-        }
-    }
-    
     /**
      * @param statement
      * @param column
@@ -1113,7 +1094,7 @@ public class DbSearch {
         assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
         
         // if there are no possible matches, short-circuit here...
-        if (c.automaticEmptySet())
+        if (c.automaticEmptySet() || c.tagConstraints.noMatches)
             return param;
 
         param = setBytes(stmt, param, c.types);
