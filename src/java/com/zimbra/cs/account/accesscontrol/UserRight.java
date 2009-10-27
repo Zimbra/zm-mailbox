@@ -36,6 +36,17 @@ public class UserRight extends Right {
     public boolean isPresetRight() {
         return true;
     }
+
+    @Override
+    boolean executableOnTargetType(TargetType targetType) {
+        // special treatment for user right:
+        // if a right is executable on account, it is executable on calendar resource
+        if (mTargetType == TargetType.account)
+            return (targetType == TargetType.account || targetType == TargetType.calresource);
+        else
+            return super.executableOnTargetType(targetType);    
+    }
+    
     
     /*
     String dump(StringBuilder sb) {

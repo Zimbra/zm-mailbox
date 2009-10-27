@@ -44,7 +44,7 @@ public abstract class Right extends RightConsts {
     private String mDesc;  // a brief description
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
-    private TargetType mTargetType;
+    protected TargetType mTargetType;
     
     
     static void init(RightManager rm) throws ServiceException {
