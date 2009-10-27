@@ -503,6 +503,7 @@ public class Recurrence
         {
             mDtStart = dtstart;
             mRecur = recur;
+            fixupRecurUntil();
             mInvId = invId;
             mDuration = duration;
             if (mDuration == null) {
@@ -512,7 +513,24 @@ public class Recurrence
                     mDuration = ParsedDuration.ONE_SECOND;
             }
         }
-        
+
+        private void fixupRecurUntil() {
+            if (mRecur != null && mDtStart != null) {
+                ParsedDateTime until = mRecur.getUntil();
+                if (until != null && until.hasTime() != mDtStart.hasTime()) {
+                    // RFC5545 Section 3.3.10: UNTIL should have same value type as DTSTART.
+                    if (mDtStart.hasTime()) {
+                        // Add time part to UNTIL.  Set it to 23:59:59 in DTSTART's timezone, expressed as UTC.
+                        Date dayEnd = until.getDateForRecurUntil(mDtStart.getTimeZone());
+                        ParsedDateTime untilUtc = ParsedDateTime.fromUTCTime(dayEnd.getTime());
+                        mRecur.setUntil(untilUtc);
+                    } else {
+                        until.setHasTime(false);
+                    }
+                }
+            }
+        }
+
         public int getType() { return TYPE_REPEATING; }
         public Iterator addRulesIterator() { return null; }
         public Iterator subRulesIterator() { return null; }
