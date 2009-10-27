@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.service.util.ItemId;
@@ -131,9 +132,14 @@ extends FilterHandler {
     @Override
     public ItemId fileInto(String folderPath, int flagBitmask, String tags) throws ServiceException {
         Message source = mMailbox.getMessageById(null, mMessageId);
-        Folder currentFolder = mMailbox.getFolderById(null, source.getFolderId());
         
-        if (currentFolder.getPath().equalsIgnoreCase(folderPath)) {
+        // See if the message is already in the target folder.
+        Folder targetFolder = null;
+        try {
+            targetFolder = mMailbox.getFolderByPath(null, folderPath);
+        } catch (NoSuchItemException e) {
+        }
+        if (targetFolder != null && source.getFolderId() == targetFolder.getId()) {
             ZimbraLog.filter.debug("Ignoring fileinto action for message %d.  It is already in %s.",
                 mMessageId, folderPath);
             return null;

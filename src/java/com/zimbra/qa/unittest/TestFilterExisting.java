@@ -52,14 +52,17 @@ extends TestCase {
     private static final String NAME_PREFIX = "TestFilterExisting";
     private static final String FOLDER1_NAME = NAME_PREFIX + "-folder1";
     private static final String FOLDER2_NAME = NAME_PREFIX + "-folder2";
+    private static final String FOLDER3_NAME = NAME_PREFIX + "-folder3";
     private static final String FOLDER1_PATH = "/" + FOLDER1_NAME;
     private static final String FOLDER2_PATH = "/" + FOLDER2_NAME;
+    private static final String FOLDER3_PATH = "/" + FOLDER3_NAME;
     private static final String TAG_NAME = NAME_PREFIX + "-tag";
     private static final String KEEP_RULE_NAME = NAME_PREFIX + " keep";
     private static final String TAG_RULE_NAME = NAME_PREFIX + " tag";
     private static final String FLAG_RULE_NAME = NAME_PREFIX + " flag";
     private static final String FOLDER1_RULE_NAME = NAME_PREFIX + " folder1";
     private static final String FOLDER2_RULE_NAME = NAME_PREFIX + " folder2";
+    private static final String FOLDER3_RULE_NAME = NAME_PREFIX + " folder3";
     private static final String DISCARD_RULE_NAME = NAME_PREFIX + " discard";
     private static final String REDIRECT_RULE_NAME = NAME_PREFIX + " redirect";
 
@@ -304,6 +307,23 @@ extends TestCase {
         }
     }
     
+    /**
+     * Confirms that filing into the same folder doesn't result in a duplicate copy
+     * of the message (bug 42051).
+     */
+    public void testFileIntoSameFolder()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder3 = TestUtil.createFolder(mbox, FOLDER3_PATH);
+        String subject = NAME_PREFIX + " test folder3";
+        String id = TestUtil.addMessage(mbox, subject, folder3.getId(), null); 
+        
+        // Run the folder3 rule, and make sure one message matches instead of two.
+        Set<String> affectedIds = runRules(new String[] { FOLDER3_RULE_NAME }, id, null);
+        assertEquals(0, affectedIds.size());
+        TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
+    }
+    
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -390,6 +410,14 @@ extends TestCase {
         actions.add(new ZFileIntoAction(FOLDER2_PATH));
         rules.add(new ZFilterRule(FOLDER2_RULE_NAME, true, false, conditions, actions));
         
+        // if subject contains "folder3", file into folder3.  This one uses the
+        // folder name without the leading slash.
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "folder3"));
+        actions.add(new ZFileIntoAction(FOLDER3_NAME));
+        rules.add(new ZFilterRule(FOLDER3_RULE_NAME, true, false, conditions, actions));
+
         // if subject contains "discard", discard
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
