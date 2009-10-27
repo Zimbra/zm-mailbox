@@ -60,6 +60,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
@@ -402,24 +403,37 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     }
 
     protected static Element sendOrganizerChangeMessage(
-            ZimbraSoapContext zsc, OperationContext octxt,
-            CalendarItem calItem, Account acct, Mailbox mbox,
+            final ZimbraSoapContext zsc, final OperationContext octxt,
+            final CalendarItem calItem, final Account acct, final Mailbox mbox,
             Element response)
     throws ServiceException {
-        Account authAccount = getAuthenticatedAccount(zsc);
-        Invite[] invites = calItem.getInvites();
-        for (Invite inv : invites) {
-            List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
-            if (rcpts.size() > 0) {
-                CalSendData csd = new CalSendData();
-                csd.mInvite = inv;
-                csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
-                csd.mMm = CalendarMailSender.createOrganizerChangeMessage(
-                        acct, authAccount, zsc.isUsingAdminPrivileges(), calItem, csd.mInvite, rcpts);
-                sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
-                                            response, true, true);
+        Runnable r = new Runnable() {
+            public void run() {
+                try {
+                    Account authAccount = getAuthenticatedAccount(zsc);
+                    Invite[] invites = calItem.getInvites();
+                    for (Invite inv : invites) {
+                        List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+                        if (rcpts.size() > 0) {
+                            CalSendData csd = new CalSendData();
+                            csd.mInvite = inv;
+                            csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
+                            csd.mMm = CalendarMailSender.createOrganizerChangeMessage(
+                                    acct, authAccount, zsc.isUsingAdminPrivileges(), calItem, csd.mInvite, rcpts);
+                            sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
+                                                        null, true, true);
+                        }
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Ignoring error while sending organizer change message", e);
+                } catch (OutOfMemoryError e) {
+                    Zimbra.halt("OutOfMemoryError while sending organizer change message", e);
+                }
             }
-        }
+        };
+        Thread senderThread = new Thread(r, "AnnounceOrganizerChangeSender");
+        senderThread.setDaemon(true);
+        senderThread.start();
         return response;
     }
 
