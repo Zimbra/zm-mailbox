@@ -447,12 +447,23 @@ public class DbUtil {
 
     /**
      * Returns a string that optimizes SQL WHERE IN clauses to an operator when
-     * the parm list is a single entry. IN can prevent some DBs like sqlite from
-     * choosing proper indexes
+     * the parm list is small. A single IN can prevent some DBs like sqlite from
+     * choosing proper indexes and a small # uses more CPU resources
      */
     public static String whereIn(String column, boolean in, int size) {
-        if (size == 1)
+        if (size == 1) {
             return column + (in ? " = ?" : " <> ?");
+        } else if (size <= 3) {
+            StringBuffer sb = new StringBuffer("(");
+            
+            do {
+                sb.append(column).append((in ? " = ?" : " <> ?"));
+                if (size > 1)
+                    sb.append(" OR ");
+            } while (--size > 0);
+            sb.append(')');
+            return sb.toString();
+        }
         return column + (in ? " IN" : " NOT IN") + suitableNumberOfVariables(size);
     }
 
