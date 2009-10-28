@@ -369,11 +369,14 @@ public class CalDavDataImport extends MailItemImport {
     	int itemId = mitem.getId();
     	DataSource ds = getDataSource();
     	DataSourceItem item = DbDataSource.getMapping(ds, itemId);
+    	boolean isCreate = false;
     	if (item.remoteId == null) {
     		// new item
     		item.md = new Metadata();
 			item.md.put(METADATA_KEY_TYPE, METADATA_TYPE_APPOINTMENT);
 			item.remoteId = createTargetUrl(mitem);
+			item.folderId = mitem.getFolderId();
+			isCreate = true;
     	}
     	String type = item.md.get(METADATA_KEY_TYPE);
     	if (METADATA_TYPE_FOLDER.equals(type)) {
@@ -396,7 +399,11 @@ public class CalDavDataImport extends MailItemImport {
     		}
     		    
     		item.md.put(METADATA_KEY_ETAG, etag);
-    		DbDataSource.updateMapping(ds, item);
+            if (isCreate) {
+                DbDataSource.addMapping(ds, item);
+            } else {
+                DbDataSource.updateMapping(ds, item);
+            }
     	} else {
     		ZimbraLog.datasource.warn("pushModify: unrecognized item type for %d: %s", itemId, type);
     		return;
@@ -637,8 +644,10 @@ public class CalDavDataImport extends MailItemImport {
     			allDone = false;
     		}
     		
-    		if (cf.ctagMatched)
-    		    break;
+    		if (cf.ctagMatched) {
+                currentSync = mbox.getLastChangeID();
+                break;
+    		}
     		
     		// pull in the changes from the remote server
     		List<RemoteItem> remoteItems = getRemoteItems(syncFolder);
