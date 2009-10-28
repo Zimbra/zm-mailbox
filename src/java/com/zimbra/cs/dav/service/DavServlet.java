@@ -561,7 +561,7 @@ public class DavServlet extends ZimbraServlet {
         }
         
         // build proxy request
-		String url = getServiceUrl(acct, DAV_PATH) + URLUtil.urlEscape(path + "/" + (extraPath == null ? "" : extraPath));
+		String url = getProxyUrl(ctxt.getRequest(), server, DAV_PATH) + URLUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
 		HttpState state = new HttpState();
         authToken.encode(state, false, server.getAttr(Provisioning.A_zimbraServiceHostname));
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
