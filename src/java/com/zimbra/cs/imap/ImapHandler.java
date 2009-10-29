@@ -863,7 +863,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         // check whether this server requires encryption for GSSAPI
         try {
-            return isSSLEnabled() || !Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraSaslGssapiRequiresTls, false);
+            return mStartedTLS || !Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraSaslGssapiRequiresTls, false);
         } catch (ServiceException e) {
             ZimbraLog.security.warn("could not determine whether TLS encryption is required for GSSAPI auth; defaulting to FALSE", e);
             return false;
