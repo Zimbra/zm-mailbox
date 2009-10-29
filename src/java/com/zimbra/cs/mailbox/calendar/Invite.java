@@ -75,6 +75,8 @@ public class Invite {
     private static final boolean OUTLOOK_COMPAT_ALLDAY =
         LC.calendar_outlook_compatible_allday_events.booleanValue();
     
+    private static final String HEADER_SEPARATOR = "*~*~*~*~*~*~*~*~*~*";
+
     static Log sLog = LogFactory.getLog(Invite.class);
     
     /**
@@ -2121,8 +2123,16 @@ public class Invite {
             
             // DESCRIPTION and X-ALT-DESC;FMTTYPE=text/html
             String desc = getDescription();
-            if (desc != null && desc.length() > 0)
-                component.addProperty(new ZProperty(ICalTok.DESCRIPTION, desc));
+            if (desc != null) {
+                // Remove Outlook-style *~*~*~ header block.  Remove separator plus two newlines.
+                int delim = desc.indexOf(HEADER_SEPARATOR);
+                if (delim >= 0) {
+                    desc = desc.substring(delim + HEADER_SEPARATOR.length());
+                    desc = desc.replaceFirst("^\\r?\\n\\r?\\n", "");
+                }
+                if (desc.length() > 0)
+                    component.addProperty(new ZProperty(ICalTok.DESCRIPTION, desc));
+            }
             String descHtml = getDescriptionHtml();
             if (descHtml != null && descHtml.length() > 0) {
                 ZProperty altDesc = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
