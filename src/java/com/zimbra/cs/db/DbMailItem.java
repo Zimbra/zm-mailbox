@@ -2638,7 +2638,7 @@ public class DbMailItem {
                     stmt.setString(pos++, indexIDs.get(index));
                 rs = stmt.executeQuery();
                 while (rs.next())
-                    info.sharedIndex.remove(rs.getInt(1));
+                    info.sharedIndex.remove(rs.getString(1));
                 rs.close(); rs = null;
                 stmt.close(); stmt = null;
             }

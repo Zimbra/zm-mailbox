@@ -43,7 +43,8 @@ extends FilterHandler {
     private int mMessageId;
     private MimeMessage mMimeMessage;
     private ParsedMessage mParsedMessage;
-    private boolean mDeleteOriginal = false;
+    private boolean mKept = false;
+    private boolean mFiled = false;
     private boolean mFiltered = false;
     
     public ExistingMessageHandler(Mailbox mbox, int messageId) {
@@ -105,6 +106,7 @@ extends FilterHandler {
         ZimbraLog.filter.debug("Implicitly keeping existing message %d.", mMessageId);
         Message msg = mMailbox.getMessageById(null, mMessageId);
         updateTagsAndFlagsIfNecessary(msg, flagBitmask, tags);
+        mKept = true;
         return msg;
     }
 
@@ -114,6 +116,7 @@ extends FilterHandler {
         ZimbraLog.filter.debug("Explicitly keeping existing message %d.", mMessageId);
         Message msg = mMailbox.getMessageById(null, mMessageId);
         updateTagsAndFlagsIfNecessary(msg, flagBitmask, tags);
+        mKept = true;
         return msg;
     }
     
@@ -151,6 +154,7 @@ extends FilterHandler {
             Folder target = mMailbox.getFolderByPath(null, folderPath);
             Message newMsg = (Message) mMailbox.copy(null, mMessageId, MailItem.TYPE_MESSAGE, target.getId());
             mFiltered = true;
+            mFiled = true;
 
             // Apply flags and tags
             int flagBits = source.getFlagBitmask();
@@ -164,7 +168,7 @@ extends FilterHandler {
             mMailbox.getAccount().getName(), folderPath, flagBitmask, tags);
         if (id != null) {
             mFiltered = true;
-            mDeleteOriginal = true;
+            mFiled = true;
         }
         return id;
     }
@@ -192,7 +196,7 @@ extends FilterHandler {
 
     @Override
     public void afterFiltering() throws ServiceException {
-        if (mDeleteOriginal) {
+        if (mFiled && !mKept) {
             ZimbraLog.filter.info("Deleting original message %d after filing to another folder.", mMessageId);
             mMailbox.delete(null, mMessageId, MailItem.TYPE_MESSAGE);
         }

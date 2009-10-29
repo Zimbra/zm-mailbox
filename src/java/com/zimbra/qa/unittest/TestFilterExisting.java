@@ -126,6 +126,9 @@ extends TestCase {
     public void testFileInto()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.createFolder(mbox, FOLDER1_PATH);
+        TestUtil.createFolder(mbox, FOLDER2_PATH);
+        
         String subject = NAME_PREFIX + " test keep, fileinto folder1 and folder2";
         String id = TestUtil.addMessage(mbox, subject);
         String[] ruleNames = new String[] { FOLDER1_RULE_NAME };
