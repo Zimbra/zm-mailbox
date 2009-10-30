@@ -1789,8 +1789,12 @@ originally intended.
         o - include items in any other folder
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
-  for op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}", t="{id-list}", f="{flags}"
-  for op="tag", caller must specify tag="{id}"
+  For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
+    t="{tag-id-list}", f="{flags}".  When modifying tags or flags, all specified tags and flags
+    are set, and all others are unset.
+      
+  For op="tag" or op="!tag", caller must specify tag="{id}".  This changes the state of
+    the specified tag without altering other tags.  
 
   <action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
     - change the item's color to new color.  only one of color or rgb attribute
@@ -1801,7 +1805,7 @@ originally intended.
 
 <MsgActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam|trash" [tag="{id}"] [l="{folder}"] [f="{flags}"] [t="{id-list}"] [color="{color}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam|trash" [tag="{id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"]/>
 </MsgActionRequest>
 
 <MsgActionResponse>
@@ -1812,9 +1816,13 @@ originally intended.
            messages that were acted on
            list may only have 1 element for action "spam"
 
-  for op="update", caller can specify any or all of: l="{folder}", t="{id-list}", f="{flags}", color="{color}"
-  for op="tag", caller must specify tag="{id}"
+  For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
+    t="{tag-id-list}", f="{flags}".  
+
   for op="!spam", can optionally specify a destination folder
+  
+  See <ItemActionRequest> for more details.
+  
 ---------
 
 <ConvActionRequest>
@@ -1837,6 +1845,9 @@ originally intended.
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
   for op="!spam", can optionally specify a destination folder
+
+  See <ItemActionRequest> for more details.
+  
 ---------
 
 <FolderActionRequest>
@@ -1942,9 +1953,10 @@ note that "delete", "empty", "rename", "move", "color", "update" can be used on 
            notes that were acted on;
            list may only have 1 element for actions "edit", "repos", "color"
 
-  for op="update", caller can specify any or all of: l="{folder}", t="{id-list}", f="{flags}", color="{color}", pos="{x,y,width,height}"
-  for op="tag", caller must specify tag="{id}"
+  for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list}", f="{flags}", color="{color}", pos="{x,y,width,height}"
 
+  See <ItemActionRequest> for more details.
+  
 ---------
 
 <TagActionRequest>
@@ -2089,7 +2101,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 +  setting folder/tags/flags/color occurs *after* the draft is created/updated, and if it fails the content *WILL STILL BE SAVED*
 
 <SaveDraftRequest>
-  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{id-list}"] [color="{color}"]>
+  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
     [<irt>{Message-ID header for message being replied to}</irt>]
@@ -2109,7 +2121,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
    FileUploadServlet, and submit it through our server:
 
 <SaveDraftRequest>
-  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"] [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{id-list}"] [color="{color}"]/>
+  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"] [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"]/>
 </SaveDraftRequest>
 
 
@@ -2303,13 +2315,14 @@ NOTE: should we return modified attrs in response?
   {list} = on input, list of contacts to act on, on output, list of
            contacts that were acted on
 
-for op="update", caller can specify any or all of: l="{folder}", t="{id-list}", f="{flags}", color="{color}", <a> attribute list:
-for op="tag", caller must specify tag="{id}"
+for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list}", f="{flags}", color="{color}", <a> attribute list:
 
-  <action id="{list}" op="update" [l="{folder}"] [t="{id-list}"] [f="{flags}"] [color="{color}"]>
+  <action id="{list}" op="update" [l="{folder}"] [t="{tag-id-list}"] [f="{flags}"] [color="{color}"]>
     [<a n="fieldName">fieldValue</a>]*
   </action>
 
+  See <ItemActionRequest> for more details.
+  
 ----------
 
 <ImportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"]>
