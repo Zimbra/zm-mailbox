@@ -50,7 +50,7 @@ public class BlobConsistencyUtil {
     private static final String LO_NO_EXPORT = "no-export";
     
     private Options mOptions;
-    private List<Long> mMailboxIds = new ArrayList<Long>();
+    private List<Long> mMailboxIds;
     private List<Short> mVolumeIds = new ArrayList<Short>();
     private boolean mSkipSizeCheck = false;
     private boolean mVerbose = false;
@@ -68,11 +68,11 @@ public class BlobConsistencyUtil {
         mOptions.addOption(new Option("v", LO_VERBOSE, false, "Display verbose output.  Display stack trace on error."));
         mOptions.addOption(new Option(null, LO_SKIP_SIZE_CHECK, false, "Skip blob size check."));
         
-        Option o = new Option(null, LO_VOLUMES, true, "Specify which volumes to check.");
+        Option o = new Option(null, LO_VOLUMES, true, "Specify which volumes to check.  If not specified, check all volumes.");
         o.setArgName("volume-ids");
         mOptions.addOption(o);
         
-        o = new Option("m", LO_MAILBOXES, true, "Specify which mailboxes to check");
+        o = new Option("m", LO_MAILBOXES, true, "Specify which mailboxes to check.  If not specified, check all mailboxes.");
         o.setArgName("mailbox-ids");
         mOptions.addOption(o);
         
@@ -133,6 +133,7 @@ public class BlobConsistencyUtil {
         
         String mailboxList = CliUtil.getOptionValue(cl, LO_MAILBOXES);
         if (mailboxList != null) {
+            mMailboxIds = new ArrayList<Long>();
             for (String id : mailboxList.split(",")) {
                 try {
                     mMailboxIds.add(Long.parseLong(id));
@@ -170,13 +171,37 @@ public class BlobConsistencyUtil {
         CliUtil.toolSetup();
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
+        if (mMailboxIds == null) {
+            mMailboxIds = getAllMailboxIds(prov);
+        }
+        for (long mboxId : mMailboxIds) {
+            System.out.println("Checking mailbox " + mboxId + ".");
+            checkMailbox(mboxId, prov);
+        }
+        
+        if (mUnexpectedBlobWriter != null) {
+            mUnexpectedBlobWriter.close();
+        }
+    }
+    
+    private List<Long> getAllMailboxIds(SoapProvisioning prov)
+    throws ServiceException {
+        List<Long> ids = new ArrayList<Long>();
+        XMLElement request = new XMLElement(AdminConstants.GET_ALL_MAILBOXES_REQUEST);
+        Element response = prov.invoke(request);
+        for (Element mboxEl : response.listElements(AdminConstants.E_MAILBOX)) {
+            ids.add(mboxEl.getAttributeLong(AdminConstants.A_ID));
+        }
+        return ids;
+    }
+    
+    private void checkMailbox(long mboxId, SoapProvisioning prov)
+    throws ServiceException {
         XMLElement request = new XMLElement(AdminConstants.CHECK_BLOB_CONSISTENCY_REQUEST);
         for (short volumeId : mVolumeIds) {
             request.addElement(AdminConstants.E_VOLUME).addAttribute(AdminConstants.A_ID, volumeId);
         }
-        for (long mboxId : mMailboxIds) {
-            request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
-        }
+        request.addElement(AdminConstants.E_MAILBOX).addAttribute(AdminConstants.A_ID, mboxId);
         request.addAttribute(AdminConstants.A_CHECK_SIZE, !mSkipSizeCheck);
         
         Element response = prov.invoke(request);
@@ -227,10 +252,6 @@ public class BlobConsistencyUtil {
                     }
                 }
             }
-        }
-        
-        if (mUnexpectedBlobWriter != null) {
-            mUnexpectedBlobWriter.close();
         }
     }
     
