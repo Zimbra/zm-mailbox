@@ -52,10 +52,6 @@ import java.util.Map;
  * @author schemers
  */
 public class ZimbraAuthToken extends AuthToken {
-
-    // TODO: config
-    private static final int AUTHTOKEN_CACHE_SIZE = 5000;
-    
     private static final String C_ID  = "id";
     // original admin id
     private static final String C_AID  = "aid";    
@@ -70,7 +66,7 @@ public class ZimbraAuthToken extends AuthToken {
     private static final String C_DIGEST = "digest";
     private static final String C_VALIDITY_VALUE  = "vv";
 
-    private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
+    private static LRUMap mCache = new LRUMap(LC.zimbra_authtoken_cache_size.intValue());
     
     private static Log mLog = LogFactory.getLog(AuthToken.class); 
     
