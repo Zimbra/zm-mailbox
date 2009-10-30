@@ -282,8 +282,9 @@ public class ServiceException extends Exception {
     }
     
     // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_ACCOUNT
-    public static ServiceException DEFEND_ACCOUNT_HARVEST() {
-        return new ServiceException("permission denied: can not access account", PERM_DENIED, SENDERS_FAULT);
+    public static ServiceException DEFEND_ACCOUNT_HARVEST(String account) {
+        return PERM_DENIED("can not access account " + account);
+        // return new ServiceException("permission denied: can not access account " + account, PERM_DENIED, SENDERS_FAULT);
     }
 
     public static ServiceException AUTH_REQUIRED() {
