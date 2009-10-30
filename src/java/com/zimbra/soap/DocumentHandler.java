@@ -165,7 +165,7 @@ public abstract class DocumentHandler {
         Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
         if (acct == null) {
             if (zsc.isDelegatedRequest())
-                throw ServiceException.DEFEND_ACCOUNT_HARVEST();
+                throw ServiceException.DEFEND_ACCOUNT_HARVEST(id);
             else
                 throw ServiceException.AUTH_EXPIRED();
         }

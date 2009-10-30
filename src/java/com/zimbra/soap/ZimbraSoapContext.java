@@ -217,13 +217,13 @@ public class ZimbraSoapContext {
             } else if (key.equals(HeaderConstants.BY_NAME)) {
                 Account account = prov.get(AccountBy.name, value, mAuthToken);
                 if (account == null)
-                    throw ServiceException.DEFEND_ACCOUNT_HARVEST();
+                    throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
                 
                 mRequestedAccountId = account.getId();
             } else if (key.equals(HeaderConstants.BY_ID)) {
                 Account account = prov.get(AccountBy.id, value, mAuthToken);
                 if (account == null)
-                    throw ServiceException.DEFEND_ACCOUNT_HARVEST();
+                    throw ServiceException.DEFEND_ACCOUNT_HARVEST(value);
                 
                 mRequestedAccountId = value;
             } else {
