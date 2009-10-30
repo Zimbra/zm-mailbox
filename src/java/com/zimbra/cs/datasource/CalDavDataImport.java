@@ -332,7 +332,11 @@ public class CalDavDataImport extends MailItemImport {
     		ZimbraLog.datasource.warn("pushDelete: empty item %d", item.itemId);
     		return;
     	}
-    	String type = item.md.get(METADATA_KEY_TYPE);
+    	String type = item.md.get(METADATA_KEY_TYPE, null);
+    	if (type == null || !type.equals(METADATA_TYPE_APPOINTMENT)) {
+    	    // not a calendar item
+            return;
+    	}
     	String uri = item.remoteId;
     	if (uri == null) {
     		ZimbraLog.datasource.warn("pushDelete: empty uri for item %d", item.itemId);
