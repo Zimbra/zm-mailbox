@@ -2555,6 +2555,15 @@ zimbra_noop_max_timeout)
 
 ---------------------------
 
+<GetRulesRequest>
+<SaveRulesRequest>
+
+These APIs have been replaced with <GetFilterRulesRequest> and <ModifyFilterRulesRequest>,
+which offer improved ease of use and error handling.  The old APIs will continue
+to work in ZCS 6.0, and will be removed in the next major release.
+  
+---------------------------
+
 <GetFilterRulesRequest/>
 
 <GetFilterRulesResponse>
