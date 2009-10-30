@@ -417,6 +417,7 @@ public class LC {
     public static final KnownKey zimbra_csv_mapping_file;
     
     public static final KnownKey zimbra_auth_provider;
+    public static final KnownKey zimbra_authtoken_cache_size;
     public static final KnownKey zimbra_authtoken_cookie_domain;
     
     public static final KnownKey zimbra_zmjava_options;
@@ -1303,6 +1304,7 @@ public class LC {
 
         zimbra_auth_provider = new KnownKey("zimbra_auth_provider");
         zimbra_auth_provider.setDefault("zimbra");
+        zimbra_authtoken_cache_size = new KnownKey("zimbra_authtoken_cache_size", "5000");
         zimbra_authtoken_cookie_domain = new KnownKey("zimbra_authtoken_cookie_domain");
         zimbra_authtoken_cookie_domain.setDefault("");
         
