@@ -1885,7 +1885,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>out of office notifications (if enabled) are sent only if current date is before this date</desc>
 </attr>
 
-<attr id="386" name="zimbraPrefOutOfOfficeCacheDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable">
+<attr id="386" name="zimbraPrefOutOfOfficeCacheDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>7d</defaultCOSValue>
   <desc>server remembers addresses to which notifications have been sent for this interval, and does not send duplicate notifications in this interval</desc>
 </attr>
