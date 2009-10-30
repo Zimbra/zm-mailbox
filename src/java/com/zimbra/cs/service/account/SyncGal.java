@@ -54,6 +54,7 @@ public class SyncGal extends AccountDocumentHandler {
         boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);
 
         GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setType(Provisioning.GAL_SEARCH_TYPE.ALL);
         params.setToken(tokenAttr);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);

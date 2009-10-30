@@ -158,6 +158,8 @@ public class ContactAutoComplete {
     private boolean mIncludeSharedFolders;
     private Collection<String> mEmailKeys;
     
+    private GAL_SEARCH_TYPE mSearchType;
+    
 	private static final String[] DEFAULT_EMAIL_KEYS = {
 		ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
 	};
@@ -181,6 +183,7 @@ public class ContactAutoComplete {
 		if (mEmailKeys == null)
 			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
 		mIncludeRankingResults = true;
+		mSearchType = GAL_SEARCH_TYPE.USER_ACCOUNT;
 	}
 	
 	public Collection<String> getEmailKeys() {
@@ -194,6 +197,9 @@ public class ContactAutoComplete {
 	}
 	public void setIncludeRankingResults(boolean includeRankingResults) {
 		mIncludeRankingResults = includeRankingResults;
+	}
+	public void setSearchType(GAL_SEARCH_TYPE type) {
+	    mSearchType = type;
 	}
 	
 	public AutoCompleteResult query(String str, Collection<Integer> folders, int limit) throws ServiceException {
@@ -240,7 +246,7 @@ public class ContactAutoComplete {
 		ZimbraLog.gal.debug("querying gal");
 		GalSearchParams params = new GalSearchParams(account);
 		params.setQuery(str);
-		params.setType(GAL_SEARCH_TYPE.USER_ACCOUNT);
+		params.setType(mSearchType);
 		params.setLimit(limit - result.entries.size());
 		params.setResultCallback(new AutoCompleteCallback(str, result, params));
 		try {
@@ -276,8 +282,6 @@ public class ContactAutoComplete {
 	    public void handleElement(Element e) throws ServiceException {
 			ZimbraLog.gal.debug("gal entry: "+""+e.getAttribute(MailConstants.A_ID));
 	        handleContactAttrs(parseContactElement(e));
-	    }
-	    public void setNewToken(int newToken) {
 	    }
 	    public void setSortBy(String sortBy) {
 	    }

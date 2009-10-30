@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ContactAutoComplete;
 import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
@@ -37,9 +38,20 @@ public class AutoComplete extends MailDocumentHandler {
     	while (n.endsWith("*"))
     	    n = n.substring(0, n.length() - 1);
         
+        String typeStr = request.getAttribute(MailConstants.A_TYPE, "account");
+        Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.ALL;
+        if (typeStr.equals("all"))
+            type = Provisioning.GAL_SEARCH_TYPE.ALL;
+        else if (typeStr.equals("account"))
+            type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
+        else if (typeStr.equals("resource"))
+            type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
+        else
+            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
+        
         int limit = account.getContactAutoCompleteMaxResults();
         
-		AutoCompleteResult result = query(request, zsc, account, false, n, limit);		
+		AutoCompleteResult result = query(request, zsc, account, false, n, limit, type);		
 		Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
 		toXML(response, result, zsc.getAuthtokenAccountId());
 		
@@ -61,12 +73,13 @@ public class AutoComplete extends MailDocumentHandler {
 		return array;
 	}
 		
-	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, boolean excludeGal, String name, int limit) throws ServiceException {
+	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, boolean excludeGal, String name, int limit, Provisioning.GAL_SEARCH_TYPE type) throws ServiceException {
        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
        
        ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
        ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
+       autoComplete.setSearchType(type);
        boolean includeGal = !excludeGal && request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
        autoComplete.setIncludeGal(includeGal);
        return autoComplete.query(name, folders, limit);
