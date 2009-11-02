@@ -317,6 +317,17 @@ extends Assert {
     }
     
     
+    public static List<String> search(ZMailbox mbox, String query, String type)
+    throws Exception {
+        List<String> ids = new ArrayList<String>();
+        ZSearchParams params = new ZSearchParams(query);
+        params.setTypes(type);
+        for (ZSearchHit hit : mbox.search(params).getHits()) {
+            ids.add(hit.getId());
+        }
+        return ids;
+    }
+    
     public static List<ZMessage> search(ZMailbox mbox, String query)
     throws Exception {
         List<ZMessage> msgs = new ArrayList<ZMessage>();
