@@ -38,8 +38,10 @@ public class ZContactByPhoneCache extends ZEventHandler {
 	}
 	private static List<String> sATTRS = Arrays.asList(
 			ContactConstants.A_homePhone, ContactConstants.A_homePhone2, ContactConstants.A_mobilePhone,
-			ContactConstants.A_otherPhone, ContactConstants.A_workPhone, ContactConstants.A_workPhone2);
-
+			ContactConstants.A_otherPhone, ContactConstants.A_workPhone, ContactConstants.A_workPhone2,
+			ContactConstants.A_homeFax, ContactConstants.A_workFax, ContactConstants.A_workMobile,
+			ContactConstants.A_workAltPhone, ContactConstants.A_otherFax, ContactConstants.A_assistantPhone,
+			ContactConstants.A_companyPhone);
 
 	// Map of phone fields to contacts
     private Map<String, ContactPhone> mCache;
