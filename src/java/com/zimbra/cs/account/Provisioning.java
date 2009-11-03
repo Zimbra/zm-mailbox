@@ -458,22 +458,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * directly or indirectly a member of
      */
     public static class MemberOf {
-        private int mDistance;         // distance to the perspective object(account, cr, dl)
         private String mId;            // zimbraId of this group
         private boolean mIsAdminGroup; // is this group is an admin group (zimbraIsAdminGroup == TRUE)
         
-        public MemberOf(String id, int distance, boolean isAdminGroup) {
+        public MemberOf(String id, boolean isAdminGroup) {
             mId = id;
-            mDistance = distance;
             mIsAdminGroup = isAdminGroup;
         }
         
         public String getId() {
             return mId;
-        }
-        
-        public int getDistance() {
-            return mDistance;
         }
         
         public boolean isAdminGroup() {

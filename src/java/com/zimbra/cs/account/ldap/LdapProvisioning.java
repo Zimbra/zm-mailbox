@@ -3067,37 +3067,17 @@ public class LdapProvisioning extends Provisioning {
         return computeUpwardMembership(lists, via);
     }
 
-    private static final Comparator<MemberOf> MEMBER_OF_COMPARATOR =
-        new Comparator<MemberOf>() {
-            public int compare(MemberOf mo1, MemberOf mo2) {
-                Integer dist1 = Integer.valueOf(mo1.getDistance());
-                Integer dist2 = Integer.valueOf(mo2.getDistance());
-                return dist1.compareTo(dist2);
-            }
-        };
-        
-
     private AclGroups computeUpwardMembership(List<DistributionList> lists, Map<String, String> via) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
         List<String> groupIds = new ArrayList<String>();
-        
+
         for (DistributionList dl : lists) {
-            String dlName = dl.getName();
-            
-            int dist = 0;
-            String viaName = dlName;
-            do {
-                viaName = via.get(viaName);
-                dist++;
-            } while (viaName != null);
-            
             boolean isAdminGroup = dl.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
             
-            groups.add(new MemberOf(dl.getId(), dist, isAdminGroup));
+            groups.add(new MemberOf(dl.getId(), isAdminGroup));
             groupIds.add(dl.getId());
         }
         
-        Collections.sort(groups, MEMBER_OF_COMPARATOR);
         groups = Collections.unmodifiableList(groups);
         groupIds = Collections.unmodifiableList(groupIds);
         
