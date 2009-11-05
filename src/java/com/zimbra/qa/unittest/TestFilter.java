@@ -666,6 +666,7 @@ extends TestCase {
         // Get rules and save the same rules.
         Element response = mbox.invoke(new XMLElement(MailConstants.GET_RULES_REQUEST));
         Element rulesEl = response.getElement(MailConstants.E_RULES).detach();
+        RuleRewriter.sanitizeRules(rulesEl);
         Element request = rulesEl.getFactory().createElement(MailConstants.SAVE_RULES_REQUEST);
         request.addElement(rulesEl);
         response = mbox.invoke(request);

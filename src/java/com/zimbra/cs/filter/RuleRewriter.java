@@ -291,6 +291,39 @@ public class RuleRewriter {
             }
         }
     }
+    
+    /**
+     * Walks the element tree and removes surrounding quotes and brackets from:
+     * <ul>
+     *   <li><tt>k0</tt> and <tt>k1</tt> attributes of<tt>&lt;c&gt;</tt> elements</li>
+     *   <li>text of <tt>&lt;arg&gt;</tt> elements</li>
+     * </ul>
+     * This method is used to clean up the rules returned by the old
+     * <tt>GetRulesResponse</tt> so that they can be passed to
+     * <tt>SaveRulesRequest</tt>.
+     */
+    public static void sanitizeRules(Element element)
+    throws ServiceException {
+        if (element == null) {
+            return;
+        }
+        for (Element child : element.listElements()) {
+            sanitizeRules(child);
+        }
+        
+        if (element.getName().equals(MailConstants.E_CONDITION)) {
+            String k0 = element.getAttribute("k0", null);
+            if (k0 != null) {
+                element.addAttribute("k0", stripBracketsAndQuotes(k0));
+            }
+            String k1 = element.getAttribute("k1", null);
+            if (k1 != null) {
+                element.addAttribute("k1", stripBracketsAndQuotes(k1));
+            }
+        } else if (element.getName().equals(MailConstants.E_FILTER_ARG)) {
+            element.setText(stripBracketsAndQuotes(element.getText()));
+        }
+    }
 
     /**
      * @return
@@ -366,13 +399,11 @@ public class RuleRewriter {
                 if (op != null)
                     sb.append(op).append(" ");
                 String k0 = subnode.getAttribute("k0", null);
-                k0 = stripBracketsAndQuotes(k0);
-                checkQuotes(k0, ruleName);
+                checkValue(k0, ruleName);
                 if (k0 != null)
                     sb.append("\"").append(k0).append("\"").append(" ");
                 String k1 = subnode.getAttribute("k1", null);
-                k1 = stripBracketsAndQuotes(k1);
-                checkQuotes(k1, ruleName);
+                checkValue(k1, ruleName);
                 if (k1 != null) {
                     if (!isSize)            // size cannot be quoted
                         sb.append("\"");
@@ -417,24 +448,23 @@ public class RuleRewriter {
      * 
      * @return the stripped value 
      */
-    public static String stripBracketsAndQuotes(String k)
-    throws ServiceException {
-        if (k != null) {
+    public static String stripBracketsAndQuotes(String s) {
+        if (s != null) {
             // Strip surrounding brackets and quotes.
-            Matcher matcher = PAT_BRACKET_QUOTES.matcher(k);
+            Matcher matcher = PAT_BRACKET_QUOTES.matcher(s);
             if (matcher.matches()) {
-                k = matcher.group(1);
+                s = matcher.group(1);
             } else {
-                matcher = PAT_QUOTES.matcher(k);
+                matcher = PAT_QUOTES.matcher(s);
                 if (matcher.matches()) {
-                    k = matcher.group(1);
+                    s = matcher.group(1);
                 }
             }
         }
-        return k;
+        return s;
     }
 
-    private void checkQuotes(String k, String ruleName)
+    private void checkValue(String k, String ruleName)
     throws ServiceException {
         if (k == null) {
             return;
@@ -454,7 +484,7 @@ public class RuleRewriter {
     void action(StringBuffer sb, String actionName, Element element, String ruleName) throws ServiceException {
         for (Iterator<Element> it = element.elementIterator("arg"); it.hasNext(); ) {
             Element subnode = it.next();
-            String argVal = stripBracketsAndQuotes(subnode.getText());
+            String argVal = subnode.getText();
             if ("fileinto".equals(actionName)) {
                 createFolderIfNecessary(argVal, ruleName);
             } else if ("tag".equals(actionName)) {
