@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.jsieve.parser.SieveNode;
 import org.apache.jsieve.parser.generated.ASTargument;
@@ -364,11 +366,13 @@ public class RuleRewriter {
                 if (op != null)
                     sb.append(op).append(" ");
                 String k0 = subnode.getAttribute("k0", null);
-                checkValue(k0, ruleName);
+                k0 = stripBracketsAndQuotes(k0);
+                checkQuotes(k0, ruleName);
                 if (k0 != null)
                     sb.append("\"").append(k0).append("\"").append(" ");
                 String k1 = subnode.getAttribute("k1", null);
-                checkValue(k1, ruleName);
+                k1 = stripBracketsAndQuotes(k1);
+                checkQuotes(k1, ruleName);
                 if (k1 != null) {
                     if (!isSize)            // size cannot be quoted
                         sb.append("\"");
@@ -397,7 +401,40 @@ public class RuleRewriter {
             sb.append("}\n");
     }
     
-    private void checkValue(String k, String ruleName)
+    // ["value"]
+    private static final Pattern PAT_BRACKET_QUOTES = Pattern.compile("\\[\"(.*)\"\\]"); 
+    // "value"
+    private static final Pattern PAT_QUOTES = Pattern.compile("\"(.*)\"");
+    
+    /**
+     * If <tt>k</tt> matches one of the following patterns:
+     * <ul>
+     *   <li>[&quot;value&quot;]</li>
+     *   <li>&quot;value&quot;</li>
+     * </ul>
+     * strips the surrounding brackets and quotes.  Used to address limitations in the old
+     * mail filtering code and bug 42320.
+     * 
+     * @return the stripped value 
+     */
+    public static String stripBracketsAndQuotes(String k)
+    throws ServiceException {
+        if (k != null) {
+            // Strip surrounding brackets and quotes.
+            Matcher matcher = PAT_BRACKET_QUOTES.matcher(k);
+            if (matcher.matches()) {
+                k = matcher.group(1);
+            } else {
+                matcher = PAT_QUOTES.matcher(k);
+                if (matcher.matches()) {
+                    k = matcher.group(1);
+                }
+            }
+        }
+        return k;
+    }
+
+    private void checkQuotes(String k, String ruleName)
     throws ServiceException {
         if (k == null) {
             return;
@@ -417,7 +454,7 @@ public class RuleRewriter {
     void action(StringBuffer sb, String actionName, Element element, String ruleName) throws ServiceException {
         for (Iterator<Element> it = element.elementIterator("arg"); it.hasNext(); ) {
             Element subnode = it.next();
-            String argVal = subnode.getText();
+            String argVal = stripBracketsAndQuotes(subnode.getText());
             if ("fileinto".equals(actionName)) {
                 createFolderIfNecessary(argVal, ruleName);
             } else if ("tag".equals(actionName)) {

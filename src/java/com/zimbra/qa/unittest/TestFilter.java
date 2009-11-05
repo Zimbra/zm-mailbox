@@ -16,7 +16,6 @@ package com.zimbra.qa.unittest;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,9 +24,12 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.apache.jsieve.parser.generated.Node;
+import org.apache.jsieve.parser.generated.ParseException;
 
 import com.zimbra.common.mime.MimeMessage;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
@@ -37,6 +39,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.filter.RuleRewriter;
 import com.zimbra.cs.filter.SieveToSoap;
 import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.zclient.ZFilterAction;
@@ -348,14 +351,7 @@ extends TestCase {
         String script = new String(ByteUtil.getContent(new File(scriptPath)));
         assertNotNull(script);
         assertTrue(script.length() > 0);
-        List<String> ruleNames = RuleManager.getRuleNames(script);
-        Node node = RuleManager.getSieveFactory().parse(new FileInputStream(scriptPath));
-        
-        // Convert from Sieve to SOAP and back again. 
-        SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
-        sieveToSoap.accept(node);
-        SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
-        String convertedScript = soapToSieve.getSieveScript();
+        String convertedScript = normalize(script);
         
         // Compare result.
         script = normalizeWhiteSpace(script);
@@ -655,6 +651,56 @@ extends TestCase {
             fail("Should not have parsed bogus size value.");
         } catch (NumberFormatException e) {
         }
+    }
+    
+    /**
+     * Tests the old <tt>GetRulesRequest</tt> and <tt>SaveRulesRequest</tt>
+     * SOAP API's (bug 42320).
+     */
+    public void testOldApi()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        Account account = TestUtil.getAccount(USER_NAME);
+        String oldRules = account.getMailSieveScript();
+        
+        // Get rules and save the same rules.
+        Element response = mbox.invoke(new XMLElement(MailConstants.GET_RULES_REQUEST));
+        Element rulesEl = response.getElement(MailConstants.E_RULES).detach();
+        Element request = rulesEl.getFactory().createElement(MailConstants.SAVE_RULES_REQUEST);
+        request.addElement(rulesEl);
+        response = mbox.invoke(request);
+        
+        // Make sure the rules haven't changed.
+        account = TestUtil.getAccount(USER_NAME);
+        oldRules = normalize(oldRules);
+        String newRules = normalize(account.getMailSieveScript());
+        assertEquals(oldRules, newRules);
+    }
+    
+    /**
+     * Converts the script to XML and back again.
+     */
+    private String normalize(String script)
+    throws ParseException, ServiceException {
+        List<String> ruleNames = RuleManager.getRuleNames(script);
+        Node node = RuleManager.getSieveFactory().parse(new ByteArrayInputStream(script.getBytes()));
+        
+        // Convert from Sieve to SOAP and back again. 
+        SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+        sieveToSoap.accept(node);
+        SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+        return soapToSieve.getSieveScript();
+    }
+    
+    public void testStripBracketsAndQuotes()
+    throws Exception {
+        assertEquals(null, RuleRewriter.stripBracketsAndQuotes(null));
+        assertEquals("", RuleRewriter.stripBracketsAndQuotes(""));
+        assertEquals("x", RuleRewriter.stripBracketsAndQuotes("x"));
+        assertEquals("x", RuleRewriter.stripBracketsAndQuotes("[\"x\"]"));
+        assertEquals("x", RuleRewriter.stripBracketsAndQuotes("\"x\""));
+        assertEquals("x\"", RuleRewriter.stripBracketsAndQuotes("x\""));
+        assertEquals("[\"x\"", RuleRewriter.stripBracketsAndQuotes("[\"x\""));
     }
     
     private String normalizeWhiteSpace(String script) {
