@@ -48,6 +48,28 @@ public class StringUtil {
         return s1.equals(s2);
     }
 
+    /**
+     * A user-friendly compareTo that handles one or both nulls easily.
+     * @param s1
+     * @param s2
+     * @return 0 if s1 and s2 are equal, value less than 0 if s1 is before s2,
+     *         or value greater than 0 if s1 is after s2; null is considered
+     *         to come before any non-null value
+     */
+    public static int compareTo(String s1, String s2) {
+        if (s1 != null) {
+            if (s2 != null)
+                return s1.compareTo(s2);
+            else
+                return 1;
+        } else {  // s1 == null
+            if (s2 != null)
+                return -1;
+            else
+                return 0;
+        }
+    }
+
     public static int countOccurrences(String str, char c) {
         if (str == null)
             return 0;
