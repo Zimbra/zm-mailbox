@@ -62,18 +62,9 @@ public class InviteInfo implements Comparable<InviteInfo> {
             if (toRet == 0) {
                 String rid = mRecurrenceId != null ? mRecurrenceId.toString() : null;
                 String ridOther = other.mRecurrenceId != null ? other.mRecurrenceId.toString() : null;
-                if (rid != null) {
-                    toRet = rid.compareTo(ridOther);
-                } else if (ridOther != null) {
-                    toRet = ridOther.compareTo(rid) * (-1);
-                }
-                if (toRet == 0) {
-                    if (mMethod != null) {
-                        toRet = mMethod.compareTo(other.mMethod);
-                    } else if (other.mMethod != null) {
-                        toRet = other.mMethod.compareTo(mMethod) * (-1);
-                    }
-                }
+                toRet = StringUtil.compareTo(rid, ridOther);
+                if (toRet == 0)
+                    toRet = StringUtil.compareTo(mMethod, other.mMethod);
             }
         }
         return toRet;
