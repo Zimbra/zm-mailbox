@@ -368,8 +368,9 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
+            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement("INSERT INTO " + getRevisionTableName(mbox) +
+            stmt = conn.prepareStatement(command + " INTO " + getRevisionTableName(mbox) +
                         "(" + mailbox_id + "item_id, version, date, size, volume_id, blob_digest," +
                         " name, metadata, mod_metadata, change_date, mod_content) " +
                         "SELECT " + mailbox_id + "id, ?, date, size, volume_id, blob_digest," +
@@ -380,9 +381,7 @@ public class DbMailItem {
             stmt.setInt(pos++, version);
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
-            int num = stmt.executeUpdate();
-            if (num != 1)
-                throw ServiceException.FAILURE("failed to copy revision data", null);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
