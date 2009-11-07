@@ -24,6 +24,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import org.apache.commons.collections.LRUMap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.admin.FlushCache;
 
@@ -234,18 +235,9 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 			String webappDirname = getServletContext().getRealPath("/").replace(File.separatorChar, '/');
 			cacheDirname = cacheDirname.replaceAll("\\$\\{webapp\\}", webappDirname).replace('/', File.separatorChar).trim();
 			tempDir = new File(cacheDirname);
+		} else {
+			tempDir = new File(LC.zimbra_tmp_directory.value() + "/diskcache");
 		}
-		else {
-			try {
-				File checkFile = File.createTempFile("diskcache-",".check");
-				tempDir = checkFile.getParentFile();
-				checkFile.delete();
-			}
-			catch (IOException e) {
-				return null;
-			}
-		}
-
 		tempDir.mkdirs();
 		return tempDir;
 	}
