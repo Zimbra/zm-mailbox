@@ -341,6 +341,8 @@ public class LC {
     public static final KnownKey nio_imap_enabled;
     public static final KnownKey nio_pop3_enabled;
     public static final KnownKey nio_lmtp_enabled;
+    
+    public static final KnownKey imap_max_request_size;
 
     // NIO IMAP configuration settings. Move these to zimbra-attrs.xml once
     // they have been finalized.
@@ -1207,6 +1209,9 @@ public class LC {
 
         nio_lmtp_enabled = new KnownKey("nio_lmtp_enabled");
         nio_lmtp_enabled.setDefault("false");
+        
+        imap_max_request_size = new KnownKey("imap_max_request_size");
+        imap_max_request_size.setDefault(Long.toString(100 * 1024 * 1024));
 
         krb5_keytab = new KnownKey("krb5_keytab");
         krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
