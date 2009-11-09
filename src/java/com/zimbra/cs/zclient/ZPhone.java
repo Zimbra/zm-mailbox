@@ -40,6 +40,8 @@ public class ZPhone implements ToZJSONObject {
     public static final Pattern CHECK_FORMAT = Pattern.compile("^1?[2-9]\\d{9}$");
     public static final Pattern CHECK_INVALID_CHARS = Pattern.compile(".*[^\\d\\s\\(\\)\\-\\.].*");
 
+    public static final Pattern LEADING_ONE = Pattern.compile("^1");
+
     private String mName;
     private String mCallerId;
 
@@ -55,6 +57,15 @@ public class ZPhone implements ToZJSONObject {
     public String getName() {
         return mName;
     }
+
+    public String getFullName() {
+        return ZPhone.getFullName(mName);
+    }
+
+    public String getNonFullName() {
+        return ZPhone.getNonFullName(mName);
+    }
+
 
     public String getDisplay() {
         return ZPhone.getDisplay(mName);
@@ -76,6 +87,14 @@ public class ZPhone implements ToZJSONObject {
 
     public String toString() {
         return ZJSONObject.toString(this);
+    }
+
+    public static String getFullName(String number) {
+        return ZPhone.LEADING_ONE.matcher(ZPhone.getName(number)).matches() ? number : "1"+number;
+    }
+
+    public static String getNonFullName(String number) {
+        return ZPhone.LEADING_ONE.matcher(ZPhone.getName(number)).replaceAll("");
     }
 
     public static String getDisplay(String number) {
