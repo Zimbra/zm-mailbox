@@ -195,26 +195,29 @@ public final class SearchParams implements Cloneable {
     }
     
     private void checkForLocalizedContactSearch() {
-        // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
-        if (types != null && types.length == 1 && types[0] == MailItem.TYPE_CONTACT) {
-            if (mLocale != null) {
-                if (mSortBy != null) {
-                    if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
-                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING, 
-                                                      null,
-                                                      SortBy.SortCriterion.NAME,
-                                                      SortBy.SortDirection.ASCENDING,
-                                                      mLocale);
-                    } else if (mSortBy.getType() == SortBy.Type.NAME_DESCENDING) {
-                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING, 
-                                                      null,
-                                                      SortBy.SortCriterion.NAME,
-                                                      SortBy.SortDirection.DESCENDING,
-                                                      mLocale);
-                    }
-                }
-            }
-        }
+//        
+// FIXME: for bug 41920, disable localized contact sorting
+//        
+//        // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
+//        if (types != null && types.length == 1 && types[0] == MailItem.TYPE_CONTACT) {
+//            if (mLocale != null) {
+//                if (mSortBy != null) {
+//                    if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
+//                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING, 
+//                                                      null,
+//                                                      SortBy.SortCriterion.NAME,
+//                                                      SortBy.SortDirection.ASCENDING,
+//                                                      mLocale);
+//                    } else if (mSortBy.getType() == SortBy.Type.NAME_DESCENDING) {
+//                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING, 
+//                                                      null,
+//                                                      SortBy.SortCriterion.NAME,
+//                                                      SortBy.SortDirection.DESCENDING,
+//                                                      mLocale);
+//                    }
+//                }
+//            }
+//        }
     }
 
     public void setSortBy(SortBy sortBy) {

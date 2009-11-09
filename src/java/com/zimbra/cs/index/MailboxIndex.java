@@ -148,7 +148,7 @@ public final class MailboxIndex
                 break;
             case NAME_LOCALIZED_ASCENDING:
             case NAME_LOCALIZED_DESCENDING:
-                // isLocalizedSort = true; tim: DISABLE THIS for bug 41920
+                isLocalizedSort = true; 
         }
 
         ZimbraQuery zq = new ZimbraQuery(octxt, proto, mbox, params);
