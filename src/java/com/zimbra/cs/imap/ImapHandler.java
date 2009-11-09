@@ -1290,7 +1290,7 @@ abstract class ImapHandler extends ProtocolHandler {
         sendUntagged(i4folder.getSize() + " EXISTS");
         sendUntagged(i4folder.getRecentCount() + " RECENT");
         if (i4folder.getFirstUnread() > 0)
-        	sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + "] mailbox contains unseen messages");
+            sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + "] mailbox contains unseen messages");
         sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + "] UIDs are valid for this mailbox");
         if (!i4folder.isVirtual())
             sendUntagged("OK [UIDNEXT " + i4folder.getInitialUIDNEXT() + "] next expected UID is " + i4folder.getInitialUIDNEXT());
@@ -1594,13 +1594,13 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         // RFC 5258 4: "The CHILDREN return option is simply an indication that the client
-        //                   wants this information; a server MAY provide it even if the option is
-        //                   not specified."
+        //              wants this information; a server MAY provide it even if the option is
+        //              not specified."
         if (extensionEnabled("CHILDREN"))
             returnOptions |= RETURN_CHILDREN;
 
         // RFC 5258 3.1: "Note that the SUBSCRIBED selection option implies the SUBSCRIBED
-        //                     return option (see below)."
+        //                return option (see below)."
         boolean selectSubscribed = (selectOptions & SELECT_SUBSCRIBED) != 0;
         if (selectSubscribed)
             returnOptions |= RETURN_SUBSCRIBED;
@@ -1620,8 +1620,8 @@ abstract class ImapHandler extends ProtocolHandler {
 
             for (String mailboxName : mailboxNames) {
                 // RFC 5258 3: "In particular, if an extended LIST command has multiple mailbox
-                //                   names and one (or more) of them is the empty string, the empty
-                //                   string MUST be ignored for the purpose of matching."
+                //              names and one (or more) of them is the empty string, the empty
+                //              string MUST be ignored for the purpose of matching."
                 if (mailboxName.equals(""))
                     continue;
 
@@ -1722,8 +1722,8 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         if (!matches.isEmpty()) {
-        	for (String match : matches.values())
-        		sendUntagged(match);
+            for (String match : matches.values())
+                sendUntagged(match);
         }
 
         sendNotifications(true, false);
@@ -1787,7 +1787,7 @@ abstract class ImapHandler extends ProtocolHandler {
             for (ZFolder zfolder : zmbx.getAllFolders()) {
                 if (!zfolder.getPath().startsWith(root) || zfolder.getPath().equals(root))
                     continue;
-                ImapPath path = relativeTo == null ? new ImapPath(owner, zmbx, zfolder, mCredentials) : new ImapPath(owner, zmbx, zfolder, relativeTo);
+                ImapPath path = relativeTo == null ? new ImapPath(owner, zfolder, mCredentials) : new ImapPath(owner, zfolder, relativeTo);
                 if (path.isVisible())
                     paths.put(path, path.asItemId());
             }
