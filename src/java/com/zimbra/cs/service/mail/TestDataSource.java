@@ -14,9 +14,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -28,6 +25,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class TestDataSource extends MailDocumentHandler {
@@ -85,6 +85,10 @@ public class TestDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_PASSWORD, null);
         if (value != null) {
             password = value;
+        }
+        value = eDataSource.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, value.toUpperCase());
         }
         value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
         if (value != null) {

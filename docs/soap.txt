@@ -2728,7 +2728,7 @@ The locale list in the response is sorted by display name (name attribute).
 
 <TestDataSourceRequest>
   <pop3 host="pop.myisp.com" port="110" connectionType="cleartext|ssl"
-    username="mylogin" password="mypassword"/>
+    username="mylogin" password="mypassword" leaveOnServer="true|false"/>
     
   or
   
