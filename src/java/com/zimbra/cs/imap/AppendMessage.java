@@ -158,7 +158,11 @@ class AppendMessage {
         content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
         if (content.getRawSize() > handler.getConfig().getMaxMessageSize()) {
             cleanup();
-            throw new ImapParseException(tag, "TOOBIG", "request too long", false);
+            if (catenate) {
+                throw new ImapParseException(tag, "TOOBIG", "maximum message size exceeded", false);
+            } else {
+                throw new ImapParseException(tag, "maximum message size exceeded", true);
+            }
         }
     }
     

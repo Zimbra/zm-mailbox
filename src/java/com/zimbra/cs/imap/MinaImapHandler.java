@@ -107,7 +107,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     private boolean processRequest(MinaImapRequest req)
         throws IOException, ImapParseException {
         if (req.isMaxRequestSizeExceeded())
-            throw new ImapParseException(req.getTag(), "TOOBIG", "request too big", false);
+            throw new ImapParseException(req.getTag(), "maximum request size exceeded", false);
 
         ImapFolder i4selected = mSelectedFolder;
         if (i4selected != null)

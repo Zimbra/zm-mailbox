@@ -84,7 +84,7 @@ class TcpImapHandler extends ImapHandler {
             if (mRequest.isMaxRequestSizeExceeded()) {
                 setIdle(false); // FIXME Why for only this error?
                 throw new ImapParseException(
-                    mRequest.getTag(), "TOOBIG", "request too long", false);
+                    mRequest.getTag(), "maximum request size exceeded", false);
             }
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
