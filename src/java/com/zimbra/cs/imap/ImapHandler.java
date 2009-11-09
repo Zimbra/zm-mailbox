@@ -2014,6 +2014,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
+        Object mboxobj = null;
         List<Tag> newTags = new ArrayList<Tag>();
         List<Integer> createdIds = new ArrayList<Integer>(appends.size());
         StringBuilder appendHint = extensionEnabled("UIDPLUS") ? new StringBuilder() : null;
@@ -2023,7 +2024,7 @@ abstract class ImapHandler extends ProtocolHandler {
             else if (!path.isWritable(ACL.RIGHT_INSERT))
                 throw ImapServiceException.FOLDER_NOT_WRITABLE(path.asImapPath());
 
-            Object mboxobj = path.getOwnerMailbox();
+            mboxobj = path.getOwnerMailbox();
             Object folderobj = path.getFolder();
 
             synchronized (mboxobj) {
@@ -2035,6 +2036,11 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
             }
 
+            // Append message parts and check message content size
+            for (AppendMessage append : appends) {
+                append.checkContent();
+            }
+            
             for (AppendMessage append : appends) {
                 int id = append.storeContent(mboxobj, folderobj);
                 if (id > 0)
@@ -2045,7 +2051,11 @@ abstract class ImapHandler extends ProtocolHandler {
             if (appendHint != null && uvv > 0)
                 appendHint.append("[APPENDUID ").append(uvv).append(' ').append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
         } catch (ServiceException e) {
+            for (AppendMessage append : appends) {
+                append.cleanup();
+            }
             deleteTags(newTags);
+            deleteMessages(mboxobj, createdIds);
             String msg = "APPEND failed";
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
                 ZimbraLog.imap.info("APPEND failed: no such folder: " + path);
@@ -2082,6 +2092,20 @@ abstract class ImapHandler extends ProtocolHandler {
                 ltag.getMailbox().delete(getContext(), ltag, null);
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
+            }
+        }
+    }
+
+    public void deleteMessages(Object mboxobj, List<Integer> ids) {
+        for (int id : ids) {
+            try {
+                if (mboxobj instanceof Mailbox) {
+                    ((Mailbox) mboxobj).delete(getContext(), id, MailItem.TYPE_MESSAGE);
+                } else {
+                    ((ZMailbox) mboxobj).deleteMessage(String.valueOf(id));
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("failed to delete message: " + id);
             }
         }
     }

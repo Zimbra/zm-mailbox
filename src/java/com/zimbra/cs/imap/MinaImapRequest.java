@@ -76,9 +76,11 @@ public class MinaImapRequest extends ImapRequest {
         }
         if (li != null) {
             literalCount = li.getCount();
-            incrementSize(literalCount);
+            if (!isAppend()) {
+                incrementSize(literalCount);
+            }
             if (!isMaxRequestSizeExceeded()) {
-                literal = Literal.newInstance(literalCount, isCommand("APPEND"));
+                literal = Literal.newInstance(literalCount, isAppend());
             }
             if (li.isBlocking()) {
                 sendContinuation();

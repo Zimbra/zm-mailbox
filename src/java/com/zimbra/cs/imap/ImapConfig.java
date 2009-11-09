@@ -15,18 +15,18 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.server.ServerConfig;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import static com.zimbra.cs.account.Provisioning.*;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 
-import static com.zimbra.cs.account.Provisioning.*;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 public class ImapConfig extends ServerConfig {
     private int mUnauthMaxIdleSeconds = 0;
@@ -35,13 +35,14 @@ public class ImapConfig extends ServerConfig {
     private Set<String> mDisabledExtensions;
     private boolean mSaslGssapiEnabled;
     private int mMaxRequestSize;
+    private int mMaxMessageSize;
 
     private static final int DEFAULT_NUM_THREADS = 10;
     private static final int DEFAULT_BIND_PORT = Config.D_IMAP_BIND_PORT;
     private static final int DEFAULT_SSL_BIND_PORT = Config.D_IMAP_SSL_BIND_PORT;
     private static final int DEFAULT_MAX_IDLE_SECONDS = ImapFolder.IMAP_IDLE_TIMEOUT_SEC;
     private static final int DEFAULT_UNAUTH_MAX_IDLE_SECONDS = 60;
-    private static final int DEFAULT_MAX_REQUEST_SIZE = 10000000;
+    private static final int DEFAULT_MAX_MESSAGE_SIZE = 100 * 1024 * 1024;
     
     public ImapConfig(boolean ssl) throws ServiceException {
         setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
@@ -76,13 +77,8 @@ public class ImapConfig extends ServerConfig {
             mDisabledExtensions = getDisabledExtensions(server.getMultiAttr(A_zimbraImapDisabledCapability));
         }
         mSaslGssapiEnabled = server.getBooleanAttr(A_zimbraImapSaslGssapiEnabled, false);
-        // enough space to hold the largest possible message, plus a bit extra to cover IMAP protocol chatter
-        mMaxRequestSize = config.getIntAttr(A_zimbraMtaMaxMessageSize, -1);
-        if (mMaxRequestSize <= 0) {
-            mMaxRequestSize = DEFAULT_MAX_REQUEST_SIZE;
-        } else {
-            mMaxRequestSize += 1024;
-        }
+        mMaxRequestSize = LC.imap_max_request_size.intValue();
+        mMaxMessageSize = config.getIntAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
         validate();
     }
 
@@ -134,11 +130,17 @@ public class ImapConfig extends ServerConfig {
     }
     
     /**
-     * Returns the size of the largest request (total size of all non-literals
-     * and literals) this IMAP server will handle.
+     * Maximum request size excluding APPEND literal data.
      */
     public int getMaxRequestSize() {
         return mMaxRequestSize;
+    }
+
+    /**
+     * Maximum APPEND message size.
+     */
+    public int getMaxMessageSize() {
+        return mMaxMessageSize;
     }
 
     // TODO can this value be cached?

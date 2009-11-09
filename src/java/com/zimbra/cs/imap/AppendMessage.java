@@ -41,13 +41,14 @@ class AppendMessage {
     private Date date;
     private boolean catenate;
     private List<Part> parts;
+    private Blob content;
     private List<String> flagNames;
     private int flags = Flag.BITMASK_UNREAD;
     private long tags;
     private short sflags;
 
     public static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
-    throws ImapParseException, IOException {
+        throws ImapParseException, IOException {
         AppendMessage append = new AppendMessage(handler, tag);
         append.parse(req);
         return append;
@@ -114,19 +115,18 @@ class AppendMessage {
     }
 
     public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException, ImapParseException {
-        Blob blob = getContent();
         try {
-            checkDate(blob);
+            checkDate(content);
             if (mboxObj instanceof Mailbox)
-                return store(blob, (Mailbox) mboxObj, (Folder) folderObj);
+                return store((Mailbox) mboxObj, (Folder) folderObj);
             else
-                return store(blob, (ZMailbox) mboxObj, (ZFolder) folderObj);
+                return store((ZMailbox) mboxObj, (ZFolder) folderObj);
         } finally {
-            StoreManager.getInstance().quietDelete(blob);
+            cleanup();
         }
     }
 
-    private int store(Blob content, Mailbox mbox, Folder folder) throws ServiceException, IOException {
+    private int store(Mailbox mbox, Folder folder) throws ServiceException, IOException {
         boolean idxAttach = mbox.attachmentsIndexingEnabled();
         Long receivedDate = date != null ? date.getTime() : null;
         ParsedMessage pm = new ParsedMessage(content.getFile(), receivedDate, idxAttach);
@@ -148,39 +148,43 @@ class AppendMessage {
         return msg == null ? -1 : msg.getId();
     }
 
-    private int store(Blob content, ZMailbox mbox, ZFolder folder) throws IOException, ServiceException {
+    private int store(ZMailbox mbox, ZFolder folder) throws IOException, ServiceException {
         InputStream is = content.getInputStream();
         String id = mbox.addMessage(folder.getId(), Flag.bitmaskToFlags(flags), null, date.getTime(), is, content.getRawSize(), true);
         return new ItemId(id, getCredentials().getAccountId()).getId();
     }
-    
-    private Blob getContent() throws IOException, ImapParseException, ServiceException {
-        if (!catenate) {
-            assert parts.size() == 1;
-            return parts.get(0).literal.getBlob();
+
+    public void checkContent() throws IOException, ImapParseException, ServiceException {
+        content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
+        if (content.getRawSize() > handler.getConfig().getMaxMessageSize()) {
+            cleanup();
+            throw new ImapParseException(tag, "TOOBIG", "request too long", false);
         }
+    }
+    
+    private Blob doCatenate() throws IOException, ImapParseException, ServiceException {
         // translate CATENATE (...) directives into Blob
         BlobBuilder bb = StoreManager.getInstance().getBlobBuilder();
-        boolean success = false;
         try {
             for (Part part : parts) {
                 copyBytes(part.getInputStream(), bb);
                 part.cleanup();
             }
-            Blob blob = bb.finish();
-            if (blob.getRawSize() > handler.getConfig().getMaxRequestSize())
-                throw new ImapParseException(tag, "TOOBIG", "request too long", false);
-            success = true;
-            return blob;
+            return bb.finish();
         } finally {
             for (Part part : parts)
                 part.cleanup();
             parts = null;
-            if (!success)
-                bb.dispose();
         }
     }
 
+    public void cleanup() {
+        if (content != null) {
+            StoreManager.getInstance().quietDelete(content);
+            content = null;
+        }
+    }
+    
     private void copyBytes(InputStream is, BlobBuilder bb) throws IOException {
         try {
             bb.append(is);

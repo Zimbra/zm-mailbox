@@ -18,6 +18,22 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.imap.ImapSearch.AllSearch;
+import com.zimbra.cs.imap.ImapSearch.AndOperation;
+import com.zimbra.cs.imap.ImapSearch.ContentSearch;
+import com.zimbra.cs.imap.ImapSearch.DateSearch;
+import com.zimbra.cs.imap.ImapSearch.FlagSearch;
+import com.zimbra.cs.imap.ImapSearch.HeaderSearch;
+import com.zimbra.cs.imap.ImapSearch.LogicalOperation;
+import com.zimbra.cs.imap.ImapSearch.ModifiedSearch;
+import com.zimbra.cs.imap.ImapSearch.NotOperation;
+import com.zimbra.cs.imap.ImapSearch.OrOperation;
+import com.zimbra.cs.imap.ImapSearch.RelativeDateSearch;
+import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
+import com.zimbra.cs.imap.ImapSearch.SizeSearch;
+import org.apache.commons.codec.binary.Base64;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -33,11 +49,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.codec.binary.Base64;
-
-import com.zimbra.cs.imap.ImapSearch.*;
-import com.zimbra.common.util.ZimbraLog;
 
 abstract class ImapRequest {
     private static final boolean[] TAG_CHARS      = new boolean[128];
@@ -76,6 +87,8 @@ abstract class ImapRequest {
     int mIndex, mOffset;
     private long mSize;
     private boolean mMaxRequestSizeExceeded;
+    private boolean mIsAppend;
+    private boolean mIsLogin;
 
     ImapRequest(ImapHandler handler) {
         mHandler = handler;
@@ -155,15 +168,23 @@ abstract class ImapRequest {
         addPart(new LiteralPart(literal));
     }
 
-    void addPart(String str) {
-        addPart(new StringPart(str));
+    void addPart(String line) {
+        if (mParts.isEmpty()) {
+            String cmd = getCommand(line);
+            if ("APPEND".equalsIgnoreCase(cmd)) {
+                mIsAppend = true;
+            } else if ("LOGIN".equalsIgnoreCase(cmd)) {
+                mIsLogin = true;
+            }
+        }
+        addPart(new StringPart(line));
     }
         
     private void addPart(Part part) {
         // Do not add any more parts if we have exceeded the maximum request
         // size. The exception is if this is the first part (request line) so
         // we can recover the tag when sending an error response.
-        if (!isMaxRequestSizeExceeded() || mParts.size() == 0) {
+        if (!isMaxRequestSizeExceeded() || mParts.isEmpty()) {
             mParts.add(part);
         }
     }
@@ -174,10 +195,13 @@ abstract class ImapRequest {
         }
         mParts.clear();
     }
-    
-    protected boolean isCommand(String cmd) throws ImapParseException {
-        return mParts.size() > 0 &&
-               cmd.equalsIgnoreCase(getCommand(mParts.get(0).getString()));
+
+    protected boolean isAppend() {
+        return mIsAppend;
+    }
+
+    protected boolean isLogin() {
+        return mIsLogin;
     }
 
     protected String getCommand(String requestLine) {

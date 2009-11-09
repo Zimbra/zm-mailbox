@@ -14,10 +14,10 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.IOException;
-
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
+
+import java.io.IOException;
 
 public class TcpImapRequest extends ImapRequest {
     final class ImapTerminatedException extends ImapParseException {
@@ -56,7 +56,7 @@ public class TcpImapRequest extends ImapRequest {
 
         if (mParts.size() == 1 && !isMaxRequestSizeExceeded()) {
             // check for "LOGIN" command and elide if necessary
-            mUnlogged = isCommand("LOGIN");
+            mUnlogged = isLogin();
             if (mUnlogged) {
                 logline = line.substring(0, line.indexOf(' ') + 7) + "...";
             }
@@ -76,7 +76,9 @@ public class TcpImapRequest extends ImapRequest {
                     size = -1;
                 }
                 if (size >= 0) {
-                    incrementSize(size);
+                    if (!isAppend()) {
+                        incrementSize(size);
+                    }
                     mLiteral = size;
                     continuation();
                 } else {
@@ -96,13 +98,12 @@ public class TcpImapRequest extends ImapRequest {
                 throw new ImapTerminatedException();
             mLiteral -= skipped;
         } else {
-            assert mLiteral < getMaxRequestSize();
             Part part = mParts.get(mParts.size() - 1);
             Literal literal;
             if (part.isLiteral()) {
                 literal = part.getLiteral();
             } else {
-                literal = Literal.newInstance((int) mLiteral, isCommand("APPEND"));
+                literal = Literal.newInstance((int) mLiteral, isAppend());
                 addPart(literal);
             }
             int read = literal.copy(mStream);
@@ -138,7 +139,9 @@ public class TcpImapRequest extends ImapRequest {
         boolean lastPart = (mIndex == mParts.size() - 1);
         if (lastPart || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
             if (mLiteral == -1) {
-                incrementSize(length);
+                if (!isAppend()) {
+                    incrementSize(length);
+                }
                 mLiteral = length;
             }
             if (!blocking && mStream.available() >= mLiteral)
