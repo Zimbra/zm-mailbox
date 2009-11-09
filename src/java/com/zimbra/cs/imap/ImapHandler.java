@@ -1064,8 +1064,7 @@ abstract class ImapHandler extends ProtocolHandler {
     abstract boolean doSTARTTLS(String tag) throws IOException;
 
     boolean doLOGOUT(String tag) throws IOException {
-        sendUntagged(mConfig.getGoodbye());
-        mGoodbyeSent = true;
+        sendBYE();
         sendOK(tag, "LOGOUT completed");
         return STOP_PROCESSING;
     }
@@ -3650,6 +3649,18 @@ abstract class ImapHandler extends ProtocolHandler {
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
+
+    void sendBYE() {
+        sendBYE(mConfig.getGoodbye());
+    }
+    
+    void sendBYE(String msg) {
+        try {
+            sendUntagged("BYE " + msg, true);
+        } catch (IOException e) {
+        }
+        mGoodbyeSent = true;
+    }
 
     void sendResponse(String tag, String msg, boolean flush) throws IOException {
         String response = (tag == null ? "" : tag + ' ') + (msg == null ? "" : msg);

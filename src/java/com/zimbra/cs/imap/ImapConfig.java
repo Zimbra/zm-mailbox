@@ -111,7 +111,7 @@ public class ImapConfig extends ServerConfig {
         } catch (ServiceException e) { }
 
         mBanner = "OK " + name + " Zimbra" + version + " IMAP4rev1 service ready";
-        mGoodbye = "BYE " + name + " IMAP4rev1 server terminating connection";
+        mGoodbye = name + " IMAP4rev1 server terminating connection";
     }
 
     public String getBanner()   { return mBanner; }

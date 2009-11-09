@@ -178,13 +178,8 @@ class TcpImapHandler extends ImapHandler {
         try {
             OutputStream os = mOutputStream;
             if (os != null) {
-                if (sendBanner) {
-                    if (!mGoodbyeSent) {
-                        try {
-                            sendUntagged(mConfig.getGoodbye(), true);
-                        } catch (IOException ioe) { }
-                    }
-                    mGoodbyeSent = true;
+                if (sendBanner && !mGoodbyeSent) {
+                    sendBYE();
                 }
                 os.close();
                 mOutputStream = null;

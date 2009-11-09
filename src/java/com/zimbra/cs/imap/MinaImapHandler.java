@@ -30,13 +30,16 @@ import java.io.IOException;
 import java.net.Socket;
 
 class MinaImapHandler extends ImapHandler implements MinaHandler {
+    private MinaImapServer mServer;
     private IoSession mSession;
     private MinaImapRequest mRequest;
 
     private static final long WRITE_TIMEOUT = LC.nio_imap_write_timeout.longValue() * 1000;
+    private static final int MAX_SESSIONS = LC.nio_imap_max_sessions.intValue();
     
     MinaImapHandler(MinaImapServer server, IoSession session) {
         super(server);
+        this.mServer = server;
         this.mSession = session;
         mOutputStream = new MinaIoSessionOutputStream(
             mSession, LC.nio_imap_max_chunk_size.intValue())
@@ -63,11 +66,14 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("Dropping connection (user services are disabled)");
-            // TODO Is there a better way of handling this?
             dropConnection();
-            return;
+        } else if (mServer.getStats().getActiveSessions() >= MAX_SESSIONS) {
+            ZimbraLog.imap.debug("Dropping connection (max sessions exceeded)");
+            sendBYE("Server too busy");
+            dropConnection();
+        } else {
+            sendUntagged(mConfig.getBanner(), true);
         }
-        sendUntagged(mConfig.getBanner(), true);
     }
 
     @Override protected boolean processCommand() {
@@ -147,21 +153,16 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         cleanup();
-        try {
-            if (sendBanner && !mGoodbyeSent) {
-                sendUntagged(mConfig.getGoodbye(), true);
-                mGoodbyeSent = true;
-            }
-            MinaOutputStream out = (MinaOutputStream) mOutputStream;
-            if (timeout >= 0 && out != null) {
-                // Wait for all remaining bytes to be written
-                if (!out.join(timeout))
-                    ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
-            }
-            mSession.close();
-        } catch (IOException e) {
-            ZimbraLog.imap.debug("I/O error while closing connection", e);
+        if (sendBanner && !mGoodbyeSent) {
+            sendBYE();
         }
+        MinaOutputStream out = (MinaOutputStream) mOutputStream;
+        if (timeout >= 0 && out != null) {
+            // Wait for all remaining bytes to be written
+            if (!out.join(timeout))
+                ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
+        }
+        mSession.close();
     }
 
     public void dropConnection(long timeout) {
