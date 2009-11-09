@@ -66,6 +66,7 @@ enum ProxyConfOverride {
 
 enum ProxyConfValueType {
     INTEGER,
+    LONG,
     STRING,
     BOOLEAN,
     ENABLER,
@@ -142,6 +143,8 @@ class ProxyConfVar
 
         if (mValueType == ProxyConfValueType.INTEGER) {
             updateInteger();
+        } else if (mValueType == ProxyConfValueType.LONG) {
+            updateLong();
         } else if (mValueType == ProxyConfValueType.STRING) {
             updateString();
         } else if (mValueType == ProxyConfValueType.BOOLEAN) {
@@ -308,6 +311,8 @@ class ProxyConfVar
     {
         if (mValueType == ProxyConfValueType.INTEGER) {
             return formatInteger(o);
+        } else if (mValueType == ProxyConfValueType.LONG) {
+            return formatLong(o);
         } else if (mValueType == ProxyConfValueType.STRING) {
             return formatString(o);
         } else if (mValueType == ProxyConfValueType.BOOLEAN) {
@@ -479,7 +484,32 @@ class ProxyConfVar
     public String formatInteger (Object o)
     {
         Formatter f = new Formatter();
-        f.format("%d",(Integer)o);
+        f.format("%d", (Integer)o);
+        return f.toString();
+    }
+
+    public void updateLong ()
+    {
+        if (mOverride == ProxyConfOverride.CONFIG) {
+            mValue = new Long(configSource.getLongAttr(mAttribute,(Long)mDefault));
+        } else if (mOverride == ProxyConfOverride.LOCALCONFIG) {
+            mValue = Long.valueOf(lcValue(mAttribute,mDefault.toString()));
+        } else if (mOverride == ProxyConfOverride.SERVER) {
+            mValue = new Long(serverSource.getLongAttr(mAttribute,(Long)mDefault));
+        }
+    }
+
+    public String formatLong (Object o)
+    {
+        Formatter f = new Formatter();
+        Long l = (Long)o;
+        
+        if (l % (1024 * 1024) == 0)
+            f.format("%dm", l / (1024 * 1024));
+        else if (l % 1024 == 0)
+            f.format("%dk", l / 1024);
+        else
+            f.format("%d", l);
         return f.toString();
     }
 
@@ -703,8 +733,7 @@ public class ProxyConfGen
             try {
                 BufferedReader r = new BufferedReader(new FileReader (tFile));
                 BufferedWriter w = new BufferedWriter(new FileWriter (wf));
-
-                String i,o;
+                String i;
 
                 while ((i = r.readLine()) != null) {
                     i = StringUtil.fillTemplate(i,mVars);
@@ -819,11 +848,11 @@ public class ProxyConfGen
         mConfVars.put("web.upstream.:servers", new ProxyConfVar("web.upstream.:servers", "zimbraReverseProxyLookupTarget", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CONFIG,"List of upstream HTTP servers used by Web Proxy (i.e. servers for which zimbraReverseProxyLookupTarget is true, and whose mail mode is http|mixed|both)"));
         mConfVars.put("web.:routehandlers", new ProxyConfVar("web.:routehandlers", "zimbraReverseProxyLookupTarget", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM,"List of web route lookup handlers (i.e. servers for which zimbraReverseProxyLookupTarget is true)"));
         mConfVars.put("web.routetimeout", new ProxyConfVar("web.routetimeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to web route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
-        mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Integer(10485760), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
+        mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
         mConfVars.put("web.http.port", new ProxyConfVar("web.http.port", Provisioning.A_zimbraMailProxyPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web Proxy HTTP Port"));
-        mConfVars.put("web.http.maxbody", new ProxyConfVar("web.http.maxbody", "zimbraFileUploadMaxSize", new Integer(10485760), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
+        mConfVars.put("web.http.maxbody", new ProxyConfVar("web.http.maxbody", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
         mConfVars.put("web.https.port", new ProxyConfVar("web.https.port", Provisioning.A_zimbraMailSSLProxyPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web Proxy HTTPS Port"));
-        mConfVars.put("web.https.maxbody", new ProxyConfVar("web.https.maxbody", "zimbraFileUploadMaxSize", new Integer(10485760), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
+        mConfVars.put("web.https.maxbody", new ProxyConfVar("web.https.maxbody", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
         mConfVars.put("web.ssl.cert", new ProxyConfVar("web.ssl.cert", null, "/opt/zimbra/conf/nginx.crt", ProxyConfValueType.STRING, ProxyConfOverride.NONE,"Web Proxy SSL certificate path"));
         mConfVars.put("web.ssl.key", new ProxyConfVar("web.ssl.key", null, "/opt/zimbra/conf/nginx.key", ProxyConfValueType.STRING, ProxyConfOverride.NONE,"Web Proxy SSL certificate key"));
         mConfVars.put("web.http.uport", new ProxyConfVar("web.http.uport", Provisioning.A_zimbraMailPort, new Integer(80), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web upstream server port"));
