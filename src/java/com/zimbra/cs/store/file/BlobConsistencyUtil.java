@@ -290,6 +290,7 @@ public class BlobConsistencyUtil {
                 }
                 System.err.println(msg);
             }
+            System.exit(1);
         }
     }
     
