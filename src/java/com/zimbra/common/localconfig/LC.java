@@ -144,7 +144,9 @@ public class LC {
     public static final KnownKey zimbra_spam_report_queue_size;
 
     public static final KnownKey zimbra_throttle_op_concurrency;
-    
+
+    public static final KnownKey zimbra_web_generate_gzip;
+
     public static final KnownKey zimbra_im_chat_flush_time;
     public static final KnownKey zimbra_im_chat_close_time;
 
@@ -713,6 +715,8 @@ public class LC {
 
         zimbra_throttle_op_concurrency = new KnownKey("zimbra_throttle_op_concurrency");
         zimbra_throttle_op_concurrency.setDefault("1000,1000,1000,1000,1000");
+
+        zimbra_web_generate_gzip = new KnownKey("zimbra_web_generate_gzip", "true");
 
         zimbra_im_chat_flush_time = new KnownKey("zimbra_im_chat_flush_time", "300");
         zimbra_im_chat_close_time = new KnownKey("zimbra_im_chat_close_time", "3600");
