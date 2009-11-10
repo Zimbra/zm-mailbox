@@ -458,8 +458,14 @@ public class DbUtil {
             
             do {
                 sb.append(column).append((in ? " = ?" : " <> ?"));
-                if (size > 1)
-                    sb.append(" OR ");
+                if (size > 1) {
+                    if (in)
+                        // col IN(A,B,C) --> (col=A OR col=B OR col=C)
+                        sb.append(" OR ");
+                    else
+                        // col NOT IN(A,B,C) --> (col<>A AND col<>B AND col<>C)
+                        sb.append(" AND ");
+                }
             } while (--size > 0);
             sb.append(')');
             return sb.toString();
