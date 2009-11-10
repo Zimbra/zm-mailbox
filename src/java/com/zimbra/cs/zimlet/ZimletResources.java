@@ -16,6 +16,7 @@ package com.zimbra.cs.zimlet;
 
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -199,6 +200,7 @@ public class ZimletResources
             if (!debug) {
 				file = File.createTempFile("res-", "."+type, getCacheDir());
 				if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: "+file);
+                                if (LC.zimbra_web_generate_gzip.booleanValue())
 				copy(text, file);
 				compress(file);
                 putCacheFile(cacheId, file);
