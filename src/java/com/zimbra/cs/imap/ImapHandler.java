@@ -460,7 +460,7 @@ abstract class ImapHandler extends ProtocolHandler {
                     } else if (command.equals("LIST")) {
                         Set<String> patterns = new LinkedHashSet<String>(2);
                         boolean parenthesized = false;
-                        byte selectOptions = 0, returnOptions = 0;
+                        byte selectOptions = 0, returnOptions = 0, status = 0;
 
                         req.skipSpace();
                         if (req.peekChar() == '(' && extensionEnabled("LIST-EXTENDED")) {
@@ -501,13 +501,15 @@ abstract class ImapHandler extends ProtocolHandler {
                                 String option = req.readATOM();
                                 if (option.equals("SUBSCRIBED"))     returnOptions |= RETURN_SUBSCRIBED;
                                 else if (option.equals("CHILDREN"))  returnOptions |= RETURN_CHILDREN;
-                                else
+                                else if (option.equals("STATUS") && extensionEnabled("X-DRAFT-I00-LIST-STATUS")) {
+                                    req.skipSpace();  status = parseStatusFields(req);
+                                } else
                                     throw new ImapParseException(tag, "unknown LIST return option \"" + option + '"');
                             }
                             req.skipChar(')');
                         }
                         checkEOF(tag, req);
-                        return doLIST(tag, base, patterns, selectOptions, returnOptions);
+                        return doLIST(tag, base, patterns, selectOptions, returnOptions, status);
                     } else if (command.equals("LSUB")) {
                         req.skipSpace();  String base = req.readFolder();
                         req.skipSpace();  String pattern = req.readFolderPattern();
@@ -638,23 +640,8 @@ abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doSTARTTLS(tag);
                     } else if (command.equals("STATUS")) {
-                        int status = 0;
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
-                        req.skipSpace();  req.skipChar('(');
-                        while (req.peekChar() != ')') {
-                            if (status != 0)
-                                req.skipSpace();
-                            String flag = req.readATOM();
-                            if (flag.equals("MESSAGES"))            status |= STATUS_MESSAGES;
-                            else if (flag.equals("RECENT"))         status |= STATUS_RECENT;
-                            else if (flag.equals("UIDNEXT"))        status |= STATUS_UIDNEXT;
-                            else if (flag.equals("UIDVALIDITY"))    status |= STATUS_UIDVALIDITY;
-                            else if (flag.equals("UNSEEN"))         status |= STATUS_UNSEEN;
-                            else if (flag.equals("HIGHESTMODSEQ"))  status |= STATUS_HIGHESTMODSEQ;
-                            else
-                                throw new ImapParseException(tag, "unknown STATUS attribute \"" + flag + '"');
-                        }
-                        req.skipChar(')');
+                        req.skipSpace();  byte status = parseStatusFields(req);
                         checkEOF(tag, req);
                         return doSTATUS(tag, path, status);
                     } else if (command.equals("SORT") && extensionEnabled("SORT")) {
@@ -768,6 +755,26 @@ abstract class ImapHandler extends ProtocolHandler {
         throw new ImapParseException(tag, "command not implemented");
     }
 
+    byte parseStatusFields(ImapRequest req) throws ImapParseException {
+        byte status = 0;
+        req.skipChar('(');
+        do {
+            if (status != 0)
+                req.skipSpace();
+            String flag = req.readATOM();
+            if (flag.equals("MESSAGES"))            status |= STATUS_MESSAGES;
+            else if (flag.equals("RECENT"))         status |= STATUS_RECENT;
+            else if (flag.equals("UIDNEXT"))        status |= STATUS_UIDNEXT;
+            else if (flag.equals("UIDVALIDITY"))    status |= STATUS_UIDVALIDITY;
+            else if (flag.equals("UNSEEN"))         status |= STATUS_UNSEEN;
+            else if (flag.equals("HIGHESTMODSEQ"))  status |= STATUS_HIGHESTMODSEQ;
+            else
+                throw new ImapParseException(req.getTag(), "unknown STATUS attribute \"" + flag + '"');
+        } while (req.peekChar() != ')');
+        req.skipChar(')');
+        return status;
+    }
+
     State getState() {
         if (mGoodbyeSent)
             return State.LOGOUT;
@@ -863,7 +870,8 @@ abstract class ImapHandler extends ProtocolHandler {
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
         "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1", "ID",
         "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA",
-        "RIGHTS=ektx", "SASL-IR", "SEARCHRES", "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN"
+        "RIGHTS=ektx", "SASL-IR", "SEARCHRES", "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN",
+        "X-DRAFT-I00-LIST-STATUS"
     ));
 
     protected String getCapabilityString() {
@@ -898,6 +906,7 @@ abstract class ImapHandler extends ProtocolHandler {
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
+        // [X-DRAFT-I00-LIST-STATUS]  draft-ietf-morg-status-in-list-01: IMAP4 Extension for returning STATUS information in extended LIST
 
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1");
 
@@ -935,6 +944,8 @@ abstract class ImapHandler extends ProtocolHandler {
             return extensionEnabled("CONDSTORE");
         if (extension.equalsIgnoreCase("ESORT"))
             return extensionEnabled("SORT");
+        if (extension.equalsIgnoreCase("X-DRAFT-I00-LIST-STATUS"))
+            return extensionEnabled("LIST-EXTENDED");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
             return false;
@@ -1580,7 +1591,8 @@ abstract class ImapHandler extends ProtocolHandler {
     private static final byte RETURN_SUBSCRIBED = 0x01;
     private static final byte RETURN_CHILDREN   = 0x02;
 
-    boolean doLIST(String tag, String referenceName, Set<String> mailboxNames, byte selectOptions, byte returnOptions) throws IOException {
+    boolean doLIST(String tag, String referenceName, Set<String> mailboxNames, byte selectOptions, byte returnOptions, byte status)
+    throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
@@ -1609,7 +1621,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         boolean selectRecursive = (selectOptions & SELECT_RECURSIVE) != 0;
 
-        Map<ImapPath, String> matches = new TreeMap<ImapPath, String>();
+        Map<ImapPath, Object> matches = new TreeMap<ImapPath, Object>();
         try {
             if (returnSubscribed)
                 remoteSubscriptions = mCredentials.listSubscriptions();
@@ -1684,7 +1696,11 @@ abstract class ImapHandler extends ProtocolHandler {
             for (ImapPath path : selected) {
                 for (Pattern pattern : patterns) {
                     if (pathMatches(path, pattern)) {
-                        matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String());
+                        String hit = "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String();
+                        if (status == 0)
+                            matches.put(path, hit);
+                        else
+                            matches.put(path, new String[] { hit, status(tag, path, status) });
                         break;
                     }
                 }
@@ -1722,8 +1738,14 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         if (!matches.isEmpty()) {
-            for (String match : matches.values())
-                sendUntagged(match);
+            for (Object match : matches.values()) {
+                if (match instanceof String[]) {
+                    for (String response : (String[]) match)
+                        sendUntagged(response);
+                } else {
+                    sendUntagged((String) match);
+                }
+            }
         }
 
         sendNotifications(true, false);
@@ -1935,11 +1957,10 @@ abstract class ImapHandler extends ProtocolHandler {
     static final int STATUS_UNSEEN        = 0x10;
     static final int STATUS_HIGHESTMODSEQ = 0x20;
 
-    boolean doSTATUS(String tag, ImapPath path, int status) throws IOException {
+    boolean doSTATUS(String tag, ImapPath path, byte status) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        StringBuilder data = new StringBuilder();
         try {
             path.canonicalize();
             if (!path.isVisible()) {
@@ -1948,53 +1969,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
 
-            int messages, recent, uidnext, uvv, unread, modseq;
-            Object mboxobj = path.getOwnerMailbox();
-            if (mboxobj instanceof Mailbox) {
-                Mailbox mbox = (Mailbox) mboxobj;
-                Folder folder = (Folder) path.getFolder();
-
-                messages = (int) folder.getItemCount();
-                if ((status & STATUS_RECENT) == 0)
-                    recent = -1;
-                else if (messages == 0)
-                    recent = 0;
-                else if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
-                    recent = mSelectedFolder.getRecentCount();
-                else
-                    recent = mbox.getImapRecent(getContext(), folder.getId());
-                uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
-                uvv = ImapFolder.getUIDValidity(folder);
-                unread = folder.getUnreadCount();
-                modseq = folder instanceof SearchFolder ? 0 : folder.getImapMODSEQ();
-            } else if (mboxobj instanceof ZMailbox) {
-                ZFolder zfolder = (ZFolder) path.getFolder();
-                if (zfolder == null)
-                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
-
-                messages = zfolder.getMessageCount();
-                recent = 0;
-                uidnext = zfolder.getImapUIDNEXT();
-                uvv = ImapFolder.getUIDValidity(zfolder);
-                unread = zfolder.getUnreadCount();
-                modseq = zfolder.getImapMODSEQ();
-            } else {
-                throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
-            }
-
-            if (messages >= 0 && (status & STATUS_MESSAGES) != 0)
-                data.append(data.length() > 0 ? " " : "").append("MESSAGES ").append(messages);
-            if (recent >= 0 && (status & STATUS_RECENT) != 0)
-                data.append(data.length() > 0 ? " " : "").append("RECENT ").append(recent);
-            // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()
-            if (uidnext > 0 && (status & STATUS_UIDNEXT) != 0)
-                data.append(data.length() > 0 ? " " : "").append("UIDNEXT ").append(uidnext);
-            if (uvv > 0 && (status & STATUS_UIDVALIDITY) != 0)
-                data.append(data.length() > 0 ? " " : "").append("UIDVALIDITY ").append(uvv);
-            if (unread >= 0 && (status & STATUS_UNSEEN) != 0)
-                data.append(data.length() > 0 ? " " : "").append("UNSEEN ").append(unread);
-            if (modseq >= 0 && (status & STATUS_HIGHESTMODSEQ) != 0)
-                data.append(data.length() > 0 ? " " : "").append("HIGHESTMODSEQ ").append(modseq);
+            sendUntagged(status(tag, path, status));
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info("STATUS failed: no such folder: " + path);
@@ -2004,10 +1979,64 @@ abstract class ImapHandler extends ProtocolHandler {
             return canContinue(e);
         }
 
-        sendUntagged("STATUS " + path.asUtf7String() + " (" + data + ')');
         sendNotifications(true, false);
         sendOK(tag, "STATUS completed");
         return CONTINUE_PROCESSING;
+    }
+
+    String status(String tag, ImapPath path, byte status) throws ServiceException {
+        StringBuilder data = new StringBuilder("STATUS ").append(path.asUtf7String()).append(" (");
+        int empty = data.length();
+
+        int messages, recent, uidnext, uvv, unread, modseq;
+        Object mboxobj = path.getOwnerMailbox();
+        if (mboxobj instanceof Mailbox) {
+            Mailbox mbox = (Mailbox) mboxobj;
+            Folder folder = (Folder) path.getFolder();
+
+            messages = (int) folder.getItemCount();
+            if ((status & STATUS_RECENT) == 0)
+                recent = -1;
+            else if (messages == 0)
+                recent = 0;
+            else if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
+                recent = mSelectedFolder.getRecentCount();
+            else
+                recent = mbox.getImapRecent(getContext(), folder.getId());
+            uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
+            uvv = ImapFolder.getUIDValidity(folder);
+            unread = folder.getUnreadCount();
+            modseq = folder instanceof SearchFolder ? 0 : folder.getImapMODSEQ();
+        } else if (mboxobj instanceof ZMailbox) {
+            ZFolder zfolder = (ZFolder) path.getFolder();
+            if (zfolder == null)
+                throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+
+            messages = zfolder.getMessageCount();
+            recent = 0;
+            uidnext = zfolder.getImapUIDNEXT();
+            uvv = ImapFolder.getUIDValidity(zfolder);
+            unread = zfolder.getUnreadCount();
+            modseq = zfolder.getImapMODSEQ();
+        } else {
+            throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
+        }
+
+        if (messages >= 0 && (status & STATUS_MESSAGES) != 0)
+            data.append(data.length() != empty ? " " : "").append("MESSAGES ").append(messages);
+        if (recent >= 0 && (status & STATUS_RECENT) != 0)
+            data.append(data.length() != empty ? " " : "").append("RECENT ").append(recent);
+        // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()
+        if (uidnext > 0 && (status & STATUS_UIDNEXT) != 0)
+            data.append(data.length() != empty ? " " : "").append("UIDNEXT ").append(uidnext);
+        if (uvv > 0 && (status & STATUS_UIDVALIDITY) != 0)
+            data.append(data.length() != empty ? " " : "").append("UIDVALIDITY ").append(uvv);
+        if (unread >= 0 && (status & STATUS_UNSEEN) != 0)
+            data.append(data.length() != empty ? " " : "").append("UNSEEN ").append(unread);
+        if (modseq >= 0 && (status & STATUS_HIGHESTMODSEQ) != 0)
+            data.append(data.length() != empty ? " " : "").append("HIGHESTMODSEQ ").append(modseq);
+
+        return data.append(')').toString();
     }
 
     boolean doAPPEND(String tag, ImapPath path, List<AppendMessage> appends) throws IOException, ImapParseException {

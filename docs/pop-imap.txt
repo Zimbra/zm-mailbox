@@ -32,6 +32,7 @@ IMAP protocol and extensions supported:
     [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
+    [X-DRAFT-I00-LIST-STATUS]  draft-ietf-morg-status-in-list-01: IMAP4 Extension for returning STATUS information in extended LIST
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
     Also support AUTH=X-ZIMBRA:
