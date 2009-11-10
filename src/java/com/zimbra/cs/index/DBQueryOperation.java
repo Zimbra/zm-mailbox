@@ -35,7 +35,6 @@ import com.zimbra.common.util.ZimbraLog;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanQuery;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.Db;
@@ -895,8 +894,6 @@ class DBQueryOperation extends QueryOperation {
 //                BooleanQuery originalQuery = mLuceneOp.getCurrentQuery();
                 
                 try {
-                    BooleanQuery idsQuery = new BooleanQuery();
-                    
                     //
                     // For each search result, do two things:
                     //    -- remember the indexId in a hash, so we can find the SearchResult later
@@ -973,14 +970,13 @@ class DBQueryOperation extends QueryOperation {
             // DON'T set an sql LIMIT if we're asking for lucene hits!!!  If we did, then we wouldn't be
             // sure that we'd "consumed" all the Lucene-ID's, and therefore we could miss hits!
             
-            // this is horrible and hideous and for bug 15511
-            boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
-
             long luceneStart = 0;
             if (ZimbraLog.index_search.isDebugEnabled())
                 luceneStart = System.currentTimeMillis();
             
-            mLuceneChunk = mLuceneOp.getNextResultsChunk(forceOneHitPerChunk ? 1 : mHitsPerChunk);
+            // limit in clause based on Db capabilities - bug 15511
+            mLuceneChunk = mLuceneOp.getNextResultsChunk(Math.max(
+                Db.getINClauseBatchSize(), mHitsPerChunk));
             
             // we need to set our index-id's here!
             DbLeafNode sc = topLevelAndedConstraint();

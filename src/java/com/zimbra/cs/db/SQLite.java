@@ -54,7 +54,6 @@ public class SQLite extends Db {
             case AVOID_OR_IN_WHERE_CLAUSE:   return false;
             case BITWISE_OPERATIONS:         return true;
             case BOOLEAN_DATATYPE:           return false;
-            case BROKEN_IN_CLAUSE:           return false;
             case CASE_SENSITIVE_COMPARISON:  return true;
             case CAST_AS_BIGINT:             return false;
             case CLOB_COMPARISON:            return true;
@@ -318,6 +317,8 @@ public class SQLite extends Db {
     @Override public String toString() {
         return "SQLite";
     }
+
+    protected int getInClauseBatchSize() { return 200; }
 
     public static void main(String args[]) {
         // command line argument parsing

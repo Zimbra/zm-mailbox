@@ -54,7 +54,6 @@ public class MySQL extends Db {
             case AVOID_OR_IN_WHERE_CLAUSE:   return false;
             case BITWISE_OPERATIONS:         return true;
             case BOOLEAN_DATATYPE:           return true;
-            case BROKEN_IN_CLAUSE:           return false;
             case CASE_SENSITIVE_COMPARISON:  return false;
             case CAST_AS_BIGINT:             return false;
             case CLOB_COMPARISON:            return true;

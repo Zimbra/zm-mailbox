@@ -74,7 +74,6 @@ public class Derby extends Db {
             case AVOID_OR_IN_WHERE_CLAUSE:   return true;
             case BITWISE_OPERATIONS:         return false;
             case BOOLEAN_DATATYPE:           return false;
-            case BROKEN_IN_CLAUSE:           return true;
             case CASE_SENSITIVE_COMPARISON:  return true;
             case CAST_AS_BIGINT:             return true;
             case CLOB_COMPARISON:            return false;
@@ -205,6 +204,9 @@ public class Derby extends Db {
     @Override public String toString() {
         return "derby";
     }
+
+    /* This used to be 1, but the optimizer has been greatly enhanced for 10.3 */
+    protected int getInClauseBatchSize() { return 200; }
 
     public static void main(String args[]) {
         // command line argument parsing

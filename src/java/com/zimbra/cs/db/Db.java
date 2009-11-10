@@ -49,7 +49,6 @@ public abstract class Db {
     public static enum Capability {
         BITWISE_OPERATIONS,
         BOOLEAN_DATATYPE,
-        BROKEN_IN_CLAUSE,
         CASE_SENSITIVE_COMPARISON,
         CAST_AS_BIGINT,
         CLOB_COMPARISON,
@@ -116,7 +115,6 @@ public abstract class Db {
      *  connection pool.  Permits the DB implementation to iterate over
      *  the connections or to operate on the pool itself before any
      *  connections are returned to callers. */
-    @SuppressWarnings("unused")
     void startup(PoolingDataSource pool, int poolSize) throws SQLException {
         // default is to do nothing
     }
@@ -130,14 +128,12 @@ public abstract class Db {
 
     /** Callback invoked immediately after a new connection is created for
      *  the pool. */
-    @SuppressWarnings("unused")
     void postCreate(java.sql.Connection conn) throws SQLException {
         // default is to do nothing
     }
 
     /** Callback invoked immediately before a connection is fetched from
      *  the pool and returned to the user. */
-    @SuppressWarnings("unused")
     void postOpen(Connection conn) throws SQLException {
         // default is to do nothing
     }
@@ -153,7 +149,6 @@ public abstract class Db {
         }
     }
 
-    @SuppressWarnings("unused")
     void registerDatabaseInterest(Connection conn, String dbname) throws SQLException, ServiceException {
         // default is to do nothing
     }
@@ -161,7 +156,6 @@ public abstract class Db {
     /** Callback invoked immediately before a connection is returned to the
      *  pool by the user.  Note that <tt>COMMIT</tt>/<tt>ROLLBACK</tt> must
      *  already have been called before this method is invoked. */
-    @SuppressWarnings("unused")
     void preClose(Connection conn) throws SQLException {
         // default is to do nothing
     }
@@ -202,13 +196,14 @@ public abstract class Db {
     }
 
     private static final int DEFAULT_IN_CLAUSE_BATCH_SIZE = 400;
+    
+    protected int getInClauseBatchSize() { return DEFAULT_IN_CLAUSE_BATCH_SIZE; }
 
     /** Returns the maximum number of items to include in an "IN (?, ?, ...)"
      *  clause.  For databases with a broken or hugely nonperformant IN clause,
-     *  e.g. Derby pre-10.3 (see DERBY-47 JIRA), we hardcode the IN clause
-     *  batch size to 1. */
+     *  e.g. Derby pre-10.3 (see DERBY-47 JIRA), this may be 1 */
     public static int getINClauseBatchSize() {
-        return getInstance().supportsCapability(Capability.BROKEN_IN_CLAUSE) ? 1 : DEFAULT_IN_CLAUSE_BATCH_SIZE;
+        return getInstance().getInClauseBatchSize();
     }
 
     /** Generates a SELECT expression representing a BOOLEAN.  For databases
@@ -267,7 +262,6 @@ public abstract class Db {
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";
     }
     
-    @SuppressWarnings("unused")
     public void enableStreaming(Statement stmt)
     throws SQLException {
     }
