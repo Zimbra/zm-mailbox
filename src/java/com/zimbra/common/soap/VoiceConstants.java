@@ -130,6 +130,11 @@ public class VoiceConstants {
     public static final String A_vmPrefUserLocale              = "vmPrefUserLocale";
     public static final String A_vmPrefAnsweringLocale         = "vmPrefAnsweringLocale";
 
+    public static final String A_vmPrefGreetingType            = "vmPrefGreetingType";
+    public static final String A_vmPrefEmailNotifStatus        = "vmPrefEmailNotifStatus";
+    public static final String A_vmPrefPlayTutorial            = "vmPrefPlayTutorial";
+    public static final String A_zimbraPrefVoiceItemsPerPage   = "zimbraPrefVoiceItemsPerPage";
+
     public static final int FID_VOICEMAILINBOX = 1024;
     public static final int FID_MISSEDCALLS = 1025;
     public static final int FID_ANSWEREDCALLS = 1026;
