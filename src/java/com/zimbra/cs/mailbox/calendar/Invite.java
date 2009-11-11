@@ -1386,7 +1386,14 @@ public class Invite {
     private boolean thisAcctIsOrganizer(Account acct) throws ServiceException {
         if (hasOrganizer()) {
             String addr = getOrganizer().getAddress();
-            return AccountUtil.addressMatchesAccount(acct, addr);
+            boolean isOrg = AccountUtil.addressMatchesAccount(acct, addr);
+            if (!isOrg && acct != null) {
+                // bug 41638: Let's also check if address matches zimbraPrefFromAddress.
+                String prefFromAddr = acct.getPrefFromAddress();
+                if (prefFromAddr != null && prefFromAddr.equalsIgnoreCase(addr))
+                    isOrg = true;
+            }
+            return isOrg;
         } else {
             // If there are other attendees, it's an Outlook POP/IMAP bug.  If not,
             // it's a properly formatted single-user event.  See isOrganizer()
