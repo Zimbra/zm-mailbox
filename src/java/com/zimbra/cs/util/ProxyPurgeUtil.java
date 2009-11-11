@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.util;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -22,8 +24,6 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.ParseException;
 import java.util.*;
 import java.io.*;
-import com.danga.MemCached.MemCachedClient;
-import com.danga.MemCached.SockIOPool;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.service.ServiceException;
@@ -37,14 +37,14 @@ public class ProxyPurgeUtil
         CommandLine         commandLine;
         ArrayList<String>   servers;
         ArrayList<String>   accounts;
-        MemCachedClient     mc;
+        ArrayList<ZimbraMemcachedClient> zmcs;
         String              outputformat;
         int                 numServers;
         boolean             purge = false;
         Provisioning        prov;
-        List                memcachedServers;
+        List<Server>        memcachedServers;
         final String        memcachedPort = "11211";
-        String              logLevel = "INFO";
+        String              logLevel = "ERROR";
 
         /* Parse the command-line arguments, and display usage if necessary */
         try {
@@ -61,6 +61,9 @@ public class ProxyPurgeUtil
             System.exit (1);
         }
 
+        if (commandLine.hasOption("v")) { logLevel = "DEBUG"; }
+        ZimbraLog.toolSetupLog4j (logLevel, null, false);
+
         /* Initialize the logging system and the zimbra environment */
         prov = Provisioning.getInstance();
 
@@ -70,11 +73,8 @@ public class ProxyPurgeUtil
         memcachedServers = prov.getAllServers(Provisioning.SERVICE_MEMCACHED);
         servers = new ArrayList <String> ();
 
-        if (commandLine.hasOption("v")) { logLevel = "DEBUG"; }
-        ZimbraLog.toolSetupLog4j (logLevel, null, false);
-
-        for (Iterator it=memcachedServers.iterator(); it.hasNext();) {
-            Server s = (Server) it.next();
+        for (Iterator<Server> it=memcachedServers.iterator(); it.hasNext();) {
+            Server s = it.next();
             String serverName = s.getAttr (Provisioning.A_zimbraServiceHostname, "localhost");
             String servicePort = s.getAttr (Provisioning.A_zimbraMemcachedBindPort, memcachedPort);
             servers.add (serverName + ":" + servicePort);
@@ -96,12 +96,15 @@ public class ProxyPurgeUtil
         /* Assume purge unless `-i' is specified */
         purge = (commandLine.hasOption ("i") == false);
 
-        numServers = initializeMemcachedServers (servers);
+        numServers = servers.size();
 
-        mc = new MemCachedClient ();
-        mc.setCompressEnable (false);
-        mc.setSanitizeKeys (false);
-        mc.setPrimitiveAsString (true);
+        // Connect to all memcached servers.
+        zmcs = new ArrayList<ZimbraMemcachedClient>();
+        for (int i = 0; i < numServers; ++i) {
+            ZimbraMemcachedClient zmc = new ZimbraMemcachedClient();
+            zmc.connect(new String[] { servers.get(i) }, false, null, 0, 5000);
+            zmcs.add(zmc);
+        }
 
         /* parse the format string */
         if (commandLine.hasOption ("o")) {
@@ -116,24 +119,28 @@ public class ProxyPurgeUtil
 
         for (String a: accounts) {
             for (int i = 0; i < numServers; ++i) {
+                ZimbraMemcachedClient zmc = zmcs.get(i);
+                String imapKey = "route:proto=imap;user=" + a;
+                String pop3Key = "route:proto=pop3;user=" + a;
                 if (purge) {
-                    mc.delete ("route:proto=imap;user=" + a, i, new Date(0));
-                    mc.delete ("route:proto=pop3;user=" + a, i, new Date(0));
+                    zmc.remove(imapKey, false);
+                    zmc.remove(pop3Key, false);
                 } else {
                     Formatter pop3f, imapf;
+                    String server = servers.get(i);
 
                     imapf = new Formatter ();
-                    imapf.format (outputformat, servers.get(i), 
-                        "route:proto=imap;user=" + a,
-                        mc.get ("route:proto=imap;user=" + a, i));
+                    imapf.format (outputformat, server, imapKey, zmc.get(imapKey));
                     System.out.println (imapf.toString ());
                     pop3f = new Formatter ();
-                    pop3f.format (outputformat, servers.get(i), 
-                        "route:proto=pop3;user=" + a,
-                        mc.get ("route:proto=pop3;user=" + a, i));
+                    pop3f.format (outputformat, server, pop3Key, zmc.get(pop3Key));
                     System.out.println (pop3f.toString ());
                 }
             }
+        }
+
+        for (ZimbraMemcachedClient zmc : zmcs) {
+            zmc.disconnect(ZimbraMemcachedClient.DEFAULT_TIMEOUT);
         }
     }
 
@@ -208,25 +215,6 @@ public class ProxyPurgeUtil
         }
 
         return servers;
-    }
-
-    /** Initialize memcache servers
-        @param  servers     An ArrayList containing the memcache servers to be initialized
-                            Each element in the array is a string representing a server
-        @return The number of servers initialized
-        @see    http://www.whalin.com/memcached/
-     */
-    static int initializeMemcachedServers (ArrayList<String> servers)
-    {
-        SockIOPool  pool = SockIOPool.getInstance ();
-        String[]    servernames = new String [servers.size()];
-
-        servernames = servers.toArray (servernames);
-
-        pool.setServers (servernames);
-        pool.initialize ();
-
-        return pool.getServers().length;
     }
 
     /** Parse command line arguments
