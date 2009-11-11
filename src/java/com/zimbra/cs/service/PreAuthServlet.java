@@ -142,7 +142,8 @@ public class PreAuthServlet extends ZimbraServlet {
                 if (admin) {
                     boolean isDomainAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
                     boolean isAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
-                    boolean ok = (isDomainAdminAccount || isAdminAccount);
+                    boolean isDelegatedAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false);
+                    boolean ok = (isDomainAdminAccount || isAdminAccount || isDelegatedAdminAccount);
                     if (!ok)
                         throw ServiceException.PERM_DENIED("not an admin account");
                 }

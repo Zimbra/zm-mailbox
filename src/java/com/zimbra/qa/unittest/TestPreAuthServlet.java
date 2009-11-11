@@ -32,6 +32,7 @@ import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
 
 import junit.framework.TestCase;
@@ -49,7 +50,7 @@ public class TestPreAuthServlet extends TestCase {
         return preAuthKey;
     }
     
-    String genPreAuthUrl(String preAuthKey, String user, boolean shouldFail) throws Exception {
+    String genPreAuthUrl(String preAuthKey, String user, boolean admin, boolean shouldFail) throws Exception {
         
         HashMap<String,String> params = new HashMap<String,String>();
         String acctName = TestUtil.getAddress(user);
@@ -61,6 +62,10 @@ public class TestPreAuthServlet extends TestCase {
         params.put("by", authBy);
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
+        
+        if (admin)
+            params.put("admin", "1");
+        
         String preAuth = PreAuthKey.computePreAuth(params, preAuthKey);
         
         StringBuffer url = new StringBuffer("/service/preauth?");
@@ -77,12 +82,22 @@ public class TestPreAuthServlet extends TestCase {
         url.append("&expires=" + expires);
         url.append("&preauth=" + preAuth);
         
+        if (admin)
+            url.append("&admin=1");
+        
         return url.toString();
     }
     
-    void doPreAuthServletRequest(String preAuthUrl) throws Exception{
-        int port = port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        String url = "http://localhost:" + port + preAuthUrl;
+    void doPreAuthServletRequest(String preAuthUrl, boolean admin) throws Exception{
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        
+        String protoHostPort;
+        if (admin)
+            protoHostPort = "https://localhost:" + localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        else
+            protoHostPort = "http://localhost:" + localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        
+        String url = protoHostPort + preAuthUrl;
         
         HttpClient client = new HttpClient();
         HttpMethod method = new GetMethod(url);
@@ -117,18 +132,22 @@ public class TestPreAuthServlet extends TestCase {
         }
     }
     
-    private void doPreAuth(String userLocalPart, boolean shouldFail) throws Exception {
+    private void doPreAuth(String userLocalPart, boolean admin, boolean shouldFail) throws Exception {
         String preAuthKey = setUpDomain();
-        String preAuthUrl = genPreAuthUrl(preAuthKey, userLocalPart, shouldFail);
+        
+        String preAuthUrl = genPreAuthUrl(preAuthKey, userLocalPart, admin, shouldFail);
         
         System.out.println("preAuthKey=" + preAuthKey);
         System.out.println("preAuth=" + preAuthUrl);
         
-        doPreAuthServletRequest(preAuthUrl);
+        doPreAuthServletRequest(preAuthUrl, admin);
     }
     
-    public void disable_testPreAuthServlet() throws Exception {
-        doPreAuth("user1", false);
+    public void testPreAuthServlet() throws Exception {
+        doPreAuth("user1", false, false);
+        
+        // zmprov ca da@phoebe.mac test123 zimbraIsDelegatedAdminAccount TRUE
+        doPreAuth("da", true, false);
     }
     
     private Account dumpLockoutAttrs(String user) throws Exception {
@@ -146,7 +165,7 @@ public class TestPreAuthServlet extends TestCase {
         return acct;
     }
     
-    public void testPreAuthLockout() throws Exception {
+    public void disable_testPreAuthLockout() throws Exception {
         String user = "user4";
         Account acct = TestUtil.getAccount(user);
         
@@ -179,7 +198,7 @@ public class TestPreAuthServlet extends TestCase {
             System.out.println("======================");
             System.out.println("Iteration: " + i);
             
-            doPreAuth(user, true);
+            doPreAuth(user, false, true);
             Account a = dumpLockoutAttrs(user);
             System.out.println("\n\n");
             
