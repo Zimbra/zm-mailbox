@@ -33,16 +33,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("serial")
-public class ZimletResources
-        extends DiskCacheServlet {
+public class ZimletResources extends DiskCacheServlet {
 
     //
     // Constants
     //
-
-	public static final String RESOURCE_PATH = "/res/";
-	
     private static final String COMPRESSED_EXT = ".zgz";
+    public static final String RESOURCE_PATH = "/res/";
 
     private static final String P_DEBUG = "debug";
 
@@ -62,13 +59,9 @@ public class ZimletResources
         TYPES.put("plain", "text/plain");
     }
 
-	//
-	// Constants
-	//
-
-	public ZimletResources() {
-		super("zimletres");
-	}
+    public ZimletResources() {
+        super("zimletres");
+    }
 
     //
     // HttpServlet methods
@@ -88,8 +81,8 @@ public class ZimletResources
         String pathInfo = req.getPathInfo();
         
         if (pathInfo == null) {
-    		resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    		return;
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
         }
         
         @SuppressWarnings("unchecked")
@@ -117,10 +110,10 @@ public class ZimletResources
         }
 
         // generate buffer
-		String text = null;
         File file = !debug ? getCacheFile(cacheId) : null;
+        String text = null;
+        
         if (file == null || !file.exists()) {
-            
             StringWriter writer = new StringWriter();
             PrintWriter printer = new PrintWriter(writer);
 
@@ -135,10 +128,10 @@ public class ZimletResources
                 ServletConfig config = this.getServletConfig();
                 ServletContext baseContext = config.getServletContext();
                 ServletContext clientContext = baseContext.getContext(mailUrl);
-                RequestDispatcher dispatcher = clientContext.getRequestDispatcher("/res/");
+                RequestDispatcher dispatcher = clientContext.getRequestDispatcher(RESOURCE_PATH);
 
                 for (String zimletName : zimletNames) {
-                    HttpServletRequest wrappedReq = new RequestWrapper(req, "/res/" + zimletName);
+                    HttpServletRequest wrappedReq = new RequestWrapper(req, RESOURCE_PATH + zimletName);
                     HttpServletResponse wrappedResp = new ResponseWrapper(resp, printer);
                     dispatcher.include(wrappedReq, wrappedResp);
                 }
@@ -160,10 +153,11 @@ public class ZimletResources
             if (type.equals(T_JAVASCRIPT) && !debug) {
                 // compress JS code
 				text = text.replaceAll("(^|\n)\\s*DBG\\.\\w+\\(.*\\);\\s*(\n|$)", "\n");
-                JavaScriptCompressor compressor = new JavaScriptCompressor(new StringReader(text), new ErrorReporter() {
+                JavaScriptCompressor compressor = new JavaScriptCompressor(
+                    new StringReader(text), new ErrorReporter() {
 
                     public void warning(String message, String sourceName,
-                                        int line, String lineSource, int lineOffset) {
+                        int line, String lineSource, int lineOffset) {
                         if (line < 0) {
                             ZimbraLog.zimlet.warn("\n" + message);
                         } else {
@@ -172,7 +166,7 @@ public class ZimletResources
                     }
 
                     public void error(String message, String sourceName,
-                                      int line, String lineSource, int lineOffset) {
+                        int line, String lineSource, int lineOffset) {
                         if (line < 0) {
                             ZimbraLog.zimlet.error("\n" + message);
                         } else {
@@ -180,8 +174,8 @@ public class ZimletResources
                         }
                     }
 
-                    public EvaluatorException runtimeError(String message, String sourceName,
-                                                           int line, String lineSource, int lineOffset) {
+                    public EvaluatorException runtimeError(String message,
+                        String sourceName, int line, String lineSource, int lineOffset) {
                         error(message, sourceName, line, lineSource, lineOffset);
                         return new EvaluatorException(message);
                     }
@@ -190,7 +184,7 @@ public class ZimletResources
                 compressor.compress(out, 0, true, false, false, false);
                 String mintext = out.toString();
                 if (mintext == null) {
-                    ZimbraLog.zimlet.debug("unable to minimize zimlet JS source");
+                    ZimbraLog.zimlet.info("unable to minimize zimlet JS source");
                 } else {
                     text = mintext;
                 }
@@ -198,11 +192,12 @@ public class ZimletResources
 
             // store buffer
             if (!debug) {
-				file = File.createTempFile("res-", "."+type, getCacheDir());
-				if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: "+file);
-				copy(text, file);
-				if (LC.zimbra_web_generate_gzip.booleanValue())
-				compress(file);
+                file = File.createTempFile("res-", "." + type, getCacheDir());
+                if (ZimbraLog.zimlet.isDebugEnabled())
+                    ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
+                copy(text, file);
+                if (LC.zimbra_web_generate_gzip.booleanValue())
+                    compress(file);
                 putCacheFile(cacheId, file);
             }
         } else {
@@ -210,35 +205,41 @@ public class ZimletResources
         }
 
         // write buffer
-		boolean compress = !debug && uri.endsWith(COMPRESSED_EXT);
+        boolean compress = !debug && uri.endsWith(COMPRESSED_EXT);
         try {
             // We browser sniff so need to make sure any caches do the same.
             resp.addHeader("Vary", "User-Agent");
+            if (file == null || req.getProtocol().endsWith("1.0")) {
+                // Bug 20626: We're no longer caching zimlets
+                // Set to expire far in the past.
+                resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
+                // Set standard HTTP/1.1 no-cache headers.
+                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+                // Set standard HTTP/1.0 no-cache header.
+                resp.setHeader("Pragma", "no-cache");
 
-            // Bug 20626: We're no longer caching zimlets
-            // Set to expire far in the past.
-            resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
-            // Set standard HTTP/1.1 no-cache headers.
-            resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-            // Set standard HTTP/1.0 no-cache header.
-            resp.setHeader("Pragma", "no-cache");
-
+            } else {
+                // force cache revalidation but allow client cache
+                resp.setHeader("Cache-Control", "must-revalidate, max-age=0");
+                if (file.lastModified() <= req.getDateHeader("If-Modified-Since")) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                    return;
+                }
+                resp.setDateHeader("Last-Modified", file.lastModified());
+            }
             resp.setContentType(contentType);
-            resp.setContentLength(file != null ? (int)file.length() : text.getBytes("UTF-8").length);
-        }
-        catch (IllegalStateException e) {
+            resp.setContentLength(file != null ? (int)file.length() :
+                text.getBytes("UTF-8").length);
+        } catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
             ZimbraLog.zimlet.debug("zimletres: " + cacheId);
             ZimbraLog.zimlet.debug("zimletres: " + e.getMessage());
         }
-
-		// write buffer
-		if (file != null) {
-			copy(file, resp, compress);
-		}
-		else {
-			copy(text, resp, compress);
-		}
+        if (file != null) {
+            copy(file, resp, compress);
+        } else {
+            copy(text, resp, compress);
+        }
 
     } // doGet(HttpServletRequest,HttpServletResponse)
 
@@ -248,8 +249,9 @@ public class ZimletResources
 
     private static MimetypesFileTypeMap sFileTypeMap = new MimetypesFileTypeMap();
     
-	@SuppressWarnings("unused")
-    private void printFile(HttpServletResponse resp, String zimletName, String file) throws IOException, ZimletException {
+    @SuppressWarnings("unused")
+    private void printFile(HttpServletResponse resp, String zimletName,
+        String file) throws IOException, ZimletException {
     	ZimletFile zf = ZimletUtil.getZimlet(zimletName);
     	if (zf == null) {
             ZimbraLog.zimlet.warn("zimlet file not found for: %s", zimletName);
@@ -258,7 +260,8 @@ public class ZimletResources
     	}
     	ZimletFile.ZimletEntry entry = zf.getEntry(file);
     	if (entry == null) {
-            ZimbraLog.zimlet.warn("requested file not found for zimlet: %s (%s)", zimletName, file);
+            ZimbraLog.zimlet.warn("requested file not found for zimlet: %s (%s)",
+                zimletName, file);
     		resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     		return;
     	}
@@ -278,56 +281,55 @@ public class ZimletResources
     	ByteUtil.copy(entry.getContentStream(), true, resp.getOutputStream(), false);
     }
     
-	private void generate(Set<String> zimletNames, String type, PrintWriter out) throws IOException {
+    private void generate(Set<String> zimletNames, String type, PrintWriter out)
+        throws IOException {
         boolean isCSS = type.equals(T_CSS);
-
         String commentStart = "/* ";
         String commentContinue = " * ";
         String commentEnd = " */";
 
         // create data buffers
         for (String zimlet : zimletNames) {
-        	ZimletFile file = ZimletUtil.getZimlet(zimlet);
-        	if (file == null) {
-                ZimbraLog.zimlet.warn("error loading " + zimlet + ": zimlet not found ");
+            ZimletFile file = ZimletUtil.getZimlet(zimlet);
+            if (file == null) {
+                ZimbraLog.zimlet.warn("error loading " + zimlet
+                    + ": zimlet not found ");
                 continue;
-        	}
-
-        	try {
-            	String[] files = isCSS ? 
-            			file.getZimletDescription().getStyleSheets() :
-            			file.getZimletDescription().getScripts();
-        		for (String f : files) {
+            }
+            try {
+                String[] files = isCSS ? file.getZimletDescription().getStyleSheets() :
+                    file.getZimletDescription().getScripts();
+                for (String f : files) {
                     // only add local files to list
                     if (RE_REMOTE.matcher(f).matches()) {
                         continue;
                     }
                     ZimletFile.ZimletEntry entry = file.getEntry(f);
                     if (entry == null)
-                    	continue;
-                    
+                        continue;
+
                     out.println(commentStart);
                     out.print(commentContinue);
                     out.print("Zimlet: " + zimlet + "File: " + f);
                     out.println(commentEnd);
                     out.println();
-                    
-            		printFile(out, new BufferedReader(new InputStreamReader(entry.getContentStream())), zimlet, isCSS);
+
+                    printFile(out, new BufferedReader(new InputStreamReader(
+                        entry.getContentStream())), zimlet, isCSS);
                     out.println();
-        		}
-        	} catch (ZimletException e) {
+                }
+            } catch (ZimletException e) {
                 ZimbraLog.zimlet.error("error loading " + zimlet + ": ", e);
                 continue;
-        	}
+            }
         }
         out.flush();
-
     }
 
     private void printFile(PrintWriter out, BufferedReader in,
-                           String zimletName, boolean isCSS)
-            throws IOException {
+        String zimletName, boolean isCSS) throws IOException {
         String line;
+        
         while ((line = in.readLine()) != null) {
             if (isCSS) {
                 Matcher url = RE_CSS_URL.matcher(line);
@@ -338,16 +340,16 @@ public class ZimletResources
                         if (start > offset) {
                             out.print(line.substring(offset, start));
                         }
-
                         out.print(url.group(1));
 
                         String s = url.group(2);
                         Matcher remote = RE_REMOTE.matcher(s);
+                        
                         if (!remote.find()) {
-                            out.print(ZimletUtil.ZIMLET_BASE + "/" + zimletName + "/");
+                            out.print(ZimletUtil.ZIMLET_BASE + "/" +
+                                zimletName + "/");
                         }
                         out.print(s);
-
                         offset = url.end();
                     } while (url.find());
                     if (offset < line.length()) {
@@ -375,24 +377,25 @@ public class ZimletResources
         return contentType != null ? contentType : TYPES.get(T_PLAIN);
     }
 
-	private String getCacheId(HttpServletRequest req, String type, Set<String> zimletNames) {
+    private String getCacheId(HttpServletRequest req, String type,
+        Set<String> zimletNames) {
         StringBuilder str = new StringBuilder();
+
         str.append(getLocale(req).toString());
         str.append(":");
         str.append(type);
-		if (req.getRequestURI().endsWith(COMPRESSED_EXT)) {
-			str.append(COMPRESSED_EXT);
-		}
+        if (req.getRequestURI().endsWith(COMPRESSED_EXT)) {
+            str.append(COMPRESSED_EXT);
+        }
         str.append(":");
 
-		Iterator<String> iter = zimletNames.iterator();
+        Iterator<String> iter = zimletNames.iterator();
         for (int i = 0; iter.hasNext(); i++) {
             if (i > 0) {
                 str.append(",");
             }
             str.append(iter.next());
         }
-
         return str.toString();
     }
 
