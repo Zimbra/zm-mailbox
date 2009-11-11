@@ -200,8 +200,8 @@ public class ZimletResources
             if (!debug) {
 				file = File.createTempFile("res-", "."+type, getCacheDir());
 				if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: "+file);
-                                if (LC.zimbra_web_generate_gzip.booleanValue())
 				copy(text, file);
+				if (LC.zimbra_web_generate_gzip.booleanValue())
 				compress(file);
                 putCacheFile(cacheId, file);
             }
