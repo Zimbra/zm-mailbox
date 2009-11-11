@@ -33,8 +33,8 @@ public class ZVoiceMailPrefs extends ZCallFeature {
     }
 
     public String getEmailNotificationAddress() {
-	String address = this.get(VoiceConstants.A_vmPrefEmailNotifAddress);
-	return address == null ? "" : address;
+        String address = this.get(VoiceConstants.A_vmPrefEmailNotifAddress);
+        return address == null ? "" : address;
     }
 
     public void setEmailNotificationAddress(String address) {
@@ -42,67 +42,98 @@ public class ZVoiceMailPrefs extends ZCallFeature {
     }
 
     public boolean getPlayDateAndTimeInMsgEnv() {
-	return this.getBoolean(VoiceConstants.A_vmPrefPlayDateAndTimeInMsgEnv);
+        return this.getBoolean(VoiceConstants.A_vmPrefPlayDateAndTimeInMsgEnv);
     }
     
     public void setPlayDateAndTimeInMsgEnv(boolean value) {
-	mMap.put(VoiceConstants.A_vmPrefPlayDateAndTimeInMsgEnv, value ? "true":"false");
+        mMap.put(VoiceConstants.A_vmPrefPlayDateAndTimeInMsgEnv, value ? "true":"false");
     }
     
     public boolean getAutoPlayNewMsgs() {
-	return this.getBoolean(VoiceConstants.A_vmPrefAutoPlayNewMsgs);
+        return this.getBoolean(VoiceConstants.A_vmPrefAutoPlayNewMsgs);
     }
     
     public void setAutoPlayNewMsgs(boolean value) {
-	mMap.put(VoiceConstants.A_vmPrefAutoPlayNewMsgs, value ? "true":"false");
+        mMap.put(VoiceConstants.A_vmPrefAutoPlayNewMsgs, value ? "true":"false");
     }
     
     public String getPromptLevel() {
-	return this.get(VoiceConstants.A_vmPrefPromptLevel);
+        return this.get(VoiceConstants.A_vmPrefPromptLevel);
     }
     
     public void setPromptLevel(String level) {
-	if (level.equals("RAPID") || level.equals("STANDARD") || level.equals("EXTENDED"))
-	    mMap.put(VoiceConstants.A_vmPrefPromptLevel, level);
+        if (level.equals("RAPID") || level.equals("STANDARD") || level.equals("EXTENDED"))
+            mMap.put(VoiceConstants.A_vmPrefPromptLevel, level);
     }
     
     public boolean getPlayCallerNameInMsgEnv() {
-	return this.getBoolean(VoiceConstants.A_vmPrefPlayCallerNameInMsgEnv);
+        return this.getBoolean(VoiceConstants.A_vmPrefPlayCallerNameInMsgEnv);
     }
     
     public void setPlayCallerNameInMsgEnv(boolean value) {
-	mMap.put(VoiceConstants.A_vmPrefPlayCallerNameInMsgEnv, value ? "true":"false");
+        mMap.put(VoiceConstants.A_vmPrefPlayCallerNameInMsgEnv, value ? "true":"false");
     }
     
     public boolean getSkipPinEntry() {
-	return this.getBoolean(VoiceConstants.A_vmPrefSkipPinEntry);
+        return this.getBoolean(VoiceConstants.A_vmPrefSkipPinEntry);
     }
     
     public void setSkipPinEntry(boolean value) {
-	mMap.put(VoiceConstants.A_vmPrefSkipPinEntry, value ? "true":"false");
+        mMap.put(VoiceConstants.A_vmPrefSkipPinEntry, value ? "true":"false");
     }
     
     public String getUserLocale() {
-	return this.get(VoiceConstants.A_vmPrefUserLocale);
+        return this.get(VoiceConstants.A_vmPrefUserLocale);
     }
     
     public void setUserLocale(String locale) {
-	mMap.put(VoiceConstants.A_vmPrefUserLocale, locale);
+        mMap.put(VoiceConstants.A_vmPrefUserLocale, locale);
     }
     
     public String getAnsweringLocale() {
-	return this.get(VoiceConstants.A_vmPrefAnsweringLocale);
+        return this.get(VoiceConstants.A_vmPrefAnsweringLocale);
     }
     
     public void setAnsweringLocale(String locale) {
-	mMap.put(VoiceConstants.A_vmPrefAnsweringLocale, locale);
+        mMap.put(VoiceConstants.A_vmPrefAnsweringLocale, locale);
+    }
+
+    public String getGreetingType() {
+        return this.get(VoiceConstants.A_vmPrefGreetingType);
+    }
+
+    public void setGreetingType(String type) {
+        mMap.put(VoiceConstants.A_vmPrefGreetingType, type);
+    }
+
+    public boolean getEmailNotifStatus() {
+        return this.getBoolean(VoiceConstants.A_vmPrefEmailNotifStatus);
+    }
+    
+    public void setEmailNotifStatus(boolean value) {
+        mMap.put(VoiceConstants.A_vmPrefEmailNotifStatus, value ? "true":"false");
+    }
+
+    public boolean getPlayTutorial() {
+        return this.getBoolean(VoiceConstants.A_vmPrefPlayTutorial);
+    }
+    
+    public void setPlayTutorial(boolean value) {
+        mMap.put(VoiceConstants.A_vmPrefPlayTutorial, value ? "true":"false");
+    }
+
+    public int getVoiceItemsPerPage() {
+        return this.getInt(VoiceConstants.A_zimbraPrefVoiceItemsPerPage);
+    }
+    
+    public void setVoiceItemsPerPage(int value) {
+        mMap.put(VoiceConstants.A_zimbraPrefVoiceItemsPerPage, Integer.toString(value));
     }
     
 
     public String get(String key) {
         return mMap.get(key);
     }
-    
 
     public long getLong(String name) {
 	String v = get(name);
@@ -111,6 +142,15 @@ public class ZVoiceMailPrefs extends ZCallFeature {
 	} catch (NumberFormatException e) {
 		return -1;
 	}
+    }
+
+    public int getInt(String name) {
+        String v = get(name);
+        try {
+            return v == null ? -1 : Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
     
     public boolean getBoolean(String name) {
