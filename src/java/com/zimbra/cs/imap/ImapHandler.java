@@ -1658,7 +1658,7 @@ abstract class ImapHandler extends ProtocolHandler {
                     continue;
 
                 // make sure we can do a  LIST "" "/home/user1"
-                if (owner != null && (ImapPath.NAMESPACE_PREFIX + owner).toUpperCase().equals(resolvedPath)) {
+                if (owner != null && (ImapPath.NAMESPACE_PREFIX + owner).equalsIgnoreCase(resolvedPath)) {
                     matches.put(patternPath, "LIST (\\NoSelect) \"/\" " + patternPath.asUtf7String());
                     continue;
                 }
