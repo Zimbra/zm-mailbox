@@ -15,8 +15,8 @@
 
 package com.zimbra.cs.mime;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,10 +29,11 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 
+import net.freeutils.tnef.RawInputStream;
 import net.freeutils.tnef.TNEFInputStream;
 import net.freeutils.tnef.TNEFUtils;
 import net.freeutils.tnef.mime.TNEFMime;
@@ -165,20 +166,31 @@ public class TnefConverter extends MimeVisitor {
         if (!TNEFUtils.isTNEFMimeType(bp.getContentType()))
             return null;
 
-        MimeMessage converted = null;
-        
         // convert TNEF to a MimeMessage and remove it from the parent
-        InputStream is = null;
+        MimeMessage converted = null;
+        File tmpfile = null;
+        RawInputStream rawis = null;
+        TNEFInputStream tnefis = null;
         try {
-            TNEFInputStream tnefis = new TNEFInputStream(is = bp.getInputStream());
+            tmpfile = File.createTempFile("expand", ".tnef",
+                new File(LC.zimbra_tmp_directory.value()));
+            bp.saveFile(tmpfile);
+            rawis = new RawInputStream(tmpfile);
+            tnefis = new TNEFInputStream(rawis);
             converted = TNEFMime.convert(JMSession.getSession(), tnefis);
         } catch (OutOfMemoryError e) {
             Zimbra.halt("Ran out of memory while expanding TNEF attachment", e);
         } catch (Throwable t) {
-            ZimbraLog.extensions.warn("Conversion failed.  TNEF attachment will not be expanded.", t);
+            ZimbraLog.extensions.warn("TNEF attachment expansion failed: " +
+                t.getLocalizedMessage());
             return null;
         } finally {
-            ByteUtil.closeStream(is);
+            if (tnefis != null)
+                tnefis.close();
+            if (rawis != null)
+                rawis.close();
+            if (tmpfile != null)
+                tmpfile.delete();
         }
 
         MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
