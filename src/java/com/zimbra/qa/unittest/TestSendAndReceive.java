@@ -17,6 +17,7 @@ package com.zimbra.qa.unittest;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -25,15 +26,21 @@ import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 
 public class TestSendAndReceive extends TestCase {
 
@@ -185,6 +192,58 @@ public class TestSendAndReceive extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+    }
+    
+    /**
+     * Confirms that we can forward attachments with a malformed content type (bug 42452).
+     */
+    public void testMalformedContentType()
+    throws Exception {
+        // Generate original message.
+        String subject = NAME_PREFIX + " testMalformedContentType";
+        MessageBuilder builder = new MessageBuilder().withSender(USER_NAME).withRecipient(USER_NAME)
+            .withSubject(subject).withAttachment("This is an attachment", "test.txt", MimeConstants.CT_TEXT_PLAIN);
+        
+        // Hack Content-Type so that it's invalid.
+        BufferedReader reader = new BufferedReader(new StringReader(builder.create()));
+        StringBuilder msgBuf = new StringBuilder();
+        String line = reader.readLine();
+        boolean replaced = false;
+        while (line != null) {
+            if (line.matches("Content-Type.*test.txt.*")) {
+                line = line.replace("Content-Type: text/plain;", "Content-Type: text/plain;;");
+                assertTrue("Unexpected line: " + line, line.contains(";;"));
+                replaced = true;
+            }
+            msgBuf.append(line).append("\r\n");
+            line = reader.readLine();
+        }
+        assertTrue("Could not find text/plain attachment.", replaced);
+        
+        // Add message to the mailbox.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, msgBuf.toString());
+        
+        // Forward the attachment in a new message.
+        ZMessage srcMsg = TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
+        ZMimePart srcAttachPart = srcMsg.getMimeStructure().getChildren().get(1);
+        assertEquals("test.txt", srcAttachPart.getFileName());
+        
+        ZOutgoingMessage outgoing = new ZOutgoingMessage();
+        outgoing.setMessagePart(new MessagePart(MimeConstants.CT_TEXT_PLAIN, "Forwarding attachment."));
+        outgoing.setMessagePartsToAttach(Arrays.asList(new AttachedMessagePart(srcMsg.getId(), srcAttachPart.getPartName(), null)));
+        String address = TestUtil.getAddress(USER_NAME);
+        ZEmailAddress sender = new ZEmailAddress(address, null, null, ZEmailAddress.EMAIL_TYPE_FROM);
+        ZEmailAddress recipient = new ZEmailAddress(address, null, null, ZEmailAddress.EMAIL_TYPE_TO);
+        outgoing.setAddresses(Arrays.asList(sender, recipient));
+        String fwdSubject = NAME_PREFIX + " testMalformedContentType forward";
+        outgoing.setSubject(fwdSubject);
+        mbox.sendMessage(outgoing, null, false);
+        
+        // Make sure the forwarded message arrives.
+        ZMessage fwd = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + fwdSubject + "\"");
+        ZMimePart fwdAttachPart = fwd.getMimeStructure().getChildren().get(1);
+        assertEquals("test.txt", fwdAttachPart.getFileName());
     }
     
     public void tearDown()

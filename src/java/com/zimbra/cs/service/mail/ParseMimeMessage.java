@@ -42,6 +42,7 @@ import javax.mail.internet.MimePart;
 
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -762,11 +763,21 @@ public class ParseMimeMessage {
         ctxt.incrementSize("part " + filename, mp.getSize());
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(mp.getDataHandler());
 
         String ctype = mp.getContentType();
-        if (ctype != null)
-            mbp.setHeader("Content-Type", new ContentType(ctype, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).toString());
+        if (ctype != null) {
+            // Clean up the content type and pass it to the new MimeBodyPart via DataSourceWrapper.
+            // If we don't do this, JavaMail ignores the Content-Type header.  See bug 42452,
+            // JavaMail bug 1650154.
+            String contentType = new ContentType(ctype, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).toString();
+            DataHandler originalHandler = mp.getDataHandler();
+            DataSourceWrapper wrapper = new DataSourceWrapper(originalHandler.getDataSource());
+            wrapper.setContentType(contentType);
+            mbp.setDataHandler(new DataHandler(wrapper));
+            mbp.setHeader("Content-Type", contentType);
+        } else {
+            mbp.setDataHandler(mp.getDataHandler());
+        }
 
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
 
