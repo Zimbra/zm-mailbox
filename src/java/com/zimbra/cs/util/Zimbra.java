@@ -172,7 +172,8 @@ public class Zimbra {
         Provisioning prov = Provisioning.getInstance();
         if (prov instanceof LdapProvisioning) {
             ZimbraLdapContext.waitForServer();
-            AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)prov);
+            if (forMailboxd)
+                AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)prov);
         }
         
         try {

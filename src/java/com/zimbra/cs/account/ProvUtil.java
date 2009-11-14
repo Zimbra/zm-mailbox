@@ -134,7 +134,6 @@ public class ProvUtil implements HttpDebugListener {
     private String mServer = LC.zimbra_zmprov_default_soap_server.value();
     private int mPort = LC.zimbra_admin_service_port.intValue();
     private Command mCommand;
-    
     private Map<String,Command> mCommandIndex;
     private Provisioning mProv;
     private BufferedReader mReader;
@@ -382,7 +381,7 @@ public class ProvUtil implements HttpDebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{domain}", Category.CONFIG, 1, 1),
-        DESCRIBE("describe", "desc", "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE),
+        DESCRIBE("describe", "desc", "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE, null, null, true),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|license|account|config|cos|domain|group|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name|id|foreignPrincipal} {by} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
@@ -486,6 +485,7 @@ public class ProvUtil implements HttpDebugListener {
         private int mMinArgLength = 0;
         private int mMaxArgLength = Integer.MAX_VALUE;
         private Via mVia;
+        private boolean mNeedsSchemaExtension = false;
         
         public static enum Via {
             soap, ldap;
@@ -502,7 +502,10 @@ public class ProvUtil implements HttpDebugListener {
             return len >= mMinArgLength && len <= mMaxArgLength;
         }
         public Via getVia() { return mVia; }
-
+        public boolean needsSchemaExtension() {
+            return mNeedsSchemaExtension || (mCat == Category.RIGHT);
+        }
+        
         private Command(String name, String alias) {
             mName = name;
             mAlias = alias;
@@ -534,7 +537,8 @@ public class ProvUtil implements HttpDebugListener {
             mVia = via;
         }
         
-        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, Via via, CommandHelp extraHelp)  {
+        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, 
+                Via via, CommandHelp extraHelp)  {
             mName = name;
             mAlias = alias;
             mHelp = help;
@@ -545,6 +549,11 @@ public class ProvUtil implements HttpDebugListener {
             mExtraHelp = extraHelp;
         }
         
+        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, 
+                Via via, CommandHelp extraHelp, boolean needsSchemaExtension)  {
+            this(name, alias, help, cat, minArgLength, maxArgLength, via, extraHelp);
+            mNeedsSchemaExtension = needsSchemaExtension;
+        }
     }
     
     private void addCommand(Command command) {
@@ -571,11 +580,19 @@ public class ProvUtil implements HttpDebugListener {
         return mCommandIndex.get(command.toLowerCase());
     }
     
-    private boolean needsAuth(Command command) {
+    /*
+     * Commands that should always use LdapProvisioning, but for convenience  
+     * don't require the -l option specified.
+     * 
+     * Commands that must use -l (e.g. gaa) are indicated in the Via field of the command definition 
+     * or in the command handler.
+     * TODO: clean up all the validating in individual command handlers and use the Via mecheniam.
+     */
+    private boolean forceLdapButDontRequireUseLdapOption(Command command) {
         if (command == Command.HELP || command == Command.DESCRIBE)
-            return false;
-        else
             return true;
+        else
+            return false;
     }
 
     private ProvUtil() {
@@ -587,10 +604,6 @@ public class ProvUtil implements HttpDebugListener {
             mProv = Provisioning.getInstance();
             if (mUseLdapMaster)
                 ZimbraLdapContext.forceMasterURL();
-            
-            if (mProv instanceof LdapProvisioning)
-                AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)mProv);
-            
         } else {
             SoapProvisioning sp = new SoapProvisioning();            
             sp.soapSetURI(LC.zimbra_admin_service_scheme.value()+mServer+":"+mPort+AdminConstants.ADMIN_SERVICE_URI);
@@ -603,6 +616,7 @@ public class ProvUtil implements HttpDebugListener {
                 sp.soapAdminAuthenticate(mAuthToken);
             else    
                 sp.soapZimbraAdminAuthenticate();
+
             mProv = sp;            
         }
     }
@@ -640,6 +654,10 @@ public class ProvUtil implements HttpDebugListener {
         if (!mCommand.checkArgsLength(args)) {
             usage();
             return true;
+        }
+        
+        if (mCommand.needsSchemaExtension()) {
+            loadLdapSchemaExtensionAttrs();
         }
         
         switch(mCommand) {
@@ -2775,7 +2793,6 @@ public class ProvUtil implements HttpDebugListener {
         args = cl.getArgs();
         
         try {
-            
             if (args.length < 1) {
                 pu.initProvisioning();
                 InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;
@@ -2784,8 +2801,10 @@ public class ProvUtil implements HttpDebugListener {
                 Command cmd = pu.lookupCommand(args[0]);
                 if (cmd == null)
                     pu.usage();
-                if (pu.needsAuth(cmd))
-                    pu.initProvisioning();
+                
+                if (pu.forceLdapButDontRequireUseLdapOption(cmd))
+                    pu.setUseLdap(true, false);
+                pu.initProvisioning();
                 
                 try {
                     if (!pu.execute(args))
@@ -4062,6 +4081,11 @@ public class ProvUtil implements HttpDebugListener {
     
     void throwLdapOnly() throws ServiceException {
         throw ServiceException.INVALID_REQUEST(ERR_VIA_LDAP_ONLY, null);
+    }
+    
+    private void loadLdapSchemaExtensionAttrs() {
+        if (mProv instanceof LdapProvisioning)
+            AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)mProv);
     }
 
 }
