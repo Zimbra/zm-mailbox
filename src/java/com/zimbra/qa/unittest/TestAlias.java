@@ -983,6 +983,75 @@ public class TestAlias extends TestCase {
         assertTrue(good);
     }
     
+    /*
+     * To repro:
+     *    - create two domains
+     *      zmporv -l cd main.com
+     *      zmporv -l cd other.com
+     *      
+     *    - create an account in teh main domain
+     *      zmprov -l ca junk@main.com test123
+     *      
+     *    - add two aliases to the account, one in the same domain, ther other in the other domain
+     *      zmprov -l aaa junk@main.com phoebe@main.com  (this is required to repro)
+     *      zmprov -l aaa junk@main.com phoebe@other.com (can be skipped - A)
+     *      
+     *    - remove the alias in the other domain
+     *      zmprov -l raa junk@main.com phoebe@other.com (can be skipped if A is skipped) 
+     *      
+     *    - now, rename the account to the alias just removed
+     *      zmprov -v -l ra junk@main.com phoebe@other.com 
+[] WARN: unable to move alias from uid=phoebe,ou=people,dc=main,dc=com to uid=phoebe,ou=people,dc=other,dc=com
+javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exists]; remaining name 'uid=phoebe,ou=people,dc=main,dc=com'
+        at com.sun.jndi.ldap.LdapCtx.mapErrorCode(LdapCtx.java:3012)
+        at com.sun.jndi.ldap.LdapCtx.processReturnCode(LdapCtx.java:2963)
+        at com.sun.jndi.ldap.LdapCtx.processReturnCode(LdapCtx.java:2769)
+        at com.sun.jndi.ldap.LdapCtx.c_rename(LdapCtx.java:699)
+        at com.sun.jndi.toolkit.ctx.ComponentContext.p_rename(ComponentContext.java:693)
+        at com.sun.jndi.toolkit.ctx.PartialCompositeContext.rename(PartialCompositeContext.java:251)
+        at javax.naming.InitialContext.rename(InitialContext.java:389)
+        at com.zimbra.cs.account.ldap.ZimbraLdapContext.renameEntry(ZimbraLdapContext.java:756)
+        at com.zimbra.cs.account.ldap.LdapProvisioning.moveAliases(LdapProvisioning.java:5398)
+        at com.zimbra.cs.account.ldap.LdapProvisioning.renameAccount(LdapProvisioning.java:2297)
+        at com.zimbra.cs.account.ProvUtil.execute(ProvUtil.java:934)
+        at com.zimbra.cs.account.ProvUtil.main(ProvUtil.java:2810)
+        
+        This only happens if 
+        - domain for the account is also changed for the renameAccount
+        - when the account is being renamed, there is an alias named as:
+          {same localpart as the account's new localpart}@{same domain as the account's old domain}
+     
+        This is becasue when we do validation to see if there is any clash with new lias names, the account has not been renamed 
+        yet, therefore it is not catched.
+        
+        After the fix, it should throw ACCOUNT_EXISTS (com.zimbra.cs.account.AccountServiceException: email address already exists: phoebe@other.com)
+        i.e. the renameAccount should not be allowed
+      */
+    public void testBug41884() throws Exception {
+        String OLD_DOMAIN_NAME = "main." + BASE_DOMAIN_NAME;
+        String NEW_DOMAIN_NAME = "other." + BASE_DOMAIN_NAME;
+        String OLD_LOCALPART = "junk";
+        String NEW_LOCALPART = "phoebe";
+        String OLD_ACCT_NAME = OLD_LOCALPART + "@" + OLD_DOMAIN_NAME;
+        String NEW_ACCT_NAME = NEW_LOCALPART + "@" + NEW_DOMAIN_NAME;
+        String ALIAS_NAME = NEW_LOCALPART + "@" + OLD_DOMAIN_NAME;
+        
+        Domain oldDomain = mProv.createDomain(OLD_DOMAIN_NAME, new HashMap<String, Object>());
+        Domain newDomain = mProv.createDomain(NEW_DOMAIN_NAME, new HashMap<String, Object>());
+        
+        Account acct = mProv.createAccount(OLD_ACCT_NAME, "test123", new HashMap<String, Object>());
+        mProv.addAlias(acct, ALIAS_NAME);
+        
+        boolean good = false;
+        try {
+            mProv.renameAccount(acct.getId(), NEW_ACCT_NAME);
+        } catch (ServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode()))
+                good = true;
+        }
+        assertTrue(good);
+    }
+    
     public static void main(String[] args) throws Exception {
         // TestUtil.cliSetup();
         CliUtil.toolSetup();
