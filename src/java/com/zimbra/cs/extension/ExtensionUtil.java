@@ -33,7 +33,7 @@ public class ExtensionUtil {
 
     private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList();
 
-    private static URL[] dirListToURLs(File dir) {
+    public static URL[] dirListToURLs(File dir) {
         File[] files = dir.listFiles();
         if (files == null) {
             return null;
