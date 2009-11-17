@@ -32,8 +32,10 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
+import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.ShareInfo.Published;
 import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -135,9 +137,9 @@ public class TestShareInfo extends TestCase {
             mExpected.remove(esi);
         }
         
-        void verify(ShareInfo shareInfo) throws ServiceException {
+        void verify(ShareInfoData sid) throws ServiceException {
             for (ExpectedShareInfo esi : mExpected) {
-                if (esi.isTheSame(shareInfo)) {
+                if (esi.isTheSame(sid)) {
                     mExpected.remove(esi);
                     return;
                 }
@@ -149,7 +151,11 @@ public class TestShareInfo extends TestCase {
         
         /*
          * asserts that all expected shares are found
-         * (verify already checked that each found share is expected)
+         * 
+         * (verify already checked that each found share is expected.
+         *  verify removes a share info as it finds it in the expected List,
+         *  here we want to verify that the expected List is empty, i.e. 
+         *  all expected share info are found)
          */
         void OK() {
             assertTrue(mExpected.isEmpty());
@@ -182,30 +188,30 @@ public class TestShareInfo extends TestCase {
                      copy.mGranteeName);
             }
             
-            boolean isTheSame(ShareInfo shareInfo) throws ServiceException {
+            boolean isTheSame(ShareInfoData sid) throws ServiceException {
                 
-                if (!mOwnerAcctId.equals(shareInfo.getOwnerAcctId()))
+                if (!mOwnerAcctId.equals(sid.getOwnerAcctId()))
                     return false;
                 
-                if (!mOwnerAcctName.equals(shareInfo.getOwnerAcctEmail()))
+                if (!mOwnerAcctName.equals(sid.getOwnerAcctEmail()))
                     return false;
                 
-                if (mFolderId != shareInfo.getFolderId())
+                if (mFolderId != sid.getFolderId())
                     return false;
                 
-                if (!mFolderPath.equals(shareInfo.getFolderPath()))
+                if (!mFolderPath.equals(sid.getFolderPath()))
                     return false;
                 
-                if (mRights != ACL.stringToRights(shareInfo.getRights()))
+                if (mRights != ACL.stringToRights(sid.getRights()))
                     return false;
                 
-                if (mGranteeType != ACL.stringToType(shareInfo.getGranteeType()))
+                if (mGranteeType != ACL.stringToType(sid.getGranteeType()))
                     return false;
                 
-                if (!mGranteeId.equals(shareInfo.getGranteeId()))
+                if (!mGranteeId.equals(sid.getGranteeId()))
                     return false;
                 
-                if (!mGranteeName.equals(shareInfo.getGranteeName()))
+                if (!mGranteeName.equals(sid.getGranteeName()))
                     return false;
                 
                 return true;
@@ -222,37 +228,21 @@ public class TestShareInfo extends TestCase {
         }
     }
     
-    private static class VerifyPublishedVisitor implements ShareInfo.Visitor {
+    private static class VerifyPublishedVisitor implements PublishedShareInfoVisitor {
         Expected mExpected;
         
         VerifyPublishedVisitor(Expected expected) {
             mExpected = expected;
         }
         
-        public void visit(ShareInfo shareInfo) throws ServiceException {
-            mExpected.verify(shareInfo);
+        public void visit(ShareInfoData sid) throws ServiceException {
+            mExpected.verify(sid);
         }
 
     }
     
-    private void doTestPublishShareInfo(Account publishingEntry, Account ownerForPublishing, Account ownerForGet,
-            String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
-        throws ServiceException {
-        
-        // Prov.publishShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing, folderPath);
-        
-        VerifyPublishedVisitor visitor;
-        
-        visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        // mProv.getShareInfo(publishingEntry, "usr", ownerForGet, visitor);
-        expectedDirectOnly.OK();
-        
-        visitor = new VerifyPublishedVisitor(expectedIncludeAll);
-        // mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
-        expectedDirectOnly.OK();
-    }
-    
-    private void doTestPublishShareInfo(DistributionList publishingEntry, Account ownerForPublishing, Account ownerForGet,
+    private void doTestPublishShareInfo(DistributionList publishingEntry, 
+            Account ownerForPublishing, Account ownerForGet,
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
@@ -260,9 +250,15 @@ public class TestShareInfo extends TestCase {
         
         VerifyPublishedVisitor visitor;
         
-        visitor = new VerifyPublishedVisitor(expectedIncludeAll);
-        // mProv.getShareInfo(publishingEntry, null, ownerForGet, visitor);
-        expectedDirectOnly.OK();
+        Expected verifyMe;
+        if (ownerForGet == null)
+            verifyMe = expectedIncludeAll;
+        else
+            verifyMe = expectedDirectOnly;
+        
+        visitor = new VerifyPublishedVisitor(verifyMe);
+        mProv.getPublishedShareInfo(publishingEntry, ownerForGet, visitor);
+        verifyMe.OK();
     }
     
 
@@ -282,7 +278,7 @@ public class TestShareInfo extends TestCase {
         DistributionList grantee = mProv.createDistributionList(granteeEmail, null);
         
         /*
-         * create two accounts, one is member of the grantee LD, the other is not 
+         * create two accounts, one is member of the grantee DL, the other is not 
          */
         String acctInDlEmail = getEmail("acct-in-dl", testName);
         Account acctInDl= mProv.createAccount(acctInDlEmail, PASSWORD, null);
@@ -330,18 +326,6 @@ public class TestShareInfo extends TestCase {
         expectedAll.add(esi);
         doTestPublishShareInfo(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
         
-        // === an account in the grantee DL
-        expectedDirectOnly = new Expected();
-        expectedDirectOnly.add(esi);
-        expectedAll = new Expected();
-        expectedAll.add(esi);
-        doTestPublishShareInfo(acctInDl, owner, owner, folderPath, expectedDirectOnly, expectedAll);
-        
-        // === an account not in the grantee DL
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        doTestPublishShareInfo(acctNotInDl, owner, owner, folderPath, expectedDirectOnly, expectedAll);
-        
         // === a DL in the grantee DL
         expectedDirectOnly = new Expected();
         expectedDirectOnly.add(esi);
@@ -371,20 +355,6 @@ public class TestShareInfo extends TestCase {
         expectedAll.add(esi);
         expectedAll.add(esiSubFolder);
         doTestPublishShareInfo(grantee, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
-        
-        // === an account in the grantee DL
-        expectedDirectOnly = new Expected();
-        expectedDirectOnly.add(esi);
-        expectedDirectOnly.add(esiSubFolder);
-        expectedAll = new Expected();
-        expectedAll.add(esi);
-        expectedAll.add(esiSubFolder);
-        doTestPublishShareInfo(acctInDl, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
-        
-        // === an account not in the grantee DL
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        doTestPublishShareInfo(acctNotInDl, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
         
         // === a DL in the grantee DL
         expectedDirectOnly = new Expected();
@@ -448,7 +418,7 @@ public class TestShareInfo extends TestCase {
         expectedDirectOnly.add(esiOwner1);
         expectedAll = new Expected();
         expectedAll.add(esiOwner1);
-        // pass null for ownerForGet so we will get all published shares regardlesss which owner they belong to
+        // pass null for ownerForGet so we will get all published shares regardless which owner they belong to
         doTestPublishShareInfo(grantee, owner1, null, folderPathOwner1, expectedDirectOnly, expectedAll);
         
         // publish owner2's share
@@ -458,7 +428,7 @@ public class TestShareInfo extends TestCase {
         expectedAll = new Expected();
         expectedAll.add(esiOwner1);
         expectedAll.add(esiOwner2);
-        // pass null for ownerForGet so we will get all published shares regardlesss which owner they belong to
+        // pass null for ownerForGet so we will get all published shares regardless which owner they belong to
         doTestPublishShareInfo(grantee, owner2, null, folderPathOwner2, expectedDirectOnly, expectedAll);
         
         // get only owner1's share

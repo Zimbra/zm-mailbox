@@ -1888,17 +1888,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
     
+    public static interface PublishedShareInfoVisitor {
+        public void visit(ShareInfoData shareInfoData) throws ServiceException;
+    }
+    
     public void publishShareInfo(DistributionList dl, PublishShareInfoAction action, 
             Account ownerAcct, String folderIdOrPath) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
     public void getPublishedShareInfo(DistributionList dl, Account ownerAcct, 
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
+            PublishedShareInfoVisitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    public void getShareInfo(Account ownerAcct, ShareInfo.Published.Visitor visitor) throws ServiceException {
+    public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 

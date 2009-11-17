@@ -27,7 +27,9 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -158,8 +160,8 @@ public class GetShareInfo  extends AccountDocumentHandler {
 
         Element response = proxyRequest(request, context, getServer(ownerId));
         for (Element eShare : response.listElements(AccountConstants.E_SHARE)) {
-            ShareInfo si = ShareInfo.fromXML(eShare);
-            visitor.visit(si);
+            ShareInfoData sid = ShareInfoData.fromXML(eShare);
+            visitor.visit(sid);
         }
     }
 
@@ -181,7 +183,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
         /*
          * return true if filtered in, false if filtered out
          */
-        public boolean check(ShareInfo si);
+        public boolean check(ShareInfoData sid);
     }
     
     public static class ResultFilterByTarget implements ResultFilter {
@@ -193,27 +195,27 @@ public class GetShareInfo  extends AccountDocumentHandler {
             mGranteeName = granteeName;
         }
         
-        public boolean check(ShareInfo si) {
-            if (mGranteeId != null && !mGranteeId.equals(si.getGranteeId()))
+        public boolean check(ShareInfoData sid) {
+            if (mGranteeId != null && !mGranteeId.equals(sid.getGranteeId()))
                 return false;
             
-            if (mGranteeName != null && !mGranteeName.equals(si.getGranteeName()))
+            if (mGranteeName != null && !mGranteeName.equals(sid.getGranteeName()))
                 return false;
             
             return true;
         }
     }
     
-    public static class ShareInfoVisitor implements ShareInfo.Visitor {
+    public static class ShareInfoVisitor implements PublishedShareInfoVisitor {
         Provisioning mProv;
         Element mResp;
         ShareInfo.MountedFolders mMountedFolders;
         ResultFilter mResultFilter;
         
-        SortedSet<ShareInfo> mSortedShareInfo = new TreeSet<ShareInfo>(new ShareInfoComparator());
+        SortedSet<ShareInfoData> mSortedShareInfo = new TreeSet<ShareInfoData>(new ShareInfoComparator());
         
-        private static class ShareInfoComparator implements Comparator<ShareInfo> {
-            public int compare(ShareInfo a, ShareInfo b) {
+        private static class ShareInfoComparator implements Comparator<ShareInfoData> {
+            public int compare(ShareInfoData a, ShareInfoData b) {
                 int r = a.getFolderPath().compareToIgnoreCase(b.getFolderPath());
                 if (r == 0)
                     r = a.getOwnerAcctEmail().compareToIgnoreCase(b.getOwnerAcctEmail());
@@ -233,19 +235,19 @@ public class GetShareInfo  extends AccountDocumentHandler {
         
         // sorting and filtering visitor
         // note: if grnteeType is filtered at ShareInfo
-        public void visit(ShareInfo shareInfo) throws ServiceException {
+        public void visit(ShareInfoData sid) throws ServiceException {
             // add the result if there is no filter or the result passes the filter test
-            if (mResultFilter == null || mResultFilter.check(shareInfo))
-                mSortedShareInfo.add(shareInfo);
+            if (mResultFilter == null || mResultFilter.check(sid))
+                mSortedShareInfo.add(sid);
         }
         
         public void finish() throws ServiceException {
-            for (ShareInfo si : mSortedShareInfo)
-                doVisit(si);
+            for (ShareInfoData sid : mSortedShareInfo)
+                doVisit(sid);
         }
         
         // the real visitor
-        private void doVisit(ShareInfo shareInfo) throws ServiceException {
+        private void doVisit(ShareInfoData sid) throws ServiceException {
             Element eShare = mResp.addElement(AccountConstants.E_SHARE);
             
             // add mountpoint id to XML if the share is already mounted
@@ -253,9 +255,9 @@ public class GetShareInfo  extends AccountDocumentHandler {
             
             if (mMountedFolders != null) 
                 mptId = mMountedFolders.getLocalFolderId(
-                    shareInfo.getOwnerAcctId(), shareInfo.getFolderId());
+                    sid.getOwnerAcctId(), sid.getFolderId());
             
-            shareInfo.toXML(eShare, mptId);
+            sid.toXML(eShare, mptId);
         }
     }
 

@@ -2252,7 +2252,7 @@ public class SoapProvisioning extends Provisioning {
     
     @Override
     public void getPublishedShareInfo(DistributionList dl, Account ownerAcct, 
-            ShareInfo.Published.Visitor visitor) throws ServiceException {
+            PublishedShareInfoVisitor visitor) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_PUBLISHED_SHARE_INFO_REQUEST);
         
         Element eDL = req.addElement(AdminConstants.E_DL);
@@ -2264,21 +2264,21 @@ public class SoapProvisioning extends Provisioning {
 
         Element resp = invoke(req);
         for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
-            ShareInfo si = ShareInfo.fromXML(eShare);
-            visitor.visit(si);
+            ShareInfoData sid = ShareInfoData.fromXML(eShare);
+            visitor.visit(sid);
         }
     }
     
     @Override
-    public void getShareInfo(Account ownerAcct, ShareInfo.Published.Visitor visitor) throws ServiceException {
+    public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SHARE_INFO_REQUEST);
         
         req.addElement(AdminConstants.E_OWNER).addAttribute(AdminConstants.A_BY, AccountBy.id.name()).setText(ownerAcct.getId());
 
         Element resp = invoke(req);
         for (Element eShare: resp.listElements(AdminConstants.E_SHARE)) {
-            ShareInfo si = ShareInfo.fromXML(eShare);
-            visitor.visit(si);
+            ShareInfoData sid = ShareInfoData.fromXML(eShare);
+            visitor.visit(sid);
         }
     }
 

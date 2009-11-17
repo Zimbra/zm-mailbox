@@ -78,6 +78,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
+import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -1416,11 +1417,11 @@ public class ProvUtil implements HttpDebugListener {
     
     private static class ShareInfoArgs {
         
-        Provisioning.PublishShareInfoAction mAction;
+        PublishShareInfoAction mAction;
         Account mOwnerAcct;
         String mFolderPathOrId;
         
-        ShareInfoArgs(Provisioning.PublishShareInfoAction action,
+        ShareInfoArgs(PublishShareInfoAction action,
                 Account ownerAcct, String folderPathOrId) {
             mAction = action;
             mOwnerAcct = ownerAcct;
@@ -1437,21 +1438,21 @@ public class ProvUtil implements HttpDebugListener {
         if (args.length == 5)
             folderPathOrId = args[idx++];
         
-        Provisioning.PublishShareInfoAction action;
+        PublishShareInfoAction action;
         // String desc;  not supported for now
         
         if (isAdd) {
-            action = Provisioning.PublishShareInfoAction.add;
+            action = PublishShareInfoAction.add;
             // desc = args[idx++];
         } else {
-            action = Provisioning.PublishShareInfoAction.remove;
+            action = PublishShareInfoAction.remove;
             // desc = null;
         }
         
         return new ShareInfoArgs(action, ownerAcct, folderPathOrId);
     }
     
-    private static class ShareInfoVisitor implements ShareInfo.Visitor {
+    private static class ShareInfoVisitor implements PublishedShareInfoVisitor {
         
         private static final String mFormat = 
             "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
@@ -1486,20 +1487,20 @@ public class ProvUtil implements HttpDebugListener {
                               "---------------");                          // grantee display
         }
         
-        public void visit(ShareInfo shareInfo) throws ServiceException {
+        public void visit(ShareInfoData shareInfoData) throws ServiceException {
             System.out.printf(mFormat, 
-                    shareInfo.getOwnerAcctId(),
-                    shareInfo.getOwnerAcctEmail(),
-                    shareInfo.getOwnerAcctDisplayName(),
-                    String.valueOf(shareInfo.getFolderId()),
-                    shareInfo.getFolderPath(),
-                    shareInfo.getFolderDefaultView(),
-                    shareInfo.getRights(),
-                    shareInfo.getMountpointId_zmprov_only(),
-                    shareInfo.getGranteeType(),
-                    shareInfo.getGranteeId(),
-                    shareInfo.getGranteeName(),
-                    shareInfo.getGranteeDisplayName());                        
+                    shareInfoData.getOwnerAcctId(),
+                    shareInfoData.getOwnerAcctEmail(),
+                    shareInfoData.getOwnerAcctDisplayName(),
+                    String.valueOf(shareInfoData.getFolderId()),
+                    shareInfoData.getFolderPath(),
+                    shareInfoData.getFolderDefaultView(),
+                    shareInfoData.getRights(),
+                    shareInfoData.getMountpointId_zmprov_only(),
+                    shareInfoData.getGranteeType(),
+                    shareInfoData.getGranteeId(),
+                    shareInfoData.getGranteeName(),
+                    shareInfoData.getGranteeDisplayName());                        
         }
     };
     

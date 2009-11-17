@@ -45,6 +45,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -70,20 +71,20 @@ public class SendShareNotification extends MailDocumentHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(authAccount, false);
         
         // validate the share shecpfied in the request and build a share info if all is valid 
-        ShareInfo shareInfo = validateRequest(zsc, context, octxt, authAccount, mbox, request);
+        ShareInfoData sid = validateRequest(zsc, context, octxt, authAccount, mbox, request);
         
         // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
         String notes = (eNotes==null)?null:eNotes.getText();
         
         // send the message
-        sendShareNotif(octxt, authAccount, mbox, shareInfo, notes);
+        sendShareNotif(octxt, authAccount, mbox, sid, notes);
 
         Element response = zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
         return response;
     }
     
-    private ShareInfo validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
+    private ShareInfoData validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
             Account authAccount, Mailbox mbox, Element req) throws ServiceException {
         
         Provisioning prov = Provisioning.getInstance();
@@ -144,16 +145,16 @@ public class SendShareNotification extends MailDocumentHandler {
             throw ServiceException.INVALID_REQUEST("no matching grant", null);
         
         //
-        // all is well, setup out ShareInfo object 
+        // all is well, setup our ShareInfoData object 
         //
-        ShareInfo shareInfo = new ShareInfo();
+        ShareInfoData sid = new ShareInfoData();
         
-        shareInfo.setOwnerAcctId(ownerAcct.getId());
-        shareInfo.setOwnerAcctEmail(ownerAcct.getName());
-        shareInfo.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
+        sid.setOwnerAcctId(ownerAcct.getId());
+        sid.setOwnerAcctEmail(ownerAcct.getName());
+        sid.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
         
         // folder id used for mounting
-        shareInfo.setFolderId(ownerFolderId);
+        sid.setFolderId(ownerFolderId);
         
         //
         // just a display name for the shared folder for the grantee to see.
@@ -162,26 +163,26 @@ public class SendShareNotification extends MailDocumentHandler {
         // if user2 is sharing with user3 a mountpoint that belongs to user1,
         // we should show user3 the folder(mountpoint) name in user2's mailbox,
         // not the folder name in user1's mailbox.
-        shareInfo.setFolderPath(folder.getPath());
-        shareInfo.setFolderDefaultView(folder.getDefaultView());
+        sid.setFolderPath(folder.getPath());
+        sid.setFolderDefaultView(folder.getDefaultView());
         
         // rights
-        shareInfo.setRights(matchingGrant.getGrantedRights());
+        sid.setRights(matchingGrant.getGrantedRights());
         
         // grantee
-        shareInfo.setGranteeType(granteeType);
-        shareInfo.setGranteeId(matchingId);    // if guest, matchingId is the same as granteeEmail 
-        shareInfo.setGranteeName(granteeEmail);
-        shareInfo.setGranteeDisplayName(granteeDisplayName);
+        sid.setGranteeType(granteeType);
+        sid.setGranteeId(matchingId);    // if guest, matchingId is the same as granteeEmail 
+        sid.setGranteeName(granteeEmail);
+        sid.setGranteeDisplayName(granteeDisplayName);
         
         // if the grantee is a guest, set URL and password
         if (granteeType == ACL.GRANTEE_GUEST) {
             String url = UserServlet.getRestUrl(ownerAcct) + folder.getPath();
-            shareInfo.setUrl(url);  // hmm, for mountpoint this should be the path in the owner's mailbox  TODO
-            shareInfo.setGuestPassword(matchingGrant.getPassword());
+            sid.setUrl(url);  // hmm, for mountpoint this should be the path in the owner's mailbox  TODO
+            sid.setGuestPassword(matchingGrant.getPassword());
         }
         
-        return shareInfo;
+        return sid;
     }
 
     /*
@@ -385,7 +386,7 @@ public class SendShareNotification extends MailDocumentHandler {
     //
     // send using MailSender 
     //
-    void sendShareNotif(OperationContext octxt, Account authAccount, Mailbox mbox, ShareInfo shareInfo, String notes)
+    void sendShareNotif(OperationContext octxt, Account authAccount, Mailbox mbox, ShareInfoData sid, String notes)
     throws ServiceException {
         
         Locale locale = authAccount.getLocale();
@@ -403,11 +404,11 @@ public class SendShareNotification extends MailDocumentHandler {
             mm.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
             
             // to the grantee
-            String recipient = shareInfo.getGranteeName();
+            String recipient = sid.getGranteeName();
             mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(recipient));
             
             MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(
-                    shareInfo, MsgKey.shareNotifBodyIntro, notes, locale);
+                    sid, MsgKey.shareNotifBodyIntro, notes, locale);
             mm.setContent(mmp);
             mm.saveChanges();
         } catch (MessagingException e) {
@@ -439,7 +440,7 @@ public class SendShareNotification extends MailDocumentHandler {
     //
     // send using SMTP client
     //
-    void sendShareNotif(Account authAccount, ShareInfo shareInfo, String notes)
+    void sendShareNotif(Account authAccount, ShareInfoData sid, String notes)
     throws ServiceException {
         
         Locale locale = authAccount.getLocale();
@@ -456,7 +457,7 @@ public class SendShareNotification extends MailDocumentHandler {
             notif.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
             
             // to the grantee
-            String recipient = shareInfo.getGranteeName();
+            String recipient = sid.getGranteeName();
             notif.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(recipient));
 
             if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true))
@@ -464,7 +465,7 @@ public class SendShareNotification extends MailDocumentHandler {
             else
                 notif.setEnvelopeFrom(authAccount.getName());
 
-            MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(shareInfo, MsgKey.shareNotifBodyIntro, notes, locale);
+            MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid, MsgKey.shareNotifBodyIntro, notes, locale);
             notif.setContent(mmp);
             notif.saveChanges();
 
