@@ -209,6 +209,8 @@ public class User extends Principal {
             		ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             		ZMailbox zmbx = RemoteCollection.getRemoteMailbox(zat, mp.getOwnerId());
             		ZFolder folder = zmbx.getFolderById(mp.getTarget().toString(mAccount));
+            		if (folder == null)
+            		    continue;
             		mps.add(new Pair<Mountpoint,ZFolder>(mp, folder));
             	}
         	} catch (ServiceException se) {
