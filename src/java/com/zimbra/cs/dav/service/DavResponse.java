@@ -44,10 +44,10 @@ import com.zimbra.cs.dav.resource.DavResource;
  *
  */
 public class DavResponse {
+    
+    public static Map<Integer, String> sStatusTextMap;
 	
-	public static Map<Integer, String> sStatusTextMap;
-	
-	static {
+    static {
 		sStatusTextMap = new HashMap<Integer, String>();
 		
 		sStatusTextMap.put(HttpServletResponse.SC_CONTINUE,            "HTTP/1.1 100 Continue");
@@ -196,7 +196,7 @@ public class DavResponse {
 			ZimbraLog.dav.debug("RESPONSE:\n"+new String(DomUtil.getBytes(mResponse), "UTF-8"));
 		DomUtil.writeDocumentToStream(mResponse, out);
 	}
-	
+
 	public static class PropStat {
 		private HashMap<Integer,Element> mMap;
 		private ArrayList<ResourceProperty> mProps;
@@ -220,9 +220,18 @@ public class DavResponse {
 				e.setText(msg);
 		}
 		public void add(QName name, Element value) {
-			value.detach();
-			Element e = findProp(HttpServletResponse.SC_OK).addElement(name);
-			e.add(value);
+		    value.detach();
+		    Element prop = findProp(HttpServletResponse.SC_OK);
+		    Element e = null;
+		    for (Object obj : prop.elements()) {
+		        if (obj instanceof Element && ((Element)obj).getQName().equals(name)) {
+		            e = (Element)obj;
+		            break;
+		        }
+		    }
+		    if (e == null)
+		        e = prop.addElement(name);
+		    e.add(value);
 		}
 		private Element findProp(int status) {
 			Element propstat = findPropstat(status);

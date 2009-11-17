@@ -110,8 +110,7 @@ public class ExpandProperty extends Report {
 	                        }
 	                        try {
 	                            DavResource target = UrlNamespace.getResourceAtUrl(ctxt, url);
-	                            href.detach();
-	                            Element targetElem = DocumentHelper.createElement(DavElements.E_RESPONSE);
+                                Element targetElem = DocumentHelper.createElement(DavElements.E_RESPONSE);
 	                            expandProperties(ctxt, target, property, targetElem);
 	                            propstat.add(rp.getName(), targetElem);
 	                        } catch (DavException e) {
@@ -130,19 +129,14 @@ public class ExpandProperty extends Report {
 		private String mName;
 		private String mNamespace;
 		private QName mQName;
-		private Element mElement;
 		
 		public Prop(Element propElement) {
 			mName = propElement.attributeValue(DavElements.P_NAME);
 			mNamespace = propElement.attributeValue(DavElements.P_NAMESPACE, DavElements.WEBDAV_NS_STRING);
 			mQName = QName.get(mName, mNamespace);
-			mElement = propElement;
 		}
 		public QName getQName() {
 			return mQName;
-		}
-		public Element getElement() {
-			return mElement;
 		}
 	}
 }
