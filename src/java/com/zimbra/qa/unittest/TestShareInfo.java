@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.ShareInfo.Published;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.mailbox.ACL;
@@ -255,7 +256,7 @@ public class TestShareInfo extends TestCase {
             String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
         throws ServiceException {
         
-        mProv.publishShareInfo(publishingEntry, ShareInfo.Publishing.Action.add, ownerForPublishing, folderPath);
+        mProv.publishShareInfo(publishingEntry, PublishShareInfoAction.add, ownerForPublishing, folderPath);
         
         VerifyPublishedVisitor visitor;
         

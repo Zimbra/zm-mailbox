@@ -1870,7 +1870,25 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // do nothing by default
     }
     
-    public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
+    ///
+    //
+    // ShareInfo
+    //
+    //
+    public static enum PublishShareInfoAction {
+        add,
+        remove;
+        
+        public static PublishShareInfoAction fromString(String action) throws ServiceException {
+            try {
+                return PublishShareInfoAction.valueOf(action);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown ShareInfo action: " + action, e);
+            }
+        }
+    }
+    
+    public void publishShareInfo(DistributionList dl, PublishShareInfoAction action, 
             Account ownerAcct, String folderIdOrPath) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }

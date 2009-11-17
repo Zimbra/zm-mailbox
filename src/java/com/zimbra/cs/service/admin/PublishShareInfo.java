@@ -27,6 +27,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Folder;
@@ -52,7 +53,7 @@ public class PublishShareInfo extends ShareInfoHandler {
         NamedEntry publishingOnEntry = getPublishableTargetEntry(zsc, request, prov);
         
         Element eShare = request.getElement(AdminConstants.E_SHARE);
-        ShareInfo.Publishing.Action action = ShareInfo.Publishing.Action.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
+        PublishShareInfoAction action = PublishShareInfoAction.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
             
         Account ownerAcct = getOwner(zsc, eShare, prov, true);
         

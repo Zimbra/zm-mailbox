@@ -54,6 +54,7 @@ import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -659,7 +660,7 @@ public class ShareInfo {
     public static class Publishing extends ShareInfo {
         
         public static void publish(Provisioning prov, OperationContext octxt, 
-                NamedEntry publishingOnEntry, Publishing.Action action, Account ownerAcct, 
+                NamedEntry publishingOnEntry, PublishShareInfoAction action, Account ownerAcct, 
                 Folder folder) throws ServiceException {
             
             if (folder == null) {
@@ -678,7 +679,7 @@ public class ShareInfo {
         }
         
         private static void doPublish(Provisioning prov, 
-                NamedEntry publishingOnEntry, Publishing.Action action, Account ownerAcct, 
+                NamedEntry publishingOnEntry, PublishShareInfoAction action, Account ownerAcct, 
                 Folder folder) throws ServiceException {
             
             ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcct, folder);
@@ -686,22 +687,9 @@ public class ShareInfo {
             if (si.hasGrant())
                 si.persist(prov, publishingOnEntry);
         }
-        
-        public static enum Action {
-            add,
-            remove;
-            
-            public static Action fromString(String action) throws ServiceException {
-                try {
-                    return Action.valueOf(action);
-                } catch (IllegalArgumentException e) {
-                    throw ServiceException.INVALID_REQUEST("unknown ShareInfo action: " + action, e);
-                }
-            }
-        }
     
-        private Action mAction;
-        private Publishing(Action action, Account ownerAcct, Folder folder) {
+        private PublishShareInfoAction mAction;
+        private Publishing(PublishShareInfoAction action, Account ownerAcct, Folder folder) {
             mAction = action;
             setOwnerAcctId(ownerAcct.getId());
             setOwnerAcctEmail(ownerAcct.getName());
@@ -709,7 +697,7 @@ public class ShareInfo {
             setFolderId(folder.getId());
         }
             
-        public Action getAction() {
+        public PublishShareInfoAction getAction() {
             return mAction;
         }
     
@@ -825,7 +813,7 @@ public class ShareInfo {
             
             Map<String, Object> attrs = new HashMap<String, Object>();
             String value = serialize();
-            if (getAction() == Publishing.Action.add) {
+            if (getAction() == PublishShareInfoAction.add) {
                 attrs.put(addKey, value);
             }
                 
@@ -842,7 +830,7 @@ public class ShareInfo {
             String ownerAndFoler = serializeOwnerAndFolder();
             for (String curSi : curShareInfo) {
                 if (curSi.startsWith(ownerAndFoler) && 
-                        (getAction() == Publishing.Action.remove || !curSi.equals(value))) {
+                        (getAction() == PublishShareInfoAction.remove || !curSi.equals(value))) {
                     attrs.put(removeKey, curSi);
                 }
             }

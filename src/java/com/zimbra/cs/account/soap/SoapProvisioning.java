@@ -2233,7 +2233,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.Action action, 
+    public void publishShareInfo(DistributionList dl, ShareInfo.Publishing.PublishShareInfoAction action, 
             Account ownerAcct, String folderIdOrPath) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.PUBLISH_SHARE_INFO_REQUEST);
         

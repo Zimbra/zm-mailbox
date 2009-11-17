@@ -77,6 +77,7 @@ import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.MailMode;
+import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
@@ -1415,11 +1416,11 @@ public class ProvUtil implements HttpDebugListener {
     
     private static class ShareInfoArgs {
         
-        ShareInfo.Publishing.Action mAction;
+        Provisioning.PublishShareInfoAction mAction;
         Account mOwnerAcct;
         String mFolderPathOrId;
         
-        ShareInfoArgs(ShareInfo.Publishing.Action action,
+        ShareInfoArgs(Provisioning.PublishShareInfoAction action,
                 Account ownerAcct, String folderPathOrId) {
             mAction = action;
             mOwnerAcct = ownerAcct;
@@ -1436,14 +1437,14 @@ public class ProvUtil implements HttpDebugListener {
         if (args.length == 5)
             folderPathOrId = args[idx++];
         
-        ShareInfo.Publishing.Action action;
+        Provisioning.PublishShareInfoAction action;
         // String desc;  not supported for now
         
         if (isAdd) {
-            action = ShareInfo.Publishing.Action.add;
+            action = Provisioning.PublishShareInfoAction.add;
             // desc = args[idx++];
         } else {
-            action = ShareInfo.Publishing.Action.remove;
+            action = Provisioning.PublishShareInfoAction.remove;
             // desc = null;
         }
         
