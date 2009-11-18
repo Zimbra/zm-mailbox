@@ -68,11 +68,12 @@ public class Move extends DavMethod {
         return destination;
 	}
 	protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
+	    String destinationUrl = getDestination(ctxt);
 	    try {
-	        DavResource r = UrlNamespace.getResourceAtUrl(ctxt, getDestination(ctxt));
+	        DavResource r = UrlNamespace.getResourceAtUrl(ctxt, destinationUrl);
 	        if (r instanceof Collection)
 	            return ((Collection)r);
-	        return UrlNamespace.getCollectionAtUrl(ctxt, getDestination(ctxt));
+	        return UrlNamespace.getCollectionAtUrl(ctxt, destinationUrl);
 	    } catch (Exception e) {
 	        throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
 	    }
