@@ -41,7 +41,17 @@ public class Move extends DavMethod {
 		if (destination == null)
 			throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
 		DavResource rs = ctxt.getRequestedResource();
-		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, destination);
+		Collection col = null;
+            try {
+                DavResource r = UrlNamespace.getResourceAtUrl(ctxt, destination);
+                if (r instanceof Collection)
+                    rs = ((Collection)r);
+                else
+                    rs = UrlNamespace.getCollectionAtUrl(ctxt, destination);
+            } catch (Exception e) {
+                throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
+            }
+
 		if (!(col instanceof MailItemResource))
 			throw new DavException("cannot move", HttpServletResponse.SC_BAD_REQUEST, null);
 		MailItemResource mir = (MailItemResource) rs;

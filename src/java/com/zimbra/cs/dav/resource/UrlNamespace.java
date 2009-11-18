@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -61,31 +63,49 @@ import com.zimbra.cs.service.util.ItemId;
 public class UrlNamespace {
 	public static final String ATTACHMENTS_PREFIX = "/attachments";
 	
+	public static class UrlComponents {
+	    public String user;
+	    public String path;
+	}
+	
+	public static UrlComponents parseUrl(String url) {
+	    UrlComponents uc = new UrlComponents();
+	    
+	    int index = url.indexOf(DavServlet.DAV_PATH);
+	    if (index > 0) {
+            url = url.substring(index + DavServlet.DAV_PATH.length());
+            int delim = url.indexOf('/', 1);
+            if (delim > 0) {
+                uc.user = url.substring(1, delim);
+                url = url.substring(delim);
+            }
+	    }
+        uc.path = url;
+        try {
+            uc.path = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.dav.debug("can't decode url %s", url, e);
+        }
+
+	    return uc;
+	}
+	
 	/* Returns Collection at the specified URL. */
 	public static Collection getCollectionAtUrl(DavContext ctxt, String url) throws DavException {
-		if (url.startsWith("http")) {
-			int index = url.indexOf(DavServlet.DAV_PATH);
-			if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
-				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-			index += DavServlet.DAV_PATH.length() + 1;
-			url = url.substring(index);
-			
-			// skip user.
-			index = url.indexOf('/');
-			if (index == -1)
-				throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-			url = url.substring(index);
-		}
-		String path = url;
-		int lastPos = path.length() - 1;
-		if (path.endsWith("/"))
+	    UrlComponents uc = parseUrl(url);
+		int lastPos = uc.path.length() - 1;
+		if (uc.path.endsWith("/"))
 			lastPos--;
-		int index = path.lastIndexOf('/', lastPos);
+		int index = uc.path.lastIndexOf('/', lastPos);
+		String path;
 		if (index == -1)
 			path = "/";
 		else
-			path = path.substring(0, index);
-		DavResource rsc = getResourceAt(ctxt, ctxt.getUser(), path);
+			path = uc.path.substring(0, index);
+		String user = uc.user;
+		if (user == null)
+		    user = ctxt.getUser();
+		DavResource rsc = getResourceAt(ctxt, user, path);
 		if (rsc instanceof Collection)
 			return (Collection)rsc;
 		throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -95,18 +115,12 @@ public class UrlNamespace {
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
         if (url.indexOf(PRINCIPALS_PATH) >= 0)
             return getPrincipalAtUrl(ctxt, url);
-		int index = url.indexOf(DavServlet.DAV_PATH);
-		if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-		index += DavServlet.DAV_PATH.length() + 1;
-		int delim = url.indexOf("/", index);
-		if (delim == -1)
-			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-		String user = url.substring(index, delim);
-		String path = url.substring(delim);
-		return getResourceAt(ctxt, user, path);
+	    UrlComponents uc = parseUrl(url);
+		if (uc.user == null || uc.path == null)
+            throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+		return getResourceAt(ctxt, uc.user, uc.path);
 	}
-
+	
     public static DavResource getPrincipalAtUrl(DavContext ctxt, String url) throws DavException {
         ZimbraLog.dav.debug("getPrincipalAtUrl");
         int index = url.indexOf(PRINCIPALS_PATH);
