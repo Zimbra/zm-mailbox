@@ -50,8 +50,12 @@ abstract class ImapSearch {
     }
 
     static String stringAsSearchTerm(String content) {
+        return stringAsSearchTerm(content, true);
+    }
+
+    static String stringAsSearchTerm(String content, boolean wildcard) {
         content = content.replace('*', ' ').replace('"', ' ');
-        if (content.length() == 0 || !Character.isWhitespace(content.charAt(content.length() - 1)))
+        if (wildcard && (content.length() == 0 || !Character.isWhitespace(content.charAt(content.length() - 1))))
             content += '*';
         return '"' + content + '"';
     }
@@ -329,17 +333,19 @@ abstract class ImapSearch {
 
         private Header mHeader;
         private String mValue;
+        private boolean mPrefixSearch = true;
         HeaderSearch(Header header, String value) {
             while (value.startsWith("<") || value.startsWith(">") || value.startsWith("="))
                 value = value.substring(1);
-            if (header == Header.MSGID && value.endsWith(">"))
-                value = value.substring(0, value.length());
+            if (header == Header.MSGID && value.endsWith(">")) {
+                value = value.substring(0, value.length() - 1);  mPrefixSearch = false;
+            }
             mValue = value;  mHeader = header;
         }
 
         boolean canBeRunLocally()  { return false; }
         String toZimbraSearch(ImapFolder i4folder) {
-            String value = stringAsSearchTerm(mValue);
+            String value = stringAsSearchTerm(mValue, mPrefixSearch);
             if ((mHeader == Header.FROM || mHeader == Header.TO || mHeader == Header.CC) && mValue.indexOf('@') == -1)
                 value += " or " + stringAsSearchTerm('@' + mValue);
             return mHeader + ":(" + value + ")";
