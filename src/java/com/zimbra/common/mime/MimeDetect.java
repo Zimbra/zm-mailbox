@@ -146,7 +146,7 @@ public class MimeDetect {
             }
 
             public boolean detect(byte data[], int limit) {
-                if (limit == -1)
+                if (limit == -1 || limit > data.length)
                     limit = data.length;
                 loop:
                 for (int pos = offset; pos < offset + range &&
@@ -163,8 +163,10 @@ public class MimeDetect {
             public boolean detect(RandomAccessFile raf, int limit) {
                 try {
                     byte buf[];
-                    long maxpos = (limit == -1 ? raf.length() : limit);
-
+                    long maxpos = raf.length();
+                    
+                    if (limit < 0 || limit < maxpos)
+                        maxpos = raf.length();
                     if (maxpos <= offset + value.length)
                         return false;
                     buf = new byte[offset + value.length + range < maxpos ?
