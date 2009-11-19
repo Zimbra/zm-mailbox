@@ -226,8 +226,12 @@ public class UserServlet extends ZimbraServlet {
     public static final String AUTH_QUERYPARAM = "qp"; // query parameter
 
     public static final String AUTH_NO_SET_COOKIE = "nsc"; // don't set auth token cookie after basic auth
+                                                           // same as ba after bug 42782
 
-    public static final String AUTH_DEFAULT = "co,ba,qp"; // all three
+    // see https://bugzilla.zimbra.com/show_bug.cgi?id=42782#c11
+    public static final String AUTH_SET_COOKIE = "sc"; // set auth token cookie after basic auth
+    
+    public static final String AUTH_DEFAULT = "co,nsc,qp"; // all three
 
     public static final String HTTP_URL = "http_url";
     public static final String HTTP_STATUS_CODE = "http_code";
@@ -366,7 +370,7 @@ public class UserServlet extends ZimbraServlet {
                     context.authToken = AuthProvider.getAuthToken(context.authAccount, isAdminRequest);  
                     
                     // send cookie back if need be. 
-                    if (!context.noSetCookie()) {
+                    if (context.setCookie()) {
                         boolean secureCookie = context.req.getScheme().equals("https");
                         context.authToken.encode(context.resp, isAdminRequest, secureCookie);
                     }
@@ -974,14 +978,23 @@ public class UserServlet extends ZimbraServlet {
         public boolean cookieAuthAllowed() {
             return getAuth().indexOf(AUTH_COOKIE) != -1;
         }
-
-        public boolean noSetCookie() {
-            return (authAccount != null && authAccount instanceof ACL.GuestAccount)
-                    || getAuth().indexOf(AUTH_NO_SET_COOKIE) != -1;
+        
+        public boolean isAuthedAcctGuest() {
+            return authAccount != null && authAccount instanceof ACL.GuestAccount;
+        }
+        
+        // bug 42782
+        public boolean setCookie() {
+            return (!isAuthedAcctGuest() &&
+                    getAuth().indexOf(AUTH_SET_COOKIE) != -1 &&
+                    getAuth().indexOf(AUTH_NO_SET_COOKIE) == -1);
         }
 
         public boolean basicAuthAllowed() {
-            return getAuth().indexOf(AUTH_BASIC) != -1;
+            String auth = getAuth();
+            return auth.indexOf(AUTH_NO_SET_COOKIE) != -1 ||
+                   auth.indexOf(AUTH_BASIC) != -1 ||
+                   auth.indexOf(AUTH_SET_COOKIE) != -1;
         }
 
         public boolean queryParamAuthAllowed() {
