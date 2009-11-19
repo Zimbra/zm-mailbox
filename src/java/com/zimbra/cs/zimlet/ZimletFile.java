@@ -33,6 +33,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.TemplateCompiler;
 
 /**
  * Represents Zimlet distribution file.
@@ -206,18 +207,40 @@ public class ZimletFile implements Comparable<ZimletFile> {
 		mZimletName = mDesc.getName();
 	}
 	
-	private void addFileEntry(File f, String dir) {
+	private void addFileEntry(File f, String dir) throws IOException {
+		addFileEntry(f, dir, f);
+	}
+	private void addFileEntry(File f, String dir, File base) throws IOException {
 		File[] files = f.listFiles();
 		if (files == null)
 			return;
 		for (File file : files) {
 			String name = ((dir.length() == 0) ? "" : dir + "/") + file.getName().toLowerCase();
 			if (file.isDirectory()) {
-				addFileEntry(file, name);
+				addFileEntry(file, name, base);
 				continue;
 			}
-			mEntries.put(name, new ZimletDirEntry(file));
+			if (!name.endsWith(".template.js")) {
+				mEntries.put(name, new ZimletDirEntry(file));
+			}
+			if (name.endsWith(".template")) {
+				addTemplateFileEntry(file, dir, base);
+			}
 		}
+	}
+
+	private void addTemplateFileEntry(File ifile, String dir, File base) throws IOException {
+		File ofile = new File(ifile.getParentFile(), ifile.getName()+".js");
+		if (!ofile.exists() || ifile.lastModified() > ofile.lastModified()) {
+			String prefix = base.getName() + ".";
+			String dirname = base.getAbsolutePath();
+			if (!dirname.endsWith(File.separator)) dirname += File.separatorChar;
+			String filename = ifile.getAbsolutePath().substring(dirname.length());
+			String pkg = prefix + filename.replaceAll("\\.[^\\.]+$", "").replace(File.separatorChar, '.');
+			TemplateCompiler.compile(ifile, ofile, pkg, true, true);
+		}
+		String name = ((dir.length() == 0) ? "" : dir + "/") + ofile.getName().toLowerCase();
+		mEntries.put(name, new ZimletDirEntry(ofile));
 	}
 	
 	private void initZimletDescription() throws IOException, ZimletException {

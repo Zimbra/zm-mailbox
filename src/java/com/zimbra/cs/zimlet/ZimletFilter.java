@@ -35,6 +35,7 @@ import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.TemplateCompiler;
 
 /**
  * 
@@ -46,7 +47,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
     public static final String ALLOWED_ZIMLETS = "com.zimbra.cs.zimlet.Allowed";
 
-	private static final String ZIMLET_URL = "^/service/zimlet/(?:_dev/)?([^/\\?]+)[/\\?]?.*$";
+	private static final String ZIMLET_URL = "^/service/zimlet/(?:_dev/)?([^/\\?]+)([/\\?]?)(.*)$";
     private static final String ZIMLET_RES_URL_PREFIX = "/service/zimlet/res/";
     private Pattern mPattern;
 	
@@ -194,6 +195,31 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				if (!zimletNames.contains(zimletName)) {
 					resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
 					return;
+				}
+			}
+		}
+
+		// force compilation of template
+		if (uri.endsWith(".template.js")) {
+			Matcher matcher = mPattern.matcher(uri);
+			if (matcher.matches()) {
+				String zimletName = matcher.group(1);
+				String opath = matcher.group(3);
+				String ipath = opath.replaceAll(".js$", "");
+				boolean isDevZimlet = uri.indexOf("_dev") != -1;
+				File zimletDir = new File(devdir, isDevZimlet ? zimletName : ".."+File.separatorChar+zimletName);
+				File ifile = new File(zimletDir, ipath);
+				File ofile = new File(zimletDir, opath);
+				if (!ofile.exists() || (ifile.exists() && ifile.lastModified() > ofile.lastModified())) {
+					String prefix = zimletName + ".";
+					try {
+						TemplateCompiler.compile(
+							zimletDir, zimletDir, prefix, new String[] { ipath }, true, true
+						);
+					}
+					catch (IOException e) {
+						// ignore, let fail
+					}
 				}
 			}
 		}
