@@ -903,6 +903,9 @@ public class ProvUtil implements HttpDebugListener {
 			HashSet<String> accounts = new HashSet<String>();
 			java.util.Collections.addAll(accounts, args);
 			accounts.remove(args[0]);
+			for (String acct : accounts)
+			    if (mProv.getAccountByName(acct) == null)
+	                throw AccountServiceException.NO_SUCH_ACCOUNT(acct);
 			fbcli.pushFreeBusyForAccounts(accounts);
         	break;
         }
