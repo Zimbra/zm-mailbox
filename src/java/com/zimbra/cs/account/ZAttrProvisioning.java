@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091022-1311 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091119-1514 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2356,6 +2356,30 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=63)
     public static final String A_zimbraDomainInheritedAttr = "zimbraDomainInheritedAttr";
+
+    /**
+     * enable domain mandatory mail signature
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1069)
+    public static final String A_zimbraDomainMandatoryMailSignatureEnabled = "zimbraDomainMandatoryMailSignatureEnabled";
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1071)
+    public static final String A_zimbraDomainMandatoryMailSignatureHTML = "zimbraDomainMandatoryMailSignatureHTML";
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1070)
+    public static final String A_zimbraDomainMandatoryMailSignatureText = "zimbraDomainMandatoryMailSignatureText";
 
     /**
      * maximum number of accounts allowed in a domain

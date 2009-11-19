@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091022-1311 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091119-1514 */
 
     /**
      * RFC2256: descriptive information
@@ -5803,6 +5803,222 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetDomainInheritedAttr(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainInheritedAttr, "");
+        return attrs;
+    }
+
+    /**
+     * enable domain mandatory mail signature
+     *
+     * @return zimbraDomainMandatoryMailSignatureEnabled, or false if unset
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1069)
+    public boolean isDomainMandatoryMailSignatureEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, false);
+    }
+
+    /**
+     * enable domain mandatory mail signature
+     *
+     * @param zimbraDomainMandatoryMailSignatureEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1069)
+    public void setDomainMandatoryMailSignatureEnabled(boolean zimbraDomainMandatoryMailSignatureEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, zimbraDomainMandatoryMailSignatureEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable domain mandatory mail signature
+     *
+     * @param zimbraDomainMandatoryMailSignatureEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1069)
+    public Map<String,Object> setDomainMandatoryMailSignatureEnabled(boolean zimbraDomainMandatoryMailSignatureEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, zimbraDomainMandatoryMailSignatureEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable domain mandatory mail signature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1069)
+    public void unsetDomainMandatoryMailSignatureEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable domain mandatory mail signature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1069)
+    public Map<String,Object> unsetDomainMandatoryMailSignatureEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @return zimbraDomainMandatoryMailSignatureHTML, or null if unset
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1071)
+    public String getDomainMandatoryMailSignatureHTML() {
+        return getAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, null);
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @param zimbraDomainMandatoryMailSignatureHTML new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1071)
+    public void setDomainMandatoryMailSignatureHTML(String zimbraDomainMandatoryMailSignatureHTML) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, zimbraDomainMandatoryMailSignatureHTML);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @param zimbraDomainMandatoryMailSignatureHTML new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1071)
+    public Map<String,Object> setDomainMandatoryMailSignatureHTML(String zimbraDomainMandatoryMailSignatureHTML, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, zimbraDomainMandatoryMailSignatureHTML);
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1071)
+    public void unsetDomainMandatoryMailSignatureHTML() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail html signature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1071)
+    public Map<String,Object> unsetDomainMandatoryMailSignatureHTML(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureHTML, "");
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @return zimbraDomainMandatoryMailSignatureText, or null if unset
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1070)
+    public String getDomainMandatoryMailSignatureText() {
+        return getAttr(Provisioning.A_zimbraDomainMandatoryMailSignatureText, null);
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @param zimbraDomainMandatoryMailSignatureText new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1070)
+    public void setDomainMandatoryMailSignatureText(String zimbraDomainMandatoryMailSignatureText) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureText, zimbraDomainMandatoryMailSignatureText);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @param zimbraDomainMandatoryMailSignatureText new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1070)
+    public Map<String,Object> setDomainMandatoryMailSignatureText(String zimbraDomainMandatoryMailSignatureText, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureText, zimbraDomainMandatoryMailSignatureText);
+        return attrs;
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1070)
+    public void unsetDomainMandatoryMailSignatureText() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureText, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * domain mandatory mail plain text signature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.4
+     */
+    @ZAttr(id=1070)
+    public Map<String,Object> unsetDomainMandatoryMailSignatureText(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainMandatoryMailSignatureText, "");
         return attrs;
     }
 
