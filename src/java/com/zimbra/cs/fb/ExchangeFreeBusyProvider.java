@@ -455,15 +455,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return serverInfo;
 	}
 	
-	public static int checkAuth(Account requestor) throws ServiceException, IOException {
+	public static int checkAuth(ServerInfo info, Account requestor) throws ServiceException, IOException {
 		ExchangeFreeBusyProvider prov = new ExchangeFreeBusyProvider();
-		ServerInfo info = new ServerInfo();
-		info.url = getAttr(Provisioning.A_zimbraFreebusyExchangeURL);
-		info.authUsername = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername);
-		info.authPassword = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword);
-		info.org = getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg);
-		String scheme = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme);
-		info.scheme = AuthScheme.valueOf(scheme);
 		ArrayList<Request> req = new ArrayList<Request>();
 		req.add(new Request(
 				requestor, 
@@ -474,13 +467,6 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		String url = prov.constructGetUrl(info, req);
 		HttpMethod method = new GetMethod(url);
 		return prov.sendRequest(method, info);
-	}
-	
-	private static String getAttr(String name) throws ServiceException {
-		String val = BasicUserResolver.getAttr(name, null);
-		if (val == null)
-			throw ServiceException.INVALID_REQUEST("missing "+name, null);
-		return val;
 	}
 	
 	public static class ExchangeUserFreeBusy extends FreeBusy {
