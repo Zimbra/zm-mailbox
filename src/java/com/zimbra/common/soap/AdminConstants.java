@@ -577,6 +577,13 @@ public class AdminConstants {
     public static final String A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL = "binaryProtocol";
     public static final String A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS = "defaultExpirySeconds";
     public static final String A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS = "defaultTimeoutMillis";
+    
+    // CheckExchangeAuth
+    public static final String E_AUTH = "auth";
+    public static final String A_URL = "url";
+    public static final String A_USER = "user";
+    public static final String A_PASS = "pass";
+    public static final String A_SCHEME = "scheme";
 
     //extension targets
     public static final String T_ADMIN_MAIN = "admin-main";
