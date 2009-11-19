@@ -26,6 +26,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.ldap.Check;
+import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
+import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -39,8 +41,14 @@ public class CheckExchangeAuth extends AdminDocumentHandler {
         Domain domain = Provisioning.getInstance().getDomain(authedAcct);
         
         checkRight(zsc, context, domain, Admin.R_checkExchangeAuthConfig);
-        
-        Check.Result r = Check.checkExchangeAuth(authedAcct);
+        Element auth = request.getElement(AdminConstants.E_AUTH);
+        ExchangeFreeBusyProvider.ServerInfo sinfo = new ExchangeFreeBusyProvider.ServerInfo();
+        sinfo.url = auth.getAttribute(AdminConstants.A_URL);
+        sinfo.authUsername = auth.getAttribute(AdminConstants.A_USER);
+        sinfo.authPassword = auth.getAttribute(AdminConstants.A_PASS);
+        String scheme = auth.getAttribute(AdminConstants.A_SCHEME);
+        sinfo.scheme = AuthScheme.valueOf(scheme);
+        Check.Result r = Check.checkExchangeAuth(sinfo, authedAcct);
 
 	    Element response = zsc.createElement(AdminConstants.CHECK_EXCHANGE_AUTH_RESPONSE);
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());

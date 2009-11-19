@@ -215,9 +215,9 @@ public class Check {
         }
     }
 
-    public static Result checkExchangeAuth(Account acct) throws ServiceException {
+    public static Result checkExchangeAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
     	try {
-        	int code = ExchangeFreeBusyProvider.checkAuth(acct);
+        	int code = ExchangeFreeBusyProvider.checkAuth(sinfo, acct);
         	switch (code) {
         	case 400:
         	case 404:
