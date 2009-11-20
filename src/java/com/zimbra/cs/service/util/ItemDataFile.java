@@ -289,6 +289,7 @@ public class ItemDataFile {
         opts.addOption("a", "assemble", false, "assemble backup");
         opts.addOption("c", "charset", true, "path charset");
         opts.addOption("e", "extract", false, "extract backup");
+        opts.addOption("h", "help", false, "help");
         opts.addOption("l", "list", false, "list backup");
         opts.addOption("n", "nometa", false, "ignore metadata");
         opts.addOption("p", "path", true, "extracted backup path");
@@ -310,7 +311,7 @@ public class ItemDataFile {
                 path = cl.getOptionValue('p');
             if (cl.hasOption('t'))
                 types = MailboxIndex.parseTypesString(cl.getOptionValue('t'));
-            if (cl.getArgs().length != 1)
+            if (cl.hasOption('h') || cl.getArgs().length != 1)
                 usage(opts);
             if (cl.hasOption('v'))
                 verbose = true;
@@ -325,9 +326,10 @@ public class ItemDataFile {
             else
                 usage(opts);
         } catch (Exception e) {
-            e.printStackTrace(System.out);
             if (e instanceof UnrecognizedOptionException)
                 usage(opts);
+            else
+                e.printStackTrace(System.out);
             System.exit(1);
         }
     }
