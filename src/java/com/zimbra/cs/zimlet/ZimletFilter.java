@@ -154,7 +154,8 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         }
 
         // check access
-		File devdir = new File(LC.zimlet_directory.value() + File.separator + ZimletUtil.ZIMLET_DEV_DIR);
+		File basedir = new File(LC.zimlet_directory.value());
+		File devdir = new File(basedir, ZimletUtil.ZIMLET_DEV_DIR);
         Iterator<String> iter = zimletNames.iterator();
         while (iter.hasNext()) {
             String zimletName = iter.next();
@@ -207,7 +208,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				String opath = matcher.group(3);
 				String ipath = opath.replaceAll(".js$", "");
 				boolean isDevZimlet = uri.indexOf("_dev") != -1;
-				File zimletDir = new File(devdir, isDevZimlet ? zimletName : ".."+File.separatorChar+zimletName);
+				File zimletDir = new File(isDevZimlet ? devdir : basedir, zimletName);
 				File ifile = new File(zimletDir, ipath);
 				File ofile = new File(zimletDir, opath);
 				if (!ofile.exists() || (ifile.exists() && ifile.lastModified() > ofile.lastModified())) {
