@@ -25,6 +25,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -108,6 +109,12 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    	account = prov.createAccount(acctValue, password, accountAttrs);
 	    }
 
+	    if (!Provisioning.onLocalServer(account)) {
+	        String host = account.getMailHost();
+	        Server server = prov.getServerByName(host);
+	        return proxyRequest(request, context, server);
+	    }
+	    
 	    String acctName = account.getName();
 	    String acctId = account.getId();
     	HashSet<String> galAcctIds = new HashSet<String>();
