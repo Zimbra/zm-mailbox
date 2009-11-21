@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.ShareInfo.Published;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -100,11 +101,21 @@ public class TestShareInfo extends TestCase {
         return Integer.valueOf(folder.getId());
     }
     
+    private void grantRight(Account owner, DistributionList grantee, String folderId, String rights) throws ServiceException {
+        ZMailbox ownerMbox = TestUtil.getZMailbox(owner.getName());
+        ownerMbox.modifyFolderGrant(folderId, ZGrant.GranteeType.grp, grantee.getName(), rights, null);
+    }
+    
     private ZFolder createFolder(Account owner, String folderPath) 
         throws ServiceException {
         ZMailbox ownerMbox = TestUtil.getZMailbox(owner.getName());
         ZFolder folder = TestUtil.createFolder(ownerMbox, folderPath);
         return folder;
+    }
+    
+    private void deleteFolder(Account owner, String folderId) throws Exception {
+        ZMailbox ownerMbox = TestUtil.getZMailbox(owner.getName());
+        ownerMbox.deleteFolder(folderId);
     }
     
     static class Expected {
@@ -146,6 +157,7 @@ public class TestShareInfo extends TestCase {
             }
             
             // shareInfo is not in expected
+            sid.dump();
             fail();
         }
         
@@ -241,12 +253,23 @@ public class TestShareInfo extends TestCase {
 
     }
     
+    /**
+     * 
+     * @param publishingEntry
+     * @param ownerForPublishing
+     * @param ownerForGet if null, get published share info owned by all users
+     *                    otherwise, get published share info owned by the specified owner
+     * @param folderPath
+     * @param expectedDirectOnly
+     * @param expectedIncludeAll
+     * @throws ServiceException
+     */
     private void doTestPublishShareInfo(DistributionList publishingEntry, 
+            PublishShareInfoAction action,
             Account ownerForPublishing, Account ownerForGet,
-            String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) 
-        throws ServiceException {
+            String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) throws ServiceException {
         
-        mProv.publishShareInfo(publishingEntry, PublishShareInfoAction.add, ownerForPublishing, folderPath);
+        mProv.publishShareInfo(publishingEntry, action, ownerForPublishing, folderPath);
         
         VerifyPublishedVisitor visitor;
         
@@ -261,6 +284,33 @@ public class TestShareInfo extends TestCase {
         verifyMe.OK();
     }
     
+    private void doTestPublish(DistributionList publishingEntry, 
+            Account ownerForPublishing, Account ownerForGet,
+            String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) throws ServiceException{
+        
+        doTestPublishShareInfo(publishingEntry, 
+                PublishShareInfoAction.add,
+                ownerForPublishing, ownerForGet,
+                folderPath, expectedDirectOnly, expectedIncludeAll);
+    }
+    
+    private void doTestUnpublish(DistributionList publishingEntry, 
+            Account ownerForPublishing, Account ownerForGet,
+            String folderPath, Expected expectedDirectOnly, Expected expectedIncludeAll) throws ServiceException{
+        
+        doTestPublishShareInfo(publishingEntry, 
+                PublishShareInfoAction.remove,
+                ownerForPublishing, ownerForGet,
+                folderPath, expectedDirectOnly, expectedIncludeAll);
+    }
+    
+    private void doTestGetShareInfo(Account authedAcct, Account ownerAcct, Expected expected) throws ServiceException {
+        Provisioning prov = TestProvisioningUtil.getSoapProvisioningUser(authedAcct.getName(), PASSWORD);
+        
+        VerifyPublishedVisitor visitor = new VerifyPublishedVisitor(expected);
+        prov.getShareInfo(ownerAcct, visitor);
+        expected.OK();
+    }
 
     public void testDLShareInfoGrantToDL() throws Exception {
         String testName = getName();
@@ -298,7 +348,7 @@ public class TestShareInfo extends TestCase {
         DistributionList dlNotInDL = mProv.createDistributionList(dlNotInDlEmail, null);
         
         /*
-         * create a folder in owner's mailbox and grant rights to the grantee account
+         * create a folder in owner's mailbox and grant rights to the grantee DL
          */
         String folderPath = "/test";
         short rights = ACL.RIGHT_READ | ACL.RIGHT_WRITE;
@@ -324,19 +374,19 @@ public class TestShareInfo extends TestCase {
         expectedDirectOnly.add(esi);
         expectedAll = new Expected();
         expectedAll.add(esi);
-        doTestPublishShareInfo(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
+        doTestPublish(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
         
         // === a DL in the grantee DL
         expectedDirectOnly = new Expected();
         expectedDirectOnly.add(esi);
         expectedAll = new Expected();
         expectedAll.add(esi);
-        doTestPublishShareInfo(dlInDL, owner, owner, folderPath, expectedDirectOnly, expectedAll);
+        doTestPublish(dlInDL, owner, owner, folderPath, expectedDirectOnly, expectedAll);
         
         // === a DL not in the grantee DL
         expectedDirectOnly = new Expected();
         expectedAll = new Expected();
-        doTestPublishShareInfo(dlNotInDL, owner, owner, folderPath, expectedDirectOnly, expectedAll);
+        doTestPublish(dlNotInDL, owner, owner, folderPath, expectedDirectOnly, expectedAll);
         
         
         /*
@@ -354,7 +404,7 @@ public class TestShareInfo extends TestCase {
         expectedAll = new Expected();
         expectedAll.add(esi);
         expectedAll.add(esiSubFolder);
-        doTestPublishShareInfo(grantee, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
+        doTestPublish(grantee, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
         
         // === a DL in the grantee DL
         expectedDirectOnly = new Expected();
@@ -363,12 +413,12 @@ public class TestShareInfo extends TestCase {
         expectedAll = new Expected();
         expectedAll.add(esi);
         expectedAll.add(esiSubFolder);
-        doTestPublishShareInfo(dlInDL, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
+        doTestPublish(dlInDL, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
         
         // === a DL not in the grantee DL
         expectedDirectOnly = new Expected();
         expectedAll = new Expected();
-        doTestPublishShareInfo(dlNotInDL, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
+        doTestPublish(dlNotInDL, owner, owner, subFolderPath, expectedDirectOnly, expectedAll);
     }
     
     public void testGetShareInfoByOwner() throws Exception {
@@ -390,11 +440,14 @@ public class TestShareInfo extends TestCase {
         DistributionList grantee = mProv.createDistributionList(granteeEmail, null);
         
         /*
-         * create an account in the DL
+         * create an account in the DL, and an account not in DL
          */
         String acctInDlEmail = getEmail("acct-in-dl", testName);
         Account acctInDl= mProv.createAccount(acctInDlEmail, PASSWORD, null);
         grantee.addMembers(new String[]{acctInDlEmail});
+        
+        String acctNotInDlEmail = getEmail("acct-not-in-dl", testName);
+        Account acctNotInDl = mProv.createAccount(acctNotInDlEmail, PASSWORD, null);
         
         /*
          * create a folder in owner1 mailbox and grant rights to the grantee DL
@@ -411,7 +464,6 @@ public class TestShareInfo extends TestCase {
         
         Expected.ExpectedShareInfo esiOwner1 = new Expected.ExpectedShareInfo(owner1.getId(), owner1.getName(), folderIdOfOwner1, folderPathOwner1, rights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
         Expected.ExpectedShareInfo esiOwner2 = new Expected.ExpectedShareInfo(owner2.getId(), owner2.getName(), folderIdOfOwner2, folderPathOwner2, rights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
-
         
         // publish owner1's share
         expectedDirectOnly = new Expected();
@@ -419,7 +471,7 @@ public class TestShareInfo extends TestCase {
         expectedAll = new Expected();
         expectedAll.add(esiOwner1);
         // pass null for ownerForGet so we will get all published shares regardless which owner they belong to
-        doTestPublishShareInfo(grantee, owner1, null, folderPathOwner1, expectedDirectOnly, expectedAll);
+        doTestPublish(grantee, owner1, null, folderPathOwner1, expectedDirectOnly, expectedAll);
         
         // publish owner2's share
         expectedDirectOnly = new Expected();
@@ -429,24 +481,156 @@ public class TestShareInfo extends TestCase {
         expectedAll.add(esiOwner1);
         expectedAll.add(esiOwner2);
         // pass null for ownerForGet so we will get all published shares regardless which owner they belong to
-        doTestPublishShareInfo(grantee, owner2, null, folderPathOwner2, expectedDirectOnly, expectedAll);
+        doTestPublish(grantee, owner2, null, folderPathOwner2, expectedDirectOnly, expectedAll);
         
-        // get only owner1's share
-        expectedDirectOnly = new Expected();
-        expectedAll = new Expected();
-        expectedAll.add(esiOwner1);
+        /*
+         * The following cannot be done for now.  Because we want to access the GetShareInfo in account 
+         * namespace, while the one in Provisioning interface is calling the admin version.
+         * 
+         * TODO: add GetShareInfo in zclient and use that for the followin tests.
+         */
         
-        VerifyPublishedVisitor visitor;
+        /*
+        // authenticated as a shared user, get shares shared by owner1
+        Expected expected = new Expected();
+        expected.add(esiOwner1);
+        doTestGetShareInfo(acctInDl, owner1, expected);
         
-        visitor = new VerifyPublishedVisitor(expectedDirectOnly);
-        // mProv.getShareInfo(acctInDl, "usr", owner1, visitor);
-        expectedDirectOnly.OK();
+        // authenticated as a shared user, get shares shared by owner2
+        expected = new Expected();
+        expected.add(esiOwner2);
+        doTestGetShareInfo(acctInDl, owner2, expected);
         
-        visitor = new VerifyPublishedVisitor(expectedAll);
-        // mProv.getShareInfo(acctInDl, null, owner1, visitor);
-        expectedDirectOnly.OK(); 
+        // authenticated as a not-shared user, should not see any share info shared by any owner
+        expected = new Expected();
+        doTestGetShareInfo(acctNotInDl, owner1, expected);
+        expected = new Expected();
+        doTestGetShareInfo(acctNotInDl, owner2, expected);
+        */
     }
+    
+    public void testRemoveShareInfo() throws Exception {
+        String testName = getName();
+        
+        /*
+         * owner account
+         */
+        String ownerEmail = getEmail("owner", testName);
+        Account owner = mProv.createAccount(ownerEmail, PASSWORD, null);
+        
+        /*
+         * grantee DL
+         */
+        String granteeEmail = getEmail("grantee-dl", testName);
+        DistributionList grantee = mProv.createDistributionList(granteeEmail, null);
+        
+        /*
+         * create a folder in owner's mailbox and grant rights to the grantee DL
+         */
+        String folderPath = "/test";
+        short rights = ACL.RIGHT_READ | ACL.RIGHT_WRITE;
+        int folderId = createFolderAndGrantRight(owner, grantee, folderPath, ACL.rightsToString(rights));
+        
+        // create a sub folder
+        String subFolder1Path = "/test/sub1";
+        ZFolder subFolder1 = createFolder(owner, subFolder1Path);
+        int subFolder1Id = Integer.valueOf(subFolder1.getId());
+        
+        // create another sub folder
+        String subFolder2Path = "/test/sub1/sub2";
+        ZFolder subFolder2 = createFolder(owner, subFolder2Path);
+        int subFolder2Id = Integer.valueOf(subFolder2.getId());
+        
+        Expected.ExpectedShareInfo esi = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), folderId, folderPath, rights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
+        Expected.ExpectedShareInfo esiSubFolder1 = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), subFolder1Id, subFolder1Path, rights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
+        Expected.ExpectedShareInfo esiSubFolder2 = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), subFolder2Id, subFolder2Path, rights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
 
+        
+        Expected expectedDirectOnly;
+        Expected expectedAll = null;
+        
+        // publish for the parent folder
+        expectedDirectOnly = new Expected();
+        expectedDirectOnly.add(esi);
+        doTestPublish(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
+        
+        // publish for the subfolder1
+        expectedDirectOnly = new Expected();
+        expectedDirectOnly.add(esi);
+        expectedDirectOnly.add(esiSubFolder1);
+        doTestPublish(grantee, owner, owner, subFolder1Path, expectedDirectOnly, expectedAll);
+        
+        // publish for the subfolder2
+        expectedDirectOnly = new Expected();
+        expectedDirectOnly.add(esi);
+        expectedDirectOnly.add(esiSubFolder1);
+        expectedDirectOnly.add(esiSubFolder2);
+        doTestPublish(grantee, owner, owner, subFolder2Path, expectedDirectOnly, expectedAll);
+        
+        // remove the subfolder1 
+        // bug 42469: should be able to unpublish if the folder is deleted
+        deleteFolder(owner, "" + subFolder1Id);
+        
+        /*
+        ShareInfo.DumpShareInfoVisitor visitor = new ShareInfo.DumpShareInfoVisitor();
+        visitor.printHeadings();
+        mProv.getPublishedShareInfo(grantee, owner, visitor);
+        */
+        
+        // unpublish the subfolder, should only see the parent folder and subfolder2
+        expectedDirectOnly = new Expected();
+        expectedDirectOnly.add(esi);
+        expectedDirectOnly.add(esiSubFolder2);
+        doTestUnpublish(grantee, owner, owner, subFolder1Path, expectedDirectOnly, expectedAll);
+        
+        // unpublish all folders(pass null for folder), should see nothing now
+        expectedDirectOnly = new Expected();
+        doTestUnpublish(grantee, owner, owner, null, expectedDirectOnly, expectedAll);
+    }
+    
+    public void testRepublish() throws Exception {
+        String testName = getName();
+        
+        /*
+         * owner account
+         */
+        String ownerEmail = getEmail("owner", testName);
+        Account owner = mProv.createAccount(ownerEmail, PASSWORD, null);
+        
+        /*
+         * grantee DL
+         */
+        String granteeEmail = getEmail("grantee-dl", testName);
+        DistributionList grantee = mProv.createDistributionList(granteeEmail, null);
+        
+        /*
+         * create a folder in owner's mailbox and grant rights to the grantee DL
+         */
+        String folderPath = "/test";
+        short rights = ACL.RIGHT_READ | ACL.RIGHT_WRITE;
+        int folderId = createFolderAndGrantRight(owner, grantee, folderPath, ACL.rightsToString(rights));
+        
+        Expected.ExpectedShareInfo esi = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), folderId, folderPath, rights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
+        
+        Expected expectedDirectOnly = null;
+        Expected expectedAll = null;
+        
+        // publish the share
+        expectedDirectOnly = new Expected();
+        expectedDirectOnly.add(esi);
+        doTestPublish(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
+        
+        // re-grant, change the right
+        short newRights = ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_ADMIN;
+        grantRight(owner, grantee, String.valueOf(folderId), ACL.rightsToString(newRights));
+        
+        // now should see only the new publish, previous published should be gone
+        Expected.ExpectedShareInfo esiWithNewRights = new Expected.ExpectedShareInfo(owner.getId(), owner.getName(), folderId, folderPath, newRights, ACL.GRANTEE_GROUP, grantee.getId(), grantee.getName());
+        expectedDirectOnly = new Expected();
+        expectedDirectOnly.add(esiWithNewRights);
+        doTestPublish(grantee, owner, owner, folderPath, expectedDirectOnly, expectedAll);
+    }
+    
     public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();  // will set SoapProvisioning
         

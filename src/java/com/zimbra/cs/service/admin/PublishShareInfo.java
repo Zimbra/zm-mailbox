@@ -26,6 +26,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -54,39 +55,97 @@ public class PublishShareInfo extends ShareInfoHandler {
         
         Element eShare = request.getElement(AdminConstants.E_SHARE);
         PublishShareInfoAction action = PublishShareInfoAction.fromString(eShare.getAttribute(AdminConstants.A_ACTION));
-            
-        Account ownerAcct = getOwner(zsc, eShare, prov, true);
         
+        // check if the authed admin has right to change(publish/unpublish) share info on this DL
         checkDistributionListRight(zsc, (DistributionList)publishingOnEntry, Admin.R_publishDistributionListShareInfo);
-        checkAccountRight(zsc, ownerAcct, Admin.R_adminLoginAs);
             
         Element eFolder = eShare.getElement(AdminConstants.E_FOLDER);
         String folderPath = eFolder.getAttribute(AdminConstants.A_PATH, null);
         String folderId = eFolder.getAttribute(AdminConstants.A_FOLDER, null);
         String folderIdOrPath = eFolder.getAttribute(AdminConstants.A_PATH_OR_ID, null);
-            
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
-        if (mbox == null)
-            throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
         
-        Folder folder = null;
-            
-        if (folderPath != null) {
+        if (folderPath != null)
             ensureOtherFolderDescriptorsAreNotPresent(folderId, folderIdOrPath);
-            folder = getFolderByPath(octxt, mbox, folderPath);
-        } else if (folderId != null) {
+        else if (folderId != null)
             ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderIdOrPath);
-            folder = getFolderByPath(octxt, mbox, folderId);
-        } else if (folderIdOrPath != null) {
+        else if (folderIdOrPath != null)
             ensureOtherFolderDescriptorsAreNotPresent(folderPath, folderId);
-            folder = getFolder(octxt, mbox, folderIdOrPath);
+
+            
+        if (action == PublishShareInfoAction.add) {
+            // adding (publishing)
+            
+            Account ownerAcct = getOwner(zsc, eShare, prov, true);
+            
+            // we will need to access the owner's mailbox, check if the admin can 
+            // access the owner account's mailbox
+            checkAccountRight(zsc, ownerAcct, Admin.R_adminLoginAs);
+            
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
+            if (mbox == null)
+                throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
+            
+            Folder folder = null;
+                
+            if (folderPath != null)
+                folder = getFolderByPath(octxt, mbox, folderPath);
+            else if (folderId != null)
+                folder = getFolderByPath(octxt, mbox, folderId);
+            else if (folderIdOrPath != null)
+                folder = getFolder(octxt, mbox, folderIdOrPath);
+            else {
+                // no folder is given, iterate through all folders
+                folder = null;
+            }
+            
+            ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry, ownerAcct, folder);
+            
         } else {
-            // no folder is given, iterate through all folders
-            folder = null;
+            // removing (unpublishing)
+            
+            /*
+             * do not have to check R_adminLoginAs right on the owner account because
+             * we will be just going through published data on the DL.
+             */ 
+            
+            //
+            // owner account
+            //
+            boolean allOwners = false;
+            String ownerAcctId = null;
+            String ownerAcctEmail = null;
+            
+            Element eOwner = eShare.getOptionalElement(AdminConstants.E_OWNER);
+            if (eOwner == null)
+                allOwners = true;
+            else {
+                allOwners = false;
+                String key = eOwner.getAttribute(AdminConstants.A_BY);
+                AccountBy by = AccountBy.fromString(key);
+                
+                if (by == AccountBy.id)
+                    ownerAcctId = eOwner.getText();
+                else if (by == AccountBy.name)
+                    ownerAcctEmail = eOwner.getText();
+                else
+                    throw ServiceException.INVALID_REQUEST("invalid owner key: " + key, null);
+            }
+            
+            //
+            // folder
+            //
+            if (folderIdOrPath != null) {
+                if (folderIdOrPath.charAt(0) == '/')
+                    folderPath = folderIdOrPath;
+                else
+                    folderId = folderIdOrPath;
+            }
+            
+            boolean allFolders = (folderId == null && folderPath == null);
+            
+            ShareInfo.Published.unpublish(prov, (DistributionList)publishingOnEntry, 
+                    ownerAcctId, ownerAcctEmail, allOwners, folderId, folderPath, allFolders);
         }
-        
-        ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry,
-                action, ownerAcct, folder);
         
         Element response = zsc.createElement(AdminConstants.PUBLISH_SHARE_INFO_RESPONSE);
         return response;

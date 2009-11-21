@@ -428,8 +428,8 @@ public class ShareInfo {
     public static class Publishing extends ShareInfo {
         
         public static void publish(Provisioning prov, OperationContext octxt, 
-                NamedEntry publishingOnEntry, PublishShareInfoAction action, Account ownerAcct, 
-                Folder folder) throws ServiceException {
+                NamedEntry publishingOnEntry,
+                Account ownerAcct, Folder folder) throws ServiceException {
             
             if (folder == null) {
                 // no folder descriptor, do the entire folder tree
@@ -440,33 +440,27 @@ public class ShareInfo {
                 
                 Set<Folder> folders = getVisibleFolders(octxt, mbox);
                 for (Folder f : folders)
-                    doPublish(prov, publishingOnEntry, action, ownerAcct, f);
+                    doPublish(prov, publishingOnEntry,  ownerAcct, f);
             } else {
-                doPublish(prov, publishingOnEntry, action, ownerAcct, folder);
+                doPublish(prov, publishingOnEntry, ownerAcct, folder);
             }
         }
         
         private static void doPublish(Provisioning prov, 
-                NamedEntry publishingOnEntry, PublishShareInfoAction action, Account ownerAcct, 
-                Folder folder) throws ServiceException {
+                NamedEntry publishingOnEntry, 
+                Account ownerAcct, Folder folder) throws ServiceException {
             
-            ShareInfo.Publishing si = new ShareInfo.Publishing(action, ownerAcct, folder);
+            ShareInfo.Publishing si = new ShareInfo.Publishing(ownerAcct, folder);
             si.discoverGrants(folder, publishingOnEntry);
             if (si.hasGrant())
                 si.persist(prov, publishingOnEntry);
         }
     
-        private PublishShareInfoAction mAction;
-        private Publishing(PublishShareInfoAction action, Account ownerAcct, Folder folder) {
-            mAction = action;
+        private Publishing(Account ownerAcct, Folder folder) {
             mData.setOwnerAcctId(ownerAcct.getId());
             mData.setOwnerAcctEmail(ownerAcct.getName());
             mData.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
             mData.setFolderId(folder.getId());
-        }
-            
-        public PublishShareInfoAction getAction() {
-            return mAction;
         }
     
         /**
@@ -581,32 +575,31 @@ public class ShareInfo {
             
             Map<String, Object> attrs = new HashMap<String, Object>();
             String value = serialize();
-            if (getAction() == PublishShareInfoAction.add) {
-                attrs.put(addKey, value);
-            }
+            attrs.put(addKey, value);
                 
             /*
-             * if adding, replace existing share info for the same owner:folder
-             * if removing, delete all(there should be only one) share info of the same owner:folder
-             * 
-             * for both case, we remove any value that starts with the same owner:folder
+             * replace existing share info for the same owner:folder
+             * we remove any value that starts with the same owner:folder 
+             * (there should only be one, but we go through all in case 
+             *  the data got in via some unexpected way)
              * 
              * one caveat: if we are adding an existing owner:folder and the share info have not 
              * changed since last published, we do not want to put a - in the mod map, because 
              * that will remove the value put in above.
              */
+            Set<String> toRemove = new HashSet<String>();
             String ownerAndFoler = serializeOwnerAndFolder();
             for (String curSi : curShareInfo) {
-                if (curSi.startsWith(ownerAndFoler) && 
-                        (getAction() == PublishShareInfoAction.remove || !curSi.equals(value))) {
-                    attrs.put(removeKey, curSi);
-                }
+                if (curSi.startsWith(ownerAndFoler) && !curSi.equals(value))
+                    toRemove.add(curSi);
             }
-
+            if (!toRemove.isEmpty())
+                attrs.put(removeKey, toRemove);
+            
             prov.modifyAttrs(publishingOnEntry, attrs);
         }
     }
-    
+
     
     /*
      * ===========================
@@ -618,7 +611,16 @@ public class ShareInfo {
         
         private String mDigest; // for deduping
 
-        
+        /*
+         * returns a list of Published from an encoded string
+         * 
+         * each zimbraShareInfo value can expand to *multiple* Published share info, because
+         * for each owner:folder, there could be multiple matched grantees
+         * e.g. 
+         *    - group dl2 is a member of group dl1
+         *    - owner shares /inbox to dl2 for rw rights 
+         *    - owner shares /inbox to dl1 for aid rights
+         */
         private static List<Published> decodeMetadata(String encoded) throws ServiceException {
             List<Published> siList = new ArrayList<Published>();
             
@@ -768,6 +770,122 @@ public class ShareInfo {
             }
         }
         
+        /**
+         * We should allow removing (un-publishing) share info even when the owner 
+         * account/mailbox/folder does not exist.  They could've been deleted.
+         * 
+         * We match the request with published as much as we can.  
+         * For perf reason, owner email and folder name is also persisted in the 
+         * published share info.  
+         * 
+         * @param prov
+         * @param unpublishingOnEntry
+         * @param ownerAcctId
+         * @param ownerAcctEmail
+         * @param allOwners
+         * @param folderId
+         * @param folderPath
+         * @param allFolders
+         * @throws ServiceException
+         */
+        public static void unpublish(Provisioning prov, 
+                DistributionList dl,
+                String ownerAcctId, String ownerAcctEmail, boolean allOwners,
+                String folderId, String folderPath, boolean allFolders) throws ServiceException {
+            
+            Matcher matcher = new Matcher(ownerAcctId, ownerAcctEmail, allOwners,
+                     folderId,  folderPath,  allFolders);
+            
+            Set<String> publishedShareInfo = dl.getMultiAttrSet(Provisioning.A_zimbraShareInfo);
+            String removeKey = "-" + Provisioning.A_zimbraShareInfo;
+            
+            Set<String> toRemove = new HashSet<String>();
+            
+            for (String psi : publishedShareInfo) {
+                
+                try {
+                    // each zimbraShareInfo value can expand to *multiple* Published share info,
+                    // see comments for decodeMetadata
+                    List<Published> siList = decodeMetadata(psi);
+                        
+                    for (Published si : siList) {    
+                        if (matcher.matches(si.mData)) {
+                            toRemove.add(psi);
+                            break;
+                        }
+                    }
+                    
+                } catch (ServiceException e) {
+                    // probably encountered malformed share info, log and ignore
+                    // should remove the value from LDAP?
+                    ZimbraLog.account.warn("unable to process share info", e);
+                }
+            }
+            
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            attrs.put(removeKey, toRemove);
+            prov.modifyAttrs(dl, attrs);
+        }
+        
+        /*
+         * matcher for unpublishing
+         */
+        private static class Matcher {
+            
+            private String mOwnerAcctId;
+            private String mOwnerAcctEmail;
+            private boolean mAllOwners;
+            private String mFolderId;
+            private String mFolderPath;
+            private boolean mAllFolders;
+            
+            private Matcher(String ownerAcctId, String ownerAcctEmail, boolean allOwners,
+                    String folderId, String folderPath, boolean allFolders) {
+                mOwnerAcctId = ownerAcctId;
+                mOwnerAcctEmail = ownerAcctEmail;
+                mAllOwners = allOwners;
+                mFolderId = folderId;
+                mFolderPath = folderPath;
+                mAllFolders = allFolders;
+            }
+            
+            private boolean matches(ShareInfoData sid) {
+                return matchOwner(sid) && matchFolder(sid);
+            }
+            
+            private boolean matchOwner(ShareInfoData sid) {
+                if (mAllOwners)
+                    return true;
+                
+                // match id if provided
+                if (mOwnerAcctId != null)
+                    return mOwnerAcctId.equals(sid.getOwnerAcctId());
+
+                // match email if provided
+                if (mOwnerAcctEmail != null)
+                    return mOwnerAcctEmail.equals(sid.getOwnerAcctEmail());
+                
+                // not matched
+                return false;
+            }
+            
+            private boolean matchFolder(ShareInfoData sid) {
+                if (mAllFolders)
+                    return true;
+                
+                // match folder id if provided
+                if (mFolderId != null)
+                    return mFolderId.equals(String.valueOf(sid.getFolderId()));
+                
+                // match folder path if provided
+                if (mFolderPath != null)
+                    return mFolderPath.equals(sid.getFolderPath());
+                
+                // not matched
+                return false;
+            }
+        }
+        
         private static void getSharesPublishedOnGroups(Provisioning prov, PublishedShareInfoVisitor visitor, 
                 AclGroups aclGroups, Account owner, Set<String> visited) 
             throws ServiceException {
@@ -808,13 +926,8 @@ public class ShareInfo {
             for (String psi : publishedShareInfo) {
                 
                 try {
-                    // each zimbraShareInfo value can expand to *multiple* Published share info, because
-                    // for each owner:folder, there could be multiple matched grantees
-                    // e.g. 
-                    //    - group dl2 is a member of group dl1
-                    //    - owner shares /inbox to dl2 for rw rights 
-                    //    - owner shares /inbox to dl1 for aid rights
-                    //
+                    // each zimbraShareInfo value can expand to *multiple* Published share info,
+                    // see comments for decodeMetadata
                     List<Published> siList = decodeMetadata(psi);
                         
                     for (Published si : siList) {    
@@ -1392,6 +1505,61 @@ public class ShareInfo {
             }
         }
     }
+    
+    /*
+     * for debugging/unittest
+     */
+    public static class DumpShareInfoVisitor implements PublishedShareInfoVisitor {
+        
+        private static final String mFormat = 
+            "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
+        
+        public static void printHeadings() {
+            System.out.printf(mFormat, 
+                              "owner id",
+                              "owner email",
+                              "owner display",
+                              "fid",
+                              "folder path",
+                              "view",
+                              "rights",
+                              "mid",
+                              "gt",
+                              "grantee id",
+                              "grantee name",
+                              "grantee display");
+            
+            System.out.printf(mFormat,
+                              "------------------------------------",      // owner id
+                              "---------------",                           // owner email
+                              "---------------",                           // owner display
+                              "-----",                                     // folder id
+                              "--------------------",                      // folder path
+                              "----------",                                // default view
+                              "----------",                                // rights
+                              "-----",                                     // mountpoint id if mounted
+                              "-----",                                     // grantee type 
+                              "------------------------------------",      // grantee id
+                              "---------------",                           // grantee name
+                              "---------------");                          // grantee display
+        }
+        
+        public void visit(ShareInfoData shareInfoData) throws ServiceException {
+            System.out.printf(mFormat, 
+                    shareInfoData.getOwnerAcctId(),
+                    shareInfoData.getOwnerAcctEmail(),
+                    shareInfoData.getOwnerAcctDisplayName(),
+                    String.valueOf(shareInfoData.getFolderId()),
+                    shareInfoData.getFolderPath(),
+                    shareInfoData.getFolderDefaultView(),
+                    shareInfoData.getRights(),
+                    shareInfoData.getMountpointId_zmprov_only(),
+                    shareInfoData.getGranteeType(),
+                    shareInfoData.getGranteeId(),
+                    shareInfoData.getGranteeName(),
+                    shareInfoData.getGranteeDisplayName());                        
+        }
+    };
 }
 
 

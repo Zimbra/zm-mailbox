@@ -248,4 +248,24 @@ public class ShareInfoData {
         if (mptId != null)
             eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
     }
+    
+    public void dump() {
+        String format = "    %15s : %s\n";
+        
+        System.out.println();
+        System.out.printf(format, "owner id",        getOwnerAcctId());
+        System.out.printf(format, "owner email",     getOwnerAcctEmail());
+        System.out.printf(format, "owner display",   getOwnerAcctDisplayName());
+        System.out.printf(format, "folder id",       String.valueOf(getFolderId()));
+        System.out.printf(format, "folder path",     getFolderPath());
+        System.out.printf(format, "view",            getFolderDefaultView());
+        System.out.printf(format, "rights",          getRights());
+        System.out.printf(format, "mountpoint id",   getMountpointId_zmprov_only());
+        System.out.printf(format, "grantee type",    getGranteeType());
+        System.out.printf(format, "grantee id",      getGranteeId());
+        System.out.printf(format, "grantee email",   getGranteeName());
+        System.out.printf(format, "grantee display", getGranteeDisplayName());
+        System.out.println();
+        
+    }
 }

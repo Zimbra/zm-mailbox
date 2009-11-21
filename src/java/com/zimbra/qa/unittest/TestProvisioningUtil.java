@@ -24,8 +24,12 @@ import java.util.Set;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
@@ -203,5 +207,54 @@ public class TestProvisioningUtil extends TestCase {
         sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         sp.soapAdminAuthenticate(userName, password);
         return sp;
+    }
+    
+    /**
+     * returns a SoapProvisioningUser object, authenticated as a user, not admin
+     * @param userName
+     * @param password
+     * @return
+     * @throws ServiceException
+     */
+    public static SoapProvisioningUser getSoapProvisioningUser(String userName, String password) throws ServiceException {
+        SoapProvisioningUser spu = new SoapProvisioningUser(userName, password);
+        spu.auth();
+        return spu;
+    }
+    
+    public static class SoapProvisioningUser extends SoapProvisioning {
+        
+        String mName;
+        String mPassword;
+        
+        SoapProvisioningUser(String name, String password) {
+            mName = name;
+            mPassword = password;
+            setURL();
+        }
+        
+        private void setURL() {
+            soapSetURI(TestUtil.getSoapUrl());
+        }
+        
+        private void auth() throws ServiceException {
+            XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
+            Element a = req.addElement(AccountConstants.E_ACCOUNT);
+            a.addAttribute(AccountConstants.A_BY, "name");
+            a.setText(mName);
+            req.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
+            Element response = invoke(req);
+            String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+            setAuthToken(new ZAuthToken(authToken));
+        }
+ 
+        /* 
+         * invokeOnTargetAccount in SoapProvisioning is protected, 
+         * expose it here
+         */
+        public Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
+            return super.invokeOnTargetAccount(request, targetId);
+        }
+
     }
 }
