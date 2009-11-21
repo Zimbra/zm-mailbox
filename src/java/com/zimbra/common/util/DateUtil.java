@@ -316,6 +316,7 @@ public class DateUtil {
             return fallback;
     
         // normalize format to "2005-10-19T16:25:38-0800"
+        encoded = encoded.toUpperCase();
         int length = encoded.length();
         if (length == 4)
             encoded += "-01-01T00:00:00-0000";
@@ -327,8 +328,12 @@ public class DateUtil {
             return fallback;
         else if (encoded.charAt(16) != ':')
             encoded = encoded.substring(0, 16) + ":00" + encoded.substring(16);
-        else if (length >= 22 && encoded.charAt(19) == '.')
-            encoded = encoded.substring(0, 19) + encoded.substring(21);
+        else if (length >= 21 && encoded.charAt(19) == '.') {
+            int pos = 20;
+            while (pos < length && Character.isDigit(encoded.charAt(pos)))
+                pos++;
+            encoded = encoded.substring(0, 19) + encoded.substring(pos);
+        }
     
         // timezone cleanup: this format understands '-0800', not '-08:00'
         int colon = encoded.lastIndexOf(':');
@@ -410,7 +415,7 @@ public class DateUtil {
         try {
             Matcher m = sAbsMillisecsDatePattern.matcher(dateStr);
             String yearStr, monthStr, dayStr;
-        
+
             if (m.matches()) {
                 return new Date(Long.parseLong(dateStr));
             }
@@ -634,6 +639,11 @@ public class DateUtil {
         System.out.println("date = " + new Date(parseDateSpecifier("-1day", 0)));
         System.out.println("date = " + new Date(parseDateSpecifier("1132276598000", 0)));
         System.out.println("date = " + new Date(parseDateSpecifier("p10day", 0)));
+
+        System.out.println("iso = " + parseISO8601Date("2009-11-20", new Date()));
+        System.out.println("iso = " + parseISO8601Date("2009-11-20T13:55:49Z", new Date()));
+        System.out.println("iso = " + parseISO8601Date("2009-11-20T13:55:49.823", new Date()));
+        System.out.println("iso = " + parseISO8601Date("2009-11-20t13:55:49.724z", new Date()));
 
         System.out.println(parseRFC2822Date("01 May 2007 09:27 -0600", new Date()));
         System.out.println(parseRFC2822Date("01 Apr 2005 18:20:24 -0800", new Date()));
