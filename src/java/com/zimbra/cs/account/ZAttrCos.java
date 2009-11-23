@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091123-1405 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091123-1412 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -22072,6 +22072,149 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefSpellDictionary(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSpellDictionary, "");
+        return attrs;
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @return zimbraPrefSpellIgnoreWord, or empty array if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public String[] getPrefSpellIgnoreWord() {
+        return getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord);
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param zimbraPrefSpellIgnoreWord new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public void setPrefSpellIgnoreWord(String[] zimbraPrefSpellIgnoreWord) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnoreWord, zimbraPrefSpellIgnoreWord);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param zimbraPrefSpellIgnoreWord new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public Map<String,Object> setPrefSpellIgnoreWord(String[] zimbraPrefSpellIgnoreWord, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnoreWord, zimbraPrefSpellIgnoreWord);
+        return attrs;
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param zimbraPrefSpellIgnoreWord new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public void addPrefSpellIgnoreWord(String zimbraPrefSpellIgnoreWord) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefSpellIgnoreWord, zimbraPrefSpellIgnoreWord);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param zimbraPrefSpellIgnoreWord new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public Map<String,Object> addPrefSpellIgnoreWord(String zimbraPrefSpellIgnoreWord, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefSpellIgnoreWord, zimbraPrefSpellIgnoreWord);
+        return attrs;
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param zimbraPrefSpellIgnoreWord existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public void removePrefSpellIgnoreWord(String zimbraPrefSpellIgnoreWord) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefSpellIgnoreWord, zimbraPrefSpellIgnoreWord);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param zimbraPrefSpellIgnoreWord existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public Map<String,Object> removePrefSpellIgnoreWord(String zimbraPrefSpellIgnoreWord, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefSpellIgnoreWord, zimbraPrefSpellIgnoreWord);
+        return attrs;
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public void unsetPrefSpellIgnoreWord() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnoreWord, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public Map<String,Object> unsetPrefSpellIgnoreWord(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefSpellIgnoreWord, "");
         return attrs;
     }
 

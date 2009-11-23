@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091123-1405 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091123-1412 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -6032,6 +6032,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1041)
     public static final String A_zimbraPrefSpellDictionary = "zimbraPrefSpellDictionary";
+
+    /**
+     * List of words to ignore when checking spelling. The word list of an
+     * account includes the words specified for its cos and domain.
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1073)
+    public static final String A_zimbraPrefSpellIgnoreWord = "zimbraPrefSpellIgnoreWord";
 
     /**
      * whether standard client should operate in accessibility Mode
