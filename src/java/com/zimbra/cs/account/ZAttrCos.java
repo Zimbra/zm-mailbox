@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091119-1514 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091123-1405 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -19618,6 +19618,88 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefMailFlashTitle(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailFlashTitle, "");
+        return attrs;
+    }
+
+    /**
+     * a list of comma separated folder ids of all folders used to count for
+     * showing a new message indicator icon for the account, useful in UIs
+     * managing multiple accounts: desktop and family mailboxes.
+     *
+     * @return zimbraPrefMailFoldersCheckedForNewMsgIndicator, or null if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1072)
+    public String getPrefMailFoldersCheckedForNewMsgIndicator() {
+        return getAttr(Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator, null);
+    }
+
+    /**
+     * a list of comma separated folder ids of all folders used to count for
+     * showing a new message indicator icon for the account, useful in UIs
+     * managing multiple accounts: desktop and family mailboxes.
+     *
+     * @param zimbraPrefMailFoldersCheckedForNewMsgIndicator new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1072)
+    public void setPrefMailFoldersCheckedForNewMsgIndicator(String zimbraPrefMailFoldersCheckedForNewMsgIndicator) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator, zimbraPrefMailFoldersCheckedForNewMsgIndicator);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * a list of comma separated folder ids of all folders used to count for
+     * showing a new message indicator icon for the account, useful in UIs
+     * managing multiple accounts: desktop and family mailboxes.
+     *
+     * @param zimbraPrefMailFoldersCheckedForNewMsgIndicator new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1072)
+    public Map<String,Object> setPrefMailFoldersCheckedForNewMsgIndicator(String zimbraPrefMailFoldersCheckedForNewMsgIndicator, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator, zimbraPrefMailFoldersCheckedForNewMsgIndicator);
+        return attrs;
+    }
+
+    /**
+     * a list of comma separated folder ids of all folders used to count for
+     * showing a new message indicator icon for the account, useful in UIs
+     * managing multiple accounts: desktop and family mailboxes.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1072)
+    public void unsetPrefMailFoldersCheckedForNewMsgIndicator() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * a list of comma separated folder ids of all folders used to count for
+     * showing a new message indicator icon for the account, useful in UIs
+     * managing multiple accounts: desktop and family mailboxes.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1072)
+    public Map<String,Object> unsetPrefMailFoldersCheckedForNewMsgIndicator(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator, "");
         return attrs;
     }
 

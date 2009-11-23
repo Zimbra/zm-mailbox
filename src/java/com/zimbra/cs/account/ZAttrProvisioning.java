@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091119-1514 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091123-1405 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5703,6 +5703,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=680)
     public static final String A_zimbraPrefMailFlashTitle = "zimbraPrefMailFlashTitle";
+
+    /**
+     * a list of comma separated folder ids of all folders used to count for
+     * showing a new message indicator icon for the account, useful in UIs
+     * managing multiple accounts: desktop and family mailboxes.
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1072)
+    public static final String A_zimbraPrefMailFoldersCheckedForNewMsgIndicator = "zimbraPrefMailFoldersCheckedForNewMsgIndicator";
 
     /**
      * RFC822 forwarding address for an account

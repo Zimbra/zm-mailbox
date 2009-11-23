@@ -4748,4 +4748,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>domain mandatory mail html signature</desc>
 </attr>
 
+<attr id="1072" name="zimbraPrefMailFoldersCheckedForNewMsgIndicator" type="string" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.5">
+  <desc>
+     a list of comma separated folder ids of all folders used to count for showing a new message indicator icon for the account, 
+     useful in UIs managing multiple accounts: desktop and family mailboxes.
+  </desc>
+</attr>
+
 </attrs>
