@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.jivesoftware.wildfire.XMPPServer;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -668,7 +669,9 @@ public class Search extends MailDocumentHandler  {
         req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
 
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, nominalTargetAcctId);
-        ZMailbox.Options zoptions = new ZMailbox.Options(zsc.getRawAuthToken(), AccountUtil.getSoapUri(target));
+        String pxyAuthToken = zsc.getAuthToken().getProxyAuthToken();
+        ZAuthToken zat = pxyAuthToken == null ? zsc.getRawAuthToken() : new ZAuthToken(pxyAuthToken);
+        ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setTargetAccount(nominalTargetAcctId);
         zoptions.setTargetAccountBy(AccountBy.id);
         zoptions.setNoSession(true);
