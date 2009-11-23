@@ -1,132 +1,237 @@
-== Install Instructions for Intel Mac OS X ==
+=============================================
+==
+==
+== Install Instructions for Intel Mac OS X
+==
+==
+=============================================
 
 The following instructions detail how to get a development
-environment setup for Zimbra on an Intel Mac running OS X 10.4. In
-each section below, links to the necessary software is provided.
-However, if inside Zimbra many of these packages are already 
-downloaded and are available at http://kenny/public/software/ 
-so try there first. 
-
-Some notes on the software:
-
-   * Perforce - install the latest version
-   * MySQL - you MUST install the x86 version, version 5 (or higher)
+environment setup for Zimbra on an Intel Mac running OS X 10.5.
 
 
-=== Perforce ===
+PREREQUISITE SOFWARE
+====================
 
-Download and install client from http://perforce.com/perforce/downloads/macosx104x86.html
+   * Perforce - the P4 Command-Line Client ("P4") and P4 Visual Client ("P4V")
+		Use the latest version
+		http://www.perforce.com/perforce/downloads/index.html
 
-Setup p4 client with following information:
+   * MySQL - you MUST install the x86 version
+		Use version 5 (or higher)
+		http://dev.mysql.com/downloads/mysql/5.0.html#macosx-dmg
 
-P4USER = {user_name}
-P4PORT = depot:1666
-P4CLIENT = {client_name}
+OVERVIEW
+========
 
-P4 View:
+--  Setup the P4 Command-Line Client
+--  Configure Build Environment
+--  Download Zimbra Source
+--  Install MySQL
+--  Build and Deploy Zimbra Server
+--  Starting and Stopping Servers
+--  Configure OpenLDAP
+--  Configure JDK for Zimbra Command Line Tools
+--  Install Mail Transfer Agent
+
+
+SETUP THE P4 COMMAND-LINE CLIENT
+================================
+
+1. Download P4 executable Command-Line Client
+
+2. Move p4 binary to /usr/local/bin
+
+3. Make p4 executable:
+
+	chmod +x
+
+More information on configuring the P4 client is available at:
+http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#1070774
+
+
+CONFIGURE BUILD ENVIRONMENT
+===========================
+
+1. Edit the shell configuration file:
+
+	vi ~/.bash_profile
+
+2. Configure the P4 client environment variables
+
+	# p4 client setup
+	export P4USER={user-name}
+	export P4PORT=depot.zimbra.com:1666
+	export P4CLIENT={workspace}
+
+3. Set Zimbra source directory:
+
+	# set SRCDIR to P4 sync directory
+	export SRCDIR=~/p4/main
+
+4. Set PATH to include Zimbra command line tools:
+
+	PATH=$PATH:/opt/zimbra/bin
+	export PATH
+
+5. Reload the shell configuration file:
+
+	cd ~
+	. .bash_profile
+		
+6. Create the zimbra output directory
+
+	mkdir -p /opt/zimbra
+
+
+DOWNLOAD ZIMBRA SOURCE
+======================
+
+1. Using the P4 Visual Client, setup a Connection to access the Zimbra depot.
+
+	Note: The Public Zimbra source code P4 depot is available at [Server=codes.zimbra.com, Port=2666, User=public, Password=public1234]
+
+2. Configure your Workspace to include the following in the View:
 		
 	For the basic server only include:
-		//depot/main/ZimbraCommon/... //{client_name}/ZimbraCommon/...
-		//depot/main/ZimbraIM/... //{client_name}/ZimbraIM/...
-		//depot/main/ZimbraServer/... //{client_name}/ZimbraServer/...
-		//depot/main/ThirdParty/jetty/... //{client_name}/ThirdParty/jetty/...
+		//depot/main/ZimbraCommon/... //{workspace-name}/ZimbraCommon/...
+		//depot/main/ZimbraIM/... //{workspace-name}/ZimbraIM/...
+		//depot/main/ZimbraServer/... //{workspace-name}/ZimbraServer/...
+		//depot/main/ThirdParty/jetty/... //{workspace-name}/ThirdParty/jetty/...
 
 	For the webclient also include
-		//depot/main/Ajax/... //{client_name}/Ajax/...
-		//depot/main/ZimbraWebClient/... //{client_name}/ZimbraWebClient/...
-		//depot/main/ZimbraTagLib/... //{client_name}/ZimbraTagLib/...
-		//depot/main/Zimlet/... //{client_name}/Zimlet/...
+		//depot/main/Ajax/... //{workspace-name}/Ajax/...
+		//depot/main/ZimbraWebClient/... //{workspace-name}/ZimbraWebClient/...
+		//depot/main/ZimbraTagLib/... //{workspace-name}/ZimbraTagLib/...
+		//depot/main/Zimlet/... //{workspace-name}/Zimlet/...
 
 	If you are using IDEA Intellij include
-		//depot/main/Zimbra.ipr //{client_name}/Zimbra.ipr
+		//depot/main/Zimbra.ipr //{workspace-name}/Zimbra.ipr
 
-After you setup Perforce, login and sync the client. This will get
-you all of the files that you will need for the rest of the install.
-
-
-=== Setup build environment ===
-
-Open a terminal shell and run the following commands:
-
-<pre>
-# set SRCDIR to P4 sync directory
-export SRCDIR=~/p4/main
-mkdir -p /opt/zimbra
-</pre>
+2. After you setup Perforce, login and sync the client. This will get the files needed for the rest of the build & install.
 
 
-=== Install MySQL ===
+INSTALL MySQL
+=============
 
-Download and install from http://dev.mysql.com/downloads/mysql/5.0.html#macosx-dmg
+1. Download MySQL disk image (mysql-5.0.87-osx-10.5-x86.dmg)
 
-Note: Install *both* packages so that MySQL starts automatically on reboot
+2. Install both packages included in the distribution:
 
-Run the following commands:
+	PACKAGE #1: mysql-5.0.87-osx-10.5-x86.pkg
+		The MySQL binaries install package
 
-<pre>
-sudo ln -s /usr/local/mysql /opt/zimbra/mysql
-</pre>
+	PACKAGE #2: MySQLStartupItem.pkg
+		Configures MySQL to automatically start during system startup. Sets MySQL in /Library/StartupItems/MySQLCOM
 
-Then create /opt/zimbra/mysql/data/my.cnf with:
+3. Create a symbolic link from the zimbra install directory to the mysql install. Run the following command:
 
-<pre>
-[mysqld]
-bind-address = localhost
-port = 7306
-</pre>
+	sudo ln -s /usr/local/mysql /opt/zimbra/mysql
 
-Start MySQL with the following command:
-[Note: mysqld will start automatically on reboot]
+4. Create the mysql configuration file.
 
-<pre>
-sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
-</pre>
+	sudo -s
+	vi /opt/zimbra/mysql/data/my.cnf
 
-Set the password to the ant expected "zimbra".
+	[mysqld]
+	bind-address = localhost
+	port = 7306
 
-<pre>
-% /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
-</pre>
+5. Start MySQL with the following command:
 
+	sudo -b /opt/zimbra/mysql/bin/safe_mysqld --user=mysql
 
-=== Install OpenLDAP ===
+	Note: With MySQLStartupItem package installed, mysqld will start automatically on reboot.
 
-OpenLDAP is now installed automatically during reset-all.
-The only manual change you need to make is to run "sudo
-visudo" and add the following at the end of the file and
-save:
+6. Set the database "root" password to the ant expected "zimbra":
 
-<pre>
-{user_name}{TAB}ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
-<pre>
+	/opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
 
+7. Confirm mysql server processes are running:
 
-=== Deploy Zimbra ===
+	bash-3.2# ps -a
 
-Deploy Zimbra with the following commands:
+	PID TTY           TIME CMD
+	14464 ttys000    0:00.02 login -pf testuser
+	14465 ttys000    0:00.01 -bash
+	14476 ttys000    0:00.01 su - testuser
+	14477 ttys000    0:00.10 -bash
+	14596 ttys000    0:00.04 /bin/bash
+	14652 ttys000    0:00.01 /bin/sh /opt/zimbra/mysql/bin/safe_mysqld --user=mysql
+	14668 ttys000    0:00.05 /usr/local/mysql/bin/mysqld --basedir=/usr/local/mysql
+	14669 ttys000    0:00.00 ps -a
 
-<pre>
-cd $SRCDIR/ZimbraServer
-ant reset-all
-</pre>
+8. The MySQL Server log file can be found at:
 
-You should now be able to point your browser to the following
-URL and login with the username "user1" and password "test123":
+	/opt/zimbra/mysql/data/{server-name}.err
 
-<pre>
-http://localhost:7070
-</pre>
+9. To stop MySQL server:
+
+	/opt/zimbra/mysql/bin/mysqladmin -u root -p shutdown
 
 
-=== Set up the JDK for command line tools ===
+BUILD AND DEPLOY ZIMBRA SERVER
+==============================
+
+1. Change to the Zimbra server source directory:	cd $SRCDIR/ZimbraServer2. Run the "reset all" ant task:	ant reset-all3. Browse to your local server and login as "Demo User One":	http://localhost:7070/zimbra	Username: user1	Password: test123
+
+4. Browse to your local server admin console and login as "Admin":
+
+	https://localhost:7071/zimbraAdmin
+
+	Username: admin	Password: test123
+
+
+STARTING AND STOPPING SERVERS
+=============================
+
+1. To stop all servers (webserver/jetty, LDAP):
+
+	cd $SRCDIR/ZimbraServer
+	ant stop-servers
+
+2. To start or stop LDAP:
+
+	cd $SRCDIR/ZimbraServer
+	ant [start-ldap | stop-ldap]
+
+3. To start or stop webserver/jetty:
+
+	cd $SRCDIR/ZimbraServer
+	ant [start-webserver | stop-webserver]
+
+
+CONFIGURE OPENLDAP
+==================
+
+1. OpenLDAP is installed automatically during "reset-all". The only manual change needed is to allow the local user to start LDAP without password.
+
+2. Run "sudo visudo" and add the following at the end of the file (i.e. in the "User Privledge Section"):
+
+	{user-name} ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
+
+	Note: replace {user-name} with your local user name and be sure to insert a [TAB] between the {user-name} and the word "ALL"
+
+
+CONFIGURE JDK FOR ZIMBRA COMMAND LINE TOOLS
+===========================================
 
 Command-line tools like zmprov, zmmailbox, zmsoap, etc., depend
 on the JDK to be in /opt/zimbra/java.  Either download the JDK
 and extract there, or create a symbolic link to your existing
 JDK location.
 
+1. Browse to the zimbra java directory:
 
-=== Install Mail Transfer Agent ===
+	cd /opt/zimbra/java/bin
+
+2. Create symbolic link to existing JDK:
+
+	sudo ln -s /usr/bin/java java
+
+
+INSTALL MAIL TRANSFER AGENT
+===========================
 
 In order to send mail to/from users in the Zimbra product
 you will need a mail transfer agent. However, you do not need
@@ -175,32 +280,3 @@ sudo -b perl $SRCDIR/ZimbraServer/src/perl/zMTAHack.pl
 NOTE: When sending mail, you need to fully qualify the
 address as {username}@$ZIMBRA_HOSTNAME. The {username} is
 "user1" through "user5".
-
-
-=== Starting / Stopping Servers ===
-
-To start or stop all servers including LDAP:
-
-<pre>
-cd $SRCDIR/ZimbraServer
-ant [start-servers | stop-servers]
-TODO
-</pre>
-
-
-To start or stop LDAP:
-
-<pre>
-cd $SRCDIR/ZimbraServer
-ant [start-ldap | stop-ldap]
-TODO
-</pre>
-
-
-To start or ZCS web servers:
-
-<pre>
-cd $SRCDIR/ZimbraServer
-ant [start-webserver | stop-webserver]
-TODO
-</pre>
