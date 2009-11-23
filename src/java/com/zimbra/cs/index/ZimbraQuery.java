@@ -1683,6 +1683,10 @@ public final class ZimbraQuery {
                 // we pass NULL to addClause which will add a blank clause for us...
                 return new NoTermQueryOperation();
             } else {
+                // indexing is disabled
+                if (mMailbox.getMailboxIndex() == null)
+                    return new NoTermQueryOperation();
+                    
                 TextQueryOperation lop = mMailbox.getMailboxIndex().createTextQueryOperation();
 
                 for (QueryInfo inf : mQueryInfo) {

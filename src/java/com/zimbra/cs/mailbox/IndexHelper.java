@@ -175,7 +175,10 @@ public class IndexHelper {
     }        
 
     String generateIndexId(int itemId) {
-        return getMailboxIndex().generateIndexId(itemId);
+        if (getMailboxIndex() != null)
+            return getMailboxIndex().generateIndexId(itemId);
+        else
+            return null;
     }
 
     /** Returns the maximum number of items to be batched in a single indexing
