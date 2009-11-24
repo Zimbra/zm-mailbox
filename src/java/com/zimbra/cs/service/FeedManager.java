@@ -68,17 +68,17 @@ import com.zimbra.cs.util.Zimbra;
 
 public class FeedManager {
 
-    public static final class SubscriptionData {
-        public List   items;
+    public static final class SubscriptionData<T> {
+        public final List<T> items;
         public String lastGuid;
         public long   lastDate = -1;
         public long   feedDate = System.currentTimeMillis();
 
-        SubscriptionData()           { items = new ArrayList(); }
-        SubscriptionData(List list)  { items = list; }
-        SubscriptionData(long fdate) { items = new ArrayList();  feedDate = fdate; }
+        SubscriptionData()              { items = new ArrayList<T>(); }
+        SubscriptionData(List<T> list)  { items = list; }
+        SubscriptionData(long fdate)    { items = new ArrayList<T>();  feedDate = fdate; }
 
-        void recordItem(Object item, String guid, long date) {
+        void recordItem(T item, String guid, long date) {
             items.add(item);
             if (date > lastDate)  { lastGuid = guid;  lastDate = date; }
         }
@@ -86,9 +86,11 @@ public class FeedManager {
 
     public static final int MAX_REDIRECTS = 3;
     public static final String HTTP_USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322) Zimbra/2.0";
-    public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
+    public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, " +
+    		                             "application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
 
-    public static SubscriptionData retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd) throws ServiceException {
+    public static SubscriptionData<?> retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd)
+    throws ServiceException {
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
 
@@ -109,7 +111,7 @@ public class FeedManager {
             int redirects = 0;
             do {
                 if (url == null || url.equals(""))
-                    return new SubscriptionData();
+                    return new SubscriptionData<Object>();
                 String lcurl = url.toLowerCase();
                 if (lcurl.startsWith("webcal:"))
                     url = "http:" + url.substring(7);
@@ -140,7 +142,7 @@ public class FeedManager {
                 try {
                     get = new GetMethod(url);
                 } catch (OutOfMemoryError e) {
-                    Zimbra.halt("out of memory", e);
+                    Zimbra.halt("out of memory", e);  return null;
                 } catch (Throwable t) {
                     throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, t);
                 }
@@ -178,10 +180,11 @@ public class FeedManager {
                     List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(content, charset.toString());
                     List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true, true, null);
                     // handle missing UIDs on remote calendars by generating them as needed
-                    for (Invite inv : invites)
+                    for (Invite inv : invites) {
                     	if (inv.getUid() == null)
-                    		inv.setUid(LdapUtil.generateUUID());
-                    return new SubscriptionData(invites);
+                    	    inv.setUid(LdapUtil.generateUUID());
+                    }
+                    return new SubscriptionData<Invite>(invites);
                 default:
                     throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
             }
@@ -204,7 +207,7 @@ public class FeedManager {
         switch (ch) {
             case 0xEF:
                 if (is.read() == 0xBB && is.read() == 0xBF) {
-                    is.mark(1);
+                    is.mark(128);
                     ch = is.read();  charset.setLength(0);  charset.append("utf-8");
                 }
                 break;
@@ -247,7 +250,7 @@ public class FeedManager {
         }
     }
 
-    private static SubscriptionData parseRssFeed(Element root, Folder.SyncData fsd) throws ServiceException {
+    private static SubscriptionData<ParsedMessage> parseRssFeed(Element root, Folder.SyncData fsd) throws ServiceException {
         try {
             String rname = root.getName();
             if (rname.equals("feed"))
@@ -258,11 +261,12 @@ public class FeedManager {
             String subjChannel = channel.getAttribute("title");
             InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
             Date dateChannel = DateUtil.parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
-            List<Enclosure> enclosures = new ArrayList<Enclosure>();
-            SubscriptionData sdata = new SubscriptionData(dateChannel.getTime());
+
+            List<Enclosure> enclosures = new ArrayList<Enclosure>(3);
+            SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>(dateChannel.getTime());
 
             if (rname.equals("rss"))
-                root = root.getElement("channel");
+                root = channel;
             else if (!rname.equals("RDF"))
                 throw ServiceException.PARSE_ERROR("unknown top-level rss element name: " + root.getQualifiedName(), null);
 
@@ -297,6 +301,8 @@ public class FeedManager {
                     text = item.getAttribute("description", null);
                 if (text == null)
                     text = item.getAttribute("abstract", null);
+                if (text == null && title != subjChannel)
+                    text = "";
                 if (text == null)
                     continue;
                 html |= text.indexOf("</") != -1 || text.indexOf("/>") != -1 || text.indexOf("<p>") != -1;
@@ -310,7 +316,7 @@ public class FeedManager {
         }
     }
 
-    private static SubscriptionData parseAtomFeed(Element feed, Folder.SyncData fsd) throws ServiceException {
+    private static SubscriptionData<ParsedMessage> parseAtomFeed(Element feed, Folder.SyncData fsd) throws ServiceException {
         try {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
@@ -318,7 +324,7 @@ public class FeedManager {
                 addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List<Enclosure> enclosures = new ArrayList<Enclosure>();
-            SubscriptionData sdata = new SubscriptionData(dateFeed.getTime());
+            SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>(dateFeed.getTime());
 
             for (Element item : feed.listElements("entry")) {
                 // get the item's date
@@ -373,7 +379,8 @@ public class FeedManager {
                                               "<HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\"></HEAD><BODY>";
     private static final String HTML_FOOTER = "</BODY></HTML>";
 
-    private static ParsedMessage generateMessage(String title, String text, String href, boolean html, InternetAddress addr, Date date, List<Enclosure> attach)
+    private static ParsedMessage generateMessage(String title, String text, String href, boolean html,
+                                                 InternetAddress addr, Date date, List<Enclosure> attach)
     throws ServiceException {
         String ctype = html ? "text/html; charset=\"utf-8\"" : "text/plain; charset=\"utf-8\"";
         String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
