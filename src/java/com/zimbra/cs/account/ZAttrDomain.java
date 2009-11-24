@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091123-1412 */
+    /* build: 6.0.2_BETA1_1111 andcla 20091124-1452 */
 
     /**
      * RFC2256: descriptive information
@@ -7939,6 +7939,78 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetNotes(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraNotes, "");
+        return attrs;
+    }
+
+    /**
+     * Platform for Privacy Preferences (P3P) header added to every response.
+     *
+     * @return zimbraP3PHeader, or null if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public String getP3PHeader() {
+        return getAttr(Provisioning.A_zimbraP3PHeader, null);
+    }
+
+    /**
+     * Platform for Privacy Preferences (P3P) header added to every response.
+     *
+     * @param zimbraP3PHeader new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public void setP3PHeader(String zimbraP3PHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraP3PHeader, zimbraP3PHeader);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Platform for Privacy Preferences (P3P) header added to every response.
+     *
+     * @param zimbraP3PHeader new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public Map<String,Object> setP3PHeader(String zimbraP3PHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraP3PHeader, zimbraP3PHeader);
+        return attrs;
+    }
+
+    /**
+     * Platform for Privacy Preferences (P3P) header added to every response.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public void unsetP3PHeader() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraP3PHeader, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Platform for Privacy Preferences (P3P) header added to every response.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public Map<String,Object> unsetP3PHeader(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraP3PHeader, "");
         return attrs;
     }
 
