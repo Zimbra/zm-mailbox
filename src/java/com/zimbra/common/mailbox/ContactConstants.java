@@ -125,6 +125,7 @@ public class ContactConstants {
     
     // vCard fields that need to be preserved
     public static final String A_vCardUID    = "vcardUID";
+    public static final String A_vCardURL    = "vcardURL";
     public static final String A_vCardXProps = "vcardXProps";
 
     public static final String TYPE_GROUP = "group";
