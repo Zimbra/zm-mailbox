@@ -1093,9 +1093,9 @@ public abstract class ArchiveFormatter extends Formatter {
                 return;
             case MailItem.TYPE_FOLDER:
                 String aclParam = context.params.get("acl");
-                boolean acl = aclParam == null || !aclParam.equals("0");
-
+                boolean doACL = aclParam == null || !aclParam.equals("0");
                 Folder f = (Folder)mi;
+                ACL acl = f.getACL();
                 Folder oldF = null;
                 byte view = f.getDefaultView();
                 
@@ -1111,9 +1111,13 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (r != Resolve.Skip) {
                         if (!f.getUrl().equals(oldF.getUrl()))
                             mbox.setFolderUrl(oc, oldF.getId(), f.getUrl());
-                        if (acl && !f.getACL().toString().equals(
-                            oldF.getACL().toString()))
-                            mbox.setPermissions(oc, oldF.getId(), f.getACL());
+                        if (doACL) {
+                            ACL oldACL = oldF.getACL();
+                            
+                            if ((acl == null && oldACL != null) ||
+                                (acl != null && (oldACL == null || !acl.equals(oldACL))))
+                                mbox.setPermissions(oc, oldF.getId(), acl);
+                        }
                     }
                 }
                 if (oldItem == null) {
@@ -1121,8 +1125,8 @@ public abstract class ArchiveFormatter extends Formatter {
                     newItem = fldr = mbox.createFolder(oc, f.getName(),
                         fldr.getId(), (byte)0, f.getDefaultView(),
                         f.getFlagBitmask(), f.getColor(), f.getUrl());
-                    if (acl)
-                        mbox.setPermissions(oc, fldr.getId(), f.getACL());
+                    if (doACL && acl != null)
+                        mbox.setPermissions(oc, fldr.getId(), acl);
                     fmap.put(fldr.getId(), fldr);
                     fmap.put(fldr.getPath(), fldr);
                 }
