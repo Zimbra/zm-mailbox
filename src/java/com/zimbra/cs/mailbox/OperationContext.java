@@ -105,6 +105,9 @@ public class OperationContext {
     int getChangeId() {
         return (player == null ? -1 : player.getChangeId());
     }
+    public boolean isRedo() {
+        return player != null;
+    }
     public boolean needRedo() {
         return player == null || !player.getUnloggedReplay();
     }

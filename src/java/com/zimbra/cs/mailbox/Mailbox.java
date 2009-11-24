@@ -796,6 +796,10 @@ public class Mailbox {
         return (mCurrentChange.active ? mCurrentChange.octxt : null);
     }
 
+    RedoableOp getRedoPlayer() {
+        return mCurrentChange.getRedoPlayer();
+    }
+
     RedoableOp getRedoRecorder() {
         return mCurrentChange.recorder;
     }
@@ -6763,8 +6767,11 @@ public class Mailbox {
 
     void snapshotCounts() throws ServiceException {
         // for write ops, update the "new messages" count in the DB appropriately
+        OperationContext octxt = mCurrentChange.octxt;
+        RedoableOp player = mCurrentChange.getRedoPlayer();
         RedoableOp recorder = mCurrentChange.recorder;
-        if (recorder != null && mCurrentChange.getRedoPlayer() == null) {
+        
+        if (recorder != null && (player == null || (octxt != null && !octxt.isRedo()))) {
             boolean isNewMessage = recorder.getOpCode() == RedoableOp.OP_CREATE_MESSAGE;
             if (isNewMessage) {
                 CreateMessage cm = (CreateMessage) recorder;
@@ -6772,10 +6779,26 @@ public class Mailbox {
                     isNewMessage = false;
                 else if ((cm.getFlags() & NON_DELIVERY_FLAGS) != 0)
                     isNewMessage = false;
-                else if (mCurrentChange.octxt != null && mCurrentChange.octxt.getSession() != null && !mCurrentChange.octxt.isDelegatedRequest(this))
+                else if (octxt != null && octxt.getSession() != null && !octxt.isDelegatedRequest(this))
                     isNewMessage = false;
+                if (isNewMessage) {
+                    String folderList = getAccount().getAttr(
+                        Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator);
+                    
+                    if (folderList != null) {
+                        String[] folderIds = folderList.split(",");
+
+                        isNewMessage = false;
+                        for (int i = 0; i < folderIds.length; i++) {
+                            if (cm.getFolderId() == Integer.parseInt(folderIds[i])) {
+                                isNewMessage = true;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
-            boolean isSoapRequest = mCurrentChange.octxt != null && mCurrentChange.octxt.getSession() instanceof SoapSession;
+            boolean isSoapRequest = octxt != null && octxt.getSession() instanceof SoapSession;
             if (isNewMessage)
                 mCurrentChange.recent = mData.recentMessages + 1;
             else if (isSoapRequest && mData.recentMessages != 0)
