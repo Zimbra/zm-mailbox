@@ -21,6 +21,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
@@ -267,29 +268,17 @@ implements LmtpCallback {
             SMTPMessage out = new SMTPMessage(JMSession.getSession());
             
             // From
-            InternetAddress fromAddress;
-            String prefAddress = account.getPrefFromAddress();
-            if (prefAddress != null) {
-                // Get address from user prefs.
-                fromAddress = new InternetAddress(prefAddress);
-                String prefDisplay = account.getPrefFromDisplay();
-                if (prefDisplay != null) {
-                    try {
-                        fromAddress.setPersonal(prefDisplay, MimeConstants.P_CHARSET_UTF8);
-                    } catch (UnsupportedEncodingException e) {
-                        throw ServiceException.FAILURE("Unable to set From address", e);
-                    }
-                }
-            } else {
-                // Get adddress from account.
+            Address fromAddress = getAddress(account.getPrefFromAddress(), account.getPrefFromDisplay());
+            if (fromAddress == null) {
+                // Get address from account.
                 fromAddress = AccountUtil.getFriendlyEmailAddress(account);
             }
             out.setFrom(fromAddress);
             
             // Reply-To
-            String replyTo = account.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
-            if (replyTo != null && !replyTo.trim().equals("")) {
-                out.setHeader("Reply-To", replyTo);
+            Address replyToAddress = getAddress(account.getPrefReplyToAddress(), account.getPrefReplyToDisplay());
+            if (replyToAddress != null) {
+                out.setReplyTo(new Address[] { replyToAddress });
             }
             
             // To
@@ -346,6 +335,24 @@ implements LmtpCallback {
             ofailed("send failed", destination, rcpt, msg, me);
             return;
         }
+    }
+    
+    private Address getAddress(String addressString, String display)
+    throws AddressException {
+        if (StringUtil.isNullOrEmpty(addressString)) {
+            return null;
+        }
+        
+        // Get address from user prefs.
+        InternetAddress address = new InternetAddress(addressString);
+        if (!StringUtil.isNullOrEmpty(display)) {
+            try {
+                address.setPersonal(display, MimeConstants.P_CHARSET_UTF8);
+            } catch (UnsupportedEncodingException e) {
+                ZimbraLog.mailbox.warn("Unable to set display name for " + addressString, e);
+            }
+        }
+        return address;
     }
     
     private String getCharset(Account account, String data) {

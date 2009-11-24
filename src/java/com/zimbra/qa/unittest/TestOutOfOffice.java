@@ -20,6 +20,7 @@ import java.util.Date;
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
@@ -45,6 +46,8 @@ extends TestCase {
     private String mOriginalFromDate;
     private String mOriginalUntilDate;
     private String mOriginalAllowAnyFrom;
+    private String mOriginalReplyToAddress;
+    private String mOriginalReplyToDisplay;
     
     private static String NAME_PREFIX = TestOutOfOffice.class.getSimpleName();
     private static String RECIPIENT_NAME = "user1";
@@ -66,6 +69,8 @@ extends TestCase {
             TestUtil.getAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled);
         mOriginalFromDate = recipient.getPrefOutOfOfficeFromDateAsString();
         mOriginalUntilDate = recipient.getPrefOutOfOfficeUntilDateAsString();
+        mOriginalReplyToAddress = recipient.getPrefReplyToAddress();
+        mOriginalReplyToDisplay = recipient.getPrefReplyToDisplay();
         
         cleanUp();
 }
@@ -112,16 +117,20 @@ extends TestCase {
     public void testPrefFromAddress()
     throws Exception {
         String newFromAddress = TestUtil.getAddress("testPrefFromAddress");
-        String newDisplayName = NAME_PREFIX + " testPrefFromAddress";
+        String newFromDisplay = NAME_PREFIX + " testPrefFromAddress";
+        String newReplyToAddress = TestUtil.getAddress("testReplyToAddress");
+        String newReplyToDisplay = NAME_PREFIX + " testReplyToAddress";
 
         // Set custom from address and turn on out-of-office.
         Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
         recipient.setPrefFromAddress(newFromAddress);
-        recipient.setPrefFromDisplay(newDisplayName);
+        recipient.setPrefFromDisplay(newFromDisplay);
         long now = System.currentTimeMillis();
         recipient.setPrefOutOfOfficeFromDate(new Date(now));
         recipient.setPrefOutOfOfficeUntilDate(new Date(now + Constants.MILLIS_PER_DAY));
         recipient.setPrefOutOfOfficeReplyEnabled(true);
+        recipient.setPrefReplyToAddress(newReplyToAddress);
+        recipient.setPrefReplyToDisplay(newReplyToDisplay);
         
         // Test with zimbraAllowAnyFromAddress = FALSE.
         recipient.setAllowAnyFromAddress(false);
@@ -129,28 +138,43 @@ extends TestCase {
         ZMailbox senderMbox = TestUtil.getZMailbox(SENDER_NAME);
         TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject);
         ZMessage reply = TestUtil.waitForMessage(senderMbox, "in:inbox subject:\"" + subject + "\"");
-        ZEmailAddress fromAddress = getFromAddress(reply);
+        
+        // Validate addresses.
+        ZEmailAddress fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
         assertEquals(recipient.getName(), fromAddress.getAddress());
+        assertEquals(recipient.getDisplayName(), fromAddress.getPersonal());
+        
+        ZEmailAddress replyToAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO);
+        assertEquals(newReplyToAddress, replyToAddress.getAddress());
+        assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
         
         DbOutOfOffice.clear(mConn, mMbox);
         mConn.commit();
         
-        // Test with zimbraAllowAnyFromAddress = TRUE;
+        // Test with zimbraAllowAnyFromAddress = TRUE.
         recipient.setAllowAnyFromAddress(true);
         subject = NAME_PREFIX + " testPrefFromAddress 2";
         TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, subject);
         reply = TestUtil.waitForMessage(senderMbox, "in:inbox subject:\"" + subject + "\"");
-        fromAddress = getFromAddress(reply);
+        ZimbraLog.test.info("Second reply:\n" + TestUtil.getContent(senderMbox, reply.getId()));
+        
+        // Validate addresses.
+        fromAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_FROM);
         assertEquals(newFromAddress, fromAddress.getAddress());
+        assertEquals(newFromDisplay, fromAddress.getPersonal());
+        
+        replyToAddress = getAddress(reply, ZEmailAddress.EMAIL_TYPE_REPLY_TO);
+        assertEquals(newReplyToAddress, replyToAddress.getAddress());
+        assertEquals(newReplyToDisplay, replyToAddress.getPersonal());
     }
     
-    private ZEmailAddress getFromAddress(ZMessage msg) {
+    private ZEmailAddress getAddress(ZMessage msg, String type) {
         for (ZEmailAddress address : msg.getEmailAddresses()) {
-            if (address.getType().equals(ZEmailAddress.EMAIL_TYPE_FROM)) {
+            if (address.getType().equals(type)) {
                 return address;
             }
         }
-        fail("Could not find From address in message: " + msg.getSubject());
+        fail("Could not find address of type " + type + " in message: " + msg.getSubject());
         return null;
     }
     
@@ -167,6 +191,8 @@ extends TestCase {
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, mOriginalReplyEnabled);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeFromDate, mOriginalFromDate);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeUntilDate, mOriginalUntilDate);
+        sender.setPrefReplyToAddress(mOriginalReplyToAddress);
+        sender.setPrefReplyToDisplay(mOriginalReplyToDisplay);
         
         super.tearDown();
     }
