@@ -187,11 +187,15 @@ public class Collection extends MailItemResource {
         String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), MimeConstants.P_CHARSET_UTF8);
         Mailbox mbox = null;
         try {
+            String url = ctxt.getItem();
+            if (url.endsWith(".vcf"))
+                url = url.substring(0, url.length()-4);
             mbox = getMailbox(ctxt);
             DavResource res = null;
             for (VCard vcard : VCard.parseVCard(buf)) {
                 if (vcard.fields.isEmpty())
                     continue;
+                vcard.fields.put(ContactConstants.A_vCardURL, url);
                 String uid = vcard.uid;
                 Contact c = null;
                 // check for existing contact

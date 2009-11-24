@@ -139,7 +139,7 @@ public abstract class MailItemResource extends DavResource {
 		if ((item.getType() == MailItem.TYPE_CONTACT || item.getType() == MailItem.TYPE_FOLDER || item.getType() == MailItem.TYPE_MOUNTPOINT) && !path.endsWith("/"))
 			path += "/";
 		if (item.getType() == MailItem.TYPE_CONTACT)
-		    path += VCard.getUid((Contact)item) + AddressObject.VCARD_EXTENSION;
+		    path += VCard.getUrl((Contact)item) + AddressObject.VCARD_EXTENSION;
 		return path;
 	}
 

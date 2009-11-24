@@ -405,6 +405,9 @@ public class UrlNamespace {
                         StringBuilder query = new StringBuilder();
                         query.append("#").append(ContactConstants.A_vCardUID).append(":");
                         query.append(uid);
+                        query.append(" OR ").append("#").append(ContactConstants.A_vCardURL).append(":");
+                        query.append(uid);
+                        ZimbraLog.dav.debug("query %s", query.toString());
                         try {
                             zqr = mbox.search(ctxt.getOperationContext(), query.toString(), new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 10);
                             if (zqr.hasNext()) {

@@ -530,6 +530,13 @@ public class VCard {
         return con.getMailbox().getAccountId() + ":" + con.getId();
     }
     
+    public static String getUrl(Contact con) {
+        String url = con.get(ContactConstants.A_vCardURL);
+        if (url != null)
+            return url;
+        return getUid(con);
+    }
+    
     private static void encodeField(StringBuilder sb, String name, String value) {
         if (sb == null || name == null || value == null)
             return;
