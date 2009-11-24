@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 andcla 20091124-1452 */
+    /* build: 6.0.2_BETA1_1111 andcla 20091124-1534 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4772,14 +4772,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraObjectType = "zimbraObjectType";
 
     /**
-     * Platform for Privacy Preferences (P3P) header added to every response.
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1074)
-    public static final String A_zimbraP3PHeader = "zimbraP3PHeader";
-
-    /**
      * registered change password listener name
      *
      * @since ZCS 5.0.1
@@ -6323,6 +6315,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=337)
     public static final String A_zimbraRemoteManagementUser = "zimbraRemoteManagementUser";
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public static final String A_zimbraResponseHeader = "zimbraResponseHeader";
 
     /**
      * Allowed reverse proxy IP addresses. Lookup servlet will only generate

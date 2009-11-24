@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 andcla 20091124-1452 */
+    /* build: 6.0.2_BETA1_1111 andcla 20091124-1534 */
 
     /**
      * RFC2256: descriptive information
@@ -7943,78 +7943,6 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Platform for Privacy Preferences (P3P) header added to every response.
-     *
-     * @return zimbraP3PHeader, or null if unset
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1074)
-    public String getP3PHeader() {
-        return getAttr(Provisioning.A_zimbraP3PHeader, null);
-    }
-
-    /**
-     * Platform for Privacy Preferences (P3P) header added to every response.
-     *
-     * @param zimbraP3PHeader new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1074)
-    public void setP3PHeader(String zimbraP3PHeader) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraP3PHeader, zimbraP3PHeader);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Platform for Privacy Preferences (P3P) header added to every response.
-     *
-     * @param zimbraP3PHeader new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1074)
-    public Map<String,Object> setP3PHeader(String zimbraP3PHeader, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraP3PHeader, zimbraP3PHeader);
-        return attrs;
-    }
-
-    /**
-     * Platform for Privacy Preferences (P3P) header added to every response.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1074)
-    public void unsetP3PHeader() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraP3PHeader, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Platform for Privacy Preferences (P3P) header added to every response.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1074)
-    public Map<String,Object> unsetP3PHeader(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraP3PHeader, "");
-        return attrs;
-    }
-
-    /**
      * registered change password listener name
      *
      * @return zimbraPasswordChangeListener, or null if unset
@@ -8719,6 +8647,149 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetPublicServiceProtocol(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPublicServiceProtocol, "");
+        return attrs;
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @return zimbraResponseHeader, or empty array if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public String[] getResponseHeader() {
+        return getMultiAttr(Provisioning.A_zimbraResponseHeader);
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param zimbraResponseHeader new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public void setResponseHeader(String[] zimbraResponseHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResponseHeader, zimbraResponseHeader);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param zimbraResponseHeader new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public Map<String,Object> setResponseHeader(String[] zimbraResponseHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResponseHeader, zimbraResponseHeader);
+        return attrs;
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param zimbraResponseHeader new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public void addResponseHeader(String zimbraResponseHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraResponseHeader, zimbraResponseHeader);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param zimbraResponseHeader new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public Map<String,Object> addResponseHeader(String zimbraResponseHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraResponseHeader, zimbraResponseHeader);
+        return attrs;
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param zimbraResponseHeader existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public void removeResponseHeader(String zimbraResponseHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraResponseHeader, zimbraResponseHeader);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param zimbraResponseHeader existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public Map<String,Object> removeResponseHeader(String zimbraResponseHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraResponseHeader, zimbraResponseHeader);
+        return attrs;
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public void unsetResponseHeader() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResponseHeader, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom response headers. For example, can be used to add a P3P header
+     * for user agents to understand the site&#039;s privacy policy.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1074)
+    public Map<String,Object> unsetResponseHeader(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResponseHeader, "");
         return attrs;
     }
 
