@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091125-1341 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091125-1404 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1570,6 +1570,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=619)
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
+
+    /**
+     * whether user can specify an alternate calendar folder as the default
+     * calendar
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public static final String A_zimbraCalendarAlternateDefaultFolderEnabled = "zimbraCalendarAlternateDefaultFolderEnabled";
 
     /**
      * alternate location for calendar and task folders
@@ -5150,6 +5159,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=439)
     public static final String A_zimbraPrefCalendarDayHourStart = "zimbraPrefCalendarDayHourStart";
+
+    /**
+     * default calendar for new appointments
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public static final String A_zimbraPrefCalendarDefaultFolder = "zimbraPrefCalendarDefaultFolder";
 
     /**
      * first day of week to show in calendar (0=sunday, 6=saturday)
