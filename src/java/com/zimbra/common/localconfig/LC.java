@@ -455,6 +455,9 @@ public class LC {
     public static final KnownKey freebusy_exchange_cn2;
     public static final KnownKey freebusy_exchange_cn3;
     
+    public static final KnownKey zimbra_lmtp_validate_messages;
+    public static final KnownKey zimbra_lmtp_max_line_length;
+    
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1282,6 +1285,9 @@ public class LC {
         freebusy_exchange_cn1 = new KnownKey("freebusy_exchange_cn1");
         freebusy_exchange_cn2 = new KnownKey("freebusy_exchange_cn2");
         freebusy_exchange_cn3 = new KnownKey("freebusy_exchange_cn3");
+
+        zimbra_lmtp_validate_messages = new KnownKey("zimbra_lmtp_validate_messages", "true");
+        zimbra_lmtp_max_line_length = new KnownKey("zimbra_lmtp_max_line_length", "10240");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
