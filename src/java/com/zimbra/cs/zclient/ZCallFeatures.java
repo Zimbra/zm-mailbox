@@ -27,6 +27,11 @@ import java.util.ArrayList;
 
 public class ZCallFeatures {
 
+    public static final String SELECTIVE_CALL_FORWARD_LIST_FULL = "voice.SELECTIVE_CALL_FORWARD_LIST_FULL";
+    public static final String SELECTIVE_CALL_REJECT_LIST_FULL = "voice.SELECTIVE_CALL_REJECT_LIST_FULL";
+    public static final String SELECTIVE_CALL_FORWARD_ALREADY_IN_LIST = "voice.SELECTIVE_CALL_FORWARD_ALREADY_IN_LIST";
+    public static final String SELECTIVE_CALL_REJECT_ALREADY_IN_LIST = "voice.SELECTIVE_CALL_REJECT_ALREADY_IN_LIST";
+
     private ZMailbox mMbox;
     private ZPhone mPhone;
     private Map<String, ZCallFeature> mCallFeatures;
@@ -46,6 +51,12 @@ public class ZCallFeatures {
         this.addFeature(VoiceConstants.E_CALL_FORWARD);
         this.addFeature(VoiceConstants.E_SELECTIVE_CALL_FORWARD);
         this.addFeature(VoiceConstants.E_VOICE_MAIL_PREFS);
+	
+	this.addFeature(VoiceConstants.E_CALL_FORWARD_BUSY_LINE);
+	this.addFeature(VoiceConstants.E_CALL_FORWARD_NO_ANSWER);
+	this.addFeature(VoiceConstants.E_CALL_WAITING);
+	
+	this.addFeature(VoiceConstants.E_SELECTIVE_CALL_REJECTION);
 
         List<Element> elements = e.listElements(VoiceConstants.E_CALL_FEATURE);
         for (Element element : elements) {
@@ -62,6 +73,8 @@ public class ZCallFeatures {
         if (!mCallFeaturesLoaded) {
             mCallFeaturesLoaded = true;
             mMbox.loadCallFeatures(this);
+	    
+	    this.getSubscribedFeatures();
         }
     }
 
@@ -76,6 +89,10 @@ public class ZCallFeatures {
     public ZSelectiveCallForwarding getSelectiveCallForwarding() {
         return (ZSelectiveCallForwarding) getFeature(VoiceConstants.E_SELECTIVE_CALL_FORWARD);
     }
+    
+    public ZSelectiveCallRejection getSelectiveCallRejection() {
+        return (ZSelectiveCallRejection) getFeature(VoiceConstants.E_SELECTIVE_CALL_REJECTION);
+    }
 
     public ZVoiceMailPrefs getVoiceMailPrefs() {
         return (ZVoiceMailPrefs) getFeature(VoiceConstants.E_VOICE_MAIL_PREFS);
@@ -85,6 +102,8 @@ public class ZCallFeatures {
         ZCallFeature result;
         if (VoiceConstants.E_SELECTIVE_CALL_FORWARD.equals(name)) {
             result = new ZSelectiveCallForwarding(name);
+        } else if (VoiceConstants.E_SELECTIVE_CALL_REJECTION.equals(name)) {
+            result = new ZSelectiveCallRejection(name);
         } else if (VoiceConstants.E_VOICE_MAIL_PREFS.equals(name)) {
             result = new ZVoiceMailPrefs(name);
         } else {
