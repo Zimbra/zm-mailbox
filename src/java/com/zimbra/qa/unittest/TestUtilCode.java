@@ -21,15 +21,23 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import com.zimbra.common.util.*;
+import com.zimbra.common.mime.Rfc822ValidationInputStream;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.TimeoutMap;
+import com.zimbra.common.util.ValueCounter;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author bburtin
@@ -273,6 +281,68 @@ public class TestUtilCode extends TestCase
         assertTrue(ByteUtil.isGzipped(compressed));
         assertFalse(ByteUtil.isGzipped(uncompressed));
         assertEquals(s, new String(uncompressed));
+    }
+    
+    public void testRfc822Validation()
+    throws Exception {
+        validateRfc822("A", 0, null, true);
+        validateRfc822("A", 1, null, true);
+        validateRfc822(getLongString(10240), 0, null, true);
+        validateRfc822(getLongString(10241), 0, null, false);
+        validateRfc822("A: B\r\n" + getLongString(10240), 0, null, true);
+        validateRfc822("A: B\r\n", 10, getLongString(10230), true);
+        validateRfc822("A: B\r\n", 10240, "\r\nxyz", true);
+        validateRfc822("A: B\r\n", 10241, "\r\nxyz", false);
+        validateRfc822("A: B\r\n", 10240, "xyz", false);
+    }
+    
+    private String getLongString(int length) {
+        byte[] content = new byte[length];
+        for (int i = 0; i < length; i++) {
+            content[i] = (byte) ('a' + ((i % 26)));
+        }
+        return new String(content);
+    }
+    
+    private void validateRfc822(String before, int numNullBytes, String after, boolean isValid)
+    throws IOException {
+        byte[] content = getBytes(before, numNullBytes, after);
+        
+        // Test reading into a buffer.
+        byte[] buf = new byte[100];
+        Rfc822ValidationInputStream in = new Rfc822ValidationInputStream(new ByteArrayInputStream(content), 10240);
+        while ((in.read(buf)) >= 0) {
+        }
+        in.close();
+        assertEquals(isValid, in.isValid());
+        
+        // Test reading on character at a time.
+        in = new Rfc822ValidationInputStream(new ByteArrayInputStream(content), 10240);
+        while ((in.read()) >= 0) {
+        }
+        in.close();
+        assertEquals(isValid, in.isValid());
+        
+        // Compare content.
+        byte[] copy = ByteUtil.getContent(new Rfc822ValidationInputStream(new ByteArrayInputStream(content), 10240), content.length);
+        for (int i = 0; i < content.length; i++) {
+            assertEquals("Mismatch at byte " + i, content[i], copy[i]);
+        }
+    }
+    
+    private byte[] getBytes(String before, int numNullBytes, String after) {
+        if (before == null) {
+            before = "";
+        }
+        if (after == null) {
+            after = "";
+        }
+        byte[] beforeBytes = before.getBytes();
+        byte[] afterBytes = after.getBytes();
+        byte[] content = new byte[beforeBytes.length + numNullBytes + afterBytes.length];
+        System.arraycopy(beforeBytes, 0, content, 0, beforeBytes.length);
+        System.arraycopy(afterBytes, 0, content, beforeBytes.length + numNullBytes, afterBytes.length);
+        return content;
     }
     
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {

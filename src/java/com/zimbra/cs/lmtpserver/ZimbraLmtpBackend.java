@@ -28,9 +28,12 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.ParseException;
 
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -234,7 +237,16 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
 
         int diskThreshold = FileBlobStore.getDiskStreamingThreshold();
+        Rfc822ValidationInputStream validator = null;
+        if (LC.zimbra_lmtp_validate_messages.booleanValue()) {
+            validator = new Rfc822ValidationInputStream(in, LC.zimbra_lmtp_max_line_length.longValue());
+            in = validator;
+        }
         IncomingBlob incoming = IncomingBlob.create(in, sizeHint, diskThreshold);
+        if (validator != null && !validator.isValid()) {
+            incoming.delete();
+            throw new ParseException("Invalid message content");
+        }
         Blob blob = incoming.getBlob();
         
         try {
