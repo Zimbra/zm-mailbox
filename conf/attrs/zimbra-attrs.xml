@@ -4764,7 +4764,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>
      Custom response headers. For example, can be used to add a P3P header
      for user agents to understand the site's privacy policy. Note: the value
-     MUST be the entire header line (e.g. "X-Foo: Bar").
+     MUST be the entire header line (e.g. X-Foo: Bar).
   </desc>
 </attr>
 
