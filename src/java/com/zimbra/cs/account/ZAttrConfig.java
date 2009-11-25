@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 andcla 20091124-1534 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091125-1341 */
 
     /**
      * RFC2256: descriptive information
@@ -6366,6 +6366,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetDomainStatus(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainStatus, "");
+        return attrs;
+    }
+
+    /**
+     * URL for posting error report popped up in WEB client
+     *
+     * @return zimbraErrorReportUrl, or null if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1075)
+    public String getErrorReportUrl() {
+        return getAttr(Provisioning.A_zimbraErrorReportUrl, null);
+    }
+
+    /**
+     * URL for posting error report popped up in WEB client
+     *
+     * @param zimbraErrorReportUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1075)
+    public void setErrorReportUrl(String zimbraErrorReportUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraErrorReportUrl, zimbraErrorReportUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for posting error report popped up in WEB client
+     *
+     * @param zimbraErrorReportUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1075)
+    public Map<String,Object> setErrorReportUrl(String zimbraErrorReportUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraErrorReportUrl, zimbraErrorReportUrl);
+        return attrs;
+    }
+
+    /**
+     * URL for posting error report popped up in WEB client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1075)
+    public void unsetErrorReportUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraErrorReportUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for posting error report popped up in WEB client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1075)
+    public Map<String,Object> unsetErrorReportUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraErrorReportUrl, "");
         return attrs;
     }
 
@@ -18982,7 +19054,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @return zimbraResponseHeader, or empty array if unset
      *
@@ -18995,7 +19068,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param zimbraResponseHeader new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19011,7 +19085,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param zimbraResponseHeader new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19028,7 +19103,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param zimbraResponseHeader new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19044,7 +19120,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param zimbraResponseHeader new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -19061,7 +19138,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param zimbraResponseHeader existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19077,7 +19155,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param zimbraResponseHeader existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -19094,7 +19173,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19109,7 +19189,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

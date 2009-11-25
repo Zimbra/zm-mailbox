@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 andcla 20091124-1534 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091125-1341 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2441,6 +2441,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=212)
     public static final String A_zimbraDomainType = "zimbraDomainType";
+
+    /**
+     * URL for posting error report popped up in WEB client
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1075)
+    public static final String A_zimbraErrorReportUrl = "zimbraErrorReportUrl";
 
     /**
      * Indicates the account should be excluded from Crossmailbox searchers.
@@ -6318,7 +6326,8 @@ public class ZAttrProvisioning {
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
-     * for user agents to understand the site&#039;s privacy policy.
+     * for user agents to understand the sites privacy policy. Note: the
+     * value MUST be the entire header line (e.g. X-Foo: Bar).
      *
      * @since ZCS 6.0.5
      */
