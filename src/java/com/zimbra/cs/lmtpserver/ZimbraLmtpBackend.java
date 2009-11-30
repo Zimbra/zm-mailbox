@@ -25,8 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.mail.internet.ParseException;
+
 import org.apache.commons.collections.map.LRUMap;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.CopyInputStream;
@@ -250,7 +254,22 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         throws ServiceException, IOException {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
-        Blob blob = StoreManager.getInstance().storeIncoming(cis, sizeHint, null);
+        in = cis;
+        
+        Rfc822ValidationInputStream validator = null;
+        if (LC.zimbra_lmtp_validate_messages.booleanValue()) {
+            validator = new Rfc822ValidationInputStream(cis, LC.zimbra_lmtp_max_line_length.longValue());
+            in = validator;
+        }
+        
+        Blob blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
+        
+        if (validator != null && !validator.isValid()) {
+            StoreManager.getInstance().delete(blob);
+            setDeliveryStatuses(env.getRecipients(), LmtpReply.INVALID_BODY_PARAMETER);
+            return;
+        }
+        
         BufferStream bs = cis.getBufferStream();
 
         try {
