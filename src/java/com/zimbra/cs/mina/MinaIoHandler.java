@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.mina;
 
+import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
@@ -69,7 +70,10 @@ class MinaIoHandler implements IoHandler {
     }
 
     public void messageSent(IoSession session, Object msg) {
-        // Nothing to do here...
+        if (stats != null && msg instanceof ByteBuffer) {
+            ByteBuffer bb = (ByteBuffer) msg;
+            stats.sentBytes.addAndGet(bb.remaining());
+        }
     }
 
     public static MinaHandler getMinaHandler(IoSession session) {

@@ -93,7 +93,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         try {
             server.start();
         } catch (IOException e) {
-            Zimbra.halt("failed to start ImapSSLServer", e);
+            Zimbra.halt("failed to start IMAP server", e);
             return null;
         }
         return server;

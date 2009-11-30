@@ -4,7 +4,7 @@ import org.apache.mina.common.IoSession;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MinaStats {
+public class MinaStats implements MinaStatsMBean {
     private final MinaServer server;
 
     public MinaStats(MinaServer server) {

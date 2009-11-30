@@ -37,6 +37,7 @@ public class MinaLmtpServer extends MinaServer {
     public MinaLmtpServer(LmtpConfig config, ExecutorService pool)
             throws IOException, ServiceException {
         super(config, pool);
+        registerMinaStatsMBean("MinaLmtpServer");
     }
 
     @Override
@@ -46,7 +47,7 @@ public class MinaLmtpServer extends MinaServer {
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new MinaCodecFactory(this) {
+        return new MinaCodecFactory() {
             public ProtocolDecoder getDecoder() {
                 return new MinaLmtpDecoder(getStats());
             }

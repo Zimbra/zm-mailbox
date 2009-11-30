@@ -23,14 +23,19 @@ import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
-import org.apache.mina.common.*;
+import org.apache.mina.common.DefaultIoFilterChainBuilder;
+import org.apache.mina.common.IoHandler;
+import org.apache.mina.common.IoSession;
+import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.SSLFilter;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
+import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -38,6 +43,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.security.sasl.SaslServer;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.security.KeyStore;
@@ -314,6 +320,14 @@ public abstract class MinaServer implements Server {
 
     protected abstract ProtocolCodecFactory getProtocolCodecFactory();
     
+    protected void registerMinaStatsMBean(String type) {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        try {
+            mbs.registerMBean(getStats(), new ObjectName("ZimbraCollaborationSuite:type=" + type));
+        } catch (Exception e) {
+            getLog().warn("Unable to register MinaStats mbean", e);
+        }
+    }
     /**
      * Returns the logger for server log messages.
      *

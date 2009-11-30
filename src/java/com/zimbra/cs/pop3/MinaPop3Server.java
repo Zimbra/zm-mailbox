@@ -38,6 +38,8 @@ public class MinaPop3Server extends MinaServer {
     MinaPop3Server(ServerConfig config, ExecutorService pool)
         throws IOException, ServiceException {
         super(config, pool);
+        registerMinaStatsMBean(
+            config.isSSLEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
     }
 
     @Override public MinaHandler createHandler(IoSession session) {
@@ -45,7 +47,7 @@ public class MinaPop3Server extends MinaServer {
     }
 
     @Override protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new MinaCodecFactory(this) {
+        return new MinaCodecFactory() {
             public ProtocolDecoder getDecoder() {
                 return new MinaPop3Decoder(getStats());
             }
