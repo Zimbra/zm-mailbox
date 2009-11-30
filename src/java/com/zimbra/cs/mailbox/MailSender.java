@@ -635,16 +635,17 @@ public class MailSender {
             setStackTrace(mMex.getStackTrace());
         }
 
+        @Override
         public String getMessage() {
-            String msg = super.getMessage();
-            if (msg == null) {
-                Exception next = mMex.getNextException();
-                if (next != null)
-                    msg = next.getLocalizedMessage();
-            }
-            return msg;
+            return mMex.getMessage();
+        }
+        
+        @Override
+        public Exception getNextException() {
+            return mMex.getNextException();
         }
 
+        @Override
         public synchronized String toString() {
             StringBuffer sb = new StringBuffer();
             appendException(sb, this);
