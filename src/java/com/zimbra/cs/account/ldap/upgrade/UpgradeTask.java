@@ -13,7 +13,8 @@ public enum UpgradeTask {
     BUG_32557(DomainObjectClassAmavisAccount.class),
     BUG_32719(ZimbraHsmPolicy.class),
     BUG_33814(ZimbraMtaAuthEnabled.class),
-    BUG_41000(ZimbraGalLdapFilterDef_zimbraAutoComplete_zimbraSearch.class);
+    BUG_41000(ZimbraGalLdapFilterDef_zimbraAutoComplete_zimbraSearch.class),
+    BUG_42896(ZimbraMailQuota_constraint.class);
     
     private Class mUpgradeClass;
     
