@@ -46,6 +46,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -4220,13 +4221,26 @@ public class Mailbox {
     throws IOException, ServiceException {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cs = new CopyInputStream(in, sizeHint, bufLen, bufLen);
+        in = cs;
         Blob blob = null;
         
         try {
             BufferStream bs = cs.getBufferStream();
             ParsedMessage pm = null;
             
-            blob = StoreManager.getInstance().storeIncoming(cs, sizeHint, null);
+            Rfc822ValidationInputStream validator = null;
+            if (LC.zimbra_lmtp_validate_messages.booleanValue()) {
+                validator = new Rfc822ValidationInputStream(cs, LC.zimbra_lmtp_max_line_length.longValue());
+                in = validator;
+            }
+            
+            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
+            
+            if (validator != null && !validator.isValid()) {
+                StoreManager.getInstance().delete(blob);
+                throw ServiceException.INVALID_REQUEST("Message content is invalid.", null);
+            }
+                
             pm = new ParsedMessage(new ParsedMessageOptions(blob, bs.isPartial() ?
                 null : bs.getBuffer(), receivedDate, attachmentsIndexingEnabled()));
             cs.release();
