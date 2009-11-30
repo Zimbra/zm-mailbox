@@ -52,7 +52,7 @@ public class MinaImapServer extends MinaServer {
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new MinaCodecFactory(this) {
+        return new MinaCodecFactory() {
             public ProtocolDecoder getDecoder() {
                 return new MinaImapDecoder(getStats());
             }
