@@ -24,6 +24,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -482,6 +483,20 @@ extends TestCase {
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+    }
+    
+    /**
+     * Confirms that we reject messages that have a line that's longer
+     * than the limit specified by {@link LC#zimbra_lmtp_max_line_length}.
+     * Bug 42214.
+     */
+    public void testValidation()
+    throws Exception {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i <= LC.zimbra_lmtp_max_line_length.longValue(); i++) {
+            buf.append('x');
+        }
+        assertFalse(TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, buf.toString()));
     }
     
     public void tearDown()
