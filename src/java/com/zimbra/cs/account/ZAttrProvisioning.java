@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091125-1404 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091130-1040 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -7593,6 +7593,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=281)
     public static final String A_zimbraZimletKeyword = "zimbraZimletKeyword";
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public static final String A_zimbraZimletMandatoryZimlets = "zimbraZimletMandatoryZimlets";
 
     /**
      * The panel item section in the Zimlet description

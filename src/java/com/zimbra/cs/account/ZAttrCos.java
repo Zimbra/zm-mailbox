@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091125-1404 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091130-1040 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -24269,6 +24269,158 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetZimletAvailableZimlets(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletAvailableZimlets, "");
+        return attrs;
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @return zimbraZimletMandatoryZimlets, or empty array if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public String[] getZimletMandatoryZimlets() {
+        return getMultiAttr(Provisioning.A_zimbraZimletMandatoryZimlets);
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param zimbraZimletMandatoryZimlets new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public void setZimletMandatoryZimlets(String[] zimbraZimletMandatoryZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param zimbraZimletMandatoryZimlets new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public Map<String,Object> setZimletMandatoryZimlets(String[] zimbraZimletMandatoryZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
+        return attrs;
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param zimbraZimletMandatoryZimlets new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public void addZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param zimbraZimletMandatoryZimlets new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public Map<String,Object> addZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
+        return attrs;
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param zimbraZimletMandatoryZimlets existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public void removeZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param zimbraZimletMandatoryZimlets existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public Map<String,Object> removeZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
+        return attrs;
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public void unsetZimletMandatoryZimlets() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * List of mandatory zimlets set by the admin, user can only enable
+     * disable Zimlets which are optional. Mandatory zimlets cannot be
+     * disabled by the user.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1078)
+    public Map<String,Object> unsetZimletMandatoryZimlets(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, "");
         return attrs;
     }
 

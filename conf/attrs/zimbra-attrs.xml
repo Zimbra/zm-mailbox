@@ -4781,4 +4781,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>default calendar for new appointments</desc>
 </attr>
 
+<attr id="1078" name="zimbraZimletMandatoryZimlets" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInfo,domainAdminModifiable,accountInherited" since="6.0.5">
+  <desc>List of mandatory zimlets set by the admin, user can only enable disable Zimlets which are optional. Mandatory zimlets cannot be disabled by the user.</desc>
+</attr>
+
+
 </attrs>
