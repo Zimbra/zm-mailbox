@@ -26,11 +26,8 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
-import java.lang.management.ManagementFactory;
 
 /**
  * MINA-based IMAP server implementation.
@@ -43,6 +40,9 @@ public class MinaImapServer extends MinaServer {
     MinaImapServer(ImapConfig config, ExecutorService pool)
             throws IOException, ServiceException {
         super(config, pool);
+        registerMinaStatsMBean(
+            config.isSSLEnabled() ? "MinaImapSSLServer" : "MinaImapServer");
+
     }
 
     @Override
@@ -61,13 +61,4 @@ public class MinaImapServer extends MinaServer {
 
     @Override
     public Log getLog() { return ZimbraLog.imap; }
-
-    public void registerMinaStatsMBean(String name) {
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        try {
-            mbs.registerMBean(getStats(), new ObjectName(name));
-        } catch (Exception e) {
-            ZimbraLog.imap.warn("Unable to register MinaStats mbean", e);
-        }
-    }
 }
