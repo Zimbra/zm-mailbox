@@ -18,6 +18,8 @@ package com.zimbra.cs.service.mail;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -27,7 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -75,21 +77,27 @@ public class CheckSpelling extends MailDocumentHandler {
         // Get the dictionary name from either (1) the request,
         // (2) zimbraPrefSpellDictionary or (3) the account's locale.
         String dictionary = request.getAttribute(MailConstants.A_DICTIONARY, null);
+        Account account = getRequestedAccount(zc);
         if (dictionary == null) {
-            Account account = getRequestedAccount(zc);
             dictionary = account.getPrefSpellDictionary();
             if (dictionary == null) {
                 dictionary = account.getLocale().toString();
             }
         }
-
+        
+        // Assemble the list of words to ignore from the account, domain, and COS.
+        List<String> ignoreWords = new ArrayList<String>();
+        addToList(ignoreWords, account.getPrefSpellIgnoreWord());
+        addToList(ignoreWords, prov.getDomain(account).getPrefSpellIgnoreWord());
+        addToList(ignoreWords, prov.getCOS(account).getPrefSpellIgnoreWord());
+        
         // Get word list from one of the spell servers.
         ServerResponse spellResponse = null;
         for (int i = 0; i < urls.length; i++) {
             String url = urls[i];
             try {
                 sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s", url, dictionary, text);
-                spellResponse = checkSpelling(url, dictionary, text);
+                spellResponse = checkSpelling(url, dictionary, ignoreWords, text);
                 if (spellResponse.statusCode == 200) {
                     break; // Successful request.  No need to check the other servers.
                 }
@@ -99,6 +107,9 @@ public class CheckSpelling extends MailDocumentHandler {
         }
 
         // Check for errors
+        if (spellResponse == null) {
+            return unavailable(response);
+        }
         if (spellResponse.statusCode != 200) {
             throw ServiceException.FAILURE("Spell check failed: " + spellResponse.content, null);
         }
@@ -138,7 +149,16 @@ public class CheckSpelling extends MailDocumentHandler {
         return response;
     }
     
-    private ServerResponse checkSpelling(String url, String dictionary, String text)
+    private void addToList(List<String> list, String[] elements) {
+        if (elements == null) {
+            return;
+        }
+        for (String element : elements) {
+            list.add(element);
+        }
+    }
+    
+    private ServerResponse checkSpelling(String url, String dictionary, List<String> ignoreWords, String text)
     throws IOException {
         PostMethod post = new PostMethod(url);
         if (dictionary != null) {
@@ -146,6 +166,9 @@ public class CheckSpelling extends MailDocumentHandler {
         }
         if (text != null) {
             post.addParameter("text", text);
+        }
+        if (!ListUtil.isEmpty(ignoreWords)) {
+            post.addParameter("ignore", StringUtil.join(",", ignoreWords));
         }
         HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         ServerResponse response = new ServerResponse();

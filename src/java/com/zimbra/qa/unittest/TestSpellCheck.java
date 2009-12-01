@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.client.LmcSession;
@@ -42,9 +43,9 @@ public class TestSpellCheck extends TestCase {
     private static final String USER_NAME = "user1";
     
     private static final String TEXT =
-        "On a cycle the fram is gone. You're completely in cotnact with it all.\n" +
-        "You're in the scene, not just watching it anymore, and the sense of presence\n" +
-        "is overwhelming. That concrete whizing by five inches below your foot is the\n" +
+        "On a cycle the fram is gone. You're completly in cotnact with it all.\n" +
+        "You're in the scene, not just watching it anmore, and the sense of presence\n" +
+        "is overwhelming. That concret whizing by five inches below your foot is the\n" +
         "real thing, the same \"stuff\" you walk on, it's right there, so blurred you can't\n" +
         "focus on it, yet you can put your foot down and touch it anytime, and the\n" +
         "whole thing, the whole experience, is nevr removed from immediate\n" +
@@ -52,10 +53,19 @@ public class TestSpellCheck extends TestCase {
         
     private String[] mOriginalDictionaries;
     private boolean mAvailable = false;
+    private String[] mOriginalAccountIgnoreWords;
+    private String[] mOriginalDomainIgnoreWords;
+    private String[] mOriginalCosIgnoreWords;
     
     public void setUp()
     throws Exception {
-        mOriginalDictionaries = Provisioning.getInstance().getLocalServer().getSpellAvailableDictionary();
+        Provisioning prov = Provisioning.getInstance();
+        mOriginalDictionaries = prov.getLocalServer().getSpellAvailableDictionary();
+        
+        Account account = TestUtil.getAccount(USER_NAME);
+        mOriginalAccountIgnoreWords = account.getPrefSpellIgnoreWord();
+        mOriginalDomainIgnoreWords = prov.getDomain(account).getPrefSpellIgnoreWord();
+        mOriginalCosIgnoreWords = prov.getCOS(account).getPrefSpellIgnoreWord();
         
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         CheckSpellingResult result = mbox.checkSpelling("test");
@@ -70,6 +80,13 @@ public class TestSpellCheck extends TestCase {
         if (!mAvailable) {
             return;
         }
+        
+        // Add ignored words to pref on account, cos, and domain.
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setPrefSpellIgnoreWord(new String[] { "completly" });
+        Provisioning prov = Provisioning.getInstance();
+        prov.getDomain(account).setPrefSpellIgnoreWord(new String[] { "anmore" });
+        prov.getCOS(account).setPrefSpellIgnoreWord(new String[] { "concret" });
         
         // Send the request
         LmcSession session = TestUtil.getSoapSession(USER_NAME);
@@ -162,7 +179,13 @@ public class TestSpellCheck extends TestCase {
     
     public void tearDown()
     throws Exception {
-        Provisioning.getInstance().getLocalServer().setSpellAvailableDictionary(mOriginalDictionaries);
+        Provisioning prov = Provisioning.getInstance();
+        prov.getLocalServer().setSpellAvailableDictionary(mOriginalDictionaries);
+        
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setPrefSpellIgnoreWord(mOriginalAccountIgnoreWords);
+        prov.getDomain(account).setPrefSpellIgnoreWord(mOriginalDomainIgnoreWords);
+        prov.getCOS(account).setPrefSpellIgnoreWord(mOriginalCosIgnoreWords);
     }
 
     public static void main(String[] args)
