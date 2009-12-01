@@ -312,7 +312,7 @@ public abstract class Formatter {
             out.println("<body onload='onLoad()'>");
             out.println("<script>");
             out.println("function onLoad() {");
-            if (exception == null && w == null) {
+            if (exception == null && (w == null || w.size() == 0)) {
                 out.print("    window.parent." + callback + "('success');");
             } else {
                 String result = exception != null ? "fail" : "warn";
