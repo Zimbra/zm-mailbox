@@ -4760,7 +4760,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="1074" name="zimbraResponseHeader" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="6.0.5">
+<attr id="1074" name="zimbraResponseHeader" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInfo,domainInherited" since="6.0.5">
   <desc>
      Custom response headers. For example, can be used to add a P3P header
      for user agents to understand the sites privacy policy. Note: the value
