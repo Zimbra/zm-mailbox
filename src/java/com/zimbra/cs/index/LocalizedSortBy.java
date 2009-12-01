@@ -17,10 +17,7 @@
 package com.zimbra.cs.index;
 
 import java.text.Collator;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 
 import com.zimbra.common.service.ServiceException;
@@ -125,83 +122,6 @@ public class LocalizedSortBy extends SortBy {
         
         public String toString() {
             return mName+","+mItemId;
-        }
-    }
-    
-    private static void printAll(List<TestHit> test) {
-        for (TestHit t: test) {
-            System.out.println(t.toString());
-        }
-    }
-    
-    public static void main(String args[]) {
-        LocalizedSortBy enUSAsc = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING,"enUSAsc", 
-                                                    SortCriterion.ID, SortDirection.ASCENDING, 
-                                                    new Locale("en_US"));
-        
-        LocalizedSortBy deAsc = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING,"deAsc", 
-                                                    SortCriterion.ID, SortDirection.ASCENDING, 
-                                                    new Locale("de_DE"));
-        
-        LocalizedSortBy svAsc = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING,"svAsc", 
-                                                    SortCriterion.ID, SortDirection.ASCENDING, 
-                                                    new Locale("sv"));
-        
-        LocalizedSortBy deDesc = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING,"deDesc", 
-                                                    SortCriterion.ID, SortDirection.DESCENDING, 
-                                                    new Locale("de_DE"));
-        
-        LocalizedSortBy svDesc = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING,"svDesc", 
-                                                    SortCriterion.ID, SortDirection.DESCENDING, 
-                                                    new Locale("sv"));
-        
-        
-        
-        if (false) {
-            List<TestHit> test = new ArrayList<TestHit>();
-            test.add(new TestHit("Udet", 1));
-            test.add(new TestHit("Übelacker", 2));
-            test.add(new TestHit("Uell",3));
-            test.add(new TestHit("Ülle",4));
-            test.add(new TestHit("Ueve",5));
-            test.add(new TestHit("Üxküll",6));
-            test.add(new TestHit("Uffenbach",7));
-            System.out.println("\nSTART:");
-            printAll(test);
-            
-            Collections.sort(test, enUSAsc.getZimbraHitComparator());
-            System.out.println("\nAFTER EN_US SORT:");
-            printAll(test);
-            
-            Collections.sort(test, deAsc.getZimbraHitComparator());
-            System.out.println("\nAFTER DK_DESC SORT:");
-            printAll(test);
-        }
-        {
-            // for Swedish, z<ö, for German ö<z
-            List<TestHit> test = new ArrayList<TestHit>();
-            test.add(new TestHit("z",3));
-            test.add(new TestHit("z",1));
-            test.add(new TestHit("z",2));
-            test.add(new TestHit("ö",3));
-            System.out.println("\nSTART:");
-            printAll(test);
-
-            Collections.sort(test, svAsc.getZimbraHitComparator());
-            System.out.println("\nAFTER SV_ASC SORT:");
-            printAll(test);
-            
-            Collections.sort(test, svDesc.getZimbraHitComparator());
-            System.out.println("\nAFTER SV_DESC SORT:");
-            printAll(test);
-            
-            Collections.sort(test, deAsc.getZimbraHitComparator());
-            System.out.println("\nAFTER DK_ASC SORT:");
-            printAll(test);
-            
-            Collections.sort(test, deDesc.getZimbraHitComparator());
-            System.out.println("\nAFTER DK_DESC SORT:");
-            printAll(test);
         }
     }
 }
