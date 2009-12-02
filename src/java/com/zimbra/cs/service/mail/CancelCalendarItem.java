@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -191,7 +192,11 @@ public class CancelCalendarItem extends CalendarRequest {
             csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, csd);
             
         } else {
-            List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+            List<Address> rcpts;
+            if (inv.isOrganizer())
+                rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+            else
+                rcpts = new ArrayList<Address>(0);
             csd.mMm = CalendarMailSender.createCancelMessage(
                     acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts,
                     calItem, inv, text, iCal);
