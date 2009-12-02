@@ -17,7 +17,7 @@ public class SetMailboxMetadata extends MailDocumentHandler {
     private static final int TOTAL_METADATA_LIMIT = 10000;
     
     private static enum SectionNames {
-        zwc
+        zwc, bes
     }
     
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
