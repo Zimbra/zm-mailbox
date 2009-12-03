@@ -557,7 +557,7 @@
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
         <ant dir="${im.dir}" target="jar" inheritAll="false"/>
-        <javac fork="true" memorymaximumsize="256m" destdir="${build.classes.dir}" debug="true"
+        <javac fork="true" memorymaximumsize="512m" destdir="${build.classes.dir}" debug="true"
                classpathref="class.path" target="${javac.target}">
             <src refid="all.java.path"/>
         </javac>
