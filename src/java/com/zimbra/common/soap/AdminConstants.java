@@ -386,6 +386,10 @@ public class AdminConstants {
     public static final QName REVOKE_RIGHT_RESPONSE = QName.get("RevokeRightResponse", NAMESPACE);
     public static final QName CHECK_RIGHT_REQUEST = QName.get("CheckRightRequest", NAMESPACE);
     public static final QName CHECK_RIGHT_RESPONSE = QName.get("CheckRightResponse", NAMESPACE);
+    public static final QName GET_DELEGATED_ADMIN_CONSTRAINTS_REQUEST = QName.get("GetDelegatedAdminConstraintsRequest", NAMESPACE);
+    public static final QName GET_DELEGATED_ADMIN_CONSTRAINTS_RESPONSE = QName.get("GetDelegatedAdminConstraintsResponse", NAMESPACE);
+    public static final QName MODIFY_DELEGATED_ADMIN_CONSTRAINTS_REQUEST = QName.get("ModifyDelegatedAdminConstraintsRequest", NAMESPACE);
+    public static final QName MODIFY_DELEGATED_ADMIN_CONSTRAINTS_RESPONSE = QName.get("ModifyDelegatedAdminConstraintsResponse", NAMESPACE);
     
     // Monitoring
     public static final QName GET_SERVER_STATS_REQUEST = QName.get("GetServerStatsRequest", NAMESPACE);
