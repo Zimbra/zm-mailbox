@@ -29,11 +29,28 @@ public class ZimbraMailQuota_constraint extends LdapUpgrade {
     }
     
     private void setZimbraMailQuotaConstraint(ZimbraLdapContext zlc, Cos cos) {
-        long quotaOnCos = cos.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+        
+        String quotaLimitOnCosStr = cos.getAttr(Provisioning.A_zimbraDomainAdminMaxMailQuota);
+        
+        System.out.println("Cos " + cos.getName() + ": " + Provisioning.A_zimbraDomainAdminMaxMailQuota + "=" + quotaLimitOnCosStr);
+        
+        if (quotaLimitOnCosStr == null) {
+            System.out.println("Skip setting constraint for " + Provisioning.A_zimbraMailQuota + " on cos " + cos.getName());
+            return;
+        }
+        
+        long quotaLimitOnCos = Long.parseLong(quotaLimitOnCosStr);
         
         // no quota limitation
-        if (quotaOnCos == 0) {
-            System.out.println("Skip setting constraint for " + Provisioning.A_zimbraMailQuota + " on cos " + cos.getName() + ", there is no quota limit on this cos");
+        if (quotaLimitOnCos == 0) {
+            System.out.println("Skip setting constraint for " + Provisioning.A_zimbraMailQuota + " on cos " + cos.getName());
+            return;
+        }
+        
+        // delegated admin cannot change quota at all 
+        // (the right to set zimbraMailQuota had been revoked in the AdminRights upgrade, don't need to set constraint here)
+        if (quotaLimitOnCos == -1) {
+            System.out.println("Skip setting constraint for " + Provisioning.A_zimbraMailQuota + " on cos " + cos.getName());
             return;
         }
         
@@ -47,7 +64,7 @@ public class ZimbraMailQuota_constraint extends LdapUpgrade {
         }
         
         // there is currently no constraint for zimbraMailQuota, add it
-        String value = Provisioning.A_zimbraMailQuota + ":max=" + quotaOnCos;
+        String value = Provisioning.A_zimbraMailQuota + ":max=" + quotaLimitOnCos;
         constraints.add(value);
         
         Map<String, Object> newValues = new HashMap<String, Object>();
