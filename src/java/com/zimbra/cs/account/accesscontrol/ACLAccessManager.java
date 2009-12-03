@@ -121,7 +121,12 @@ public class ACLAccessManager extends AccessManager {
 
     @Override
     public boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException {
-        throw ServiceException.FAILURE("internal error", null);  // should never be called
+        // throw ServiceException.FAILURE("internal error", null);  // should never be called
+        
+        // for bug 42896, we now have to do the same check on zimbraDomainAdminMaxMailQuota  
+        // until we come up with a framework to support constraints on a per admin basis.
+        // the following call is ugly!
+        return com.zimbra.cs.account.DomainAccessManager.canSetMailQuota(at, targetAccount, mailQuota);
     }
     
     @Override

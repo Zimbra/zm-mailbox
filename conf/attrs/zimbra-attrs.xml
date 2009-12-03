@@ -1945,7 +1945,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="398" name="zimbraDomainAdminMaxMailQuota" type="long" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <desc>
     maximum amount of mail quota a domain admin can set on a user
-    Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
   </desc>
 </attr>
 

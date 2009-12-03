@@ -69,12 +69,29 @@ public class ModifyAccount extends AdminDocumentHandler {
         // check to see if quota is being changed
         long curQuota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
         
+        /*
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         // checkQuota is called only for domain based access manager, remove when we
         // can totally deprecate domain based access manager 
         if (isDomainAdminOnly(zsc))
             checkQuota(zsc, account, attrs);
-
+        */
+        
+        /*
+         * for bug 42896, the above is no longer true.
+         * 
+         * For quota, we have to support the per admin limitation zimbraDomainAdminMaxMailQuota, 
+         * until we come up with a framework to support constraints on a per admin basis.
+         * 
+         * for now, always call checkQuota, which will check zimbraDomainAdminMaxMailQuota.
+         * 
+         * If the access manager, and if we have come here, it has already passed the constraint
+         * checking, in the checkAccountRight call.   If it had violated any constraint, it would 
+         * have errored out.  i.e. for zimbraMailQuota, both zimbraConstraint and zimbraDomainAdminMaxMailQuota 
+         * are enforced.
+         */
+        checkQuota(zsc, account, attrs);
+        
         // check to see if cos is being changed, need right on new cos 
         checkCos(zsc, account, attrs);
 
