@@ -210,6 +210,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.PURGE_ACCOUNT_CALENDAR_CACHE_REQUEST, new PurgeAccountCalendarCache());
 
         // rights
+        dispatcher.registerHandler(AdminConstants.GET_DELEGATED_ADMIN_CONSTRAINTS_REQUEST, new GetDelegatedAdminConstraints());
         dispatcher.registerHandler(AdminConstants.GET_RIGHTS_DOC_REQUEST, new GetRightsDoc());
         dispatcher.registerHandler(AdminConstants.GET_RIGHT_REQUEST, new GetRight());
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_CONSOLE_UI_COMP_REQUEST, new GetAdminConsoleUIComp());
@@ -220,6 +221,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_GRANTS_REQUEST, new GetGrants());
         dispatcher.registerHandler(AdminConstants.CHECK_RIGHT_REQUEST, new CheckRight());
         dispatcher.registerHandler(AdminConstants.GRANT_RIGHT_REQUEST, new GrantRight());
+        dispatcher.registerHandler(AdminConstants.MODIFY_DELEGATED_ADMIN_CONSTRAINTS_REQUEST, new ModifyDelegatedAdminConstraints());
         dispatcher.registerHandler(AdminConstants.REVOKE_RIGHT_REQUEST, new RevokeRight());
         
         // admin wait set

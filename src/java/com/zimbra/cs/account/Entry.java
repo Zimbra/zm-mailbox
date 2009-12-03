@@ -386,7 +386,7 @@ public abstract class Entry implements ToZJSONObject {
 
     /**
      * Returns the set of values for the given attribute, or an empty
-     * array if no values are defined.
+     * set if no values are defined.
      */
     public Set<String> getMultiAttrSet(String name) {
         if (mMultiAttrSetCache == null)        

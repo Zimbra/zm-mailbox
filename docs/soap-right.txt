@@ -702,3 +702,67 @@ Get all system defined rights.
 </GetAllRightsResponse>
 
 See <GetRightResponse> for description of each <right> in the response. 
+
+----------------------------------------------------------
+Get constraints (zimbraConstraint) for delegated admin on global config or a cos
+
+<GetDelegatedAdminConstraintsRequest type="config|cos" [id="..."] [name="..."]>
+  [<a name="{attr-name}">+]
+</GetDelegatedAdminConstraintsRequest>
+
+type: - if set to config, id and name is ignored
+        will retrieve constraints on global config 
+      - if set to cos, either id or name has to be specified to identify the cos
+      
+none or several attributes can be specified for which constraints are to be returned.
+If no attribute is specified, all constraints on the global config/cos will be returned.
+
+If there is no constraint for a requested attribute, <a> element for the attribute 
+will not appear in the response.
+  
+<GetDelegatedAdminConstraintsResponse type="config|cos" [id="..."] [name="..."]>  
+  [<a n="...">
+    <constraint>
+      [<min>{min}</min>]
+      [<max>{max}</max>]
+      [<values>
+         <v>...</v>+
+      </values>]
+    </constraint>   
+  </a>+]
+</GetDelegatedAdminConstraintsResponse>
+
+e.g.
+
+<GetDelegatedAdminConstraintsRequest type="cos" name="cos1">
+  <a name="zimbraMailQuota">
+</GetDelegatedAdminConstraintsRequest> 
+  
+<GetDelegatedAdminConstraintsResponse type="cos" id="e00428a1-0c00-11d9-836a-000d93afea2a" name="cos1">  
+  <a n="zimbraMailQuota">
+    <constraint>
+      <max>524288000</max>
+      <min>20971520</min>
+    </constraint>      
+  </a>
+</GetDelegatedAdminConstraintsResponse>
+
+----------------------------------------------------------
+Modify constraint (zimbraConstraint) for delegated admin on global config or a cos
+
+<ModifyDelegatedAdminConstraintsRequest type="config|cos" [id="..."] [name="..."]>
+  <a name="{attr-name}">
+    <constraint>
+      [<min>{min}</min>]
+      [<max>{max}</max>]
+      [<values>
+         <v>...</v>+
+      </values>]
+    </constraint>]  
+  </a>    
+</ModifyDelegatedAdminConstraintsRequest>
+
+If constraints for an attribute already exists, it will be replaced by the new constraints.
+If <constraint> is an empty element, constraints for the attribute will be removed.
+
+<ModifyDelegatedAdminConstraintsResponse/>

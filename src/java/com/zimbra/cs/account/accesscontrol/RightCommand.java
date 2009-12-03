@@ -408,26 +408,11 @@ public class RightCommand {
             for (Element eAttr : eAttrs.listElements(AdminConstants.E_A)) {
                 String attrName = eAttr.getAttribute(AdminConstants.A_N);
                 
-                // constraint
-                Element eConstraint = eAttr.getOptionalElement(AdminConstants.E_CONSTRAINT);
+                // constraints
                 AttributeConstraint constraint = null;
-                if (eConstraint != null) {
-                    constraint = AttributeConstraint.newConstratint(am, attrName);
-                    
-                    Element eMin = eConstraint.getOptionalElement(AdminConstants.E_MIN);
-                    if (eMin != null)
-                        constraint.setMin(eMin.getText());
-                        
-                    Element eMax = eConstraint.getOptionalElement(AdminConstants.E_MAX);
-                    if (eMax != null)
-                        constraint.setMax(eMin.getText());
-                    
-                    Element eValues = eConstraint.getOptionalElement(AdminConstants.E_VALUES);
-                    if (eValues != null) {
-                        for (Element eValue : eValues.listElements(AdminConstants.E_VALUE))
-                            constraint.addValue(eValue.getText());
-                    }
-                }
+                Element eConstraint = eAttr.getOptionalElement(AdminConstants.E_CONSTRAINT);
+                if (eConstraint != null)
+                    constraint = AttributeConstraint.fromXML(am, attrName, eConstraint);
                 
                 // default
                 Element eDefault = eAttr.getOptionalElement(AdminConstants.E_DEFAULT);
@@ -495,25 +480,8 @@ public class RightCommand {
                 
                 // constraint
                 AttributeConstraint constraint = ea.getConstraint();
-                if (constraint != null) {
-                    Element eConstraint = eAttr.addElement(AdminConstants.E_CONSTRAINT);
-                    
-                    String min = constraint.getMin();
-                    if (min != null)
-                        eConstraint.addElement(AdminConstants.E_MIN).setText(min);
-                    
-                    String max = constraint.getMax();
-                    if (max != null)
-                        eConstraint.addElement(AdminConstants.E_MAX).setText(max);
-                    
-                    Set<String> values = constraint.getValues();
-                    if (values != null) {
-                        Element eValues = eConstraint.addElement(AdminConstants.E_VALUES);
-                        for (String v : values)
-                            eValues.addElement(AdminConstants.E_VALUE).setText(v);
-                    }
-                        
-                }
+                if (constraint != null)
+                    constraint.toXML(eAttr);
                 
                 // default
                 if (!ea.getDefault().isEmpty()) {

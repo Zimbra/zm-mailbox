@@ -14,13 +14,17 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -32,8 +36,10 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
-class AttributeConstraint {
+public class AttributeConstraint {
     private static final String CONSTRAINT_CACHE_KEY = "CONSTRAINT_CACHE";
+    private static final String PARTS_DELIMITER = ":";
+    private static final String VALUES_DELIMITER = ",";
     
     private String mAttrName;
     private Set<String> mValues;
@@ -58,6 +64,10 @@ class AttributeConstraint {
         if (mValues == null)
             mValues = new HashSet<String>();
         mValues.add(value);
+    }
+    
+    boolean isEmpty() {
+        return getMin() == null && getMax() == null && getValues() == null;
     }
     
     Set<String> getValues() {
@@ -310,8 +320,37 @@ class AttributeConstraint {
         }
     }
     
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append(getAttrName());
+        
+        String min = getMin();
+        if (min != null)
+            sb.append(PARTS_DELIMITER + "min=" + min);
+        
+        String max = getMax();
+        if (max != null)
+            sb.append(PARTS_DELIMITER + "max=" + max);
+        
+        Set<String> values = getValues();
+        if (values != null && values.size() > 0) {
+            sb.append(PARTS_DELIMITER + "values=");
+            boolean first = true;
+            for (String value : values) {
+                if (!first)
+                    sb.append(VALUES_DELIMITER);
+                else
+                    first = false;
+                sb.append(value);
+            }
+        }
+        
+        return sb.toString();
+    }
+    
     private static AttributeConstraint fromString(AttributeManager am, String s) throws ServiceException  {
-        String[] parts = s.split(":");
+        String[] parts = s.split(PARTS_DELIMITER);
         if (parts.length < 2)
             throw ServiceException.PARSE_ERROR("invalid constraint: " + s, null);
             
@@ -326,13 +365,53 @@ class AttributeConstraint {
                 constraint.setMax(part.substring(4));
             else if (part.startsWith("values=")) {
                 String values = part.substring(7);
-                String[] vs = values.split(",");
+                String[] vs = values.split(VALUES_DELIMITER);
                 for (String v : vs)
                     constraint.addValue(v);
             }
         }
         
         return constraint;
+    }
+    
+    public static AttributeConstraint fromXML(AttributeManager am, String attrName, Element eConstraint) throws ServiceException {
+        
+        AttributeConstraint constraint = AttributeConstraint.newConstratint(am, attrName);
+            
+        Element eMin = eConstraint.getOptionalElement(AdminConstants.E_MIN);
+        if (eMin != null)
+            constraint.setMin(eMin.getText());
+                
+        Element eMax = eConstraint.getOptionalElement(AdminConstants.E_MAX);
+        if (eMax != null)
+            constraint.setMax(eMax.getText());
+          
+        Element eValues = eConstraint.getOptionalElement(AdminConstants.E_VALUES);
+        if (eValues != null) {
+            for (Element eValue : eValues.listElements(AdminConstants.E_VALUE))
+                constraint.addValue(eValue.getText());
+        }
+            
+        return constraint;     
+    }
+    
+    public void toXML(Element eParent) {
+        Element eConstraint = eParent.addElement(AdminConstants.E_CONSTRAINT);
+        
+        String min = getMin();
+        if (min != null)
+            eConstraint.addElement(AdminConstants.E_MIN).setText(min);
+        
+        String max = getMax();
+        if (max != null)
+            eConstraint.addElement(AdminConstants.E_MAX).setText(max);
+        
+        Set<String> values = getValues();
+        if (values != null) {
+            Element eValues = eConstraint.addElement(AdminConstants.E_VALUES);
+            for (String v : values)
+                eValues.addElement(AdminConstants.E_VALUE).setText(v);
+        }
     }
         
     static AttributeConstraint newConstratint(AttributeManager am, String attrName) throws ServiceException {
@@ -381,30 +460,79 @@ class AttributeConstraint {
         return constraintEntry;
     }
     
-    static Map<String, AttributeConstraint> getConstraint(Entry constraintEntry) throws ServiceException {
+    public static Map<String, AttributeConstraint> getConstraint(Entry constraintEntry) throws ServiceException {
         
         Map<String, AttributeConstraint> constraints = (Map<String, AttributeConstraint>)constraintEntry.getCachedData(CONSTRAINT_CACHE_KEY);
         if (constraints == null) {
-            constraints = new HashMap<String, AttributeConstraint>();
-            
             //
             // if there is no zimbraConstraint, we get an empty Set from getMultiAttrSet
             // and we will cache and return an empty set of AttributeConstraint.  
             // This is good because we do not want to repeatedly read LDAP if zimbraConstraint
             // is not set
             //
-            Set<String> cstrnts = constraintEntry.getMultiAttrSet(Provisioning.A_zimbraConstraint);
-            
-            AttributeManager am = AttributeManager.getInstance();
-            for (String c : cstrnts) {
-                AttributeConstraint constraint = AttributeConstraint.fromString(am, c);
-                constraints.put(constraint.getAttrName(), constraint);
-            }
-            
+            constraints = loadConstraints(constraintEntry);
             constraintEntry.setCachedData(CONSTRAINT_CACHE_KEY, constraints);
         }
         
         return constraints;
+    }
+    
+    private static Map<String, AttributeConstraint> loadConstraints(Entry constraintEntry) throws ServiceException {
+        Map<String, AttributeConstraint> constraints = new HashMap<String, AttributeConstraint>();
+
+        Set<String> cstrnts = constraintEntry.getMultiAttrSet(Provisioning.A_zimbraConstraint);
+        
+        AttributeManager am = AttributeManager.getInstance();
+        for (String c : cstrnts) {
+            AttributeConstraint constraint = AttributeConstraint.fromString(am, c);
+            constraints.put(constraint.getAttrName(), constraint);
+        }
+            
+        return constraints;
+    }
+    
+    public static void modifyConstraint(Entry constraintEntry, List<AttributeConstraint> newConstraints) throws ServiceException {
+        
+        // current constraints
+        Map<String, AttributeConstraint> curConstraints = loadConstraints(constraintEntry);
+        
+        for (AttributeConstraint newConstraintsForAttr : newConstraints) {
+            String attrName = newConstraintsForAttr.getAttrName();
+            AttributeConstraint curConstraintsForAttr = curConstraints.get(attrName);
+            
+            if (curConstraintsForAttr == null) {
+                // currently there are constraints for the attr
+                if (newConstraintsForAttr.isEmpty()) {
+                    // new constraints for the attr is empty, remove the current constraints for the attr
+                    curConstraints.remove(attrName);
+                } else {
+                    // new constraints for the attr is not empty, replace with the new constraints
+                    curConstraints.put(attrName, newConstraintsForAttr);
+                }
+            } else {
+                // currently there is no constraint for the attr
+                // add the constraints for the attr if it is not empty
+                if (!newConstraintsForAttr.isEmpty()) {
+                    curConstraints.put(attrName, newConstraintsForAttr);
+                }
+            }
+            
+        }
+        
+        // curConstraints now contains the new values
+        // update LDAP
+        Map<String, Object> newAttrValues = new HashMap<String, Object>();
+        if (curConstraints.size() == 0)
+            newAttrValues.put(Provisioning.A_zimbraConstraint, null);
+        else {
+            List<String> newValues = new ArrayList<String>();
+            for (AttributeConstraint at : curConstraints.values()) {
+                newValues.add(at.toString());
+            }
+            
+            newAttrValues.put(Provisioning.A_zimbraConstraint, newValues.toArray(new String[newValues.size()]));
+        }
+        Provisioning.getInstance().modifyAttrs(constraintEntry, newAttrValues);
     }
     
     private static boolean ignoreConstraint(String attrName) {
@@ -465,7 +593,7 @@ class AttributeConstraint {
         
         AttributeConstraint.fromString(am, "zimbraPasswordMinLength:min=6");
         AttributeConstraint.fromString(am, "zimbraPasswordMaxLength:min=64");
-        AttributeConstraint.fromString(am, "zimbraPasswordMinLength:min=6:max=64:vaues=1,2,3");
+        AttributeConstraint.fromString(am, "zimbraPasswordMinLength:min=6:max=64:values=1,2,3");
         AttributeConstraint.fromString(am, "zimbraFeatureMailEnabled:values=FALSE,TRUE");
         
         Account acct = prov.get(Provisioning.AccountBy.name, "user1@phoebe.mac");
