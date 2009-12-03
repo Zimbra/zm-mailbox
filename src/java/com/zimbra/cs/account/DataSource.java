@@ -288,8 +288,13 @@ public class DataSource extends AccountProperty {
         return getAttr(Provisioning.A_zimbraPrefReplyToDisplay);
     }
     
+    boolean isRequestScopeDebugTraceOn = false;
+    public synchronized void setRequestScopeDebugTraceOn(boolean b) {
+        isRequestScopeDebugTraceOn = b;
+    }
+    
     public boolean isDebugTraceEnabled() {
-    	return getBooleanAttr(Provisioning.A_zimbraDataSourceEnableTrace, false);
+    	return isRequestScopeDebugTraceOn || getBooleanAttr(Provisioning.A_zimbraDataSourceEnableTrace, false);
     }
     
     //IMAP datasources can override these
