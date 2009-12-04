@@ -33,10 +33,13 @@
     <a n="displayName"/>
     <a n="givenName"/>
     <a n="gn"/>
+    <a n="homePhone"/>
     <a n="initials"/>
     <a n="l"/>
+    <a n="mobile"/>
     <a n="o"/>
     <a n="ou"/>
+    <a n="pager"/>
     <a n="physicalDeliveryOfficeName"/>
     <a n="postalAddress"/>
     <a n="postalCode"/>
@@ -161,6 +164,7 @@
     <a n="zimbraPrefCalendarAutoAddInvites"/>
     <a n="zimbraPrefCalendarDayHourEnd"/>
     <a n="zimbraPrefCalendarDayHourStart"/>
+    <a n="zimbraPrefCalendarDefaultFolder"/>
     <a n="zimbraPrefCalendarFirstDayOfWeek"/>
     <a n="zimbraPrefCalendarForwardInvitesTo"/>
     <a n="zimbraPrefCalendarInitialCheckedCalendars"/>
@@ -200,6 +204,7 @@
     <a n="zimbraPrefFromDisplay"/>
     <a n="zimbraPrefGalAutoCompleteEnabled"/>
     <a n="zimbraPrefGalSearchEnabled"/>
+    <a n="zimbraPrefGetMailAction"/>
     <a n="zimbraPrefGroupMailBy"/>
     <a n="zimbraPrefHtmlEditorDefaultFontColor"/>
     <a n="zimbraPrefHtmlEditorDefaultFontFamily"/>
@@ -235,6 +240,7 @@
     <a n="zimbraPrefMailDefaultCharset"/>
     <a n="zimbraPrefMailFlashIcon"/>
     <a n="zimbraPrefMailFlashTitle"/>
+    <a n="zimbraPrefMailFoldersCheckedForNewMsgIndicator"/>
     <a n="zimbraPrefMailForwardingAddress"/>
     <a n="zimbraPrefMailInitialSearch"/>
     <a n="zimbraPrefMailItemsPerPage"/>
@@ -280,6 +286,7 @@
     <a n="zimbraPrefShowSelectionCheckbox"/>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraPrefSpellDictionary"/>
+    <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
     <a n="zimbraPrefTagTreeOpen"/>
     <a n="zimbraPrefTimeZoneId"/>
@@ -308,6 +315,7 @@
     <a n="zimbraTextAnalyzer"/>
     <a n="zimbraWebClientShowOfflineLink"/>
     <a n="zimbraZimletAvailableZimlets"/>
+    <a n="zimbraZimletMandatoryZimlets"/>
     <a n="zimbraZimletUserProperties"/>
 
   </attrs>
@@ -380,6 +388,7 @@
     <a n="zimbraMailStatus"/>
     <a n="zimbraNotes"/>
     <a n="zimbraPrefSkin"/>
+    <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefTimeZoneId"/>
     <a n="zimbraSkinBackgroundColor"/>
     <a n="zimbraSkinFavicon"/>
