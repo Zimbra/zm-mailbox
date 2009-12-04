@@ -90,6 +90,9 @@ public class LC {
     public static final KnownKey localized_client_msgs_directory;
     public static final KnownKey skins_directory;
 
+    public static final KnownKey zimbra_disk_cache_servlet_flush;
+    public static final KnownKey zimbra_disk_cache_servlet_size;
+
     public static final KnownKey zimbra_store_sweeper_max_age;
     public static final KnownKey zimbra_store_copy_buffer_size_kb;
     public static final KnownKey zimbra_nio_file_copy_chunk_size_kb;
@@ -636,6 +639,9 @@ public class LC {
 
         skins_directory = new KnownKey("skins_directory");
         skins_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "zimbra" + FS + "skins");
+
+        zimbra_disk_cache_servlet_flush = new KnownKey("zimbra_disk_cache_servlet_flush", "true");
+        zimbra_disk_cache_servlet_size = new KnownKey("zimbra_disk_cache_servlet_size", "1000");
 
         zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
