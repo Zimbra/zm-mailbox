@@ -192,7 +192,7 @@ public class ZimletResources extends DiskCacheServlet {
 
             // store buffer
             if (!debug) {
-                file = File.createTempFile("res-", "." + type, getCacheDir());
+                file = createCacheFile(cacheId, type);
                 if (ZimbraLog.zimlet.isDebugEnabled())
                     ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
                 copy(text, file);

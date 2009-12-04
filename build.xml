@@ -856,6 +856,7 @@
 
     <target name="reset-jetty" description="Resets jetty">
         <delete dir="${jetty.home.dir}"/>
+        <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
         <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
         <move toDir="${jetty.home.dir}">
@@ -869,6 +870,7 @@
         <mkdir dir="${jetty.home.dir}/work/zimbra"/>
         <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
         <mkdir dir="${jetty.home.dir}/webapps/zimlet"/>
+        <mkdir dir="${zimbra.home.dir}/data/tmp/jetty"/>
         <mkdir dir="${zimbra.home.dir}/zimlets-deployed"/>
     </target>
 
@@ -1069,7 +1071,7 @@
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
         <delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
-   		<delete dir="${zimbra.home.dir}/data"/>
+        <delete dir="${zimbra.home.dir}/data"/>
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
         </delete>
