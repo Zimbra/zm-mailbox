@@ -79,6 +79,9 @@ This feature is used for securing admin server in hosted deployment (bug# 30510)
   <key name="debug_disable_mailbox_group">
     <value>false</value>
   </key>
+  <key name="zimbra_disk_cache_servlet_flush">
+    <value>false</value>
+  </key>
   <key name="zimbra_mailbox_groups">
     <value>100</value>
   </key>
