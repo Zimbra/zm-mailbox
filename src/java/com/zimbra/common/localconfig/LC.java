@@ -548,6 +548,13 @@ public class LC {
     public static final KnownKey zimbra_lmtp_validate_messages;
     public static final KnownKey zimbra_lmtp_max_line_length;
     
+    public static final KnownKey data_source_eas_sync_email;
+    public static final KnownKey data_source_eas_sync_contacts;
+    public static final KnownKey data_source_eas_sync_calendar;
+    public static final KnownKey data_source_eas_sync_tasks;
+    public static final KnownKey data_source_eas_window_size;
+    public static final KnownKey data_source_eas_mime_truncation;
+    
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1528,6 +1535,13 @@ public class LC {
         data_source_scheduling_enabled = new KnownKey("data_source_scheduling_enabled", "true");
         
         notes_enabled = new KnownKey("notes_enabled", "false");
+        
+        data_source_eas_sync_email = new KnownKey("data_source_eas_sync_email", "true");
+        data_source_eas_sync_contacts = new KnownKey("data_source_eas_sync_contacts", "true");
+        data_source_eas_sync_calendar = new KnownKey("data_source_eas_sync_calendar", "true");
+        data_source_eas_sync_tasks = new KnownKey("data_source_eas_sync_tasks", "true");
+        data_source_eas_window_size = new KnownKey("data_source_eas_window_size", "50");
+        data_source_eas_mime_truncation = new KnownKey("data_source_eas_mime_truncation", "4");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
