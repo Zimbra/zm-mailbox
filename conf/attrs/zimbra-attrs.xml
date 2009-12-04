@@ -207,6 +207,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC2256: descriptive information</desc>
 </attr>
 
+<attr name="homePhone" type="string" optionalIn="account" flags="domainAdminModifiable">
+    <desc>RFC1274: home telephone number</desc>
+</attr>
+
 <attr name="initials" type="string" optionalIn="account" flags="domainAdminModifiable">
     <desc>RFC2256: initials of some or all of names, but not the surname(s).</desc>
 </attr>
@@ -219,6 +223,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC1274: RFC822 Mailbox</desc>
 </attr>
 
+<attr name="mobile" type="string" optionalIn="account" flags="domainAdminModifiable">
+    <desc>RFC1274: mobile telephone number</desc>
+</attr>
+
 <attr name="objectClass" type="string">
     <desc>RFC2256: object classes of the entity</desc>
 </attr>
@@ -229,6 +237,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="ou" type="string" optionalIn="account" flags="domainAdminModifiable">
     <desc>RFC2256: organizational unit this object belongs to</desc>
+</attr>
+
+<attr name="pager" type="string" optionalIn="account" flags="domainAdminModifiable">
+    <desc>RFC1274: pager telephone number</desc>
 </attr>
 
 <attr name="physicalDeliveryOfficeName" type="string" optionalIn="account" flags="domainAdminModifiable">

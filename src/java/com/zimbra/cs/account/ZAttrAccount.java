@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091130-1040 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091203-2221 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -587,6 +587,68 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC1274: home telephone number
+     *
+     * @return homePhone, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getHomePhone() {
+        return getAttr(Provisioning.A_homePhone, null);
+    }
+
+    /**
+     * RFC1274: home telephone number
+     *
+     * @param homePhone new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setHomePhone(String homePhone) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_homePhone, homePhone);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC1274: home telephone number
+     *
+     * @param homePhone new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setHomePhone(String homePhone, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_homePhone, homePhone);
+        return attrs;
+    }
+
+    /**
+     * RFC1274: home telephone number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetHomePhone() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_homePhone, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC1274: home telephone number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetHomePhone(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_homePhone, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: initials of some or all of names, but not the surname(s).
      *
      * @return initials, or null if unset
@@ -773,6 +835,68 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC1274: mobile telephone number
+     *
+     * @return mobile, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getMobile() {
+        return getAttr(Provisioning.A_mobile, null);
+    }
+
+    /**
+     * RFC1274: mobile telephone number
+     *
+     * @param mobile new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setMobile(String mobile) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_mobile, mobile);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC1274: mobile telephone number
+     *
+     * @param mobile new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setMobile(String mobile, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_mobile, mobile);
+        return attrs;
+    }
+
+    /**
+     * RFC1274: mobile telephone number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetMobile() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_mobile, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC1274: mobile telephone number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetMobile(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_mobile, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: organization this object belongs to
      *
      * @return o, or null if unset
@@ -893,6 +1017,68 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetOu(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_ou, "");
+        return attrs;
+    }
+
+    /**
+     * RFC1274: pager telephone number
+     *
+     * @return pager, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getPager() {
+        return getAttr(Provisioning.A_pager, null);
+    }
+
+    /**
+     * RFC1274: pager telephone number
+     *
+     * @param pager new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setPager(String pager) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_pager, pager);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC1274: pager telephone number
+     *
+     * @param pager new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setPager(String pager, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_pager, pager);
+        return attrs;
+    }
+
+    /**
+     * RFC1274: pager telephone number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetPager() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_pager, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC1274: pager telephone number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetPager(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_pager, "");
         return attrs;
     }
 
@@ -5948,7 +6134,6 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @return zimbraDomainAdminMaxMailQuota, or -1 if unset
      */
@@ -5959,7 +6144,6 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @param zimbraDomainAdminMaxMailQuota new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5973,7 +6157,6 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @param zimbraDomainAdminMaxMailQuota new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5988,7 +6171,6 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -6001,7 +6183,6 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

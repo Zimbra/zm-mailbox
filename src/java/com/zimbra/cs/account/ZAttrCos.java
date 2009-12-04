@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091130-1040 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091203-2221 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3447,7 +3447,6 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @return zimbraDomainAdminMaxMailQuota, or -1 if unset
      */
@@ -3458,7 +3457,6 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @param zimbraDomainAdminMaxMailQuota new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3472,7 +3470,6 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @param zimbraDomainAdminMaxMailQuota new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3487,7 +3484,6 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -3500,7 +3496,6 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

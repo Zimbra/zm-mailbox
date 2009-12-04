@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091130-1040 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091203-2221 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1034,6 +1034,12 @@ public class ZAttrProvisioning {
     public static final String A_gn = "gn";
 
     /**
+     * RFC1274: home telephone number
+     */
+    @ZAttr(id=-1)
+    public static final String A_homePhone = "homePhone";
+
+    /**
      * RFC2256: initials of some or all of names, but not the surname(s).
      */
     @ZAttr(id=-1)
@@ -1052,6 +1058,12 @@ public class ZAttrProvisioning {
     public static final String A_mail = "mail";
 
     /**
+     * RFC1274: mobile telephone number
+     */
+    @ZAttr(id=-1)
+    public static final String A_mobile = "mobile";
+
+    /**
      * RFC2256: organization this object belongs to
      */
     @ZAttr(id=-1)
@@ -1068,6 +1080,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_ou = "ou";
+
+    /**
+     * RFC1274: pager telephone number
+     */
+    @ZAttr(id=-1)
+    public static final String A_pager = "pager";
 
     /**
      * &#039;RFC2256: Physical Delivery Office Name
@@ -2297,7 +2315,6 @@ public class ZAttrProvisioning {
 
     /**
      * maximum amount of mail quota a domain admin can set on a user
-     * Deprecated since 6.0.0_BETA2 in the pure ACL based access manager.
      */
     @ZAttr(id=398)
     public static final String A_zimbraDomainAdminMaxMailQuota = "zimbraDomainAdminMaxMailQuota";
