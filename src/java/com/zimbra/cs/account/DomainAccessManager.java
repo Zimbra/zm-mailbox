@@ -144,8 +144,6 @@ public class DomainAccessManager extends AccessManager {
     public boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException {
         if (!canAccessAccount(at,  targetAccount))
             return false;
-
-        if (at.isAdmin()) return true;
         
         return canSetMailQuota(at, targetAccount, mailQuota);
     }
@@ -153,6 +151,8 @@ public class DomainAccessManager extends AccessManager {
     // public static because of bug 42896.
     // change back to non-static protected when we support constraints on a per admin basis
     public static boolean canSetMailQuota(AuthToken at, Account targetAccount, long quota) throws ServiceException {
+        if (at.isAdmin()) return true;
+        
         Account adminAccount = Provisioning.getInstance().get(Provisioning.AccountBy.id,  at.getAccountId(), at);
         if (adminAccount == null) return false;
 
