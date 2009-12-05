@@ -288,6 +288,13 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                 ZimbraLog.index_add.debug("****Deleting index " + mIdxDirectory.toString());
             
             String[] files = mIdxDirectory.list();
+            // list method may return null (for FSDirectory if the underlying directory doesn't exist in the filesystem or there are permissions problems). 
+            if (files == null) {
+                if (ZimbraLog.index_add.isDebugEnabled())
+                    ZimbraLog.index_add.debug("****Deleting index unable to list directory " + mIdxDirectory.toString());
+                return;
+            }
+                
             for (String file : files) {
                 mIdxDirectory.deleteFile(file);
             }
