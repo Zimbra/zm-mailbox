@@ -15,13 +15,6 @@
 
 package com.zimbra.cs.html;
 
-/* 
- * (C) Copyright 2002-2004, Andy Clark.  All rights reserved.
- *
- * This file is distributed under an Apache style license. Please
- * refer to the LICENSE file for specific details.
- */
-
 import org.apache.xerces.xni.Augmentations;
 import org.apache.xerces.xni.NamespaceContext;
 import org.apache.xerces.xni.QName;
