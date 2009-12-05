@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.accesscontrol.generated.AdminRights;
 
@@ -39,7 +40,8 @@ public abstract class AdminRight extends Right {
         PR_ALWAYS_ALLOW = newAdminSystemRight("PSEUDO_ALWAYS_ALLOW", RightType.preset);
         PR_SYSTEM_ADMIN_ONLY = newAdminSystemRight("PSEUDO_SYSTEM_ADMIN_ONLY", RightType.preset);
         
-        AdminRights.init(rm);
+        if (LC.zimbra_rights_delegated_admin_supported.booleanValue())
+            AdminRights.init(rm);
     }
     
     protected AdminRight(String name, RightType rightType) {
