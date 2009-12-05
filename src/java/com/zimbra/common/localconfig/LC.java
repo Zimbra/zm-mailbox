@@ -144,6 +144,8 @@ public class LC {
     public static final KnownKey zimbra_index_lucene_nobatch_ram_buffer_size_kb;
     public static final KnownKey zimbra_index_lucene_nobatch_autocommit;
     
+    public static final KnownKey zimbra_rights_delegated_admin_supported;
+
     public static final KnownKey zimbra_spam_report_queue_size;
 
     public static final KnownKey zimbra_throttle_op_concurrency;
@@ -726,6 +728,8 @@ public class LC {
         zimbra_index_lucene_nobatch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_nobatch_ram_buffer_size_kb", "10240");
         zimbra_index_lucene_nobatch_autocommit = new KnownKey("zimbra_index_lucene_nobatch_autocommit", "false");
         
+        zimbra_rights_delegated_admin_supported = new KnownKey("zimbra_rights_delegated_admin_supported", "true");
+
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
 
