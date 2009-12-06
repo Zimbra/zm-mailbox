@@ -1377,6 +1377,12 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetFolderGrant(String[] args) throws ServiceException {
         ZFolder f = lookupFolder(args[0]);
+        // after bug 40178, grantee names are not returned in the refresh block,
+        // they are only returned in GetFolderResponse.
+        // Do not use the cached folder (inited from the refresh block), do a 
+        // GetFolderRequest instead.
+        f = mMbox.getFolderRequestById(f.getId());
+        
         if (verboseOpt()) {
             StringBuilder sb = new StringBuilder();
             for (ZGrant g : f.getGrants()) {
