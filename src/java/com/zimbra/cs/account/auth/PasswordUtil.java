@@ -96,7 +96,42 @@ public class PasswordUtil {
         }
     }
     
-    
+    /*
+     * MD5
+     */
+    public static class MD5 {
+        
+        private static String MD5_ENCODING = "{MD5}";
+        
+        public static boolean isMD5(String encodedPassword) {
+            return encodedPassword.startsWith(MD5_ENCODING);
+        }
+        
+        public static boolean verifyMD5(String encodedPassword, String password) {
+            if (!encodedPassword.startsWith(MD5_ENCODING))
+                return false;
+            byte[] encodedBuff = encodedPassword.substring(MD5_ENCODING.length()).getBytes();
+            byte[] buff = Base64.decodeBase64(encodedBuff);
+            String generated = generateMD5(password);
+            return generated.equals(encodedPassword);
+        }
+        
+        public static String generateMD5(String password) {
+            try {
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                md.update(password.getBytes("UTF-8"));
+                
+                byte[] digest = md.digest();
+                return MD5_ENCODING + new String(Base64.encodeBase64(digest));
+            } catch (NoSuchAlgorithmException e) {
+                // this shouldn't happen unless JDK is foobar
+                throw new RuntimeException(e);
+            } catch (UnsupportedEncodingException e) {
+                // this shouldn't happen unless JDK is foobar
+                throw new RuntimeException(e);
+            }
+        }
+    }    
 
 
 }
