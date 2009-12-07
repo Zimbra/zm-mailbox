@@ -133,5 +133,22 @@ public class PasswordUtil {
         }
     }    
 
+    public static void main(String args[]) {
+        
+        String plain = "test123";
+        System.out.println("plain:        " + plain);
+        System.out.println("encoded SSHA: " + SSHA.generateSSHA(plain, null));
+        System.out.println("encoded SSH1: " + SHA1.generateSHA1(plain));
+        System.out.println("encoded MD5:  " + MD5.generateMD5(plain));
+        System.out.println();
+        
+        plain = "helloWorld";
+        System.out.println("plain:        " + plain);
+        System.out.println("encoded SSHA: " + SSHA.generateSSHA(plain, null));
+        System.out.println("encoded SSH1: " + SHA1.generateSHA1(plain));
+        System.out.println("encoded MD5:  " + MD5.generateMD5(plain));
+        System.out.println();
+        
+    }
 
 }
