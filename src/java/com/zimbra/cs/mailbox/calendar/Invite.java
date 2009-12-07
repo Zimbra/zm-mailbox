@@ -1579,6 +1579,9 @@ public class Invite {
     public void setIsOrganizer(Account acct) throws ServiceException {
         mIsOrganizer = thisAcctIsOrganizer(acct);
     }
+    public void setIsOrganizer(boolean isOrganizer) {
+        mIsOrganizer = isOrganizer;
+    }
 
     public boolean isLocalOnly() {
         // Local-only is never true for the organizer user.

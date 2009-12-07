@@ -559,6 +559,42 @@ public class Message extends MailItem {
         if (mCalendarItemInfos == null)
             mCalendarItemInfos = new ArrayList<CalendarItemInfo>();
 
+        // Clean up invalid missing organizer/attendee from some Exchanged-originated invite. (bug 43195)
+        // We are looking for a multi-VEVENT structure where the series VEVENT has organizer and attendees
+        // specified and exception instance VEVENTs omit them.  Exchange seems to expect you to inherit
+        // organizer/attendee from series, but that's wrong.  Fix the data by duplicating the missing
+        // properties.
+        if (invites.size() > 1) {
+            ZOrganizer seriesOrganizer = null;
+            boolean seriesIsOrganizer = false;
+            List<ZAttendee> seriesAttendees = null;
+            // Get organizer and attendees from series VEVENT.
+            for (Invite inv : invites) {
+                if (!inv.hasRecurId()) {
+                    seriesOrganizer = inv.getOrganizer();
+                    seriesIsOrganizer = inv.isOrganizer();
+                    seriesAttendees = inv.getAttendees();
+                    break;
+                }
+            }
+            if (seriesOrganizer != null) {
+                for (Invite inv : invites) {
+                    if (inv.hasRecurId() && !inv.hasOrganizer()) {
+                        inv.setOrganizer(seriesOrganizer);
+                        inv.setIsOrganizer(seriesIsOrganizer);
+                        // Inherit attendees from series, iff no attendee is listed and also no organizer
+                        // is given.  If organizer is specified, we will assume they really meant for this
+                        // exception instance to have no attendee.
+                        if (!inv.hasOtherAttendees() && seriesAttendees != null) {
+                            for (ZAttendee at : seriesAttendees) {
+                                inv.addAttendee(at);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
             // Bug 38550/41239: If ORGANIZER is missing, set it to email sender.  If that sender
