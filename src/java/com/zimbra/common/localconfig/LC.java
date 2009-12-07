@@ -198,6 +198,7 @@ public class LC {
     public static final KnownKey ldap_common_require_tls;
     public static final KnownKey ldap_common_threads;
     public static final KnownKey ldap_common_toolthreads;
+    public static final KnownKey ldap_common_writetimeout;
     public static final KnownKey ldap_db_cachefree;
     public static final KnownKey ldap_db_cachesize;
     public static final KnownKey ldap_db_checkpoint;
@@ -790,6 +791,9 @@ public class LC {
 
         ldap_common_toolthreads = new KnownKey("ldap_common_toolthreads");
         ldap_common_toolthreads.setDefault("1");
+
+        ldap_common_writetimeout = new KnownKey("ldap_common_writetimeout");
+        ldap_common_writetimeout.setDefault("0");
 
         ldap_db_cachefree = new KnownKey("ldap_db_cachefree");
         ldap_db_cachefree.setDefault("1");
