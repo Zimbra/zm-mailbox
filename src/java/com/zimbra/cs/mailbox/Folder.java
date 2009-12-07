@@ -298,6 +298,11 @@ public class Folder extends MailItem {
         // check admin access
         if (AccessManager.getInstance().canAccessAccount(authuser, getAccount(), asAdmin))
             return rightsNeeded;
+
+        return checkACL(rightsNeeded, authuser, asAdmin);
+    }
+
+    private short checkACL(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // check the ACLs to see if access has been explicitly granted
         Short granted = mRights != null ? mRights.getGrantedRights(authuser) : null;
         if (granted != null)
@@ -305,9 +310,9 @@ public class Folder extends MailItem {
         // no ACLs apply; can we check parent folder for inherited rights?
         if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_FLAG_NO_INHERIT))
             return 0;
-        return mParent.checkRights(rightsNeeded, authuser, asAdmin);
+        return mParent.checkACL(rightsNeeded, authuser, asAdmin);
     }
-
+    
     /** Grants the specified set of rights to the target and persists them
      *  to the database.
      * 
