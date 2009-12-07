@@ -30,7 +30,8 @@ public class SetHeaderFilter implements Filter {
 	public static final Pattern RE_HEADER = Pattern.compile("^([^:]+):\\s+(.*)$");
 	public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
 
-	private static final Map<String,String[]> responseHeaders = Collections.synchronizedMap(new HashMap<String,String[]>()); 
+	private static final Map<String,KeyValue[]> responseHeaders = Collections.synchronizedMap(new HashMap<String,KeyValue[]>());
+	private static final KeyValue[] NO_HEADERS = {};
 
 	private static boolean isAlreadyFiltering = false;
 
@@ -83,43 +84,7 @@ public class SetHeaderFilter implements Filter {
 			HttpServletResponse httpResponse = (HttpServletResponse)response;
 
 			String serverName = getServerName(httpRequest);
-			String[] headers = responseHeaders.get(serverName);
-
-			if (headers == null) {
-				boolean filtering;
-				synchronized (this.getClass()) {
-					filtering = isAlreadyFiltering;
-					isAlreadyFiltering = true;
-				}
-				if (!filtering) {
-					try {
-						SoapProvisioning provisioning = new SoapProvisioning();
-						String soapUri =
-							LC.zimbra_admin_service_scheme.value() +
-							LC.zimbra_zmprov_default_soap_server.value() +
-							':' +
-							LC.zimbra_admin_service_port.intValue() +
-							AdminConstants.ADMIN_SERVICE_URI
-						;
-						provisioning.soapSetURI(soapUri);
-						Entry info = provisioning.getDomainInfo(Provisioning.DomainBy.virtualHostname, serverName);
-						if (info == null) {
-							info = provisioning.getConfig();
-						}
-						if (info != null) {
-							headers = info.getMultiAttr(ZAttrProvisioning.A_zimbraResponseHeader, true);
-						}
-						else {
-							headers = new String[] {};
-						}
-						responseHeaders.put(serverName, headers);
-					}
-					catch (Exception e) {
-						this.error("Unable to get domain config", e);
-					}
-				}
-			}
-
+			KeyValue[] headers = getResponseHeaders(serverName);
 			if (headers != null) {
 				this.addHeaders(httpResponse, headers);
 			}
@@ -133,22 +98,65 @@ public class SetHeaderFilter implements Filter {
 		return HttpUtil.getVirtualHost(request);
 	}
 
-	protected void addHeaders(HttpServletResponse response, String[] headers) {
+	protected KeyValue[] getResponseHeaders(String serverName) {
+		KeyValue[] headers = responseHeaders.get(serverName);
+		if (headers == null) {
+			boolean filtering;
+			synchronized (this.getClass()) {
+				filtering = isAlreadyFiltering;
+				isAlreadyFiltering = true;
+			}
+			if (!filtering) {
+				try {
+					SoapProvisioning provisioning = new SoapProvisioning();
+					String soapUri =
+						LC.zimbra_admin_service_scheme.value() +
+						LC.zimbra_zmprov_default_soap_server.value() +
+						':' +
+						LC.zimbra_admin_service_port.intValue() +
+						AdminConstants.ADMIN_SERVICE_URI
+					;
+					provisioning.soapSetURI(soapUri);
+					Entry info = provisioning.getDomainInfo(Provisioning.DomainBy.virtualHostname, serverName);
+					if (info == null) {
+						info = provisioning.getConfig();
+					}
+					if (info != null) {
+						String[] values = info.getMultiAttr(ZAttrProvisioning.A_zimbraResponseHeader, true);
+						headers = new KeyValue[values.length];
+						for (int i = 0; i < values.length; i++) {
+							String value = values[i];
+							Matcher matcher = RE_HEADER.matcher(value);
+							if (matcher.matches()) {
+								headers[i] = new KeyValue(matcher.group(1), matcher.group(2));
+							}
+							else {
+								headers[i] = new KeyValue(value);
+							}
+						}
+					}
+					else {
+						headers = NO_HEADERS;
+					}
+					responseHeaders.put(serverName, headers);
+				}
+				catch (Exception e) {
+					this.error("Unable to get domain config", e);
+				}
+			}
+		}
+		return headers;
+	}
+
+	protected void addHeaders(HttpServletResponse response, KeyValue[] headers) {
 		if (headers == null) return;
-		for (String header : headers) {
+		for (KeyValue header : headers) {
 			this.addHeader(response, header);
 		}
 	}
 
-	protected void addHeader(HttpServletResponse response, String header) {
-		Matcher matcher = RE_HEADER.matcher(header);
-		String name = UNKNOWN_HEADER_NAME;
-		String value = header;
-		if (matcher.matches()) {
-			name = matcher.group(1);
-			value = matcher.group(2);
-		}
-		response.addHeader(name, value);
+	protected void addHeader(HttpServletResponse response, KeyValue header) {
+		response.addHeader(header.key, header.value);
 	}
 
 	protected boolean isDebugEnabled() {
@@ -169,6 +177,24 @@ public class SetHeaderFilter implements Filter {
 	}
 	protected void error(String message, Throwable t) {
 		this.logger.error(message, t);
+	}
+
+	//
+	// Classes
+	//
+
+	protected static class KeyValue {
+		// Data
+		public String key;
+		public String value;
+		// Constructors
+		public KeyValue(String value) {
+			this(SetHeaderFilter.UNKNOWN_HEADER_NAME, value);
+		}
+		public KeyValue(String key, String value) {
+			this.key = key;
+			this.value = value;
+		}
 	}
 
 } // class SetHeaderFilter
