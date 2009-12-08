@@ -73,7 +73,7 @@ public class SetHeaderFilter implements Filter {
 
 	public boolean doFilter(ServletRequest request, ServletResponse response)
 	throws IOException, ServletException {
-		this.addZimbraResponseHeaders(request, response);
+		//this.addZimbraResponseHeaders(request, response);
 		return true;
 	}
 
