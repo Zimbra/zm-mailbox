@@ -2135,6 +2135,13 @@
   =======================================================
 -->
 <!-- Admin Console Server Status -->
+<right name="viewAdminConsoleServerStatus" type="getAttrs" targetType="config">
+    <desc> Admin Console view attr rights for server status Tab </desc>
+    <attrs>
+      <a n="zimbraLogHostname"/>
+    </attrs>
+</right>
+
 <!-- Admin Console Server Statistics -->
 
 <!-- ======================================================= -->
@@ -2323,6 +2330,7 @@
   <rights>
     <r n="getServiceStatus"/>
     <r n="listServer"/>
+    <r n="viewAdminConsoleServerStatus" />  
   </rights>
 </right>
 
