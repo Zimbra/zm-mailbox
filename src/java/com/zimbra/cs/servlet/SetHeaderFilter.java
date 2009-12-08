@@ -32,10 +32,9 @@ public class SetHeaderFilter implements Filter {
 	public static final Pattern RE_HEADER = Pattern.compile("^([^:]+):\\s+(.*)$");
 	public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
 
-	private static final Map<String,KeyValue[]> responseHeaders = Collections.synchronizedMap(new HashMap<String,KeyValue[]>());
 	private static final KeyValue[] NO_HEADERS = {};
 
-	private static boolean isAlreadyFiltering = false;
+	private static final Map<String,KeyValue[]> responseHeaders = Collections.synchronizedMap(new HashMap<String,KeyValue[]>());
 
 	//
 	// Data
@@ -89,69 +88,53 @@ public class SetHeaderFilter implements Filter {
 	protected void addZimbraResponseHeaders(ServletRequest request, ServletResponse response)
 	throws IOException, ServletException {
 		if (!this.isResponseHeadersEnabled) return;
-		try {
-			HttpServletRequest httpRequest = (HttpServletRequest)request;
-			HttpServletResponse httpResponse = (HttpServletResponse)response;
 
-			String serverName = getServerName(httpRequest);
-			KeyValue[] headers = getResponseHeaders(serverName);
-			if (headers != null) {
-				this.addHeaders(httpResponse, headers);
-			}
-		}
-		finally {
-			isAlreadyFiltering = false;
-		}
-	}
+		HttpServletRequest httpRequest = (HttpServletRequest)request;
+		if (httpRequest.getRequestURI().startsWith("/service/admin/soap")) return;
 
-	protected String getServerName(HttpServletRequest request) {
-		return HttpUtil.getVirtualHost(request);
+		HttpServletResponse httpResponse = (HttpServletResponse)response;
+		String serverName = HttpUtil.getVirtualHost(httpRequest);
+		KeyValue[] headers = getResponseHeaders(serverName);
+		this.addHeaders(httpResponse, headers);
 	}
 
 	protected KeyValue[] getResponseHeaders(String serverName) {
 		KeyValue[] headers = responseHeaders.get(serverName);
 		if (headers == null) {
-			boolean filtering;
-			synchronized (this.getClass()) {
-				filtering = isAlreadyFiltering;
-				isAlreadyFiltering = true;
-			}
-			if (!filtering) {
-				headers = NO_HEADERS;
-				try {
-					SoapProvisioning provisioning = new SoapProvisioning();
-					String soapUri =
-						LC.zimbra_admin_service_scheme.value() +
-						LC.zimbra_zmprov_default_soap_server.value() +
-						':' +
-						LC.zimbra_admin_service_port.intValue() +
-						AdminConstants.ADMIN_SERVICE_URI
-					;
-					provisioning.soapSetURI(soapUri);
-					Entry info = provisioning.getDomainInfo(Provisioning.DomainBy.virtualHostname, serverName);
-					if (info == null) {
-						info = provisioning.getConfig();
-					}
-					if (info != null) {
-						String[] values = info.getMultiAttr(ZAttrProvisioning.A_zimbraResponseHeader, true);
-						headers = new KeyValue[values.length];
-						for (int i = 0; i < values.length; i++) {
-							String value = values[i];
-							Matcher matcher = RE_HEADER.matcher(value);
-							if (matcher.matches()) {
-								headers[i] = new KeyValue(matcher.group(1), matcher.group(2));
-							}
-							else {
-								headers[i] = new KeyValue(value);
-							}
+			headers = NO_HEADERS;
+			try {
+				SoapProvisioning provisioning = new SoapProvisioning();
+				String soapUri =
+					LC.zimbra_admin_service_scheme.value() +
+					LC.zimbra_zmprov_default_soap_server.value() +
+					':' +
+					LC.zimbra_admin_service_port.intValue() +
+					AdminConstants.ADMIN_SERVICE_URI
+				;
+				provisioning.soapSetURI(soapUri);
+				Entry info = provisioning.getDomainInfo(Provisioning.DomainBy.virtualHostname, serverName);
+				if (info == null) {
+					info = provisioning.getConfig();
+				}
+				if (info != null) {
+					String[] values = info.getMultiAttr(ZAttrProvisioning.A_zimbraResponseHeader, true);
+					headers = new KeyValue[values.length];
+					for (int i = 0; i < values.length; i++) {
+						String value = values[i];
+						Matcher matcher = RE_HEADER.matcher(value);
+						if (matcher.matches()) {
+							headers[i] = new KeyValue(matcher.group(1), matcher.group(2));
+						}
+						else {
+							headers[i] = new KeyValue(value);
 						}
 					}
 				}
-				catch (Exception e) {
-					this.error("Unable to get domain config", e);
-				}
-				responseHeaders.put(serverName, headers);
 			}
+			catch (Exception e) {
+				this.error("Unable to get domain config", e);
+			}
+			responseHeaders.put(serverName, headers);
 		}
 		return headers;
 	}
