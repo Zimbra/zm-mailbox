@@ -547,8 +547,8 @@ public class StringUtil {
         for (i = 0, last = -1; i < length; i++) {
             char c = str.charAt(i);
             switch (c) {
-                case '<':       replacement = "\\x3C";               break;
-                case '>':       replacement = "\\x3E";               break;
+                case '<':       replacement = "\\u003C";             break;
+                case '>':       replacement = "\\u003E";             break;
                 case '\\':      replacement = "\\\\";                break;
                 case '"':       replacement = "\\\"";                break;
                 case '\u2028':  replacement = "\\u2028";             break;
