@@ -27,6 +27,8 @@ public class SetHeaderFilter implements Filter {
 	// Constants
 	//
 
+	public static final String P_RESPONSE_HEADERS_ENABLED = "zimbraResponseHeader.enabled";
+
 	public static final Pattern RE_HEADER = Pattern.compile("^([^:]+):\\s+(.*)$");
 	public static final String UNKNOWN_HEADER_NAME = "X-Zimbra-Unknown-Header";
 
@@ -38,6 +40,8 @@ public class SetHeaderFilter implements Filter {
 	//
 	// Data
 	//
+
+	protected boolean isResponseHeadersEnabled = true;
 
 	private Log logger;
 
@@ -63,7 +67,12 @@ public class SetHeaderFilter implements Filter {
 		}
 	}
 
-	public void init(FilterConfig filterConfig) throws ServletException { }
+	public void init(FilterConfig filterConfig) throws ServletException {
+		String s = filterConfig.getInitParameter(P_RESPONSE_HEADERS_ENABLED);
+		if (s != null) {
+			this.isResponseHeadersEnabled = Boolean.parseBoolean(s.trim().toLowerCase());
+		}
+	}
 
 	public void destroy() { }
 
@@ -73,12 +82,13 @@ public class SetHeaderFilter implements Filter {
 
 	public boolean doFilter(ServletRequest request, ServletResponse response)
 	throws IOException, ServletException {
-		//this.addZimbraResponseHeaders(request, response);
+		this.addZimbraResponseHeaders(request, response);
 		return true;
 	}
 
 	protected void addZimbraResponseHeaders(ServletRequest request, ServletResponse response)
 	throws IOException, ServletException {
+		if (!this.isResponseHeadersEnabled) return;
 		try {
 			HttpServletRequest httpRequest = (HttpServletRequest)request;
 			HttpServletResponse httpResponse = (HttpServletResponse)response;
@@ -107,6 +117,7 @@ public class SetHeaderFilter implements Filter {
 				isAlreadyFiltering = true;
 			}
 			if (!filtering) {
+				headers = NO_HEADERS;
 				try {
 					SoapProvisioning provisioning = new SoapProvisioning();
 					String soapUri =
@@ -135,14 +146,11 @@ public class SetHeaderFilter implements Filter {
 							}
 						}
 					}
-					else {
-						headers = NO_HEADERS;
-					}
-					responseHeaders.put(serverName, headers);
 				}
 				catch (Exception e) {
 					this.error("Unable to get domain config", e);
 				}
+				responseHeaders.put(serverName, headers);
 			}
 		}
 		return headers;
