@@ -255,8 +255,6 @@ public class LC {
 
     public static final KnownKey derby_properties;
 
-    public static final KnownKey sqlite_cache_size;
-
     public final static KnownKey logger_data_directory;
     public final static KnownKey logger_zmrrdfetch_port;
     public static final KnownKey logger_mysql_directory;
@@ -982,8 +980,6 @@ public class LC {
 
         derby_properties = new KnownKey("derby_properties");
         derby_properties.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "derby.properties");
-
-        sqlite_cache_size = new KnownKey("sqlite_cache_size", "0", "size of sqlite shared cache");
 
         zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
         zimbra_logger_mysql_password.setDefault("zimbra");
