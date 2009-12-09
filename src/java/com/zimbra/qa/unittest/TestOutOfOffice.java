@@ -183,16 +183,16 @@ extends TestCase {
         cleanUp();
         DbPool.quietClose(mConn);
         
-        Account sender = TestUtil.getAccount(SENDER_NAME);
-        sender.setPrefFromAddress(mOriginalFromAddress);
-        sender.setPrefFromDisplay(mOriginalFromDisplay);
-        TestUtil.setAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
+        Account recipient = TestUtil.getAccount(RECIPIENT_NAME);
+        recipient.setPrefFromAddress(mOriginalFromAddress);
+        recipient.setPrefFromDisplay(mOriginalFromDisplay);
+        TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
         
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, mOriginalReplyEnabled);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeFromDate, mOriginalFromDate);
         TestUtil.setAccountAttr(RECIPIENT_NAME, Provisioning.A_zimbraPrefOutOfOfficeUntilDate, mOriginalUntilDate);
-        sender.setPrefReplyToAddress(mOriginalReplyToAddress);
-        sender.setPrefReplyToDisplay(mOriginalReplyToDisplay);
+        recipient.setPrefReplyToAddress(mOriginalReplyToAddress);
+        recipient.setPrefReplyToDisplay(mOriginalReplyToDisplay);
         
         super.tearDown();
     }
