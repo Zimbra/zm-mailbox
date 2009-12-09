@@ -48,12 +48,9 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -372,6 +369,8 @@ public class AttributeManager {
             List<String> defaultCOSValuesUpgrade = null;   // note: init to null instead of empty List
             String description = null;
             String deprecateDesc = null;
+            boolean minimize = LC.zimbra_minimize_resources.booleanValue();
+            
             for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
                 Element elem = (Element)elemIter.next();
                 if (elem.getName().equals(E_GLOBAL_CONFIG_VALUE)) {
@@ -457,7 +456,7 @@ public class AttributeManager {
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
-                    description, requiresRestart, sinceVer, deprecatedSinceVer);
+                    minimize ? null : description, requiresRestart, sinceVer, deprecatedSinceVer);
             
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
