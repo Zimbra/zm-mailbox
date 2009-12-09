@@ -149,13 +149,15 @@ public class Zimbra {
         SoapTransport.setDefaultUserAgent("ZCS", BuildInfo.VERSION);
 
         checkForClasses();
-
+        
         ZimbraApplication app = ZimbraApplication.getInstance();
 
         DbPool.startup();
 
         app.initializeZimbraDb(forMailboxd);
         
+        AttributeManager.getInstance().setMinimize(forMailboxd);
+
         if (!Versions.checkVersions())
             Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
 

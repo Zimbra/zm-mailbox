@@ -132,6 +132,9 @@ public class AttributeManager {
     
     private AttributeCallback mIDNCallback = new IDNCallback();
 
+    // do not keep comments and descriptions when running in a server
+    private boolean mMinimize = false;
+    
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
     private static Map<Integer,String> mOCGroupMap = new HashMap<Integer,String>();
@@ -218,6 +221,7 @@ public class AttributeManager {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
         Element root = doc.getRootElement();
+
         if (!root.getName().equals(E_ATTRS)) {
             error(null, file, "root tag is not " + E_ATTRS);
             return;
@@ -369,7 +373,6 @@ public class AttributeManager {
             List<String> defaultCOSValuesUpgrade = null;   // note: init to null instead of empty List
             String description = null;
             String deprecateDesc = null;
-            boolean minimize = LC.zimbra_minimize_resources.booleanValue();
             
             for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
                 Element elem = (Element)elemIter.next();
@@ -456,7 +459,7 @@ public class AttributeManager {
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
-                    minimize ? null : description, requiresRestart, sinceVer, deprecatedSinceVer);
+                    mMinimize ? null : description, requiresRestart, sinceVer, deprecatedSinceVer);
             
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
@@ -557,6 +560,7 @@ public class AttributeManager {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
         Element root = doc.getRootElement();
+
         if (!root.getName().equals(E_OBJECTCLASSES)) {
             error(null, file, "root tag is not " + E_OBJECTCLASSES);
             return;
@@ -673,8 +677,8 @@ public class AttributeManager {
                 error(name, file, "unknown class in AttributeClass: " + name);
             }
 
-
-            ObjectClassInfo info = new ObjectClassInfo(attrClass, name, id, groupId, type, superOCs, description, comment);
+            ObjectClassInfo info = new ObjectClassInfo(attrClass, name, id, groupId, type, superOCs,
+                mMinimize ? null : description, mMinimize ? null : comment);
             if (mOCs.get(canonicalName) != null) {
                 error(name, file, "duplicate objectclass definiton");
             }
@@ -969,6 +973,8 @@ public class AttributeManager {
         return immutable;
     }
 
+    public void setMinimize(boolean minimize) { mMinimize = minimize; }
+    
     /**
      * @param type
      * @return
