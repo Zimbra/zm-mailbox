@@ -132,13 +132,13 @@
     </condition>
 
     <condition property="db.driver.jar" value="derby*.jar">
-	<isset property="db-derby"/>
+        <isset property="db-derby"/>
     </condition>
     <condition property="db.driver.jar" value="mysql-connector-java*.jar">
-	<isset property="db-mysql"/>
+        <isset property="db-mysql"/>
     </condition>
     <condition property="db.driver.jar" value="sqlitejdbc*.jar">
-	<isset property="db-sqlite"/>
+        <isset property="db-sqlite"/>
     </condition>
 
     <condition property="is-windows">
@@ -754,18 +754,17 @@
         <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
-    	<!-- jetty windows service wrapper -->
-    	<if>
+        <!-- jetty windows service wrapper -->
+        <if>
             <isset property="is-windows"/>
             <then>
-            	<echo>Copying jetty windows service wrapper files</echo>
+                <echo>Copying jetty windows service wrapper files</echo>
                 <copy todir="${dist.jetty.dir}/etc" file="tools/jetty/wrapper.conf"/>
                 <!-- <copy todir="${dist.dir}/bin" file="tools/jetty/wrapper.exe"/> -->
                 <copy todir="${dist.dir}/lib" file="tools/jetty/wrapper.jar"/>
                 <copy todir="${dist.dir}/lib" file="tools/jetty/wrapper.dll"/>
             </then>
         </if>
-
 
         <!-- openldap -->
         <copy tofile="${dist.dir}/${slapd.conf.dir}/slapd.conf" file="${slapd.conf.src}" overwrite="true"/>
@@ -777,42 +776,54 @@
             <fileset dir="${build.dir}/ldap-config" includes="*.schema"/>
         </copy>
 
-	<!-- db schema, config and jars -->
-	<antcall target="db-versions-init" />
+        <!-- db schema, config and jars -->
+        <antcall target="db-versions-init" />
         <copy todir="${dist.db.dir}" overwrite="true">
             <fileset dir="${src.dir}/db" includes="*.sql"/>
             <fileset dir="${db.schema.dir}" includes="*.sql"/>
-	    <fileset dir="${build.dir}" includes="*.sql"/>
-	    <filterset>
-		<filter token="ZIMBRA_HOME" value="${zimbra.home.dir}/"/>
-		<filter token="ZIMBRA_INSTALL" value="${zimbra.home.dir}/"/>
-	    </filterset>
+            <fileset dir="${build.dir}" includes="*.sql"/>
+            <filterset>
+                <filter token="ZIMBRA_HOME" value="${zimbra.home.dir}/"/>
+                <filter token="ZIMBRA_INSTALL" value="${zimbra.home.dir}/"/>
+            </filterset>
         </copy>
 
-	<if>
-	    <isset property="db-derby"/>
-	    <then>
-		<copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
-		<copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
-		<copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-		    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-		    <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
-		</java>
-	    </then>
-	</if>
-	<if>
-	    <isset property="db-sqlite"/>
-	    <then>
-		<copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
-		    <fileset file="${common.jars.dir}/sqlite*.jar"/>
-		</copy>
-		<java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-		    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml" />
-		    <arg line="-e debug_disable_mailbox_group=true -f"/>
-		</java>
-	    </then>
-	</if>
+        <if>
+            <isset property="db-derby"/>
+            <then>
+                <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
+                <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
+                <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
+                </java>
+            </then>
+        </if>
+        <if>
+            <isset property="db-sqlite"/>
+            <then>
+                <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
+                    <fileset file="${common.jars.dir}/sqlite*.jar"/>
+                </copy>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f"/>
+                </java>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml" />
+                    <arg line="-e debug_disable_mailbox_group=true -f"/>
+                </java>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e sqlite_cache_size=2000 -f"/>
+                </java>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e sqlite_page_size=2048 -f"/>
+                </java>
+            </then>
+        </if>
 
         <!-- wikis -->
         <copy todir="${dist.dir}/wiki" overwrite="true">

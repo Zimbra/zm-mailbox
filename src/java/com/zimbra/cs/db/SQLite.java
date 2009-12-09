@@ -42,6 +42,7 @@ public class SQLite extends Db {
 
     private Map<Db.Error, String> mErrorCodes;
     private String cacheSize;
+    private String pageSize;
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
@@ -63,7 +64,7 @@ public class SQLite extends Db {
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return false;
             case ON_DUPLICATE_KEY:           return false;
-            case ON_UPDATE_CASCADE:          return false;
+            case ON_UPDATE_CASCADE:          return true;
             case READ_COMMITTED_ISOLATION:   return false;
             case REPLACE_INTO:               return true;
             case REQUEST_UTF8_UNICODE_COLLATION:  return false;
@@ -94,16 +95,20 @@ public class SQLite extends Db {
 
 
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
-        
-        cacheSize = LC.sqlite_cache_size.value();
+        cacheSize = LC.get("sqlite_cache_size");
         if (cacheSize.equals("0"))
             cacheSize = null;
-        ZimbraLog.dbconn.info("sqlite driver running with " + (cacheSize == null ?
-            "default" : cacheSize) + " page cache");
+        ZimbraLog.dbconn.info("sqlite driver running with " + (cacheSize == null ? "default" : cacheSize) + " page cache");
+
+        pageSize = LC.get("sqlite_page_size");
+        if (pageSize.equals("0"))
+            pageSize = null;
+        ZimbraLog.dbconn.info("sqlite driver running with " + (pageSize == null ? "default" : pageSize + "-byte") + " page size");
+
         super.startup(pool, poolSize);
     }
 
-    void postCreate(java.sql.Connection conn) throws SQLException {
+    @Override void postCreate(java.sql.Connection conn) throws SQLException {
         try {
             conn.setAutoCommit(true);
             pragmas(conn, null);
@@ -116,21 +121,29 @@ public class SQLite extends Db {
         PreparedStatement stmt = null;
         
         try {
-            (stmt = conn.prepareStatement("PRAGMA " +
-                (dbname == null || dbname.equals("zimbra") ? "" : dbname + ".") +
-                key + " = " + value)).execute();
+            String prefix = dbname == null || dbname.equals("zimbra") ? "" : dbname + ".";
+            (stmt = conn.prepareStatement("PRAGMA " + prefix + key + " = " + value)).execute();
         } finally {
             DbPool.quietCloseStatement(stmt);
         }
     }
 
     void pragmas(java.sql.Connection conn, String dbname) throws SQLException {
-        if (cacheSize != null)
-            pragma(conn, dbname, "cache_size", cacheSize);
-        pragma(conn, dbname, "encoding", "\"UTF-8\"");
+        pragma(conn, dbname, "foreign_keys", "ON");
         pragma(conn, dbname, "fullfsync", "OFF");
         pragma(conn, dbname, "journal_mode", "PERSIST");
         pragma(conn, dbname, "synchronous", "NORMAL");
+        pragma(conn, dbname, "encoding", "\"UTF-8\"");
+
+        if (cacheSize != null) {
+            pragma(conn, dbname, "cache_size", cacheSize);
+            // leaving this uncommented seems to break subsequent PRAGMAs
+//            pragma(conn, dbname, "default_cache_size", cacheSize);
+        }
+        if (pageSize != null) {
+            pragma(conn, dbname, "default_page_size", pageSize);
+            pragma(conn, dbname, "page_size", pageSize);
+        }
     }
 
     private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
@@ -170,9 +183,10 @@ public class SQLite extends Db {
         attachDatabase(conn, dbname);
     }
 
+    @SuppressWarnings("unused")
     void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
         PreparedStatement stmt = null;
-        
+
         try {
             boolean autocommit = conn.getConnection().getAutoCommit();
             if (!autocommit)
@@ -184,9 +198,9 @@ public class SQLite extends Db {
             if (!autocommit)
                 conn.getConnection().setAutoCommit(autocommit);
         } catch (SQLException e) {
-            if (!"database is already attached".equals(e.getMessage()))
-                return;
             ZimbraLog.dbconn.error("database " + dbname + " attach failed", e);
+            if (!"database is already attached".equals(e.getMessage()))
+                throw e;
         } finally {
             DbPool.quietCloseStatement(stmt);
         }
@@ -318,7 +332,9 @@ public class SQLite extends Db {
         return "SQLite";
     }
 
-    protected int getInClauseBatchSize() { return 200; }
+    @Override protected int getInClauseBatchSize() {
+        return 200;
+    }
 
     public static void main(String args[]) {
         // command line argument parsing
