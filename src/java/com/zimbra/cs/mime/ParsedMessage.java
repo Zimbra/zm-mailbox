@@ -204,12 +204,12 @@ public class ParsedMessage {
             throw new IOException("File " + file.getPath() + " is empty.");
         }
 
-        mSharedStream = new BlobInputStream(file);
         if (rawSize != null) {
             mRawSize = rawSize;
         } else if (!FileUtil.isGzipped(file)) {
             mRawSize = (int) file.length();
         }
+        mSharedStream = new BlobInputStream(file, mRawSize);
         mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }

@@ -269,7 +269,7 @@ public class BlobConsistencyChecker {
                 blob.fileModContent = modContent;
                 
                 if (mCheckSize) {
-                    blob.fileDataSize = getDataSize(file);
+                    blob.fileDataSize = getDataSize(file, blob.dbSize);
                     if (blob.dbSize != blob.fileDataSize) {
                         mResults.incorrectSize.add(blob);
                     }
@@ -288,12 +288,13 @@ public class BlobConsistencyChecker {
         }
     }
     
-    private static long getDataSize(File file)
+    private static long getDataSize(File file, long expected)
     throws IOException {
-        if (FileUtil.isGzipped(file)) {
+        long fileLen = file.length();
+        if (fileLen != expected && FileUtil.isGzipped(file)) {
             return ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(file)));
         } else {
-            return file.length();
+            return fileLen;
         }
     }
 }

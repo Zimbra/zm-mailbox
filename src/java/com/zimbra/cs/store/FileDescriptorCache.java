@@ -85,9 +85,9 @@ public class FileDescriptorCache
     /**
      * Reads one byte from the specified file.
      */
-    public int read(String path, long fileOffset)
+    public int read(String path, long rawSize, long fileOffset)
     throws IOException {
-        SharedFile file = getSharedFile(path);
+        SharedFile file = getSharedFile(path, rawSize);
         int retVal = file.read(fileOffset);
         closeIfPruned(path, file);
         return retVal;
@@ -96,9 +96,9 @@ public class FileDescriptorCache
     /**
      * Reads from the specified file.
      */
-    public int read(String path, long fileOffset, byte[] buf, int bufferOffset, int len)
+    public int read(String path, long rawSize, long fileOffset, byte[] buf, int bufferOffset, int len)
     throws IOException {
-        SharedFile file = getSharedFile(path);
+        SharedFile file = getSharedFile(path, rawSize);
         int numRead = file.read(fileOffset, buf, bufferOffset, len);
         closeIfPruned(path, file);
         return numRead;
@@ -115,7 +115,7 @@ public class FileDescriptorCache
     /**
      * Returns the existing cache entry or creates a new one.
      */
-    private SharedFile getSharedFile(String path)
+    private SharedFile getSharedFile(String path, long rawSize)
     throws IOException {
         SharedFile sharedFile = null;
         synchronized (this) {
@@ -125,7 +125,7 @@ public class FileDescriptorCache
         if (sharedFile == null) {
             mHitRate.increment(0);
             File file = new File(path);
-            if (FileUtil.isGzipped(file)) {
+            if (file.length() != rawSize && FileUtil.isGzipped(file)) {
                 ZimbraLog.store.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
                 sharedFile = mUncompressedFileCache.get(path, new File(path), !DebugConfig.disableMessageStoreFsync);
             } else {
@@ -141,14 +141,6 @@ public class FileDescriptorCache
         }
         
         return sharedFile;
-    }
-    
-    public long getLength(String path)
-    throws IOException {
-        SharedFile file = getSharedFile(path);
-        long length = file.getLength();
-        closeIfPruned(path, file);
-        return length;
     }
     
     /**

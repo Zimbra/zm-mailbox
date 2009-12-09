@@ -34,7 +34,12 @@ implements SharedInputStream {
      * parent.
      */
     private File mFile;
-    
+
+    /**
+     * Size before any compression
+     */
+    private long mRawSize;
+
     // All indexes are relative to the file, not relative to mStart/mEnd.
     
     /**
@@ -69,37 +74,41 @@ implements SharedInputStream {
      */
     public BlobInputStream(Blob blob)
     throws IOException {
-        this(blob.getFile(), null, null, null);
+        this(blob.getFile(), blob.getRawSize(), null, null, null);
     }
 
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
+     * @param file
+     * @param rawSize size of file, before any compression
      */
-    public BlobInputStream(File file)
+    public BlobInputStream(File file, long rawSize)
     throws IOException {
-        this(file, null, null, null);
+        this(file, rawSize, null, null, null);
     }
 
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
      * @param file the file
+     * @param rawSize size of file, before any compression
      * @param start starting index, or <tt>null</tt> for beginning of file
      * @param end ending index (exclusive), or <tt>null</tt> for end of file
      */
-    public BlobInputStream(File file, Long start, Long end)
+    public BlobInputStream(File file, long rawSize, Long start, Long end)
     throws IOException {
-        this(file, start, end, null);
+        this(file, rawSize, start, end, null);
     }
     
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
      * @param file the file.  Only used if <tt>parent</tt> is <tt>null</tt>.
+     * @param rawSize size of file, before any compression
      * @param start starting index, or <tt>null</tt> for beginning of file
      * @param end ending index (exclusive), or <tt>null</tt> for end of file
      * @param parent the parent stream, or <tt>null</tt> if this is the first stream.
      * If non-null, the file from the parent is used.
      */
-    private BlobInputStream(File file, Long start, Long end, BlobInputStream parent)
+    private BlobInputStream(File file, long rawSize, Long start, Long end, BlobInputStream parent)
     throws IOException {
         if (parent == null) {
             // Top-level stream.
@@ -110,6 +119,7 @@ implements SharedInputStream {
             mRoot = parent.mRoot;
             file = mRoot.mFile;
         }
+        mRawSize = rawSize;
         
         if (!file.exists()) {
             throw new IOException(file.getPath() + " does not exist.");
@@ -125,19 +135,18 @@ implements SharedInputStream {
             mStart = start;
             mPos = start;
         }
-        long dataLength = getFileDescriptorCache().getLength(file.getPath());
         if (end == null) {
-            mEnd = dataLength;
+            mEnd = mRawSize;
         } else {
-            if (end > dataLength) {
-                String msg = String.format("End index %d for %s exceeded file size %d", end, file.getPath(), dataLength);
+            if (end > mRawSize) {
+                String msg = String.format("End index %d for %s exceeded file size %d", end, file.getPath(), mRawSize);
                 throw new IOException(msg);
             }
             mEnd = end;
         }
 
         sLog.debug("Created %s: file=%s, length=%d, uncompressed length=%d, start=%d, end=%d, parent=%s, mStart=%d, mEnd=%d.",
-            this, file.getPath(), file.length(), dataLength, start, end, parent, mStart, mEnd);
+            this, file.getPath(), file.length(), mRawSize, start, end, parent, mStart, mEnd);
     }
 
     private static FileDescriptorCache mFileDescriptorCache;
@@ -193,7 +202,7 @@ implements SharedInputStream {
         if (mPos >= mEnd) {
             return -1;
         }
-        int retVal = getFileDescriptorCache().read(mRoot.mFile.getPath(), mPos);
+        int retVal = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, mPos);
         if (retVal >= 0) {
             mPos++;
         } else {
@@ -213,7 +222,7 @@ implements SharedInputStream {
         
         // Make sure we don't read past the endpoint passed to the constructor
         len = (int) Math.min(len, mEnd - mPos);
-        int numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mPos, b, off, len);
+        int numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, mPos, b, off, len);
         if (numRead > 0) {
             mPos += numRead;
         } else {
@@ -279,7 +288,7 @@ implements SharedInputStream {
         
         BlobInputStream newStream = null;
         try {
-            newStream = new BlobInputStream(null, start, end, this);
+            newStream = new BlobInputStream(null, mRawSize, start, end, this);
         } catch (IOException e) {
             sLog.warn("Unable to create substream for %s", mRoot.mFile.getPath(), e);
         }

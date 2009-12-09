@@ -25,6 +25,13 @@ public class VolumeMailboxBlob extends MailboxBlob {
         mBlob = blob;
     }
 
+    @Override public MailboxBlob setSize(long size) {
+        super.setSize(size);
+        if (mBlob != null)
+            mBlob.setRawSize(size);
+        return this;
+    }
+
     @Override public VolumeBlob getLocalBlob() {
         return mBlob;
     }
