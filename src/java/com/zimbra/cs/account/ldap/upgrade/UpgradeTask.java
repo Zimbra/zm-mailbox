@@ -15,7 +15,7 @@ public enum UpgradeTask {
     BUG_33814(ZimbraMtaAuthEnabled.class),
     BUG_41000(ZimbraGalLdapFilterDef_zimbraAutoComplete_zimbraSearch.class),
     BUG_42877(zimbraGalLdapAttrMap.class),
-    BUG_42896(ZimbraMailQuota_constraint.class);
+    BUG_42896(ZimbraMailQuota_constraint.class),
     BUG_43147(GalSyncAccountContactLimit.class);
     
     private Class mUpgradeClass;
