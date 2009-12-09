@@ -56,6 +56,8 @@ public class LC {
         // class is run.
     }
 
+    public static final KnownKey zimbra_minimize_resources;
+
     public static final KnownKey zimbra_home;
     public static final KnownKey zimbra_java_path;
     public static final KnownKey zimbra_java_home;
@@ -565,6 +567,9 @@ public class LC {
                 "You will have to, with abundant precaution, re-generate my.cnf and " +
                 "restart MySQL server for the change to take effect.";
         final String FS = "/";  // Use Unix-style file separator even on Windows.
+
+        // minimize server resources for small servers such as Zimbra Desktop
+        zimbra_minimize_resources = new KnownKey("zimbra_minimize_resources", "false");
 
         zimbra_home = new KnownKey("zimbra_home");
         zimbra_home.setDefault(FS + "opt" + FS + "zimbra");

@@ -15,9 +15,11 @@
 
 package com.zimbra.common.localconfig;
 
-import com.zimbra.common.util.L10nUtil;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
-import java.util.*;
+import com.zimbra.common.util.L10nUtil;
 
 public class KnownKey {
 
@@ -31,13 +33,13 @@ public class KnownKey {
     }
 
     static String[] getAll() {
-        return (String[])mKnownKeys.keySet().toArray(new String[0]);
+        return mKnownKeys.keySet().toArray(new String[0]);
     }
-    
+
     static boolean isKnown(String key) {
         return mKnownKeys.containsKey(key);
     }
-    
+
     static String getDoc(String key) {
         KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
@@ -45,7 +47,7 @@ public class KnownKey {
         }
         return kk.doc();
     }
-    
+
     static String getDefaultValue(String key) {
         KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
@@ -53,26 +55,26 @@ public class KnownKey {
         }
         return kk.mDefaultValue;
     }
-    
-    static void expandAll(LocalConfig lc) throws ConfigException {
+
+    static void expandAll(LocalConfig lc, boolean minimize) throws ConfigException {
         String[] keys = KnownKey.getAll();
         for (String key : keys) {
-        	KnownKey kk = mKnownKeys.get(key);
-        	kk.expand(lc);
+            KnownKey kk = mKnownKeys.get(key);
+            kk.expand(lc, minimize);
         }
     }
-    
+
     static String getValue(String key) throws ConfigException {
         KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
             return null;
         }
         if (kk.mValue == null) {
-        	kk.expand(LocalConfig.getInstance());
+            kk.expand(LocalConfig.getInstance(), false);
         }
         return kk.mValue;
     }
-    
+
     static boolean needForceToEdit(String key) {
         KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
@@ -80,17 +82,17 @@ public class KnownKey {
         }
         return kk.mForceToEdit;
     }
-    
+
     /*
      * Instance stuff.
      */
-    
+
     private final String mKey;
     private String mDoc;
     private String mDefaultValue;
     private String mValue; //cached value after expansion
     private boolean mForceToEdit;
-    
+
     /**
      * The only public method here.  If you have a KnownKey object, this
      * is a shortcut to get it's value.
@@ -108,7 +110,7 @@ public class KnownKey {
         }
         return Boolean.valueOf(s).booleanValue();
     }
-    
+
     public int intValue() {
         String s = LC.get(mKey);
         if (s == null || s.length() == 0) {
@@ -116,7 +118,7 @@ public class KnownKey {
         }
         return Integer.parseInt(s);
     }
-    
+
     /**
      * Returns the value of this KnownKey as an int, but forces it to be within
      * the range of minValue <= RETURN <= maxValue
@@ -132,7 +134,7 @@ public class KnownKey {
             toRet = maxValue;
         return toRet;
     }
-    
+
     public long longValue() {
         String s = LC.get(mKey);
         if (s == null || s.length() == 0) {
@@ -140,7 +142,7 @@ public class KnownKey {
         }
         return Long.parseLong(s);
     }
-    
+
     /**
      * Returns the value of this KnownKey as a long, but forces it to be within
      * the range of minValue <= RETURN <= maxValue
@@ -156,30 +158,30 @@ public class KnownKey {
             toRet = maxValue;
         return toRet;
     }
-    
+
     public String key() {
-    	return mKey;   
+        return mKey;   
     }
 
-	public String doc() {
-		return doc(null);
-	}
+    public String doc() {
+        return doc(null);
+    }
 
-	public String doc(Locale locale) {
-		String doc = mDoc;
-		if (doc == null) doc = L10nUtil.getMessage(mKey, locale);
-		return doc;
-	}
+    public String doc(Locale locale) {
+        String doc = mDoc;
+        if (doc == null) doc = L10nUtil.getMessage(mKey, locale);
+        return doc;
+    }
 
-	public KnownKey(String key) {
-		this(key, null, null);
-	}
+    public KnownKey(String key) {
+        this(key, null, null);
+    }
 
-	public KnownKey(String key, String defaultValue) {
-		this(key, defaultValue, null);
-	}
+    public KnownKey(String key, String defaultValue) {
+        this(key, defaultValue, null);
+    }
 
-	public KnownKey(String key, String defaultValue, String doc) {
+    public KnownKey(String key, String defaultValue, String doc) {
         mKey = key;
         if (mKnownKeys.containsKey(key)) {
             Logging.warn("programming error - known key added more than once: " + key);
@@ -193,7 +195,7 @@ public class KnownKey {
         mDoc = doc;
         return this;
     }
-    
+
     public KnownKey setDefault(String defaultValue) {
         mDefaultValue = defaultValue;
         mValue = null;
@@ -208,13 +210,15 @@ public class KnownKey {
         mForceToEdit = value;
         return this;
     }
-    
-    private void expand(LocalConfig lc) throws ConfigException {
-    	try {
-    		mValue = lc.expand(mKey, mDefaultValue);
-    	} catch (ConfigException x) {
-    		Logging.error("Can't expand config key " + mKey + "=" + mDefaultValue, x);
-    		throw x;
-    	}
+
+    private void expand(LocalConfig lc, boolean minimize) throws ConfigException {
+        try {
+            mValue = lc.expand(mKey, mDefaultValue);
+            if (minimize)
+                mDoc = null;
+        } catch (ConfigException x) {
+            Logging.error("Can't expand config key " + mKey + "=" + mDefaultValue, x);
+            throw x;
+        }
     }
 }
