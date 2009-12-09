@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.service.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -23,34 +24,33 @@ import java.util.regex.Pattern;
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
-
-import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
 
 public class SpamHandler {
 
@@ -138,7 +138,7 @@ public class SpamHandler {
         }
     }
    
-    private void sendReport(SpamReport sr) throws ServiceException, MessagingException {
+    private void sendReport(SpamReport sr) throws ServiceException, MessagingException, IOException {
         String isSpamString = sr.mIsSpam ? mTypeSpam : mTypeHam;
         InternetAddress toAddress = sr.mIsSpam ? mIsSpamAddress : mIsNotSpamAddress;
         
@@ -175,7 +175,9 @@ public class SpamHandler {
         out.setRecipient(javax.mail.Message.RecipientType.TO, toAddress);
         out.setEnvelopeFrom(mEnvelopeFrom);
         out.setSubject("zimbra-spam-report: " + sr.mAccountName + ": " + isSpamString);
-        Transport.send(out);
+        
+        SmtpConnection smtp = JMSession.getSmtpConnection();
+        smtp.sendMessage(out);
         
         ZimbraLog.misc.info("Sent " + sr);
     }

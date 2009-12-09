@@ -21,9 +21,33 @@ import com.zimbra.cs.mailclient.MailConfig;
  */
 public class SmtpConfig extends MailConfig {
     public static final String PROTOCOL = "smtp";
+    public static final int DEFAULT_PORT = 25;
 
+    private String domain;
+    private boolean allowPartialSend;
+    
+    public SmtpConfig(String host) {
+        super(host);
+        setPort(DEFAULT_PORT);
+    }
+    
     public String getProtocol() {
         return PROTOCOL;
     }
     
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+    
+    public String getDomain() {
+        return domain;
+    }
+    
+    public void setAllowPartialSend(boolean allow) {
+        this.allowPartialSend = allow;
+    }
+    
+    public boolean isPartialSendAllowed() {
+        return allowPartialSend;
+    }
 }

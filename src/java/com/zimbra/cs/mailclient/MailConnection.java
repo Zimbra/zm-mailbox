@@ -159,7 +159,7 @@ public abstract class MailConnection {
 
     /**
      * Creates a new <tt>MailInputStream</tt> for the specified input stream.
-     * This method should be overriden to return a <tt>MailInputStream</tt>
+     * This method should be overridden to return a <tt>MailInputStream</tt>
      * suitable for the specific protocol type.
      *
      * @param is the underlying input stream

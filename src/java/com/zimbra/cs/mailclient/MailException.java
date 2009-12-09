@@ -19,6 +19,7 @@ import java.io.IOException;
 /**
  * Indicates that a mail client error has occurred.
  */
+@SuppressWarnings("serial")
 public class MailException extends IOException {
     /**
      * Creates a new <tt>MailException</tt> with a <tt>null</tt> detail

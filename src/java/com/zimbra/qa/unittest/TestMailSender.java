@@ -22,13 +22,19 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
@@ -41,11 +47,21 @@ extends TestCase {
     private static final String SENDER_NAME = "user1";
     private static final String RECIPIENT_NAME = "user2";
     private String mOriginalSmtpPort = null;
+    private String mOriginalSmtpSendPartial;
     
-    private static class SmtpRejectSender
+    private static class SmtpRejectRecipient
     implements Runnable
     {
+        private String mRejectRcpt;
+        private String mErrorMsg;
         private PrintWriter mOut;
+        
+        private static final Pattern PAT_RCPT = Pattern.compile("RCPT TO:<(.*)>");
+        
+        private SmtpRejectRecipient(String rcpt, String error) {
+            mRejectRcpt = rcpt;
+            mErrorMsg = error;
+        }
         
         public void run() {
             ServerSocket server = null;
@@ -59,27 +75,31 @@ extends TestCase {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(in));
                 String line = null;
                 
-                send("220 " + SmtpRejectSender.class.getSimpleName());
+                send("220 " + SmtpRejectRecipient.class.getSimpleName());
                 while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("EHLO")) {
-                        send("500 Use HELO instead");
-                    } else if (line.startsWith("HELO")) {
+                    String uc = line.toUpperCase();
+                    if (uc.startsWith("DATA")) {
+                        send("354 OK");
+                        while (!line.equals(".")) {
+                            line = reader.readLine();
+                        }
                         send("250 OK");
-                    } else if (line.startsWith("MAIL FROM")) {
-                        send("250 OK");
-                    } else if (line.startsWith("RSET")) {
-                        send("250 OK");
-                    } else if (line.startsWith("QUIT")) {
+                    } else if (uc.startsWith("QUIT")) {
                         send("221 Buh-bye.");
                         break;
+                    } else if (uc.startsWith("RCPT")){
+                        Matcher m = PAT_RCPT.matcher(line);
+                        if (m.matches() && m.group(1).equals(mRejectRcpt)) {
+                            send("550 " + mErrorMsg);
+                        } else {
+                            send("250 OK");
+                        }
                     } else {
-                        // Reject sender
-                        assertTrue("Unexpected line: " + line, line.startsWith("RCPT TO"));
-                        send("550 Sender address rejected: User unknown in relay recipient table");
+                        send("250 OK");
                     }
                 }
             } catch (Exception e) {
-                ZimbraLog.test.error("Error in %s.", SmtpRejectSender.class.getSimpleName(), e);
+                ZimbraLog.test.error("Error in %s.", SmtpRejectRecipient.class.getSimpleName(), e);
             } finally {
                 try {
                     if (mOut != null) {
@@ -109,40 +129,119 @@ extends TestCase {
     public void setUp()
     throws Exception {
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
+        mOriginalSmtpSendPartial = TestUtil.getServerAttr(Provisioning.A_zimbraSmtpSendPartial);
     }
     
-    public void testRejectSender()
+    public void testRejectRecipient()
     throws Exception {
-        Thread smtpServerThread = new Thread(new SmtpRejectSender());
-        smtpServerThread.start();
-        Provisioning.getInstance().getLocalServer().setSmtpPort(TEST_SMTP_PORT);
-        
-        String content = TestUtil.getTestMessage(NAME_PREFIX + " testRejectSender", RECIPIENT_NAME, SENDER_NAME, null);
+        String errorMsg = "Sender address rejected: User unknown in relay recipient table";
+        String bogusAddress = TestUtil.getAddress("bogus");
+        startDummySmtpServer(bogusAddress, errorMsg);
+        Server server = Provisioning.getInstance().getLocalServer();
+        server.setSmtpPort(TEST_SMTP_PORT);
+
+        String content = TestUtil.getTestMessage(NAME_PREFIX + " testRejectSender", bogusAddress, SENDER_NAME, null);
         MimeMessage msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         Mailbox mbox = TestUtil.getMailbox(SENDER_NAME);
-        
+
+        // Test reject first recipient, get partial send value from LDAP.
         boolean sendFailed = false;
+        server.setSmtpSendPartial(false);
         try {
-            mbox.getMailSender().sendMimeMessage(null, mbox, msg, null, null, null, null, null, false, false);
+            mbox.getMailSender().sendMimeMessage(null, mbox, msg);
         } catch (MailServiceException e) {
-            assertEquals(e.getCode(), MailServiceException.SEND_ABORTED_ADDRESS_FAILURE);
-            String errorMsg = e.getMessage();
-            assertTrue("Unexpected error message", errorMsg.contains("Sender address rejected"));
+            validateException(e, MailServiceException.SEND_ABORTED_ADDRESS_FAILURE, bogusAddress, errorMsg);
+            sendFailed = true;
+        }
+        assertTrue(sendFailed);
+        
+        // Test reject first recipient, set partial send value explicitly.
+        startDummySmtpServer(bogusAddress, errorMsg);
+        sendFailed = false;
+        server.setSmtpSendPartial(true);
+        MailSender sender = mbox.getMailSender().setIgnoreFailedAddresses(false);
+        
+        try {
+            sender.sendMimeMessage(null, mbox, msg);
+        } catch (MailServiceException e) {
+            validateException(e, MailServiceException.SEND_ABORTED_ADDRESS_FAILURE, bogusAddress, errorMsg);
+            sendFailed = true;
+        }
+        assertTrue(sendFailed);
+        
+        // Test reject second recipient, get partial send value from LDAP.
+        startDummySmtpServer(bogusAddress, errorMsg);
+        sendFailed = false;
+        String validAddress = TestUtil.getAddress(RECIPIENT_NAME);
+        InternetAddress[] recipients = new InternetAddress[2];
+        recipients[0] = new InternetAddress(validAddress);
+        recipients[1] = new InternetAddress(bogusAddress);
+        msg.setRecipients(MimeMessage.RecipientType.TO, recipients);
+        server.setSmtpSendPartial(false);
+        try {
+            mbox.getMailSender().sendMimeMessage(null, mbox, msg);
+        } catch (MailServiceException e) {
+            validateException(e, MailServiceException.SEND_ABORTED_ADDRESS_FAILURE, bogusAddress, errorMsg);
+            sendFailed = true;
+        }
+        assertTrue(sendFailed);
+        
+        // Test partial send, get value from LDAP.
+        startDummySmtpServer(bogusAddress, errorMsg);
+        server.setSmtpSendPartial(true);
+        sendFailed = false;
+        try {
+            mbox.getMailSender().sendMimeMessage(null, mbox, msg);
+        } catch (MailServiceException e) {
+            validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, errorMsg);
+            sendFailed = true;
+        }
+        assertTrue(sendFailed);
+        
+        // Test partial send, specify value explicitly.
+        server.setSmtpSendPartial(false);
+        startDummySmtpServer(bogusAddress, errorMsg);
+        server.setSmtpSendPartial(true);
+        sendFailed = false;
+        sender = mbox.getMailSender().setIgnoreFailedAddresses(true);
+        try {
+            sender.sendMimeMessage(null, mbox, msg);
+        } catch (MailServiceException e) {
+            validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, errorMsg);
             sendFailed = true;
         }
         assertTrue(sendFailed);
     }
     
+    private void startDummySmtpServer(String rejectedRecipient, String errorMsg) {
+        Thread smtpServerThread = new Thread(new SmtpRejectRecipient(rejectedRecipient, errorMsg));
+        smtpServerThread.start();
+    }
+    
+    private void validateException(MailServiceException e, String expectedCode, String invalidRecipient, String errorSubstring) {
+        assertEquals(expectedCode, e.getCode());
+        
+        boolean foundRecipient = false;
+        for (Argument arg : e.getArgs()) {
+            if (arg.mName.equals("invalid")) {
+                assertEquals(invalidRecipient, arg.mValue);
+                foundRecipient = true;
+            }
+        }
+        assertTrue(foundRecipient);
+    }
+    
     public void tearDown()
     throws Exception {
-        Provisioning.getInstance().getLocalServer().setSmtpPortAsString(mOriginalSmtpPort);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpSendPartial, mOriginalSmtpSendPartial);
     }
     
     public static void main(String[] args)
     throws Exception {
         // Simply starts the test SMTP server for ad-hoc testing.  The test needs
         // to run inside the mailbox server.
-        Thread thread = new Thread(new SmtpRejectSender());
+        Thread thread = new Thread(new SmtpRejectRecipient(args[0], args[1]));
         thread.start();
     }
 }

@@ -14,26 +14,26 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
-import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -127,9 +128,12 @@ public class SendDeliveryReport extends MailDocumentHandler {
             report.setHeader("Content-Type", multi.getContentType() + "; report-type=disposition-notification");
             report.saveChanges();
 
-            Transport.send(report);
+            SmtpConnection smtp = JMSession.getSmtpConnection();
+            smtp.sendMessage(report);
         } catch (MessagingException me) {
             throw ServiceException.FAILURE("error while sending read receipt", me);
+        } catch (IOException e) {
+                throw ServiceException.FAILURE("error while sending read receipt", e);
         }
     }
 

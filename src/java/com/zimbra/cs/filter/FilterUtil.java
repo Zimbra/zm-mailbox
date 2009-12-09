@@ -19,8 +19,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.sun.mail.smtp.SMTPMessage;
@@ -35,18 +33,20 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
@@ -348,7 +348,12 @@ public class FilterUtil {
             Account account = sourceMbox.getAccount();
             outgoingMsg.setEnvelopeFrom(account.getName());
         }
-        Transport.send(outgoingMsg, new javax.mail.Address[] { new InternetAddress(destinationAddress) });
+        SmtpConnection smtp = JMSession.getSmtpConnection();
+        try {
+            smtp.sendMessage(sourceMbox.getAccount().getName(), new String[] { destinationAddress }, outgoingMsg);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to redirect to " + destinationAddress, e);
+        }
     }
     
     /**

@@ -25,12 +25,10 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 
-import javax.mail.MessagingException;
 import javax.mail.Session;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TimeoutMap;
 import com.zimbra.common.util.ZimbraLog;
@@ -38,91 +36,31 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailclient.smtp.SmtpConfig;
+import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 
 /**
  * @author schemers
  */
 public class JMSession {
 
+    private static Session sSession;
+    
     static {
         // Assume that most malformed base64 errors occur due to incorrect delimiters,
         // as opposed to errors in the data itself.  See bug 11213 for more details.
         System.setProperty("mail.mime.base64.ignoreerrors", "true");
-    }
-    
-    /**
-     * Returns a new JavaMail session that has the latest SMTP settings from LDAP.
-     */
-    public static Session getSession()
-    throws MessagingException {
-        return getSession(null);
-    }
-    
-    /**
-     * Returns a new JavaMail session that has the latest SMTP settings from LDAP.
-     * Settings are retrieved from the local server and overridden by the domain.
-     * 
-     * @param domain the domain, or <tt>null</tt> to use server settings
-     */
-    public static Session getSession(Domain domain)
-    throws MessagingException {
-        Server server;
-        String smtpHost = null;
-        
-        try {
-            server = Provisioning.getInstance().getLocalServer();
-            smtpHost = getRandomSmtpHost(domain);
-        } catch (ServiceException e) {
-            throw new MessagingException("Unable initialize JavaMail session", e);
-        }
-        if (smtpHost == null) {
-            String msg = "No SMTP hosts available";
-            if (domain != null) {
-                msg += " for domain " + domain.getName();
-            }
-            throw new MessagingException(msg);
-        }
         
         Properties props = new Properties();
         props.setProperty("mail.mime.address.strict", "false");
-        props.setProperty("mail.smtp.host", smtpHost);
-        props.setProperty("mail.smtp.port", getValue(server, domain, Provisioning.A_zimbraSmtpPort));
-        props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
-
-        // Get timeout value in seconds from LDAP, convert to millis, and set on the session.
-        String sTimeout = getValue(server, domain, Provisioning.A_zimbraSmtpTimeout);
-        long timeout = (sTimeout == null ? 60 : Long.parseLong(sTimeout));
-        sTimeout = Long.toString(timeout * Constants.MILLIS_PER_SECOND);
-        props.setProperty("mail.smtp.connectiontimeout", sTimeout);
-        props.setProperty("mail.smtp.timeout", sTimeout);
-        
-        Boolean sendPartial = Boolean.parseBoolean(getValue(server, domain, Provisioning.A_zimbraSmtpSendPartial));
-        props.setProperty("mail.smtp.sendpartial", sendPartial.toString());
-        
-        Session session = Session.getInstance(props);
-        return session;
+        sSession = Session.getInstance(props);
     }
     
     /**
-     * Returns the JavaMail SMTP session with settings from the given
-     * account and its domain.
+     * Returns a new JavaMail session.
      */
-    public static Session getSmtpSession(Account account)
-    throws MessagingException {
-        Domain domain = null;
-        if (account != null) {
-            try {
-                domain = Provisioning.getInstance().getDomain(account);
-            } catch (ServiceException e) {
-                ZimbraLog.smtp.warn("Unable to look up domain for account %s.", account.getName(), e);
-            }
-        }
-        Session session = getSession(domain);
-        if (LC.javamail_smtp_debug.booleanValue() ||
-            (account != null && account.isSmtpEnableTrace())) {
-            session.setDebug(true);
-        }
-        return session;
+    public synchronized static Session getSession() {
+        return sSession;
     }
     
     /**
@@ -160,7 +98,7 @@ public class JMSession {
      * @param server the server
      * @param domain the domain, or <tt>null</tt> to use server settings
      */
-    private static String getRandomSmtpHost(Domain domain)
+    public static String getRandomSmtpHost(Domain domain)
     throws ServiceException {
         String[] hosts = getSmtpHostsFromLdap(domain);
         if (hosts.length == 0) {
@@ -196,9 +134,13 @@ public class JMSession {
     /**
      * Returns a new set that contains all SMTP hosts, not including
      * hosts that were marked as bad with {@link #markSmtpHostBad}.
+     * 
+     * @param account the account, or <tt>null</tt> if the message is
+     * not being sent from a mailbox
      */
-    public static Set<String> getSmtpHosts(Domain domain)
+    public static Set<String> getSmtpHosts(Account account)
     throws ServiceException {
+        Domain domain = Provisioning.getInstance().getDomain(account);
         Set<String> hosts = new HashSet<String>();
         for (String host : getSmtpHostsFromLdap(domain)) {
             if (!sBadSmtpHosts.containsKey(host)) {
@@ -241,5 +183,39 @@ public class JMSession {
             hosts = server.getSmtpHostname();
         }
         return hosts;
+    }
+    
+    public static SmtpConfig getSmtpConfig()
+    throws ServiceException {
+        return getSmtpConfig(null, getRandomSmtpHost(null));
+    }
+    
+    public static SmtpConfig getSmtpConfig(Account account, String host)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Domain domain = null;
+        if (account != null) {
+            domain = prov.getDomain(account);
+        }
+        
+        // Set host, port, etc.
+        SmtpConfig config = new SmtpConfig(host);
+        Server server = prov.getLocalServer();
+        config.setPort(Integer.parseInt(getValue(server, domain, Provisioning.A_zimbraSmtpPort)));
+        config.setAllowPartialSend(Boolean.parseBoolean(getValue(server, domain, Provisioning.A_zimbraSmtpSendPartial)));
+        config.setDomain(LC.zimbra_server_hostname.value());
+        
+        // Set timeout.
+        String sTimeout = getValue(server, domain, Provisioning.A_zimbraSmtpTimeout);
+        int timeout = (sTimeout == null ? 60 : Integer.parseInt(sTimeout));
+        config.setConnectTimeout(timeout);
+        config.setReadTimeout(timeout);
+        
+        return config;
+    }
+    
+    public static SmtpConnection getSmtpConnection()
+    throws ServiceException {
+        return new SmtpConnection(getSmtpConfig());
     }
 }
