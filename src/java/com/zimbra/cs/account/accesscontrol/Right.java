@@ -45,6 +45,7 @@ public abstract class Right extends RightConsts {
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
     protected TargetType mTargetType;
+    private CheckRightCallback mCallback;
     
     
     static void init(RightManager rm) throws ServiceException {
@@ -132,6 +133,14 @@ public abstract class Right extends RightConsts {
     
     void setDefault(Boolean defaultValue) {
         mDefault = defaultValue;
+    }
+    
+    public CheckRightCallback getCallback() {
+        return mCallback;
+    }
+    
+    void setCallback(CheckRightCallback callback) {
+        mCallback = callback;
     }
     
     boolean executableOnTargetType(TargetType targetType) {

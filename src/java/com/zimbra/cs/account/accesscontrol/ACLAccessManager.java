@@ -209,11 +209,11 @@ public class ACLAccessManager extends AccessManager {
             
             return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " +
-                                   "grantee=" + grantee.getAccountId() +
-                                   ", target=" + target.getLabel() +
-                                   ", right=" + rightNeeded.getName() +
-                                   " => denied", e);
+            ZimbraLog.acl.warn("ACL checking failed: " +
+                               "grantee=" + grantee.getAccountId() +
+                               ", target=" + target.getLabel() +
+                               ", right=" + rightNeeded.getName() +
+                               " => denied", e);
         }
         
         return false;
@@ -236,11 +236,11 @@ public class ACLAccessManager extends AccessManager {
             
             return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " + 
-                                   "grantee=" + granteeEmail + 
-                                   ", target=" + target.getLabel() + 
-                                   ", right=" + rightNeeded.getName() + 
-                                   " => denied", e);
+            ZimbraLog.acl.warn("ACL checking failed: " + 
+                               "grantee=" + granteeEmail + 
+                               ", target=" + target.getLabel() + 
+                               ", right=" + rightNeeded.getName() + 
+                               " => denied", e);
         }
         
         return false;
@@ -447,18 +447,26 @@ public class ACLAccessManager extends AccessManager {
                 if (canDelegateNeeded)
                     return false;
                 
-                // no ACL, see if there is a configured default 
+                // no ACL, call the callback if there is one for the right
+                CheckRightCallback callback = rightNeeded.getCallback();
+                if (callback != null) {
+                    Boolean callbackResult = callback.checkRight(grantee, target, asAdmin);
+                    if (callbackResult != null)
+                        return callbackResult.booleanValue();
+                }
+                
+                // no ACL, and no callback (or no callback result), see if there is a configured default 
                 Boolean defaultValue = rightNeeded.getDefault();
                 if (defaultValue != null)
                     return defaultValue.booleanValue();
             }
                 
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("ACL checking failed: " + 
-                                   "grantee=" + grantee.getName() + 
-                                   ", target=" + target.getLabel() + 
-                                   ", right=" + rightNeeded.getName() + 
-                                   " => denied", e);
+            ZimbraLog.acl.warn("ACL checking failed: " + 
+                               "grantee=" + grantee.getName() + 
+                               ", target=" + target.getLabel() + 
+                               ", right=" + rightNeeded.getName() + 
+                               " => denied", e);
         }
         return false;
     }

@@ -14,17 +14,10 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import java.io.BufferedReader;
+
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +51,8 @@ import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.AttributeInfo;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.FileGenUtil;
-import com.zimbra.cs.util.BuildInfo;
 
 
 public class RightManager {
@@ -75,6 +66,7 @@ public class RightManager {
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
     
+    private static final String A_CALLBACK     = "callback";
     private static final String A_FILE         = "file";
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
@@ -260,6 +252,13 @@ public class RightManager {
 
             right = new UserRight(name);
             right.setTargetType(TargetType.account);
+            
+            String callback = eRight.attributeValue(A_CALLBACK, null);
+            if (callback != null) {
+                CheckRightCallback cb = loadCallback(callback, right);
+                right.setCallback(cb);
+            }
+            
         } else {
             String rt = eRight.attributeValue(A_TYPE);
             if (rt == null)
@@ -296,6 +295,22 @@ public class RightManager {
         right.completeRight();
 
         return right;
+    }
+    
+    private static CheckRightCallback loadCallback(String clazz, Right right) {
+        CheckRightCallback cb = null;
+        if (clazz == null)
+            return null;
+        if (clazz.indexOf('.') == -1)
+            clazz = "com.zimbra.cs.account.accesscontrol.callback." + clazz;
+        try {
+            cb = (CheckRightCallback) Class.forName(clazz).newInstance();
+            if (cb != null)
+                cb.setRight(right);
+        } catch (Exception e) {
+            ZimbraLog.acl.warn("loadCallback " + clazz + " for right " + right.getName() +  " caught exception", e);
+        }
+        return cb;
     }
     
     private boolean loadSystemRights(File file, List<File> processedFiles) throws DocumentException, ServiceException {

@@ -42,6 +42,13 @@ public class FolderACL {
     OperationContext mOctxt;
     ShareTarget mShareTarget;
     
+    // caches whether the authed account can access the target account as an admin or via the loginAs right
+    // only looked at if the authed account is not the owner of the target account
+    // callsites of FolderACL can construct FolderACL with a non-null canAccessOwnerAccount value to bypass
+    // the AccessManager.getInstance().canAccessAccount() call if it has been evaluated else where
+    // (e.g. if called from a CheckRightCallback).
+    Boolean mCanAccessOwnerAccount; 
+    
     private static class ShareTarget {
         private Account mOwnerAcct;
         int mFolderId;
@@ -51,6 +58,11 @@ public class FolderACL {
             if (mOwnerAcct == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(ownerAcctId);
             
+            mFolderId = folderId;
+        }
+        
+        private ShareTarget(Account ownerAcct, int folderId) throws ServiceException {
+            mOwnerAcct = ownerAcct;
             mFolderId = folderId;
         }
         
@@ -84,6 +96,13 @@ public class FolderACL {
     public FolderACL(OperationContext octxt, String ownerAcctId, int folderId) throws ServiceException {
         mOctxt = octxt;
         mShareTarget = new ShareTarget(ownerAcctId, folderId);
+        mCanAccessOwnerAccount = null;
+    }
+    
+    public FolderACL(OperationContext octxt, Account ownerAcct, int folderId, Boolean canAccessOwnerAccount) throws ServiceException {
+        mOctxt = octxt;
+        mShareTarget = new ShareTarget(ownerAcct, folderId);
+        mCanAccessOwnerAccount = mCanAccessOwnerAccount;
     }
     
     /**
@@ -143,6 +162,14 @@ public class FolderACL {
             authuser = null;
         return authuser;
     }
+    
+    private boolean canAccessOwnerAccount(Account authuser, boolean asAdmin) throws ServiceException {
+        if (mCanAccessOwnerAccount == null) {
+            boolean caa = AccessManager.getInstance().canAccessAccount(authuser, mShareTarget.getAccount(), asAdmin);
+            mCanAccessOwnerAccount = Boolean.valueOf(caa);
+        }
+        return mCanAccessOwnerAccount.booleanValue();
+    }
 
     /**
      * 
@@ -168,8 +195,8 @@ public class FolderACL {
         if (authuser == null || authuser.getId().equals(mShareTarget.getAccountId()))
             return rightsNeeded;
         
-        // check admin access
-        if (AccessManager.getInstance().canAccessAccount(authuser, mShareTarget.getAccount(), asAdmin))
+        // check admin access and login right
+        if (canAccessOwnerAccount(authuser, asAdmin))
             return rightsNeeded;
         
         Short granted = null;
