@@ -54,11 +54,15 @@ public class InviteCallback extends CheckRightCallback {
         
         FolderACL folderACL = new FolderACL(octxt, targetAcct, folderId, Boolean.FALSE);
         
-        // rwidxa 
-        // todo, see CalendarItem.create, what to do with private right?
+        // bug 42146
+        //     admin rights (granted by UI): rwidxa 
+        //     manager rights (granted by UI): rwidx 
+        //
+        // TODO, see CalendarItem.create, what to do with private right?
+        //
         short rightsNeeded = ACL.RIGHT_READ | ACL.RIGHT_WRITE | 
                              ACL.RIGHT_INSERT | ACL.RIGHT_DELETE | 
-                             ACL.RIGHT_ACTION | ACL.RIGHT_ADMIN;
+                             ACL.RIGHT_ACTION;
         boolean hasRights = folderACL.canAccess(rightsNeeded);
         
         if (hasRights)
