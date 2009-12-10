@@ -132,12 +132,12 @@ public class AttributeManager {
     
     private AttributeCallback mIDNCallback = new IDNCallback();
 
-    // do not keep comments and descriptions when running in a server
-    private boolean mMinimize = false;
-    
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
     private static Map<Integer,String> mOCGroupMap = new HashMap<Integer,String>();
+    
+    // do not keep comments and descriptions when running in a server
+    private static boolean mMinimize = false;
     
     public static AttributeManager getInstance() throws ServiceException {
         synchronized(AttributeManager.class) {
@@ -191,8 +191,6 @@ public class AttributeManager {
     			throw ServiceException.FAILURE("error loading attrs file: " + file, de);
     		}
     	}
-    	
-    	
     }
     
     private List<String> mErrors = new LinkedList<String>();
@@ -973,7 +971,7 @@ public class AttributeManager {
         return immutable;
     }
 
-    public void setMinimize(boolean minimize) { mMinimize = minimize; }
+    public static void setMinimize(boolean minimize) { mMinimize = minimize; }
     
     /**
      * @param type

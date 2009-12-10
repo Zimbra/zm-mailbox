@@ -156,7 +156,7 @@ public class Zimbra {
 
         app.initializeZimbraDb(forMailboxd);
         
-        AttributeManager.getInstance().setMinimize(forMailboxd);
+        AttributeManager.setMinimize(forMailboxd);
 
         if (!Versions.checkVersions())
             Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
