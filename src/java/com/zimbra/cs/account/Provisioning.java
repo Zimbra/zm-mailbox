@@ -539,8 +539,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public abstract GlobalGrant getGlobalGrant() throws ServiceException;
     
+    /**
+     * Looks up <tt>MimeTypeInfo</tt> objects by type.
+     * @return the MIME types, or an empty <tt>List</tt> if none match
+     */
     public abstract List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException;
     
+    /**
+     * Returns all <tt>MimeTypeInfo</tt> objects.
+     * @return the MIME types, or an empty <tt>List</tt> if none exist
+     */
     public abstract List<MimeTypeInfo> getAllMimeTypes() throws ServiceException;
     
     public abstract List<Zimlet> getObjectTypes() throws ServiceException;

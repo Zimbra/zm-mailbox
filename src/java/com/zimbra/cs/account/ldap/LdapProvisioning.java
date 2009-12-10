@@ -538,9 +538,9 @@ public class LdapProvisioning extends Provisioning {
             ne.close();
             return mimeTypes;
         } catch (NameNotFoundException e) {
-            return null;
+            return Collections.emptyList();
         } catch (InvalidNameException e) {
-            return null;                        
+            return Collections.emptyList();                        
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get mime types for " + mimeType, e);
         } finally {
@@ -562,9 +562,9 @@ public class LdapProvisioning extends Provisioning {
             ne.close();
             return mimeTypes;
         } catch (NameNotFoundException e) {
-            return null;
+            return Collections.emptyList();
         } catch (InvalidNameException e) {
-            return null;                        
+            return Collections.emptyList();                        
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to get mime types", e);
         } finally {
