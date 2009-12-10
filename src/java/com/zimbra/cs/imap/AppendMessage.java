@@ -129,7 +129,7 @@ class AppendMessage {
     private int store(Mailbox mbox, Folder folder) throws ServiceException, IOException {
         boolean idxAttach = mbox.attachmentsIndexingEnabled();
         Long receivedDate = date != null ? date.getTime() : null;
-        ParsedMessage pm = new ParsedMessage(content.getFile(), receivedDate, idxAttach);
+        ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
         try {
             if (!pm.getSender().equals("")) {
                 InternetAddress ia = new InternetAddress(pm.getSender());

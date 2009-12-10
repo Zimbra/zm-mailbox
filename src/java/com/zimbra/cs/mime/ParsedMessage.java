@@ -45,6 +45,7 @@ import javax.mail.internet.MimeUtility;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.zimbra.cs.store.Blob;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -153,6 +154,11 @@ public class ParsedMessage {
     public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
     throws ServiceException, IOException {
         initialize(file, receivedDate, indexAttachments, null, null);
+    }
+
+    public ParsedMessage(Blob blob, Long receivedDate, boolean indexAttachments)
+        throws ServiceException, IOException {
+        initialize(blob.getFile(), receivedDate, indexAttachments, (int) blob.getRawSize(), blob.getDigest());    
     }
     
     public ParsedMessage(ParsedMessageOptions opt)

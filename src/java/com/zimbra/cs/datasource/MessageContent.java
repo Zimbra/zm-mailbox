@@ -42,7 +42,7 @@ public class MessageContent {
         if (data != null) {
             return new ParsedMessage(data, receivedDate, indexAttachments);
         } else {
-            return new ParsedMessage(blob.getFile(), receivedDate, indexAttachments);
+            return new ParsedMessage(blob, receivedDate, indexAttachments);
         }
     }
 
