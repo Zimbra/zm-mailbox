@@ -33,9 +33,12 @@ public class InviteCallback extends CheckRightCallback {
         
         OperationContext octxt = new OperationContext(authedAcct, asAdmin);
         
-        int folderId;
+        int folderId = 10;
+        
+        /*
         boolean alternateDefaultFolderEnabled = targetAcct.getBooleanAttr(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, false);
         String defaultCalendar = null;
+
         if (alternateDefaultFolderEnabled)
             defaultCalendar = targetAcct.getAttr(Provisioning.A_zimbraPrefCalendarDefaultFolder);
         
@@ -51,6 +54,7 @@ public class InviteCallback extends CheckRightCallback {
             Folder folder = mbox.getFolderByPath(octxt, defaultCalendar);
             folderId = folder.getId();
         }
+        */
         
         FolderACL folderACL = new FolderACL(octxt, targetAcct, folderId, Boolean.FALSE);
         
@@ -58,11 +62,10 @@ public class InviteCallback extends CheckRightCallback {
         //     admin rights (granted by UI): rwidxa 
         //     manager rights (granted by UI): rwidx 
         //
-        // TODO, see CalendarItem.create, what to do with private right?
+        // don't need the action right - it's for accepting/denying invites on behave of the invitee
+        // don't need the admin right - it's for granting/revoking rights on the owner's folder
         //
-        short rightsNeeded = ACL.RIGHT_READ | ACL.RIGHT_WRITE | 
-                             ACL.RIGHT_INSERT | ACL.RIGHT_DELETE | 
-                             ACL.RIGHT_ACTION;
+        short rightsNeeded = ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT | ACL.RIGHT_DELETE;
         boolean hasRights = folderACL.canAccess(rightsNeeded);
         
         if (hasRights)
