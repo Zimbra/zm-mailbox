@@ -23,12 +23,12 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
+import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -38,21 +38,21 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailclient.smtp.SmtpConnection;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.AccountUtil;
@@ -469,12 +469,9 @@ public class SendShareNotification extends MailDocumentHandler {
             notif.setContent(mmp);
             notif.saveChanges();
 
-            SmtpConnection smtp = JMSession.getSmtpConnection();
-            smtp.sendMessage(notif);
+            Transport.send(notif);
         } catch (MessagingException me) {
             throw ServiceException.FAILURE("error while sending share notification", me);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("error while sending share notification", e);
         }
     }
 

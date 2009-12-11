@@ -18,9 +18,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -437,13 +434,12 @@ public class MailServiceException extends ServiceException {
                 SENDERS_FAULT);
     }
     
-    private static MailServiceException internal_SEND_FAILURE(String failureType, String msg, Exception e,
-                                                              List<? extends Address> invalid, List<? extends Address> unsent) {
+    private static MailServiceException internal_SEND_FAILURE(String failureType, String msg, Exception e,  Address[] invalid, Address[] unsent) {
     	int len = 0;
     	if (invalid != null)
-    		len += invalid.size();
+    		len += invalid.length;
     	if (unsent != null)
-    		len += unsent.size();
+    		len += unsent.length;
     	Argument[] args = new Argument[len];
     	
     	int offset = 0;
@@ -459,15 +455,15 @@ public class MailServiceException extends ServiceException {
     	return new MailServiceException(msg, failureType, SENDERS_FAULT, e, args);
     }
     
-    public static MailServiceException SEND_ABORTED_ADDRESS_FAILURE(String msg, Exception e, Address invalid) {
-    	return internal_SEND_FAILURE(SEND_ABORTED_ADDRESS_FAILURE, msg, e, Arrays.asList(invalid), null);
+    public static MailServiceException SEND_ABORTED_ADDRESS_FAILURE(String msg, Exception e, Address[] invalid, Address[] unsent) {
+    	return internal_SEND_FAILURE(SEND_ABORTED_ADDRESS_FAILURE, msg, e, invalid, unsent);
     }
 
-    public static MailServiceException SEND_PARTIAL_ADDRESS_FAILURE(Exception e, List<? extends Address> invalid) {
-    	return internal_SEND_FAILURE(SEND_PARTIAL_ADDRESS_FAILURE, null, e, invalid, null);
+    public static MailServiceException SEND_PARTIAL_ADDRESS_FAILURE(String msg, Exception e, Address[] invalid, Address[] unsent) {
+    	return internal_SEND_FAILURE(SEND_PARTIAL_ADDRESS_FAILURE, msg, e, invalid, unsent);
     }
 
-    public static MailServiceException SEND_FAILURE(String msg, Exception e, List<? extends Address> invalid, List<? extends Address> unsent) {
+    public static MailServiceException SEND_FAILURE(String msg, Exception e, Address[] invalid, Address[] unsent) {
     	return internal_SEND_FAILURE(SEND_FAILURE, msg, e, invalid, unsent);
     }
 

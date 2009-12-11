@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Enumeration;
@@ -32,12 +31,12 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailbox;
@@ -45,7 +44,6 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.lmtpserver.LmtpCallback;
-import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -474,13 +472,10 @@ implements LmtpCallback {
             }
             out.setEnvelopeFrom(envFrom);
             
-            SmtpConnection smtp = JMSession.getSmtpConnection();
-            smtp.sendMessage(out);
+            Transport.send(out);
             ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
         } catch (MessagingException me) {
             nfailed("send failed", destination, rcpt, msg, me);
-        } catch (IOException e) {
-            nfailed("send failed", destination, rcpt, msg, e);
         }
 
     }
@@ -574,11 +569,8 @@ implements LmtpCallback {
                     out.setEnvelopeFrom(envFrom);
 
                     out.saveChanges();
-                    SmtpConnection smtp = JMSession.getSmtpConnection();
-                    smtp.sendMessage(out);
+                    Transport.send(out);
                 } catch (MessagingException e) {
-                    ZimbraLog.lmtp.warn("Unable to send intercept message to %s.", interceptAddress, e);
-                } catch (IOException e) {
                     ZimbraLog.lmtp.warn("Unable to send intercept message to %s.", interceptAddress, e);
                 }
             }        

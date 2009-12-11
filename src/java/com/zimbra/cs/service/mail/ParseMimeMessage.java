@@ -68,6 +68,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -397,6 +398,11 @@ public class ParseMimeMessage {
             String excepStr = ExceptionToString.ToString(encEx);
             mLog.warn(excepStr);
             throw ServiceException.FAILURE("UnsupportedEncodingExecption", encEx);
+        } catch (SendFailedException sfe) {
+            SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
+            String excepStr = ExceptionToString.ToString(ssfe);
+            mLog.warn(excepStr);
+            throw ServiceException.FAILURE("SendFailure", ssfe);
         } catch (MessagingException me) {
             String excepStr = ExceptionToString.ToString(me);
             mLog.warn(excepStr);

@@ -67,7 +67,6 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ACL.Grant;
-import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -1381,12 +1380,11 @@ public class ShareInfo {
         }
         
         private static void buildContentAndSend(SMTPMessage out, DistributionList dl, MailSenderVisitor visitor, Locale locale, Integer idx) 
-            throws MessagingException, IOException, ServiceException {
+            throws MessagingException {
             
             MimeMultipart mmp = buildMailContent(dl, visitor, locale, Integer.valueOf(idx));
             out.setContent(mmp);
-            SmtpConnection smtp = JMSession.getSmtpConnection();
-            smtp.sendMessage(out);
+            Transport.send(out);
             
             // log
             Address[] rcpts = out.getRecipients(javax.mail.Message.RecipientType.TO);
@@ -1437,10 +1435,6 @@ public class ShareInfo {
                 }
                 
             } catch (MessagingException e) {
-                ZimbraLog.account.warn("send share info notification failed rcpt='" + toAddr +"'", e);
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("send share info notification failed rcpt='" + toAddr +"'", e);
-            } catch (IOException e) {
                 ZimbraLog.account.warn("send share info notification failed rcpt='" + toAddr +"'", e);
             }
         }

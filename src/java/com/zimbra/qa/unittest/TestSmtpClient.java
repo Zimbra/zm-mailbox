@@ -82,7 +82,9 @@ public class TestSmtpClient extends TestCase {
         mm.saveChanges();
         
         // Initialize SMTP client.
-        SmtpConfig config = JMSession.getSmtpConfig();
+        // XXX bburtin: reenable once our own SMTP client is back in place
+        // SmtpConfig config = JMSession.getSmtpConfig();
+        SmtpConfig config = null;
         SmtpConnection conn = new SmtpConnection(config);
         conn.sendMessage(mm);
         
