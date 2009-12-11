@@ -33,30 +33,13 @@ public class InviteCallback extends CheckRightCallback {
         
         OperationContext octxt = new OperationContext(authedAcct, asAdmin);
         
-        int folderId = 10;
+        int defaultCalendarfolderId = Mailbox.ID_FOLDER_CALENDAR;
         
-        /*
         boolean alternateDefaultFolderEnabled = targetAcct.getBooleanAttr(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, false);
-        String defaultCalendar = null;
-
         if (alternateDefaultFolderEnabled)
-            defaultCalendar = targetAcct.getAttr(Provisioning.A_zimbraPrefCalendarDefaultFolder);
+            defaultCalendarfolderId = targetAcct.getIntAttr(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Mailbox.ID_FOLDER_CALENDAR);
         
-        if (defaultCalendar == null)
-            folderId = Mailbox.ID_FOLDER_CALENDAR;
-        else {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(targetAcct, false);
-            if (mbox == null) {
-                ZimbraLog.acl.warn("no mailbox for target account " + targetAcct.getName() +
-                        ", checkRight callback for right [" + mRight.getName() +"] skipped");
-                return null;
-            }
-            Folder folder = mbox.getFolderByPath(octxt, defaultCalendar);
-            folderId = folder.getId();
-        }
-        */
-        
-        FolderACL folderACL = new FolderACL(octxt, targetAcct, folderId, Boolean.FALSE);
+        FolderACL folderACL = new FolderACL(octxt, targetAcct, defaultCalendarfolderId, Boolean.FALSE);
         
         // bug 42146
         //     admin rights (granted by UI): rwidxa 
@@ -64,6 +47,9 @@ public class InviteCallback extends CheckRightCallback {
         //
         // don't need the action right - it's for accepting/denying invites on behave of the invitee
         // don't need the admin right - it's for granting/revoking rights on the owner's folder
+        // 
+        // don't worry about the private right: we are checking if the authed user can invite(public/private)
+        // the target user, the authed user is composing the invite and he sees what's in his invite anyway.
         //
         short rightsNeeded = ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT | ACL.RIGHT_DELETE;
         boolean hasRights = folderACL.canAccess(rightsNeeded);
