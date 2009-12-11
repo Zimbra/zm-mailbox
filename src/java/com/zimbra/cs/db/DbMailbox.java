@@ -217,7 +217,7 @@ public class DbMailbox {
                     // then create the primary lookup row in ZIMBRA.MAILBOX
                     stmt = conn.prepareStatement("INSERT INTO mailbox (account_id, id, last_backup_at, comment)" +
                             " VALUES (?, ?, ?, ?)");
-                    stmt.setString(1, accountId);
+                    stmt.setString(1, accountId.toLowerCase());
                     stmt.setLong(2, mailboxId);
                     if (lastBackupAt >= 0)
                         stmt.setInt(3, lastBackupAt);
@@ -233,7 +233,7 @@ public class DbMailbox {
                         "(id, account_id, index_volume_id, item_id_checkpoint)" +
                         " VALUES (?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ")");
                 stmt.setLong(1, mailboxId);
-                stmt.setString(2, accountId);
+                stmt.setString(2, accountId.toLowerCase());
                 stmt.setShort(3, indexVolume);
                 stmt.executeUpdate();
             } else {
@@ -241,7 +241,7 @@ public class DbMailbox {
                 stmt = conn.prepareStatement("INSERT INTO mailbox" +
                         "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment)" +
                         " VALUES (?, ?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?)");
-                stmt.setString(1, accountId);
+                stmt.setString(1, accountId.toLowerCase());
                 stmt.setLong(2, mailboxId);
                 stmt.setLong(3, groupId);
                 stmt.setInt(4, indexVolume);
@@ -612,7 +612,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement("SELECT account_id, id FROM mailbox");
             rs = stmt.executeQuery();
             while (rs.next())
-                result.put(rs.getString(1), rs.getLong(2));
+                result.put(rs.getString(1).toLowerCase(), rs.getLong(2));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching mailboxes", e);
@@ -650,7 +650,7 @@ public class DbMailbox {
                 stmt = conn.prepareStatement("SELECT account_id, size_checkpoint FROM mailbox");
                 rs = stmt.executeQuery();
                 while (rs.next())
-                    sizes.put(rs.getString(1), rs.getLong(2));
+                    sizes.put(rs.getString(1).toLowerCase(), rs.getLong(2));
             } else {
                 // FIXME: not taking mailbox locks in the non-ROW_LEVEL_LOCKING case
                 for (long mailboxId : mailboxIds) {
@@ -660,7 +660,7 @@ public class DbMailbox {
                     stmt = conn.prepareStatement("SELECT account_id, size_checkpoint FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX));
                     rs = stmt.executeQuery();
                     while (rs.next())
-                        sizes.put(rs.getString(1), rs.getLong(2));
+                        sizes.put(rs.getString(1).toLowerCase(), rs.getLong(2));
                     rs.close();    rs = null;
                     stmt.close();  stmt = null;
 
@@ -703,7 +703,7 @@ public class DbMailbox {
             int pos = 1;
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             mbd.id            = mailboxId;
-            mbd.accountId     = rs.getString(pos++);
+            mbd.accountId     = rs.getString(pos++).toLowerCase();
             mbd.schemaGroupId = rs.getLong(pos++);
             mbd.size          = rs.getLong(pos++);
             if (rs.wasNull())
@@ -919,7 +919,7 @@ public class DbMailbox {
             rs = stmt.executeQuery();
             if (rs.next()) {
                 String emailCol = rs.getString(1);
-                String accountId = rs.getString(2);
+                String accountId = rs.getString(2).toLowerCase();
                 long mailboxId = rs.getLong(3);
                 long deletedAt = rs.getLong(4) * 1000;
                 return new DeletedAccount(emailCol, accountId, mailboxId, deletedAt);
@@ -1050,7 +1050,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement("SELECT account_id FROM mailbox");
             rs = stmt.executeQuery();
             while (rs.next())
-                accountIds.add(rs.getString(1));
+                accountIds.add(rs.getString(1).toLowerCase());
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting distinct account ids", e);
         } finally {
@@ -1117,7 +1117,7 @@ public class DbMailbox {
             int pos = 1;
             data.id = rs.getLong(pos++);
             data.schemaGroupId = rs.getLong(pos++);
-            data.accountId = rs.getString(pos++);
+            data.accountId = rs.getString(pos++).toLowerCase();
             data.indexVolumeId = rs.getShort(pos++);
             data.lastItemId = rs.getInt(pos++);
             data.contacts = rs.getInt(pos++);
