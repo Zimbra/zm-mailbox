@@ -816,7 +816,7 @@
                 </java>
                 <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e sqlite_cache_size=2000 -f"/>
+                    <arg line="-e sqlite_cache_size=16000 -f"/>
                 </java>
                 <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
