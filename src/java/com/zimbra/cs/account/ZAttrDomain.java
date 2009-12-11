@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091203-2221 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091211-1528 */
 
     /**
      * RFC2256: descriptive information
@@ -4975,7 +4975,7 @@ public class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
     }
 
     /**
@@ -8145,6 +8145,78 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetPreAuthKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPreAuthKey, "");
+        return attrs;
+    }
+
+    /**
+     * folder id of default calendar
+     *
+     * @return zimbraPrefCalendarDefaultFolderId, or -1 if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public int getPrefCalendarDefaultFolderId() {
+        return getIntAttr(Provisioning.A_zimbraPrefCalendarDefaultFolderId, -1);
+    }
+
+    /**
+     * folder id of default calendar
+     *
+     * @param zimbraPrefCalendarDefaultFolderId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public void setPrefCalendarDefaultFolderId(int zimbraPrefCalendarDefaultFolderId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Integer.toString(zimbraPrefCalendarDefaultFolderId));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * folder id of default calendar
+     *
+     * @param zimbraPrefCalendarDefaultFolderId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public Map<String,Object> setPrefCalendarDefaultFolderId(int zimbraPrefCalendarDefaultFolderId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Integer.toString(zimbraPrefCalendarDefaultFolderId));
+        return attrs;
+    }
+
+    /**
+     * folder id of default calendar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public void unsetPrefCalendarDefaultFolderId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * folder id of default calendar
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public Map<String,Object> unsetPrefCalendarDefaultFolderId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, "");
         return attrs;
     }
 

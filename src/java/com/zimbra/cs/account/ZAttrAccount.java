@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091203-2221 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091211-1528 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -20307,64 +20307,64 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * default calendar for new appointments
+     * folder id of default calendar
      *
-     * @return zimbraPrefCalendarDefaultFolder, or null if unset
+     * @return zimbraPrefCalendarDefaultFolderId, or 10 if unset
      *
      * @since ZCS 6.0.5
      */
     @ZAttr(id=1077)
-    public String getPrefCalendarDefaultFolder() {
-        return getAttr(Provisioning.A_zimbraPrefCalendarDefaultFolder, null);
+    public int getPrefCalendarDefaultFolderId() {
+        return getIntAttr(Provisioning.A_zimbraPrefCalendarDefaultFolderId, 10);
     }
 
     /**
-     * default calendar for new appointments
+     * folder id of default calendar
      *
-     * @param zimbraPrefCalendarDefaultFolder new value
+     * @param zimbraPrefCalendarDefaultFolderId new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 6.0.5
      */
     @ZAttr(id=1077)
-    public void setPrefCalendarDefaultFolder(String zimbraPrefCalendarDefaultFolder) throws com.zimbra.common.service.ServiceException {
+    public void setPrefCalendarDefaultFolderId(int zimbraPrefCalendarDefaultFolderId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolder, zimbraPrefCalendarDefaultFolder);
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Integer.toString(zimbraPrefCalendarDefaultFolderId));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * default calendar for new appointments
+     * folder id of default calendar
      *
-     * @param zimbraPrefCalendarDefaultFolder new value
+     * @param zimbraPrefCalendarDefaultFolderId new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 6.0.5
      */
     @ZAttr(id=1077)
-    public Map<String,Object> setPrefCalendarDefaultFolder(String zimbraPrefCalendarDefaultFolder, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefCalendarDefaultFolderId(int zimbraPrefCalendarDefaultFolderId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolder, zimbraPrefCalendarDefaultFolder);
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Integer.toString(zimbraPrefCalendarDefaultFolderId));
         return attrs;
     }
 
     /**
-     * default calendar for new appointments
+     * folder id of default calendar
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 6.0.5
      */
     @ZAttr(id=1077)
-    public void unsetPrefCalendarDefaultFolder() throws com.zimbra.common.service.ServiceException {
+    public void unsetPrefCalendarDefaultFolderId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolder, "");
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * default calendar for new appointments
+     * folder id of default calendar
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20372,9 +20372,9 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 6.0.5
      */
     @ZAttr(id=1077)
-    public Map<String,Object> unsetPrefCalendarDefaultFolder(Map<String,Object> attrs) {
+    public Map<String,Object> unsetPrefCalendarDefaultFolderId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolder, "");
+        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, "");
         return attrs;
     }
 
