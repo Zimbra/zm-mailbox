@@ -447,12 +447,12 @@ public class ACLAccessManager extends AccessManager {
                 if (canDelegateNeeded)
                     return false;
                 
-                // no ACL, call the callback if there is one for the right
-                CheckRightCallback callback = rightNeeded.getCallback();
-                if (callback != null) {
-                    Boolean callbackResult = callback.checkRight(grantee, target, asAdmin);
-                    if (callbackResult != null)
-                        return callbackResult.booleanValue();
+                // no ACL, call the fallback if there is one for the right
+                CheckRightFallback fallback = rightNeeded.getFallback();
+                if (fallback != null) {
+                    Boolean fallbackResult = fallback.checkRight(grantee, target, asAdmin);
+                    if (fallbackResult != null)
+                        return fallbackResult.booleanValue();
                 }
                 
                 // no ACL, and no callback (or no callback result), see if there is a configured default 

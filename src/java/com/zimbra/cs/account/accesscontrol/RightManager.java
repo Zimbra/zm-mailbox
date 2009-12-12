@@ -66,7 +66,7 @@ public class RightManager {
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
     
-    private static final String A_CALLBACK     = "callback";
+    private static final String A_FALLBACK     = "fallback";
     private static final String A_FILE         = "file";
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
@@ -253,10 +253,10 @@ public class RightManager {
             right = new UserRight(name);
             right.setTargetType(TargetType.account);
             
-            String callback = eRight.attributeValue(A_CALLBACK, null);
-            if (callback != null) {
-                CheckRightCallback cb = loadCallback(callback, right);
-                right.setCallback(cb);
+            String fallback = eRight.attributeValue(A_FALLBACK, null);
+            if (fallback != null) {
+                CheckRightFallback fb = loadFallback(fallback, right);
+                right.setFallback(fb);
             }
             
         } else {
@@ -297,18 +297,18 @@ public class RightManager {
         return right;
     }
     
-    private static CheckRightCallback loadCallback(String clazz, Right right) {
-        CheckRightCallback cb = null;
+    private static CheckRightFallback loadFallback(String clazz, Right right) {
+        CheckRightFallback cb = null;
         if (clazz == null)
             return null;
         if (clazz.indexOf('.') == -1)
-            clazz = "com.zimbra.cs.account.accesscontrol.callback." + clazz;
+            clazz = "com.zimbra.cs.account.accesscontrol.fallback." + clazz;
         try {
-            cb = (CheckRightCallback) Class.forName(clazz).newInstance();
+            cb = (CheckRightFallback) Class.forName(clazz).newInstance();
             if (cb != null)
                 cb.setRight(right);
         } catch (Exception e) {
-            ZimbraLog.acl.warn("loadCallback " + clazz + " for right " + right.getName() +  " caught exception", e);
+            ZimbraLog.acl.warn("loadFallback " + clazz + " for right " + right.getName() +  " caught exception", e);
         }
         return cb;
     }

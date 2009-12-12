@@ -5,7 +5,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 
-public abstract class CheckRightCallback {
+public abstract class CheckRightFallback {
     protected Right mRight;
 
     void setRight(Right right) {
@@ -16,8 +16,8 @@ public abstract class CheckRightCallback {
         try {
             return doCheckRight(authedAcct, target, asAdmin);
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("caught exception in checkRight callback" +
-                    ", checkRight callback for right [" + mRight.getName() +"] skipped", e);
+            ZimbraLog.acl.warn("caught exception in checkRight fallback" +
+                    ", checkRight fallback for right [" + mRight.getName() +"] skipped", e);
             return null;
         }
     }

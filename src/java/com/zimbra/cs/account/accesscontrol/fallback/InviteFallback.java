@@ -1,20 +1,17 @@
-package com.zimbra.cs.account.accesscontrol.callback;
+package com.zimbra.cs.account.accesscontrol.fallback;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.accesscontrol.CheckRightCallback;
+import com.zimbra.cs.account.accesscontrol.CheckRightFallback;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.acl.FolderACL;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.util.Zimbra;
 
-public class InviteCallback extends CheckRightCallback {
+public class InviteFallback extends CheckRightFallback {
     
     //
     // allow the invite right if the authed user has admin folder right on the default calendar folder
