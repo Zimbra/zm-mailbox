@@ -109,9 +109,10 @@ public class Search extends MailDocumentHandler  {
         
 //        params.setMode(SearchResultMode.IDS); // HACK HACK TESTING DO NOT CHECK IN!
 
-        ZimbraQueryResults results = doSearch(zsc, octxt, mbox, params);
-
+        ZimbraQueryResults results = null;
         try {
+            results = doSearch(zsc, octxt, mbox, params);
+            
             // create the XML response Element
             Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
 
@@ -129,8 +130,12 @@ public class Search extends MailDocumentHandler  {
             putInfo(response, params, results);
             
             return response;
+        } catch (ServiceException x) {
+            ZimbraLog.misc.warn(x.getMessage(), x);
+            throw x;
         } finally {
-            results.doneWithSearchResults();
+            if (results != null)
+                results.doneWithSearchResults();
         }
     }
 

@@ -975,7 +975,7 @@ class DBQueryOperation extends QueryOperation {
                 luceneStart = System.currentTimeMillis();
             
             // limit in clause based on Db capabilities - bug 15511
-            mLuceneChunk = mLuceneOp.getNextResultsChunk(Math.max(
+            mLuceneChunk = mLuceneOp.getNextResultsChunk(Math.min(
                 Db.getINClauseBatchSize(), mHitsPerChunk));
             
             // we need to set our index-id's here!
