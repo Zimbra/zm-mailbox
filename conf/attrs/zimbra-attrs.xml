@@ -1046,7 +1046,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>deprecated in favor of zimbraMtaTlsSecurityLevel and zimbraMtaSaslAuthEnable</deprecateDesc>
 </attr>
 
-<attr id="195" name="zimbraMtaBlockedExtension" type="string" max="64" cardinality="multi" optionalIn="globalConfig" requiresRestart="mta">
+<attr id="195" name="zimbraMtaBlockedExtension" type="string" max="64" cardinality="multi" optionalIn="globalConfig" requiresRestart="antispam">
   <desc>Attachment file extensions that are blocked</desc>
 </attr>
 
@@ -1110,16 +1110,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>Deprecated in favor of zimbraIsServiceEnabled</deprecateDesc>
 </attr>
 
-<attr id="202" name="zimbraSpamKillPercent" type="integer" min="0" cardinality="single" optionalIn="globalConfig" requiresRestart="mta">
+<attr id="202" name="zimbraSpamKillPercent" type="integer" min="0" cardinality="single" optionalIn="globalConfig" requiresRestart="antispam">
   <globalConfigValue>75</globalConfigValue>
   <desc>Spaminess percentage beyond which a message is dropped</desc>
 </attr>
 
-<attr id="203" name="zimbraSpamSubjectTag" type="astring" max="32" cardinality="single" optionalIn="globalConfig" requiresRestart="mta">
+<attr id="203" name="zimbraSpamSubjectTag" type="astring" max="32" cardinality="single" optionalIn="globalConfig" requiresRestart="antispam">
   <desc>Subject prefix for spam messages</desc>
 </attr>
 
-<attr id="204" name="zimbraSpamTagPercent" type="integer" min="0" cardinality="single" optionalIn="globalConfig"  requiresRestart="mta">
+<attr id="204" name="zimbraSpamTagPercent" type="integer" min="0" cardinality="single" optionalIn="globalConfig"  requiresRestart="antispam">
   <globalConfigValue>33</globalConfigValue>
   <desc>Spaminess percentage beyound which a message is marked as spam</desc>
 </attr>
@@ -1140,7 +1140,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether to email admin on virus detection</desc>
 </attr>
 
-<attr id="208" name="zimbraVirusWarnRecipient" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta">
+<attr id="208" name="zimbraVirusWarnRecipient" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="antispam">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to email recipient on virus detection</desc>
 </attr>
