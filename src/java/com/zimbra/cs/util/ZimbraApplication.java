@@ -49,8 +49,8 @@ public class ZimbraApplication {
         return "zimbra";
     }
 
-    public String getInstallId() {
-        return "zimbra";
+    public String getClientId() {
+        return "01234567-89AB-CDEF--FEDC-BA9876543210";
     }
 
     public boolean supports(String className) {
