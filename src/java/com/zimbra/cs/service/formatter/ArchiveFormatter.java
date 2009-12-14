@@ -277,17 +277,17 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (results != null)
                         results.doneWithSearchResults();
                 }
-                if (aos == null) {
-                    if (emptyname == null) {
-                        context.resp.setHeader("Content-Disposition", null);
-                        throw new UserServletException(HttpServletResponse.
-                            SC_NO_CONTENT, "No data found");
-                    }
-                    context.resp.setHeader("Content-Disposition", Part.ATTACHMENT +
-                        "; filename=" + HttpUtil.encodeFilename(context.req,
-                        emptyname));
-                    aos = getOutputStream(context, UTF8);
+            }
+            if (aos == null) {
+                if (emptyname == null) {
+                    context.resp.setHeader("Content-Disposition", null);
+                    throw new UserServletException(HttpServletResponse.
+                        SC_NO_CONTENT, "No data found");
                 }
+                context.resp.setHeader("Content-Disposition", Part.ATTACHMENT +
+                    "; filename=" + HttpUtil.encodeFilename(context.req,
+                    emptyname));
+                aos = getOutputStream(context, UTF8);
             }
         } finally {
             if (ml != null)
