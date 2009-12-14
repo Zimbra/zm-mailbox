@@ -245,7 +245,7 @@ public class ZimletFile implements Comparable<ZimletFile> {
 	
 	private void initZimletDescription() throws IOException, ZimletException {
 		if (mDesc == null) {
-			ZimletEntry entry = (ZimletEntry)mEntries.get(mDescFile);
+			ZimletEntry entry = (ZimletEntry)mEntries.get(mDescFile.toLowerCase());
 			if (entry == null) {
 				throw new FileNotFoundException("zimlet description not found: " + mDescFile);
 			}
