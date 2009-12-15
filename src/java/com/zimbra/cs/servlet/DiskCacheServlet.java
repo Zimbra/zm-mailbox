@@ -209,11 +209,11 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
                     for (String file : cacheDir.list()) {
                         int idx = file.indexOf("-");
                         
-                        if (idx != -1) {
+                        if (idx != -1 && !file.endsWith(EXT_COMPRESSED)) {
                             String cacheKey = file.substring(0, idx);
                             
                             cache.put(cacheKey, new File(cacheDir.getAbsolutePath() +
-                                '/' +file));
+                                '/' + file));
                         }
                     }
                 }
