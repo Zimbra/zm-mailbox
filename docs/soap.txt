@@ -3268,3 +3268,11 @@ returns the effective permissions of the specified folder
   <folder perm="{permissions}"/>
 </GetEffectiveFolderPermsResponse>
                        
+
+---------------------------- 
+
+<ResetContactRankingRequest/>
+
+resets the contact ranking table for the account
+
+<ResetContactRankingResponse/>
