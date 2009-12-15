@@ -134,6 +134,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt = new Option("u", LO_URL, true, "SOAP service URL, usually " +
                 "http[s]://host:port/service/soap or https://host:port/service/admin/soap.");
         opt.setArgName("url");
+        mOptions.addOption(opt);
         
         mOptions.addOption(new Option("z", LO_ZADMIN, false, "Authenticate with zimbra admin name/password from localconfig."));
         mOptions.addOption(new Option("v", LO_VERBOSE, false, 
