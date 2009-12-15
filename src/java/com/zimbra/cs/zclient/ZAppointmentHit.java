@@ -245,6 +245,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mIsTask = isTask;
 
             appt.mIsAllDay = inst.getAttributeBool(MailConstants.A_CAL_ALLDAY, isAllDay);
+            appt.mTimeZoneOffset = inst.getAttributeLong(MailConstants.A_CAL_TZ_OFFSET,  appt.mTimeZoneOffset);
             appt.mStartTime = inst.getAttributeLong(MailConstants.A_CAL_START_TIME, 0);
 
             if (appt.mIsAllDay) {
