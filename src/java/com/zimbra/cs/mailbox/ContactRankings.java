@@ -56,6 +56,14 @@ public class ContactRankings {
 			return;
 		readFromDatabase();
 	}
+    public static void reset(String accountId) throws ServiceException {
+        if (!LC.contact_ranking_enabled.booleanValue())
+            return;
+        ContactRankings rankings = new ContactRankings(accountId);
+        rankings.mEntryMap.clear();
+        rankings.mEntrySet.clear();
+        rankings.writeToDatabase();
+    }
 	public static void increment(String accountId, Collection<? extends Address> addrs) throws ServiceException {
 		if (!LC.contact_ranking_enabled.booleanValue())
 			return;

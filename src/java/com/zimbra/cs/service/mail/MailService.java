@@ -192,5 +192,6 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_YAHOO_AUTH_TOKEN_REQUEST, new GetYahooAuthToken());
         
         dispatcher.registerHandler(MailConstants.AUTO_COMPLETE_REQUEST, new AutoComplete());
+        dispatcher.registerHandler(MailConstants.RESET_CONTACT_RANKING_REQUEST, new ResetContactRanking());
     }
 }
