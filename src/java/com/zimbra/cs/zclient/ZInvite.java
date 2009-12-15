@@ -83,6 +83,23 @@ public class ZInvite implements ToZJSONObject {
         return (mComponents == null || mComponents.isEmpty()) ? null : mComponents.get(0);
     }
 
+    public boolean getHasAcceptableComponent(){
+        if(mComponents == null && mComponents.isEmpty()) return false;
+        for(int i =0 ; i < mComponents.size(); i++){
+            if(mComponents.get(i) != null && !mComponents.get(i).getStatus().isCancelled()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean getHasInviteReplyMethod(){
+        if(getComponent() != null && (getComponent().getMethod().isRequest() || getComponent().getMethod().isPublish())){
+            return true;
+        }
+        return false;
+    }
+
     public Element toElement(Element parent) {
         Element invEl = parent.addElement(MailConstants.E_INVITE);
         for (ZTimeZone tz : mTimeZones)
@@ -156,6 +173,7 @@ public class ZInvite implements ToZJSONObject {
         private String mRecurrenceIdZ;
         private String mDescription;
         private String mDescriptionHtml;
+        private ZMethod mMethod;
         private boolean mIsNoBlob;
 
         public ZComponent() {
@@ -177,6 +195,7 @@ public class ZInvite implements ToZJSONObject {
             mIsAllDay = e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
             mName = e.getAttribute(MailConstants.A_NAME, null);
             mLocation = e.getAttribute(MailConstants.A_CAL_LOCATION, null);
+            mMethod = ZMethod.fromString(e.getAttribute(MailConstants.A_CAL_METHOD, ZMethod.PUBLISH.name()));
 
             Iterator<Element> catIter = e.elementIterator(MailConstants.E_CAL_CATEGORY);
             if (catIter.hasNext()) {
@@ -303,6 +322,8 @@ public class ZInvite implements ToZJSONObject {
             if (mPriority != null) compEl.addAttribute(MailConstants.A_CAL_PRIORITY, mPriority);
             if (mPercentCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, mPercentCompleted);
             if (mCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_COMPLETED, mCompleted);
+            if (mMethod != null)  compEl.addAttribute(MailConstants.A_CAL_METHOD, mMethod.name());
+
 
             if (mReplies != null && !mReplies.isEmpty()) {
                 Element repliesEl = compEl.addElement(MailConstants.E_CAL_REPLIES);
@@ -353,6 +374,14 @@ public class ZInvite implements ToZJSONObject {
 
         public void setStatus(ZStatus status) {
             mStatus = status;
+        }
+
+        public ZMethod getMethod() {
+            return mMethod;
+        }
+
+        public void setMethod(ZMethod method) {
+            mMethod =  method;
         }
 
         public ZClass getClassProp() {
@@ -609,8 +638,9 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("transparency", mTransparency.name());
             zjo.put("isAllDay", mIsAllDay);
             zjo.put("name", mName);
+            zjo.put("method", mMethod.name());
             zjo.put("compNum", mComponentNum);
-            zjo.put("locaiton", mLocation);
+            zjo.put("location", mLocation);
             zjo.putList("categories", mCategories);
             zjo.putList("comments", mComments);
             zjo.putList("contacts", mContacts);
@@ -1110,6 +1140,27 @@ public class ZInvite implements ToZJSONObject {
             return ZJSONObject.toString(this);
         }
 
+    }
+
+    public enum ZMethod {
+        PUBLISH, REQUEST, REPLY, ADD, CANCEL, REFRESH, COUNTER, DECLINECOUNTER;
+
+        public static ZMethod fromString(String s) throws ServiceException {
+            try {
+                return ZMethod.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid method "+s+", valid values: "+ Arrays.asList(ZMethod.values()), e);
+            }
+        }
+
+        public boolean isPublish() { return equals(PUBLISH); }
+        public boolean isRequest() { return equals(REQUEST); }
+        public boolean isReply() { return equals(REPLY); }
+        public boolean isAdd() { return equals(ADD); }
+        public boolean isCancel() { return equals(CANCEL); }
+        public boolean isRefresh() { return equals(REFRESH); }
+        public boolean isCounter() { return equals(COUNTER); }
+        public boolean isDeclineCounter() { return equals(DECLINECOUNTER); }
     }
 
     public enum ZStatus {
