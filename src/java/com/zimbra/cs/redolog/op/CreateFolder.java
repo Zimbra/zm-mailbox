@@ -47,7 +47,7 @@ public class CreateFolder extends RedoableOp {
         mAttrs = attrs;
         mDefaultView = view;
         mFlags = flags;
-        mColor = color.getRgb();
+        mColor = color.getValue();
         mUrl = url == null ? "" : url;
     }
 

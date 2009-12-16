@@ -387,10 +387,7 @@ public abstract class MailItemResource extends DavResource {
         }
          */
         ResourceProperty color = new ResourceProperty(DavElements.E_CALENDAR_COLOR);
-        if (mColor.getRgb() == 0x0)
-            // if no color is set use the default color
-            color.setStringValue(DEFAULT_COLOR);
-        else if (mColor.hasMapping())
+        if (mColor.hasMapping())
             // if it's a mapped color use iCal's native color
             color.setStringValue(COLOR_MAP[mColor.getMappedColor()]);
         else

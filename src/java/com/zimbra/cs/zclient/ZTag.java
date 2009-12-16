@@ -17,6 +17,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
 import org.json.JSONException;
@@ -44,40 +45,10 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         
         private int mValue;
 
-		private static final long[] OLD_COLORS = {
-			0x000000, 0x0000FF, 0x008284, 0x008200, 0x840084,
-			0xFF0000, 0x848200, 0xFF0084, 0x848284, 0xFF8000
-		};
-
         public int getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
-            try {
-				com.zimbra.cs.mailbox.MailItem.Color color = s.startsWith("#")
-					? new com.zimbra.cs.mailbox.MailItem.Color(s.substring(1))
-					: new com.zimbra.cs.mailbox.MailItem.Color(Long.parseLong(s));
-				int mapped = color.getMappedColor();
-				if (!color.hasMapping()) {
-					long rgb = color.getRgb();
-					for (int i = 0; i < OLD_COLORS.length; i++) {
-						long c = OLD_COLORS[i];
-						if (rgb == c) {
-							mapped = i;
-							break;
-						}
-					}
-				}
-                return Color.values()[mapped];
-            } catch (NumberFormatException e) {
-            } catch (IndexOutOfBoundsException e) {
-            }
-            
-            try {
-                return Color.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                return orange;
-	            //throw ZClientException.CLIENT_ERROR("invalid color: "+s+", valid values: "+Arrays.asList(Color.values()), e);
-            }
+            return Color.values()[MailItem.Color.getMappedColor(s)];
         }
 
         Color(int value) { mValue = value; } 

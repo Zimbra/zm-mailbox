@@ -51,7 +51,7 @@ public class CreateMountpoint extends RedoableOp {
         mRemoteId = remoteId;
         mDefaultView = view;
         mFlags = flags;
-        mColor = color.getRgb();
+        mColor = color.getValue();
     }
 
     public int getId() {

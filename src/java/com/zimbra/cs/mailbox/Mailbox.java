@@ -43,6 +43,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.cs.upgrade.MailboxUpgrade;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.localconfig.LC;
@@ -68,7 +69,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -143,7 +143,6 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.upgrade.ContactUpgrade;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
@@ -459,8 +458,14 @@ public class Mailbox {
 
 			// bug 41144: map "workEmail" contact fields to "email"
 			if (!getVersion().atLeast(1, 6)) {
-				ContactUpgrade.upgradeContactsTo1_6(this);
+				MailboxUpgrade.upgradeTo1_6(this);
 				updateVersion(new MailboxVersion((short) 1, (short) 6));
+			}
+
+			// bug 41893: revert folder colors back to mapped value
+			if (!getVersion().atLeast(1, 7)) {
+				MailboxUpgrade.upgradeTo1_7(this);
+				updateVersion(new MailboxVersion((short)1, (short)7));
 			}
 
     		// done!

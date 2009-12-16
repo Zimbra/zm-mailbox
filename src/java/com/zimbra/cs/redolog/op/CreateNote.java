@@ -47,7 +47,7 @@ public class CreateNote extends RedoableOp {
         mId = UNKNOWN_ID;
         mFolderId = folderId;
         mContent = content != null ? content : "";
-        mColor = color.getRgb();
+        mColor = color.getValue();
         mBounds = bounds;
     }
 

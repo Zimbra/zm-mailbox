@@ -38,7 +38,7 @@ public class ColorItem extends RedoableOp {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;
-        mColor = color.getRgb();
+        mColor = color.getValue();
     }
 
     @Override public int getOpCode() {

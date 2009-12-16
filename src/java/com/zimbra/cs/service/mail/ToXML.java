@@ -310,10 +310,16 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_FLAGS, flags);
         }
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
-            elem.addAttribute(MailConstants.A_RGB, folder.getRgbColor().toString());
-            byte color = folder.getColor();
-            if (color != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailConstants.A_COLOR, color);
+			MailItem.Color color = folder.getRgbColor();
+			if (color.hasMapping()) {
+				byte mappedColor = color.getMappedColor();
+				if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {
+					elem.addAttribute(MailConstants.A_COLOR, color.getMappedColor());
+				}
+			}
+			if (color.getValue() != 0) {
+				elem.addAttribute(MailConstants.A_RGB, color.toString());
+			}
         }
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unread = folder.getUnreadCount();

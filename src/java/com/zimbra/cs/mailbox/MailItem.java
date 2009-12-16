@@ -2737,7 +2737,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static class Color {
     	private static final int  ORANGE = 9;
     	private static final long RGB_INDICATOR      = 0x01000000;
-    	private static final long RGB_INDICATOR_MASK = 0xff000000;
     	private static final long RGB_MASK           = 0x00ffffff;
         private static final long[] COLORS = {
             // none,  blue,     cyan,     green,    purple
@@ -2759,80 +2758,86 @@ public abstract class MailItem implements Comparable<MailItem> {
         // don't change this constructor to public.  RGB_INDICATOR is
         // for internal use only in order to make metadata backward
         // compatible.
-        static Color fromMetadata(long rgb) {
-            Color c = new Color(0);
-            if ((rgb & RGB_INDICATOR_MASK) > 0)
-                c.setRgb((rgb & RGB_MASK));
-            else
-                c.setColor((byte)rgb);
-            return c;
+        static Color fromMetadata(long value) {
+            return (value & RGB_INDICATOR) != 0 ? new Color(value & RGB_MASK) : new Color((byte)value);
         }
+		public static byte getMappedColor(String s) {
+			if (s == null) return (byte)ORANGE;
+			try {
+				long value = s.startsWith("#") ? Long.parseLong(s.substring(1), 16) : Long.parseLong(s);
+				for (int i = 0; i < COLORS.length; i++) {
+					if (value == COLORS[i]) {
+						return (byte)i;
+					}
+				}
+			}
+			catch (NumberFormatException e) {
+				// ignore
+			}
+			return (byte)ORANGE;
+	    }
+		public long getValue() {
+			return mValue;
+		}
         public byte getRed() {
-            return (byte)((mRgb >> 16) & 0xff);
+            return (byte)((getRgb() >> 16) & 0xff);
         }
         public byte getGreen() {
-            return (byte)((mRgb >> 8) & 0xff);
+            return (byte)((getRgb() >> 8) & 0xff);
         }
         public byte getBlue() {
-            return (byte)(mRgb & 0xff);
+            return (byte)(getRgb() & 0xff);
         }
         public long getRgb() {
-            return mRgb;
+            return hasMapping() ? COLORS[(int)mValue] : mValue & RGB_MASK;
         }
         public byte getMappedColor() {
-            byte c = 0;
-            for (long color : COLORS) {
-                if (mRgb == color)
-                    return c;
-                c++;
-            }
-            return ORANGE;
+            return hasMapping() ? (byte)mValue : ORANGE;
         }
         public boolean hasMapping() {
-            for (long color : COLORS) {
-                if (mRgb == color)
-                    return true;
-            }
-            return false;
+            return (mValue & RGB_INDICATOR) == 0;
         }
         public void set(Color that) {
-            this.mRgb = that.mRgb;
+            mValue = that.mValue;
         }
         public void setRgb(long rgb) {
-            mRgb = rgb;
+            mValue = rgb | RGB_INDICATOR;
         }
         public void setColor(byte color) {
             if (color > ORANGE || color < 0)
                 color = ORANGE;
-            mRgb = COLORS[color];
+            mValue = color;
         }
         public void setColor(String color) {
-            if (color.length() == 7)
+            if (color.length() == 4 || color.length() == 7)
                 color = color.substring(1);
+            if (color.length() == 3) {
+                String r = color.substring(0, 1);
+                String g = color.substring(1, 2);
+                String b = color.substring(2, 3);
+                color = r+r+g+g+b+b;
+            }
             if (color.length() == 6) {
-                mRgb = 
+                long rgb =
                     Integer.parseInt(color.substring(0, 2), 16) << 16 |
                     Integer.parseInt(color.substring(2, 4), 16) << 8 |
                     Integer.parseInt(color.substring(4), 16);
+                setRgb(rgb);
             }
         }
         long toMetadata() {
-            return (mRgb | RGB_INDICATOR);
+            return mValue;
         }
 
-        private long mRgb;
+        private long mValue;
 
         @Override public boolean equals(Object that) {
             if (that instanceof Color)
-                return this.mRgb == ((Color)that).mRgb;
+                return mValue == ((Color)that).mValue;
             return false;
         }
         @Override public String toString() {
-            String rgb = Long.toHexString(mRgb);
-            int padding = 6 - rgb.length();
-            for (int i = 0; i < padding; i++)
-                rgb = "0" + rgb;
-            return "#" + rgb;
+            return String.format("#%06X", getRgb());
         }
     }
 

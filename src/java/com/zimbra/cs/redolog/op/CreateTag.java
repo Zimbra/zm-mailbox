@@ -42,7 +42,7 @@ public class CreateTag extends RedoableOp {
         setMailboxId(mailboxId);
         mTagId = UNKNOWN_ID;
         mName = name != null ? name : "";
-        mColor = color.getRgb();
+        mColor = color.getValue();
     }
 
     public int getTagId() {

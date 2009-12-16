@@ -52,7 +52,7 @@ public class CreateSavedSearch extends RedoableOp {
         mSort = sort != null ? query : "";
         mFolderId = folderId;
         mFlags = flags;
-        mColor = color.getRgb();
+        mColor = color.getValue();
     }
 
     public int getSearchId() {
