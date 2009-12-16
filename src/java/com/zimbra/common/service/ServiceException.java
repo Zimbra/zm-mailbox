@@ -45,7 +45,8 @@ public class ServiceException extends Exception {
     public static final String NOT_IN_PROGRESS = "service.NOT_IN_PROGRESS";
     public static final String INTERRUPTED = "service.INTERRUPTED";
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
-
+    public static final String SAX_READER_ERROR = "service.SAX_READER_ERROR";
+    
     protected String mCode;
     protected Argument[] mArgs = null;
     private String mId;
@@ -339,5 +340,9 @@ public class ServiceException extends Exception {
 
     public static ServiceException NO_SPELL_CHECK_URL(String str) {
         return new ServiceException("Spell Checking Not Available "+str!=null?str:"", NO_SPELL_CHECK_URL, RECEIVERS_FAULT);
+    }
+    
+    public static ServiceException SAX_READER_ERROR(String str, Throwable cause) {
+        return new ServiceException("SAX Reader Error: " + (str != null ? str : ""), SAX_READER_ERROR, SENDERS_FAULT, cause);
     }
 }
