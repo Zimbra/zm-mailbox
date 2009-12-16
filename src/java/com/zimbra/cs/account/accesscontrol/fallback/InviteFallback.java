@@ -32,10 +32,6 @@ public class InviteFallback extends CheckRightFallback {
         
         int defaultCalendarfolderId = Mailbox.ID_FOLDER_CALENDAR;
         
-        boolean alternateDefaultFolderEnabled = targetAcct.getBooleanAttr(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, false);
-        if (alternateDefaultFolderEnabled)
-            defaultCalendarfolderId = targetAcct.getIntAttr(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Mailbox.ID_FOLDER_CALENDAR);
-        
         FolderACL folderACL = new FolderACL(octxt, targetAcct, defaultCalendarfolderId, Boolean.FALSE);
         
         // bug 42146
