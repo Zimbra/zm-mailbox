@@ -27,7 +27,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -474,5 +473,27 @@ public class FileUtil {
             return "";
         }
         return filename.substring(lastDot + 1, filename.length());
+    }
+    
+    public static void rename(File src, File dst) throws IOException {
+        if (src.renameTo(dst))
+            return;
+        if (!src.exists())
+            throw new IOException("renaming source file " + src.getPath() + " doesn't exist");
+        if (dst.exists())
+            throw new IOException("renaming destination file " + dst.getPath() + " already exists");
+        if (SystemUtil.ON_WINDOWS) {
+            //HACK: according to http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6213298 there's a jvm bug on windows
+            //HACK: this is the recommended hack
+            for (int i = 0; i < 20; ++i) {
+                System.gc();
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException x) {}
+                if (src.renameTo(dst))
+                    return;
+            }
+        }
+        throw new IOException("file renaming failed: src=\"" + src.getPath() + "\" dst=\"" + dst.getPath() + "\"");
     }
 }
