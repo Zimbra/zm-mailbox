@@ -16,6 +16,8 @@ package com.zimbra.cs.mailclient;
 
 import static com.zimbra.cs.mailclient.auth.SaslAuthenticator.*;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.smtp.SmtpConfig;
+import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Password;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -97,13 +99,15 @@ public abstract class MailClient {
             return new ImapConnection((ImapConfig) config);
         } else if (config instanceof Pop3Config) {
             return new Pop3Connection((Pop3Config) config);
+        } else if (config instanceof SmtpConfig) {
+            return new SmtpConnection((SmtpConfig) config);
         } else {
             throw new IllegalArgumentException(
                 "Unsupported protocol: " + config.getProtocol());
         }
     }
 
-    private void startCommandLoop() throws IOException {
+    private void startCommandLoop() {
         connection.setTraceEnabled(false);
         Thread t = new ReaderThread();
         t.setDaemon(true);
@@ -162,11 +166,11 @@ public abstract class MailClient {
             // Continue parsing...
         }
         if (!args.hasNext()) {
-            throw new IllegalArgumentException("Missing required host name");
+            throw new IllegalArgumentException("Missing required hostname");
         }
         config.setHost(args.next());
         if (args.hasNext()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Extra arguments found after hostname");
         }
     }
 

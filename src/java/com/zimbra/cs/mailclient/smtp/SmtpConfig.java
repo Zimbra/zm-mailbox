@@ -25,10 +25,21 @@ public class SmtpConfig extends MailConfig {
 
     private String domain;
     private boolean allowPartialSend;
+    private String password;
+    
+    public SmtpConfig(String host, int port, String user, String password) {
+        super(host);
+        setPort(port);
+        setAuthenticationId(user);
+        setPassword(password);
+    }
     
     public SmtpConfig(String host) {
         super(host);
         setPort(DEFAULT_PORT);
+    }
+    
+    public SmtpConfig() {
     }
     
     public String getProtocol() {
@@ -49,5 +60,17 @@ public class SmtpConfig extends MailConfig {
     
     public boolean isPartialSendAllowed() {
         return allowPartialSend;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
+    public boolean needAuth() {
+        return getAuthenticationId() != null;
     }
 }

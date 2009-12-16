@@ -101,7 +101,7 @@ public abstract class MailConnection {
         }
     }
 
-    private void startTls() throws IOException {
+    protected void startTls() throws IOException {
         checkState(State.NOT_AUTHENTICATED);
         sendStartTls();
         SSLSocket sock = newSSLSocket(socket);
@@ -138,7 +138,7 @@ public abstract class MailConnection {
     protected abstract void sendLogin(String user, String pass) throws IOException;
 
     /**
-     * Sents authentication information to server. This is used if SASL
+     * Sends authentication information to server. This is used if SASL
      * authentication has been specified in the mail configuration for
      * the connection. The method {@link MailConfig#getMechanism()} returns
      * the SASL mechanism to use for authentication.
