@@ -77,7 +77,7 @@ public class ScheduleInbox extends CalendarCollection {
 		Mailbox mbox = getMailbox(ctxt);
 		ZimbraQueryResults zqr = null;
 		try {
-			zqr = mbox.search(ctxt.getOperationContext(), query, SEARCH_TYPES, SortBy.NAME_ASCENDING, 100);
+			zqr = mbox.search(ctxt.getOperationContext(), query, SEARCH_TYPES, SortBy.DATE_ASCENDING, 100);
 			while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
