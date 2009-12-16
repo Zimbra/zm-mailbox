@@ -156,11 +156,8 @@ public class UncompressedFileCache<K> {
                 temp.file.delete();
                 shared = new SharedFile(uncompressedFile);
             } else {
-                String oldPath = temp.file.getPath();
                 uncompressedFile = new File(mCacheDir, temp.digest);
-                if (!temp.file.renameTo(uncompressedFile)) {
-                    throw new IOException("Cannot move " + oldPath + " to " + uncompressedFile.getPath());
-                }
+                FileUtil.rename(temp.file, uncompressedFile);
                 shared = new SharedFile(uncompressedFile); // Opens the file implicitly.
                 put(key, temp.digest, uncompressedFile);
             }
