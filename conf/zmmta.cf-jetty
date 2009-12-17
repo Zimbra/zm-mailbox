@@ -10,6 +10,7 @@ SECTION amavis
 	if SERVICE archiving
 		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
 	fi
+	LOCAL amavis_dspam_enabled
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
