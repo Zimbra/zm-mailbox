@@ -222,9 +222,14 @@ public class ParsedContact {
         return mm;
     }
     
-    private static List<Attachment> parseBlob(InputStream in) throws MessagingException, IOException {
+    private static List<Attachment> parseBlob(InputStream in) throws ServiceException, MessagingException, IOException {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), in);
-        MimeMultipart multi = (MimeMultipart) mm.getContent();
+        MimeMultipart multi = null;
+        try {
+            multi = (MimeMultipart)mm.getContent();
+        } catch (ClassCastException x) {
+            throw ServiceException.FAILURE("MimeMultipart content expected but got " + mm.getContent().toString(), x);
+        }
 
         List<Attachment> attachments = new ArrayList<Attachment>(multi.getCount());
         for (int i = 1; i <= multi.getCount(); i++) {
