@@ -206,9 +206,16 @@ public class User extends Principal {
             	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
             	for (MailItem item : mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT)) {
             		Mountpoint mp = (Mountpoint)item;
+            		// skip non-calendar mountpoints
+            		if (mp.getDefaultView() != MailItem.TYPE_APPOINTMENT && mp.getDefaultView() != MailItem.TYPE_TASK)
+            		    continue;
             		ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
             		ZMailbox zmbx = RemoteCollection.getRemoteMailbox(zat, mp.getOwnerId());
+            		// skip dangling mountpoints
+            		if (zmbx == null)
+            		    continue;
             		ZFolder folder = zmbx.getFolderById(mp.getTarget().toString(mAccount));
+            		// skip dangling mountpoints
             		if (folder == null)
             		    continue;
             		mps.add(new Pair<Mountpoint,ZFolder>(mp, folder));
