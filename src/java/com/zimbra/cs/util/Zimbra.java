@@ -330,6 +330,11 @@ public class Zimbra {
         ZimbraHttpConnectionManager.shutdownReaperThread();
 
         sTimer.cancel();
+
+        try {
+            DbPool.shutdown();
+        } catch (Exception e) {
+        }
     }
 
     public static synchronized boolean started() {
