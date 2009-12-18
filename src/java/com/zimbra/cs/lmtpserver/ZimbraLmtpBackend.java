@@ -109,6 +109,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 ZimbraLog.lmtp.info("try again for address " + addr + ": account status maintenance");
                 return LmtpStatus.TRYAGAIN;
             }
+            
+            if (!Provisioning.onLocalServer(acct)) {
+                ZimbraLog.lmtp.warn("try again for address " + addr + ": mailbox is on another server");
+                return LmtpStatus.TRYAGAIN;
+            }
 
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
                 ZimbraLog.lmtp.info("rejecting address " + addr + ": account status closed");
