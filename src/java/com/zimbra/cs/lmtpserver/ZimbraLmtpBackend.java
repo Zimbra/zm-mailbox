@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.mail.internet.ParseException;
-
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.localconfig.LC;
@@ -40,6 +38,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -50,7 +49,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
-import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.service.util.ItemId;
@@ -116,6 +114,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) {
                 ZimbraLog.lmtp.info("try again for address " + addr + ": account status maintenance");
                 return LmtpReply.MAILBOX_DISABLED;
+            }
+            
+            if (!Provisioning.onLocalServer(acct)) {
+                ZimbraLog.lmtp.warn("try again for address " + addr + ": mailbox is not on this server");
+                return LmtpReply.MAILBOX_NOT_ON_THIS_SERVER;
             }
 
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_PENDING)) {
