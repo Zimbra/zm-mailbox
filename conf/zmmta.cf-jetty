@@ -25,7 +25,7 @@ SECTION amavis
 
 SECTION antivirus DEPENDS amavis
   REWRITE conf/clamd.conf.in conf/clamd.conf
-  REWRITE conf/freshclam.conf.in conf/freshclam.conf
+  REWRITE conf/freshclam.conf.in conf/freshclam.conf MODE 0600
 	VAR zimbraVirusWarnAdmin
 	VAR zimbraVirusDefinitionsUpdateFrequency
 	VAR zimbraVirusBlockEncryptedArchive
