@@ -177,7 +177,8 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<ItemId> prohibitedRemoteItemIds = new HashSet<ItemId>(); /* optional - ALL of these itemIDs are excluded*/
 
     public Set<String> indexIds = new HashSet<String>();                   /* optional - ANY of these indexIDs are OK.  */
-
+    public Boolean hasIndexId = null;                                      /* optional - index_id must be present */
+    
     public Set<Byte> types = new HashSet<Byte>();                         /* optional - ANY of these types are OK.  */
     public Set<Byte> excludeTypes = new HashSet<Byte>();                  /* optional - ALL of these types are excluded */
 
@@ -528,6 +529,14 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         
         // indexId
         sp.run(retVal, indexIds, "INDEXID");
+        
+        if (hasIndexId != null) {
+            if (hasIndexId) {
+                retVal.append("HAS_INDEXID ");
+            } else {
+                retVal.append("-HAS_INDEXID ");
+            }
+        }
 
         // type
         bp.run(retVal, types, "TYPE"); 
@@ -788,6 +797,17 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                 indexIds = SetHelper.intersectIfNonempty(indexIds, other.indexIds);
                 if (indexIds.size() == 0)
                     noResults = true;
+            }
+        }
+        
+        // has indexId
+        if (hasIndexId == null)
+            hasIndexId = other.hasIndexId;
+        else if (other.hasIndexId != null) {
+            if (!hasIndexId.equals(other.hasIndexId)) {
+                noResults = true;
+                ZimbraLog.index.debug("Adding a HAS_NO_INDEXIDS constraint to a HAS_INDEXIDS one, this is a NO_RESULTS result");
+                return;
             }
         }
 

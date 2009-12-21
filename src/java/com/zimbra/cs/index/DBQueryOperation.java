@@ -866,6 +866,10 @@ class DBQueryOperation extends QueryOperation {
             overallStart = System.currentTimeMillis();
         }
         
+        // we want only indexed items from db
+        DbLeafNode sc = topLevelAndedConstraint();
+        sc.hasIndexId = Boolean.TRUE;
+        
         do {
             //
             // (1) Get the next chunk of results from the DB

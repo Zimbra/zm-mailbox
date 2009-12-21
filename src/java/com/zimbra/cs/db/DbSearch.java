@@ -485,6 +485,14 @@ public class DbSearch {
             }
         }
         
+        if (c.hasIndexId != null) {
+            if (c.hasIndexId.booleanValue()) {
+                statement.append(" AND mi.index_id is NOT NULL ");
+            } else {
+                statement.append(" AND mi.index_id is NULL ");
+            }
+        }
+        
         if (inCalTable) {
             num += encodeRangeWithMinimum(statement, "ap.start_time", c.calStartDates, 1);
             num += encodeRangeWithMinimum(statement, "ap.end_time", c.calEndDates, 1);

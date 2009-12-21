@@ -319,13 +319,14 @@ public class IndexHelper {
                     if (mHighestSubmittedToIndex == null) 
                         nr.lowest = getMailbox().getHighestFlushedToIndex().getChangeId();
                     else
-
                         nr.lowest = mHighestSubmittedToIndex.getChangeId();
+                    
                     // since mod_metadata >= mod_content (always), and there's an index on mod_metadata
                     // generate a SELECT on both constraints, even though we only really care about 
                     // the mod_content constraint
                     c.modified.add(nr);
                     c.modifiedContent.add(nr);
+                    c.hasIndexId = Boolean.TRUE;
                     DbSearch.search(items, getMailbox().getOperationConnection(), c, getMailbox(), SortBy.NONE, SearchResult.ExtraData.MODCONTENT);
 
                     int deferredCount = getMailbox().getIndexDeferredCount();
