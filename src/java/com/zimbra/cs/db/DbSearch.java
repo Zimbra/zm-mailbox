@@ -697,6 +697,8 @@ public class DbSearch {
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: ("+numParams+" parameters): "+statement.toString());
             
+            long startTime = LC.zimbra_slow_logging_enabled.booleanValue() ? System.currentTimeMillis() : 0;
+            
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
             
@@ -715,11 +717,15 @@ public class DbSearch {
             if (hasValidLIMIT && !Db.supports(Db.Capability.LIMIT_CLAUSE))
                 stmt.setMaxRows(offset + limit + 1);
 
+            long prepTime = startTime > 0 ? System.currentTimeMillis() - startTime : 0;
+            
             /*
              * EXECUTE!
              */
             assert(param == numParams+1);
             rs = stmt.executeQuery();
+            
+            long execTime = startTime > 0 ? System.currentTimeMillis() - startTime - prepTime : 0;
             
             /*
              * Return results
@@ -733,6 +739,13 @@ public class DbSearch {
                 }
                 result.add(SearchResult.createResult(rs, sort, extra));
             }
+            
+            long fetchTime = startTime > 0 ? System.currentTimeMillis() - startTime - prepTime - execTime: 0;
+            if (prepTime + execTime + fetchTime > LC.zimbra_slow_logging_threshold.longValue()) {
+                sLog.warn("Slow SQL (start=%d prep=%d exec=%d fetch=%d rows=%d):\n" + statement.toString(),
+                        startTime, prepTime, execTime, fetchTime, result.size());
+            }
+            
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching search metadata", e);

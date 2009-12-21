@@ -15,6 +15,7 @@
 
 package com.zimbra.soap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -420,6 +421,12 @@ public class SoapEngine {
                     handler.postHandle(userObj);
                 }
                 ZimbraPerf.SOAP_TRACKER.addStat(getStatName(request), startTime);
+                long duration = System.currentTimeMillis() - startTime;
+                if (LC.zimbra_slow_logging_enabled.booleanValue() && duration > LC.zimbra_slow_logging_threshold.longValue() &&
+                        !request.getQName().getName().equals(MailConstants.SYNC_REQUEST.getName())) {
+                    ZimbraLog.soap.warn("Slow SOAP request (start=" + startTime + "):\n" + request.prettyPrint());
+                    ZimbraLog.soap.warn("Slow SOAP response (time=" + duration + "):\n" + response.prettyPrint());
+                }
             }
         } catch (SoapFaultException e) {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
