@@ -558,6 +558,9 @@ public class LC {
     public static final KnownKey data_source_eas_window_size;
     public static final KnownKey data_source_eas_mime_truncation;
     
+    public static final KnownKey zimbra_slow_logging_enabled;
+    public static final KnownKey zimbra_slow_logging_threshold;
+    
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1551,6 +1554,9 @@ public class LC {
         data_source_eas_sync_tasks = new KnownKey("data_source_eas_sync_tasks", "true");
         data_source_eas_window_size = new KnownKey("data_source_eas_window_size", "50");
         data_source_eas_mime_truncation = new KnownKey("data_source_eas_mime_truncation", "4");
+        
+        zimbra_slow_logging_enabled = new KnownKey("zimbra_slow_logging_enabled", "false");
+        zimbra_slow_logging_threshold = new KnownKey("zimbra_slow_logging_threshold", "5000");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
