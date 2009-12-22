@@ -447,7 +447,7 @@ public class SendShareNotification extends MailDocumentHandler {
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         
         try {
-            SMTPMessage notif = new SMTPMessage(JMSession.getSession());
+            SMTPMessage notif = new SMTPMessage(JMSession.getSmtpSession());
             
             String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
             notif.setSubject(subject, StringUtil.checkCharset(subject, charset));

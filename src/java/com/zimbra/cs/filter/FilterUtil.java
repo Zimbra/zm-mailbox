@@ -19,8 +19,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.sun.mail.smtp.SMTPMessage;
@@ -35,13 +33,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
@@ -317,7 +316,7 @@ public class FilterUtil {
     public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
 
     public static void redirect(Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
-    throws ServiceException, MessagingException {
+    throws ServiceException {
         SMTPMessage outgoingMsg = null;
         
         try {
@@ -348,7 +347,10 @@ public class FilterUtil {
             Account account = sourceMbox.getAccount();
             outgoingMsg.setEnvelopeFrom(account.getName());
         }
-        Transport.send(outgoingMsg, new javax.mail.Address[] { new InternetAddress(destinationAddress) });
+        MailSender sender = sourceMbox.getMailSender();
+        sender.setSaveToSent(false);
+        sender.setRecipients(destinationAddress);
+        sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
     }
     
     /**

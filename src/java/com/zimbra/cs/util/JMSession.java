@@ -16,13 +16,12 @@
 package com.zimbra.cs.util;
 
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -44,18 +43,34 @@ import com.zimbra.cs.account.Server;
  */
 public class JMSession {
 
+    private static Session sSession;
+    
     static {
         // Assume that most malformed base64 errors occur due to incorrect delimiters,
         // as opposed to errors in the data itself.  See bug 11213 for more details.
         System.setProperty("mail.mime.base64.ignoreerrors", "true");
+        
+        Properties props = new Properties();
+        props.setProperty("mail.mime.address.strict", "false");
+        sSession = Session.getInstance(props);
     }
     
     /**
      * Returns a new JavaMail session that has the latest SMTP settings from LDAP.
      */
+    @SuppressWarnings("unused")
     public static Session getSession()
     throws MessagingException {
-        return getSession(null);
+        return sSession;
+    }
+    
+    /**
+     * Returns a new JavaMail session that has the latest SMTP settings from
+     * the local server.
+     */
+    public static Session getSmtpSession()
+    throws MessagingException {
+        return getSmtpSession((Domain) null);
     }
     
     /**
@@ -64,7 +79,7 @@ public class JMSession {
      * 
      * @param domain the domain, or <tt>null</tt> to use server settings
      */
-    public static Session getSession(Domain domain)
+    private static Session getSmtpSession(Domain domain)
     throws MessagingException {
         Server server;
         String smtpHost = null;
@@ -83,8 +98,7 @@ public class JMSession {
             throw new MessagingException(msg);
         }
         
-        Properties props = new Properties();
-        props.setProperty("mail.mime.address.strict", "false");
+        Properties props = new Properties(sSession.getProperties());
         props.setProperty("mail.smtp.host", smtpHost);
         props.setProperty("mail.smtp.port", getValue(server, domain, Provisioning.A_zimbraSmtpPort));
         props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
@@ -100,6 +114,9 @@ public class JMSession {
         props.setProperty("mail.smtp.sendpartial", sendPartial.toString());
         
         Session session = Session.getInstance(props);
+        if (LC.javamail_smtp_debug.booleanValue()) {
+            session.setDebug(true);
+        }
         return session;
     }
     
@@ -117,9 +134,8 @@ public class JMSession {
                 ZimbraLog.smtp.warn("Unable to look up domain for account %s.", account.getName(), e);
             }
         }
-        Session session = getSession(domain);
-        if (LC.javamail_smtp_debug.booleanValue() ||
-            (account != null && account.isSmtpEnableTrace())) {
+        Session session = getSmtpSession(domain);
+        if (account != null && account.isSmtpEnableTrace()) {
             session.setDebug(true);
         }
         return session;
@@ -138,8 +154,6 @@ public class JMSession {
         }
         return value;
     }
-    
-    private static final Random RANDOM = new Random();
     
     /**
      * Caches the set of SMTP hosts that we've failed to connect to.  Only
@@ -167,30 +181,30 @@ public class JMSession {
             return null;
         }
 
-        String host = null;
         if (hosts.length == 1) {
-            host = hosts[0];
-        } else {
-            host = hosts[RANDOM.nextInt(hosts.length)];
+            if (isHostBad(hosts[0])) {
+                return null;
+            } else {
+                return hosts[0];
+            }
         }
-        if (!sBadSmtpHosts.containsKey(host)) {
-            return host;
-        }
-        if (hosts.length == 1) {
-            // No other hosts to try.
-            return null;
-        }
+
         
-        // Current host is bad.  Find another one.
-        List<String> hostList = new ArrayList<String>();
-        Collections.addAll(hostList, hosts);
+        List<String> hostList = Arrays.asList(hosts);
         Collections.shuffle(hostList);
         for (String currentHost : hostList) {
-            if (!sBadSmtpHosts.containsKey(currentHost)) {
+            if (!isHostBad(currentHost)) {
                 return currentHost;
             }
         }
         return null;
+    }
+    
+    private static boolean isHostBad(String hostname) {
+        if (hostname != null) {
+            hostname = hostname.toLowerCase();
+        }
+        return sBadSmtpHosts.containsKey(hostname);
     }
     
     /**
@@ -201,7 +215,7 @@ public class JMSession {
     throws ServiceException {
         Set<String> hosts = new HashSet<String>();
         for (String host : getSmtpHostsFromLdap(domain)) {
-            if (!sBadSmtpHosts.containsKey(host)) {
+            if (!isHostBad(host)) {
                 hosts.add(host);
             }
         }
@@ -216,9 +230,12 @@ public class JMSession {
      * @param hostName the SMTP server hostname
      */
     public static void markSmtpHostBad(String hostName) {
+        if (hostName == null) {
+            return;
+        }
         ZimbraLog.smtp.info(
             "Disallowing connections to %s for %d milliseconds.", hostName, LC.smtp_host_retry_millis.intValue());
-        sBadSmtpHosts.put(hostName, null);
+        sBadSmtpHosts.put(hostName.toLowerCase(), null);
     }
     
     private static final String[] NO_HOSTS = new String[0];

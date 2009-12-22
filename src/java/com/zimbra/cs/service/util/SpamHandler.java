@@ -142,7 +142,7 @@ public class SpamHandler {
         String isSpamString = sr.mIsSpam ? mTypeSpam : mTypeHam;
         InternetAddress toAddress = sr.mIsSpam ? mIsSpamAddress : mIsNotSpamAddress;
         
-        SMTPMessage out = new SMTPMessage(JMSession.getSession());
+        SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(sr.mMailboxId);
         Message msg = mbox.getMessageById(null, sr.mMessageId);

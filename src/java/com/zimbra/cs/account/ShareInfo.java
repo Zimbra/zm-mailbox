@@ -1398,7 +1398,7 @@ public class ShareInfo {
                                         Account fromAcct, DistributionList dl, String toAddr,
                                         MailSenderVisitor visitor) throws ServiceException {
             try {
-                SMTPMessage out = new SMTPMessage(JMSession.getSession());
+                SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
             
                 Pair<Address, Address> senderAddrs = getFromAndReplyToAddr(prov, fromAcct, dl);
                 Address fromAddr = senderAddrs.getFirst();

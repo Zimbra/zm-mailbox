@@ -87,7 +87,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
             if (recipients == null || recipients.length == 0)
                 return;
 
-            SMTPMessage report = new SMTPMessage(JMSession.getSession());
+            SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
             String subject = "Read-Receipt: " + msg.getSubject();
             report.setSubject(subject, StringUtil.checkCharset(subject, charset));
             report.setSentDate(new Date());

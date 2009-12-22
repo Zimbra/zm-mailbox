@@ -265,7 +265,7 @@ implements LmtpCallback {
 
         // Send the message
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSession());
+            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
             
             // From
             Address fromAddress = getAddress(account.getPrefFromAddress(), account.getPrefFromDisplay());
@@ -450,7 +450,7 @@ implements LmtpCallback {
         
         // Send the message
         try {
-            SMTPMessage out = new SMTPMessage(JMSession.getSession());
+            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
             out.setHeader("Auto-Submitted", "auto-replied (notification; " + rcpt + ")");
             InternetAddress address = new InternetAddress(from);
             out.setFrom(address);
@@ -540,7 +540,7 @@ implements LmtpCallback {
                         attached.setContent("", msg.getContentType());
                     }
 
-                    SMTPMessage out = new SMTPMessage(JMSession.getSession());
+                    SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
                     out.setHeader("Auto-Submitted", "auto-replied (zimbra; intercept)");
                     InternetAddress address = new InternetAddress(from);
                     out.setFrom(address);
