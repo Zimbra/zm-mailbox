@@ -54,10 +54,6 @@ public class ScheduledTaskManager {
         
         for (ScheduledTask task : DbScheduledTask.getTasks(null, 0)) {
             try {
-                // Validate mailbox ID
-                if (task.getMailboxId() > 0) {
-                    MailboxManager.getInstance().getMailboxById(task.getMailboxId());
-                }
                 schedule(null, task);
             } catch (ServiceException e) {
                 ZimbraLog.scheduler.warn("Unable to schedule %s.", task, e);
