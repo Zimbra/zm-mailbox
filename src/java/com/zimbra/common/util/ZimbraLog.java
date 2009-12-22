@@ -162,7 +162,7 @@ public class ZimbraLog {
     public static final Log imap = LogFactory.getLog("zimbra.imap");
     
     /**
-     * the "zimbra.imap" logger. For POP-related events.
+     * the "zimbra.pop" logger. For POP-related events.
      */
     public static final Log pop = LogFactory.getLog("zimbra.pop");
     
