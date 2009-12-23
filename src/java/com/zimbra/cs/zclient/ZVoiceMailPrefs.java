@@ -60,7 +60,7 @@ public class ZVoiceMailPrefs extends ZCallFeature {
     }
     
     public void setPromptLevel(String level) {
-        if (level.equals("RAPID") || level.equals("STANDARD") || level.equals("EXTENDED"))
+        if (level != null && (level.equals("RAPID") || level.equals("STANDARD") || level.equals("EXTENDED")))
             mMap.put(VoiceConstants.A_vmPrefPromptLevel, level);
     }
     
