@@ -122,13 +122,15 @@ public class SQLite extends Db {
         
         try {
             String prefix = dbname == null || dbname.equals("zimbra") ? "" : dbname + ".";
-            (stmt = conn.prepareStatement("PRAGMA " + prefix + key + " = " + value)).execute();
+            (stmt = conn.prepareStatement("PRAGMA " + prefix + key +
+                (value == null ? "" : " = " + value))).execute();
         } finally {
             DbPool.quietCloseStatement(stmt);
         }
     }
 
     void pragmas(java.sql.Connection conn, String dbname) throws SQLException {
+        pragma(conn, dbname, "auto_vacuum", "2");
         pragma(conn, dbname, "foreign_keys", "ON");
         pragma(conn, dbname, "fullfsync", "OFF");
         pragma(conn, dbname, "journal_mode", "PERSIST");
@@ -166,6 +168,33 @@ public class SQLite extends Db {
         return retVal == null ? conn : retVal;
     }
 
+    @Override public void optimize(Connection conn, String dbname, int level)
+        throws ServiceException {
+        try {
+            PreparedStatement stmt = null;
+
+            registerDatabaseInterest(conn, dbname);
+            try {
+                if (dbname == null)
+                    dbname = "zimbra";
+                if (level > 0 && dbname.endsWith("zimbra")) {
+                    if (level == 2)
+                        (stmt = conn.prepareStatement("VACUUM")).execute();
+                    else if (level == 1)
+                        pragma(conn.getConnection(), dbname, "incremental_vacuum", null);
+                }
+                (stmt = conn.prepareStatement("ANALYZE " + dbname)).execute();
+                ZimbraLog.dbconn.debug("sqlite " +
+                    (level > 0 ? "vacuum " : "analyze ") + dbname);
+            } finally {
+                DbPool.quietCloseStatement(stmt);
+            }
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("sqlite " +
+                (level > 0 ? "vacuum" : "analyze") + " error", e);
+        }
+    }
+    
     @Override public void registerDatabaseInterest(Connection conn, String dbname) throws SQLException, ServiceException {
         LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
@@ -183,7 +212,6 @@ public class SQLite extends Db {
         attachDatabase(conn, dbname);
     }
 
-    @SuppressWarnings("unused")
     void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
         PreparedStatement stmt = null;
 

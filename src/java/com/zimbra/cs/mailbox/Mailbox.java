@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,6 +70,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -6499,6 +6501,17 @@ public class Mailbox {
         }
     }
 
+    // optimize the underlying database
+    public void optimize(OperationContext octxt, int level) throws ServiceException {
+        synchronized (this) {
+            try {
+                beginTransaction("optimize", octxt);
+                DbMailbox.optimize(this, level);
+            } finally {
+                endTransaction(true);
+            }
+        }
+    }
 
     // Coordinate other conflicting operations (such as backup) and shared delivery, delivery of a message to
     // multiple recipients.  Such operation on a mailbox and shared delivery

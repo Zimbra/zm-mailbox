@@ -138,6 +138,13 @@ public abstract class Db {
         // default is to do nothing
     }
 
+    /** optimize and optionally compact a database
+     * level 0: analysis tuning only
+     * level 1: quick file optimization and analysis
+     * level 2: full file optimization and analysis
+     */
+    public void optimize(Connection conn, String name, int level) throws ServiceException {}
+
     /** Indicates that the connection will be accessing the given Mailbox's
      *  database in the scope of the current transaction.  Must be called
      *  <em>before</em> any SQL commands are executed in the transaction. */
@@ -262,9 +269,7 @@ public abstract class Db {
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";
     }
     
-    public void enableStreaming(Statement stmt)
-    throws SQLException {
-    }
+    public void enableStreaming(Statement stmt) throws SQLException {}
 
     /** Generates a WHERE-type clause that evaluates to <code>expr1</code> if
      *  its value is non-<tt>NULL</tt> and <code>expr2</code> otherwise. */

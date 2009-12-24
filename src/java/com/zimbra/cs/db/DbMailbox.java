@@ -1111,6 +1111,19 @@ public class DbMailbox {
         return results;
     }
 
+    public static void optimize(Mailbox mbox, int level) throws ServiceException {
+        assert(Thread.holdsLock(getZimbraSynchronizer(mbox)));
+
+        Connection conn = mbox.getOperationConnection();
+        String name = DbMailbox.getDatabaseName(mbox);
+        
+        try {
+            Db.getInstance().optimize(conn, name, level);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("optimizing mailbox db " + name, e);
+        }
+    }
+
     private static void readMailboxRawData(List<Mailbox.MailboxData> results, ResultSet rs) throws SQLException {
         while (rs.next()) {
             Mailbox.MailboxData data = new Mailbox.MailboxData();
