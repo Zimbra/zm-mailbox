@@ -40,7 +40,8 @@ public class DomainCache {
     private Counter mHitRate = new Counter();
     
     /*
-     * for caching non-existing domains so we don't repeatedly search LDAP for non-exsting domains
+     * for caching non-existing domains so we don't repeatedly search LDAP for domains that do not 
+     * exist in Zimbra LDAP.
      * 
      * entries in the NonExistingCache has the same TTS/max as this DomainCache.
      */

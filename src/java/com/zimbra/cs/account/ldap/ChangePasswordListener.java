@@ -22,6 +22,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 
@@ -47,7 +48,10 @@ public abstract class ChangePasswordListener {
     }
     
     public synchronized static ChangePasswordListener getHandler(Account acct) throws ServiceException {
-        Domain domain = Provisioning.getInstance().getDomain(acct);
+        Domain domain = Provisioning.getInstance().getZimbraDomain(acct);
+        if (domain == null)
+            throw AccountServiceException.NO_SUCH_DOMAIN(acct.getDomainName());
+        
         String listenerName = domain.getAttr(Provisioning.A_zimbraPasswordChangeListener);
         
         if (listenerName == null)

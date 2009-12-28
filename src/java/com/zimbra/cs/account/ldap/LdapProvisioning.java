@@ -1804,8 +1804,19 @@ public class LdapProvisioning extends Provisioning {
             case krb5Realm:
                 return getDomainByKrb5RealmInternal(key);
             default:
-                    return null;
+                return null;
         }
+    }
+    
+    @Override
+    public Domain getZimbraDomain(DomainBy keyType, String key) throws ServiceException {
+        
+        // remove it from the non-existing cache if we find it there
+        Domain domain = getFromCache(keyType, key);
+        if (domain instanceof DomainCache.NonExistingDomain)
+            sDomainCache.removeNonExisting(keyType, key);
+        
+        return get(keyType, key);
     }
 
     private Domain getFromCache(DomainBy keyType, String key) throws ServiceException {
