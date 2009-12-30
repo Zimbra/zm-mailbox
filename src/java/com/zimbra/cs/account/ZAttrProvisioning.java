@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091216-1532 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091230-1133 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1588,15 +1588,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=619)
     public static final String A_zimbraBatchedIndexingSize = "zimbraBatchedIndexingSize";
-
-    /**
-     * whether user can specify an alternate calendar folder as the default
-     * calendar
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1076)
-    public static final String A_zimbraCalendarAlternateDefaultFolderEnabled = "zimbraCalendarAlternateDefaultFolderEnabled";
 
     /**
      * alternate location for calendar and task folders
@@ -5178,14 +5169,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarDayHourStart = "zimbraPrefCalendarDayHourStart";
 
     /**
-     * folder id of default calendar
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1077)
-    public static final String A_zimbraPrefCalendarDefaultFolderId = "zimbraPrefCalendarDefaultFolderId";
-
-    /**
      * first day of week to show in calendar (0=sunday, 6=saturday)
      */
     @ZAttr(id=261)
@@ -5393,6 +5376,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=470)
     public static final String A_zimbraPrefDeleteInviteOnReply = "zimbraPrefDeleteInviteOnReply";
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public static final String A_zimbraPrefDisabledZimlets = "zimbraPrefDisabledZimlets";
 
     /**
      * whether to display external images in HTML mail
@@ -6188,9 +6179,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefWhenSentToEnabled = "zimbraPrefWhenSentToEnabled";
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -7547,7 +7536,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraYahooId = "zimbraYahooId";
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      */
     @ZAttr(id=291)
     public static final String A_zimbraZimletAvailableZimlets = "zimbraZimletAvailableZimlets";
@@ -7567,7 +7558,8 @@ public class ZAttrProvisioning {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @since ZCS 5.0.10
      */
@@ -7610,16 +7602,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=281)
     public static final String A_zimbraZimletKeyword = "zimbraZimletKeyword";
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public static final String A_zimbraZimletMandatoryZimlets = "zimbraZimletMandatoryZimlets";
 
     /**
      * The panel item section in the Zimlet description

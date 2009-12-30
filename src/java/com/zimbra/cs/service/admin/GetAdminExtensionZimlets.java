@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.zimlet.ZimletPresence.Presence;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -55,7 +56,7 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 			    continue;
 			
 			if (z.isExtension()) {
-				ZimletUtil.listZimlet(response, z, -1);
+				ZimletUtil.listZimlet(response, z, -1, Presence.enabled); // admin zimlets are all enabled
 			}
 		}
     }

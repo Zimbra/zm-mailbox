@@ -29,7 +29,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
@@ -48,6 +47,7 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletProperty;
 import com.zimbra.cs.zimlet.ZimletUserProperties;
+import com.zimbra.cs.zimlet.ZimletPresence;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -197,13 +197,14 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     private static void doZimlets(Element response, Account acct) {
+        
     	try {
-            String[] attrList = ZimletUtil.getZimlets(acct);
-            List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
+            ZimletPresence userZimlets = ZimletUtil.getUserZimlets(acct);
+            List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(userZimlets.getZimletNamesAsArray());
             int priority = 0;
             for (Zimlet z : zimletList) {
                 if (z.isEnabled() && !z.isExtension())
-                    ZimletUtil.listZimlet(response, z, priority);
+                    ZimletUtil.listZimlet(response, z, priority, userZimlets.getPresence(z.getName()));
                 priority++;
             }
     

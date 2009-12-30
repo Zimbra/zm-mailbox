@@ -55,6 +55,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.SEARCH_CALENDAR_RESOURCES_REQUEST, new SearchCalendarResources());
 
         dispatcher.registerHandler(AccountConstants.MODIFY_PROPERTIES_REQUEST, new ModifyProperties());
+        dispatcher.registerHandler(AccountConstants.MODIFY_ZIMLET_PREFS_REQUEST, new ModifyZimletPrefs());
 
         dispatcher.registerHandler(AccountConstants.GET_ALL_LOCALES_REQUEST, new GetAllLocales());
         dispatcher.registerHandler(AccountConstants.GET_AVAILABLE_LOCALES_REQUEST, new GetAvailableLocales());
@@ -81,6 +82,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.MODIFY_WHITE_BLACK_LIST_REQUEST, new ModifyWhiteBlackList());
         
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+
     }
 
     /**

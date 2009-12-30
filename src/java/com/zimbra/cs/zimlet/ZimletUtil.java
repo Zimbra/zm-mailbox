@@ -62,6 +62,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.zimlet.ZimletPresence.Presence;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.*;
 import com.zimbra.common.soap.*;
@@ -84,22 +85,67 @@ public class ZimletUtil {
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
 	@SuppressWarnings("unchecked")
 	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
-
-	public static String[] getZimlets(Account acct) throws ServiceException {
-		String[] zimlets = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-		Domain domain = Provisioning.getInstance().getDomain(acct);
-		if (domain != null) {
-			Set<String> domainZimlets = domain.getMultiAttrSet(Provisioning.A_zimbraZimletDomainAvailableZimlets);
-			Set<String> availZimlets = new HashSet<String>(Arrays.asList(zimlets));
-			return SetUtil.union(availZimlets, domainZimlets).toArray(new String[0]);
-		} else
-			return zimlets;
-	}
 	
-	public static String[] getZimlets(Cos cos) {
-	    String[] zimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-	    return zimlets;
-	}
+    public static ZimletPresence getUserZimlets(Account acct) throws ServiceException {
+        ZimletPresence userZimlets = getAvailableZimlets(acct);
+
+        // userZimlets now contains all allowed zimlets for the user
+        // process user pref, which overrides cos/domain enabled/disabled by default
+        // user pref cannot override cos/domain mandatory zimlets
+        
+        String[] userPrefEnabledZimlets = acct.getMultiAttr(Provisioning.A_zimbraPrefZimlets);
+        for (String zimletName : userPrefEnabledZimlets) {
+            Presence presence = userZimlets.getPresence(zimletName);
+            if (presence != null &&               // zimlet is allowed
+                presence != Presence.mandatory && // can't override mandatory 
+                presence != Presence.enabled) {   // disabled by default, but user specifically enabled it
+                userZimlets.put(zimletName, Presence.enabled);
+            }
+        }
+
+        String[] userPrefDisabledZimlets = acct.getMultiAttr(Provisioning.A_zimbraPrefDisabledZimlets);
+        for (String zimletName : userPrefDisabledZimlets) {
+            Presence presence = userZimlets.getPresence(zimletName);
+            if (presence != null &&               // zimlet is allowed
+                presence != Presence.mandatory && // can't override mandatory 
+                presence != Presence.disabled) {  // enabled by default, but user specifically disabled it
+                userZimlets.put(zimletName, Presence.disabled);
+            }
+        }
+ 
+        return userZimlets;
+    }
+
+    public static ZimletPresence getAvailableZimlets(Account acct) throws ServiceException {
+        ZimletPresence availZimlets = new ZimletPresence();
+        
+        // process domain settings first, because if domain and cos conflict we honor the cos setting
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        if (domain != null) {
+            String[] domainZimlets = domain.getMultiAttr(Provisioning.A_zimbraZimletDomainAvailableZimlets);
+            for (String zimletWithPrefix : domainZimlets) {
+                availZimlets.put(zimletWithPrefix);
+            }
+        }
+        
+        String[] acctCosZimlets = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+        for (String zimletWithPrefix : acctCosZimlets) {
+            availZimlets.put(zimletWithPrefix);
+        }
+        
+        return availZimlets;
+    }
+	
+    public static ZimletPresence getAvailableZimlets(Cos cos) throws ServiceException {
+        ZimletPresence availZimlets = new ZimletPresence();
+        
+        String[] acctCosZimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+        for (String zimletWithPrefix : acctCosZimlets) {
+            availZimlets.put(zimletWithPrefix);
+        }
+
+        return availZimlets;
+    }
 	
 	public static String[] listZimletNames() {
 		String[] zimlets = sZimlets.keySet().toArray(new String[0]);
@@ -322,7 +368,7 @@ public class ZimletUtil {
 	 * @param elem - Parent Element node
 	 * @param zimlet
 	 */
-	public static void listZimlet(Element elem, Zimlet zimlet, int priority) {
+	public static void listZimlet(Element elem, Zimlet zimlet, int priority, Presence presence) {
         loadZimlets();
         ZimletFile zf = (ZimletFile) sZimlets.get(zimlet.getName());
         if (zf == null) {
@@ -336,6 +382,11 @@ public class ZimletUtil {
         if (priority >= 0) {
         	zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRIORITY, priority);
         }
+        
+        if (presence == null)
+            presence = Presence.enabled;
+        zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRESENCE, presence.toString());
+        
         try {
 			zf.getZimletDescription().addToElement(entry);
 			String config = zimlet.getHandlerConfig();
@@ -358,6 +409,10 @@ public class ZimletUtil {
 			Element entry = elem.addElement(AccountConstants.E_ZIMLET);
 			Element zimletContext = entry.addElement(AccountConstants.E_ZIMLET_CONTEXT);
 			zimletContext.addAttribute(AccountConstants.A_ZIMLET_BASE_URL, zimletBase);
+			
+			// dev zimlets are all enabled
+			zimletContext.addAttribute(AccountConstants.A_ZIMLET_PRESENCE, Presence.enabled.toString());
+			
 			try {
 				zim.getZimletDescription().addToElement(entry);
 				if (zim.hasZimletConfig()) {
@@ -720,7 +775,7 @@ public class ZimletUtil {
 		Set<String> domainsToRemove = new HashSet<String>();
 		for (String d : domainArray)
 			domainsToRemove.add(d);
-		String[] zimlets = c.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+		String[] zimlets = getAvailableZimlets(c).getZimletNamesAsArray();
 		for (String z : zimlets) {
 			if (z.equals(zimlet))
 				continue;
@@ -820,7 +875,7 @@ public class ZimletUtil {
 		System.out.println("Listing COS entries for Zimlet "+zimlet+"...");
 		Provisioning prov = Provisioning.getInstance();
 		for (Cos cos : prov.getAllCos()) {
-			String[] zimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+			String[] zimlets = getAvailableZimlets(cos).getZimletNamesAsArray();
 			for (int i = 0; i < zimlets.length; i++) {
 				if (zimlets[i].equals(zimlet)) {
 					System.out.println("\t"+cos.getName());
@@ -890,7 +945,7 @@ public class ZimletUtil {
 		Provisioning prov = Provisioning.getInstance();
 		for (Cos cos : prov.getAllCos()) {
 			System.out.println("  "+cos.getName()+":");
-			String[] zimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+			String[] zimlets = getAvailableZimlets(cos).getZimletNamesAsArray();
 			Arrays.sort(zimlets);
 			for (int i = 0; i < zimlets.length; i++) {
 				System.out.println("\t"+zimlets[i]);
@@ -1113,7 +1168,7 @@ public class ZimletUtil {
 			System.out.println("       Extension: true");
 		String cosList = null;
 		for (Cos cos : prov.getAllCos()) {
-			for (String zc : cos.getZimletAvailableZimlets()) {
+			for (String zc : getAvailableZimlets(cos).getZimletNamesAsArray()) {
 				if (zc.compareTo(zimlet) != 0)
 					continue;
 				if (cosList == null)

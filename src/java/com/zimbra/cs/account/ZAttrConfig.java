@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091216-1532 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091230-1133 */
 
     /**
      * RFC2256: descriptive information
@@ -29046,7 +29046,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @return zimbraZimletDomainAvailableZimlets, or empty array if unset
      *
@@ -29060,7 +29061,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param zimbraZimletDomainAvailableZimlets new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29077,7 +29079,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param zimbraZimletDomainAvailableZimlets new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29095,7 +29098,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param zimbraZimletDomainAvailableZimlets new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29112,7 +29116,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param zimbraZimletDomainAvailableZimlets new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -29130,7 +29135,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param zimbraZimletDomainAvailableZimlets existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29147,7 +29153,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param zimbraZimletDomainAvailableZimlets existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -29165,7 +29172,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29181,7 +29189,8 @@ public class ZAttrConfig extends Entry {
     /**
      * List of Zimlets available to this domain. Zimlets available to
      * accounts in the domain is the union of account/cos attribute
-     * zimbraZimletAvailableZimlets and this attribute.
+     * zimbraZimletAvailableZimlets and this attribute. See
+     * zimbraZimletAvailableZimlets for value format.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -1479,8 +1479,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>URL of extra scripts used by the Zimlet</desc>
 </attr>
 
-<attr id="291" name="zimbraZimletAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInfo,domainAdminModifiable,accountInherited">
-  <desc>List of Zimlets available to this COS</desc>
+<attr id="291" name="zimbraZimletAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInfo,domainAdminModifiable,accountInherited" callback="AvailableZimlets">
+  <desc>
+      List of Zimlets available to this COS
+      Values can be prefixed with ! or + or -
+      !: mandatory
+      + (or no prefix): enabled by default
+      -: disabled by default
+  </desc>
 </attr>
 
 <attr id="292" name="zimbraZimletServerIndexRegex" type="cstring" max="256" cardinality="single" optionalIn="zimletEntry">
@@ -3573,9 +3579,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of revisions to keep for calendar items (appointments and tasks). 0 means unlimited.</desc>
 </attr>
 
-<attr id="710" name="zimbraZimletDomainAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" since="5.0.10">
-  <desc>List of Zimlets available to this domain.
-        Zimlets available to accounts in the domain is the union of account/cos attribute zimbraZimletAvailableZimlets and this attribute. 
+<attr id="710" name="zimbraZimletDomainAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" callback="AvailableZimlets" since="5.0.10">
+  <desc>
+      List of Zimlets available to this domain.
+      Zimlets available to accounts in the domain is the union of account/cos attribute zimbraZimletAvailableZimlets and this attribute. 
+      See zimbraZimletAvailableZimlets for value format.
   </desc>
 </attr>
 
@@ -3864,10 +3872,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
     
 <attr id="765" name="zimbraPrefZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="6.0.0_BETA1">
-  <desc>
-      zimlets user wants to see in the UI
-      note: zimlets available to a user is the union of account/cos attr zimbraZimletAvailableZimlets and domain attr zimbraZimletDomainAvailableZimlets
-  </desc>
+  <desc>zimlets user wants to see in the UI</desc>
 </attr>
 
 <attr id="766" name="zimbraConstraint" type="string" cardinality="multi" optionalIn="globalConfig,cos" since="6.0.0_BETA1">
@@ -4787,9 +4792,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>URL for posting error report popped up in WEB client</desc>
 </attr>
 
-<attr id="1076" name="zimbraZimletMandatoryZimlets" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInfo,domainAdminModifiable,accountInherited" since="6.0.5">
-  <desc>List of mandatory zimlets set by the admin, user can only enable disable Zimlets which are optional. Mandatory zimlets cannot be disabled by the user.</desc>
+<attr id="1076" name="zimbraPrefDisabledZimlets" type="string" cardinality="multi" optionalIn="account,cos" flags="domainAdminModifiable" since="6.0.5">
+  <desc>zimlets user does not want to see in the UI</desc>
 </attr>
-
 
 </attrs>

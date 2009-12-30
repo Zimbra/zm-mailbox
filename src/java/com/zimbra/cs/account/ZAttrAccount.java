@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091216-1532 */
+    /* build: 6.0.2_BETA1_1111 pshao 20091230-1133 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -3725,83 +3725,6 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetCOSId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCOSId, "");
-        return attrs;
-    }
-
-    /**
-     * whether user can specify an alternate calendar folder as the default
-     * calendar
-     *
-     * @return zimbraCalendarAlternateDefaultFolderEnabled, or false if unset
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1076)
-    public boolean isCalendarAlternateDefaultFolderEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, false);
-    }
-
-    /**
-     * whether user can specify an alternate calendar folder as the default
-     * calendar
-     *
-     * @param zimbraCalendarAlternateDefaultFolderEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1076)
-    public void setCalendarAlternateDefaultFolderEnabled(boolean zimbraCalendarAlternateDefaultFolderEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, zimbraCalendarAlternateDefaultFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether user can specify an alternate calendar folder as the default
-     * calendar
-     *
-     * @param zimbraCalendarAlternateDefaultFolderEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1076)
-    public Map<String,Object> setCalendarAlternateDefaultFolderEnabled(boolean zimbraCalendarAlternateDefaultFolderEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, zimbraCalendarAlternateDefaultFolderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether user can specify an alternate calendar folder as the default
-     * calendar
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1076)
-    public void unsetCalendarAlternateDefaultFolderEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether user can specify an alternate calendar folder as the default
-     * calendar
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1076)
-    public Map<String,Object> unsetCalendarAlternateDefaultFolderEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarAlternateDefaultFolderEnabled, "");
         return attrs;
     }
 
@@ -20307,78 +20230,6 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * folder id of default calendar
-     *
-     * @return zimbraPrefCalendarDefaultFolderId, or 10 if unset
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1077)
-    public int getPrefCalendarDefaultFolderId() {
-        return getIntAttr(Provisioning.A_zimbraPrefCalendarDefaultFolderId, 10);
-    }
-
-    /**
-     * folder id of default calendar
-     *
-     * @param zimbraPrefCalendarDefaultFolderId new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1077)
-    public void setPrefCalendarDefaultFolderId(int zimbraPrefCalendarDefaultFolderId) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Integer.toString(zimbraPrefCalendarDefaultFolderId));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * folder id of default calendar
-     *
-     * @param zimbraPrefCalendarDefaultFolderId new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1077)
-    public Map<String,Object> setPrefCalendarDefaultFolderId(int zimbraPrefCalendarDefaultFolderId, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, Integer.toString(zimbraPrefCalendarDefaultFolderId));
-        return attrs;
-    }
-
-    /**
-     * folder id of default calendar
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1077)
-    public void unsetPrefCalendarDefaultFolderId() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * folder id of default calendar
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1077)
-    public Map<String,Object> unsetPrefCalendarDefaultFolderId(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarDefaultFolderId, "");
-        return attrs;
-    }
-
-    /**
      * first day of week to show in calendar (0=sunday, 6=saturday)
      *
      * @return zimbraPrefCalendarFirstDayOfWeek, or 0 if unset
@@ -22823,6 +22674,140 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefDeleteInviteOnReply(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDeleteInviteOnReply, "");
+        return attrs;
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @return zimbraPrefDisabledZimlets, or empty array if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public String[] getPrefDisabledZimlets() {
+        return getMultiAttr(Provisioning.A_zimbraPrefDisabledZimlets);
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param zimbraPrefDisabledZimlets new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public void setPrefDisabledZimlets(String[] zimbraPrefDisabledZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisabledZimlets, zimbraPrefDisabledZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param zimbraPrefDisabledZimlets new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public Map<String,Object> setPrefDisabledZimlets(String[] zimbraPrefDisabledZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisabledZimlets, zimbraPrefDisabledZimlets);
+        return attrs;
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param zimbraPrefDisabledZimlets new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public void addPrefDisabledZimlets(String zimbraPrefDisabledZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefDisabledZimlets, zimbraPrefDisabledZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param zimbraPrefDisabledZimlets new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public Map<String,Object> addPrefDisabledZimlets(String zimbraPrefDisabledZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefDisabledZimlets, zimbraPrefDisabledZimlets);
+        return attrs;
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param zimbraPrefDisabledZimlets existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public void removePrefDisabledZimlets(String zimbraPrefDisabledZimlets) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefDisabledZimlets, zimbraPrefDisabledZimlets);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param zimbraPrefDisabledZimlets existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public Map<String,Object> removePrefDisabledZimlets(String zimbraPrefDisabledZimlets, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefDisabledZimlets, zimbraPrefDisabledZimlets);
+        return attrs;
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public void unsetPrefDisabledZimlets() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisabledZimlets, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * zimlets user does not want to see in the UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1076)
+    public Map<String,Object> unsetPrefDisabledZimlets(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisabledZimlets, "");
         return attrs;
     }
 
@@ -31493,9 +31478,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @return zimbraPrefZimlets, or empty array if unset
      *
@@ -31507,9 +31490,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param zimbraPrefZimlets new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31524,9 +31505,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param zimbraPrefZimlets new value
      * @param attrs existing map to populate, or null to create a new map
@@ -31542,9 +31521,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param zimbraPrefZimlets new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31559,9 +31536,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param zimbraPrefZimlets new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -31577,9 +31552,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param zimbraPrefZimlets existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -31594,9 +31567,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param zimbraPrefZimlets existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -31612,9 +31583,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -31628,9 +31597,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * zimlets user wants to see in the UI note: zimlets available to a user
-     * is the union of account/cos attr zimbraZimletAvailableZimlets and
-     * domain attr zimbraZimletDomainAvailableZimlets
+     * zimlets user wants to see in the UI
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -33044,7 +33011,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @return zimbraZimletAvailableZimlets, or empty array if unset
      */
@@ -33054,7 +33023,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param zimbraZimletAvailableZimlets new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33067,7 +33038,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param zimbraZimletAvailableZimlets new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33081,7 +33054,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param zimbraZimletAvailableZimlets new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33094,7 +33069,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param zimbraZimletAvailableZimlets new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -33108,7 +33085,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param zimbraZimletAvailableZimlets existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33121,7 +33100,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param zimbraZimletAvailableZimlets existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -33135,7 +33116,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -33147,7 +33130,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * List of Zimlets available to this COS
+     * List of Zimlets available to this COS Values can be prefixed with ! or
+     * + or - !: mandatory + (or no prefix): enabled by default -: disabled
+     * by default
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -33156,158 +33141,6 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetZimletAvailableZimlets(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraZimletAvailableZimlets, "");
-        return attrs;
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @return zimbraZimletMandatoryZimlets, or empty array if unset
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public String[] getZimletMandatoryZimlets() {
-        return getMultiAttr(Provisioning.A_zimbraZimletMandatoryZimlets);
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param zimbraZimletMandatoryZimlets new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public void setZimletMandatoryZimlets(String[] zimbraZimletMandatoryZimlets) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param zimbraZimletMandatoryZimlets new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public Map<String,Object> setZimletMandatoryZimlets(String[] zimbraZimletMandatoryZimlets, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
-        return attrs;
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param zimbraZimletMandatoryZimlets new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public void addZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param zimbraZimletMandatoryZimlets new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public Map<String,Object> addZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
-        return attrs;
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param zimbraZimletMandatoryZimlets existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public void removeZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param zimbraZimletMandatoryZimlets existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public Map<String,Object> removeZimletMandatoryZimlets(String zimbraZimletMandatoryZimlets, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraZimletMandatoryZimlets, zimbraZimletMandatoryZimlets);
-        return attrs;
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public void unsetZimletMandatoryZimlets() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * List of mandatory zimlets set by the admin, user can only enable
-     * disable Zimlets which are optional. Mandatory zimlets cannot be
-     * disabled by the user.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.5
-     */
-    @ZAttr(id=1078)
-    public Map<String,Object> unsetZimletMandatoryZimlets(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraZimletMandatoryZimlets, "");
         return attrs;
     }
 

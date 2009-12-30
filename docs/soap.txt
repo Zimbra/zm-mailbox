@@ -526,7 +526,7 @@ effect if called in a <nosession> context.
    </props>
    <zimlets>
      <zimlet>
-       <zimletContext baseUrl="..."/>
+       <zimletContext baseUrl="..." priority="..." presence="{zimlet-presence}"/>
        <zimlet>...</zimlet>
        <zimletConfig>...</zimletConfig>
      </zimlet>
@@ -594,6 +594,8 @@ effect if called in a <nosession> context.
         - displayName
 
   {data-source}: see GetDataSourcesRequest for details
+  
+  {zimlet-presence}: mandatory | enabled | disabled
   
 ----------------------------
 
@@ -3276,3 +3278,15 @@ returns the effective permissions of the specified folder
 resets the contact ranking table for the account
 
 <ResetContactRankingResponse/>
+
+----------------------------
+  
+<ModifyZimletPrefsRequest>
+    <zimlet name="{name}" presence="{enabled|disabled}"/>+
+</ModifyZimletPrefsRequest>
+ 
+<ModifyZimletPrefsResponse>
+    <zimlet name="{name}" presence="{enabled|disabled}"/>+
+</ModifyZimletPrefsResponse>
+
+---------
