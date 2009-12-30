@@ -192,6 +192,7 @@
     <a n="zimbraPrefDedupeMessagesSentToSelf"/>
     <a n="zimbraPrefDefaultSignatureId"/>
     <a n="zimbraPrefDeleteInviteOnReply"/>
+    <a n="zimbraPrefDisabledZimlets"/>
     <a n="zimbraPrefDisplayExternalImages"/>
     <a n="zimbraPrefFolderColorEnabled"/>
     <a n="zimbraPrefFolderTreeOpen"/>
@@ -314,7 +315,6 @@
     <a n="zimbraTextAnalyzer"/>
     <a n="zimbraWebClientShowOfflineLink"/>
     <a n="zimbraZimletAvailableZimlets"/>
-    <a n="zimbraZimletMandatoryZimlets"/>
     <a n="zimbraZimletUserProperties"/>
 
   </attrs>
