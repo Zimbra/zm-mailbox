@@ -52,6 +52,8 @@ public class AccountConstants {
     public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE = QName.get("SearchCalendarResourcesResponse", NAMESPACE);
     public static final QName MODIFY_PROPERTIES_REQUEST = QName.get("ModifyPropertiesRequest", NAMESPACE);
     public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get("ModifyPropertiesResponse", NAMESPACE);
+    public static final QName MODIFY_ZIMLET_PREFS_REQUEST = QName.get("ModifyZimletPrefsRequest", NAMESPACE);
+    public static final QName MODIFY_ZIMLET_PREFS_RESPONSE = QName.get("ModifyZimletPrefsResponse", NAMESPACE);
     public static final QName GET_ALL_LOCALES_REQUEST = QName.get("GetAllLocalesRequest", NAMESPACE);
     public static final QName GET_ALL_LOCALES_RESPONSE = QName.get("GetAllLocalesResponse", NAMESPACE);
     public static final QName GET_AVAILABLE_LOCALES_REQUEST = QName.get("GetAvailableLocalesRequest", NAMESPACE);
@@ -89,7 +91,6 @@ public class AccountConstants {
      
     public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
-
     
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -161,6 +162,7 @@ public class AccountConstants {
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
     public static final String A_ZIMLET_PRIORITY = "priority";
+    public static final String A_ZIMLET_PRESENCE = "presence";
     public static final String A_TIMESTAMP = "timestamp";
     public static final String A_TOKENIZE_KEY = "tokenizeKey";
     public static final String A_EXPIRES = "expires";
