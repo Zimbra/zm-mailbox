@@ -542,8 +542,10 @@ public class Mime {
 
     /**
      * Returns true if we consider this to be an attachment for the sake of "filtering" by attachments.
-     * i.e., if someone searchs for messages with attachment types of "text/plain", we probably wouldn't want
+     * i.e., if someone searches for messages with attachment types of "text/plain", we probably wouldn't want
      * every multipart/mixed message showing up, since 99% of them will have a first body part of text/plain.
+     * 
+     * Note: Zimbra folder sharing notifications are not considered attachments for this purpose.
      * 
      * @param mpi
      * @return
@@ -579,6 +581,11 @@ public class Mime {
                 }
             }
         }
+        
+        // Zimbra folder sharing notifications are not considered attachments.
+        if (ctype.equals(MimeConstants.CT_XML_ZIMBRA_SHARE))
+            return false;
+        
         return true;
      }
 
