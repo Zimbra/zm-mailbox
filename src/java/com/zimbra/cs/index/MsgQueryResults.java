@@ -63,6 +63,13 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
             ZimbraHit opNext = mResults.getNext();
             
             MessageHit curHit = null;
+            
+            if (opNext instanceof ConversationHit) {
+                assert(false); // not written yet.  If we hit this, need to iterate conv and add ALL of its messages to the hit list here...
+            } else if ((!(opNext instanceof MessageHit)) && (!(opNext instanceof MessagePartHit))) {
+                return opNext; // wasn't a Conv/Message/Part, so just return it as-is
+            }
+            
             Integer msgId = new Integer(opNext.getItemId());
             
             curHit = (MessageHit)mSeenMsgs.get(msgId);
@@ -85,6 +92,11 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
                 /* Iterate fwd a bit to see if we can pick up more message parts... */
                 while (mResults.hasNext()) {
                     ZimbraHit nextHit = mResults.peekNext();
+                    if (nextHit instanceof ConversationHit) {
+                        assert(false); // not written yet.  If we hit this, need to iterate conv and add ALL of its messages to the hit list here...
+                    } else if ((!(nextHit instanceof MessageHit)) && (!(nextHit instanceof MessagePartHit))) {
+                        return curHit; // wasn't a Conv/Message/Part, so just return it as-is
+                    }
                     
                     int newMsgId = nextHit.getItemId();
                     
