@@ -171,27 +171,32 @@ public class SQLite extends Db {
     @Override public void optimize(Connection conn, String dbname, int level)
         throws ServiceException {
         try {
+            boolean autocommit = conn.getConnection().getAutoCommit();
             PreparedStatement stmt = null;
 
-            registerDatabaseInterest(conn, dbname);
             try {
+                if (!autocommit)
+                    conn.getConnection().setAutoCommit(true);
                 if (dbname == null)
                     dbname = "zimbra";
+                registerDatabaseInterest(conn, dbname);
                 if (level > 0 && dbname.endsWith("zimbra")) {
                     if (level == 2)
                         (stmt = conn.prepareStatement("VACUUM")).execute();
-                    else if (level == 1)
+                    else
                         pragma(conn.getConnection(), dbname, "incremental_vacuum", null);
                 }
                 (stmt = conn.prepareStatement("ANALYZE " + dbname)).execute();
+                if (!autocommit)
+                    conn.getConnection().setAutoCommit(autocommit);
                 ZimbraLog.dbconn.debug("sqlite " +
-                    (level > 0 ? "vacuum " : "analyze ") + dbname);
+                    (level > 0 ? "vacuum" : "analyze") + ' ' + dbname);
             } finally {
                 DbPool.quietCloseStatement(stmt);
             }
         } catch (Exception e) {
             throw ServiceException.FAILURE("sqlite " +
-                (level > 0 ? "vacuum" : "analyze") + " error", e);
+                (level > 0 ? "vacuum" : "analyze") + ' ' + dbname + " error", e);
         }
     }
     
