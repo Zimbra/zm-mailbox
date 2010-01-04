@@ -130,7 +130,10 @@ public class SQLite extends Db {
     }
 
     void pragmas(java.sql.Connection conn, String dbname) throws SQLException {
-        pragma(conn, dbname, "auto_vacuum", "2");
+        /*
+         * auto_vacuum causes databases to be locked permanently
+         * pragma(conn, dbname, "auto_vacuum", "2");
+         */
         pragma(conn, dbname, "foreign_keys", "ON");
         pragma(conn, dbname, "fullfsync", "OFF");
         pragma(conn, dbname, "journal_mode", "PERSIST");
