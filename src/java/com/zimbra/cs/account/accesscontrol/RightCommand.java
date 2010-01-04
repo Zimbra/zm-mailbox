@@ -1241,8 +1241,12 @@ public class RightCommand {
         } else if (right.isComboRight()) {
             Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);
             ComboRight comboRight = (ComboRight)right;
-            for (Right r : comboRight.getRights())
-                eRights.addElement(AdminConstants.E_R).addAttribute(AdminConstants.A_N, r.getName());
+            for (Right r : comboRight.getRights()) {
+                Element eNestedRight = eRights.addElement(AdminConstants.E_R);
+                eNestedRight.addAttribute(AdminConstants.A_N, r.getName());
+                eNestedRight.addAttribute(AdminConstants.A_TYPE, r.getRightType().name());
+                eNestedRight.addAttribute(AdminConstants.A_TARGET_TYPE, r.getTargetTypeStr());
+            }
         }
 
         return eRight;

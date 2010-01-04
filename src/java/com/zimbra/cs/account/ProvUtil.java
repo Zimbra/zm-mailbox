@@ -2017,8 +2017,11 @@ public class ProvUtil implements HttpDebugListener {
             ComboRight comboRight = (ComboRight)right;
             System.out.println();
             System.out.println(indent + "rights:");
-            for (Right r : comboRight.getRights())
-                System.out.println(indent2 + r.getName());
+            for (Right r : comboRight.getRights()) {
+                String tt = r.getTargetTypeStr();
+                tt = tt==null?"": " (" + tt + ")";
+                System.out.format("%s%10.10s: %s %s\n", indent2, r.getRightType().name(), r.getName(), tt);
+            }
         }
         System.out.println();
     }

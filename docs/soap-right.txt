@@ -656,7 +656,7 @@ Get definition of a right.
        [<a n="{attr-name}"/>+]
      </attrs>]
     [<rights>
-       <r n="{right-name}"/>+
+       <r n="{right-name}" type="{right-type}" [targetType="{target-type}"]/>+
      </rights>]
   </right>
 </GetRightResponse>
