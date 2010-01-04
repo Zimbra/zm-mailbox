@@ -43,7 +43,7 @@ public class TestAccess extends TestCase {
     private SoapAdminUser mProvAdmin;
     private SoapUser mSoapUser1;
     
-    private int mBrainDeadSingleThreadRandom = 0;
+    private static int sBrainDeadSingleThreadRandom = 0;
         
     private static String PASSWORD = "test123";
     private String DOMAIN_NAME;
@@ -138,14 +138,14 @@ public class TestAccess extends TestCase {
             soapAdminAuthenticate(mName, PASSWORD);
         }
         
-        DataSource setup_createDataSource(String acctName, String dataSourceName) {
+        DataSource setup_createDataSource(TestAccess ta, Role role, Perm perm, String acctName, String dataSourceName) throws Exception {
             
             DataSource dataSource = null;
             try {
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 attrs.put(Provisioning.A_zimbraDataSourceEnabled, "TRUE");
                 attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
-                attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
+                attrs.put(Provisioning.A_zimbraDataSourceFolderId, ta.createFolderAndReturnFolderId(role, perm));
                 attrs.put(Provisioning.A_zimbraDataSourceHost, "pop3.google.com");
                 attrs.put(Provisioning.A_zimbraDataSourcePassword, "my-pop3-password");
                 attrs.put(Provisioning.A_zimbraDataSourcePort, "8888");
@@ -161,26 +161,30 @@ public class TestAccess extends TestCase {
        }
     }
     
-    private String random() {
-        return "" + (mBrainDeadSingleThreadRandom++);
+    private static String random() {
+        String r = "" + (sBrainDeadSingleThreadRandom++);
+        // System.out.println("===== " + r + " =====");
+        return r;
     }
     
-    void accessTest(Role role, Perm perm, XMLElement req)  throws Exception {
+    Element accessTest(Role role, Perm perm, XMLElement req)  throws Exception {
         System.out.println(role.name() + ": " + req.getName());
         
         String expectedCode = perm.getByRole(role);
         String resultCode = null;
         
+        Element response = null;
+        
         try {
             switch (role) {
             case R_USER: 
-                mSoapUser1.invoke(req);
+                response = mSoapUser1.invoke(req);
                 break;
             case R_USER_TARGET_SELF:
-                mSoapUser1.invokeOnTargetAccount(req, ACCT_1_ID);
+                response = mSoapUser1.invokeOnTargetAccount(req, ACCT_1_ID);
                 break;
             case R_USER_TARGET_OTEHRUSER:
-                mSoapUser1.invokeOnTargetAccount(req, ACCT_2_ID);
+                response = mSoapUser1.invokeOnTargetAccount(req, ACCT_2_ID);
                 break;
             default:
             	fail();
@@ -194,6 +198,7 @@ public class TestAccess extends TestCase {
         }
         
         assertEquals(expectedCode, resultCode);
+        return response;
     }
     
     // ================= APIs ================
@@ -224,6 +229,22 @@ public class TestAccess extends TestCase {
         accessTest(role, perm, req);
     }
     
+    private String createFolderAndReturnFolderId(Role role, Perm perm) throws Exception {
+        String folderName = "/folder-"+random();
+        XMLElement req = new XMLElement(MailConstants.CREATE_FOLDER_REQUEST);
+        Element folder = req.addElement(MailConstants.E_FOLDER);
+        folder.addAttribute(MailConstants.A_NAME, folderName);
+        Element response = accessTest(role, perm, req);
+        
+        if (response == null) {
+            // probably got PERM_DENIED, just return some bogus value
+            // in this case the value it doesn't matter because the purpose is 
+            // to validate that the next Create/ModifyDataSource call will get PERM_DENIED
+            return "1000";
+        } else
+            return response.getElement(MailConstants.E_FOLDER).getAttribute(MailConstants.A_ID);
+    }
+    
     public void CreateDataSource(Role role, Perm perm) throws Exception {
         String dateSourceName = "datasource-create-"+random();
         
@@ -235,7 +256,7 @@ public class TestAccess extends TestCase {
         dataSource.addAttribute(MailConstants.A_DS_PORT, "8888");
         dataSource.addAttribute(MailConstants.A_DS_USERNAME, "my-pop3-name");
         dataSource.addAttribute(MailConstants.A_DS_PASSWORD, "my-pop3-password");
-        dataSource.addAttribute(MailConstants.A_FOLDER, "1");
+        dataSource.addAttribute(MailConstants.A_FOLDER, createFolderAndReturnFolderId(role, perm));
         dataSource.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, "ssl");
         accessTest(role, perm, req);
     }
@@ -260,7 +281,7 @@ public class TestAccess extends TestCase {
     
     public void DeleteDataSource(Role role, Perm perm) throws Exception {
         String dateSourceName = "datasource-delete-"+random();
-        DataSource ds = mProvAdmin.setup_createDataSource(ACCT_1_EMAIL, dateSourceName);
+        DataSource ds = mProvAdmin.setup_createDataSource(this, role, perm, ACCT_1_EMAIL, dateSourceName);
         
         XMLElement req = new XMLElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
         Element dataSource = req.addElement(MailConstants.E_DS_POP3);
@@ -343,7 +364,7 @@ public class TestAccess extends TestCase {
     
     public void ModifyDataSource(Role role, Perm perm) throws Exception {
         String dateSourceName = "datasource-modify-"+random();
-        DataSource ds = mProvAdmin.setup_createDataSource(ACCT_1_EMAIL, dateSourceName);
+        DataSource ds = mProvAdmin.setup_createDataSource(this, role, perm, ACCT_1_EMAIL, dateSourceName);
         
         XMLElement req = new XMLElement(MailConstants.MODIFY_DATA_SOURCE_REQUEST);
         Element dataSource = req.addElement(MailConstants.E_DS_POP3);
@@ -409,7 +430,7 @@ public class TestAccess extends TestCase {
 
     public void TestDataSource(Role role, Perm perm) throws Exception {
         String dateSourceName = "datasource-test-"+random();
-        DataSource ds = mProvAdmin.setup_createDataSource(ACCT_1_EMAIL, dateSourceName);
+        DataSource ds = mProvAdmin.setup_createDataSource(this, role, perm, ACCT_1_EMAIL, dateSourceName);
         
         XMLElement req = new XMLElement(MailConstants.TEST_DATA_SOURCE_REQUEST);
         Element dataSource = req.addElement(MailConstants.E_DS_POP3);
@@ -456,7 +477,10 @@ public class TestAccess extends TestCase {
         for (Role role : Role.values()) {
             Auth(role, Perm.Perm_2);
             AutoCompleteGal(role, Perm.Perm_1);
+            
             ChangePassword(role, Perm.Perm_2);
+            mSoapUser1.auth(); // urg, need to re-auth after changing password, because we now invalidate auth token after password change. 
+            
             CreateDataSource(role, Perm.Perm_1);
             CreateIdentity(role, Perm.Perm_1);
             CreateSignature(role, Perm.Perm_1);
