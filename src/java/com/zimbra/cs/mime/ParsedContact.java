@@ -422,6 +422,7 @@ public class ParsedContact {
     
     public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
         analyze(mbox);
+        // dumpLuceneDocuments();
         return mZDocuments;
     }
     
@@ -501,6 +502,7 @@ public class ParsedContact {
         appendContactField(searchText, this, ContactConstants.A_firstName);
         appendContactField(searchText, this, ContactConstants.A_lastName);
         appendContactField(searchText, this, ContactConstants.A_nickname);
+        appendContactField(searchText, this, ContactConstants.A_fullName);
         
         // rebuild contentText here with the emailStr FIRST, then the other text.  
         // The email addresses should be first so that they have a higher search score than the other
@@ -521,5 +523,16 @@ public class ParsedContact {
         doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
         
         return doc;
+    }
+    
+    private void dumpLuceneDocuments() {
+        
+        StringBuilder sb = new StringBuilder();
+        
+        for (IndexDocument id : mZDocuments) {
+            id.dump(sb);
+        }
+        
+        ZimbraLog.index_add.debug("Contact lucene doc: \n" + sb.toString());
     }
 }
