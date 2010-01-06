@@ -90,13 +90,19 @@ public class CheckSpelling extends MailDocumentHandler {
         addToList(ignoreWords, account.getPrefSpellIgnoreWord());
         addToList(ignoreWords, prov.getDomain(account).getPrefSpellIgnoreWord());
         addToList(ignoreWords, prov.getCOS(account).getPrefSpellIgnoreWord());
+    
+		String ignore = request.getAttribute(MailConstants.A_IGNORE, null);
+		if (ignore != null) {
+			ignore = ignore.replaceAll(","," ").replaceAll("\\s{2,}"," ").trim();
+			addToList(ignoreWords, ignore.split(" "));
+		}
         
         // Get word list from one of the spell servers.
         ServerResponse spellResponse = null;
         for (int i = 0; i < urls.length; i++) {
             String url = urls[i];
             try {
-                sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s", url, dictionary, text);
+                sLog.debug("Checking spelling: url=%s, dictionary=%s, text=%s, ignore=%s", url, dictionary, text, ignoreWords);
                 spellResponse = checkSpelling(url, dictionary, ignoreWords, text);
                 if (spellResponse.statusCode == 200) {
                     break; // Successful request.  No need to check the other servers.

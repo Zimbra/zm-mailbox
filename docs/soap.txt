@@ -2674,7 +2674,7 @@ checking.
 
 ---------------------------
 
-<CheckSpellingRequest [dictionary="{name}"]>
+<CheckSpellingRequest [dictionary="{name}"] [ignore="{words}"]>
     [text to spell check]
 </CheckSpellingRequest>
 
@@ -2689,6 +2689,10 @@ interface is available or not.
 {name} : the optional name of the aspell dictionary that will be used to
 check spelling.  If not specified, the the dictionary will be either
 zimbraPrefSpellDictionary or the account's locale, in that order.
+
+{words} : comma-separated list of words to ignore just for this request.
+These words are added to the user's personal dictionary of ignore words
+stored as zimbraPrefSpellIgnoreWord.
 
 ---------------------------
 
