@@ -4396,7 +4396,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
    ===============================================================================
  -->
 
-<attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="6.0.0_BETA2">
+<attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="5.0.22">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
     Used to control whether Java NIO direct buffers are used. 
