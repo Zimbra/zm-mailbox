@@ -15,85 +15,6 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.RemoteServiceException;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.Disposition;
-import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import com.zimbra.common.soap.VoiceConstants;
-import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
-import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.DataSourceBy;
-import com.zimbra.cs.account.Provisioning.IdentityBy;
-import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.zclient.ZFolder.Color;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZCreateContactEvent;
-import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
-import com.zimbra.cs.zclient.event.ZCreateEvent;
-import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
-import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
-import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
-import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
-import com.zimbra.cs.zclient.event.ZCreateTagEvent;
-import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
-import com.zimbra.cs.zclient.event.ZDeleteEvent;
-import com.zimbra.cs.zclient.event.ZEventHandler;
-import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZModifyContactEvent;
-import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
-import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
-import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
-import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
-import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
-import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
-import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
-import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.dom4j.QName;
-import org.json.JSONException;
-
-import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -116,6 +37,62 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.dom4j.QName;
+import org.json.JSONException;
+
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.RemoteServiceException;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.VoiceConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.fb.FreeBusyQuery;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.zclient.ZFolder.Color;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZSearchParams.Cursor;
+import com.zimbra.cs.zclient.event.*;
 
 public class ZMailbox implements ToZJSONObject {
 
@@ -3641,52 +3618,61 @@ public class ZMailbox implements ToZJSONObject {
         return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
     }
 
-	public static class CheckSpellingResult {
-		private boolean mAvailable;
-		private List<Misspelling> mMisspellings;
+    public static class CheckSpellingResult {
+        private boolean mAvailable;
+        private List<Misspelling> mMisspellings;
 
-		public CheckSpellingResult(Element response) throws ServiceException  {
-			mAvailable = response.getAttributeBool(MailConstants.A_AVAILABLE);
-			List<Element> list = response.listElements(MailConstants.E_MISSPELLED);
-			mMisspellings = new ArrayList<Misspelling>(list.size());
-			for (Element misspelled : list) {
-				mMisspellings.add(new Misspelling(misspelled));
-			}
-		}
+        public CheckSpellingResult(Element response) throws ServiceException  {
+            mAvailable = response.getAttributeBool(MailConstants.A_AVAILABLE);
+            List<Element> list = response.listElements(MailConstants.E_MISSPELLED);
+            mMisspellings = new ArrayList<Misspelling>(list.size());
+            for (Element misspelled : list) {
+                mMisspellings.add(new Misspelling(misspelled));
+            }
+        }
 
-		public boolean getIsAvailable() { return mAvailable; }
-		public List<Misspelling> getMisspellings() { return mMisspellings; }
-	}
-	public static class Misspelling {
-		private String mWord;
-		private String[] mSuggestions;
-		public Misspelling(Element element) throws ServiceException {
-			mWord = element.getAttribute(MailConstants.A_WORD);
-			String suggestions = element.getAttribute(MailConstants.A_SUGGESTIONS);
-			mSuggestions = suggestions.length() > 0 ? sCOMMA.split(suggestions) : new String[0];
-		}
-		public String getWord() {
-			return mWord;
-		}
-		public String[] getSuggestions() {
-			return mSuggestions;
-		}
-	}
+        public boolean getIsAvailable() { return mAvailable; }
+        public List<Misspelling> getMisspellings() { return mMisspellings; }
+    }
+    
+    public static class Misspelling {
+        private String mWord;
+        private String[] mSuggestions;
+        public Misspelling(Element element) throws ServiceException {
+            mWord = element.getAttribute(MailConstants.A_WORD);
+            String suggestions = element.getAttribute(MailConstants.A_SUGGESTIONS);
+            mSuggestions = suggestions.length() > 0 ? sCOMMA.split(suggestions) : new String[0];
+        }
+        public String getWord() {
+            return mWord;
+        }
+        public String[] getSuggestions() {
+            return mSuggestions;
+        }
+    }
 
-	public synchronized CheckSpellingResult checkSpelling(String text) throws ServiceException {
-	    return checkSpelling(text, null);
-	}
-	
-	public synchronized CheckSpellingResult checkSpelling(String text, String dictionary)
-	throws ServiceException {
+    public synchronized CheckSpellingResult checkSpelling(String text) throws ServiceException {
+        return checkSpelling(text, null, null);
+    }
+
+    public synchronized CheckSpellingResult checkSpelling(String text, String dictionary)
+    throws ServiceException {
+        return checkSpelling(text, dictionary, null);
+    }
+    
+    public synchronized CheckSpellingResult checkSpelling(String text, String dictionary, List<String> ignore)
+    throws ServiceException {
         Element req = newRequestElement(MailConstants.CHECK_SPELLING_REQUEST);
         if (dictionary != null) {
             req.addAttribute(MailConstants.A_DICTIONARY, dictionary);
         }
+        if (!ListUtil.isEmpty(ignore)) {
+            req.addAttribute(MailConstants.A_IGNORE, StringUtil.join(",", ignore));
+        }
         req.setText(text);
         Element response = invoke(req);
         return new CheckSpellingResult(response);
-	}
+    }
 
     public void createIdentity(ZIdentity identity) throws ServiceException {
         Element req = newRequestElement(AccountConstants.CREATE_IDENTITY_REQUEST);

@@ -15,9 +15,9 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,9 +29,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.client.LmcSession;
-import com.zimbra.cs.client.soap.LmcCheckSpellingRequest;
-import com.zimbra.cs.client.soap.LmcCheckSpellingResponse;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.CheckSpellingResult;
 import com.zimbra.cs.zclient.ZMailbox.Misspelling;
@@ -88,28 +85,54 @@ public class TestSpellCheck extends TestCase {
         prov.getDomain(account).setPrefSpellIgnoreWord(new String[] { "anmore" });
         prov.getCOS(account).setPrefSpellIgnoreWord(new String[] { "concret" });
         
-        // Send the request
-        LmcSession session = TestUtil.getSoapSession(USER_NAME);
-        LmcCheckSpellingRequest req = new LmcCheckSpellingRequest(TEXT);
-        req.setSession(session);
-        LmcCheckSpellingResponse response =
-            (LmcCheckSpellingResponse)req.invoke(TestUtil.getSoapUrl());
-        assertTrue(response.isAvailable());
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling(TEXT);
+        assertTrue(result.getIsAvailable());
         
         // Verify the response
         Map<String, String[]> map = new HashMap<String, String[]>();
-        Iterator<String> i = response.getMisspelledWordsIterator();
-        while (i.hasNext()) {
-            String word = i.next();
-            map.put(word, response.getSuggestions(word));
+        for (Misspelling mis : result.getMisspellings()) {
+            map.put(mis.getWord(), mis.getSuggestions());
         }
         
-        assertEquals("Number of misspelled words", 4, map.size());
-        assertTrue("fram", response.getSuggestions("fram").length > 0);
-        assertTrue("cotnact", response.getSuggestions("cotnact").length > 0);
-        assertTrue("whizing", response.getSuggestions("whizing").length > 0);
-        assertTrue("nevr", response.getSuggestions("nevr").length > 0);
+        assertEquals("Number of misspelled words", 4, getNumMisspellings(result));
+        assertTrue("fram", hasSuggestion(result, "fram", "from"));
+        assertTrue("cotnact", hasSuggestion(result, "cotnact", "contact"));
+        assertTrue("whizing", hasSuggestion(result, "whizing", "whizzing"));
+        assertTrue("nevr", hasSuggestion(result, "nevr", "never"));
         ZimbraLog.test.debug("Successfully tested spell checking");
+    }
+    
+    /**
+     * Tests the <tt>ignore</tt> attribute for <tt>CheckSpellingRequest</tt>.
+     */
+    public void testIgnore()
+    throws Exception {
+        if (!mAvailable) {
+            return;
+        }
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling("one twi thre forr", null, Arrays.asList("twi", "thre"));
+        assertEquals("Number of misspelled words", 1, getNumMisspellings(result));
+        assertTrue(hasSuggestion(result, "forr", "four"));
+    }
+    
+    private int getNumMisspellings(CheckSpellingResult result) {
+        return result.getMisspellings().size();
+    }
+    
+    private boolean hasSuggestion(CheckSpellingResult result, String misspelled, String expectedSuggestion) {
+        for (Misspelling mis : result.getMisspellings()) {
+            if (mis.getWord().equals(misspelled)) {
+                for (String suggestion : mis.getSuggestions()) {
+                    if (suggestion.equals(expectedSuggestion)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     /**
@@ -155,9 +178,9 @@ public class TestSpellCheck extends TestCase {
     }
     
     /**
-     * Confirms that accented characters are handled correctly (bug 41394).
+     * Confirms that accented characters are returned correctly (bug 41394).
      */
-    public void testSpanish()
+    public void testReceiveSpanish()
     throws Exception {
         if (!mAvailable) {
             return;
@@ -168,7 +191,7 @@ public class TestSpellCheck extends TestCase {
         assertEquals(1, result.getMisspellings().size());
         Misspelling misspelling = result.getMisspellings().get(0);
         assertEquals("reunion", misspelling.getWord());
-        String expected = "reuni" + "\u00f3" + "n";
+        String expected = "reuni\u00f3n";
         for (String suggestion : misspelling.getSuggestions()) {
             if (suggestion.equals(expected)) {
                 return;
@@ -177,6 +200,52 @@ public class TestSpellCheck extends TestCase {
         fail("Could not find expected suggestion '" + expected + "'");
     }
     
+    /**
+     * Confirms that accented characters are sent correctly (bug 43626).
+     */
+    public void testSendSpanish()
+    throws Exception {
+        if (!mAvailable) {
+            return;
+        }
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling("\u00faltimos esst\u00e1", "es");
+        assertEquals(1, result.getMisspellings().size());
+        Misspelling misspelling = result.getMisspellings().get(0);
+        assertEquals("esst\u00e1", misspelling.getWord());
+        String expected = "est\u00e1";
+        for (String suggestion : misspelling.getSuggestions()) {
+            if (suggestion.equals(expected)) {
+                return;
+            }
+        }
+        fail("Could not find expected suggestion '" + expected + "'");
+    }
+    
+    public void testRussian()
+    throws Exception {
+        if (!mAvailable) {
+            return;
+        }
+        
+        String krokodil = "\u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b";
+        String krokodilMisspelled = "\u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b\u043b";
+        String cherepaha = "\u0427\u0435\u0440\u0435\u043f\u0430\u0445\u0430";
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CheckSpellingResult result = mbox.checkSpelling(krokodilMisspelled + " " + cherepaha, "ru");
+        assertEquals(1, result.getMisspellings().size());
+        Misspelling misspelling = result.getMisspellings().get(0);
+        assertEquals(krokodilMisspelled, misspelling.getWord());
+        for (String suggestion : misspelling.getSuggestions()) {
+            if (suggestion.equals(krokodil)) {
+                return;
+            }
+        }
+        
+        fail("Could not find expected suggestion '" + krokodil + "'");
+    }
     public void tearDown()
     throws Exception {
         Provisioning prov = Provisioning.getInstance();

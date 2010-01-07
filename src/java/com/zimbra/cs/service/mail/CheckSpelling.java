@@ -90,13 +90,12 @@ public class CheckSpelling extends MailDocumentHandler {
         addToList(ignoreWords, account.getPrefSpellIgnoreWord());
         addToList(ignoreWords, prov.getDomain(account).getPrefSpellIgnoreWord());
         addToList(ignoreWords, prov.getCOS(account).getPrefSpellIgnoreWord());
-    
-		String ignore = request.getAttribute(MailConstants.A_IGNORE, null);
-		if (ignore != null) {
-			ignore = ignore.replaceAll(","," ").replaceAll("\\s{2,}"," ").trim();
-			addToList(ignoreWords, ignore.split(" "));
-		}
-        
+
+        String ignore = request.getAttribute(MailConstants.A_IGNORE, null);
+        if (ignore != null) {
+            addToList(ignoreWords, ignore.split("[\\s,]+"));
+        }
+
         // Get word list from one of the spell servers.
         ServerResponse spellResponse = null;
         for (int i = 0; i < urls.length; i++) {
@@ -160,13 +159,16 @@ public class CheckSpelling extends MailDocumentHandler {
             return;
         }
         for (String element : elements) {
-            list.add(element);
+            if (!StringUtil.isNullOrEmpty(element)) {
+                list.add(element);
+            }
         }
     }
     
     private ServerResponse checkSpelling(String url, String dictionary, List<String> ignoreWords, String text)
     throws IOException {
         PostMethod post = new PostMethod(url);
+        post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
         if (dictionary != null) {
             post.addParameter("dictionary", dictionary);
         }
