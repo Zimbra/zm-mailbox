@@ -3720,6 +3720,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               Please talk to phoebe if you have any question.
    ===============================================================================
  -->
+
+<attr id="1002" name="zimbraMailUseDirectBuffers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.22">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>
+    Used to control whether Java NIO direct buffers are used. 
+    Value is propagated to Jetty configuration.  In the future, other NIO pieces
+    (IMAP/POP/LMTP) will also honor this.
+  </desc>
+</attr>
+
 <attr id="1014" name="zimbraMemcachedClientServerList" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.17">
   <desc>list of host:port for memcached servers; set to empty value to disable the use of memcached</desc>
 </attr>

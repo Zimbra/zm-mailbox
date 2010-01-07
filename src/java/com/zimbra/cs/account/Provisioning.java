@@ -1093,6 +1093,7 @@ public abstract class Provisioning {
     public static final String A_zimbraAdminURL = "zimbraAdminURL";
 
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
+    public static final String A_zimbraMailUseDirectBuffers = "zimbraMailUseDirectBuffers";
 
     public static final String A_zimbraAdminPort = "zimbraAdminPort";
 
