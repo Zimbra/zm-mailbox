@@ -687,7 +687,7 @@ public class MailConstants {
     public static final String A_SUGGESTIONS = "suggestions";
     public static final String E_DICTIONARY = "dictionary";
     public static final String A_DICTIONARY = "dictionary";
-	public static final String A_IGNORE = "ignore";
+    public static final String A_IGNORE = "ignore";
 
     // data sources
     public static final String E_DS = "dsrc";
