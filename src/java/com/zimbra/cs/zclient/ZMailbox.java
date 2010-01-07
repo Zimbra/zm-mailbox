@@ -320,8 +320,6 @@ public class ZMailbox implements ToZJSONObject {
     private Map<String, ZPhoneAccount> mPhoneAccountMap;
 	private Element mVoiceStorePrincipal;
 	private long mSize;
-	private boolean mHasMyCard;
-	private ZContact mMyCard;
 	private boolean mNoTagCache;
 	private ZContactByPhoneCache mContactByPhoneCache; 
 
@@ -1578,52 +1576,16 @@ public class ZMailbox implements ToZJSONObject {
         return doAction(contactAction(tag ? "tag" : "!tag", ids).addAttribute(MailConstants.A_TAG, tagId));
     }
 
+	// Needs to be obsoleted.
 	public synchronized ZContact getMyCard() throws ServiceException {
-		if (!mHasMyCard) {
-			ZSearchParams searchParams = new ZSearchParams("#cardOwner:isMyCard");
-			searchParams.setTypes(ZSearchParams.TYPE_CONTACT);
-			List<ZSearchHit> hits = this.search(searchParams).getHits();
-			if (hits.size() > 0) {
-				ZSearchHit myCardHit = null;
-				int lowestId = 0;
-				for (ZSearchHit hit : hits) {
-					String idStr = hit.getId();
-					try {
-						int id = Integer.parseInt(idStr);
-						if (myCardHit == null || id <= lowestId) {
-							lowestId = id;
-							myCardHit = hit;
-						}
-					} catch (NumberFormatException ignored) {
-						// WTF.
-					}
-				}
-				if (myCardHit != null) {
-					mMyCard = getContact(myCardHit.getId());
-				}
-			}
-			mHasMyCard = true;
-		}
-		return mMyCard;
+		return null;
 	}
 
-	/**
-	 *
-	 * @param ids comma-separated list of contact ids
-	 * @return true if one of the ids belongs to the my card
-	 * @throws ServiceException
-	 */
+	// Needs to be obsoleted.
 	public boolean getIsMyCard(String ids) throws ServiceException {
-		ZContact myCard = getMyCard();
-		if (myCard != null) {
-			for (String id : sCOMMA.split(ids)) {
-				if (id.equals(myCard.getId())) {
-					return true;
-				}
-			}
-		}
 		return false;
-	};
+	}
+	
 	/**
      * update items(s)
      * @param ids list of contact ids to update
