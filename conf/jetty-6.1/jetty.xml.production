@@ -115,21 +115,20 @@
         <Set name="rewritePathInfo">false</Set>
         <Set name="originalPathAttribute">requestedPath</Set>
 	<Call name="addRule"><Arg><New class="org.mortbay.jetty.handler.rewrite.MsieSslRule"/></Arg></Call>
+        <!-- map convenience URLs to the webapp that handles them -->
         <Call name="addRewriteRule"><Arg>/Microsoft-Server-ActiveSync/*</Arg><Arg>/service/extension/zimbrasync</Arg></Call>
         <Call name="addRewriteRule"><Arg>/principals/*</Arg><Arg>/service/dav/principals</Arg></Call>
         <Call name="addRewriteRule"><Arg>/dav/*</Arg><Arg>/service/dav/home</Arg></Call>
-
         <Call name="addRewriteRule"><Arg>/home/*</Arg><Arg>/service/home/</Arg></Call>
         <Call name="addRewriteRule"><Arg>/user/*</Arg><Arg>/service/user/</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/zimbra/home/*</Arg><Arg>/service/home</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/zimbra/user/*</Arg><Arg>/service/user</Arg></Call>
-
-        <Call name="addRewriteRule"><Arg>/zimbraAdmin/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/home/*</Arg><Arg>/service/home</Arg></Call>
+        <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/user/*</Arg><Arg>/service/user</Arg></Call>
+        <!-- stop if we've hit the proper webapps -->
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraAdminURL%%/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/*</Arg><Arg></Arg></Call>
+        <!-- assume all other requests handled by zimbra webapp -->
         <Call name="addRewriteRule"><Arg>/*</Arg><Arg>%%zimbraMailURL%%</Arg></Call>
         <Set name="handler">
           <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
