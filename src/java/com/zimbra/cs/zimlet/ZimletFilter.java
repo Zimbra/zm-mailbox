@@ -83,7 +83,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         	authToken = getAuthTokenForApp(req, resp);
 		} catch (ServiceException se) {
         	ZimbraLog.zimlet.info("can't get authToken: "+se.getMessage());
-        	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        	resp.sendError(HttpServletResponse.SC_FORBIDDEN);
         	return;
         }
         
@@ -125,7 +125,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 		}
 		catch (ServiceException e) {
 			ZimbraLog.zimlet.info("unable to get list of zimlets");
-			resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			resp.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
@@ -147,7 +147,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
             Matcher matcher = mPattern.matcher(uri);
             if (!matcher.matches()) {
                 ZimbraLog.zimlet.info("no zimlet specified in request");
-                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
 			zimletNames.add(matcher.group(1));
@@ -194,7 +194,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 			if (matcher.matches()) {
 				String zimletName = matcher.group(1);
 				if (!zimletNames.contains(zimletName)) {
-					resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					resp.sendError(HttpServletResponse.SC_FORBIDDEN);
 					return;
 				}
 			}
