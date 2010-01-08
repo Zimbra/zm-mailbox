@@ -479,6 +479,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         if (mp == null)
                             throw MailServiceException.NO_SUCH_PART(part);
                         name = Mime.getFilename(mp);
+                        ext = null;
                         sz = mp.getSize();
                         if (sz == -1)
                             sz = miSize;
