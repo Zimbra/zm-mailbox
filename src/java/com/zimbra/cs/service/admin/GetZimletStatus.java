@@ -107,5 +107,20 @@ public class GetZimletStatus extends AdminDocumentHandler {
         relatedRights.add(Admin.R_listZimlet);
         relatedRights.add(Admin.R_listCos);
         relatedRights.add(Admin.R_getZimlet);
+        
+        notes.add("Only zimlets on which the authed admin has effective " + 
+                  Admin.R_listZimlet.getName() + " and " + Admin.R_getZimlet.getName() + 
+                  " rights will appear in <zimlets> in the response.");
+        
+        notes.add("Only zimlets on which the authed admin has effective " + 
+                  Admin.R_listCos.getName() +
+                  " right will be appear in <cos> in the response.");
+      
+        notes.add("e.g. there are zimlet1, zimlet2, zimlet3 and cos1, cos2 , if an admin has effective " + 
+                  Admin.R_listZimlet.getName() + " and " + Admin.R_getZimlet.getName() +  
+                  " rights on zimlet1, zimlet2, " + 
+                  "then only zimlet1, zimlet2 will appear in <zimlets> in GetZimletStatusResponse, " + 
+                  "and only cos1 will appear in <cos> in the resposne.  " +
+                  "The GetZimletStatusRequest itself will not get PERM_DENIED.");
     }
 }
