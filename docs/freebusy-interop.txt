@@ -176,6 +176,11 @@ can be implemented.
 --------------------------
 Interop with other non-Exchange systems
 
+NOTE:
+
+THIS FEATURE IS NOT OFFICIALLY SUPPORTED.  THIS SECTION IS PRIMARILY FOR FYI.
+FREE/BUSY INTEROP HAS BEEN TESTED AGAINST EXCHANGE 2003 AND 2007 ONLY.
+
 Zimbra can handle other 3rd party system by extending the FreeBusyProvider
 framework.  
 
