@@ -31,7 +31,7 @@ import java.io.StringWriter;
  * Dead-Simple: does what it says - writes data about the exception to a string.
  */
 public final class ExceptionToString {
-    public static final String ToString(Exception e) {
+    public static final String ToString(Throwable e) {
     	StringWriter sw = new StringWriter();
     	PrintWriter pw = new PrintWriter(sw);
     	e.printStackTrace(pw);
