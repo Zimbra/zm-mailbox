@@ -124,27 +124,30 @@ public class Pop3Sync extends MailItemImport {
 
     private void connect() throws ServiceException {
         if (!connection.isClosed()) return;
+        boolean hasUIDL;
         try {
             connection.connect();
+            // Bug 41213: Make sure to check if UIDL is supported both before
+            // and after authentication.
+            hasUIDL = hasUIDL();
             try {
                 connection.login(dataSource.getDecryptedPassword());
             } catch (CommandFailedException e) {
                 throw new LoginException(e.getError());
             }
+            hasUIDL |= hasUIDL();
         } catch (Exception e) {
             connection.close();
             throw ServiceException.FAILURE(
                 "Unable to connect to POP3 server: " + dataSource, e);
         }
-        if (dataSource.leaveOnServer()) {
-            checkHasUIDL();
+        if (dataSource.leaveOnServer() && !hasUIDL) {
+            throw RemoteServiceException.POP3_UIDL_REQUIRED();
         }
     }
 
-    private void checkHasUIDL() throws ServiceException {
-        if (!connection.hasCapability(Pop3Capabilities.UIDL)) {
-            throw RemoteServiceException.POP3_UIDL_REQUIRED();
-        }
+    private boolean hasUIDL() {
+        return connection.hasCapability(Pop3Capabilities.UIDL);
     }
     
     private void fetchAndDeleteMessages()
