@@ -522,7 +522,6 @@ public class ZimletUtil {
 			Version ver = new Version(z.getAttr(Provisioning.A_zimbraZimletVersion));
 			if (zd.getVersion().compareTo(ver) < 0) {
 				ZimbraLog.zimlet.info("Zimlet " + zimletName + " being installed is of an older version.");
-				return;
 			}
 			if (zd.getVersion().compareTo(ver) == 0) {
 				action = Action.REPAIR;

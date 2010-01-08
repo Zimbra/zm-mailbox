@@ -35,9 +35,10 @@ import java.util.ArrayList;
 public class Version implements Comparable<Version> {
 	
 	ArrayList<Integer> mTokens;
+	String mVer;
 	
 	public Version(Version v) {
-		mTokens = (ArrayList<Integer>)v.mTokens.clone();
+	    set(v);
 	}
 	
 	public Version(String str) {
@@ -53,12 +54,13 @@ public class Version implements Comparable<Version> {
 	}
 	
 	public void parse(String str) {
-		String[] tokens = str.split("\\.");
+		String[] tokens = str.split("\\.|_");
 		int depth = tokens.length;
 		mTokens = new ArrayList<Integer>();
 		for (int i = 0; i < depth; i++) {
 			mTokens.add(Integer.parseInt(tokens[i]));
 		}
+        mVer = str;
 	}
 	
 	public boolean equals(Object obj) {
@@ -91,6 +93,8 @@ public class Version implements Comparable<Version> {
 	}
 	
 	public String toString() {
+	    if (mVer != null)
+	        return mVer;
 		StringBuffer buf = new StringBuffer("");
 		for (int i = 0; i < mTokens.size(); i++) {
 			if (buf.length() > 0) buf.append(".");
@@ -101,12 +105,14 @@ public class Version implements Comparable<Version> {
 	
 	public void set(Version v) {
 		this.mTokens = (ArrayList<Integer>)v.mTokens.clone();
+		this.mVer = v.mVer;
 	}
 
 	/*
 	 * 1.5 -> 1.4
 	 */
 	public void decrement() {
+	    mVer = null;
 		int lastToken = mTokens.size() - 1;
 		if (lastToken >= 0) {
 			int tok = mTokens.remove(lastToken);
@@ -119,6 +125,7 @@ public class Version implements Comparable<Version> {
 	 * 1.5 -> 1.6
 	 */
 	public void increment() {
+        mVer = null;
 		int lastToken = mTokens.size() - 1;
 		if (lastToken >= 0) {
 			int tok = mTokens.remove(lastToken);
@@ -131,6 +138,7 @@ public class Version implements Comparable<Version> {
 	 * 1.5 -> 1.5.1
 	 */
 	public void incrementMinor() {
+        mVer = null;
 		mTokens.add(1);
 	}
 	
