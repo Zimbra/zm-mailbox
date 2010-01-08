@@ -195,12 +195,14 @@ public class DavContext {
 		    int index = mUri.indexOf('/', 1);
             if (index > 0) {
                 String reqType = mUri.substring(1, index);
-                if (reqType.equals("home"))
-                    mRequestType = RequestType.RESOURCE;
-                else
-                    mRequestType = RequestType.PRINCIPAL;
                 int start = index+1;
-                index = mUri.indexOf('/', index+1);
+                if (reqType.equals("home")) {
+                    mRequestType = RequestType.RESOURCE;
+                } else if (mUri.startsWith(UrlNamespace.PRINCIPALS_PATH)) {
+                    mRequestType = RequestType.PRINCIPAL;
+                    start = UrlNamespace.PRINCIPALS_PATH.length();
+                }
+                index = mUri.indexOf('/', start);
                 if (index != -1) {
                     mUser = mUri.substring(start, index);
                     mPath = mUri.substring(index);
