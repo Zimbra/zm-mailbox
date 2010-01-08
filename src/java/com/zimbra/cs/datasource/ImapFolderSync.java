@@ -516,7 +516,7 @@ class ImapFolderSync {
 
     private void appendMsgs(List<Integer> itemIds) throws ServiceException, IOException {
         remoteFolder.info("Appending %d message(s) to remote IMAP folder", itemIds.size());
-        ImapAppender appender = new ImapAppender(connection, remoteFolder.getPath());
+        ImapAppender appender = newImapAppender(remoteFolder.getPath());
         for (int id : itemIds) {
             if (skipItem(id)) {
                 LOG.warn("Skipping append of item %d due to previous errors", id);
@@ -586,7 +586,7 @@ class ImapFolderSync {
         List<Integer> newLocalIds = tracker.getNewMessageIds();
         if (newLocalIds.size() > 0) {
             remoteFolder.info("Copying %d messages to remote folder", newLocalIds.size());
-            ImapAppender appender = new ImapAppender(connection, remoteFolder.getPath());
+            ImapAppender appender = newImapAppender(remoteFolder.getPath());
             for (int id : newLocalIds) {
                 clearError(id);
                 Message msg = localFolder.getMessage(id);
@@ -610,6 +610,10 @@ class ImapFolderSync {
         return remoteFolder.select();
     }
 
+    private ImapAppender newImapAppender(String path) {
+        return new ImapAppender(connection, path).setHasAppendUid(hasAppendUid());
+    }
+    
     private void fetchFlags(long lastUid, Set<Integer> msgIds)
         throws ServiceException, IOException {
         String seq = 1 + ":" + lastUid;
@@ -1004,11 +1008,11 @@ class ImapFolderSync {
     }
     
     private boolean hasCopyUid() {
-        return hasUidPlus() || isYahoo();
+        return connection.hasUidPlus() || isYahoo();
     }
 
-    private boolean hasUidPlus() {
-        return connection.hasUidPlus();
+    private boolean hasAppendUid() {
+        return connection.hasUidPlus() || isYahoo();
     }
     
     private boolean isYahoo() {

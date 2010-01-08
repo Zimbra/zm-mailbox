@@ -24,6 +24,7 @@ import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.Quoted;
 import com.zimbra.cs.mailclient.imap.ResponseText;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailbox.Message;
@@ -59,8 +60,9 @@ public class ImapAppender {
         hasAppendUid = connection.hasUidPlus();
     }
 
-    public void setHasAppendUid(boolean hasAppendUid) {
+    public ImapAppender setHasAppendUid(boolean hasAppendUid) {
         this.hasAppendUid = hasAppendUid;
+        return this;
     }
 
     public long appendMessage(Message msg) throws IOException, ServiceException {
@@ -170,7 +172,8 @@ public class ImapAppender {
             params.add(data);
         }
         params.add("SENTON");
-        params.add(mi.mm.getSentDate());
+        Date date = mi.mm.getSentDate();
+        params.add(String.format("%td-%tb-%tY", date, date, date));
         return params.toArray();
     }
 
