@@ -238,28 +238,32 @@ public class NativeFormatter extends Formatter {
     public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc, long size,
         HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
+        
         disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-
         if (desc != null)
             resp.addHeader("Content-Description", desc);
-
-        resp.setContentType(contentType);
 
         // defang when the html attachment was requested with disposition inline
         if (contentType.startsWith(MimeConstants.CT_TEXT_HTML) &&
                 disp.equals(Part.INLINE)) {
             String charset = Mime.getCharset(contentType);
             String content;
+            
             if (charset != null && !charset.equals("")) {
                 Reader reader = Mime.getTextReader(is, contentType, defaultCharset);
+                
+                contentType = MimeConstants.CT_TEXT_HTML + "; charset=" + charset; 
                 content = HtmlDefang.defang(reader, false);
             } else {
+                contentType = MimeConstants.CT_TEXT_HTML;
                 content = HtmlDefang.defang(is, false);
             }
+            resp.setContentType(contentType);
             if (content.length() > 0)
                 resp.setContentLength(content.length());
             resp.getWriter().write(content);
         } else {
+            resp.setContentType(contentType);
             sendbackBinaryData(req, resp, is, disp, filename, size);
         }
     }
