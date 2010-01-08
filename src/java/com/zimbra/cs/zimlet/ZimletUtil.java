@@ -591,8 +591,6 @@ public class ZimletUtil {
                                     "zimlet" + File.separator + 
                                     "WEB-INF" + File.separator + 
                                     "lib");
-        // location for the properties
-		File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimletName);
 		// location for the rest of the files
         File zimlet = new File(getZimletDir() + File.separatorChar + zimletName);
         
@@ -604,10 +602,6 @@ public class ZimletUtil {
 			String fname = entry.getName();
 			if (fname.endsWith(".jar")) {
 				File file = new File(libDir, fname);
-				file.getParentFile().mkdirs();
-				writeFile(entry.getContents(), file);
-			} else if (fname.endsWith(".properties")) {
-				File file = new File(propsDir, fname);
 				file.getParentFile().mkdirs();
 				writeFile(entry.getContents(), file);
             } else {
@@ -709,12 +703,6 @@ public class ZimletUtil {
 			sZimlets.remove(zimlet);
 		}
 		
-        File propsDir = new File(LC.zimlet_properties_directory.value() + File.separator + zimlet);
-        if (propsDir.exists()) {
-            ZimbraLog.zimlet.info("Deleting Zimlet property files "+propsDir.getAbsolutePath());
-            deleteFile(propsDir);
-        }
-        
 		if (auth == null)
 			return;
 		
