@@ -232,7 +232,7 @@ public class FolderACL {
     }
     
     private Short getEffectivePermissionsLocal() throws ServiceException {
-        Mailbox ownerMbx = MailboxManager.getInstance().getMailboxByAccountId(mShareTarget.getAccountId(), false);
+        Mailbox ownerMbx = MailboxManager.getInstance().getMailboxByAccountId(mShareTarget.getAccountId());
         Folder folder = ownerMbx.getFolderById(null, mShareTarget.getFolderId());
         return getEffectivePermissionsLocal(mOctxt, ownerMbx, folder);
     }
