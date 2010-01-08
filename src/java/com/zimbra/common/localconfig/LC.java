@@ -325,7 +325,6 @@ public class LC {
     public static final KnownKey zimbra_class_sslprotocolsocketfactory;
 
     public static final KnownKey zimlet_directory;
-    public static final KnownKey zimlet_properties_directory;
     public static final KnownKey wiki_enabled;
     public static final KnownKey wiki_user;
 
@@ -1179,9 +1178,6 @@ public class LC {
 
         zimlet_directory = new KnownKey("zimlet_directory");
         zimlet_directory.setDefault("${zimbra_home}" + FS + "zimlets-deployed");
-
-        zimlet_properties_directory = new KnownKey("zimlet_properties_directory");
-        zimlet_properties_directory.setDefault("${zimbra_home}" + FS + "zimlets-properties");
 
         wiki_enabled = new KnownKey("wiki_enabled");
         wiki_enabled.setDefault("false");
