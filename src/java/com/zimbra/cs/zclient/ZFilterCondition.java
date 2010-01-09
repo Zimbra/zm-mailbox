@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.FilterUtil.DateComparison;
 import com.zimbra.cs.filter.FilterUtil.NumberComparison;
@@ -294,7 +295,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_BODY_TEST);
-            test.addAttribute(MailConstants.A_VALUE, mText);
+			if (!StringUtil.isNullOrEmpty(mText)) {
+            	test.addAttribute(MailConstants.A_VALUE, mText);
+			}
             if (mBodyOp == BodyOp.NOT_CONTAINS) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
@@ -432,7 +435,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             if (mHeaderOp.isNegative()) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
-            test.addAttribute(MailConstants.A_VALUE, mValue);
+			if (!StringUtil.isNullOrEmpty(mValue)) {
+            	test.addAttribute(MailConstants.A_VALUE, mValue);
+			}
             return test;
         }
         
