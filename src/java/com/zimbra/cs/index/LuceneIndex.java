@@ -716,7 +716,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
      * 
      * @param indexDir
      * @return TRUE if the index directory is empty or doesn't exist,
-     *             FALSE if the index directory exists and has files in it  
+     *         FALSE if the index directory exists and has files in it or if we cannot list files in the directory
      * @throws IOException
      */
     private boolean indexDirIsEmpty(File indexDir) {
@@ -728,7 +728,16 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         
         // Empty directory is okay, but a directory with any files
         // implies index corruption.
+        
         File[] files = indexDir.listFiles();
+        
+        // if files is null here, we are likely running into file permission issue
+        // log a WARN and return false
+        if (files == null) {
+            ZimbraLog.index.warn("Could not list files in directory " + indexDir.getAbsolutePath());
+            return false;
+        }
+        
         int numFiles = 0;
         for (int i = 0; i < files.length; i++) {
             File f = files[i];
@@ -743,6 +752,23 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     private void doneWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
         assert(beginWritingNestLevel>0);
+                
+        /*
+         * assertion is by default off in production
+         * 
+         * If beginWritingNestLevel is 0 before the decrement, the corresponding 
+         * beginWriting probably got an IOException so beginWritingNestLevel didn't 
+         * get incremented.  
+         * 
+         * If assertion is off, we really don't want to proceed here, otherwise the 
+         * beginWritingNestLevel will become negative, which is a situation that 
+         * cannot be recovered until a server restart. 
+         */
+        if (beginWritingNestLevel == 0) {
+            ZimbraLog.index.warn("beginWritingNestLevel is 0 in LuceneIndex.doneWriting, flushing skipped.");
+            return;
+        }
+            
         beginWritingNestLevel--;
         if (beginWritingNestLevel == 0) {
             if (mNumUncommittedItems > sMaxUncommittedOps) {
@@ -810,7 +836,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
 //          ZimbraLog.index.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
         } catch (IOException e1) {
-            ZimbraLog.index_add.debug("Caught exception trying to open index: "+e1, e1);
+            ZimbraLog.index_add.error("Caught exception trying to open index: "+e1, e1);
             File indexDir  = mIdxDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
 //              ZimbraLog.index.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
