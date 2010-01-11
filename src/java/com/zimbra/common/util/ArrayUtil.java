@@ -159,5 +159,15 @@ public class ArrayUtil {
         
         return toRet;
     }
-    
+ 
+    /**
+     * Returns the first element, or <tt>null</tt> if the array
+     * is <tt>null</tt> or empty.
+     */
+    public static <E> E getFirstElement(E[] array) {
+        if (array == null || array.length == 0) {
+            return null;
+        }
+        return array[0];
+    }
 }
