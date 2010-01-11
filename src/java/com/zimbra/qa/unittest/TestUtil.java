@@ -211,7 +211,7 @@ extends Assert {
     public static String getTestMessage(String subject, String recipient, String sender, Date date)
     throws ServiceException, MessagingException, IOException {
         return new MessageBuilder().withSubject(subject).withRecipient(recipient)
-            .withSender(sender).withDate(date).create();
+            .withFrom(sender).withDate(date).create();
     }
 
     static String addDomainIfNecessary(String user)

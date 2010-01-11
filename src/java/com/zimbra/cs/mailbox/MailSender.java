@@ -37,6 +37,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -88,6 +89,7 @@ public class MailSender {
     private boolean mTrackBadHosts = true;
     private int mCurrentHostIndex = 0;
     private List<String> mRecipients = new ArrayList<String>();
+    private String mEnvelopeFrom;
     
     public MailSender()  { }
     
@@ -216,6 +218,18 @@ public class MailSender {
         return this;
     }
     
+    /**
+     * Sets the address sent for <tt>MAIL FROM</tt> in the SMTP session.
+     * Default behavior: if <tt>zimbraSmtpRestrictEnvelopeFrom</tt> is <tt>true</tt>,
+     * <tt>MAIL FROM</tt> will always be set to the account's name.  Otherwise
+     * it is set to the value of the <tt>Sender</tt> or <tt>From</tt> header
+     * in the outgoing message, in that order.
+     */
+    public MailSender setEnvelopeFrom(String address) {
+        mEnvelopeFrom = address;
+        return this;
+    }
+    
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
         String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
@@ -318,6 +332,22 @@ public class MailSender {
             // set the From, Sender, Date, Reply-To, etc. headers
             updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, mReplyToSender, mSkipSendAsCheck);
 
+            // Determine envelope sender.
+            if (mEnvelopeFrom == null) {
+                if (acct.isSmtpRestrictEnvelopeFrom()) {
+                    mEnvelopeFrom = mbox.getAccount().getName();
+                } else {
+                    // Set envelope sender to Sender or From, in that order.
+                    Address envAddress = mm.getSender();
+                    if (envAddress == null) {
+                        envAddress = ArrayUtil.getFirstElement(mm.getFrom());
+                    }
+                    if (envAddress != null) {
+                        mEnvelopeFrom = ((InternetAddress) envAddress).getAddress();
+                    }
+                }
+            }
+            
             // run any pre-send/pre-save MIME mutators
             try {
                 for (Class<? extends MimeVisitor> vclass : MimeVisitor.getMutators())
@@ -595,15 +625,6 @@ public class MailSender {
                 mm.setReplyTo(new Address[] {sender});
         }
 
-        if (mm instanceof FixedMimeMessage) {
-            FixedMimeMessage fmm = (FixedMimeMessage) mm;
-            Session session = fmm.getSession() != null ? fmm.getSession() : JMSession.getSession();
-            // set MAIL FROM to authenticated user for bounce purposes
-            String mailfrom = (sender != null ? sender : AccountUtil.getFriendlyEmailAddress(authuser)).getAddress();
-            session.getProperties().setProperty("mail.smtp.from", mailfrom);
-            fmm.setSession(session);
-        }
-
         mm.saveChanges();
     }
 
@@ -693,6 +714,9 @@ public class MailSender {
     private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses)
     throws MessagingException {
         mSession.getProperties().setProperty("mail.smtp.host", hostname);
+        if (mEnvelopeFrom != null) {
+            mSession.getProperties().setProperty("mail.smtp.from", mEnvelopeFrom);
+        }
         ZimbraLog.smtp.debug("Sending message %s to SMTP host %s with properties: %s",
             mm.getMessageID(), hostname, mSession.getProperties());
         Transport transport = mSession.getTransport("smtp");

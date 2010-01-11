@@ -35,6 +35,7 @@ import com.zimbra.cs.util.JMSession;
 public class MessageBuilder {
 
     private String mSubject;
+    private String mFrom;
     private String mSender;
     private String mRecipient;
     private String mBody;
@@ -68,8 +69,13 @@ public class MessageBuilder {
         return this;
     }
     
-    public MessageBuilder withSender(String sender) {
-        mSender = sender;
+    public MessageBuilder withFrom(String from) {
+        mFrom = from;
+        return this;
+    }
+    
+    public MessageBuilder withSender(String address) {
+        mSender = address;
         return this;
     }
     
@@ -114,8 +120,8 @@ public class MessageBuilder {
         if (mRecipient == null) {
             mRecipient = "user1";
         }
-        if (mSender == null) {
-            mSender = "jspiccoli";
+        if (mFrom == null) {
+            mFrom = "jspiccoli";
         }
         if (mDate == null) {
             mDate = new Date();
@@ -126,12 +132,16 @@ public class MessageBuilder {
         if (mBody == null) {
             mBody = MessageBuilder.DEFAULT_MESSAGE_BODY;
         }
-        mSender = TestUtil.addDomainIfNecessary(mSender);
+        mFrom = TestUtil.addDomainIfNecessary(mFrom);
         mRecipient = TestUtil.addDomainIfNecessary(mRecipient);
+        mSender = TestUtil.addDomainIfNecessary(mSender);
         
         MimeMessage msg = new MimeMessageWithNoId();
         msg.setRecipient(RecipientType.TO, new InternetAddress(mRecipient));
-        msg.setFrom(new InternetAddress(mSender));
+        msg.setFrom(new InternetAddress(mFrom));
+        if (mSender != null) {
+            msg.setSender(new InternetAddress(mSender));
+        }
         msg.setSentDate(mDate);
         msg.setSubject(mSubject);
         
