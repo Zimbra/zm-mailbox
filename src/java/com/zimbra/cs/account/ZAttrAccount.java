@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091230-1133 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100111-1132 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -32565,6 +32565,88 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetSmtpEnableTrace(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpEnableTrace, "");
+        return attrs;
+    }
+
+    /**
+     * If TRUE, the address for MAIL FROM in the SMTP session will always be
+     * set to this accounts name. If FALSE, the address will be the value of
+     * the Sender or From header in the outgoing message, in that order.
+     *
+     * @return zimbraSmtpRestrictEnvelopeFrom, or true if unset
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public boolean isSmtpRestrictEnvelopeFrom() {
+        return getBooleanAttr(Provisioning.A_zimbraSmtpRestrictEnvelopeFrom, true);
+    }
+
+    /**
+     * If TRUE, the address for MAIL FROM in the SMTP session will always be
+     * set to this accounts name. If FALSE, the address will be the value of
+     * the Sender or From header in the outgoing message, in that order.
+     *
+     * @param zimbraSmtpRestrictEnvelopeFrom new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public void setSmtpRestrictEnvelopeFrom(boolean zimbraSmtpRestrictEnvelopeFrom) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpRestrictEnvelopeFrom, zimbraSmtpRestrictEnvelopeFrom ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, the address for MAIL FROM in the SMTP session will always be
+     * set to this accounts name. If FALSE, the address will be the value of
+     * the Sender or From header in the outgoing message, in that order.
+     *
+     * @param zimbraSmtpRestrictEnvelopeFrom new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public Map<String,Object> setSmtpRestrictEnvelopeFrom(boolean zimbraSmtpRestrictEnvelopeFrom, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpRestrictEnvelopeFrom, zimbraSmtpRestrictEnvelopeFrom ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE, the address for MAIL FROM in the SMTP session will always be
+     * set to this accounts name. If FALSE, the address will be the value of
+     * the Sender or From header in the outgoing message, in that order.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public void unsetSmtpRestrictEnvelopeFrom() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpRestrictEnvelopeFrom, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, the address for MAIL FROM in the SMTP session will always be
+     * set to this accounts name. If FALSE, the address will be the value of
+     * the Sender or From header in the outgoing message, in that order.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public Map<String,Object> unsetSmtpRestrictEnvelopeFrom(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpRestrictEnvelopeFrom, "");
         return attrs;
     }
 

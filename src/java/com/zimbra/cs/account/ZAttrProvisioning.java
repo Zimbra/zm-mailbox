@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091230-1133 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100111-1132 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4185,7 +4185,7 @@ public class ZAttrProvisioning {
      * propagated to Jetty configuration. In the future, other NIO pieces
      * (IMAP/POP/LMTP) will also honor this.
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.22
      */
     @ZAttr(id=1002)
     public static final String A_zimbraMailUseDirectBuffers = "zimbraMailUseDirectBuffers";
@@ -6987,6 +6987,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=98)
     public static final String A_zimbraSmtpPort = "zimbraSmtpPort";
+
+    /**
+     * If TRUE, the address for MAIL FROM in the SMTP session will always be
+     * set to this accounts name. If FALSE, the address will be the value of
+     * the Sender or From header in the outgoing message, in that order.
+     *
+     * @since ZCS 6.0.5
+     */
+    @ZAttr(id=1077)
+    public static final String A_zimbraSmtpRestrictEnvelopeFrom = "zimbraSmtpRestrictEnvelopeFrom";
 
     /**
      * If true, an X-Authenticated-User header will be added to messages sent

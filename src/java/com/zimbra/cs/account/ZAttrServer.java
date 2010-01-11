@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20091230-1133 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100111-1132 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -7664,7 +7664,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMailUseDirectBuffers, or false if unset
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.22
      */
     @ZAttr(id=1002)
     public boolean isMailUseDirectBuffers() {
@@ -7679,7 +7679,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraMailUseDirectBuffers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.22
      */
     @ZAttr(id=1002)
     public void setMailUseDirectBuffers(boolean zimbraMailUseDirectBuffers) throws com.zimbra.common.service.ServiceException {
@@ -7697,7 +7697,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.22
      */
     @ZAttr(id=1002)
     public Map<String,Object> setMailUseDirectBuffers(boolean zimbraMailUseDirectBuffers, Map<String,Object> attrs) {
@@ -7713,7 +7713,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.22
      */
     @ZAttr(id=1002)
     public void unsetMailUseDirectBuffers() throws com.zimbra.common.service.ServiceException {
@@ -7730,7 +7730,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.0_BETA2
+     * @since ZCS 5.0.22
      */
     @ZAttr(id=1002)
     public Map<String,Object> unsetMailUseDirectBuffers(Map<String,Object> attrs) {

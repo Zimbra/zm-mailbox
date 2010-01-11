@@ -4796,4 +4796,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimlets user does not want to see in the UI</desc>
 </attr>
 
+<attr id="1077" name="zimbraSmtpRestrictEnvelopeFrom" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.5">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    If TRUE, the address for MAIL FROM in the SMTP session will always be set to
+    this accounts name.  If FALSE, the address will be the value of the Sender or
+    From header in the outgoing message, in that order.
+  </desc>
+</attr>
+
 </attrs>
