@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100111-1132 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100111-1308 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -23884,8 +23884,9 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be
-     * set to this accounts name. If FALSE, the address will be the value of
-     * the Sender or From header in the outgoing message, in that order.
+     * set to the email address of the account. If FALSE, the address will be
+     * the value of the Sender or From header in the outgoing message, in
+     * that order.
      *
      * @return zimbraSmtpRestrictEnvelopeFrom, or true if unset
      *
@@ -23898,8 +23899,9 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be
-     * set to this accounts name. If FALSE, the address will be the value of
-     * the Sender or From header in the outgoing message, in that order.
+     * set to the email address of the account. If FALSE, the address will be
+     * the value of the Sender or From header in the outgoing message, in
+     * that order.
      *
      * @param zimbraSmtpRestrictEnvelopeFrom new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23915,8 +23917,9 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be
-     * set to this accounts name. If FALSE, the address will be the value of
-     * the Sender or From header in the outgoing message, in that order.
+     * set to the email address of the account. If FALSE, the address will be
+     * the value of the Sender or From header in the outgoing message, in
+     * that order.
      *
      * @param zimbraSmtpRestrictEnvelopeFrom new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23933,8 +23936,9 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be
-     * set to this accounts name. If FALSE, the address will be the value of
-     * the Sender or From header in the outgoing message, in that order.
+     * set to the email address of the account. If FALSE, the address will be
+     * the value of the Sender or From header in the outgoing message, in
+     * that order.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -23949,8 +23953,9 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be
-     * set to this accounts name. If FALSE, the address will be the value of
-     * the Sender or From header in the outgoing message, in that order.
+     * set to the email address of the account. If FALSE, the address will be
+     * the value of the Sender or From header in the outgoing message, in
+     * that order.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

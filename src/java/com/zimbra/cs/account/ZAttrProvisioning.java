@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100111-1132 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100111-1308 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -6990,8 +6990,9 @@ public class ZAttrProvisioning {
 
     /**
      * If TRUE, the address for MAIL FROM in the SMTP session will always be
-     * set to this accounts name. If FALSE, the address will be the value of
-     * the Sender or From header in the outgoing message, in that order.
+     * set to the email address of the account. If FALSE, the address will be
+     * the value of the Sender or From header in the outgoing message, in
+     * that order.
      *
      * @since ZCS 6.0.5
      */
