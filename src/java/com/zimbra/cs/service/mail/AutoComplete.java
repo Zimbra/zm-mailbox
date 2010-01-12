@@ -38,17 +38,7 @@ public class AutoComplete extends MailDocumentHandler {
     	while (n.endsWith("*"))
     	    n = n.substring(0, n.length() - 1);
         
-        String typeStr = request.getAttribute(MailConstants.A_TYPE, "account");
-        Provisioning.GAL_SEARCH_TYPE type = Provisioning.GAL_SEARCH_TYPE.ALL;
-        if (typeStr.equals("all"))
-            type = Provisioning.GAL_SEARCH_TYPE.ALL;
-        else if (typeStr.equals("account"))
-            type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
-        else if (typeStr.equals("resource"))
-            type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
-        else
-            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
-        
+    	Provisioning.GAL_SEARCH_TYPE type = getSearchType(request.getAttribute(MailConstants.A_TYPE, "account"));
         int limit = account.getContactAutoCompleteMaxResults();
         
 		AutoCompleteResult result = query(request, zsc, account, false, n, limit, type);		
@@ -101,6 +91,19 @@ public class AutoComplete extends MailDocumentHandler {
             if (entry.isDlist())
             	cn.addAttribute(MailConstants.A_DISPLAYNAME, entry.getDisplayName());
 		}
+	}
+	
+	protected Provisioning.GAL_SEARCH_TYPE getSearchType(String typeStr) throws ServiceException {
+        Provisioning.GAL_SEARCH_TYPE type;
+        if (typeStr.equals("all"))
+            type = Provisioning.GAL_SEARCH_TYPE.ALL;
+        else if (typeStr.equals("account"))
+            type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
+        else if (typeStr.equals("resource"))
+            type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
+        else
+            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
+        return type;
 	}
 	
 	private String getType(ContactEntry entry) {
