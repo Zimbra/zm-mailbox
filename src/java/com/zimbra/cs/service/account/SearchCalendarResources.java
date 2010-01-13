@@ -23,7 +23,6 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -48,10 +47,10 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
-        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT,
+        int limit = (int) request.getAttributeLong(AccountConstants.A_LIMIT,
                 Integer.MAX_VALUE);
         if (limit == 0) limit = Integer.MAX_VALUE;
-        int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
+        int offset = (int) request.getAttributeLong(AccountConstants.A_OFFSET, 0);
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
@@ -70,6 +69,7 @@ public class SearchCalendarResources extends AccountDocumentHandler {
             CalendarResource entry = (CalendarResource) resources.get(i);
             ToXML.encodeCalendarResource(response, entry);
         }
+        response.addAttribute(AccountConstants.A_MORE, limitMax < resources.size());
         return response;
     }
 
