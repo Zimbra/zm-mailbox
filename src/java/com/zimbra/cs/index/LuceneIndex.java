@@ -836,9 +836,25 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
 //          ZimbraLog.index.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
         } catch (IOException e1) {
-            ZimbraLog.index_add.error("Caught exception trying to open index: "+e1, e1);
+            // 
+            // the index (the segments* file in particular) probably didn't exist when new IndexWriter
+            // was called in the try block, we would get a FileNotFoundException for that case.
+            // If the directory is empty, this is the very first index write for this this mailbox
+            // (or the index might be deleted), the FileNotFoundException is benign.
+            //
+            // If the directory is empty, try again with the create flag set to true. 
+            // 
+            // If e1 is other IOException, our second try will likely throw another IOException.
+            // If the directory is not empty, we throw an IOException and set e1 as the cause.
+            // For both case, the IOException will be logged at outer code.
+            //
+            // Log it as at DEBUG level instead of ERROR here.
+            //
+            ZimbraLog.index_add.debug("Caught exception trying to open index: "+e1, e1);
             File indexDir  = mIdxDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
+               
+                
 //              ZimbraLog.index.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, null);
                 if (ZimbraLog.index_lucene.isDebugEnabled())
