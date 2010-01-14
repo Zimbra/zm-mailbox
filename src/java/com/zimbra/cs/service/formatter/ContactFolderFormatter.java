@@ -61,60 +61,67 @@ public class ContactFolderFormatter extends Formatter {
         
         ItemIdFormatter ifmt = new ItemIdFormatter(context.authAccount, context.targetAccount, false);
         context.resp.setContentType(CONTENT_TYPE);
-		OutputStream out = new BufferedOutputStream(context.resp.getOutputStream());
-		Iterator<? extends MailItem> contacts = this.getMailItems(context, 0, 0, 0);
-		while (contacts.hasNext()) {
-			MailItem item = contacts.next();
-			if (!(item instanceof Contact))
-				continue;
-			// send metadata of the Contact
-			// itemId
-			out.write(MailConstants.A_ID.getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			out.write(ifmt.formatItemId(item).getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			// folderId
-			out.write(MailConstants.A_FOLDER.getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			out.write(ifmt.formatItemId(item.getFolderId()).getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			// date
-			out.write(MailConstants.A_DATE.getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			out.write(Long.toString(item.getDate()).getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			// revision
-			out.write(MailConstants.A_REVISION.getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			out.write(Integer.toString(item.getSavedSequence()).getBytes("UTF-8"));
-			out.write(FIELD_DELIMITER);
-			// fileAsStr
-			try {
-				String fileAsStr = ((Contact)item).getFileAsString();
-				out.write(MailConstants.A_FILE_AS_STR.getBytes("UTF-8"));
-				out.write(FIELD_DELIMITER);
-				out.write(fileAsStr.getBytes("UTF-8"));
-			} catch (ServiceException se) {
-			}
-			
-			Map<String,String> fields = ((Contact) item).getFields();
-			for (String k : fields.keySet()) {
-				out.write(FIELD_DELIMITER);
-				out.write(k.getBytes("UTF-8"));
-				out.write(FIELD_DELIMITER);
-				out.write(fields.get(k).getBytes("UTF-8"));
-			}
-			switch (d) {
-			case Field:
-				out.write(FIELD_DELIMITER);
-				break;
-			case Contact:
-				out.write(CONTACT_DELIMITER);
-				break;
-			}
-		}
-		out.flush();
-	}
+        OutputStream out = new BufferedOutputStream(context.resp.getOutputStream());
+		
+        Iterator<? extends MailItem> contacts = null;
+        try {
+            contacts = this.getMailItems(context, 0, 0, 0);
+            while (contacts.hasNext()) {
+                MailItem item = contacts.next();
+                if (!(item instanceof Contact))
+                    continue;
+                // send metadata of the Contact
+                // itemId
+                out.write(MailConstants.A_ID.getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                out.write(ifmt.formatItemId(item).getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                // folderId
+                out.write(MailConstants.A_FOLDER.getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                out.write(ifmt.formatItemId(item.getFolderId()).getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                // date
+                out.write(MailConstants.A_DATE.getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                out.write(Long.toString(item.getDate()).getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                // revision
+                out.write(MailConstants.A_REVISION.getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                out.write(Integer.toString(item.getSavedSequence()).getBytes("UTF-8"));
+                out.write(FIELD_DELIMITER);
+                // fileAsStr
+                try {
+                    String fileAsStr = ((Contact)item).getFileAsString();
+                    out.write(MailConstants.A_FILE_AS_STR.getBytes("UTF-8"));
+                    out.write(FIELD_DELIMITER);
+                    out.write(fileAsStr.getBytes("UTF-8"));
+                } catch (ServiceException se) {
+                }
+
+                Map<String,String> fields = ((Contact) item).getFields();
+                for (String k : fields.keySet()) {
+                    out.write(FIELD_DELIMITER);
+                    out.write(k.getBytes("UTF-8"));
+                    out.write(FIELD_DELIMITER);
+                    out.write(fields.get(k).getBytes("UTF-8"));
+                }
+                switch (d) {
+                case Field:
+                    out.write(FIELD_DELIMITER);
+                    break;
+                case Contact:
+                    out.write(CONTACT_DELIMITER);
+                    break;
+                }
+            }
+            out.flush();
+        } finally {
+            if (contacts instanceof QueryResultIterator)
+                ((QueryResultIterator) contacts).finished();
+        }
+    }
 
 	@Override
 	public String getType() {
