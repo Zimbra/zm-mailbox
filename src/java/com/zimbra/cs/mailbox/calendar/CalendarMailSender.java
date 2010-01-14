@@ -646,7 +646,7 @@ public class CalendarMailSender {
                 try {
                     MailSender sender = mbox.getMailSender().setSaveToSent(true)
                         .setOriginalMessageId(origMsgId).setReplyType(MailSender.MSGTYPE_REPLY)
-                        .setIgnoreFailedAddresses(true).setSkipSendAsCheck(true);
+                        .setForceSendPartial(true).setSkipSendAsCheck(true);
                     sender.sendMimeMessage(octxt, mbox, mm);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -842,7 +842,7 @@ public class CalendarMailSender {
             public void run() {
                 try {
                     mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
-                            new ItemId(mbox, invId), replyType, null, false, true);
+                            new ItemId(mbox, invId), replyType, null, true, true);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline reply", e);
                 } catch (OutOfMemoryError e) {

@@ -43,6 +43,9 @@ import com.zimbra.cs.account.Server;
  */
 public class JMSession {
 
+    public static final String SMTP_SEND_PARTIAL_PROPERTY = "mail.smtp.sendpartial";
+    public static final String SMTPS_SEND_PARTIAL_PROPERTY = "mail.smtps.sendpartial";
+
     private static Session sSession;
     
     static {
@@ -111,7 +114,8 @@ public class JMSession {
         props.setProperty("mail.smtp.timeout", sTimeout);
         
         Boolean sendPartial = Boolean.parseBoolean(getValue(server, domain, Provisioning.A_zimbraSmtpSendPartial));
-        props.setProperty("mail.smtp.sendpartial", sendPartial.toString());
+        props.setProperty(SMTP_SEND_PARTIAL_PROPERTY, sendPartial.toString());
+        props.setProperty(SMTPS_SEND_PARTIAL_PROPERTY, sendPartial.toString());
         
         Session session = Session.getInstance(props);
         if (LC.javamail_smtp_debug.booleanValue()) {

@@ -148,7 +148,7 @@ public class SendMsg extends MailDocumentHandler {
                 }
 
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads, iidOrigId,
-                    replyType, identityId, noSaveToSent, false, needCalendarSentByFixup);
+                    replyType, identityId, noSaveToSent, needCalendarSentByFixup);
 
                 // (need to make sure that *something* gets recorded, because caching
                 //   a null ItemId makes the send appear to still be PENDING)
@@ -176,8 +176,7 @@ public class SendMsg extends MailDocumentHandler {
 
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<InternetAddress> newContacts,
                                        List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
-                                       boolean noSaveToSent, boolean ignoreFailedAddresses,
-                                       boolean needCalendarSentByFixup)
+                                       boolean noSaveToSent, boolean needCalendarSentByFixup)
     throws ServiceException {
         
         if (needCalendarSentByFixup)
@@ -185,10 +184,10 @@ public class SendMsg extends MailDocumentHandler {
 
         if (noSaveToSent)
             return mbox.getMailSender().sendMimeMessage(oc, mbox, false, mm, newContacts, uploads,
-                                                        origMsgId, replyType, null, ignoreFailedAddresses, false);
+                                                        origMsgId, replyType, null, false, false);
         else
             return mbox.getMailSender().sendMimeMessage(oc, mbox, mm, newContacts, uploads,
-                                                        origMsgId, replyType, identityId, ignoreFailedAddresses, false);
+                                                        origMsgId, replyType, identityId, false, false);
     }
 
     static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData) throws ServiceException {

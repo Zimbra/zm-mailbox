@@ -192,7 +192,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         }
 
         // Apply the change and notify existing attendees.
-        sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false, true);
+        sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
 
         // Notify removed attendees.
         List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();

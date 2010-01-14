@@ -129,7 +129,7 @@ public class CreateCalendarItemException extends CalendarRequest {
                 }
             }
 
-            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false);
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response);
         }
 
         // Inter-mailbox move if necessary.

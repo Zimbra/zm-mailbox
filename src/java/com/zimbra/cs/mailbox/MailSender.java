@@ -81,7 +81,7 @@ public class MailSender {
     private ItemId mOriginalMessageId;
     private String mReplyType;
     private Identity mIdentity;
-    private boolean mIgnoreFailedAddresses = false;
+    private boolean mForceSendPartial = false;
     private boolean mReplyToSender = false;
     private boolean mSkipSendAsCheck = false;
     private List<String> mSmtpHosts = new ArrayList<String>();
@@ -142,8 +142,8 @@ public class MailSender {
      * @param ignore if <tt>true</tt>, don't throw a {@link SendFailedException}
      * when a message send fails.  The default is <tt>false</tt>.
      */
-    public MailSender setIgnoreFailedAddresses(boolean ignore) {
-        mIgnoreFailedAddresses = ignore;
+    public MailSender setForceSendPartial(boolean ignore) {
+        mForceSendPartial = ignore;
         return this;
     }
     
@@ -202,7 +202,7 @@ public class MailSender {
         mSmtpHosts.addAll(smtpHosts);
         return this;
     }
-    
+
     /**
      * Specifies the recipients for the outgoing message.  The default
      * behavior is to use the recipients specified in the headers of
@@ -253,7 +253,7 @@ public class MailSender {
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
                                   ItemId origMsgId, String replyType, String identityId,
-                                  boolean ignoreFailedAddresses, boolean replyToSender)
+                                  boolean forceSendPartial, boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
         if (authuser == null)
@@ -263,7 +263,7 @@ public class MailSender {
             identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
 
         return sendMimeMessage(octxt, mbox, null, mm, newContacts, uploads, origMsgId, replyType, identity,
-                               ignoreFailedAddresses, replyToSender);
+                forceSendPartial, replyToSender);
     }
 
     protected static class RollbackData {
@@ -295,7 +295,7 @@ public class MailSender {
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
                                   Collection<InternetAddress> saveContacts, Collection<Upload> uploads,
                                   ItemId origMsgId, String replyType, Identity identity,
-                                  boolean ignoreFailedAddresses, boolean replyToSender)
+                                  boolean forceSendPartial, boolean replyToSender)
     throws ServiceException {
         mSaveToSent = saveToSent;
         mSaveContacts = saveContacts;
@@ -303,7 +303,7 @@ public class MailSender {
         mOriginalMessageId = origMsgId;
         mReplyType = replyType;
         mIdentity = identity;
-        mIgnoreFailedAddresses = ignoreFailedAddresses;
+        mForceSendPartial = forceSendPartial;
         mReplyToSender = replyToSender;
         return sendMimeMessage(octxt, mbox, mm);
     }
@@ -412,7 +412,7 @@ public class MailSender {
             logMessage(mm, mOriginalMessageId, mUploads, mReplyType);
 
             // actually send the message via SMTP
-            Collection<Address> sentAddresses = sendMessage(mbox, mm, mIgnoreFailedAddresses, rollback);
+            Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollback);
 
             if (!sentAddresses.isEmpty() && octxt != null) {
             	try {
@@ -631,13 +631,29 @@ public class MailSender {
     /*
      * returns a Collection of successfully sent recipient Addresses
      */
-    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
+    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean forceSendPartial, final RollbackData[] rollback)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
     	HashSet<Address> sentAddresses = new HashSet<Address>();
+    	mCurrentHostIndex = 0;
     	String hostname = getNextHost();
-    	
-        try {
+
+    	boolean sendPartial;
+    	if (mSession != null) {
+        	if (forceSendPartial) {
+        	    sendPartial = true;
+        	} else {
+        	    String prop = mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY);
+        	    sendPartial = prop != null && Boolean.parseBoolean(prop);
+        	}
+    	} else {
+    	    // We can get here when ZDesktop is doing SMTP send for a data source.
+    	    // We can't safely set sendPartial on the static transport, so just assume we're operating
+    	    // in sendPartial==false mode always.
+    	    sendPartial = false;
+    	}
+
+    	try {
             // Initialize recipient addresses from either the member variable
             // or the message.
             Address[] rcptAddresses = null;
@@ -653,19 +669,21 @@ public class MailSender {
             while (rcptAddresses != null && rcptAddresses.length > 0) {
                 try {
                     if (hostname != null) {
-                        sendMessageToHost(hostname, mm, rcptAddresses);
+                        sendMessageToHost(hostname, mm, rcptAddresses, sendPartial);
                     } else {
                         Transport.send(mm, rcptAddresses);
                     }
                     sentAddresses.addAll(Arrays.asList(rcptAddresses));
                     break;
                 } catch (SendFailedException sfe) {
-                    if (!ignoreFailedAddresses)
+                    if (!sendPartial)
                         throw sfe;
-                    rcptAddresses = sfe.getValidUnsentAddresses();
+                    // If we were in sendPartial mode, silently ignore any addresses that failed.
+                    // We did our best to send to all valid and deliverable addresses.
                     Address[] sent = sfe.getValidSentAddresses();
                     if (sent != null && sent.length > 0)
                         sentAddresses.addAll(Arrays.asList(sent));
+                    break;
                 } catch (MessagingException e) {
                     Exception chained = e.getNextException(); 
                     if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
@@ -711,11 +729,20 @@ public class MailSender {
         return null;
     }
     
-    private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses)
+    private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses, boolean sendPartial)
     throws MessagingException {
         mSession.getProperties().setProperty("mail.smtp.host", hostname);
         if (mEnvelopeFrom != null) {
             mSession.getProperties().setProperty("mail.smtp.from", mEnvelopeFrom);
+        }
+        String originalSendPartial = mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY);
+        if (originalSendPartial == null)
+            originalSendPartial = Boolean.FALSE.toString();
+        if (sendPartial) {
+            // If sendPartial is true, set it in the session.  If false, use the session's existing setting,
+            // which may already be set to true based on server configuration.
+            mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, "true");
+            mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, "true");
         }
         ZimbraLog.smtp.debug("Sending message %s to SMTP host %s with properties: %s",
             mm.getMessageID(), hostname, mSession.getProperties());
@@ -724,7 +751,13 @@ public class MailSender {
             transport.connect();
             transport.sendMessage(mm, rcptAddresses);
         } finally {
-            transport.close();
+            try {
+                transport.close();
+            } finally {
+                // Restore the session's sendPartial setting to its original value.
+                mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, originalSendPartial);
+                mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, originalSendPartial);
+            }
         }
     }
     

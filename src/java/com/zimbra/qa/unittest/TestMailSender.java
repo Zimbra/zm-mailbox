@@ -184,7 +184,7 @@ extends TestCase {
         startDummySmtpServer(bogusAddress, errorMsg);
         sendFailed = false;
         server.setSmtpSendPartial(true);
-        MailSender sender = mbox.getMailSender().setIgnoreFailedAddresses(false);
+        MailSender sender = mbox.getMailSender().setForceSendPartial(false);
         
         try {
             sender.sendMimeMessage(null, mbox, msg);
@@ -228,7 +228,7 @@ extends TestCase {
         startDummySmtpServer(bogusAddress, errorMsg);
         server.setSmtpSendPartial(true);
         sendFailed = false;
-        sender = mbox.getMailSender().setIgnoreFailedAddresses(true);
+        sender = mbox.getMailSender().setForceSendPartial(true);
         try {
             sender.sendMimeMessage(null, mbox, msg);
         } catch (MailServiceException e) {

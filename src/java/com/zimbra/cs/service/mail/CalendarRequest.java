@@ -197,10 +197,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Account acct,
         Mailbox mbox,
         CalSendData csd,
-        Element response,
-        boolean ignoreFailedAddresses)
+        Element response)
     throws ServiceException {
-        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, ignoreFailedAddresses, true);
+        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, true);
     }
 
     protected static Element sendCalendarMessage(
@@ -211,12 +210,11 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             Mailbox mbox,
             CalSendData csd,
             Element response,
-            boolean ignoreFailedAddresses,
             boolean updateOwnAppointment)
         throws ServiceException {
             return sendCalendarMessageInternal(zsc, octxt, apptFolderId,
                                                acct, mbox, csd, response,
-                                               ignoreFailedAddresses, updateOwnAppointment);
+                                               updateOwnAppointment);
         }
 
     /**
@@ -245,7 +243,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean cancelOwnAppointment)
     throws ServiceException {
     	return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct, mbox, csd,
-                                           null, true, cancelOwnAppointment);
+                                           null, cancelOwnAppointment);
     }
 
     /**
@@ -257,7 +255,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
      * @param mbox
      * @param csd
      * @param response
-     * @param ignoreFailedAddresses
      * @param updateOwnAppointment if true, corresponding change is made to
      *                             sender's calendar
      * @return
@@ -271,7 +268,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Mailbox mbox,
         CalSendData csd,
         Element response,
-        boolean ignoreFailedAddresses,
         boolean updateOwnAppointment)
     throws ServiceException {
         boolean onBehalfOf = zsc.isDelegatedRequest();
@@ -348,6 +344,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         int[] ids = null;
         ItemId msgId = null;
+        boolean forceSendPartial = true;  // All calendar-related emails are sent in sendpartial mode.
         try {
             if (!csd.mInvite.isCancel()) {
                 // For create/modify requests, we want to first update the local mailbox (organizer's)
@@ -362,7 +359,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (!csd.mDontNotifyAttendees)
                     msgId = mbox.getMailSender().sendMimeMessage(
                             octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, true);
             } else {
                 // But if we're sending a cancel request, send emails first THEN update the local mailbox.
                 // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
@@ -378,7 +375,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (!csd.mDontNotifyAttendees)
                     msgId = mbox.getMailSender().sendMimeMessage(
                             octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, ignoreFailedAddresses, true);
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, true);
                 if (updateOwnAppointment)
                     ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
             }
@@ -421,7 +418,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             csd.mMm = CalendarMailSender.createOrganizerChangeMessage(
                                     acct, authAccount, zsc.isUsingAdminPrivileges(), calItem, csd.mInvite, rcpts);
                             sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
-                                                        null, true, true);
+                                                        null, true);
                         }
                     }
                 } catch (ServiceException e) {

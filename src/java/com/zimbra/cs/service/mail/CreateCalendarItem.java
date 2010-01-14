@@ -89,6 +89,6 @@ public class CreateCalendarItem extends CalendarRequest {
             }
         }
 
-        return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, false);
+        return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response);
     }
 }
