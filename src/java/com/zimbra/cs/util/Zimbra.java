@@ -199,8 +199,7 @@ public class Zimbra {
         if (app.supports(MemcachedConnector.class.getName()))
             MemcachedConnector.startup();
 
-        if (app.supports(ExtensionUtil.class.getName()))
-            ExtensionUtil.initAll();
+        ExtensionUtil.initAll();
 
         // ZimletUtil.loadZimlets();
 
@@ -260,8 +259,7 @@ public class Zimbra {
                 ZimbraPerf.initialize();
         }
 
-        if (app.supports(ExtensionUtil.class.getName()))
-            ExtensionUtil.postInitAll();
+        ExtensionUtil.postInitAll();
 
         sInited = true;
     }

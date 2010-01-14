@@ -135,7 +135,12 @@ public class DataSourceManager {
             try {
                 String className = LC.data_source_xsync_class.value();
                 if (className != null && className.length() > 0) {
-                    Class cmdClass = Class.forName(className);
+                    Class cmdClass = null;
+                    try {
+                        cmdClass = Class.forName(className);
+                    } catch (ClassNotFoundException x) {
+                        cmdClass = ExtensionUtil.findClass(className);
+                    }
                     Constructor constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
                     return (DataImport)constructor.newInstance(new Object[] {ds});
                 }

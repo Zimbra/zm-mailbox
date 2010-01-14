@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.util;
 
+import java.util.List;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -71,5 +73,14 @@ public class ZimbraApplication {
 
     public boolean isShutdown() {
         return isShutdown;
+    }
+    
+    public void addExtensionName(String name) {
+        assert false;
+    }
+    
+    public List<String> getExtensionNames() {
+        assert false;
+        return null;
     }
 }
