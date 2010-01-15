@@ -50,6 +50,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.service.AuthProvider;
 
 /**
  * This class represents a route in the *LOCAL* cloud, ie between trusted servers
@@ -88,7 +89,7 @@ public class CloudRouteSession extends Session {
         String hostname = targetServer.getAttr(Provisioning.A_zimbraServiceHostname);
         int port = IMConfig.XMPP_CLOUDROUTING_PORT.getInt();
         
-        AuthToken adminAuthToken = ZimbraAuthToken.getZimbraAdminAuthToken();
+        AuthToken adminAuthToken = AuthProvider.getAdminAuthToken();
         
         Socket socket = SSLConfig.createSSLSocket();
         try {

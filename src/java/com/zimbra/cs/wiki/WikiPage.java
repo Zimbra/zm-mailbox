@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.wiki.WikiServiceException;
@@ -288,7 +289,7 @@ public abstract class WikiPage {
 				auth = ctxt.auth;
 			else {
 				try {
-					auth = AuthToken.getZimbraAdminAuthToken();
+					auth = AuthProvider.getAdminAuthToken();
 				} catch (Exception ate) {
 					auth = null;
 				}

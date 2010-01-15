@@ -419,6 +419,11 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acctName);
     }
     
+    public static AuthToken getAdminAuthToken() throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
+        return AuthProvider.getAuthToken(acct, true);
+    }
+    
     public static AuthToken getAuthToken(Account acct, long expires) throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {

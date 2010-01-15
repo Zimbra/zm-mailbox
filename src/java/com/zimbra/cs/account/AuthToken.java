@@ -147,11 +147,6 @@ public abstract class AuthToken {
         return new ZimbraAuthToken(acctId, externalEmail, pass, digest, expires);
     }
     
-    // AP-TODO-5: REMOVE AFTER CLEANUP
-    public static AuthToken getZimbraAdminAuthToken() throws ServiceException {
-        return ZimbraAuthToken.getZimbraAdminAuthToken();
-    }
-    
     public static Map getInfo(String encoded) throws AuthTokenException {
         return ZimbraAuthToken.getInfo(encoded);
     }

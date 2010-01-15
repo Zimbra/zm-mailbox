@@ -121,11 +121,6 @@ public class ZimbraAuthToken extends AuthToken {
         return at;
     }
     
-    public static AuthToken getZimbraAdminAuthToken() throws ServiceException {
-        Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
-        return new ZimbraAuthToken(acct, true);
-    }
-    
     protected ZimbraAuthToken() {
          
     }

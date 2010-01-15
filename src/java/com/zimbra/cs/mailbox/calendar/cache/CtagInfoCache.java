@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -190,7 +191,7 @@ public class CtagInfoCache {
             else
                 ZimbraLog.calendar.warn("Invalid folder %d in account %s during cache lookup", folderId, accountId);
         } else {
-            ZAuthToken zat = AuthToken.getZimbraAdminAuthToken().toZAuthToken();
+            ZAuthToken zat = AuthProvider.getAdminAuthToken().toZAuthToken();
             ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(acct));
             zoptions.setNoSession(true);
             zoptions.setResponseProtocol(SoapProtocol.SoapJS);

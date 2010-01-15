@@ -50,6 +50,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 
 public class GalSearchControl {
@@ -320,7 +321,7 @@ public class GalSearchControl {
 			Provisioning prov = Provisioning.getInstance();
     		String serverUrl = URLUtil.getAdminURL(prov.getServerByName(targetAcct.getMailHost()));
 			SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
-			transport.setAuthToken(AuthToken.getZimbraAdminAuthToken().toZAuthToken());
+			transport.setAuthToken(AuthProvider.getAdminAuthToken().toZAuthToken());
 			transport.setTargetAcctId(targetAcct.getId());
 			if (mParams.getSoapContext() != null)
 				transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
