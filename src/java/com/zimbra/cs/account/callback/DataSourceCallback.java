@@ -111,7 +111,7 @@ public class DataSourceCallback extends AttributeCallback {
         // Don't do anything unless inside the server
         if (!Zimbra.started())
             return;
-        if (Provisioning.A_zimbraDataSourcePollingInterval.equals(attrName) &&
+        if (INTERVAL_ATTRS.contains(attrName) &&
             LC.data_source_scheduling_enabled.booleanValue()) {
             postModifyPollingInterval(context, attrName, entry, isCreate);
         } else if (entry instanceof DataSource) {
