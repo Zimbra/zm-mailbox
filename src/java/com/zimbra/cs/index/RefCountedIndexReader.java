@@ -135,11 +135,11 @@ final class RefCountedIndexReader {
         
         // LastAccessTime,
         String accessTime = String.format("%1$tm%1$td-%1$tH:%1$tM:%1$tS.%1$tL", new Date(mAccessTime));
-        line.append(accessTime + DEBUG_DELIM);
+        line.append(accessTime + "(" + mAccessTime + ")" + DEBUG_DELIM);
             
         // StackFrames
         StackTraceElement[] stack = curThread.getStackTrace();
-        int maxFrames = Math.min(20, stack.length);
+        int maxFrames = Math.min(50, stack.length);
             
         // skip the top two frames, they are Thread:1409 and RefCountedIndexReader:108 
         for (int i = 2; i < maxFrames; i++) {
@@ -148,9 +148,15 @@ final class RefCountedIndexReader {
             if (lastDot != -1)
                 className = className.substring(lastDot+1);
             line.append(className + ":" + stack[i].getLineNumber() + " - ");
+            
+            // we don't want the frames to go too deep, stop if we see these:
+            if (className.equals("SoapEngine") || 
+                className.equals("ZimbraServlet") ||   
+                className.equals("ProtocolHandler"))
+                break;
         }
             
-        RefCountedIndexReaderStats.addStats(line.toString());
+        RefCountedIndexReaderStats.addStats(line.toString() + "\n"); // add an empty line so it's easier for human eyes 
     }
     
     RefCountedIndexReader(ILuceneIndex idx, IndexReader reader) {
