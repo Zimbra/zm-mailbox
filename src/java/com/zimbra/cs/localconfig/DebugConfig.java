@@ -146,7 +146,11 @@ public class DebugConfig {
     /** If true, disable the memcached-based folders/tags cache of mailboxes.
      */
     public static boolean disableFoldersTagsCache;
-
+    
+    public static boolean enableContactLocalizedSort;
+    
+    public static boolean enableRefCountedIndexReaderStats;
+    
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -192,6 +196,10 @@ public class DebugConfig {
         forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
 
         disableFoldersTagsCache = booleanValue("debug_disable_folders_tags_cache", false);
+        
+        enableContactLocalizedSort = booleanValue("debug_enable_contact_localized_sort", true);
+        
+        enableRefCountedIndexReaderStats = booleanValue("debug_enable_ref_counted_index_reader_stats", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
