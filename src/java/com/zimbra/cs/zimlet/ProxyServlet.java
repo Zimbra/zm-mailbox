@@ -45,6 +45,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
@@ -70,11 +71,19 @@ public class ProxyServlet extends ZimbraServlet {
     private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, auth.getAccountId(), auth);
-        return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+
+        Cos cos = prov.getCOS(acct);
+
+        Set<String> allowedDomains = cos.getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
+
+        ZimbraLog.zimlet.debug("get allowedDomains result: "+allowedDomains);
+        
+        return allowedDomains;
     }
     
     private boolean checkPermissionOnTarget(HttpServletRequest req, URL target, AuthToken auth) {
         String host = target.getHost().toLowerCase();
+        ZimbraLog.zimlet.debug("checking allowedDomains permission on target host: "+host);
         Set<String> domains;
         try {
             domains = getAllowedDomains(auth);
