@@ -371,6 +371,21 @@ public enum TargetType {
             return null;
     }
     
+    public static String getTargetDomainName(Provisioning prov, Entry target) throws ServiceException{
+        
+        if (target instanceof CalendarResource) {
+            CalendarResource cr = (CalendarResource)target;
+            return cr.getDomainName();
+        } else if (target instanceof Account) {
+            Account acct = (Account)target;
+            return acct.getDomainName();
+        } else if (target instanceof DistributionList) {
+            DistributionList dl = (DistributionList)target;
+            return dl.getDomainName();
+        } else
+            return null;
+    }
+    
     /*
      * This method is called for searching for negative grants granted on a  
      * "sub-target" of a target on which we are granting a right.  If the 

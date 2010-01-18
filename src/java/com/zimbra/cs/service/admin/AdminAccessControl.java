@@ -25,7 +25,6 @@ import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -44,11 +43,9 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -699,20 +696,26 @@ public abstract class AdminAccessControl {
     }
     
     /**
+     * A right checker for checking rights for large number of objects.
+     * e.g. SearchDirectory, SearchMultiMailbox (all mailboxes on server)
      * 
-     * class SearchDirectoryRightChecker
-     *
+     * We can't use the regular way to check right for those because of 
+     * bad response time.  bug 39514.
+     * 
+     * The regular way will lead to a LDAP search (if not already loaded) 
+     * to find the groups/domain the target belongs, yuck!
+     * 
+     *  Note: this is the only place where permission is computed from an 
+     *  AllEffectiveRights object - because of bug 39514.
      */
-    public static class SearchDirectoryRightChecker implements NamedEntry.CheckRight {
-        private AdminAccessControl mAC;
-        private Provisioning mProv;
-        private Set<String> mReqAttrs; // not used/checked now after bug 38452
+    public static abstract class BulkRightChecker implements NamedEntry.CheckRight {
+        protected AdminAccessControl mAC;
+        protected Provisioning mProv;
         RightCommand.AllEffectiveRights mAllEffRights;
         
-        public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
+        public BulkRightChecker(AdminAccessControl accessControl, Provisioning prov) throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
-            mReqAttrs = reqAttrs;
         }
         
         /* Can't do this because of perf bug 39514
@@ -724,19 +727,32 @@ public abstract class AdminAccessControl {
         }
         */
         
-        /*
-         * See if tis admin has the list right from our AllEffectiveRights
-         * 
-         * Note: this is the only place where permission is computed from an AllEffectiveRights object -
-         *       because of bug 39514.  
-         *       
-         *       If we were to use the usual route (i.e. mAC.hasRightsToList(target, listRight, null)),
-         *       then for each entry found, there will be a LDAP search to find the groups this entry belongs, yuck.
-         */
-        private boolean hasRightsToList(NamedEntry target, AdminRight listRight) throws ServiceException {
+        protected boolean hasRight(NamedEntry target, AdminRight rightNeeded) throws ServiceException {
+            
+            // can use the bulk mechanism only the access control object is pure ACL based
+            if (mAC instanceof ACLAccessControl)
+                return hasRightImplBulk(target, rightNeeded);
+            else {
+                // fallback to the normal right checking
+                return hasRightImplBulkDefault(target, rightNeeded);
+            }
+        }
+        
+        // use the normal way to check right
+        private boolean hasRightImplBulkDefault(NamedEntry target, AdminRight rightNeeded) throws ServiceException {
+            try {
+                mAC.checkRight(target, rightNeeded);
+                return true;  // survived the right checking
+            } catch (ServiceException e) {
+                
+            }
+            return false;
+        }
+        
+        private boolean hasRightImplBulk(NamedEntry target, AdminRight rightNeeded) throws ServiceException {
             
             try {
-                Boolean hardRulesResult = AccessControlUtil.checkHardRules(mAC.mAuthedAcct, true, target, listRight);
+                Boolean hardRulesResult = AccessControlUtil.checkHardRules(mAC.mAuthedAcct, true, target, rightNeeded);
                 if (hardRulesResult != null)
                     return hardRulesResult.booleanValue();
             } catch (ServiceException e) {
@@ -753,7 +769,7 @@ public abstract class AdminAccessControl {
                         Provisioning.GranteeBy.id, mAC.mAuthedAcct.getId(),
                         false, false);
             
-            TargetType targetType = listRight.getTargetType();
+            TargetType targetType = rightNeeded.getTargetType();
             
             RightCommand.RightsByTargetType rbtt = mAllEffRights.rightsByTargetType().get(targetType);
             
@@ -769,22 +785,20 @@ public abstract class AdminAccessControl {
             for (RightCommand.RightAggregation rightsByEntries : rbtt.entries()) {
                 if (rightsByEntries.entries().contains(targetName)) {
                     RightCommand.EffectiveRights effRights = rightsByEntries.effectiveRights();
-                    return hasRight(effRights, target, listRight);
+                    return hasRightBulk(effRights, target, rightNeeded);
                 }
             }
             
             // 2. see if the admin has the right on domain scope
-            Domain targetDomain = targetType.getTargetDomain(mProv, target);
-            if (targetDomain != null) {
+            String targetDomainName = targetType.getTargetDomainName(mProv, target);
+            if (targetDomainName != null) {
                 if (rbtt instanceof RightCommand.DomainedRightsByTargetType) {
-                    String domainName = targetDomain.getName();
-                    
                     RightCommand.DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rbtt;
                     
                     for (RightCommand.RightAggregation rightsByDomains : domainedRights.domains()) {
-                        if (rightsByDomains.entries().contains(domainName)) {
+                        if (rightsByDomains.entries().contains(targetDomainName)) {
                             RightCommand.EffectiveRights effRights = rightsByDomains.effectiveRights();
-                            return hasRight(effRights, target, listRight);
+                            return hasRightBulk(effRights, target, rightNeeded);
                         }
                     }
                 }
@@ -792,19 +806,33 @@ public abstract class AdminAccessControl {
             
             // 3. see if the admin has the right on all entries of the type on the system
             RightCommand.EffectiveRights er = rbtt.all();
-            if (hasRight(er, target, listRight))
+            if (hasRightBulk(er, target, rightNeeded))
                 return true;
             
             return false;
         }
-
         
-        private boolean hasRight(RightCommand.EffectiveRights effRights, NamedEntry target, AdminRight listRight) {
+        private boolean hasRightBulk(RightCommand.EffectiveRights effRights, NamedEntry target, AdminRight rightNeeded) {
             if (effRights == null)
                 return false;
             
             List<String> presetRights = effRights.presetRights();
-            return presetRights != null && presetRights.contains(listRight.getName());
+            return presetRights != null && presetRights.contains(rightNeeded.getName());
+        }
+        
+        public abstract boolean allow(NamedEntry entry) throws ServiceException;
+    }
+    
+    /**
+     * 
+     * class SearchDirectoryRightChecker
+     *
+     */
+    public static class SearchDirectoryRightChecker extends BulkRightChecker {
+        
+        public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
+            // reqAttrs is no longer needed, TODO, cleanup from all callsites 
+            super(accessControl, prov);
         }
         
         private boolean hasRightsToListDanglingAlias(Alias alias) throws ServiceException {
@@ -862,7 +890,7 @@ public abstract class AdminAccessControl {
             else {
                 AdminRight listRightNeeded = needRight(entry);  
                 if (listRightNeeded != null)
-                    return hasRightsToList(entry, listRightNeeded);
+                    return hasRight(entry, listRightNeeded);
                 else
                     return false;
             }

@@ -1059,6 +1059,19 @@ public class LdapProvisioning extends Provisioning {
     public List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags) throws ServiceException {
         return (List<NamedEntry>) searchAccountsInternal(query, returnAttrs, sortAttr, sortAscending, flags);
     }
+    
+    @Override
+    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) throws ServiceException {
+        String base = getDIT().mailBranchBaseDN();
+        
+        // searchObjects put the caller's query before objectClass.  
+        // objectClass is indexed but zimbraMailHost is not.  
+        // put together the query here
+        String query = "(&(objectclass=zimbraAccount)(" + Provisioning.A_zimbraMailHost + "=" + server.getName() + "))";
+        
+        int flags = opts.getFlags() | Provisioning.SO_NO_FIXUP_OBJECTCLASS;
+        searchObjects(query, opts.getReturnAttrs(), base, flags, visitor, opts.getMaxResults(), true, opts.getOnMaster());
+    }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)

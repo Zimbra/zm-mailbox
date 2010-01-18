@@ -1227,6 +1227,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
+    /**
+     * Search for all accunts on the server
+     * 
+     * @param server
+     * @param opts  note: query in opts is ignored
+     * @param visitor
+     * @throws ServiceException
+     */
+    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
 
     public static class SearchOptions {
         // pseudo attr name for target name
