@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100111-1308 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100119-1123 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -562,6 +562,7 @@ public class ZAttrProvisioning {
         includeBody("includeBody"),
         includeBodyWithPrefix("includeBodyWithPrefix"),
         includeAsAttachment("includeAsAttachment"),
+        includeBodyAndHeaders("includeBodyAndHeaders"),
         includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix");
         private String mValue;
         private PrefForwardIncludeOriginalText(String value) { mValue = value; }
@@ -575,6 +576,7 @@ public class ZAttrProvisioning {
         public boolean isIncludeBody() { return this == includeBody;}
         public boolean isIncludeBodyWithPrefix() { return this == includeBodyWithPrefix;}
         public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
+        public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
     }
 
@@ -719,11 +721,15 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefReplyIncludeOriginalText {
+        includeSmartAndHeadersWithPrefix("includeSmartAndHeadersWithPrefix"),
+        includeSmartAndHeaders("includeSmartAndHeaders"),
         includeBody("includeBody"),
         includeBodyWithPrefix("includeBodyWithPrefix"),
         includeAsAttachment("includeAsAttachment"),
         includeNone("includeNone"),
+        includeBodyAndHeaders("includeBodyAndHeaders"),
         includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix"),
+        includeSmartWithPrefix("includeSmartWithPrefix"),
         includeSmart("includeSmart");
         private String mValue;
         private PrefReplyIncludeOriginalText(String value) { mValue = value; }
@@ -734,11 +740,15 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
+        public boolean isIncludeSmartAndHeadersWithPrefix() { return this == includeSmartAndHeadersWithPrefix;}
+        public boolean isIncludeSmartAndHeaders() { return this == includeSmartAndHeaders;}
         public boolean isIncludeBody() { return this == includeBody;}
         public boolean isIncludeBodyWithPrefix() { return this == includeBodyWithPrefix;}
         public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
         public boolean isIncludeNone() { return this == includeNone;}
+        public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
+        public boolean isIncludeSmartWithPrefix() { return this == includeSmartWithPrefix;}
         public boolean isIncludeSmart() { return this == includeSmart;}
     }
 
