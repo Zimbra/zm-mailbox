@@ -727,6 +727,16 @@ public abstract class AdminAccessControl {
         }
         */
         
+        //
+        // a short cut for subclass to call before spending resources to prepare 
+        // objects for right checking.  A bit ugly, because it should really only 
+        // be checked in AccessControlUtil.checkHardRules.  But for perf reason
+        // we use this shortcut.
+        //
+        protected boolean allowAll() {
+            return AccessControlUtil.isGlobalAdmin(mAC.mAuthedAcct, true);
+        }
+        
         protected boolean hasRight(NamedEntry target, AdminRight rightNeeded) throws ServiceException {
             
             // can use the bulk mechanism only the access control object is pure ACL based
