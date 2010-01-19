@@ -78,12 +78,20 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     private boolean isAllMailboxes = false;
     private List<ParseMailboxID> mMailboxes;
     
+    // read timeout for the proxy SOAP request
+    // -l mean use default SOAP http client timeout
+    private long mTimeout = -1;
+    
     private void setSearchParams(SearchParams params) {
         this.mSearchParams = (SearchParams)params.clone();
         mSearchParams.clearCursor();
         // when doing offset-paging, since we do a mergesort locally, the remote query must start
         // at offset 0 and page through all the results
         mSearchParams.setOffset(0); 
+    }
+    
+    public void setTimeout(long timeout) {
+        mTimeout = timeout;
     }
 
     /**
@@ -278,6 +286,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         if (baseurl == null)
             baseurl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
         ProxyTarget proxy = new ProxyTarget(server, mAuthToken, baseurl + qnrequest.getName());
+        if (mTimeout != -1)
+            proxy.setTimeouts(mTimeout);
 
         ZimbraSoapContext zscProxy, zscInbound = mSearchParams.getRequestContext();
         if (zscInbound != null)

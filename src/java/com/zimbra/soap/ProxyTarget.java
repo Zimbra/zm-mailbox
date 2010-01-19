@@ -123,7 +123,7 @@ public class ProxyTarget {
             transport = new SoapHttpTransport(mURL);
             if (mMaxAttempts > 0)
                 transport.setRetryCount(mMaxAttempts);
-            if (mTimeout > 0)
+            if (mTimeout >= 0)
                 transport.setTimeout((int) Math.min(mTimeout, Integer.MAX_VALUE));
 
             Element response = transport.invokeRaw(envelope);
