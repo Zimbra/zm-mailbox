@@ -48,7 +48,9 @@ public class ModifyPrefs extends AccountDocumentHandler {
         HashMap<String, Object> prefs = new HashMap<String, Object>();
         for (KeyValuePair kvp : request.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
             String name = kvp.getKey(), value = kvp.getValue();
-            if (!name.startsWith(PREF_PREFIX))
+            char ch = name.length() > 0 ? name.charAt(0) : 0;
+            int offset = ch == '+' || ch == '-' ? 1 : 0;
+            if (!name.startsWith(PREF_PREFIX, offset))
                 throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX, null);
             StringUtil.addToMultiMap(prefs, name, value);
         }
