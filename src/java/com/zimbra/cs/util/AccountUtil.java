@@ -25,6 +25,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
@@ -68,7 +69,54 @@ public class AccountUtil {
         ia.setAddress(address);
         return ia;
     }
-
+    
+    /**
+     * Returns the <tt>From</tt> address used for an outgoing message from the given account.
+     * Takes all account attributes into consideration, including user preferences.  
+     */
+    public static InternetAddress getFromAddress(Account acct) {
+        if (acct == null) {
+            return null;
+        }
+        String address = SystemUtil.coalesce(acct.getPrefFromAddress(), acct.getName());
+        String personal = SystemUtil.coalesce(acct.getPrefFromDisplay(), acct.getDisplayName(), acct.getCn());
+        try {
+            return new InternetAddress(address, personal, MimeConstants.P_CHARSET_UTF8);
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.system.error("Unable to encode address %s <%s>", personal, address);
+            InternetAddress ia = new InternetAddress();
+            ia.setAddress(address);
+            return ia;
+        }
+    }
+    
+    /**
+     * Returns the <tt>Reply-To</tt> address used for an outgoing message from the given
+     * account, based on user preferences, or <tt>null</tt> if <tt>zimbraPrefReplyToEnabled</tt>
+     * is <tt>FALSE</tt>.
+     */
+    public static InternetAddress getReplyToAddress(Account acct) {
+        if (acct == null) {
+            return null;
+        }
+        if (!acct.isPrefReplyToEnabled()) {
+            return null;
+        }
+        String address = acct.getPrefReplyToAddress();
+        if (address == null) {
+            return null;
+        }
+        String personal = acct.getPrefReplyToDisplay();
+        try {
+            return new InternetAddress(address, personal, MimeConstants.P_CHARSET_UTF8);
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.system.error("Unable to encode address %s <%s>", personal, address);
+            InternetAddress ia = new InternetAddress();
+            ia.setAddress(address);
+            return ia;
+        }
+    }
+    
     public static boolean isDirectRecipient(Account acct, MimeMessage mm) throws ServiceException, MessagingException {
         return isDirectRecipient(acct, null, mm, -1);
     }

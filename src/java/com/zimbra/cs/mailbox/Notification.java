@@ -266,19 +266,12 @@ implements LmtpCallback {
         // Send the message
         try {
             SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
-            
-            // From
-            Address fromAddress = getAddress(account.getPrefFromAddress(), account.getPrefFromDisplay());
-            if (fromAddress == null) {
-                // Get address from account.
-                fromAddress = AccountUtil.getFriendlyEmailAddress(account);
-            }
-            out.setFrom(fromAddress);
-            
-            // Reply-To
-            Address replyToAddress = getAddress(account.getPrefReplyToAddress(), account.getPrefReplyToDisplay());
-            if (replyToAddress != null) {
-                out.setReplyTo(new Address[] { replyToAddress });
+
+            // Set From and Reply-To.
+            out.setFrom(AccountUtil.getFromAddress(account));
+            InternetAddress replyTo = AccountUtil.getReplyToAddress(account);
+            if (replyTo != null) {
+                out.setReplyTo(new Address[] { replyTo });
             }
             
             // To
@@ -335,24 +328,6 @@ implements LmtpCallback {
             ofailed("send failed", destination, rcpt, msg, me);
             return;
         }
-    }
-    
-    private Address getAddress(String addressString, String display)
-    throws AddressException {
-        if (StringUtil.isNullOrEmpty(addressString)) {
-            return null;
-        }
-        
-        // Get address from user prefs.
-        InternetAddress address = new InternetAddress(addressString);
-        if (!StringUtil.isNullOrEmpty(display)) {
-            try {
-                address.setPersonal(display, MimeConstants.P_CHARSET_UTF8);
-            } catch (UnsupportedEncodingException e) {
-                ZimbraLog.mailbox.warn("Unable to set display name for " + addressString, e);
-            }
-        }
-        return address;
     }
     
     private String getCharset(Account account, String data) {
