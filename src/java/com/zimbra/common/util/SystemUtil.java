@@ -50,4 +50,18 @@ public class SystemUtil {
         }
         return t;
     }
+    
+    /**
+     * Returns the first non-null value in the given list.
+     */
+    public static <E> E coalesce(E ... values) {
+        if (values != null) {
+            for (E value : values) {
+                if (value != null) {
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
 }
