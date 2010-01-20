@@ -1677,7 +1677,7 @@ public class ZMailbox implements ToZJSONObject {
      * hard delete conversation(s).
      *
      * @param ids list of conversation ids to act on
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1691,7 +1691,7 @@ public class ZMailbox implements ToZJSONObject {
      * moves conversation to trash folder.
      *
      * @param ids list of conversation ids to act on
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1706,7 +1706,7 @@ public class ZMailbox implements ToZJSONObject {
      *
      * @param ids list of conversation ids to act on
      * @param read mark read (TRUE) or unread (FALSE)
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1721,7 +1721,7 @@ public class ZMailbox implements ToZJSONObject {
      *
      * @param ids list of conversation ids to act on
      * @param flag flag (TRUE) or unflag (FALSE)
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1737,7 +1737,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param ids list of conversation ids to act on
      * @param tagId id of tag to tag/untag with
      * @param tag tag (TRUE) or untag (FALSE)
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1752,7 +1752,7 @@ public class ZMailbox implements ToZJSONObject {
      *
      * @param ids list of conversation ids to act on
      * @param destFolderId id of destination folder
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1768,7 +1768,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param id conversation id to act on
      * @param spam spam (TRUE) or not spam (FALSE)
      * @param destFolderId optional id of destination folder, only used with "not spam".
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items in a conversation. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1803,7 +1803,7 @@ public class ZMailbox implements ToZJSONObject {
      * hard delete item(s).
      *
      * @param ids list of item ids to act on
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1817,7 +1817,7 @@ public class ZMailbox implements ToZJSONObject {
      * move item(s) to trash
      *
      * @param ids list of item ids to act on
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1833,7 +1833,7 @@ public class ZMailbox implements ToZJSONObject {
      *
      * @param ids list of ids to act on
      * @param read mark read (TRUE) or unread (FALSE)
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1848,7 +1848,7 @@ public class ZMailbox implements ToZJSONObject {
      *
      * @param ids list of ids to act on
      * @param flag flag (TRUE) or unflag (FALSE)
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1864,7 +1864,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param ids list of ids to act on
      * @param tagId id of tag to tag/untag with
      * @param tag tag (TRUE) or untag (FALSE)
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items. A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1879,7 +1879,7 @@ public class ZMailbox implements ToZJSONObject {
      *
      * @param ids list of item ids to act on
      * @param destFolderId id of destination folder
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result
@@ -1895,7 +1895,7 @@ public class ZMailbox implements ToZJSONObject {
      * @param destFolderId optional destination folder
      * @param tagList optional new list of tag ids
      * @param flags optional new value for flags
-     * @param targetConstraints list of charecters comprised of TC_INCLUDE_* strings. Constrains the set of
+     * @param targetConstraints list of characters comprised of TC_INCLUDE_* strings. Constrains the set of
      *         affected items A leading '-' means to negate the constraint(s). Use null for
      *         no constraints.
      * @return action result

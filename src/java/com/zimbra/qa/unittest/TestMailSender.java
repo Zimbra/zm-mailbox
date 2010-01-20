@@ -335,8 +335,8 @@ extends TestCase {
     
     public static void main(String[] args)
     throws Exception {
-        // Simply starts the test SMTP server for ad-hoc testing.  The test needs
-        // to run inside the mailbox server.
+        // Simply starts the test SMTP server for ad-hoc testing.  Doesn't
+        // run unit tests, since they need to run on the server side.
         DummySmtpServer smtp = new DummySmtpServer();
         if (args.length >= 2) {
             smtp.setRejectedRecipient(args[0], args[1]);
