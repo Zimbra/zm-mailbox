@@ -1001,7 +1001,7 @@
         </java>
     </target>
 
-    <target name="import-wiki-templates" depends="init-wiki">
+    <target name="import-wiki-templates" depends="init-wiki" unless="email-only">
         <echo>Importing Wiki templates from data/wiki/Template to wiki user ${wiki.user.default}</echo>
         <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
             <arg line="impn ${wiki.user.default} data/wiki/Template Template"/>
