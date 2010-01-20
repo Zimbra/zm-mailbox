@@ -17,6 +17,9 @@ package com.zimbra.qa.unittest;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +36,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -62,6 +66,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZInviteCondition;
 import com.zimbra.cs.zclient.ZMessage.Flag;
 
 public class TestFilter
@@ -352,7 +357,7 @@ extends TestCase {
         assertNotNull(script);
         assertTrue(script.length() > 0);
         String convertedScript = normalize(script);
-        
+
         // Compare result.
         script = normalizeWhiteSpace(script);
         convertedScript = normalizeWhiteSpace(convertedScript);
@@ -414,6 +419,97 @@ extends TestCase {
         TestUtil.addMessageLmtp(subject, address, address);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"a b c\"");
         assertTrue("Message was not flagged", msg.isFlagged());
+    }
+    
+    public void testInvite()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        
+        // Create tags.
+        String prefix = NAME_PREFIX + " testInvite ";
+        
+        ZTag tagNoMethod = mbox.createTag(prefix + "no method", null);
+        ZTag tagAnyReply = mbox.createTag(prefix + "any reply", null);
+        ZTag tagAnyRequest = mbox.createTag(prefix + "any request", null);
+        ZTag tagRequestOrCancel = mbox.createTag(prefix + "request or cancel", null);
+        ZTag tagReply = mbox.createTag(prefix + "reply", null);
+        
+        // Create filter rules that set tags based on conditions.
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        ZFilterCondition condition = new ZInviteCondition(true);
+        ZFilterAction action = new ZTagAction(tagNoMethod.getName());
+        rules.add(createRule("testInvite - no method", condition, action));
+        
+        condition = new ZInviteCondition(true, ZInviteCondition.METHOD_ANYREPLY);
+        action = new ZTagAction(tagAnyReply.getName());
+        rules.add(createRule("testInvite - any reply", condition, action));
+        
+        condition = new ZInviteCondition(true, ZInviteCondition.METHOD_ANYREQUEST);
+        action = new ZTagAction(tagAnyRequest.getName());
+        rules.add(createRule("testInvite - any request", condition, action));
+        
+        condition = new ZInviteCondition(true, Arrays.asList(ZInviteCondition.METHOD_REQUEST, ZInviteCondition.METHOD_CANCEL));
+        action = new ZTagAction(tagRequestOrCancel.getName());
+        rules.add(createRule("testInvite - request or cancel", condition, action));
+        
+        condition = new ZInviteCondition(true, ZInviteCondition.METHOD_REPLY);
+        action = new ZTagAction(tagReply.getName());
+        rules.add(createRule("testInvite - reply", condition, action));
+        
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveRules(mMbox, zRules);
+
+        // Send an invite from user2 and check tags.
+        ZMailbox organizer = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        String subject = NAME_PREFIX + " testInvite request 1";
+        Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
+        Date endDate = new Date(startDate.getTime() + Constants.MILLIS_PER_HOUR);
+        TestUtil.createAppointment(organizer, subject, mbox.getName(), startDate, endDate);
+        
+        // Get message and check tags.
+        ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        Set<String> tagIds = getTagIdSet(msg);
+        assertTrue(tagIds.contains(tagNoMethod.getId()));
+        assertFalse(tagIds.contains(tagAnyReply.getId()));
+        assertTrue(tagIds.contains(tagAnyRequest.getId()));
+        assertTrue(tagIds.contains(tagRequestOrCancel.getId()));
+        assertFalse(tagIds.contains(tagReply.getId()));
+        
+        // Now test filtering a reply to an invite.  Send an invite to user2,
+        // and have user2 accept the appointment.
+        organizer = TestUtil.getZMailbox(USER_NAME);
+        mbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        subject = NAME_PREFIX + " testInvite request 2";
+        startDate = new Date(startDate.getTime() + Constants.MILLIS_PER_DAY);
+        endDate = new Date(endDate.getTime() + Constants.MILLIS_PER_DAY);
+        TestUtil.createAppointment(organizer, subject, mbox.getName(), startDate, endDate);
+        
+        // Receive the invite and accept the appointment.
+        msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        subject = NAME_PREFIX + " testInvite reply";
+        TestUtil.sendInviteReply(mbox, msg.getId(), organizer.getName(), subject, ZMailbox.ReplyVerb.ACCEPT);
+        msg = TestUtil.waitForMessage(organizer, "in:inbox subject:\"" + subject + "\"");
+        
+        // Check tags on the invite reply.
+        tagIds = getTagIdSet(msg);
+        assertTrue(tagIds.contains(tagNoMethod.getId()));
+        assertTrue(tagIds.contains(tagAnyReply.getId()));
+        assertFalse(tagIds.contains(tagAnyRequest.getId()));
+        assertFalse(tagIds.contains(tagRequestOrCancel.getId()));
+        assertTrue(tagIds.contains(tagReply.getId()));
+    }
+    
+    private Set<String> getTagIdSet(ZMessage msg) {
+        if (!msg.hasTags()) {
+            return Collections.emptySet();
+        }
+        Set<String> tagIds = new HashSet<String>();
+        Collections.addAll(tagIds, msg.getTagIds().split(","));
+        return tagIds;
+    }
+    
+    private ZFilterRule createRule(String name, ZFilterCondition condition, ZFilterAction action) {
+        return new ZFilterRule(name, true, false, Arrays.asList(condition), Arrays.asList(action));
     }
     
     /**
@@ -603,7 +699,7 @@ extends TestCase {
         
         ZFilterRules zRules = new ZFilterRules(rules);
         saveRules(mMbox, zRules);
-
+        
         // Add a message with an attachment.
         String address = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " testAttachment1";
@@ -690,6 +786,7 @@ extends TestCase {
         SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
         sieveToSoap.accept(node);
         SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+        
         return soapToSieve.getSieveScript();
     }
     

@@ -16,8 +16,11 @@ package com.zimbra.cs.zclient;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import org.json.JSONException;
 
@@ -206,7 +209,16 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             return new ZAttachmentExistsCondition(!isNegative);
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {
-            return new ZInviteCondition(!isNegative);
+            List<Element> eMethods = condEl.listElements(MailConstants.E_METHOD);
+            if (eMethods.isEmpty()) {
+                return new ZInviteCondition(!isNegative);
+            } else {
+                List<String> methods = new ArrayList<String>();
+                for (Element eMethod : eMethods) {
+                    methods.add(eMethod.getText());
+                }
+                return new ZInviteCondition(!isNegative, methods);
+            }
         } else {
              throw ZClientException.CLIENT_ERROR("unknown filter condition: "+name, null);
         }
@@ -504,16 +516,51 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public static class ZInviteCondition extends ZFilterCondition {
+        public static final String METHOD_ANYREQUEST = "anyrequest";
+        public static final String METHOD_ANYREPLY = "anyreply";
+        public static final String METHOD_PUBLISH = "publish";
+        public static final String METHOD_REQUEST = "request";
+        public static final String METHOD_REPLY = "reply";
+        public static final String METHOD_ADD = "add";
+        public static final String METHOD_CANCEL = "cancel";
+        public static final String METHOD_REFRESH = "refresh";
+        public static final String METHOD_DECLINECOUNTER = "declinecounter";
+        
         private boolean mIsInvite;
+        private List<String> mMethods = new ArrayList<String>();
 
         public ZInviteCondition(boolean isInvite) {
             mIsInvite = isInvite;
         }
-
+        
+        public ZInviteCondition(boolean isInvite, String method) {
+            this(isInvite, Arrays.asList(method));
+        }
+        
+        public ZInviteCondition(boolean isInvite, List<String> methods) {
+            mIsInvite = isInvite;
+            if (methods != null) {
+                mMethods.addAll(methods);
+            }
+        }
+        
+        public void setMethods(String ... methods) {
+            mMethods.clear();
+            Collections.addAll(mMethods, methods);
+        }
+        
         public boolean isInvite() { return mIsInvite; }
 
         public String toConditionString() {
-            return mIsInvite ? "invite exists" : "invite not_exists";
+            StringBuilder buf = new StringBuilder("invite ");
+            if (!mIsInvite) {
+                buf.append("not_");
+            }
+            buf.append("exists");
+            if (!mMethods.isEmpty()) {
+                buf.append(" method ").append(StringUtil.join(",", mMethods));
+            }
+            return buf.toString();
         }
 
         @Override
@@ -526,6 +573,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             Element test = parent.addElement(MailConstants.E_INVITE_TEST);
             if (!mIsInvite) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            for (String method : mMethods) {
+                test.addElement(MailConstants.E_METHOD).setText(method);
             }
             return test;
         }

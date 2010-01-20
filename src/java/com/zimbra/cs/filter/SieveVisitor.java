@@ -14,9 +14,11 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.jsieve.parser.SieveNode;
@@ -40,7 +42,7 @@ import com.zimbra.cs.filter.FilterUtil.StringComparison;
 public abstract class SieveVisitor {
 
     protected enum VisitPhase { begin, end }
-
+    
     @SuppressWarnings("unused")
     protected void visitNode(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
@@ -90,7 +92,7 @@ public abstract class SieveVisitor {
     throws ServiceException { }
     
     @SuppressWarnings("unused")
-    protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props)
+    protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props, List<String> methods)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
@@ -153,13 +155,10 @@ public abstract class SieveVisitor {
             if (isRuleNode(node)) {
                 // New rule tree.
                 RuleProperties newProps = new RuleProperties();
-                if ("disabled_if".equals(getNodeName(node))) {
+                if ("disabled_if".equalsIgnoreCase(getNodeName(node))) {
                     newProps.isEnabled = false;
                 }
-                newProps.condition = getCondition(getNode(node, 0, 0));
-                visitRule(node, VisitPhase.begin, newProps);
                 accept(node, newProps);
-                visitRule(node, VisitPhase.end, newProps);
             } else if (node instanceof ASTtest) {
                 acceptTest(node, props);
             } else if (node instanceof ASTcommand) {
@@ -172,34 +171,25 @@ public abstract class SieveVisitor {
         visitNode(parent, VisitPhase.end, props);
     }
     
-    /**
-     * Returns <tt>anyof</tt> if this node is an <tt>anyof</tt> test,
-     * or <tt>allof</tt> in all other cases (condition is not specified).
-     */
-    private Condition getCondition(Node node) {
-        if (!(node instanceof ASTtest)) {
-            return Condition.allof;
-        }
-        String name = getNodeName(node);
-        if ("anyof".equals(name)) {
-            return Condition.anyof;
-        } else {
-            return Condition.allof;
-        }
-    }
-    
     private void acceptTest(Node node, RuleProperties props)
     throws ServiceException {
         visitTest(node, VisitPhase.begin, props);
         String nodeName = getNodeName(node);
         
-        if ("not".equals(nodeName)) {
+        if ("not".equalsIgnoreCase(nodeName)) {
             props.isNegativeTest = true;
             accept(node, props);
-        } else if ("allof".equals(nodeName) || "anyof".equals(nodeName)) {
-            // allof and anyof are handled in accept() 
+        } else if ("allof".equalsIgnoreCase(nodeName)) {
+            props.condition = Condition.allof;
+            visitRule(node, VisitPhase.begin, props);
             accept(node, props);
-        } else if ("header".equals(nodeName)) {
+            visitRule(node, VisitPhase.end, props);
+        } else if ("anyof".equalsIgnoreCase(nodeName)) {
+            props.condition = Condition.anyof;
+            visitRule(node, VisitPhase.begin, props);
+            accept(node, props);
+            visitRule(node, VisitPhase.end, props);
+        } else if ("header".equalsIgnoreCase(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             StringComparison comparison = StringComparison.fromString(s);
             String header = getValue(node, 0, 1, 0, 0);
@@ -208,13 +198,13 @@ public abstract class SieveVisitor {
             visitHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
             accept(node, props);
             visitHeaderTest(node, VisitPhase.end, props, header, comparison, value);
-        } else if ("exists".equals(nodeName)) {
+        } else if ("exists".equalsIgnoreCase(nodeName)) {
             String header = getValue(node, 0, 0, 0, 0);
             
             visitHeaderExistsTest(node, VisitPhase.begin, props, header);
             accept(node, props);
             visitHeaderExistsTest(node, VisitPhase.end, props, header);
-        } else if ("size".equals(nodeName)) {
+        } else if ("size".equalsIgnoreCase(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             NumberComparison comparison = NumberComparison.fromString(s);
             SieveNode sizeNode = (SieveNode) getNode(node, 0, 1);
@@ -229,7 +219,7 @@ public abstract class SieveVisitor {
             visitSizeTest(node, VisitPhase.begin, props, comparison, size, sizeString);
             accept(node, props);
             visitSizeTest(node, VisitPhase.end, props, comparison, size, sizeString);
-        } else if ("date".equals(nodeName)) {
+        } else if ("date".equalsIgnoreCase(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             DateComparison comparison = DateComparison.fromString(s);
             String dateString = getValue(node, 0, 1, 0, 0);
@@ -241,26 +231,31 @@ public abstract class SieveVisitor {
             visitDateTest(node, VisitPhase.begin, props, comparison, date);
             accept(node, props);
             visitDateTest(node, VisitPhase.end, props, comparison, date);
-        } else if ("body".equals(nodeName)) {
+        } else if ("body".equalsIgnoreCase(nodeName)) {
             String value = getValue(node, 0, 1, 0, 0);
             
             visitBodyTest(node, VisitPhase.begin, props, value);
             accept(node, props);
             visitBodyTest(node, VisitPhase.end, props, value);
-        } else if ("attachment".equals(nodeName)) {
+        } else if ("attachment".equalsIgnoreCase(nodeName)) {
             visitAttachmentTest(node, VisitPhase.begin, props);
             accept(node, props);
             visitAttachmentTest(node, VisitPhase.end, props);
-        } else if ("addressbook".equals(nodeName)) {
+        } else if ("addressbook".equalsIgnoreCase(nodeName)) {
             String header = getValue(node, 0, 1, 0, 0);
             String folderPath = getValue(node, 0, 2, 0, 0);
             visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
             accept(node, props);
             visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
-        } else if ("invite".equals(nodeName)) {
-            visitInviteTest(node, VisitPhase.begin, props);
+        } else if ("invite".equalsIgnoreCase(nodeName)) {
+            List<String> methods = Collections.emptyList();
+            if (getNode(node, 0).jjtGetNumChildren() > 0) {
+                // Arguments node has children.
+                methods = getMultiValue(node, 0, 1, 0);
+            }
+            visitInviteTest(node, VisitPhase.begin, props, methods);
             accept(node, props);
-            visitAttachmentTest(node, VisitPhase.end, props);
+            visitInviteTest(node, VisitPhase.end, props, methods);
         } else {
             ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
             accept(node, props);
@@ -274,37 +269,37 @@ public abstract class SieveVisitor {
         visitAction(node, VisitPhase.begin, props);
         String nodeName = getNodeName(node);
 
-        if ("keep".equals(nodeName)) {
+        if ("keep".equalsIgnoreCase(nodeName)) {
             visitKeepAction(node, VisitPhase.begin, props);
             accept(node, props);
             visitKeepAction(node, VisitPhase.end, props);
-        } else if ("discard".equals(nodeName)) {
+        } else if ("discard".equalsIgnoreCase(nodeName)) {
             visitDiscardAction(node, VisitPhase.begin, props);
             accept(node, props);
             visitDiscardAction(node, VisitPhase.end, props);
-        } else if ("fileinto".equals(nodeName)) {
+        } else if ("fileinto".equalsIgnoreCase(nodeName)) {
             String folderPath = getValue(node, 0, 0, 0, 0);
             visitFileIntoAction(node, VisitPhase.begin, props, folderPath);
             accept(node, props);
             visitFileIntoAction(node, VisitPhase.end, props, folderPath);
-        } else if ("flag".equals(nodeName)) {
+        } else if ("flag".equalsIgnoreCase(nodeName)) {
             String s = getValue(node, 0, 0, 0, 0);
             Flag flag = Flag.fromString(s);
             
             visitFlagAction(node, VisitPhase.begin, props, flag);
             accept(node, props);
             visitFlagAction(node, VisitPhase.end, props, flag);
-        } else if ("tag".equals(nodeName)) {
+        } else if ("tag".equalsIgnoreCase(nodeName)) {
             String tagName = getValue(node, 0, 0, 0, 0);
             visitTagAction(node, VisitPhase.begin, props, tagName);
             accept(node, props);
             visitTagAction(node, VisitPhase.end, props, tagName);
-        } else if ("redirect".equals(nodeName)) {
+        } else if ("redirect".equalsIgnoreCase(nodeName)) {
             String address = getValue(node, 0, 0, 0, 0);
             visitRedirectAction(node, VisitPhase.begin, props, address);
             accept(node, props);
             visitRedirectAction(node, VisitPhase.end, props, address);
-        } else if ("stop".equals(nodeName)) {
+        } else if ("stop".equalsIgnoreCase(nodeName)) {
             visitStopAction(node, VisitPhase.begin, props);
             accept(node, props);
             visitStopAction(node, VisitPhase.end, props);
@@ -336,13 +331,13 @@ public abstract class SieveVisitor {
         for (int i = 0; i < indexes.length; i++) {
             if (node.jjtGetNumChildren() == 0) {
                 throw ServiceException.PARSE_ERROR(
-                    "Subnode " + i + " has no children.", null);
+                    "Subnode " + getNodeName(node) + " of node " + getNodeName(parent) + " has no children.", null);
             }
             
             if (indexes[i] >= node.jjtGetNumChildren()) {
                 throw ServiceException.PARSE_ERROR(
-                    "Subnode " + i + " has " + node.jjtGetNumChildren() + " children." +
-                    "  Requested child " + indexes[i] + ".", null);
+                    "Subnode " + getNodeName(node) + " of node " + getNodeName(parent) + " has " +
+                    node.jjtGetNumChildren() + " children.  Requested child " + indexes[i] + ".", null);
             }
             node = node.jjtGetChild(indexes[i]);
         }
@@ -357,9 +352,26 @@ public abstract class SieveVisitor {
             return null;
         }
         if (value instanceof String) {
-            value = FilterUtil.unescape(stripQuotes(((String) value)));
+            value = FilterUtil.unescape(stripQuotes((String) value));
         }
         return value.toString();
+    }
+    
+    private List<String> getMultiValue(Node parent, int ... indexes)
+    throws ServiceException {
+        Node child = getNode(parent, indexes);
+        if (child.jjtGetNumChildren() == 0) {
+            throw ServiceException.PARSE_ERROR("Subnode has no children", null);
+        }
+        List<String> values = new ArrayList<String>();
+        for (int i = 0; i < child.jjtGetNumChildren(); i++) {
+            Object value = ((SieveNode) child.jjtGetChild(i)).getValue();
+            if (value instanceof String) {
+                value = FilterUtil.unescape(stripQuotes((String) value));
+            }
+            values.add(value == null ? null : value.toString());
+        }
+        return values;
     }
     
     

@@ -58,3 +58,13 @@ if anyof (addressbook :in "from" "contacts")
     flag "flagged";
     stop;
 }
+# Invite without method
+if allof (invite)
+{
+    keep;
+}
+# Invite with method
+if anyof (invite :method ["reply", "refresh", "counter"])
+{
+    keep;
+}

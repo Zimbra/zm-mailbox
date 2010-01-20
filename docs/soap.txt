@@ -2581,7 +2581,7 @@ to work in ZCS 6.0, and will be removed in the next major release.
 
 <GetFilterRulesResponse>
   <filterRules>
-    <filterRule name="{rule-name}" [active="{0|1}"]>
+    <filterRule name="{rule-name}" [active="{0|1}"]>*
       <filterTests condition="{allof | anyof"}>
         {test}
         [test]
@@ -2593,10 +2593,9 @@ to work in ZCS 6.0, and will be removed in the next major release.
         ...
       </filterActions>
     </filterRule>
-    [filter rule]
-    ...
   </filterRules>
 </GetFilterRulesResponse>
+
 
 <ModifyFilterRulesRequest>
   <filterRules> ... </filterRules>
@@ -2615,7 +2614,10 @@ Tests:
   <bodyTest value="{value}" />
   <attachmentTest />
   <addressBookTest header="{header-name}" folderPath="{folder-path}" />
-  <inviteTest />
+  <inviteTest>
+    <method>{method}</method>
+    ...
+  </inviteTest>
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test
@@ -2642,6 +2644,10 @@ flag values: flagged, read
 date values are in seconds since epoch, and are truncated to the day. Hours, minutes,
   and seconds are ignored.
 index is an integer, used to maintain the order of filter tests and actions.
+method values: anyrequest, anyreply, publish, request, reply, add, cancel, refresh,
+  counter, declinecounter.  anyrequest matches publish, request, add, cancel,
+  declinecounter.  anyreply matches reply, refresh, counter.  If no methods are
+  specified, the test returns true for all invites.
  
 ---------------------------
 

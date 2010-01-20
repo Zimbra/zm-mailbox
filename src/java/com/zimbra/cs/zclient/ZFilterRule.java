@@ -259,7 +259,12 @@ public class ZFilterRule implements ToZJSONObject {
                 }
             } else if (a.equals("invite")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
-                conditions.add(new ZInviteCondition(args[i++].equals("exists")));
+                ZInviteCondition cond = new ZInviteCondition(args[i++].equals("exists"));
+                if (i + 1 < args.length && args[i].equalsIgnoreCase("method")) {
+                    i++; // method
+                    cond.setMethods(args[i++].split(","));
+                }
+                conditions.add(cond);
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {

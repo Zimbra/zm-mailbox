@@ -156,7 +156,7 @@ public class SoapToSieve {
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             snippet = "attachment";
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {
-            snippet = "invite";
+            snippet = convertInviteTest(test);
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
         }
@@ -165,6 +165,27 @@ public class SoapToSieve {
             snippet = "not " + snippet;
         }
         return snippet;
+    }
+    
+    private String convertInviteTest(Element test) {
+        StringBuilder buf = new StringBuilder("invite");
+        List<Element> methods = test.listElements(MailConstants.E_METHOD);
+        if (!methods.isEmpty()) {
+            buf.append(" :method [");
+            boolean firstTime = true;
+            for (Element method : methods) {
+                if (firstTime) {
+                    firstTime = false;
+                } else {
+                    buf.append(", ");
+                }
+                buf.append('"');
+                buf.append(FilterUtil.escape(method.getText()));
+                buf.append('"');
+            }
+            buf.append("]");
+        }
+        return buf.toString();
     }
     
     private String handleAction(Element action)

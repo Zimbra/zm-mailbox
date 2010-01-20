@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import javax.mail.MessagingException;
@@ -66,6 +67,7 @@ import com.zimbra.cs.client.soap.LmcSoapClientException;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -79,10 +81,12 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZDataSource;
+import com.zimbra.cs.zclient.ZDateTime;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZGetMessageParams;
+import com.zimbra.cs.zclient.ZInvite;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMountpoint;
@@ -90,9 +94,18 @@ import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZInvite.ZAttendee;
+import com.zimbra.cs.zclient.ZInvite.ZClass;
+import com.zimbra.cs.zclient.ZInvite.ZComponent;
+import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
+import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
+import com.zimbra.cs.zclient.ZInvite.ZRole;
+import com.zimbra.cs.zclient.ZInvite.ZStatus;
+import com.zimbra.cs.zclient.ZInvite.ZTransparency;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
+import com.zimbra.cs.zclient.ZMailbox.ZAppointmentResult;
 import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
@@ -282,22 +295,28 @@ extends Assert {
     
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body, String attachmentUploadId)
     throws Exception {
+        ZOutgoingMessage msg = getOutgoingMessage(recipientName, subject, body, attachmentUploadId);
+        senderMbox.sendMessage(msg, null, false);
+    }
+    
+    public static ZOutgoingMessage getOutgoingMessage(String recipient, String subject, String body, String attachmentUploadId)
+    throws ServiceException {
         ZOutgoingMessage msg = new ZOutgoingMessage();
         List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
-        addresses.add(new ZEmailAddress(TestUtil.getAddress(recipientName),
+        addresses.add(new ZEmailAddress(addDomainIfNecessary(recipient),
             null, null, ZEmailAddress.EMAIL_TYPE_TO));
         msg.setAddresses(addresses);
         msg.setSubject(subject);
         msg.setMessagePart(new MessagePart("text/plain", body));
         msg.setAttachmentUploadId(attachmentUploadId);
-        senderMbox.sendMessage(msg, null, false);
+        return msg;
     }
 
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
     public static List<Integer> search(Mailbox mbox, String query, byte type)
-    throws Exception {
+    throws ServiceException, ParseException, IOException {
         return search(mbox, query, new byte[] { type });
     }
     
@@ -305,7 +324,7 @@ extends Assert {
      * Searches a mailbox and returns the id's of all matching items.
      */
     public static List<Integer> search(Mailbox mbox, String query, byte[] types)
-    throws Exception {
+    throws ServiceException, ParseException, IOException {
         List<Integer> ids = new ArrayList<Integer>();
         ZimbraQueryResults r = mbox.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
@@ -318,7 +337,7 @@ extends Assert {
     
     
     public static List<String> search(ZMailbox mbox, String query, String type)
-    throws Exception {
+    throws ServiceException {
         List<String> ids = new ArrayList<String>();
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(type);
@@ -329,7 +348,7 @@ extends Assert {
     }
     
     public static List<ZMessage> search(ZMailbox mbox, String query)
-    throws Exception {
+    throws ServiceException {
         List<ZMessage> msgs = new ArrayList<ZMessage>();
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
@@ -346,7 +365,7 @@ extends Assert {
      * Gets the raw content of a message.
      */
     public static String getContent(ZMailbox mbox, String msgId)
-    throws Exception {
+    throws ServiceException {
         ZGetMessageParams msgParams = new ZGetMessageParams();
         msgParams.setId(msgId);
         msgParams.setRawContent(true);
@@ -435,6 +454,12 @@ extends Assert {
             if (ds.getName().contains(subjectSubstring)) {
                 mbox.deleteDataSource(ds);
             }
+        }
+        
+        // Delete appointments
+        List<String> ids = search(mbox, subjectSubstring, ZSearchParams.TYPE_APPOINTMENT);
+        if (!ids.isEmpty()) {
+            mbox.deleteItem(StringUtil.join(",", ids), null);
         }
     }
 
@@ -897,5 +922,46 @@ extends Assert {
         assertNotNull("Content was not fetched from the server", content);
         MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
         return mimeMsg.getHeader(headerName, null);
+    }
+    
+    public static ZAppointmentResult createAppointment(ZMailbox mailbox, String subject, String attendee, Date startDate, Date endDate)
+    throws ServiceException {
+        ZInvite invite = new ZInvite();
+        ZInvite.ZComponent comp = new ZComponent();
+
+        comp.setStatus(ZStatus.CONF);
+        comp.setClassProp(ZClass.PUB);
+        comp.setTransparency(ZTransparency.O);
+
+        comp.setStart(new ZDateTime(startDate.getTime(), false, TimeZone.getDefault()));
+        comp.setEnd(new ZDateTime(endDate.getTime(), false, TimeZone.getDefault()));
+        comp.setName(subject);
+        comp.setOrganizer(new ZOrganizer(mailbox.getName()));
+
+        if (attendee != null) {
+            attendee = addDomainIfNecessary(attendee);
+            ZAttendee zattendee = new ZAttendee();
+            zattendee.setAddress(attendee);
+            zattendee.setRole(ZRole.REQ);
+            zattendee.setParticipantStatus(ZParticipantStatus.NE);
+            zattendee.setRSVP(true);
+            comp.getAttendees().add(zattendee);
+        }
+
+        invite.getComponents().add(comp);
+
+        ZOutgoingMessage m = null;
+        if (attendee != null) {
+            m = getOutgoingMessage(attendee, subject, "Test appointment", null);
+        }
+
+        return mailbox.createAppointment(ZFolder.ID_CALENDAR, null, m, invite, null);
+    }
+    
+    public static void sendInviteReply(ZMailbox mbox, String inviteId, String organizer, String subject, ZMailbox.ReplyVerb replyVerb)
+    throws ServiceException {
+        organizer = addDomainIfNecessary(organizer);
+        ZOutgoingMessage msg = getOutgoingMessage(organizer, subject, "Reply to appointment " + inviteId, null);
+        mbox.sendInviteReply(inviteId, "0", replyVerb, true, null, null, msg);
     }
 }
