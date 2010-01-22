@@ -117,25 +117,25 @@ abstract class ImapRequest {
     protected abstract class Part {
         abstract int size();
         abstract byte[] getBytes() throws IOException;
-        boolean isString() { return false; }
-        boolean isLiteral() { return false; }
+        boolean isString()   { return false; }
+        boolean isLiteral()  { return false; }
         abstract String getString() throws ImapParseException;
         abstract Literal getLiteral() throws ImapParseException;
-        void cleanup() {}
+        void cleanup()  {}
     }
 
     private class StringPart extends Part {
         private String str;
 
-        StringPart(String s) { str = s; }
+        StringPart(String s)  { str = s; }
 
-        int size() { return str.length(); }
-        byte[] getBytes() { return str.getBytes(); }
-        boolean isString() { return true; }
-        String getString() { return str; }
-        public String toString() { return str; }
+        @Override int size()                { return str.length(); }
+        @Override byte[] getBytes()         { return str.getBytes(); }
+        @Override boolean isString()        { return true; }
+        @Override String getString()        { return str; }
+        @Override public String toString()  { return str; }
 
-        Literal getLiteral() throws ImapParseException {
+        @Override Literal getLiteral() throws ImapParseException {
             throw new ImapParseException(mTag, "not inside literal");
         }
     }
@@ -143,19 +143,19 @@ abstract class ImapRequest {
     private class LiteralPart extends Part {
         private Literal lit;
 
-        LiteralPart(Literal l) { lit = l; }
+        LiteralPart(Literal l)  { lit = l; }
 
-        int size() { return lit.size(); }
-        byte[] getBytes() throws IOException { return lit.getBytes(); }
-        boolean isLiteral() { return true; }
-        Literal getLiteral() { return lit; }
-        void cleanup() { lit.cleanup(); }
+        @Override int size()                            { return lit.size(); }
+        @Override byte[] getBytes() throws IOException  { return lit.getBytes(); }
+        @Override boolean isLiteral()                   { return true; }
+        @Override Literal getLiteral()                  { return lit; }
+        @Override void cleanup()                        { lit.cleanup(); }
 
-        public String getString() throws ImapParseException {
+        @Override public String getString() throws ImapParseException {
             throw new ImapParseException(mTag, "not inside string");
         }
 
-        public String toString() {
+        @Override public String toString() {
             try {
                 return new String(lit.getBytes(), "US-ASCII");
             } catch (IOException e) {
@@ -190,9 +190,8 @@ abstract class ImapRequest {
     }
 
     void cleanup() {
-        for (Part part : mParts) {
+        for (Part part : mParts)
             part.cleanup();
-        }
         mParts.clear();
     }
 
@@ -286,7 +285,8 @@ abstract class ImapRequest {
     /* Returns the character at the read position, or -1 if we're at the end
      * of a literal or of a line. */
     int peekChar() throws ImapParseException {
-        if (mIndex >= mParts.size()) return -1;
+        if (mIndex >= mParts.size())
+            return -1;
         String str = mParts.get(mIndex).getString();
         return mOffset < str.length() ? str.charAt(mOffset) : -1;
     }
@@ -302,19 +302,18 @@ abstract class ImapRequest {
         }
     }
 
-    void skipSpace() throws ImapParseException { skipChar(' '); }
+    void skipSpace() throws ImapParseException  { skipChar(' '); }
 
     void skipChar(char c) throws ImapParseException {
         String str = mParts.get(mIndex).getString();
-        if (mOffset >= str.length()) {
+        if (mOffset >= str.length())
             throw new ImapParseException(mTag, "unexpected end of line; expected '" + c + "'");
-        }
         char got = str.charAt(mOffset);
         if (got == c) mOffset++;
         else throw new ImapParseException(mTag, "wrong character; expected '" + c + "' but got '" + got + "'");
     }                                       
 
-    void skipNIL() throws ImapParseException { skipAtom("NIL"); }
+    void skipNIL() throws ImapParseException  { skipAtom("NIL"); }
 
     void skipAtom(String atom) throws ImapParseException {
         if (!readATOM().equals(atom))
