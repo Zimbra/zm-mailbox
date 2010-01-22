@@ -124,11 +124,9 @@ public class DataSourceCallback extends AttributeCallback {
     private void postModifyPollingInterval(Map context, String attrName, Entry entry, boolean isCreate) {
         // Don't do anything if the interval didn't change
         Boolean intervalChanged = isCreate || (Boolean) context.get(KEY_INTERVAL_CHANGED);
-        if (intervalChanged == null || !intervalChanged) {
-            ZimbraLog.datasource.debug("Polling interval did not change.  Not updating schedule.");
-            return;
-        }
         
+        if (intervalChanged == null || !intervalChanged)
+            return;
         // Update schedules for any affected data sources
         try {
             if (entry instanceof DataSource) {
