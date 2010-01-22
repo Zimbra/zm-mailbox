@@ -171,6 +171,7 @@ public class LC {
     
     public static final KnownKey stats_img_folder;
     
+    public static final KnownKey soap_fault_include_stack_trace;
     public static final KnownKey soap_response_buffer_size;
     public static final KnownKey soap_response_chunked_transfer_encoding_disabled;
     public static final KnownKey zimbra_servlet_output_stream_buffer_size;
@@ -771,6 +772,8 @@ public class LC {
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
 
+        soap_fault_include_stack_trace = new KnownKey("soap_fault_include_stack_trace", "false");
+        
         soap_response_buffer_size = new KnownKey("soap_response_buffer_size");
         soap_response_buffer_size.setDefault("");
         soap_response_buffer_size.setDoc("the size of the content buffer for sending SOAP http responses." + 

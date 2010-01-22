@@ -22,8 +22,10 @@ package com.zimbra.common.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.util.ExceptionToString;
 
 /**
  * Interface to Soap 1.1 Protocol
@@ -96,7 +98,10 @@ class Soap11Protocol extends SoapProtocol {
         Element error = eDetail.addUniqueElement(ZimbraNamespace.E_ERROR);
         // FIXME: should really be a qualified "attribute"
         error.addUniqueElement(ZimbraNamespace.E_CODE).setText(e.getCode());
-        error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(e.getId());
+        if (LC.soap_fault_include_stack_trace.booleanValue())
+            error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(ExceptionToString.ToString(e));
+        else
+            error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(e.getId());
         
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
