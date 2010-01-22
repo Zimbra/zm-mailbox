@@ -68,9 +68,9 @@ public class ModifyZimletPrefs extends AccountDocumentHandler {
              * if default presence is the same as what user wants. it does not 
              * need to appear in the user pref.
              */
-            if (defaultPresence == null ||                     // zimlet not available to the user
+            if (defaultPresence == null ||               // zimlet not available to the user
                 defaultPresence == Presence.mandatory || // zimlet is mandatory
-                defaultPresence == userPrefPresence) {         // default == what user wants
+                defaultPresence == userPrefPresence) {   // default == what user wants
                 StringUtil.addToMultiMap(attrs, delEnabled, zimletName);
                 StringUtil.addToMultiMap(attrs, delDisabled, zimletName);
             } else {

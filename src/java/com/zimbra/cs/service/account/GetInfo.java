@@ -197,8 +197,10 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     private static void doZimlets(Element response, Account acct) {
-        
     	try {
+    	    // bug 34517
+            ZimletUtil.migrateUserPrefIfNecessary(acct);
+    	    
             ZimletPresence userZimlets = ZimletUtil.getUserZimlets(acct);
             List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(userZimlets.getZimletNamesAsArray());
             int priority = 0;

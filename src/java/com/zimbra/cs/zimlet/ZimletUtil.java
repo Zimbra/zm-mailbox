@@ -61,6 +61,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zimlet.ZimletPresence.Presence;
 import com.zimbra.common.service.ServiceException;
@@ -85,6 +87,47 @@ public class ZimletUtil {
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
 	@SuppressWarnings("unchecked")
 	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
+	
+	public static void migrateUserPrefIfNecessary(Account acct) throws ServiceException {
+	    if (!DebugConfig.enableMigrateUserZimletPrefs)
+	        return;
+	    
+	    Set<String> wanted = acct.getMultiAttrSet(Provisioning.A_zimbraPrefZimlets);
+	    Set<String> unwanted = acct.getMultiAttrSet(Provisioning.A_zimbraPrefDisabledZimlets);
+	    
+	    // needs upgrade only if wanted is not empty and unwanted is empty, because
+	    // if wanted is empty: means use whatever zimbraZimletAvailableZimlets/zimbraZimletDomainAvailableZimlets says
+	    // if unwanted is not empty: already migrated or user has change it.
+	    boolean needsMigrate = (!wanted.isEmpty()) && unwanted.isEmpty();
+	    
+	    if (!needsMigrate)
+	        return;
+	    
+	    ZimletPresence availZimlets = getAvailableZimlets(acct);
+	    Map<String, Object> attrs = new HashMap<String, Object>();
+	    StringBuilder disabledZimletNamesForLogging = new StringBuilder();
+	    
+	    for (String zimletName : availZimlets.getZimletNames()) {
+	        Presence presence = availZimlets.getPresence(zimletName);
+	        
+	        if (presence == Presence.enabled && !wanted.contains(zimletName)) {
+	            disabledZimletNamesForLogging.append(zimletName + ", ");
+	            StringUtil.addToMultiMap(attrs, Provisioning.A_zimbraPrefDisabledZimlets, zimletName);
+	        }
+	    }
+	    
+	    // in the odd case when someone has all available zimlets set in his zimbraPrefZimlets,
+	    // attrs will be empty => we've got nothing to do. 
+	    if (attrs.isEmpty()) {
+	        ZimbraLog.account.info("Not migrating zimbraPrefDisabledZimlets for account " + acct.getName() + " because all zimlets are enabled");
+	        return;
+	    }
+
+	    ZimbraLog.account.info("Migrating zimbraPrefDisabledZimlets for account " + acct.getName() + " to " + disabledZimletNamesForLogging.toString());
+	    
+	    Provisioning prov = Provisioning.getInstance();
+        prov.modifyAttrs(acct, attrs);
+	}
 	
     public static ZimletPresence getUserZimlets(Account acct) throws ServiceException {
         ZimletPresence userZimlets = getAvailableZimlets(acct);

@@ -151,6 +151,8 @@ public class DebugConfig {
     
     public static boolean enableRefCountedIndexReaderStats;
     
+    public static boolean enableMigrateUserZimletPrefs;
+    
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -200,6 +202,16 @@ public class DebugConfig {
         enableContactLocalizedSort = booleanValue("debug_enable_contact_localized_sort", true);
         
         enableRefCountedIndexReaderStats = booleanValue("debug_enable_ref_counted_index_reader_stats", false);
+        
+        // TODO: change default to false after 6.0.5
+        //       and request an upgrade step:
+        //           for upgrade: from pre 6.0.5 => true
+        //                        from 6.0.5 or later => false   
+        //
+        //       for new install of 6.0.5, don't need to set a value, default will be true
+        //       for new install after 6.0.5, don't need to set a value, default will be false
+        //      
+        enableMigrateUserZimletPrefs = booleanValue("migrate_user_zimlet_prefs", true);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
