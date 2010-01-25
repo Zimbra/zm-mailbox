@@ -22,6 +22,7 @@ import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,6 +36,7 @@ import java.io.EOFException;
 public final class ImapInputStream extends MailInputStream {
     private final ImapConnection connection;
     private final ImapConfig config;
+    private final ByteArrayOutputStream baos;
 
     private static final boolean DEBUG = false;
 
@@ -42,14 +44,14 @@ public final class ImapInputStream extends MailInputStream {
         super(is);
         this.connection = connection;
         config = connection.getImapConfig();
+        baos = new ByteArrayOutputStream();
     }
 
-    // TODO This constructor can be removed once we switch to the new ImapSync
-    // and UidFetch is no longer needed
     public ImapInputStream(InputStream is, ImapConfig config) {
         super(is);
         connection = null;
         this.config = config;
+        baos = new ByteArrayOutputStream();
     }
     
     public Atom readAtom() throws IOException {
@@ -272,7 +274,15 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public String readText() throws IOException {
-        return readChars(Chars.TEXT_CHARS);
+        if (isEOL()) {
+            return "";
+        }
+        // bug 43997: Handle possible UTF8 encoded response text in greeting.
+        baos.reset();
+        do {
+            baos.write(read());
+        } while (!isEOL());
+        return baos.toString("UTF8");
     }
 
     public String readText(char delim) throws IOException {

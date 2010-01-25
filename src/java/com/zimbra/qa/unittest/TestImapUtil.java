@@ -21,6 +21,8 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.datasource.ImapUtil;
 
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,6 +89,14 @@ public class TestImapUtil extends TestCase {
         assertEquals("INBOX", folders.get(0));
     }
 
+    public void testUtf8Text() throws Exception {
+        String msg = "UTF8: ‘Žé?";
+        byte[] b = (msg + "\r\n").getBytes("UTF8");
+        ImapInputStream is = new ImapInputStream(new ByteArrayInputStream(b), new ImapConfig());
+        assertEquals(msg, is.readText());
+        is.skipCRLF();
+    }
+    
     private void compareLists(List<?> expected, List<?> actual) {
         assertEquals(expected.size(), actual.size());
         for (int i = 0; i < expected.size(); i++) {
