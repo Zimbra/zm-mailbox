@@ -107,7 +107,10 @@ class RemoteQueryOperation extends FilterQueryOperation {
     public void doneWithSearchResults() throws ServiceException {
         if (mResults != null)
             mResults.doneWithSearchResults();
+        
+        super.doneWithSearchResults();
     }
+    
     public List<QueryInfo> getResultInfo() {
         if (mResults != null)
             return mResults.getResultInfo();
