@@ -233,7 +233,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         c.addAttribute(MailConstants.A_NAME, mName);
         if (mOp != null) c.addAttribute(MailConstants.A_OPERATION, mOp);
         if (mK0 != null) c.addAttribute(MailConstants.A_LHS, mK0);
-        if (mK1 != null) c.addAttribute(MailConstants.A_RHS, mK1);
+        if (!StringUtil.isNullOrEmpty(mK1)) c.addAttribute(MailConstants.A_RHS, mK1);
         return c;
     }
 
