@@ -1004,4 +1004,9 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();
     }
+    
+    long getMailboxId() {
+        return mMbidx.getMailboxId();
+    }
+    
 }

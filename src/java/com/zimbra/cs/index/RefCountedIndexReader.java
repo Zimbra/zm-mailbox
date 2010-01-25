@@ -74,7 +74,8 @@ final class RefCountedIndexReader {
         
         public String getHeader() {
             List<String> columns = new ArrayList<String>();
-            columns.add("ThreadId");
+            columns.add("ThreadName");
+            columns.add("MailboxId");
             columns.add("Notes");
             columns.add("Hashcode");
             columns.add("RefCount");
@@ -117,8 +118,20 @@ final class RefCountedIndexReader {
             
         Thread curThread = Thread.currentThread();
             
-        // ThreadId,
-        line.append(curThread.getId() + DEBUG_DELIM);
+        // ThreadName,
+        // line.append(curThread.getId() + DEBUG_DELIM);
+        line.append(curThread.getName() + DEBUG_DELIM);        
+        
+        // MailboxId
+        long mailboxId = -1;
+        if (mIdx instanceof LuceneIndex) {
+            LuceneIndex li = (LuceneIndex)mIdx;
+            mailboxId = li.getMailboxId();
+        }
+        if (mailboxId == -1)
+            line.append("unknown" + DEBUG_DELIM);
+        else
+            line.append(mailboxId + DEBUG_DELIM);
             
         // Notes,
         line.append("[");
