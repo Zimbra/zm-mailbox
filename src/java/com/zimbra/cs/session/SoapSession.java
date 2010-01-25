@@ -606,6 +606,7 @@ public class SoapSession extends Session {
                 zscProxy.setProxySession(rsi.mSessionId);
     
                 ProxyTarget proxy = new ProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
+                proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(server, envelope.getFirst(), true, true);
             } catch (ServiceException e) {
@@ -1000,22 +1001,30 @@ public class SoapSession extends Session {
 
     private Map<String, Element> fetchRemoteHierarchies(ZimbraSoapContext zsc, Map<String, Server> remoteServers) {
         Map<String, Element> hierarchies = new HashMap<String, Element>();
+
+        Element noop;
         try {
-            Element noop = Element.create(zsc.getRequestProtocol(), MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
-
-            for (Map.Entry<String, Server> remote : remoteServers.entrySet()) {
-                String accountId = remote.getKey();
-                Server server = remote.getValue();
-
+            noop = Element.create(zsc.getRequestProtocol(), MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
+        } catch (ServiceException e) {
+            // garbage in, nothing out...
+            return hierarchies;
+        }
+        
+        for (Map.Entry<String, Server> remote : remoteServers.entrySet()) {
+            String accountId = remote.getKey();
+            Server server = remote.getValue();
+            
+            try {
                 ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, accountId);
                 zscProxy.setProxySession(getRemoteSessionId(server));
 
                 ProxyTarget proxy = new ProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
+                proxy.disableRetries().setTimeouts(10 * Constants.MILLIS_PER_SECOND);
                 Pair<Element, Element> envelope = proxy.execute(noop.detach(), zscProxy);
                 handleRemoteNotifications(server, envelope.getFirst(), true, true);
                 hierarchies.put(accountId, envelope.getSecond().getOptionalElement(MailConstants.E_FOLDER));
-            }
-        } catch (ServiceException e) { }
+            } catch (ServiceException e) { }
+        }
         return hierarchies;
     }
 
