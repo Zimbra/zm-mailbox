@@ -370,6 +370,24 @@ public class FileUtil {
         Arrays.sort(files, comp);
     }
 
+    
+    public static void delete(File file) throws IOException {
+        if (file.delete() || !file.exists())
+            return;
+        if (SystemUtil.ON_WINDOWS) {
+            //HACK: work around JVM bug
+            for (int i = 0; i < 20; ++i) {
+                System.gc();
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException x) {}
+                if (file.delete() || !file.exists())
+                    return;
+            }
+        }
+        throw new IOException("file deletion failed: " + file.getPath());
+    }
+
     /**
 	 * Deletes a directory hierarchy and all files under it.
 	 * 
