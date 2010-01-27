@@ -15,25 +15,10 @@
 
 package com.zimbra.qa.unittest;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
 import junit.framework.TestCase;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.ZimbraHit;
-import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.MimeVisitor;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
 
 
 /**
@@ -41,61 +26,24 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class TestConversion extends TestCase {
 
+    private static final String USER_NAME = "user1";
+    
+    /**
+     * Tests downloading attachments from a TNEF message (bug 44263).
+     */
     public void testTnef()
     throws Exception {
-        ZimbraLog.test.debug("testTnef()");
-        
-        AttachmentFinder finder = new AttachmentFinder("upload.gif");
-        Message msg = getTnefMessage();
-        finder.accept(msg.getMimeMessage());
-        assertTrue("Could not find upload.gif", finder.found());
-        
-        finder = new AttachmentFinder("upload2.gif");
-        finder.accept(msg.getMimeMessage());
-        assertTrue("Could not find upload2.gif", finder.found());
-    }
-
-    private Message getTnefMessage()
-    throws Exception {
-        // Search for the sample message that has a TNEF attachment
-        Account account = TestUtil.getAccount("user1");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        String query = "subject:Rich text (TNEF) test";
-        ZimbraQueryResults results = mbox.search(new OperationContext(mbox), query,
-            new byte[] { MailItem.TYPE_MESSAGE}, SortBy.SUBJ_ASCENDING, 100);
-        assertTrue("No results found for '" + query + "'", results.hasNext());
-        
-        // Make sure that attachments have been extracted out of winmail.dat
-        ZimbraHit hit = results.getNext();
-        results.doneWithSearchResults();
-        return mbox.getMessageById(null, hit.getItemId());
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"Rich text (TNEF) test\"");
+        byte[] data = TestUtil.getContent(mbox, msg.getId(), "upload.gif");
+        assertEquals(73, data.length);
+        data = TestUtil.getContent(mbox, msg.getId(), "upload2.gif");
+        assertEquals(851, data.length);
     }
     
-    private class AttachmentFinder extends MimeVisitor {
-        private String mFilename;
-        private boolean mFound = false;
-        
-        public AttachmentFinder(String filename) {
-            mFilename = filename;
-        }
-        
-        public boolean found() {
-            return mFound;
-        }
-        
-        protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
-            String filename = Mime.getFilename(bp);
-            if (filename != null && filename.equals(mFilename))
-                mFound = true;
-            return false;
-        }
-        
-        protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) {
-            return false;
-        }
-        
-        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) {
-            return false;
-        }
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestConversion.class);
     }
 }

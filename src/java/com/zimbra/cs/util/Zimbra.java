@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.mime.TnefFileCache;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
@@ -191,6 +192,12 @@ public class Zimbra {
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
         }
+        
+        try {
+            TnefFileCache.startup();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize TNEF file cache.", e);
+        }
 
         MailboxManager.getInstance();
 
@@ -322,6 +329,8 @@ public class Zimbra {
 
         MailboxManager.getInstance().shutdown();
 
+        TnefFileCache.shutdown();
+        
         if (sIsMailboxd)
             StoreManager.getInstance().shutdown();
         

@@ -48,6 +48,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.Element.Attribute;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -109,6 +110,7 @@ import com.zimbra.cs.zclient.ZMailbox.ZAppointmentResult;
 import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 
 /**
  * @author bburtin
@@ -373,6 +375,35 @@ extends Assert {
         return msg.getContent();
     }
     
+    public static byte[] getContent(ZMailbox mbox, String msgId, String partName)
+    throws ServiceException, IOException {
+        ZMessage msg = mbox.getMessageById(msgId);
+        ZMimePart part = getPart(msg.getMimeStructure(), partName);
+        if (part == null) {
+            return null;
+        }
+        return ByteUtil.getContent(mbox.getRESTResource("?id=" + msgId + "&part=" + part.getPartName()), 1024);
+    }
+
+    /**
+     * Returns the mime part in the given structure whose name, part name, or
+     * filename matches the given name.
+     */
+    public static ZMimePart getPart(ZMimePart mimeStructure, String name) {
+        for (ZMimePart child : mimeStructure.getChildren()) {
+            ZMimePart part = getPart(child, name);
+            if (part != null) {
+                return part;
+            }
+        }
+        if (StringUtil.equalIgnoreCase(mimeStructure.getName(), name) ||
+            StringUtil.equalIgnoreCase(mimeStructure.getFileName(), name) ||
+            StringUtil.equalIgnoreCase(mimeStructure.getPartName(), name)) {
+            return mimeStructure;
+        }
+        return null;
+    }
+
     public static ZMessage waitForMessage(ZMailbox mbox, String query)
     throws Exception {
         for (int i = 1; i <= 20; i++) {
