@@ -41,11 +41,18 @@ import java.util.regex.Pattern;
  */
 public class StringUtil {
 
-    /** A user-friendly equal that handles one or both nulls easily. */
+    /** A user-friendly version of <tt>String.equals()</tt> that handles one or both nulls easily. */
     public static boolean equal(String s1, String s2) {
         if (s1 == null || s2 == null)
             return s1 == s2;
         return s1.equals(s2);
+    }
+    
+    /** A user-friendly version of <tt>String.equalsIgnoreCase()</tt> that handles one or both nulls easily. */
+    public static boolean equalIgnoreCase(String s1, String s2) {
+        if (s1 == null || s2 == null)
+            return s1 == s2;
+        return s1.equalsIgnoreCase(s2);
     }
 
     /**
