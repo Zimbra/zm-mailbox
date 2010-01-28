@@ -39,6 +39,7 @@ public class MailboxUpgrade {
 	//
 
 	private static final Map<Long,Byte> UPGRADE_TO_1_7_COLORS = new HashMap<Long,Byte>();
+    private static final Map<Long,Byte> UPGRADE_TO_1_8_COLORS = UPGRADE_TO_1_7_COLORS;
 
 	static {
 		Map<Long,Byte> map = UPGRADE_TO_1_7_COLORS;
@@ -102,6 +103,21 @@ public class MailboxUpgrade {
 			}
 		}
 	}
+
+    public static void upgradeTo1_8(Mailbox mbox) throws ServiceException {
+        // bug 41850: revert tag colors back to mapped value
+        OperationContext octxt = new OperationContext(mbox);
+        for (Tag tag : mbox.getTagList(octxt)) {
+            MailItem.Color color = tag.getRgbColor();
+            if (!color.hasMapping()) {
+                Byte value = UPGRADE_TO_1_8_COLORS.get(color.getValue());
+                if (value != null) {
+                    MailItem.Color newcolor = new MailItem.Color((byte)value);
+                    mbox.setColor(octxt, new int[] { tag.getId() }, tag.getType(), newcolor);
+                }
+            }
+        }
+    }
 
 	//
 	// Static functions

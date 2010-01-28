@@ -472,6 +472,12 @@ public class Mailbox {
 				updateVersion(new MailboxVersion((short)1, (short)7));
 			}
 
+            // bug 41850: revert tag colors back to mapped value
+            if (!getVersion().atLeast(1, 8)) {
+                MailboxUpgrade.upgradeTo1_8(this);
+                updateVersion(new MailboxVersion((short)1, (short)8));
+            }
+
 			// done!
     		mInitializationComplete = true;
     		return true;
