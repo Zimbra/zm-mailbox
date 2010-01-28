@@ -22,10 +22,12 @@ import java.util.Set;
 
 import net.fortuna.ical4j.data.ParserException;
 
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite.InviteVisitor;
@@ -165,13 +167,17 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         TimeZoneMap tzmap = null;
         for (String tzid : mTZIDsSeen) {
             ICalTimeZone tz = mTimeZoneMap.getTimeZone(tzid);
+            if (tz == null) {
+                // Undefined TZID means bad incoming data, but if it happens to be a well-known timezone,
+                // let's be lenient and use the predefined definition.
+                String sanitizedTzid = TimeZoneMap.sanitizeTZID(tzid);
+                tz = WellKnownTimeZones.getTimeZoneById(sanitizedTzid);
+            }
             if (tz != null) {
                 if (tzmap == null)
                     tzmap = new TimeZoneMap(tz);
                 tzmap.add(tz);
             } else {
-                System.out.println("Couldnt find: " + tzid + "; in tzidmap: " + mTimeZoneMap);
-                System.out.println("Bad comp = " + comp);
                 throw ServiceException.PARSE_ERROR(
                         "TZID reference encountered before/without its VTIMEZONE: " + tzid, null);
             }

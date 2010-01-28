@@ -231,7 +231,7 @@ public class TimeZoneMap {
     	mTzMap.put(tzid, tz);
     }
 
-    public String sanitizeTZID(String tzid) {
+    public static String sanitizeTZID(String tzid) {
         // Workaround for bug in Outlook, which double-quotes TZID parameter
         // value in properties like DTSTART, DTEND, etc. Use unquoted tzId.
         int len = tzid.length();
