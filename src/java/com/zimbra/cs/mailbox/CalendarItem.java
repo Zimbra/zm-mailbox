@@ -653,7 +653,9 @@ public abstract class CalendarItem extends MailItem {
             long numComp = meta.getLong(Metadata.FN_NUM_COMPONENTS);
             for (int i = 0; i < numComp; i++) {
                 Metadata md = meta.getMap(Metadata.FN_INV + i);
-                mInvites.add(Invite.decodeMetadata(getMailboxId(), md, this, accountTZ));
+                Invite inv = Invite.decodeMetadata(getMailboxId(), md, this, accountTZ);
+                mInvites.add(inv);
+                mTzMap.add(inv.getTimeZoneMap());
             }
 
             Metadata metaRecur = meta.getMap(FN_CALITEM_RECURRENCE, true);
