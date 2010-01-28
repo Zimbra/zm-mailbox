@@ -318,6 +318,7 @@ public class SQLite extends Db {
         assert(dbname != null && !dbname.trim().equals(""));
         ZimbraLog.dbconn.info("deleting database file for DB '" + dbname + "'");
         new File(getDatabaseFilename(dbname)).delete();
+        new File(getDatabaseFilename(dbname) + "-journal").delete();
     }
 
 
