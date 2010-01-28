@@ -90,7 +90,7 @@ public class TestImapUtil extends TestCase {
     }
 
     public void testUtf8Text() throws Exception {
-        String msg = "UTF8: ‘Žé?";
+        String msg = "UTF8: \u00c0\u00e5";
         byte[] b = (msg + "\r\n").getBytes("UTF8");
         ImapInputStream is = new ImapInputStream(new ByteArrayInputStream(b), new ImapConfig());
         assertEquals(msg, is.readText());
