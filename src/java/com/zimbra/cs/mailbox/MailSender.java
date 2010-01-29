@@ -414,18 +414,6 @@ public class MailSender {
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollback);
 
-            if (!sentAddresses.isEmpty() && octxt != null) {
-            	try {
-                	ContactRankings.increment(octxt.getAuthenticatedUser().getId(), sentAddresses);
-            	} catch (Exception e) {
-            		ZimbraLog.smtp.error("unable to update contact rankings", e);
-            	}
-            	if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
-                	Collection<InternetAddress> newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
-            		saveNewContacts(newContacts, octxt, authMailbox);
-            	}
-            }
-            
             // Send intercept if save-to-sent didn't do it already.
             if (!mSaveToSent) {
                 try {
@@ -454,13 +442,20 @@ public class MailSender {
             if (mUploads != null)
                 FileUploadServlet.deleteUploads(mUploads);
 
-            // save contacts explicitly requested by the client to the personal address book
-            if (false && mSaveContacts != null && !mSaveContacts.isEmpty()) {
-                if (authMailbox == null)
-                    authMailbox = getAuthenticatedMailbox(octxt, authuser, isAdminRequest);
-                saveNewContacts(mSaveContacts, octxt, authMailbox);
+            // save new contacts and update rankings
+            // skip this step if this is a delegate request (bug 44329)
+            if (!isDelegatedRequest && !sentAddresses.isEmpty() && octxt != null) {
+                try {
+                    ContactRankings.increment(octxt.getAuthenticatedUser().getId(), sentAddresses);
+                } catch (Exception e) {
+                    ZimbraLog.smtp.error("unable to update contact rankings", e);
+                }
+                if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
+                    Collection<InternetAddress> newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
+                    saveNewContacts(newContacts, octxt, authMailbox);
+                }
             }
-
+            
             return (rollback[0] != null ? rollback[0].msgId : null);
 
         } catch (SafeSendFailedException sfe) {
