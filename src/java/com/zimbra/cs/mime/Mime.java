@@ -62,8 +62,8 @@ import org.apache.commons.codec.net.QCodec;
 
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
-import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -1170,5 +1170,23 @@ public class Mime {
         thread.setName("MimeMessageThread");
         thread.start();
         return in;
+    }
+    
+    /**
+     * Returns the size of this <tt>MimePart</tt>'s content.  If the content
+     * is encoded, returns the size of the decoded content.
+     */
+    public static int getSize(MimePart part)
+    throws MessagingException, IOException {
+        int size = part.getSize();
+        if (size > 0) {
+            if ("base64".equalsIgnoreCase(part.getEncoding())) {
+                // MimePart.getSize() returns the encoded size.
+                size = (int) ((size * 0.75) - (size / 76));
+            }
+        } else {
+            size = (int) ByteUtil.getDataLength(part.getInputStream());
+        }
+        return size;
     }
 }

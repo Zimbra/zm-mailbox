@@ -1700,16 +1700,10 @@ public class ToXML {
 
         // figure out attachment size
         try {
-            int size = mp.getSize();
-            if (size >= 0) {
-                if ("base64".equalsIgnoreCase(mp.getEncoding()))
-                    size = (int) ((size * 0.75) - (size / 76));
-            } else {
-                size = 0;  // sometimes size can be -1; force to 0
-            }
-            elem.addAttribute(MailConstants.A_SIZE, size);
-        } catch (MessagingException me) {
+            elem.addAttribute(MailConstants.A_SIZE, Mime.getSize(mp));
+        } catch (Exception me) {
             // don't put out size if we get exception
+            ZimbraLog.mailbox.warn("Unable to determine MIME part size: " + me);
         }
 
         // figure out attachment disposition

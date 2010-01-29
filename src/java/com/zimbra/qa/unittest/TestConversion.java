@@ -19,6 +19,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 
 
 /**
@@ -39,6 +40,11 @@ public class TestConversion extends TestCase {
         assertEquals(73, data.length);
         data = TestUtil.getContent(mbox, msg.getId(), "upload2.gif");
         assertEquals(851, data.length);
+        
+        ZMimePart part = TestUtil.getPart(msg, "upload.gif");
+        assertEquals(73, part.getSize());
+        part = TestUtil.getPart(msg, "upload2.gif");
+        assertEquals(851, part.getSize());
     }
     
     public static void main(String[] args)

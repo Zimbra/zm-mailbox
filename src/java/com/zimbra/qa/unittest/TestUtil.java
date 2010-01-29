@@ -375,10 +375,10 @@ extends Assert {
         return msg.getContent();
     }
     
-    public static byte[] getContent(ZMailbox mbox, String msgId, String partName)
+    public static byte[] getContent(ZMailbox mbox, String msgId, String name)
     throws ServiceException, IOException {
         ZMessage msg = mbox.getMessageById(msgId);
-        ZMimePart part = getPart(msg.getMimeStructure(), partName);
+        ZMimePart part = getPart(msg, name);
         if (part == null) {
             return null;
         }
@@ -386,10 +386,13 @@ extends Assert {
     }
 
     /**
-     * Returns the mime part in the given structure whose name, part name, or
-     * filename matches the given name.
+     * Returns the mime part with a matching name, part name, or filename.
      */
-    public static ZMimePart getPart(ZMimePart mimeStructure, String name) {
+    public static ZMimePart getPart(ZMessage msg, String name) {
+        return getPart(msg.getMimeStructure(), name);
+    }
+    
+    private static ZMimePart getPart(ZMimePart mimeStructure, String name) {
         for (ZMimePart child : mimeStructure.getChildren()) {
             ZMimePart part = getPart(child, name);
             if (part != null) {
