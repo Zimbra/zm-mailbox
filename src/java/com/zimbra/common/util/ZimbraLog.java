@@ -439,10 +439,11 @@ public class ZimbraLog {
         descriptions.put(extensions.getCategory(), "Server extension loading");
         descriptions.put(zimlet.getCategory(), "Zimlet operations");
         descriptions.put(wiki.getCategory(), "Wiki operations");
-        descriptions.put(op.getCategory(), "Changes to mailbox state");
+        descriptions.put(mailop.getCategory(), "Changes to mailbox state");
         descriptions.put(dav.getCategory(), "DAV operations");
         descriptions.put(io.getCategory(), "Filesystem operations");
         descriptions.put(store.getCategory(), "Mail store disk operations");
+        descriptions.put(purge.getCategory(), "Mailbox purge operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
     
