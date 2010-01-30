@@ -159,15 +159,24 @@ public class NativeFormatter extends Formatter {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
         } else {
             String contentType = mp.getContentType();
+            String shortContentType = Mime.getContentType(mp);
+
             if (contentType == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
-            } else if (contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
+            } else if (shortContentType.equalsIgnoreCase(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
                 if ((contentType = MimeDetect.getMimeDetect().detect(Mime.getFilename(mp), mp.getInputStream())) == null)
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+                else
+                    shortContentType = contentType;
             }
             // CR or LF in Content-Type causes Chrome to barf, unfortunately
             contentType = contentType.replace('\r', ' ').replace('\n', ' ');
 
+            // IE displays garbage if the content-type header is too long
+            String ua = context.req.getHeader("User-Agent");
+            if (ua != null && ua.indexOf("MSIE") != -1 && contentType.length() > 80)
+                contentType = shortContentType;
+            
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
                             (context.hasView() && context.getView().equals(HTML_VIEW));
             if (!html) {
