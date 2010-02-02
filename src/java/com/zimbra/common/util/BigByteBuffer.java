@@ -170,6 +170,7 @@ public class BigByteBuffer extends OutputStream {
 					bufFileIn = null;
 				}
 				super.close();
+				destroy();
 			}
 		};
 	}
