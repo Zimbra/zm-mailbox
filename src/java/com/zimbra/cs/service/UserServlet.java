@@ -1413,6 +1413,11 @@ public class UserServlet extends ZimbraServlet {
         return getRemoteResourceAsStream(authToken, url, null, 0, null, null);
     }
     
+    public static Pair<Integer, InputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url) throws ServiceException, IOException {
+        HttpInputStream his = getRemoteResourceAsStream(authToken, url, null, 0, null, null).getSecond();
+        return new Pair<Integer, InputStream>(his.getContentLength(), his);
+    }
+    
     public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url,
                 String proxyHost, int proxyPort, String proxyUser, String proxyPass)
     throws ServiceException, IOException {
