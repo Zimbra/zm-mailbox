@@ -49,6 +49,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public static final String ID_BRIEFCASE = "16";
     public static final String ID_FIRST_USER_ID = "256";
 
+    public static final String PERM_WRITE = "w";
+    
     private ZFolder.Color mColor;
     private String mId;
     private String mName;
