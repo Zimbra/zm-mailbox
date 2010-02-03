@@ -32,7 +32,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.ExpandMimeMessage;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.TnefFileCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.MailboxBlob;
@@ -119,10 +118,6 @@ public class MessageCache {
                 if (node != null) {
                     sLog.debug("Purged digest %s from the message cache.", digest);
                     sDataSize -= node.size;
-                    
-                    TnefFileCache tnefCache = TnefFileCache.getInstance();
-                    tnefCache.purge(node.message);
-                    tnefCache.purge(node.expanded);
                 }
             }
         }
@@ -264,10 +259,6 @@ public class MessageCache {
                     sLog.debug("Pruning digest %s from the cache.", entry.getKey());
                     it.remove();
                     sDataSize -= entry.getValue().size;
-                    
-                    TnefFileCache tnefCache = TnefFileCache.getInstance();
-                    tnefCache.purge(entry.getValue().message);
-                    tnefCache.purge(entry.getValue().expanded);
                 }
             }
         }

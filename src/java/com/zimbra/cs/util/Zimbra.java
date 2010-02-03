@@ -193,12 +193,6 @@ public class Zimbra {
             throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
         }
         
-        try {
-            TnefFileCache.startup();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to initialize TNEF file cache.", e);
-        }
-
         MailboxManager.getInstance();
 
         app.startup();
@@ -329,8 +323,6 @@ public class Zimbra {
 
         MailboxManager.getInstance().shutdown();
 
-        TnefFileCache.shutdown();
-        
         if (sIsMailboxd)
             StoreManager.getInstance().shutdown();
         

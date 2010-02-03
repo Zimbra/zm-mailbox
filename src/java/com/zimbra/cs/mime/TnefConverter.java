@@ -15,27 +15,24 @@
 
 package com.zimbra.cs.mime;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 
-import net.freeutils.tnef.RawInputStream;
 import net.freeutils.tnef.TNEFInputStream;
 import net.freeutils.tnef.TNEFUtils;
 import net.freeutils.tnef.mime.TNEFMime;
@@ -71,13 +68,9 @@ import net.freeutils.tnef.mime.TNEFMime;
  * @author bburtin
  */
 public class TnefConverter extends MimeVisitor {
-    
-    private MimeMessage mMsg;
-    
     protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
 
     protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
-        mMsg = msg;
         // do the decode in the exit phase
         if (visitKind != VisitPhase.VISIT_END)
             return false;
@@ -172,26 +165,22 @@ public class TnefConverter extends MimeVisitor {
         if (!TNEFUtils.isTNEFMimeType(bp.getContentType()))
             return null;
 
-        // convert TNEF to a MimeMessage and remove it from the parent
         MimeMessage converted = null;
-        File tnefFile = null;
-        RawInputStream rawis = null;
-        TNEFInputStream tnefis = null;
+        
+        // convert TNEF to a MimeMessage and remove it from the parent
+        InputStream is = null;
         try {
-            tnefFile = TnefFileCache.getInstance().getFile(mMsg, bp);
-            rawis = new RawInputStream(tnefFile);
-            tnefis = new TNEFInputStream(rawis);
+            TNEFInputStream tnefis = new TNEFInputStream(is = bp.getInputStream());
             converted = TNEFMime.convert(JMSession.getSession(), tnefis);
-        } catch (OutOfMemoryError e) {
-            Zimbra.halt("Ran out of memory while expanding TNEF attachment", e);
+        // XXX bburtin: nasty hack.  Don't handle OOME since JTNEF can allocate a huge byte
+        // array when the TNEF file is malformed.  See bug 42649.
+        // } catch (OutOfMemoryError e) {
+        //    Zimbra.halt("Ran out of memory while expanding TNEF attachment", e);
         } catch (Throwable t) {
-            ZimbraLog.extensions.warn("TNEF attachment expansion failed", t);
+            ZimbraLog.extensions.warn("Conversion failed.  TNEF attachment will not be expanded.", t);
             return null;
         } finally {
-            if (tnefis != null)
-                tnefis.close();
-            if (rawis != null)
-                rawis.close();
+            ByteUtil.closeStream(is);
         }
 
         MimeMultipart convertedMulti = (MimeMultipart) converted.getContent();
