@@ -62,6 +62,8 @@ public class FileUtil {
     public static void compress(File src, File dest, boolean sync) throws IOException {
         FileInputStream fin = null;
         GZIPOutputStream fout = null;
+        boolean isComplete = false;
+        
         try {
             fin = new FileInputStream(src);
             FileOutputStream fos = new FileOutputStream(dest);
@@ -73,6 +75,7 @@ public class FileUtil {
             }
             if (sync)
                 fos.getChannel().force(true);
+            isComplete = true;
         } finally {
             if (fin != null) {
                 try {
@@ -87,6 +90,9 @@ public class FileUtil {
                 } catch (IOException ioe) {
                     ZimbraLog.misc.warn("FileUtil.compress(" + src + "," + dest + "): ignoring exception while closing output channel", ioe);
                 }
+            }
+            if (!isComplete) {
+                dest.delete();
             }
         }
     }
@@ -111,6 +117,7 @@ public class FileUtil {
      */
     public static void uncompress(InputStream in, File dest, boolean sync) throws IOException {
         FileOutputStream fout = null;
+        boolean isComplete = false;
         try {
             fout = new FileOutputStream(dest);
             byte[] buf = new byte[COPYBUFLEN];
@@ -120,9 +127,13 @@ public class FileUtil {
             }
             if (sync)
                 fout.getChannel().force(true);
+            isComplete = true;
         } finally {
             ByteUtil.closeStream(in);
             ByteUtil.closeStream(fout);
+            if (!isComplete) {
+                dest.delete();
+            }
         }
     }
 
@@ -141,13 +152,14 @@ public class FileUtil {
     }
 
     public static void copy(File from, File to, boolean sync) throws IOException {
-    	FileInputStream fin = null;
-    	FileOutputStream fout = null;
-    	try {
-    		fin = new FileInputStream(from);
-    		fout = new FileOutputStream(to);
-    		FileChannel cin = fin.getChannel();
-    		FileChannel cout = fout.getChannel();
+        FileInputStream fin = null;
+        FileOutputStream fout = null;
+        boolean isComplete = false;
+        try {
+            fin = new FileInputStream(from);
+            fout = new FileOutputStream(to);
+            FileChannel cin = fin.getChannel();
+            FileChannel cout = fout.getChannel();
             long length = cin.size();
             long offset = 0;
             long bytesLeft = length;
@@ -156,29 +168,33 @@ public class FileUtil {
                 long bytesCopied = cin.transferTo(offset, chunkSize, cout);
                 if (bytesCopied != chunkSize) {
                     throw new IOException("FileUtil.copy(" + from + "," + to + "): incomplete transfer; expected=" +
-                                          chunkSize + " bytes, actual=" + bytesCopied + " bytes");
+                        chunkSize + " bytes, actual=" + bytesCopied + " bytes");
                 }
                 offset += bytesCopied;
                 bytesLeft -= bytesCopied;
             }
             if (sync)
                 cout.force(true);
-    	} finally {
-    		if (fin != null) {
-    			try {
-    				fin.close();
-    			} catch (IOException ioe) {
-    				ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing input channel", ioe);
-    			}
-    		}
-    		if (fout != null) {
-    			try {
-    				fout.close();
-    			} catch (IOException ioe) {
-    				ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing output channel", ioe);
-    			}
-    		}
-    	}
+            isComplete = true;
+        } finally {
+            if (fin != null) {
+                try {
+                    fin.close();
+                } catch (IOException ioe) {
+                    ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing input channel", ioe);
+                }
+            }
+            if (fout != null) {
+                try {
+                    fout.close();
+                } catch (IOException ioe) {
+                    ZimbraLog.misc.warn("FileUtil.copy(" + from + "," + to + "): ignoring exception while closing output channel", ioe);
+                }
+            }
+            if (!isComplete) {
+                to.delete();
+            }
+        }
     }
 
     public static void copyOIO(File src, File dest) throws IOException {
@@ -197,6 +213,7 @@ public class FileUtil {
     public static void copyOIO(File src, File dest, byte[] buf, boolean sync) throws IOException {
         FileInputStream fis = null;
         FileOutputStream fos = null;
+        boolean isComplete = false;
         try {
             fis = new FileInputStream(src);
             fos = new FileOutputStream(dest);
@@ -206,6 +223,7 @@ public class FileUtil {
             }
             if (sync)
                 fos.getChannel().force(true);
+            isComplete = true;
         } finally {
             if (fos != null) {
                 try {
@@ -216,6 +234,9 @@ public class FileUtil {
                 try {
                     fis.close();
                 } catch (IOException e) {}
+            }
+            if (!isComplete) {
+                dest.delete();
             }
         }
     }
@@ -229,6 +250,7 @@ public class FileUtil {
      * @throws IOException
      */
     public static void copy(InputStream in, boolean closeIn, File dest) throws IOException {
+        boolean isComplete = false;
         try {
             FileOutputStream fos = new FileOutputStream(dest);
             byte[] buf = new byte[COPYBUFLEN];
@@ -237,12 +259,16 @@ public class FileUtil {
                 while ((byteRead = in.read(buf)) != -1) {
                     fos.write(buf, 0, byteRead);
                 }
+                isComplete = true;
             } finally {
                 fos.close();
             }
         } finally {
             if (closeIn)
                 ByteUtil.closeStream(in);
+            if (!isComplete) {
+                dest.delete();
+            }
         }
     }
 
