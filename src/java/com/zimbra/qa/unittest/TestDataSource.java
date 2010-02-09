@@ -300,7 +300,7 @@ public class TestDataSource extends TestCase {
             folder = mbox.createFolder(parentId, NAME_PREFIX + " testRss", null, null, null, urlString);
         } catch (ServiceException e) {
             assertEquals(ServiceException.RESOURCE_UNREACHABLE, e.getCode());
-            ZimbraLog.test.warn("Unable to test RSS data source for %s: %s.", urlString, e);
+            ZimbraLog.test.warn("Unable to test RSS data source for %s: %s.", urlString, e.toString());
             return;
         }
 
