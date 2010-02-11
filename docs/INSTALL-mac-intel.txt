@@ -248,13 +248,14 @@ on the JDK to be in /opt/zimbra/java.  Either download the JDK
 and extract there, or create a symbolic link to your existing
 JDK location.
 
-1. Browse to the zimbra java directory:
+1. Browse to the zimbra directory:
 
-	cd /opt/zimbra/java/bin
+	cd /opt/zimbra
 
-2. Create symbolic link to existing JDK:
+2. Create symbolic link to an existing JDK. The following shows linking
+   to JDK 1.6 on Mac: 
 
-	sudo ln -s /usr/bin/java java
+	sudo ln -s /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/ Java
 
 
 INSTALL MAIL TRANSFER AGENT
