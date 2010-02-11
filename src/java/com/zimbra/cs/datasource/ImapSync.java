@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.datasource;
                              
+import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
@@ -199,7 +200,7 @@ public class ImapSync extends MailItemImport {
     }
 
     private void checkImportingSelf() throws IOException, ServiceException {
-        if (dataSource.isOffline())
+        if (dataSource.isOffline() || !connection.hasCapability(ImapCapabilities.ID))
             return;
         try {
             IDInfo id = connection.id();
