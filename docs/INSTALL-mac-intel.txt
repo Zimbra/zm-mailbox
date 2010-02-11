@@ -255,8 +255,7 @@ JDK location.
 2. Create symbolic link to an existing JDK. The following shows linking
    to JDK 1.6 on Mac: 
 
-	sudo ln -s /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/ Java
-
+	sudo ln -s /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/ java
 
 INSTALL MAIL TRANSFER AGENT
 ===========================
