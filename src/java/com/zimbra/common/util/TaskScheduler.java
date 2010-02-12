@@ -161,7 +161,7 @@ public class TaskScheduler<V> {
     
     /**
      * Schedules a task.
-     * @param taskId the task id, used for looking up results and cancelling the task
+     * @param taskId the task id, used for looking up results and canceling the task
      * @param task the task
      * @param recurs <tt>true</tt> if this is a recurring task
      * @param intervalMillis number of milliseconds between executions of a recurring
@@ -177,7 +177,22 @@ public class TaskScheduler<V> {
     }
 
     /**
-     * Returns the result of the last task excecution
+     * Returns the <tt>Callable</tt> object for the given <tt>taskId</tt>, or <tt>null</tt>
+     * if no matching task exists.
+     */
+    public Callable<V> getTask(Object taskId) {
+        TaskRunner<V> runner = mRunnerMap.get(taskId);
+        if (runner == null) {
+            return null;
+        }
+        if (runner.mSchedule.isCancelled()) {
+            return null;
+        }
+        return runner.getTask();
+    }
+    
+    /**
+     * Returns the result of the last task execution.
      * @param taskId
      */
     public V getLastResult(Object taskId) {
