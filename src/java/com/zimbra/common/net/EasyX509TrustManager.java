@@ -41,10 +41,10 @@ import java.security.cert.X509Certificate;
  * you are perfectly aware of security implications of accepting 
  * self-signed certificates
  * </p>
- * 
+ *
  * @author <a href="mailto:adrian.sutton@ephox.com">Adrian Sutton</a>
  * @author <a href="mailto:oleg@ural.ru">Oleg Kalnichevski</a>
- * 
+ *
  * <p>
  * DISCLAIMER: HttpClient developers DO NOT actively support this component.
  * The component is provided as a reference material, which may be inappropriate
@@ -90,36 +90,36 @@ public class EasyX509TrustManager implements X509TrustManager
                 LOG.debug("X509Certificate[" + i + "]=" + certificates[i]);
             }
         }
-        
+
         if ((certificates != null) && (certificates.length > 0)) {
-        	try {
+            try {
                 // NOTE: this is not a full-featured path validation algorithm.
                 //
                 // Step 0: check if the target is valid now.
-	        	certificates[0].checkValidity();
-	        	LOG.debug("X509Certificate[0] valid");
-	        	
-	            // Step 1: verify that the chain is complete and valid.
-	            for (int i = 1; i < certificates.length; i++) {
-	            	certificates[i].checkValidity();
-	            	LOG.debug("X509Certificate[" + i + "] valid");
-	                try {
-	                	certificates[i-1].verify(certificates[i].getPublicKey());
-	                	LOG.debug("X509Certificate[" + (i-1) + "] trusted by X509Certificate[" + i + "]");
-	                } catch (NoSuchAlgorithmException x) {
-	                    throw new CertificateException(x.toString());
-	                } catch (NoSuchProviderException x) {
-	                    throw new CertificateException(x.toString());
-	                } catch (InvalidKeyException x) {
-	                    throw new CertificateException(x.toString());
-	                } catch (SignatureException x) {
-	                    throw new CertificateException(x.toString());
-	                }
-	            }
-        	} catch (CertificateException x) {
+                certificates[0].checkValidity();
+                LOG.debug("X509Certificate[0] valid");
+
+                // Step 1: verify that the chain is complete and valid.
+                for (int i = 1; i < certificates.length; i++) {
+                    certificates[i].checkValidity();
+                    LOG.debug("X509Certificate[" + i + "] valid");
+                    try {
+                        certificates[i-1].verify(certificates[i].getPublicKey());
+                        LOG.debug("X509Certificate[" + (i-1) + "] trusted by X509Certificate[" + i + "]");
+                    } catch (NoSuchAlgorithmException x) {
+                        throw new CertificateException(x.toString());
+                    } catch (NoSuchProviderException x) {
+                        throw new CertificateException(x.toString());
+                    } catch (InvalidKeyException x) {
+                        throw new CertificateException(x.toString());
+                    } catch (SignatureException x) {
+                        throw new CertificateException(x.toString());
+                    }
+                }
+            } catch (CertificateException x) {
                 LOG.error(x.toString());
                 return false;
-        	}
+            }
             return true;
         } else {
             return this.standardTrustManager.isServerTrusted(certificates);

@@ -33,63 +33,63 @@ import com.zimbra.common.localconfig.LC;
 
 /**
  * Default cacerts backed trust manager
- *  
+ *
  * @author jjzhuang
  */
 public class DefaultTrustManager implements X509TrustManager {
-    
-	X509TrustManager keyStoreTrustManager;
-	
-	protected DefaultTrustManager() throws GeneralSecurityException {
-		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-		InputStream kin = null;
-    	try {
-    		kin = new FileInputStream(LC.mailboxd_truststore.value());
-    		try {
-    			keyStore.load(kin, LC.mailboxd_truststore_password.value().toCharArray());
-    		} catch (IOException x) {
-    			throw new KeyStoreException(x);
-    		}
-    	} catch (FileNotFoundException x) {
-    		throw new KeyStoreException(x);
-    	} finally {
-    		if (kin != null)
-    			try {
-    				kin.close();
-    			} catch (IOException x) {
-    				throw new KeyStoreException(x);
-    			}
-    	}
-		
-    	TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    	factory.init(keyStore);
-    	TrustManager[] trustManagers = factory.getTrustManagers();
-    	for (TrustManager tm : trustManagers)
-    		if (tm instanceof X509TrustManager) {
-    			keyStoreTrustManager = (X509TrustManager)tm;
-    			return;
-    		}
+
+    X509TrustManager keyStoreTrustManager;
+
+    protected DefaultTrustManager() throws GeneralSecurityException {
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        InputStream kin = null;
+        try {
+            kin = new FileInputStream(LC.mailboxd_truststore.value());
+            try {
+                keyStore.load(kin, LC.mailboxd_truststore_password.value().toCharArray());
+            } catch (IOException x) {
+                throw new KeyStoreException(x);
+            }
+        } catch (FileNotFoundException x) {
+            throw new KeyStoreException(x);
+        } finally {
+            if (kin != null)
+                try {
+                    kin.close();
+                } catch (IOException x) {
+                    throw new KeyStoreException(x);
+                }
+        }
+
+        TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        factory.init(keyStore);
+        TrustManager[] trustManagers = factory.getTrustManagers();
+        for (TrustManager tm : trustManagers)
+            if (tm instanceof X509TrustManager) {
+                keyStoreTrustManager = (X509TrustManager)tm;
+                return;
+            }
         throw new KeyStoreException(TrustManagerFactory.getDefaultAlgorithm() + " trust manager not supported");
-	}
-	
+    }
+
     public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-    	keyStoreTrustManager.checkClientTrusted(chain, authType);
+        keyStoreTrustManager.checkClientTrusted(chain, authType);
     }
-    
+
     public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-    	keyStoreTrustManager.checkServerTrusted(chain, authType);
+        keyStoreTrustManager.checkServerTrusted(chain, authType);
     }
-    
+
     public X509Certificate[] getAcceptedIssuers() {
         return keyStoreTrustManager.getAcceptedIssuers();
     }
-    
+
     private static DefaultTrustManager instance;
-    
+
     public static synchronized DefaultTrustManager getInstance() throws GeneralSecurityException {
-    	if (instance == null)
-    		instance = new DefaultTrustManager();
-    	return instance;
+        if (instance == null)
+            instance = new DefaultTrustManager();
+        return instance;
     }
 }
 

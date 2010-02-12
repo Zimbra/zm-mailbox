@@ -15,8 +15,6 @@
 
 package com.zimbra.common.net;
 
-import com.zimbra.common.net.EasyX509TrustManager;
-
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;

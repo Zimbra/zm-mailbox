@@ -14,8 +14,6 @@
  */
 package com.zimbra.common.net;
 
-import com.zimbra.common.net.CustomSSLSocket;
-import com.zimbra.common.net.CustomTrustManager;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
@@ -31,65 +29,65 @@ import javax.net.ssl.TrustManager;
 
 /**
  * Override SSLSocketFactory to provide a createSocket() interface
- *  
+ *
  * @author jjzhuang
  */
 public class CustomSSLSocketFactory extends SSLSocketFactory {
     private SSLSocketFactory factory;
-    
+
     boolean verifyHostname = true;
-    
+
     public CustomSSLSocketFactory(boolean verifyHostname)  throws GeneralSecurityException {
         SSLContext sslcontext = SSLContext.getInstance("TLS");
         sslcontext.init(null, new TrustManager[] { CustomTrustManager.getInstance() }, null);
         factory = sslcontext.getSocketFactory();
         this.verifyHostname = verifyHostname;
     }
-    
+
     public CustomSSLSocketFactory() throws GeneralSecurityException {
-    	this(true);
+        this(true);
     }
-    
+
     @Override
     public Socket createSocket() throws IOException {
-    	//javamail smtp uses unconnected socket
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(), null, verifyHostname);
+        //javamail smtp uses unconnected socket
+        return new CustomSSLSocket((SSLSocket) factory.createSocket(), null, verifyHostname);
     }
-    
+
     @Override
     public Socket createSocket(InetAddress address, int port) throws IOException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(address, port), address.getHostName(), verifyHostname);
+        return new CustomSSLSocket((SSLSocket) factory.createSocket(address, port), address.getHostName(), verifyHostname);
     }
-    
+
     @Override
     public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(address, port, localAddress, localPort), address.getHostName(), verifyHostname);
+        return new CustomSSLSocket((SSLSocket) factory.createSocket(address, port, localAddress, localPort), address.getHostName(), verifyHostname);
     }
 
     @Override
     public Socket createSocket(String host, int port) throws IOException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port), host, verifyHostname);
+        return new CustomSSLSocket((SSLSocket) factory.createSocket(host, port), host, verifyHostname);
     }
-    
+
     @Override
     public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port, localHost, localPort), host, verifyHostname);
+        return new CustomSSLSocket((SSLSocket) factory.createSocket(host, port, localHost, localPort), host, verifyHostname);
     }
-    
+
     @Override
     public Socket createSocket(Socket socket, String host, int port, boolean flag) throws IOException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(socket, host, port, flag), host, verifyHostname);
+        return new CustomSSLSocket((SSLSocket) factory.createSocket(socket, host, port, flag), host, verifyHostname);
     }
 
     public static SocketFactory getDefault() {
-    	try {
-    		return new CustomSSLSocketFactory();
-    	} catch (GeneralSecurityException x) {
-    		ZimbraLog.security.error(x);
-    		return null;
-    	}
+        try {
+            return new CustomSSLSocketFactory();
+        } catch (GeneralSecurityException x) {
+            ZimbraLog.security.error(x);
+            return null;
+        }
     }
-    
+
     @Override
     public String[] getDefaultCipherSuites() {
         return factory.getDefaultCipherSuites();

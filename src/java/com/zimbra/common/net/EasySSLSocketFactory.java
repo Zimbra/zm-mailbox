@@ -19,9 +19,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-// import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-// import javax.net.ssl.TrustManager;
 
 import com.sun.net.ssl.SSLContext;
 import com.sun.net.ssl.TrustManager;
@@ -65,21 +63,21 @@ public class EasySSLSocketFactory extends SSLSocketFactory {
         return factory.createSocket(socket, s, i, flag);
     }
     
-    public Socket createSocket(InetAddress inaddr, int i,
-                               InetAddress inaddr1, int j) throws IOException {
-        return factory.createSocket(inaddr, i, inaddr1, j);
+    public Socket createSocket(InetAddress addr, int port,
+                               InetAddress localAddr, int localPort) throws IOException {
+        return factory.createSocket(addr, port, localAddr, localPort);
     }
     
-    public Socket createSocket(InetAddress inaddr, int i) throws IOException {
-        return factory.createSocket(inaddr, i);
+    public Socket createSocket(InetAddress addr, int port) throws IOException {
+        return factory.createSocket(addr, port);
     }
 
-    public Socket createSocket(String s, int i, InetAddress inaddr, int j) throws IOException {
-        return factory.createSocket(s, i, inaddr, j);
+    public Socket createSocket(String host, int port, InetAddress localAddr, int localPort) throws IOException {
+        return factory.createSocket(host, port, localAddr, localPort);
     }
 
-    public Socket createSocket(String s, int i) throws IOException {
-        return factory.createSocket(s, i);
+    public Socket createSocket(String host, int port) throws IOException {
+        return factory.createSocket(host, port);
     }
     
     public Socket createSocket() throws IOException {

@@ -14,8 +14,6 @@
  */
 package com.zimbra.common.net;
 
-import com.zimbra.common.net.CustomSSLSocket;
-import com.zimbra.common.net.CustomTrustManager;
 import org.apache.commons.httpclient.ConnectTimeoutException;
 import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
@@ -32,36 +30,27 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
 public class CustomSSLProtocolSocketFactory implements SecureProtocolSocketFactory {
+    private final SSLSocketFactory factory;
 
-    private SSLSocketFactory factory;
-    
     public CustomSSLProtocolSocketFactory() throws GeneralSecurityException {
     	SSLContext sslcontext = SSLContext.getInstance("TLS");
         sslcontext.init(null, new TrustManager[] { CustomTrustManager.getInstance() }, null);
         factory = sslcontext.getSocketFactory();
     }
 
-    public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException, UnknownHostException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(socket, host, port, autoClose), host, true);
+    public Socket createSocket(Socket socket, String host, int port, boolean autoClose) throws IOException {
+    	return new CustomSSLSocket((SSLSocket) factory.createSocket(socket, host, port, autoClose), host, true);
     }
     
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port), host, true);
+    public Socket createSocket(String host, int port) throws IOException {
+    	return new CustomSSLSocket((SSLSocket) factory.createSocket(host, port), host, true);
     }
     
-    public Socket createSocket(String host, int port, InetAddress clientHost, int clientPort) throws IOException, UnknownHostException {
-    	return new CustomSSLSocket((SSLSocket)factory.createSocket(host, port, clientHost, clientPort), host, true);
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+    	return new CustomSSLSocket((SSLSocket) factory.createSocket(host, port, localHost, localPort), host, true);
     }
 
     public Socket createSocket(String host, int port, InetAddress localAddress, int localPort, HttpConnectionParams params) throws IOException, UnknownHostException, ConnectTimeoutException {
         return createSocket(host, port, localAddress, localPort);
-    }
-
-    public boolean equals(Object obj) {
-        return ((obj != null) && obj.getClass().equals(CustomSSLProtocolSocketFactory.class));
-    }
-
-    public int hashCode() {
-        return CustomSSLProtocolSocketFactory.class.hashCode();
     }
 }
