@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.common.util.SSLSocketFactoryManager;
+import com.zimbra.common.net.SSLSocketFactoryManager;
 
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.SocketFactory;

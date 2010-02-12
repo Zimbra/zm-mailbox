@@ -24,11 +24,10 @@ import java.util.Map;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.SSLSocket;
 
+import com.zimbra.common.net.DummySSLSocketFactory;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
-import com.zimbra.common.util.DummySSLSocketFactory;
-import com.zimbra.common.util.EasySSLProtocolSocketFactory;
+import com.zimbra.common.net.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 

@@ -24,10 +24,10 @@ import java.util.regex.Pattern;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.SSLSocketFactoryManager;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.filter.RuleManager;

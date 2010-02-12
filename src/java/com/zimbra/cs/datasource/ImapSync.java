@@ -34,7 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.datasource.SyncState;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.SSLSocketFactoryManager;
+import com.zimbra.common.net.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;

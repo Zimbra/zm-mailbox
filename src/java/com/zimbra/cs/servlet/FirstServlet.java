@@ -28,9 +28,8 @@ import java.util.TimerTask;
 import javax.servlet.http.HttpServlet;
 
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.SSLSocketFactoryManager;
+import com.zimbra.common.net.SSLSocketFactoryManager;
 import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
 import com.zimbra.znative.Util;

@@ -54,8 +54,8 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.EasySSLSocketFactory;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.EasySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
