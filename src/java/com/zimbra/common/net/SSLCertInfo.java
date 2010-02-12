@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.util.BEncoding;
 import com.zimbra.common.util.BEncoding.BEncodingException;
 
 public class SSLCertInfo {

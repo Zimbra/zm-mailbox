@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,6 +35,10 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.CustomSSLSocket;
+import com.zimbra.common.net.DefaultTrustManager;
+import com.zimbra.common.net.SSLCertInfo;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Custom keystore backed trust manager

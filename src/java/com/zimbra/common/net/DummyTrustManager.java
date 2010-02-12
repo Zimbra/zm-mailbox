@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import java.security.cert.X509Certificate;
 

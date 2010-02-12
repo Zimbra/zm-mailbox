@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,6 +32,7 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
+import com.zimbra.common.net.CustomTrustManager;
 import sun.security.util.HostnameChecker;
 
 import com.zimbra.common.localconfig.LC;

@@ -12,7 +12,10 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.common.util;
+package com.zimbra.common.net;
+
+import com.zimbra.common.net.DummyTrustManager;
+import com.zimbra.common.util.SystemUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;

@@ -1,4 +1,4 @@
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 /*
  * ***** BEGIN LICENSE BLOCK *****
@@ -19,13 +19,14 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import javax.net.SocketFactory;
 // import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 // import javax.net.ssl.TrustManager;
 
 import com.sun.net.ssl.SSLContext;
 import com.sun.net.ssl.TrustManager;
+import com.zimbra.common.net.GullibleTrustManager;
+import com.zimbra.common.util.SystemUtil;
 
 /**
 <p>

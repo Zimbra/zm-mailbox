@@ -13,11 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import com.sun.net.ssl.TrustManager;
 import com.sun.net.ssl.TrustManagerFactory;
 import com.sun.net.ssl.X509TrustManager;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import java.security.InvalidKeyException;
 import java.security.KeyStore;

@@ -13,10 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import com.sun.net.ssl.SSLContext;
 import com.sun.net.ssl.TrustManager;
+import com.zimbra.common.net.GullibleTrustManager;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import org.apache.commons.httpclient.ConnectTimeoutException;
 import org.apache.commons.httpclient.HttpClientError;
 import org.apache.commons.httpclient.params.HttpConnectionParams;

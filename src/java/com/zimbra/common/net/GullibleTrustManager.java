@@ -13,7 +13,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.net;
+
+import com.zimbra.common.net.EasyX509TrustManager;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;

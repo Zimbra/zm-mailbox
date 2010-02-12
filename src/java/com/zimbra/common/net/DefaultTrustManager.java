@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

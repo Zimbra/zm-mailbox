@@ -12,13 +12,17 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.common.util;
+package com.zimbra.common.net;
 
 import java.security.GeneralSecurityException;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+import com.zimbra.common.net.CustomSSLSocketFactory;
+import com.zimbra.common.net.DummySSLSocketFactory;
+import com.zimbra.common.net.EasySSLProtocolSocketFactory;
+import com.zimbra.common.util.ZimbraLog;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 

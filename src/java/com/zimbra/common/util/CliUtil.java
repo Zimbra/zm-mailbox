@@ -15,6 +15,7 @@
 
 package com.zimbra.common.util;
 
+import com.zimbra.common.net.EasySSLProtocolSocketFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
