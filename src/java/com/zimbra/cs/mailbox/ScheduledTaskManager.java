@@ -113,6 +113,10 @@ public class ScheduledTaskManager {
         }
     }
     
+    public static ScheduledTask getTask(String className, String taskName, long mailboxId) {
+        return (ScheduledTask) sScheduler.getTask(getKey(className, taskName, mailboxId));
+    }
+    
     /**
      * Cancels a persistent task.
      */

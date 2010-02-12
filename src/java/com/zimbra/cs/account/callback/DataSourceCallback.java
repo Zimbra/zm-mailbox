@@ -22,7 +22,6 @@ import java.util.Set;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
@@ -42,7 +41,6 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class DataSourceCallback extends AttributeCallback {
 
-    private static final String KEY_INTERVAL_CHANGED = "IntervalChanged";
     private static final Set<String> INTERVAL_ATTRS = new HashSet<String>();
     
     static {
@@ -55,89 +53,51 @@ public class DataSourceCallback extends AttributeCallback {
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceYabPollingInterval);
         INTERVAL_ATTRS.add(Provisioning.A_zimbraDataSourceCalendarPollingInterval);
     }
-    
+
     /**
-      * Confirms that the polling interval set on the data source is at least as long
-      * as the minimum set for the account.
-      * 
-      * @param entry a {@link DataSource} or {@link Account}
-      */
+     * Confirms that polling interval values are not set lower than the minimum.
+     */
     @SuppressWarnings("unchecked")
     @Override public void preModify(Map context, String attrName, Object attrValue,
                                     Map attrsToModify, Entry entry, boolean isCreate)
     throws ServiceException {
-        if (isCreate) {
-            // No old value, so nothing to do.  Creation is handled in postModify().
-            return;
-        }
-        if (!LC.data_source_scheduling_enabled.booleanValue()) {
-            return;
-        }
-        
         if (INTERVAL_ATTRS.contains(attrName)) {
-            context.put(KEY_INTERVAL_CHANGED, willIntervalChange(attrName, attrValue, entry));
-        } else if (attrName.equals(Provisioning.A_zimbraDataSourceEnabled)) {
-            String oldValue = entry.getAttr(Provisioning.A_zimbraDataSourceEnabled);
-            context.put(KEY_INTERVAL_CHANGED, StringUtil.equal(oldValue, (String) attrValue));
-        } else {
-            context.put(KEY_INTERVAL_CHANGED, false);
+            String interval = (String) attrValue;
+            if (entry instanceof DataSource) {
+                validateDataSource((DataSource) entry, interval);
+            } else if (entry instanceof Account) {
+                validateAccount((Account) entry, attrName, interval);
+            } else if (entry instanceof Cos) {
+                validateCos((Cos) entry, attrName, interval);
+            }
         }
     }
-    
-    private boolean willIntervalChange(String attrName, Object attrValue, Entry entry)
-    throws ServiceException {
-        String newInterval = (String) attrValue;
-        String oldInterval = "";
-        if (entry != null) {
-            oldInterval = entry.getAttr(attrName);
-        }
-        
-        if (entry instanceof DataSource) {
-            validateDataSource((DataSource) entry, newInterval);
-        } else if (entry instanceof Account) {
-            validateAccount((Account) entry, attrName, newInterval);
-        } else if (entry instanceof Cos) {
-            validateCos((Cos) entry, attrName, newInterval);
-        }
 
-        // Determine if the interval has changed
-        long lNewInterval = DateUtil.getTimeInterval(newInterval, 0);
-        long lOldInterval = DateUtil.getTimeInterval(oldInterval, 0);
-        return (lNewInterval != lOldInterval);
-    }
-    
+    /**
+     * Updates scheduled tasks for data sources whose polling interval has changed. 
+     */
     @SuppressWarnings("unchecked")
     @Override public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
         // Don't do anything unless inside the server
-        if (!Zimbra.started())
+        if (!Zimbra.started() || !LC.data_source_scheduling_enabled.booleanValue())
             return;
-        if (INTERVAL_ATTRS.contains(attrName) &&
-            LC.data_source_scheduling_enabled.booleanValue()) {
-            postModifyPollingInterval(context, attrName, entry, isCreate);
+        
+        if (INTERVAL_ATTRS.contains(attrName) || Provisioning.A_zimbraDataSourceEnabled.equals(attrName)) {
+            // Update schedules for any affected data sources
+            try {
+                if (entry instanceof DataSource) {
+                    scheduleDataSource((DataSource) entry);
+                } else if (entry instanceof Account) {
+                    scheduleAccount((Account) entry);
+                } else if (entry instanceof Cos) {
+                    scheduleCos((Cos) entry);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.datasource.warn("Unable to update schedule for %s", entry, e);
+            }
         } else if (entry instanceof DataSource) {
             // Reset error status on any attribute changes (bug 39050).
             DataSourceManager.resetErrorStatus((DataSource) entry);
-        }
-    }
-    
-    @SuppressWarnings("unchecked")
-    private void postModifyPollingInterval(Map context, String attrName, Entry entry, boolean isCreate) {
-        // Don't do anything if the interval didn't change
-        Boolean intervalChanged = isCreate || (Boolean) context.get(KEY_INTERVAL_CHANGED);
-        
-        if (intervalChanged == null || !intervalChanged)
-            return;
-        // Update schedules for any affected data sources
-        try {
-            if (entry instanceof DataSource) {
-                scheduleDataSource((DataSource) entry);
-            } else if (entry instanceof Account) {
-                scheduleAccount((Account) entry);
-            } else if (entry instanceof Cos) {
-                scheduleCos((Cos) entry);
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.datasource.warn("Unable to update schedule for %s", entry, e);
         }
     }
     

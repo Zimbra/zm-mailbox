@@ -26,9 +26,9 @@ import java.util.concurrent.ConcurrentMap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -327,6 +327,10 @@ public class DataSourceManager {
         throws ServiceException {
         ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
         DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
+    }
+    
+    public static DataSourceTask getTask(Mailbox mbox, String dsId) {
+        return (DataSourceTask) ScheduledTaskManager.getTask(DataSourceTask.class.getName(), dsId, mbox.getId());
     }
     
     /*

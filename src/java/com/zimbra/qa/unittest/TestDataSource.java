@@ -21,6 +21,9 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.testng.TestNG;
+import org.testng.annotations.Test;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -31,11 +34,16 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.ScheduledTask;
 import com.zimbra.cs.zclient.ZCalDataSource;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZRssDataSource;
 
@@ -300,7 +308,7 @@ public class TestDataSource extends TestCase {
             folder = mbox.createFolder(parentId, NAME_PREFIX + " testRss", null, null, null, urlString);
         } catch (ServiceException e) {
             assertEquals(ServiceException.RESOURCE_UNREACHABLE, e.getCode());
-            ZimbraLog.test.warn("Unable to test RSS data source for %s: %s.", urlString, e.toString());
+            ZimbraLog.test.info("Unable to test RSS data source for %s: %s.", urlString, e.toString());
             return;
         }
 
@@ -313,7 +321,7 @@ public class TestDataSource extends TestCase {
         // is running on a box that's not connected to the internet.
         String error = mbox.testDataSource(ds);
         if (error != null) {
-            ZimbraLog.test.warn("Unable to test RSS data source for %s: %s.", urlString, error);
+            ZimbraLog.test.info("Unable to test RSS data source for %s: %s.", urlString, error);
             return;
         }
         
@@ -331,7 +339,7 @@ public class TestDataSource extends TestCase {
     }
 
     // XXX bburtin: disabled test due to bug 37222 (unable to parse Google calendar).
-    public void xtestCal()
+    public void disabledTestCal()
     throws Exception {
         // Create folder.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -394,6 +402,58 @@ public class TestDataSource extends TestCase {
         }
         return null;
     }
+
+    @Test(groups = {"Server"})
+    public void testScheduling()
+    throws Exception {
+        // Create data source.
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder = TestUtil.createFolder(zmbox, "/" + NAME_PREFIX + "-testScheduling");
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        int port = server.getImapBindPort();
+        ZImapDataSource zds = new ZImapDataSource(NAME_PREFIX + " testScheduling", true, "localhost", port,
+            "user2", "test123", folder.getId(), ConnectionType.cleartext);
+        String dsId = zmbox.createDataSource(zds);
+        
+        // Test scheduling based on polling interval. 
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        String attrName = Provisioning.A_zimbraDataSourcePollingInterval;
+        String imapAttrName = Provisioning.A_zimbraDataSourceImapPollingInterval;
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "0");
+        checkSchedule(mbox, dsId, null);
+        
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "10m");
+        checkSchedule(mbox, dsId, 600000);
+
+        TestUtil.setAccountAttr(USER_NAME, imapAttrName, "");
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
+        checkSchedule(mbox, dsId, null);
+        
+        TestUtil.setAccountAttr(USER_NAME, imapAttrName, "5m");
+        checkSchedule(mbox, dsId, 300000);
+        
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "0");
+        checkSchedule(mbox, dsId, null);
+        
+        // Bug 44502: test changing polling interval from 0 to unset when
+        // interval is set on the account.
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
+        checkSchedule(mbox, dsId, 300000);
+        
+        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
+        checkSchedule(mbox, dsId, null);
+    }
+    
+    private void checkSchedule(Mailbox mbox, String dataSourceId, Integer intervalMillis)
+    throws Exception {
+        ScheduledTask task = DataSourceManager.getTask(mbox, dataSourceId);
+        if (intervalMillis == null) {
+            assertNull(task);
+        } else {
+            assertEquals(intervalMillis.longValue(), task.getIntervalMillis());
+        }
+    }
     
     public void tearDown()
     throws Exception {
@@ -421,6 +481,9 @@ public class TestDataSource extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(TestDataSource.class);
+        TestNG testng = TestUtil.newTestNG();
+        testng.setExcludedGroups("Server");
+        testng.setTestClasses(new Class[] { TestDataSource.class });
+        testng.run();
     }
 }
