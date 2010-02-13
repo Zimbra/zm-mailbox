@@ -24,6 +24,7 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
+import java.security.GeneralSecurityException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -37,7 +38,7 @@ import sun.security.util.HostnameChecker;
 import com.zimbra.common.localconfig.LC;
 
 public class CustomSSLSocket extends SSLSocket {
-    private static ThreadLocal<String> threadLocal = new ThreadLocal<String>();
+    private static final ThreadLocal<String> threadLocal = new ThreadLocal<String>();
 
     static String getCertificateHostname() {
         return threadLocal.get();
@@ -56,6 +57,7 @@ public class CustomSSLSocket extends SSLSocket {
     }
 
     private static void verifyHostname(String hostname, SSLSession session) throws IOException {
+        
         if (LC.ssl_allow_mismatched_certs.booleanValue())
             return;
 
@@ -71,114 +73,28 @@ public class CustomSSLSocket extends SSLSocket {
 
         X509Certificate cert = certJavax2Java(certs[0]);
 
-        if (CustomTrustManager.getInstance().isCertificateAcceptedForHostname(hostname, cert))
+        CustomTrustManager ctm;
+        try {
+            ctm = CustomTrustManager.getInstance();
+        } catch (GeneralSecurityException e) {
+            throw new IOException("CustomTrustManager not found", e);
+        }
+
+        if (ctm.isCertificateAcceptedForHostname(hostname, cert))
             return;
 
         HostnameChecker hc = HostnameChecker.getInstance(HostnameChecker.TYPE_TLS);
         try {
             hc.match(hostname, cert);
         } catch (CertificateException x) {
-            String certInfo = CustomTrustManager.getInstance().handleCertificateCheckFailure(hostname, cert, true);
+            String certInfo = ctm.handleCertificateCheckFailure(hostname, cert, true);
             throw new SSLPeerUnverifiedException(certInfo);
         }
     }
 
-//    private class CustomSSLInputStream extends InputStream {
-//    	InputStream in;
-//    	
-//    	public CustomSSLInputStream(InputStream in) {
-//			this.in = in;
-//		}
-//    	
-//    	@Override
-//    	public int available() throws IOException {
-//    		return in.available();
-//    	}
-//    	
-//    	@Override
-//    	public void close() throws IOException {
-//    		in.close();
-//    	}
-//    	
-//    	@Override
-//    	public synchronized void mark(int readlimit) {
-//    		in.mark(readlimit);
-//    	}
-//    	
-//    	@Override
-//    	public boolean markSupported() {
-//    		return in.markSupported();
-//    	}
-//    	
-//    	@Override
-//    	public int read() throws IOException {
-//    		startHandshake();
-//    		return in.read();
-//    	}
-//    	
-//    	@Override
-//    	public int read(byte[] b) throws IOException {
-//    		startHandshake();
-//    		return in.read(b);
-//    	}
-//    	
-//    	@Override
-//    	public int read(byte[] b, int off, int len) throws IOException {
-//    		startHandshake();
-//    		return in.read(b, off, len);
-//    	}
-//    	
-//    	@Override
-//    	public synchronized void reset() throws IOException {
-//    		in.reset();
-//    	}
-//    	
-//    	@Override
-//    	public long skip(long n) throws IOException {
-//    		return in.skip(n);
-//    	}
-//    }
-//	
-//    private class CustomSSLOutputStream extends OutputStream {
-//    	private OutputStream out;
-//    	
-//    	public CustomSSLOutputStream(OutputStream out) {
-//			this.out = out;
-//		}
-//		
-//		@Override
-//		public void close() throws IOException {
-//			out.close();
-//		}
-//		
-//		@Override
-//		public void flush() throws IOException {
-//			out.flush();
-//		}
-//		
-//		@Override
-//		public void write(byte[] b) throws IOException {
-//			startHandshake();
-//			out.write(b);
-//		}
-//		
-//		@Override
-//		public void write(byte[] b, int off, int len) throws IOException {
-//			startHandshake();
-//			out.write(b, off, len);
-//		}
-//
-//		@Override
-//		public void write(int b) throws IOException {
-//			startHandshake();
-//			out.write(b);
-//		}
-//    }
-
-    private SSLSocket socket;
+    private final SSLSocket socket;
     private String host;
-    private boolean verifyHostname;
-
+    private final boolean verifyHostname;
     private boolean isHandshakeStarted;
 
     public CustomSSLSocket(SSLSocket socket, String host, boolean verifyHostname) {
@@ -189,7 +105,7 @@ public class CustomSSLSocket extends SSLSocket {
 
     private String getHostname() {
         if (host == null)
-            host = ((InetSocketAddress)socket.getRemoteSocketAddress()).getHostName();
+            host = ((InetSocketAddress) socket.getRemoteSocketAddress()).getHostName();
         return host;
     }
 

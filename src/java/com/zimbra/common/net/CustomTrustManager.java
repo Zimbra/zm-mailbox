@@ -43,22 +43,19 @@ import com.zimbra.common.util.ZimbraLog;
  * @author jjzhuang
  */
 public class CustomTrustManager implements X509TrustManager {
+    private final X509TrustManager defaultTrustManager;
+    private X509TrustManager keyStoreTrustManager;
+    private final KeyStore keyStore;
+    private final Map<String, X509Certificate> pendingCerts = new HashMap<String, X509Certificate>();
 
-    X509TrustManager defaultTrustManager;
-
-    X509TrustManager keyStoreTrustManager;
-
-    KeyStore keyStore;
-
-    Map<String, X509Certificate> pendingCerts = new HashMap<String, X509Certificate>();
-
-    protected CustomTrustManager() {
+    protected CustomTrustManager() throws GeneralSecurityException {
         try {
             defaultTrustManager = DefaultTrustManager.getInstance();
-            loadKeyStore();
+            keyStore = loadKeyStore();
             resetKeyStoreTrustManager();
-        } catch (GeneralSecurityException x) {
-            ZimbraLog.security.error("trust manager init error", x);
+        } catch (GeneralSecurityException e) {
+            ZimbraLog.security.error("trust manager init error", e);
+            throw e;
         }
     }
 
@@ -181,14 +178,14 @@ public class CustomTrustManager implements X509TrustManager {
         throw new KeyStoreException(TrustManagerFactory.getDefaultAlgorithm() + " trust manager not supported");
     }
 
-    private synchronized void loadKeyStore() throws GeneralSecurityException {
-        keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    private static KeyStore loadKeyStore() throws GeneralSecurityException {
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         boolean isKeyStoreInitialized = false;
-        InputStream kin = null;
+        InputStream in = null;
         try {
-            kin = new FileInputStream(LC.mailboxd_keystore.value());
+            in = new FileInputStream(LC.mailboxd_keystore.value());
             try {
-                keyStore.load(kin, LC.mailboxd_keystore_password.value().toCharArray());
+                keyStore.load(in, LC.mailboxd_keystore_password.value().toCharArray());
                 isKeyStoreInitialized = true;
             } catch (CertificateException x) {
                 ZimbraLog.security.warn("failed to load certificates", x);
@@ -198,9 +195,9 @@ public class CustomTrustManager implements X509TrustManager {
         } catch (FileNotFoundException x) {
             ZimbraLog.security.info("keystore not present");
         } finally {
-            if (kin != null)
+            if (in != null)
                 try {
-                    kin.close();
+                    in.close();
                 } catch (IOException x) {
                     ZimbraLog.security.warn("keystore file can't be closed after reading", x);
                 }
@@ -208,9 +205,9 @@ public class CustomTrustManager implements X509TrustManager {
 
         if (!isKeyStoreInitialized) {
             try {
-                kin = new FileInputStream(LC.mailboxd_keystore_base.value());
+                in = new FileInputStream(LC.mailboxd_keystore_base.value());
                 try {
-                    keyStore.load(kin, LC.mailboxd_keystore_base_password.value().toCharArray());
+                    keyStore.load(in, LC.mailboxd_keystore_base_password.value().toCharArray());
                     isKeyStoreInitialized = true;
                 } catch (CertificateException x) {
                     ZimbraLog.security.warn("failed to load backup certificates", x);
@@ -220,9 +217,9 @@ public class CustomTrustManager implements X509TrustManager {
             } catch (FileNotFoundException x) {
                 ZimbraLog.security.warn("backup keystore not found");
             } finally {
-                if (kin != null)
+                if (in != null)
                     try {
-                        kin.close();
+                        in.close();
                     } catch (IOException x) {
                         ZimbraLog.security.warn("backup keystore file can't be closed after reading", x);
                     }
@@ -237,6 +234,8 @@ public class CustomTrustManager implements X509TrustManager {
                 throw new KeyStoreException(x);
             }
         }
+
+        return keyStore;
     }
 
     private synchronized void saveKeyStore() throws GeneralSecurityException {
@@ -262,7 +261,7 @@ public class CustomTrustManager implements X509TrustManager {
 
     private static CustomTrustManager instance;
 
-    public static synchronized CustomTrustManager getInstance() {
+    public static synchronized CustomTrustManager getInstance() throws GeneralSecurityException {
         if (instance == null)
             instance = new CustomTrustManager();
         return instance;
