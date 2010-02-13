@@ -77,7 +77,8 @@ public class CustomSSLSocket extends SSLSocket {
         try {
             ctm = CustomTrustManager.getInstance();
         } catch (GeneralSecurityException e) {
-            throw new IOException("CustomTrustManager not found", e);
+            throw (IOException)
+                new IOException("CustomTrustManager not found").initCause(e);
         }
 
         if (ctm.isCertificateAcceptedForHostname(hostname, cert))
