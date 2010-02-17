@@ -962,9 +962,16 @@
             <arg line="-s -f data/soap/samplesearchfolders.xml"/>
         </java>
         <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}"/>
-        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="lmtp.timeout">
             <socket server="${lmtp.host}" port="${lmtp.port}"/>
         </waitfor>
+        <fail message="lmtp port ${lmtp.port} not open.">
+            <condition>
+                <isset property="lmtp.timeout"/>
+             </condition>
+        </fail>
+
+
         <echo>LmtpInject messages for ${account-to-inject.email}</echo>
         <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
               failonerror="true">
@@ -1239,9 +1246,14 @@
     </target>
 
     <target name="ldap-load">
-        <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+        <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="ldap.timeout">
             <socket server="${ldap.host}" port="${ldap.port}"/>
         </waitfor>
+        <fail message="ldap server is not running on port ${ldap.port}.">
+            <condition>
+                <isset property="ldap.timeout"/>
+             </condition>
+        </fail>
         <antcall target="ldap-add">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
         </antcall>
@@ -1608,9 +1620,14 @@
 
     <target name="start-jetty" depends="start-jetty-windows,start-jetty-unix">
         <echo>Waiting for jetty to start</echo>
-        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+        <waitfor checkevery="1" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="jetty.timeout">
             <http url="http://${deploy.host}:${deploy.port}/service/soap" errorsBeginAt="500"/>
         </waitfor>
+        <fail message="jetty is not running on port ${deploy.port}.  check mailbox.log for any error.">
+            <condition>
+                <isset property="jetty.timeout"/>
+             </condition>
+        </fail>
     </target>
 
     <target name="stop-jetty-windows" if="is-windows">
