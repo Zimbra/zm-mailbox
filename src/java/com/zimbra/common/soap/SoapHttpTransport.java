@@ -35,15 +35,13 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpVersion;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.apache.commons.httpclient.URI;
 import org.dom4j.ElementHandler;
 
+import com.zimbra.common.httpclient.HttpProxyConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -59,7 +57,6 @@ public class SoapHttpTransport extends SoapTransport {
     private int mRetryCount = defaultRetryCount;
     private int mTimeout = defaultTimeout;
     private String mUri;
-    private URI mURI;
     private static boolean defaultKeepAlive = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getKeepAlive();
     private static int defaultRetryCount = LC.httpclient_soaphttptransport_retry_count.intValue();
     private static int defaultTimeout = LC.httpclient_soaphttptransport_so_timeout.intValue();
@@ -74,55 +71,14 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     /**
-     * Create a new SoapHttpTransport object for the specified URI.
-     * Supported schemes are http and https. The connection
-     * is not made until invoke or connect is called.
-     *
-     * Multiple threads using this transport must do their own
-     * synchronization.
+     * Create a new SoapHttpTransport object for the specified URI
+     * 
+     * @param uri the origin server URL
      */
     public SoapHttpTransport(String uri) {
-        this(uri, null, 0);
-    }
-
-    /**
-     * Create a new SoapHttpTransport object for the specified URI, with specific
-     *  proxy information.
-     * 
-     * @param uri the origin server URL
-     * @param proxyHost hostname of proxy
-     * @param proxyPort port of proxy
-     */
-    public SoapHttpTransport(String uri, String proxyHost, int proxyPort) {
-        this(uri, proxyHost, proxyPort, null, null);
-    }
-
-    /**
-     * Create a new SoapHttpTransport object for the specified URI, with specific
-     *  proxy information including proxy auth credentials.
-     * 
-     * @param uri the origin server URL
-     * @param proxyHost hostname of proxy
-     * @param proxyPort port of proxy
-     * @param proxyUser username for proxy auth
-     * @param proxyPass password for proxy auth
-     */
-    public SoapHttpTransport(String uri, String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
         super();
         mUri = uri;
-        try {
-            mURI = new URI(uri, false);
-        } catch (Exception e) {
-        }
-        if (proxyHost != null && proxyHost.length() > 0 && proxyPort > 0) {
-            mHostConfig = new HostConfiguration();
-            mHostConfig.setHost(mURI);
-            mHostConfig.setProxy(proxyHost, proxyPort);
-            if (proxyUser != null && proxyUser.length() > 0 && proxyPass != null && proxyPass.length() > 0) {
-                mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-                mClient.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
-            }
-        }
+        mHostConfig = HttpProxyConfig.getProxyConfig(uri);
     }
 
     public void setHttpDebugListener(HttpDebugListener listener) {

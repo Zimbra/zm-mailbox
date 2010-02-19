@@ -477,6 +477,8 @@ public class LC {
     public static final KnownKey httpclient_soaphttptransport_retry_count;
     public static final KnownKey httpclient_soaphttptransport_so_timeout;
     
+    public static final KnownKey httpclient_use_system_proxy;
+    
     // convertd
     public static final KnownKey httpclient_convertd_so_timeout;
     
@@ -1455,6 +1457,8 @@ public class LC {
                 Long.toString(300 * Constants.MILLIS_PER_SECOND),
                 "socket timeout in milliseconds for SOAP clients using the SoapHttpTransport class");
         
+        httpclient_use_system_proxy = new KnownKey("httpclient_use_system_proxy", "false",
+                "whether to use system proxies");
         
         httpclient_convertd_so_timeout = new KnownKey(
                 "httpclient_convertd_so_timeout", 
