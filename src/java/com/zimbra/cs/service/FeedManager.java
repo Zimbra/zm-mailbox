@@ -47,6 +47,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -151,7 +152,7 @@ public class FeedManager {
                 get.setDoAuthentication(true);
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
                 get.addRequestHeader("Accept", HTTP_ACCEPT);
-                client.executeMethod(get);
+                HttpClientUtil.executeMethod(client, get);
 
                 Header locationHeader = get.getResponseHeader("location");
                 if (locationHeader != null) {

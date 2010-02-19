@@ -24,6 +24,7 @@ import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class TestFileUpload
@@ -54,7 +55,7 @@ extends TestCase {
         
         PostMethod post = new PostMethod(uri.toString());
         post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-        int statusCode = client.executeMethod(post);
+        int statusCode = HttpClientUtil.executeMethod(client, post);
         assertEquals(200, statusCode);
         
         String response = post.getResponseBodyAsString();

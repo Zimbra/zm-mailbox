@@ -38,6 +38,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 
 import org.dom4j.DocumentException;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
@@ -319,7 +320,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			formAuth(client, info);
 			break;
 		}
-		return client.executeMethod(method);
+		return HttpClientUtil.executeMethod(client, method);
 	}
 	
 	private boolean basicAuth(HttpClient client, ServerInfo info) {
@@ -351,7 +352,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		HttpState state = new HttpState();
 		client.setState(state);
 		try {
-			int status = client.executeMethod(method);
+			int status = HttpClientUtil.executeMethod(client, method);
 			if (status >= 400) {
 				ZimbraLog.fb.error("form auth to Exchange returned an error: "+status);
 				return false;

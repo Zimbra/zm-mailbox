@@ -16,6 +16,7 @@
 package com.zimbra.cs.service;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -36,7 +37,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
 import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
@@ -78,8 +78,6 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -1299,7 +1297,7 @@ public class UserServlet extends ZimbraServlet {
 
     public static HttpInputStream getRemoteContentAsStream(AuthToken authToken, Account target, String folder, Map<String,String> params) throws ServiceException, IOException {
         String url = getRemoteUrl(target, folder, params);
-        return getRemoteResourceAsStream(authToken.toZAuthToken(), url, null, 0, null, null).getSecond();
+        return getRemoteResourceAsStream(authToken.toZAuthToken(), url).getSecond();
     }
 
     private static String getRemoteUrl(Account target, String folder, Map<String, String> params) throws ServiceException {
@@ -1325,14 +1323,9 @@ public class UserServlet extends ZimbraServlet {
     }
 
     public static Pair<Header[], byte[]> getRemoteResource(ZAuthToken authToken, String url) throws ServiceException {
-        return getRemoteResource(authToken, url, null, 0, null, null);
-    }
-
-    public static Pair<Header[], byte[]> getRemoteResource(ZAuthToken authToken, String url,
-            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
         HttpMethod get = null;
         try {
-            Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
+            Pair<Header[], HttpMethod> pair = doHttpOp(authToken, new GetMethod(url));
             get = pair.getSecond();
             return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
         } catch (IOException x) {
@@ -1344,7 +1337,6 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-
     public static FileUploadServlet.Upload getRemoteResourceAsUpload(AuthToken at, ItemId iid, Map<String,String> params)
     throws ServiceException, IOException {
         Map<String, String> pcopy = new HashMap<String, String>(params);
@@ -1355,7 +1347,7 @@ public class UserServlet extends ZimbraServlet {
         Account target = prov.get(AccountBy.id, iid.getAccountId(), at);
         String url = getRemoteUrl(target, null, pcopy);
 
-        Pair<Header[], HttpInputStream> response = getRemoteResourceAsStream(at.toZAuthToken(), url, null, 0, null, null);
+        Pair<Header[], HttpInputStream> response = getRemoteResourceAsStream(at.toZAuthToken(), url);
 
         // and save the result as an upload
         String ctype = "text/plain", filename = null;
@@ -1410,23 +1402,21 @@ public class UserServlet extends ZimbraServlet {
         	params.put(QP_NAME, extraPath);
         Account target = Provisioning.getInstance().getAccountById(iid.getAccountId());
         String url = getRemoteUrl(target, null, params);
-        return getRemoteResourceAsStream(authToken, url, null, 0, null, null);
+        return getRemoteResourceAsStream(authToken, url);
     }
     
-    public static Pair<Integer, InputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url) throws ServiceException, IOException {
-        HttpInputStream his = getRemoteResourceAsStream(authToken, url, null, 0, null, null).getSecond();
+    public static Pair<Integer, InputStream> getRemoteResourceAsStreamWithLength(ZAuthToken authToken, String url) throws ServiceException, IOException {
+        HttpInputStream his = getRemoteResourceAsStream(authToken, url).getSecond();
         return new Pair<Integer, InputStream>(his.getContentLength(), his);
     }
     
-    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url,
-                String proxyHost, int proxyPort, String proxyUser, String proxyPass)
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(ZAuthToken authToken, String url)
     throws ServiceException, IOException {
-        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
+        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, new GetMethod(url));
         return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
-    public static Pair<Header[], HttpInputStream> putMailItem(ZAuthToken authToken, String url, MailItem item, 
-                String proxyHost, int proxyPort, String proxyUser, String proxyPass)
+    public static Pair<Header[], HttpInputStream> putMailItem(ZAuthToken authToken, String url, MailItem item)
     throws ServiceException, IOException {
         if (item instanceof Document) {
             Document doc = (Document) item;
@@ -1438,20 +1428,19 @@ public class UserServlet extends ZimbraServlet {
             String contentType = doc.getContentType();
             method.addRequestHeader("Content-Type", contentType);
             method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), doc.getSize(), contentType));
-            Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, method);
+            Pair<Header[], HttpMethod> pair = doHttpOp(authToken, method);
             return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
         }
-        return putRemoteResource(authToken, url, item.getContentStream(), null, proxyHost, proxyPort, proxyUser, proxyPass);
+        return putRemoteResource(authToken, url, item.getContentStream(), null);
     }
 
     public static Pair<Header[], HttpInputStream> putRemoteResource(AuthToken authToken, String url, Account target,
                 InputStream req, Header[] headers)
     throws ServiceException, IOException {
-        return putRemoteResource(authToken.toZAuthToken(), url, req, headers, null, 0, null, null);
+        return putRemoteResource(authToken.toZAuthToken(), url, req, headers);
     }
     
-    public static Pair<Header[], HttpInputStream> putRemoteResource(ZAuthToken authToken, String url,
-    		InputStream req, Header[] headers, String proxyHost, int proxyPort, String proxyUser, String proxyPass)
+    public static Pair<Header[], HttpInputStream> putRemoteResource(ZAuthToken authToken, String url, InputStream req, Header[] headers)
     throws ServiceException, IOException {
         StringBuilder u = new StringBuilder(url);
         u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
@@ -1466,11 +1455,11 @@ public class UserServlet extends ZimbraServlet {
             }
         }
         method.setRequestEntity(new InputStreamRequestEntity(req, contentType));
-        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, method);
+        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, method);
         return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
-    private static Pair<Header[], HttpMethod> doHttpOp(ZAuthToken authToken, String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method)
+    private static Pair<Header[], HttpMethod> doHttpOp(ZAuthToken authToken, HttpMethod method)
     throws ServiceException {
         // create an HTTP client with the same cookies
         String url = "";
@@ -1493,15 +1482,6 @@ public class UserServlet extends ZimbraServlet {
             client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         }
         
-    	if (proxyHost != null && proxyPort > 0) {
-    		client.getHostConfiguration().setProxy(proxyHost, proxyPort);
-    		if (proxyUser != null && proxyPass != null) {
-    			client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
-    		}
-    	} else {
-    	    HttpProxyUtil.configureProxy(client);
-    	}
-        
     	if (method instanceof PutMethod) {
     		long contentLength = ((PutMethod)method).getRequestEntity().getContentLength();
     		if (contentLength > 0) {
@@ -1517,7 +1497,7 @@ public class UserServlet extends ZimbraServlet {
     	}
     	
         try {
-            int statusCode = client.executeMethod(method);
+            int statusCode = HttpClientUtil.executeMethod(client, method);
             if (statusCode == HttpStatus.SC_NOT_FOUND)
                 throw MailServiceException.NO_SUCH_ITEM(-1);
             else if (statusCode != HttpStatus.SC_OK && 

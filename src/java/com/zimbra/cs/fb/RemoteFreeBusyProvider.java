@@ -28,6 +28,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -119,7 +120,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                 method = new GetMethod(targetUrl.toString());
                 String fbMsg;
                 try {
-                    client.executeMethod(method);
+                    HttpClientUtil.executeMethod(client, method);
                     byte[] buf = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
                     fbMsg = new String(buf, "UTF-8");
                 } catch (IOException ex) {

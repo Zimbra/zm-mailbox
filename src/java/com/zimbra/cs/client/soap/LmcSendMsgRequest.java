@@ -30,6 +30,7 @@ import org.dom4j.Element;
 import org.dom4j.DocumentHelper;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -112,7 +113,7 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
             String contentType = URLConnection.getFileNameMap().getContentTypeFor(f.getName());
             Part[] parts = { new FilePart(f.getName(), f, contentType, "UTF-8") };
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-            statusCode = client.executeMethod(post);
+            statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
             if (statusCode == 200) {

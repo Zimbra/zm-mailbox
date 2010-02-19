@@ -37,6 +37,7 @@ import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
@@ -233,7 +234,7 @@ public class ProxyServlet extends ZimbraServlet {
             }
             
             try {
-                client.executeMethod(method);
+                HttpClientUtil.executeMethod(client, method);
             } catch (HttpException ex) {
                 ZimbraLog.zimlet.info("exception while proxying " + target, ex);
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);

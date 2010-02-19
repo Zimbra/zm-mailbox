@@ -40,6 +40,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
@@ -510,7 +511,7 @@ public class TestIDN extends TestCase {
         methodParams.setCredentialCharset("UTF-8");
         
         try {
-            int respCode = client.executeMethod(method);
+            int respCode = HttpClientUtil.executeMethod(client, method);
 
             if (respCode != HttpStatus.SC_OK ) {
                  System.out.println("failed, respCode=" + respCode);

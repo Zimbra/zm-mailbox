@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 
 /**
@@ -137,7 +138,7 @@ public class RawAuth implements Auth {
         String uri = LC.yauth_baseuri.value() + '/' + action;
         GetMethod method = new GetMethod(uri);
         method.setQueryString(params);
-        int rc = new HttpClient().executeMethod(method);
+        int rc = HttpClientUtil.executeMethod(new HttpClient(), method);
         Response res = new Response(method);
         String error = res.getField(ERROR);
         // Request can sometimes fail even with a 200 status code, so always

@@ -41,6 +41,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 
 public class StatsImageServlet extends ZimbraServlet {
@@ -107,7 +108,7 @@ public class StatsImageServlet extends ZimbraServlet {
 		        client.setState(state);
 		        GetMethod get = new GetMethod(url.toString());
 		        try {
-		            int statusCode = client.executeMethod(get);
+		            int statusCode = HttpClientUtil.executeMethod(client, get);
 		            if (statusCode != HttpStatus.SC_OK)
 		                throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
 		            

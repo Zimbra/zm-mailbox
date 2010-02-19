@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.service;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
@@ -236,7 +237,7 @@ public class FileUploadServlet extends ZimbraServlet {
         authtoken.encode(client, get, false, hostname);
         try {
             // fetch the remote item
-            int statusCode = client.executeMethod(get);
+            int statusCode = HttpClientUtil.executeMethod(client, get);
             if (statusCode != HttpStatus.SC_OK)
                 return null;
 

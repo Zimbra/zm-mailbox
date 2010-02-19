@@ -60,6 +60,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -1594,7 +1595,7 @@ public class ZimletUtil {
 	    		String contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
 	    		Part[] parts = { new ByteArrayPart(data, name, contentType) };
 	    		post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-	    		statusCode = client.executeMethod(post);
+	    		statusCode = HttpClientUtil.executeMethod(client, post);
 
 	    		if (statusCode == 200) {
                     String response = post.getResponseBodyAsString();

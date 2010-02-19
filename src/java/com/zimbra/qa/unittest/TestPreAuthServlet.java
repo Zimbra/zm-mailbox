@@ -24,6 +24,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
@@ -101,7 +102,7 @@ public class TestPreAuthServlet extends TestCase {
         HttpMethod method = new GetMethod(url);
         
         try {
-            int respCode = client.executeMethod(method);
+            int respCode = HttpClientUtil.executeMethod(client, method);
             int statusCode = method.getStatusCode();
             String statusLine = method.getStatusLine().toString();
             

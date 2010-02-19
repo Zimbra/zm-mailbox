@@ -26,6 +26,7 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
 
@@ -141,7 +142,7 @@ public class LmcMessage {
         get.getParams().setSoTimeout(msTimeout);
         int statusCode = -1;
         try {
-            statusCode = client.executeMethod(get);
+            statusCode = HttpClientUtil.executeMethod(client, get);
 
             // parse the response
             if (statusCode == 200) {

@@ -35,6 +35,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -381,7 +382,7 @@ public class TestAccessKeyGrant extends TestCase {
     private void executeHttpMethod(HttpClient client, HttpMethod method) throws Exception {
         try {
             
-            int respCode = client.executeMethod(method);
+            int respCode = HttpClientUtil.executeMethod(client, method);
 
             if (respCode != HttpStatus.SC_OK ) {
                  System.out.println("failed, respCode=" + respCode);

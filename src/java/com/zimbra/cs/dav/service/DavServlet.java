@@ -37,6 +37,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
@@ -572,7 +573,7 @@ public class DavServlet extends ZimbraServlet {
             if (hval != null)
             	method.addRequestHeader(h, hval);
         }
-        int statusCode = client.executeMethod(method);
+        int statusCode = HttpClientUtil.executeMethod(client, method);
         ctxt.getResponse().setStatus(statusCode);
         ctxt.setStatus(statusCode);
     	InputStream in = method.getResponseBodyAsStream();

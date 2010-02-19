@@ -40,6 +40,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -198,7 +199,7 @@ public class WebDavClient {
 			break;
 		}
 		m.setRequestHeader("Depth", depth);
-		mClient.executeMethod(m);
+		HttpClientUtil.executeMethod(mClient, m);
 		if (mDebugEnabled && m.getResponseBody() != null)
 			ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
 

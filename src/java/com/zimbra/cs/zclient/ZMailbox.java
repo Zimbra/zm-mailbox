@@ -58,6 +58,7 @@ import org.dom4j.QName;
 import org.json.JSONException;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -195,23 +196,6 @@ public class ZMailbox implements ToZJSONObject {
             mAuthToken = authToken;
             setUri(uri);
         }
-
-        public void setProxy(String proxyHost, int proxyPort) {
-        	mProxyHost = proxyHost;
-        	mProxyPort = proxyPort;
-        }
-
-        public void setProxy(String proxyHost, int proxyPort, String proxyUser, String proxyPass) {
-        	mProxyHost = proxyHost;
-        	mProxyPort = proxyPort;
-        	mProxyUser = proxyUser;
-        	mProxyPass = proxyPass;
-        }
-
-        public String getProxyHost() { return mProxyHost; }
-        public int getProxyPort() { return mProxyPort; }
-        public String getProxyUser() { return mProxyUser; }
-        public String getProxyPass() { return mProxyPass; }
 
         public String getClientIp() { return mClientIp; }
         public void setClientIp(String clientIp) { mClientIp = clientIp; }
@@ -515,9 +499,7 @@ public class ZMailbox implements ToZJSONObject {
      */
     private void setSoapURI(Options options) {
         if (mTransport != null) mTransport.shutdown();
-        mTransport = new SoapHttpTransport(options.getUri(),
-        		options.getProxyHost(), options.getProxyPort(),
-        		options.getProxyUser(), options.getProxyPass());
+        mTransport = new SoapHttpTransport(options.getUri());
         if (options.getUserAgentName() == null)
             mTransport.setUserAgent("zclient", BuildInfo.VERSION);
         else
@@ -1988,7 +1970,7 @@ public class ZMailbox implements ToZJSONObject {
         int statusCode;
         try {
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
-            statusCode = client.executeMethod(post);
+            statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
             if (statusCode == 200) {
@@ -2022,7 +2004,7 @@ public class ZMailbox implements ToZJSONObject {
         int statusCode;
         try {
             post.setRequestEntity(new InputStreamRequestEntity(in, contentLength, contentType));
-            statusCode = client.executeMethod(post);
+            statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
             if (statusCode == 200) {
@@ -2527,7 +2509,7 @@ public class ZMailbox implements ToZJSONObject {
             if (msecTimeout > -1)
                 get.getParams().setSoTimeout(msecTimeout);
 
-            statusCode = client.executeMethod(get);
+            statusCode = HttpClientUtil.executeMethod(client, get);
             // parse the response
             if (statusCode == 200) {
                 return new GetMethodInputStream(get);
@@ -2598,7 +2580,7 @@ public class ZMailbox implements ToZJSONObject {
                     new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
                     new InputStreamRequestEntity(is, contentType);
             post.setRequestEntity(entity);
-            int statusCode = client.executeMethod(post);
+            int statusCode = HttpClientUtil.executeMethod(client, post);
             // parse the response
             if (statusCode == 200) {
                 //

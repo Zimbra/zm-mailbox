@@ -25,6 +25,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -89,7 +90,7 @@ public class HostedAuth extends ZimbraCustomAuth {
             method.addRequestHeader(HEADER_AUTH_USER_AGENT, context.get(AuthContext.AC_USER_AGENT).toString());
 		
         try {
-            client.executeMethod(method);
+            HttpClientUtil.executeMethod(client, method);
         } catch (HttpException ex) {
         	throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),acct.getName(), "HTTP request to remote authentication server failed",ex); 
         } catch (IOException ex) {

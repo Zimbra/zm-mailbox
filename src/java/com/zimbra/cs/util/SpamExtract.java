@@ -48,6 +48,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -307,7 +308,7 @@ public class SpamExtract {
     private static void extractMessage0(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) throws IOException, MessagingException {
         gm.setPath(path);
         if (mLog.isDebugEnabled()) mLog.debug("Fetching " + path);
-        hc.executeMethod(gm);
+        HttpClientUtil.executeMethod(hc, gm);
         if (gm.getStatusCode() != HttpStatus.SC_OK) {
             throw new IOException("HTTP GET failed: " + gm.getPath() + ": " + gm.getStatusCode() + ": " + gm.getStatusText());
         }

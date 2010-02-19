@@ -45,6 +45,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -186,7 +187,7 @@ public class SaveDocument extends WikiDocumentHandler {
         GetMethod get = new GetMethod(url);
         authtoken.encode(client, get, false, acct.getAttr(Provisioning.A_zimbraMailHost));
         try {
-            int statusCode = client.executeMethod(get);
+            int statusCode = HttpClientUtil.executeMethod(client, get);
             if (statusCode != HttpStatus.SC_OK)
                 throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote mime part", null, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
 

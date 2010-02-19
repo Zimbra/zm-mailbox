@@ -41,6 +41,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
@@ -326,7 +327,7 @@ public class ZimbraServlet extends HttpServlet {
         // dispatch the request and copy over the results
         int statusCode = -1;
         for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--) {
-            statusCode = client.executeMethod(method);
+            statusCode = HttpClientUtil.executeMethod(client, method);
         }
         if (statusCode == -1) {
             resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");

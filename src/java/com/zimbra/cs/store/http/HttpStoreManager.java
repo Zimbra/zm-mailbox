@@ -28,6 +28,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -107,7 +108,7 @@ public abstract class HttpStoreManager extends StoreManager {
 
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getGetUrl(mbox, locator));
-        int statusCode = client.executeMethod(get);
+        int statusCode = HttpClientUtil.executeMethod(client, get);
         if (statusCode != HttpStatus.SC_OK)
             throw new IOException("unexpected return code during blob GET: " + get.getStatusText());
         return new UserServlet.HttpInputStream(get);
@@ -183,7 +184,7 @@ public abstract class HttpStoreManager extends StoreManager {
         PostMethod post = new PostMethod(getPostUrl(mbox));
         try {
             post.setRequestEntity(new InputStreamRequestEntity(pin, actualSize, "application/octet-stream"));
-            int statusCode = client.executeMethod(post);
+            int statusCode = HttpClientUtil.executeMethod(client, post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
             return getStagedBlob(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
@@ -241,7 +242,7 @@ public abstract class HttpStoreManager extends StoreManager {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         DeleteMethod delete = new DeleteMethod(getDeleteUrl(mbox, locator));
         try {
-            int statusCode = client.executeMethod(delete);
+            int statusCode = HttpClientUtil.executeMethod(client, delete);
             switch (statusCode) {
                 case HttpStatus.SC_OK:         return true;
                 case HttpStatus.SC_NOT_FOUND:  return false;

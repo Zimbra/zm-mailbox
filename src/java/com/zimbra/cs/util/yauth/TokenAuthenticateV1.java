@@ -21,6 +21,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
+
 /**
  * An implementation of the v1 Yahoo Token Auth API.  This is mostly deprecated, but still used by ymsgr among others
  * 
@@ -46,7 +48,7 @@ public class TokenAuthenticateV1 {
     public static String getToken(String username, String passwd) throws IOException, HttpException {
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod("https://login.yahoo.com/config/pwtoken_get?src=ymsgr&login="+username+"&passwd="+passwd);
-        int response = client.executeMethod(method);
+        int response = HttpClientUtil.executeMethod(client, method);
 
         if (response >= 200 && response < 300) { 
             String body = method.getResponseBodyAsString();
@@ -90,7 +92,7 @@ public class TokenAuthenticateV1 {
     public static TokenAuthenticateV1 doAuth(String username, String token) throws IOException, HttpException {
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod("https://login.yahoo.com/config/pwtoken_login?src=ymsgr&token="+token);
-        int response = client.executeMethod(method);
+        int response = HttpClientUtil.executeMethod(client, method);
         
         if (response >= 200 && response < 300) { 
             String body = method.getResponseBodyAsString();

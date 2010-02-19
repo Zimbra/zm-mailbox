@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -181,7 +182,7 @@ public class CheckSpelling extends MailDocumentHandler {
         HttpClient http = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         ServerResponse response = new ServerResponse();
         try {
-            response.statusCode = http.executeMethod(post);
+            response.statusCode = HttpClientUtil.executeMethod(http, post);
             response.content = post.getResponseBodyAsString();
         } finally {
             post.releaseConnection();

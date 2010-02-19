@@ -31,6 +31,7 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpConnectionParams;
 
+import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -125,7 +126,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             try {
                 System.out.println(mId + " - about to get something from " + mMethod.getURI());
                 // execute the method
-                int respCode = mHttpClient.executeMethod(mMethod);
+                int respCode = HttpClientUtil.executeMethod(mHttpClient, mMethod);
                 
                 System.out.println(mId + " - get executed");
                 // get the response body as an array of bytes
@@ -463,7 +464,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         long startTime = System.currentTimeMillis();
         long endTime;
         try {
-            int respCode = httpClient.executeMethod(method);
+            int respCode = HttpClientUtil.executeMethod(httpClient, method);
             dumpResponse(respCode, method, "");
             fail(); // nope, it should haved timed out
         } catch (java.net.SocketTimeoutException e) {
