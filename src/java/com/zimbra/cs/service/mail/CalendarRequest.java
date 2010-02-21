@@ -561,7 +561,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
                     // Compose email using the existing MimeMessage as template and send it.
                     MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
-                    MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal);
+                    MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
                     mbox.getMailSender().sendMimeMessage(octxt, mbox, mmModify, null, null,
                             new ItemId(mbox, inv.getMailItemId()), null, null, true, true);
                 }

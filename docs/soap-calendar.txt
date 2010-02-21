@@ -1046,7 +1046,7 @@ OR
 // another user who is not already an attendee.
 //
 //
-<ForwardAppointmentRequest id="item id">
+<ForwardAppointmentRequest id="Appointment item id">
   [<tz .../>]             // definition for TZID referenced by DATETIME in <exceptId>
   [<exceptId DATETIME/>]  // RECURRENCE-ID if forwarding a single instance of a recurring appointment
   <m>
@@ -1058,6 +1058,29 @@ OR
 </ForwardAppointmentRequest>
 
 <ForwardAppointmentResponse/>
+
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// ForwardAppointmentInvite
+//
+// Used by an attendee to forward an appointment invite email to
+// another user who is not already an attendee.
+//
+// To forward an appointment item, use ForwardAppointmentRequest instead.
+//
+//
+<ForwardAppointmentInviteRequest id="invite Message item id">
+  <m>
+    <e t="f" .../>  // From
+    <e t="t" .../>+ // To
+    <su>...</su>    // Subject
+    <mp>...</mp>    // plain/html texts
+  </m>
+</ForwardAppointmentInviteRequest>
+
+<ForwardAppointmentInviteResponse/>
 
 
 

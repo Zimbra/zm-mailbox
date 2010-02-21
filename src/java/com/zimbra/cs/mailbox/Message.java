@@ -767,9 +767,8 @@ public class Message extends MailItem {
         // Forward a copy of the message to calendar admin user if preference says so.
 
         // Don't forward a forwarded invite.  Prevent infinite loop.
-        // Don't forward calendar reply emails.  Only forward request emails.
         // Don't forward the message being added to Sent folder.
-        if (!isForwardedInvite && intendedForMe && isOrganizerMethod && folderId != Mailbox.ID_FOLDER_SENT) {
+        if (!isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();

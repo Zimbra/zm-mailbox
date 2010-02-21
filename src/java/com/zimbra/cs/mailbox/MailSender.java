@@ -572,11 +572,22 @@ public class MailSender {
         } else {
             overrideFromHeader = true;
             try {
-                String fromHdr = mm.getHeader("From", null);
-                if (fromHdr != null && !fromHdr.equals("")) {
-                    InternetAddress from = new InternetAddress(fromHdr);
-                    if (AccountUtil.allowFromAddress(acct, from.getAddress()))
+                // Deny send-as, but allow send-on-behalf-of.
+                String senderHdr = mm.getHeader("Sender", null);
+                if (senderHdr != null && !senderHdr.equals("")) {
+                    // In send-on-behalf-of, Sender header must be an allowed address to send from.
+                    InternetAddress sender = new InternetAddress(senderHdr);
+                    if (AccountUtil.allowFromAddress(acct, sender.getAddress()))
                         overrideFromHeader = false;
+                } else {
+                    // In plain send, From header must be an allowed address to send from.
+                    String fromHdr = mm.getHeader("From", null);
+                    if (fromHdr != null && !fromHdr.equals("")) {
+                        InternetAddress from = new InternetAddress(fromHdr);
+                        if (AccountUtil.allowFromAddress(acct, from.getAddress())) {
+                            overrideFromHeader = false;
+                        }
+                    }
                 }
             } catch (Exception e) { }
         }

@@ -371,6 +371,14 @@ public class CalendarMailSender {
             String subject, String desc, String descHtml,
             String uid, ZCalendar.ZVCalendar cal)
     throws ServiceException {
+        return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal, true);
+    }
+
+    public static MimeMessage createCalendarMessage(
+            Address fromAddr, Address senderAddr, List<Address> toAddrs,
+            String subject, String desc, String descHtml,
+            String uid, ZCalendar.ZVCalendar cal, boolean replyToSender)
+    throws ServiceException {
         if (desc == null)
             desc = "";
         try {
@@ -422,7 +430,8 @@ public class CalendarMailSender {
                 mm.setFrom(fromAddr);
             if (senderAddr != null) {
                 mm.setSender(senderAddr);
-                mm.setReplyTo(new Address[]{senderAddr});
+                if (replyToSender)
+                    mm.setReplyTo(new Address[]{senderAddr});
             }
             mm.setSentDate(new Date());
             mm.saveChanges();
@@ -500,7 +509,8 @@ public class CalendarMailSender {
 
     public static MimeMessage createCalendarMessage(
             Address fromAddr, Address senderAddr, List<Address> toAddrs,
-            MimeMessage srcMm, Invite inv, ZVCalendar cal)
+            MimeMessage srcMm, Invite inv, ZVCalendar cal,
+            boolean replyToSender)
     throws ServiceException {
         try {
             String uid = inv.getUid();
@@ -513,15 +523,18 @@ public class CalendarMailSender {
                     Address[] addrs = new Address[toAddrs.size()];
                     toAddrs.toArray(addrs);
                     mm.setRecipients(javax.mail.Message.RecipientType.TO, addrs);
+                } else {
+                    mm.setRecipients(javax.mail.Message.RecipientType.TO, (Address[]) null);
                 }
                 mm.setRecipients(javax.mail.Message.RecipientType.CC, (Address[]) null);
                 mm.setRecipients(javax.mail.Message.RecipientType.BCC, (Address[]) null);
-    
+
                 if (fromAddr != null)
                     mm.setFrom(fromAddr);
                 if (senderAddr != null) {
                     mm.setSender(senderAddr);
-                    mm.setReplyTo(new Address[]{senderAddr});
+                    if (replyToSender)
+                        mm.setReplyTo(new Address[]{senderAddr});
                 }
     
                 // Find and replace the existing calendar part with the new calendar object.
@@ -534,7 +547,7 @@ public class CalendarMailSender {
                 String subject = inv.getName();
                 String desc = inv.getDescription();
                 String descHtml = inv.getDescriptionHtml();
-                return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal);
+                return createCalendarMessage(fromAddr, senderAddr, toAddrs, subject, desc, descHtml, uid, cal, false);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(
