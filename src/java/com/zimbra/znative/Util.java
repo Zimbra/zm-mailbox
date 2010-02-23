@@ -18,13 +18,13 @@ package com.zimbra.znative;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class Util {
+public final class Util {
 
     private static final boolean mHaveNativeCode;
     
     public static final long TICKS_PER_SECOND;
     
-    private static boolean loadLibrary() {
+    public static boolean loadLibrary() {
         if (mHaveNativeCode) {
             return mHaveNativeCode;
         }

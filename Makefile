@@ -10,33 +10,36 @@ JAVAINC := -I/usr/local/java/include -I/usr/local/java/include/linux
 SHARED_EXT := so
 PUSHED_EXT := so.Linux.i386
 CF := -fPIC -g
+PROXY_INFO := DefaultProxyInfo
 
 ifeq ($(BUILD_PLATFORM), MACOSX)
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
 SHARED_EXT := jnilib
-CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc -arch ppc64 -arch x86_64
-LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
+CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -arch ppc -arch ppc64 -arch x86_64
+LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM -framework CoreServices
 LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
-PUSHED_EXT := jnilib.MacOSX.ppc
+PUSHED_EXT := jnilib.MacOSX
+PROXY_INFO := MacProxyInfo
 endif
 
 ifeq (MACOSXx86,$(findstring MACOSXx86,$(BUILD_PLATFORM)))   
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
-CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc -arch x86_64
+CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -arch ppc -arch x86_64
 SHARED_EXT := jnilib
-LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM
+LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM -framework CoreServices
 LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
 JAVA_BINARY = /usr/bin/java
-PUSHED_EXT := jnilib.MacOSX.i386
+PUSHED_EXT := jnilib.MacOSX
+PROXY_INFO := MacProxyInfo
 endif
 
 ifeq (MACOSXx86,$(BUILD_PLATFORM))
-CF :=-fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc
+CF :=-fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.5 -arch i386 -arch ppc
 endif
 
 all: FORCE
@@ -46,7 +49,7 @@ all: FORCE
 
 FORCE: ;
 
-$(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/ProcessorUsage.o $(BUILD)/ResourceUsage.o $(BUILD)/Util.o $(BUILD)/zjniutil.o
+$(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/ProcessorUsage.o $(BUILD)/ResourceUsage.o $(BUILD)/Util.o $(BUILD)/zjniutil.o $(BUILD)/$(PROXY_INFO).o
 	gcc $(CF) $(LIB_OPTS) $(SHARED) -o $@ $^
 
 $(BUILD)/libsetuid.$(SHARED_EXT): $(BUILD)/org_mortbay_setuid_SetUID.o
@@ -72,9 +75,10 @@ $(BUILD)/IO.o: $(SRC)/native/IO.c $(BUILD)/IO.h $(SRC)/native/zjniutil.h
 
 $(BUILD)/org_mortbay_setuid_SetUID.o: $(SRC)/jetty-setuid/org_mortbay_setuid_SetUID.c $(SRC)/jetty-setuid/org_mortbay_setuid_SetUID.h
 
+$(BUILD)/$(PROXY_INFO).o: $(SRC)/native/$(PROXY_INFO).c $(BUILD)/ProxyInfo.h $(SRC)/native/zjniutil.h
+
 #
-# Hack to copy to destination for use on incremental builds in a linux
-# dev environment.
+# Hack to copy to destination for use on incremental builds on linux / mac dev environments.
 #
 push: all
 	p4 edit ../ZimbraCommon/jars/zimbra-native.jar
