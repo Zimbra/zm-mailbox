@@ -1,5 +1,7 @@
 package com.zimbra.znative;
 
+import java.util.List;
+
 public class ProxyInfo {
     private final Type type;
     private final String host;
@@ -52,8 +54,11 @@ public class ProxyInfo {
     }
     
     public static void main(String[] args) {
-        for (ProxyInfo pi : getProxyInfo("http://www.news.com")) {
-            System.out.println("pi = " + pi);
+        String url = args.length > 0 ? args[0] : "http://www.news.com";
+        System.out.printf("Proxy information for %s :\n", url);
+        ProxyInfo[] proxies = getProxyInfo(url);
+        for (int i = 0; i < proxies.length; i++) {
+            System.out.printf("proxy[%d] = %s\n", i, proxies[i]);
         }
     }
 }
