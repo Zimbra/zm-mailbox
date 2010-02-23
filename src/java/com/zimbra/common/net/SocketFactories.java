@@ -90,6 +90,10 @@ public final class SocketFactories {
         return secureProtocolSocketFactory(defaultSSLSocketFactory());
     }
 
+    public static SecureProtocolSocketFactory dummySecureProtocolSocketFactory() {
+        return secureProtocolSocketFactory(dummySSLSocketFactory());
+    }
+
     public static SocketFactory proxySelectorSocketFactory(ProxySelector ps) {
         return new ProxySelectorSocketFactory(ps);
     }
