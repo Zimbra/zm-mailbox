@@ -39,11 +39,11 @@ class CustomSSLSocketFactory extends SSLSocketFactory {
         throws GeneralSecurityException, IOException {
         
         SSLContext context = SSLContext.getInstance("TLS");
-        context.init(null, new TrustManager[] { tm }, null);
+        context.init(null, tm != null ? new TrustManager[] { tm } : null, null);
         sslFactory = context.getSocketFactory();
         sampleSSLSocket = (SSLSocket) sslFactory.createSocket();
         factory = sf;
-        this.verifyHostname = verifyHostname;
+        this.verifyHostname = verifyHostname && tm instanceof CustomTrustManager;
     }
 
     boolean isVerifyHostname() {

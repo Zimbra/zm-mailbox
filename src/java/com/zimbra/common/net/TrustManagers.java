@@ -14,21 +14,22 @@
  */
 package com.zimbra.common.net;
 
-import com.zimbra.common.localconfig.LC;
-
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 
 public final class TrustManagers {
+    private static X509TrustManager defaultTrustManager;
     private static CustomTrustManager customTrustManager;
 
-    public static synchronized X509TrustManager defaultTrustManager() {
-        return LC.ssl_allow_untrusted_certs.booleanValue() ?
-            dummyTrustManager() : customTrustManager();
+    public static synchronized void setDefaultTrustManager(X509TrustManager tm) {
+        defaultTrustManager = tm;
     }
     
+    public static synchronized X509TrustManager defaultTrustManager() {
+        return defaultTrustManager;
+    }
+
     public static synchronized CustomTrustManager customTrustManager() {
         if (customTrustManager == null) {
             try {

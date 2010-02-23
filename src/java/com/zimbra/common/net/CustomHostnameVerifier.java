@@ -21,18 +21,18 @@ import sun.security.util.HostnameChecker;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 public class CustomHostnameVerifier implements HostnameVerifier {
-    private static final boolean SSL_ALLOW_MISMATCHED_CERTS = LC.ssl_allow_mismatched_certs.booleanValue();
-    
     public static void verifyHostname(String hostname, SSLSession session) throws IOException {
-        if (SSL_ALLOW_MISMATCHED_CERTS) return;
+        if (LC.ssl_allow_mismatched_certs.booleanValue()) return;
 
         try {
             InetAddress.getByName(hostname);
@@ -62,7 +62,7 @@ public class CustomHostnameVerifier implements HostnameVerifier {
     private static java.security.cert.X509Certificate certJavax2Java(javax.security.cert.X509Certificate cert) {
         try {
             ByteArrayInputStream bis = new ByteArrayInputStream(cert.getEncoded());
-            java.security.cert.CertificateFactory cf = java.security.cert.CertificateFactory.getInstance("X.509");
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
             return (java.security.cert.X509Certificate) cf.generateCertificate(bis);
         } catch (java.security.cert.CertificateEncodingException e) {
         } catch (javax.security.cert.CertificateEncodingException e) {

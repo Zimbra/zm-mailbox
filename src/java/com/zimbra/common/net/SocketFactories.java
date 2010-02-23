@@ -23,51 +23,46 @@ import javax.net.SocketFactory;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.net.ProxySelector;
 
-/*
-* ***** BEGIN LICENSE BLOCK *****
-* Zimbra Collaboration Suite Server
-* Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
-*
-* The contents of this file are subject to the Zimbra Public License
-* Version 1.3 ("License"); you may not use this file except in
-* compliance with the License.  You may obtain a copy of the License at
-* http://www.zimbra.com/license.
-*
-* Software distributed under the License is distributed on an "AS IS"
-* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
-* ***** END LICENSE BLOCK *****
-*/
 public final class SocketFactories {
-    public static final boolean SOCKS_ENABLED = LC.socks_enabled.booleanValue();
+    private static final boolean SOCKS_ENABLED = LC.socks_enabled.booleanValue();
 
     private static boolean registered;
     
     private static final String HTTPS = "https";
     private static final String HTTP = "http";
 
-    public static void registerProtocols() {
-        registerProtocols(false);
+    public static void registerProtocolsServer() {
+        register(LC.ssl_allow_untrusted_certs.booleanValue() ?
+            TrustManagers.dummyTrustManager() : TrustManagers.customTrustManager());
     }
     
-    public synchronized static void registerProtocols(boolean acceptUntrustedCerts) {
+    public static void registerProtocols() {
+        registerProtocols(LC.ssl_allow_untrusted_certs.booleanValue());
+    }
+    
+    public static void registerProtocols(boolean allowUntrustedCerts) {
+        register(allowUntrustedCerts ? TrustManagers.dummyTrustManager() : null);
+    }
+    
+    private synchronized static void register(X509TrustManager tm) {
         if (registered) return;
 
-        Protocol.registerProtocol(HTTP, new Protocol(
-            HTTP, defaultProtocolSocketFactory(), 80));
+        // Set default TrustManager
+        TrustManagers.setDefaultTrustManager(tm);
+        
+        // Register Apache Commons HTTP/HTTPS protocol socket factories
+        ProtocolSocketFactory psf = defaultProtocolSocketFactory();
+        Protocol.registerProtocol(HTTP, new Protocol(HTTP, psf, 80));
+        ProtocolSocketFactory spsf = defaultSecureProtocolSocketFactory();
+        Protocol.registerProtocol(HTTPS, new Protocol(HTTPS, spsf, 443));
 
         // HttpURLConnection already uses system ProxySelector by default
-
-        if (acceptUntrustedCerts) {
-            SSLSocketFactory dummy = dummySSLSocketFactory();
-            Protocol.registerProtocol(HTTPS, new Protocol(HTTPS,
-                (ProtocolSocketFactory) secureProtocolSocketFactory(dummy), 443));
-            HttpsURLConnection.setDefaultSSLSocketFactory(dummy);
-        } else {
-            Protocol.registerProtocol(HTTPS, new Protocol(HTTPS,
-                (ProtocolSocketFactory) defaultSecureProtocolSocketFactory(), 443));
-            HttpsURLConnection.setDefaultSSLSocketFactory(defaultSSLSocketFactory(false));
+        // Set HttpsURLConnection SSL socket factory and optional hostname verifier
+        HttpsURLConnection.setDefaultSSLSocketFactory(defaultSSLSocketFactory(false));
+        if (tm instanceof CustomTrustManager) {
             HttpsURLConnection.setDefaultHostnameVerifier(new CustomHostnameVerifier());
         }
 
