@@ -24,10 +24,9 @@ import java.util.Map;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.SSLSocket;
 
-import com.zimbra.common.net.DummySSLSocketFactory;
+import com.zimbra.common.net.SocketFactories;
 import junit.framework.TestCase;
 
-import com.zimbra.common.net.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
@@ -142,9 +141,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
     }
     
     static void init() throws Exception {
-        // Initialize SSL for SOAP provisioning
-        EasySSLProtocolSocketFactory.init();
-        
+        SocketFactories.registerProtocols(true);
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getLocalServer();
         mPop3CleartextPort = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, 7110);
@@ -171,7 +168,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
 
         // Test SSL
         boolean good = false;
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mPop3SslPort);
+        socket = SocketFactories.dummySSLSocketFactory().createSocket(HOSTNAME, mPop3SslPort);
         if (useExcludedCipher)
             setEnabledCipherSuites(socket);
         try {
@@ -192,8 +189,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
         socket = new Socket(HOSTNAME, mPop3CleartextPort);
         send(socket, "", POP3_CONNECT_RESPONSE);
         send(socket, POP3_STLS, POP3_STLS_RESPONSE);
-        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
-        socket = factory.createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
+        socket = SocketFactories.dummySSLSocketFactory().createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
         if (useExcludedCipher)
             setEnabledCipherSuites(socket);
         try {
@@ -219,7 +215,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
         
         // Test SSL
         boolean good = false;
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
+        socket = SocketFactories.dummySSLSocketFactory().createSocket(HOSTNAME, mImapSslPort);
         if (useExcludedCipher)
             setEnabledCipherSuites(socket);
         try {
@@ -241,8 +237,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
         send(socket, null, IMAP_CONNECT_RESPONSE);
         String expectedStartTLSResp = TESTING_NIO?IMAP_STARTTLS_RESPONSE_NIO:IMAP_STARTTLS_RESPONSE;
         send(socket, IMAP_STARTTLS, expectedStartTLSResp);
-        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
-        socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
+        socket = SocketFactories.dummySSLSocketFactory().createSocket(socket, HOSTNAME, mImapCleartextPort, true);
         if (useExcludedCipher)
             setEnabledCipherSuites(socket);
         try {
@@ -268,7 +263,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
         // unless using config rewrite for jetty.xml, which usually is not done in dev env.
         // 
         boolean good = false;
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mHttpSslPort);
+        socket = SocketFactories.dummySSLSocketFactory().createSocket(HOSTNAME, mHttpSslPort);
         if (useExcludedCipher)
             setEnabledCipherSuites(socket);
         try {

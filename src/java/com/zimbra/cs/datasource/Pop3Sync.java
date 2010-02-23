@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.SSLSocketFactoryManager;
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -69,7 +69,8 @@ public class Pop3Sync extends MailItemImport {
             config.setDebug(true);
             enableTrace(config);
         }
-        config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
+        config.setSocketFactory(SocketFactories.defaultSocketFactory());
+        config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
         return config;
     }
     

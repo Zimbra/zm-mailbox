@@ -14,7 +14,8 @@
  */
 package com.zimbra.qa.unittest;
 
-import com.zimbra.common.net.SocksSocketFactory;
+import com.zimbra.common.net.ProxySelectors;
+import com.zimbra.common.net.SocketFactories;
 import junit.framework.TestCase;
 
 import javax.net.SocketFactory;
@@ -31,6 +32,9 @@ import java.util.List;
 public class TestSocks extends TestCase {
     private static final String PROXY_HOST = "localhost";
     private static final int PROXY_PORT = 1080;
+    private static final InetSocketAddress PROXY_ADDR =
+        new InetSocketAddress(PROXY_HOST, PROXY_PORT);
+
     private static final int LOCAL_PORT = 9999;
 
     public void testConnect() throws IOException {
@@ -38,11 +42,17 @@ public class TestSocks extends TestCase {
     }
 
     public void testSystemProxy() throws Exception {
-        connect(null);
+        ProxySelector ps = ProxySelectors.nativeProxySelector();
+        assertNotNull(ps);
+        List<Proxy> proxies = ps.select(new URI("socket://www.vmware.com"));
+        assertEquals(1, proxies.size());
+        Proxy proxy = proxies.get(0);
+        assertEquals(Proxy.Type.SOCKS, proxy.type());
+        assertEquals(PROXY_ADDR, proxy.address());
     }
 
     private Socket connect(ProxySelector ps) throws IOException {
-        SocketFactory sf = new SocksSocketFactory(ps);
+        SocketFactory sf = SocketFactories.proxySelectorSocketFactory(ps);
         Socket sock = sf.createSocket();
         assertFalse(sock.isConnected());
         assertFalse(sock.isBound());
@@ -55,8 +65,7 @@ public class TestSocks extends TestCase {
     private static class SimpleProxySelector extends ProxySelector {
         @Override
         public List<Proxy> select(URI uri) {
-            SocketAddress addr = new InetSocketAddress(PROXY_HOST, PROXY_PORT);
-            return Arrays.asList(new Proxy(Proxy.Type.SOCKS, addr));
+            return Arrays.asList(new Proxy(Proxy.Type.SOCKS, PROXY_ADDR));
         }
 
         @Override

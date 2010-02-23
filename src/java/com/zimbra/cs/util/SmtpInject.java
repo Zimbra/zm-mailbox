@@ -27,7 +27,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.net.DummySSLSocketFactory;
+import com.zimbra.common.net.SocketFactories;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -190,8 +190,7 @@ public class SmtpInject {
 
         // Disable certificate checking so we can test against
         // self-signed certificates
-        java.security.Security.setProperty("ssl.SocketFactory.provider",
-            DummySSLSocketFactory.class.getName());
+        props.put("mail.smtp.ssl.socketFactory", SocketFactories.dummySSLSocketFactory());
 
         Session session = Session.getInstance(props, null);
         session.setDebug(trace);

@@ -434,9 +434,8 @@ public abstract class MailConnection {
     }
 
     private Socket newSocket() throws IOException {
-        SocketFactory sf =
-            config.getSecurity() == MailConfig.Security.SSL ?
-                getSSLSocketFactory() : SocketFactory.getDefault();
+        SocketFactory sf = config.getSecurity() != MailConfig.Security.SSL ?
+                getSocketFactory() : getSSLSocketFactory();
         Socket sock = sf.createSocket();
         int connectTimeout = (int)
             Math.min(config.getConnectTimeout() * 1000L, Integer.MAX_VALUE);
@@ -453,6 +452,11 @@ public abstract class MailConnection {
             sock, sock.getInetAddress().getHostName(), sock.getPort(), false);
     }
 
+    private SocketFactory getSocketFactory() {
+        SocketFactory sf = config.getSocketFactory();
+        return sf != null ? sf : SocketFactory.getDefault();
+    }
+    
     private SSLSocketFactory getSSLSocketFactory() {
         SSLSocketFactory ssf = config.getSSLSocketFactory();
         return ssf != null ? ssf : (SSLSocketFactory) SSLSocketFactory.getDefault();

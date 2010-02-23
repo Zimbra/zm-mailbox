@@ -21,15 +21,13 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.net.ssl.SSLSocketFactory;
-
-import com.zimbra.common.net.DummySSLSocketFactory;
+import com.zimbra.common.net.SocketFactories;
 import junit.framework.TestCase;
 
-import com.zimbra.common.net.EasySSLProtocolSocketFactory;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
+import static com.zimbra.common.net.SocketFactories.dummySSLSocketFactory;
 
 public class TestPop3ImapAuth
 extends TestCase {
@@ -74,9 +72,7 @@ extends TestCase {
     
     public void setUp()
     throws Exception {
-        // Initialize SSL for SOAP provisioning
-        EasySSLProtocolSocketFactory.init();
-        
+        SocketFactories.registerProtocols(true);
         mProv = Provisioning.getInstance();
         Server server = mProv.getLocalServer();
         mOrigPop3CleartextLoginEnabled = server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
@@ -100,7 +96,7 @@ extends TestCase {
         socket.close();
 
         // Test SSL
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mPop3SslPort);
+        socket = dummySSLSocketFactory().createSocket(HOSTNAME, mPop3SslPort);
         send(socket, "", POP3_CONNECT_RESPONSE);
         send(socket, POP3_USER, POP3_USER_RESPONSE);
         send(socket, POP3_PASS, POP3_PASS_RESPONSE);
@@ -111,8 +107,7 @@ extends TestCase {
         socket = new Socket(HOSTNAME, mPop3CleartextPort);
         send(socket, "", POP3_CONNECT_RESPONSE);
         send(socket, POP3_STLS, POP3_STLS_RESPONSE);
-        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
-        socket = factory.createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
+        socket = dummySSLSocketFactory().createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
         send(socket, POP3_USER, POP3_USER_RESPONSE);
         send(socket, POP3_PASS, POP3_PASS_RESPONSE);
         send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
@@ -130,7 +125,7 @@ extends TestCase {
         socket.close();
 
         // Test SSL
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mPop3SslPort);
+        socket = dummySSLSocketFactory().createSocket(HOSTNAME, mPop3SslPort);
         send(socket, null, POP3_CONNECT_RESPONSE);
         send(socket, POP3_USER, POP3_USER_RESPONSE);
         send(socket, POP3_PASS, POP3_PASS_RESPONSE);
@@ -141,8 +136,7 @@ extends TestCase {
         socket = new Socket(HOSTNAME, mPop3CleartextPort);
         send(socket, null, POP3_CONNECT_RESPONSE);
         send(socket, POP3_STLS, POP3_STLS_RESPONSE);
-        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
-        socket = factory.createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
+        socket = dummySSLSocketFactory().createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
         send(socket, POP3_USER, POP3_USER_RESPONSE);
         send(socket, POP3_PASS, POP3_PASS_RESPONSE);
         send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
@@ -160,7 +154,7 @@ extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
         
         // Test SSL
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
+        socket = dummySSLSocketFactory().createSocket(HOSTNAME, mImapSslPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
         send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
@@ -170,8 +164,7 @@ extends TestCase {
         socket = new Socket(HOSTNAME, mImapCleartextPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
         send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
-        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
-        socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
+        socket = dummySSLSocketFactory().createSocket(socket, HOSTNAME, mImapCleartextPort, true);
         send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
@@ -189,7 +182,7 @@ extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
         
         // Test SSL
-        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
+        socket = dummySSLSocketFactory().createSocket(HOSTNAME, mImapSslPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
         send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
@@ -199,8 +192,7 @@ extends TestCase {
         socket = new Socket(HOSTNAME, mImapCleartextPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
         send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
-        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
-        socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
+        socket = dummySSLSocketFactory().createSocket(socket, HOSTNAME, mImapCleartextPort, true);
         send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);

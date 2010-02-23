@@ -54,13 +54,12 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.EasySSLSocketFactory;
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -79,7 +78,7 @@ public class ZimbraLdapContext {
     private static Hashtable<String, String> sEnvMasterAuth;
     private static Hashtable<String, String> sEnvAuth;
     
-    private static SSLSocketFactory sEasySSLSocketFactory;
+    private static SSLSocketFactory sDummySSLSocketFactory;
     
     private LdapContext mDirContext;
     private StartTlsResponse mTlsResp;
@@ -180,7 +179,7 @@ public class ZimbraLdapContext {
             System.setProperty("javax.net.ssl.trustStore", LC.mailboxd_truststore.value());
         */    
         
-        sEasySSLSocketFactory = EasySSLSocketFactory.getDefault();
+        sDummySSLSocketFactory = SocketFactories.dummySSLSocketFactory();
         
         // setup debug text
         StringBuffer startTLSDebugText = new StringBuffer("START TLS");
@@ -334,7 +333,7 @@ public class ZimbraLdapContext {
             tlsResp.setHostnameVerifier(new DummyHostVerifier());
         
         if (LC.ssl_allow_untrusted_certs.booleanValue())
-            tlsResp.negotiate(sEasySSLSocketFactory);
+            tlsResp.negotiate(sDummySSLSocketFactory);
         else
             tlsResp.negotiate();
     }

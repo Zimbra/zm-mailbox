@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.net.EasySSLProtocolSocketFactory;
+import com.zimbra.common.net.SocketFactories;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -96,12 +96,6 @@ import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.event.*;
 
 public class ZMailbox implements ToZJSONObject {
-
-    static {
-        if (LC.ssl_allow_untrusted_certs.booleanValue())
-            EasySSLProtocolSocketFactory.init();
-    }
-
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
     public final static int MAX_NUM_CACHED_MESSAGES = LC.zmailbox_message_cachesize.intValue();
@@ -111,6 +105,10 @@ public class ZMailbox implements ToZJSONObject {
 
     public final static char PATH_SEPARATOR_CHAR = '/';
 
+    static {
+        SocketFactories.registerProtocols();
+    }
+    
     public enum SearchSortBy {
         dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc, none,
         taskDueAsc, taskDueDesc, taskStatusAsc, taskStatusDesc, taskPercCompletedAsc, taskPercCompletedDesc;

@@ -27,9 +27,9 @@ import java.util.TimerTask;
 
 import javax.servlet.http.HttpServlet;
 
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.SSLSocketFactoryManager;
 import com.zimbra.znative.IO;
 import com.zimbra.znative.Process;
 import com.zimbra.znative.Util;
@@ -63,7 +63,7 @@ public class FirstServlet extends HttpServlet {
             System.setProperty("javax.net.ssl.keyStorePassword", LC.mailboxd_keystore_password.value());
             System.setProperty("javax.net.ssl.trustStorePassword", LC.mailboxd_truststore_password.value());
 
-            SSLSocketFactoryManager.init();
+            SocketFactories.registerProtocols();
 
             synchronized (mInitializedCondition) {
                 mInitialized = true;

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.datasource;
                              
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
@@ -34,7 +35,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.datasource.SyncState;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
@@ -110,7 +110,8 @@ public class ImapSync extends MailItemImport {
             config.setDebug(true);
             enableTrace(config, ds);
         }
-        config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
+        config.setSocketFactory(SocketFactories.defaultSocketFactory());
+        config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
         return config;
     }
 

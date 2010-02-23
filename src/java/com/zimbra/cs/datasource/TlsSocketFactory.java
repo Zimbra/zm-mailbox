@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.common.net.SSLSocketFactoryManager;
+import com.zimbra.common.net.SocketFactories;
 
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.SocketFactory;
@@ -30,49 +30,51 @@ import java.io.IOException;
  * when wrapping an existing socket (after TLS negotiation).
  */
 public class TlsSocketFactory extends SSLSocketFactory {
-    private SSLSocketFactory factory;
+    private final SocketFactory factory;
+    private final SSLSocketFactory sslFactory;
 
     private static final TlsSocketFactory THE_ONE = new TlsSocketFactory();
 
-    protected TlsSocketFactory() {
-    	factory = SSLSocketFactoryManager.getDefaultSSLSocketFactory();
+    public TlsSocketFactory() {
+        factory = SocketFactories.defaultSocketFactory();
+    	sslFactory = SocketFactories.defaultSSLSocketFactory();
     }
     
-    public static SocketFactory getDefault() {
+    public static TlsSocketFactory getInstance() {
         return THE_ONE;
     }
 
     public Socket createSocket() throws IOException {
-        return new Socket();
+        return factory.createSocket();
     }
 
     public Socket createSocket(InetAddress address, int port) throws IOException {
-        return new Socket(address, port);
+        return factory.createSocket(address, port);
     }
     
     public Socket createSocket(InetAddress address, int port,
                                InetAddress localAddress, int localPort) throws IOException {
-        return new Socket(address, port, localAddress, localPort);
+        return factory.createSocket(address, port, localAddress, localPort);
     }
 
     public Socket createSocket(String host, int port) throws IOException {
-        return new Socket(host, port);
+        return factory.createSocket(host, port);
     }
 
     public Socket createSocket(String host, int port,
                                InetAddress localAddress, int localPort) throws IOException {
-        return new Socket(host, port, localAddress, localPort);
+        return factory.createSocket(host, port, localAddress, localPort);
     }
 
     public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-    	return factory.createSocket(s, host, port, autoClose);
+    	return sslFactory.createSocket(s, host, port, autoClose);
     }
 
     public String[] getDefaultCipherSuites() {
-        return factory.getDefaultCipherSuites();
+        return sslFactory.getDefaultCipherSuites();
     }
 
     public String[] getSupportedCipherSuites() {
-        return factory.getSupportedCipherSuites();
+        return sslFactory.getSupportedCipherSuites();
     }
 }

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.datasource.imap;
 
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.datasource.LogOutputStream;
 import com.zimbra.cs.account.DataSource;
@@ -21,7 +22,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.net.SSLSocketFactoryManager;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.PrintStream;
@@ -53,7 +53,8 @@ public abstract class ImapImport extends MailItemImport {
             config.setTraceStream(
                 new PrintStream(new LogOutputStream(ZimbraLog.imap), true));
         }
-        config.setSSLSocketFactory(SSLSocketFactoryManager.getDefaultSSLSocketFactory());
+        config.setSocketFactory(SocketFactories.defaultSocketFactory());
+        config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
         return config;
     }
 }

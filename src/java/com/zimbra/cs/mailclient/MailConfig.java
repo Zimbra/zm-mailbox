@@ -17,6 +17,7 @@ package com.zimbra.cs.mailclient;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.util.Config;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.util.Map;
 import java.util.Properties;
@@ -39,6 +40,7 @@ public abstract class MailConfig {
     private boolean debug;
     private boolean trace;
     private PrintStream traceOut;
+    private SocketFactory socketFactory;
     private SSLSocketFactory sslSocketFactory;
     private AuthenticatorFactory authenticatorFactory;
     private int readTimeout;
@@ -120,6 +122,14 @@ public abstract class MailConfig {
             throw new NullPointerException();
         }
         this.security = security;
+    }
+
+    public SocketFactory getSocketFactory() {
+        return socketFactory;
+    }
+
+    public void setSocketFactory(SocketFactory sf) {
+        socketFactory = sf;
     }
 
     /**
