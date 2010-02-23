@@ -67,7 +67,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 		if(SMTPHost == null || SMTPHost.length()<1)
 			SMTPHost = domain.getName();
 
-		String SMTPHostMatch = String.format("^[0-9]{2}\\s%s\\.$", SMTPHost);
+		String SMTPHostMatch = String.format("^\\d+\\s%s\\.$", SMTPHost);
 		ZimbraLog.soap.info("checking domain mx record");
 		Hashtable env = new Hashtable();
 		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
