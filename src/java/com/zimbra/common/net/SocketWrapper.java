@@ -26,12 +26,12 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SocketWrapper extends Socket {
+class SocketWrapper extends Socket {
     private Socket sock;
     private SocketAddress bindpoint;
     private Map<Integer, Object> options;
 
-    public SocketWrapper() {}
+    SocketWrapper() {}
 
     public void setDelegate(Socket sock) {
         this.sock = sock;

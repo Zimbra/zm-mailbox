@@ -323,7 +323,6 @@ public class LC {
     public static final KnownKey ssl_allow_untrusted_certs;
     public static final KnownKey ssl_allow_mismatched_certs;
     public static final KnownKey ssl_allow_accept_untrusted_certs;
-    public static final KnownKey zimbra_class_sslprotocolsocketfactory;
 
     public static final KnownKey zimlet_directory;
     public static final KnownKey wiki_enabled;
@@ -370,7 +369,7 @@ public class LC {
         new KnownKey("nio_imap_max_chunk_size").setDefault(8*1024);
     public static final KnownKey nio_imap_thread_keep_alive_time =
         new KnownKey("nio_imap_thread_keep_alive_time").setDefault(60);
-    
+
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
     public static final KnownKey krb5_debug_enabled;
@@ -392,7 +391,8 @@ public class LC {
     public static final KnownKey zimbra_class_application;
     public static final KnownKey zimbra_class_rulerewriterfactory;
     public static final KnownKey zimbra_class_datasourcemanager;
-    
+
+    // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs;
     public static final KnownKey data_source_fetch_size;
     public static final KnownKey data_source_max_message_memory_size;
@@ -562,6 +562,9 @@ public class LC {
     
     public static final KnownKey zimbra_slow_logging_enabled;
     public static final KnownKey zimbra_slow_logging_threshold;
+
+    public static final KnownKey socks_enabled = new KnownKey(
+        "enable_socks", "false", "enable optional support for SOCKS client");
     
     static {
         @SuppressWarnings("unused")
@@ -1170,17 +1173,18 @@ public class LC {
         mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
         mailboxd_output_rotate_interval.setDefault("86400");
 
-        ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
-        ssl_allow_untrusted_certs.setDefault("false");
-        
-        ssl_allow_mismatched_certs = new KnownKey("ssl_allow_mismatched_certs");
-        ssl_allow_mismatched_certs.setDefault("true");
-        
-        ssl_allow_accept_untrusted_certs = new KnownKey("ssl_allow_accept_untrusted_certs", "true", "whether to allow accepting untrusted certificates");
-        
-        zimbra_class_sslprotocolsocketfactory = new KnownKey("zimbra_class_sslprotocolsocketfactory");
-        zimbra_class_sslprotocolsocketfactory.setDefault("");
+        ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs")
+            .setDoc("allow untrusted certificates")
+            .setDefault("false");
 
+        ssl_allow_mismatched_certs = new KnownKey("ssl_allow_mismatched_certs")
+            .setDoc("allow mismatched certificates (disable hostname verification")
+            .setDefault("true");
+        
+        ssl_allow_accept_untrusted_certs = new KnownKey("ssl_allow_accept_untrusted_certs")
+            .setDoc("allow user to accept untrusted certificates")
+            .setDefault("true");
+        
         zimlet_directory = new KnownKey("zimlet_directory");
         zimlet_directory.setDefault("${zimbra_home}" + FS + "zimlets-deployed");
 

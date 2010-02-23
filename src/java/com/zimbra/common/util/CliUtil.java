@@ -15,11 +15,9 @@
 
 package com.zimbra.common.util;
 
-import com.zimbra.common.net.EasySSLProtocolSocketFactory;
+import com.zimbra.common.net.SocketFactories;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-
-import com.zimbra.common.localconfig.LC;
 
 public class CliUtil {
     public static void toolSetup() {
@@ -32,8 +30,7 @@ public class CliUtil {
 
     public static void toolSetup(String defaultLogLevel, String logFile, boolean showThreads) {
         ZimbraLog.toolSetupLog4j(defaultLogLevel, logFile, showThreads);
-        if (LC.ssl_allow_untrusted_certs.booleanValue())
-            EasySSLProtocolSocketFactory.init();
+        SocketFactories.registerProtocols();
     }
 
     /**

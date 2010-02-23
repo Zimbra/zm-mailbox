@@ -18,24 +18,27 @@ import javax.net.SocketFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.URI;
 
-public class SocksSocketFactory extends SocketFactory {
+class ProxySelectorSocketFactory extends SocketFactory {
     private final ProxySelector proxySelector;
 
-    public SocksSocketFactory(ProxySelector ps) {
+    ProxySelectorSocketFactory(ProxySelector ps) {
         proxySelector = ps;
     }
 
-    public SocksSocketFactory() {
+    ProxySelectorSocketFactory() {
         this(null);
     }
 
     @Override
     public Socket createSocket() throws IOException {
-        return new SocksSocket(proxySelector);
+        return new ProxySelectorSocket(proxySelector != null ?
+            proxySelector : ProxySelectors.defaultProxySelector());
     }
     
     @Override
@@ -74,5 +77,11 @@ public class SocksSocketFactory extends SocketFactory {
             sock.connect(endpoint);
         }
         return sock;
+    }
+
+    public static void main(String[] args) throws Exception {
+        for (Proxy proxy : ProxySelectors.defaultProxySelector().select(new URI("socket://www.news.com"))) {
+            System.out.println("proxy = " + proxy);
+        }
     }
 }

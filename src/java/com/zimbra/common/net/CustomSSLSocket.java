@@ -14,99 +14,58 @@
  */
 package com.zimbra.common.net;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
-import java.security.GeneralSecurityException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
-import sun.security.util.HostnameChecker;
+class CustomSSLSocket extends SSLSocket {
+    private CustomSSLSocketFactory factory;
+    private SSLSocket sslSocket;
+    private Socket socket;
+    private String host;
+    private boolean isHandshakeStarted;
 
-import com.zimbra.common.localconfig.LC;
+    // SSLSocket settings which may be deferred if using wrapped socket
+    private List<HandshakeCompletedListener> listeners;
+    private Boolean enableSessionCreation;
+    private String[] enabledCipherSuites;
+    private String[] enabledProtocols;
+    private Boolean useClientMode;
+    private Boolean needClientAuth;
+    private Boolean wantClientAuth;
 
-public class CustomSSLSocket extends SSLSocket {
     private static final ThreadLocal<String> threadLocal = new ThreadLocal<String>();
 
     static String getCertificateHostname() {
         return threadLocal.get();
     }
 
-    private static java.security.cert.X509Certificate certJavax2Java(javax.security.cert.X509Certificate cert) {
-        try {
-            ByteArrayInputStream bis = new ByteArrayInputStream(cert.getEncoded());
-            java.security.cert.CertificateFactory cf = java.security.cert.CertificateFactory.getInstance("X.509");
-            return (java.security.cert.X509Certificate) cf.generateCertificate(bis);
-        } catch (java.security.cert.CertificateEncodingException e) {
-        } catch (javax.security.cert.CertificateEncodingException e) {
-        } catch (java.security.cert.CertificateException e) {
-        }
-        return null;
-    }
-
-    private static void verifyHostname(String hostname, SSLSession session) throws IOException {
-        
-        if (LC.ssl_allow_mismatched_certs.booleanValue())
-            return;
-
-        try {
-            InetAddress.getByName(hostname);
-        } catch (UnknownHostException uhe) {
-            throw new UnknownHostException("Could not resolve SSL sessions server hostname: " + hostname);
-        }
-
-        javax.security.cert.X509Certificate[] certs = session.getPeerCertificateChain();
-        if (certs == null || certs.length == 0)
-            throw new SSLPeerUnverifiedException("No server certificates found: " + hostname);
-
-        X509Certificate cert = certJavax2Java(certs[0]);
-
-        CustomTrustManager ctm;
-        try {
-            ctm = CustomTrustManager.getInstance();
-        } catch (GeneralSecurityException e) {
-            throw (IOException)
-                new IOException("CustomTrustManager not found").initCause(e);
-        }
-
-        if (ctm.isCertificateAcceptedForHostname(hostname, cert))
-            return;
-
-        HostnameChecker hc = HostnameChecker.getInstance(HostnameChecker.TYPE_TLS);
-        try {
-            hc.match(hostname, cert);
-        } catch (CertificateException x) {
-            String certInfo = ctm.handleCertificateCheckFailure(hostname, cert, true);
-            throw new SSLPeerUnverifiedException(certInfo);
-        }
-    }
-
-    private final SSLSocket socket;
-    private String host;
-    private final boolean verifyHostname;
-    private boolean isHandshakeStarted;
-
-    public CustomSSLSocket(SSLSocket socket, String host, boolean verifyHostname) {
-        this.socket = socket;
+    CustomSSLSocket(CustomSSLSocketFactory factory, SSLSocket sslSocket, String host) {
+        this.factory = factory;
+        this.sslSocket = sslSocket;
         this.host = host;
-        this.verifyHostname = verifyHostname;
+    }
+
+    CustomSSLSocket(CustomSSLSocketFactory factory, Socket socket) {
+        this.factory = factory;
+        this.socket = socket;
     }
 
     private String getHostname() {
         if (host == null)
-            host = ((InetSocketAddress) socket.getRemoteSocketAddress()).getHostName();
+            host = ((InetSocketAddress) sslSocket.getRemoteSocketAddress()).getHostName();
         return host;
     }
 
@@ -114,323 +73,459 @@ public class CustomSSLSocket extends SSLSocket {
 
     @Override
     public void startHandshake() throws IOException {
+        SSLSocket sock = sslSocket();
+        
         if (isHandshakeStarted)
             return;
         else
             isHandshakeStarted = true;
 
-        if (socket.getSoTimeout() <= 0)
-            socket.setSoTimeout(60000);
+        if (sock.getSoTimeout() <= 0)
+            sock.setSoTimeout(60000);
 
         threadLocal.set(getHostname());
         try {
-            socket.startHandshake();
+            sock.startHandshake();
         } catch (IOException x) {
             try {
-                socket.close();
+                sock.close();
             } catch (Exception e) {}
             throw x;
         } finally {
             threadLocal.remove();
         }
 
-        if (verifyHostname)
-            verifyHostname(getHostname(), socket.getSession());
+        if (factory.isVerifyHostname()) {
+            CustomHostnameVerifier.verifyHostname(getHostname(), sock.getSession());
+        }
     }
 
     @Override
     public void addHandshakeCompletedListener(HandshakeCompletedListener listener) {
-        socket.addHandshakeCompletedListener(listener);
+        if (sslSocket != null) {
+            sslSocket.addHandshakeCompletedListener(listener);
+        } else {
+            if (listeners == null) {
+                listeners = new ArrayList<HandshakeCompletedListener>();
+            }
+            listeners.add(listener);
+        }
     }
 
     @Override
     public boolean getEnableSessionCreation() {
-        return socket.getEnableSessionCreation();
+        if (sslSocket != null) {
+            return sslSocket.getEnableSessionCreation();
+        }
+        if (enableSessionCreation == null) {
+            enableSessionCreation = true;
+        }
+        return enableSessionCreation;
     }
 
     @Override
     public String[] getEnabledCipherSuites() {
-        return socket.getEnabledCipherSuites();
+        if (sslSocket != null) {
+            return sslSocket.getEnabledCipherSuites();
+        }
+        if (enabledCipherSuites == null) {
+            enabledCipherSuites = sampleSSLSocket().getEnabledCipherSuites();
+        }
+        return enabledCipherSuites;
     }
 
     @Override
     public String[] getEnabledProtocols() {
-        return socket.getEnabledProtocols();
+        if (sslSocket != null) {
+            return sslSocket.getEnabledProtocols();
+        }
+        if (enabledProtocols == null) {
+            enabledProtocols = sampleSSLSocket().getEnabledProtocols();
+        }
+        return enabledProtocols;
     }
 
     @Override
     public boolean getNeedClientAuth() {
-        return socket.getNeedClientAuth();
+        if (sslSocket != null) {
+            return sslSocket.getNeedClientAuth();
+        }
+        if (needClientAuth == null) {
+            needClientAuth = sampleSSLSocket().getNeedClientAuth();
+        }
+        return needClientAuth;
     }
 
     @Override
     public SSLSession getSession() {
-        return socket.getSession();
+        if (sslSocket != null) {
+            return sslSocket.getSession();
+        }
+        return sampleSSLSocket().getSession();
     }
 
     @Override
     public String[] getSupportedCipherSuites() {
-        return socket.getSupportedCipherSuites();
+        if (sslSocket != null) {
+            return sslSocket.getSupportedCipherSuites();
+        }
+        return sampleSSLSocket().getSupportedProtocols();
     }
 
     @Override
     public String[] getSupportedProtocols() {
-        return socket.getSupportedProtocols();
+        if (sslSocket != null) {
+            return sslSocket.getSupportedProtocols();
+        }
+        return sampleSSLSocket().getSupportedProtocols();
     }
 
     @Override
     public boolean getUseClientMode() {
-        return socket.getUseClientMode();
+        if (sslSocket != null) {
+            return sslSocket.getUseClientMode();
+        }
+        if (useClientMode == null) {
+            useClientMode = sampleSSLSocket().getUseClientMode();
+        }
+        return useClientMode;
     }
 
     @Override
     public boolean getWantClientAuth() {
-        return socket.getWantClientAuth();
+        if (sslSocket != null) {
+            return sslSocket.getWantClientAuth();
+        }
+        if (wantClientAuth == null) {
+            wantClientAuth = sampleSSLSocket().getWantClientAuth();
+        }
+        return wantClientAuth;
     }
 
     @Override
     public void removeHandshakeCompletedListener(HandshakeCompletedListener listener) {
-        socket.removeHandshakeCompletedListener(listener);
+        if (sslSocket != null) {
+            sslSocket.removeHandshakeCompletedListener(listener);
+        } else if (listeners != null) {
+            listeners.remove(listener);
+        }
     }
 
     @Override
     public void setEnableSessionCreation(boolean flag) {
-        socket.setEnableSessionCreation(flag);
+        if (sslSocket != null) {
+            sslSocket.setEnableSessionCreation(flag);
+        } else {
+            enableSessionCreation = flag;
+        }
     }
 
     @Override
     public void setEnabledCipherSuites(String[] suites) {
-        socket.setEnabledCipherSuites(suites);
+        if (sslSocket != null) {
+            sslSocket.setEnabledCipherSuites(suites);
+        } else {
+            enabledCipherSuites = suites;
+        }
     }
 
     @Override
     public void setEnabledProtocols(String[] protocols) {
-        socket.setEnabledProtocols(protocols);
+        if (sslSocket != null) {
+            sslSocket.setEnabledProtocols(protocols);
+        } else {
+            enabledProtocols = protocols;
+        }
     }
 
     @Override
     public void setNeedClientAuth(boolean need) {
-        socket.setNeedClientAuth(need);
+        if (sslSocket != null) {
+            sslSocket.setNeedClientAuth(need);
+        } else {
+            needClientAuth = need;
+        }
     }
 
     @Override
     public void setUseClientMode(boolean mode) {
-        socket.setUseClientMode(mode);
+        if (sslSocket != null) {
+            sslSocket.setUseClientMode(mode);
+        } else {
+            useClientMode = mode;
+        }
     }
 
     @Override
     public void setWantClientAuth(boolean want) {
-        socket.setWantClientAuth(want);
+        if (sslSocket != null) {
+            sslSocket.setWantClientAuth(want);
+        } else {
+            wantClientAuth = want;
+        }
     }
 
     //Overriding Socket
 
     @Override
     public void bind(SocketAddress bindpoint) throws IOException {
-        socket.bind(bindpoint);
+        socket().bind(bindpoint);
     }
 
     @Override
-    public synchronized void close() throws IOException {
-        socket.close();
+    public void close() throws IOException {
+        if (!isClosed()) {
+            sslSocket().close();
+        }
     }
 
     @Override
     public void connect(SocketAddress endpoint) throws IOException {
-        socket.connect(endpoint);
+        connect(endpoint, 0);
     }
 
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
-        socket.connect(endpoint, timeout);
+        if (sslSocket != null) {
+            sslSocket.connect(endpoint, timeout);
+        } else {
+            socket.connect(endpoint, timeout);
+            host = ((InetSocketAddress) endpoint).getHostName();
+            sslSocket = wrap(socket);
+        }
+    }
+
+    private SSLSocket wrap(Socket sock) throws IOException {
+        sslSocket = factory.wrap(sock);
+        if (listeners != null) {
+            for (HandshakeCompletedListener listener : listeners) {
+                sslSocket.addHandshakeCompletedListener(listener);
+            }
+        }
+        if (enableSessionCreation != null) {
+            sslSocket.setEnableSessionCreation(enableSessionCreation);
+        }
+        if (enabledCipherSuites != null) {
+            sslSocket.setEnabledCipherSuites(enabledCipherSuites);
+        }
+        if (enabledProtocols != null) {
+            sslSocket.setEnabledProtocols(enabledProtocols);
+        }
+        if (useClientMode != null) {
+            sslSocket.setUseClientMode(useClientMode);
+        }
+        if (needClientAuth != null) {
+            sslSocket.setNeedClientAuth(needClientAuth);
+        }
+        if (wantClientAuth != null) {
+            sslSocket.setWantClientAuth(wantClientAuth);
+        }
+        return sslSocket;
     }
 
     @Override
     public SocketChannel getChannel() {
-        return socket.getChannel();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public InetAddress getInetAddress() {
-        return socket.getInetAddress();
+        return socket().getInetAddress();
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        InputStream in = socket.getInputStream();
+        InputStream in = sslSocket().getInputStream();
         startHandshake();
         return in;
     }
 
     @Override
     public boolean getKeepAlive() throws SocketException {
-        return socket.getKeepAlive();
+        return socket().getKeepAlive();
     }
 
     @Override
     public InetAddress getLocalAddress() {
-        return socket.getLocalAddress();
+        return socket().getLocalAddress();
     }
 
     @Override
     public int getLocalPort() {
-        return socket.getLocalPort();
+        return socket().getLocalPort();
     }
 
     @Override
     public SocketAddress getLocalSocketAddress() {
-        return socket.getLocalSocketAddress();
+        return socket().getLocalSocketAddress();
     }
 
     @Override
     public boolean getOOBInline() throws SocketException {
-        return socket.getOOBInline();
+        return socket().getOOBInline();
     }
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        OutputStream out = socket.getOutputStream();
+        OutputStream out = sslSocket().getOutputStream();
         startHandshake();
         return out;
     }
 
     @Override
     public int getPort() {
-        return socket.getPort();
+        return socket().getPort();
     }
 
     @Override
-    public synchronized int getReceiveBufferSize() throws SocketException {
-        return socket.getReceiveBufferSize();
+    public int getReceiveBufferSize() throws SocketException {
+        return socket().getReceiveBufferSize();
     }
 
     @Override
     public SocketAddress getRemoteSocketAddress() {
-        return socket.getRemoteSocketAddress();
+        return socket().getRemoteSocketAddress();
     }
 
     @Override
     public boolean getReuseAddress() throws SocketException {
-        return socket.getReuseAddress();
+        return socket().getReuseAddress();
     }
 
     @Override
-    public synchronized int getSendBufferSize() throws SocketException {
-        return socket.getSendBufferSize();
+    public int getSendBufferSize() throws SocketException {
+        return socket().getSendBufferSize();
     }
 
     @Override
     public int getSoLinger() throws SocketException {
-        return socket.getSoLinger();
+        return socket().getSoLinger();
     }
 
     @Override
-    public synchronized int getSoTimeout() throws SocketException {
-        return socket.getSoTimeout();
+    public int getSoTimeout() throws SocketException {
+        return socket().getSoTimeout();
     }
 
     @Override
     public boolean getTcpNoDelay() throws SocketException {
-        return socket.getTcpNoDelay();
+        return socket().getTcpNoDelay();
     }
 
     @Override
     public int getTrafficClass() throws SocketException {
-        return socket.getTrafficClass();
+        return socket().getTrafficClass();
     }
 
     @Override
     public boolean isBound() {
-        return socket.isBound();
+        return socket().isBound();
     }
 
     @Override
     public boolean isClosed() {
-        return socket.isClosed();
+        return socket().isClosed();
     }
 
     @Override
     public boolean isConnected() {
-        return socket.isConnected();
+        return socket().isConnected();
     }
 
     @Override
     public boolean isInputShutdown() {
-        return socket.isInputShutdown();
+        return socket().isInputShutdown();
     }
 
     @Override
     public boolean isOutputShutdown() {
-        return socket.isOutputShutdown();
+        return socket().isOutputShutdown();
     }
 
     @Override
     public void sendUrgentData(int data) throws IOException {
-        socket.sendUrgentData(data);
+        socket().sendUrgentData(data);
     }
 
     @Override
     public void setKeepAlive(boolean on) throws SocketException {
-        socket.setKeepAlive(on);
+        socket().setKeepAlive(on);
     }
 
     @Override
     public void setOOBInline(boolean on) throws SocketException {
-        socket.setOOBInline(on);
+        socket().setOOBInline(on);
     }
 
     @Override
     public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
-        socket.setPerformancePreferences(connectionTime, latency, bandwidth);
+        socket().setPerformancePreferences(connectionTime, latency, bandwidth);
     }
 
     @Override
-    public synchronized void setReceiveBufferSize(int size) throws SocketException {
-        socket.setReceiveBufferSize(size);
+    public void setReceiveBufferSize(int size) throws SocketException {
+        socket().setReceiveBufferSize(size);
     }
 
     @Override
     public void setReuseAddress(boolean on) throws SocketException {
-        socket.setReuseAddress(on);
+        socket().setReuseAddress(on);
     }
 
     @Override
     public synchronized void setSendBufferSize(int size) throws SocketException {
-        socket.setSendBufferSize(size);
+        socket().setSendBufferSize(size);
     }
 
     @Override
     public void setSoLinger(boolean on, int linger) throws SocketException {
-        socket.setSoLinger(on, linger);
+        socket().setSoLinger(on, linger);
     }
 
     @Override
     public synchronized void setSoTimeout(int timeout) throws SocketException {
-        socket.setSoTimeout(timeout);
+        socket().setSoTimeout(timeout);
     }
 
     @Override
     public void setTcpNoDelay(boolean on) throws SocketException {
-        socket.setTcpNoDelay(on);
+        socket().setTcpNoDelay(on);
     }
 
     @Override
     public void setTrafficClass(int tc) throws SocketException {
-        socket.setTrafficClass(tc);
+        socket().setTrafficClass(tc);
     }
 
+    // Not supported in SSLSocket
+    
     @Override
     public void shutdownInput() throws IOException {
-        socket.shutdownInput();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void shutdownOutput() throws IOException {
-        socket.shutdownOutput();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public String toString() {
-        return socket.toString();
+        return socket().toString();
+    }
+
+    private SSLSocket sslSocket() throws IOException {
+        if (sslSocket == null) {
+            throw new IOException("Not connected");
+        }
+        return sslSocket;
+    }
+    
+    private SSLSocket sampleSSLSocket() {
+        return factory.getSampleSSLSocket();
+    }
+    
+    private Socket socket() {
+        return sslSocket != null ? sslSocket : socket;
     }
 }

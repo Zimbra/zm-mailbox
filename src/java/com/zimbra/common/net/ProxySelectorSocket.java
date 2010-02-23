@@ -25,41 +25,49 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 
-class SocksSocket extends SocketWrapper {
+class ProxySelectorSocket extends SocketWrapper {
     private final ProxySelector proxySelector;
 
     private static final Log LOG = ZimbraLog.io;
 
-    SocksSocket(ProxySelector ps) {
+    public ProxySelectorSocket(ProxySelector ps) {
+        if (ps == null) {
+            throw new NullPointerException("ps");
+        }
         proxySelector = ps;
     }
 
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
-        InetSocketAddress isa = (InetSocketAddress) endpoint;
-        URI uri;
+        Proxy proxy = proxy((InetSocketAddress) endpoint);
+        switch (proxy.type()) {
+        case DIRECT:
+            LOG.debug("Connecting directly to %s", endpoint);
+        case SOCKS:
+            LOG.debug("Connecting to %s via SOCKS proxy %s", endpoint, proxy.address());
+        }
+        setDelegate(new Socket(proxy));
+        super.connect(endpoint, timeout);
+    }
+
+    private Proxy proxy(InetSocketAddress addr) {
+        URI uri = uri(addr);
+        for (Proxy proxy : proxySelector.select(uri)) {
+            switch (proxy.type()) {
+            case SOCKS: case DIRECT:
+                return proxy;
+            }
+        }
+        return new Proxy(Proxy.Type.DIRECT, addr);
+    }
+
+    private static URI uri(InetSocketAddress isa) {
         try {
-            uri = new URI("socket", null, isa.getHostName(), isa.getPort(),
-                          null, null, null);
+            return new URI("socket", null, isa.getHostName(), isa.getPort(),
+                           null, null, null);
         } catch (URISyntaxException e) {
             throw new AssertionError();
         }
-        ProxySelector ps = proxySelector;
-        if (ps == null) {
-            ps = ProxySelector.getDefault();
-        }
-        List<Proxy> proxies = ps.select(uri);
-        if (proxies.isEmpty()) {
-            LOG.debug("Connecting to %s", isa);
-            setDelegate(new Socket());
-        } else {
-            Proxy proxy = proxies.get(0);
-            LOG.debug("Connecting to %s via SOCKS proxy %s",
-                      isa, proxy.address());
-            setDelegate(new Socket(proxy));
-        }
-        super.connect(endpoint, timeout);
     }
 }

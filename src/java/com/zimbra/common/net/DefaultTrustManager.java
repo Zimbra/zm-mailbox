@@ -12,7 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.common.net;
 
 import java.io.FileInputStream;
@@ -36,9 +35,8 @@ import com.zimbra.common.localconfig.LC;
  *
  * @author jjzhuang
  */
-public class DefaultTrustManager implements X509TrustManager {
-
-    X509TrustManager keyStoreTrustManager;
+class DefaultTrustManager implements X509TrustManager {
+    private X509TrustManager keyStoreTrustManager;
 
     protected DefaultTrustManager() throws GeneralSecurityException {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -82,14 +80,6 @@ public class DefaultTrustManager implements X509TrustManager {
 
     public X509Certificate[] getAcceptedIssuers() {
         return keyStoreTrustManager.getAcceptedIssuers();
-    }
-
-    private static DefaultTrustManager instance;
-
-    public static synchronized DefaultTrustManager getInstance() throws GeneralSecurityException {
-        if (instance == null)
-            instance = new DefaultTrustManager();
-        return instance;
     }
 }
 
