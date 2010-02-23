@@ -52,13 +52,4 @@ public class ProxyInfo {
         return String.format("{type=%s,host=%s,port=%d,user=%s,pass=%s}",
                              type, host, port, user, pass);
     }
-    
-    public static void main(String[] args) {
-        String url = args.length > 0 ? args[0] : "http://www.news.com";
-        System.out.printf("Proxy information for %s :\n", url);
-        ProxyInfo[] proxies = getProxyInfo(url);
-        for (int i = 0; i < proxies.length; i++) {
-            System.out.printf("proxy[%d] = %s\n", i, proxies[i]);
-        }
-    }
 }
