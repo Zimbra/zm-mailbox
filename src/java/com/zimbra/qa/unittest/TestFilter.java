@@ -14,11 +14,13 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -62,9 +64,11 @@ import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
+import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZInviteCondition;
 import com.zimbra.cs.zclient.ZMessage.Flag;
@@ -468,7 +472,7 @@ extends TestCase {
         
         // Get message and check tags.
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-        Set<String> tagIds = getTagIdSet(msg);
+        Set<String> tagIds = getTagIds(msg);
         assertTrue(tagIds.contains(tagNoMethod.getId()));
         assertFalse(tagIds.contains(tagAnyReply.getId()));
         assertTrue(tagIds.contains(tagAnyRequest.getId()));
@@ -491,21 +495,12 @@ extends TestCase {
         msg = TestUtil.waitForMessage(organizer, "in:inbox subject:\"" + subject + "\"");
         
         // Check tags on the invite reply.
-        tagIds = getTagIdSet(msg);
+        tagIds = getTagIds(msg);
         assertTrue(tagIds.contains(tagNoMethod.getId()));
         assertTrue(tagIds.contains(tagAnyReply.getId()));
         assertFalse(tagIds.contains(tagAnyRequest.getId()));
         assertFalse(tagIds.contains(tagRequestOrCancel.getId()));
         assertTrue(tagIds.contains(tagReply.getId()));
-    }
-    
-    private Set<String> getTagIdSet(ZMessage msg) {
-        if (!msg.hasTags()) {
-            return Collections.emptySet();
-        }
-        Set<String> tagIds = new HashSet<String>();
-        Collections.addAll(tagIds, msg.getTagIds().split(","));
-        return tagIds;
     }
     
     private ZFilterRule createRule(String name, ZFilterCondition condition, ZFilterAction action) {
@@ -535,6 +530,97 @@ extends TestCase {
         } catch (SoapFaultException e) {
             assertTrue("Unexpected exception: " + e, e.getMessage().contains("four asterisks"));
         }
+    }
+    
+    public void testDateFiltering()
+    throws Exception {
+        // Before tomorrow.
+        ZTag tagBeforeTomorrow = mMbox.createTag(NAME_PREFIX + " before tomorrow", null);
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        conditions.add(new ZDateCondition(DateOp.BEFORE, new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY)));
+        actions.add(new ZTagAction(tagBeforeTomorrow.getName()));
+        rules.add(new ZFilterRule("before tomorrow", true, false, conditions, actions));
+
+        // After yesterday.
+        ZTag tagAfterYesterday = mMbox.createTag(NAME_PREFIX + " after yesterday", null);
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZDateCondition(DateOp.AFTER, new Date(System.currentTimeMillis() - Constants.MILLIS_PER_DAY)));
+        actions.add(new ZTagAction(tagAfterYesterday.getName()));
+        rules.add(new ZFilterRule("after yesterday", true, false, conditions, actions));
+        
+        // Save rules.
+        ZFilterRules zRules = new ZFilterRules(rules);
+        mMbox.saveFilterRules(zRules);
+        
+        // Old message.
+        String[] recipients = new String[] { USER_NAME };
+        String subject = NAME_PREFIX + " testDateFiltering old";
+        String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME,
+            new Date(System.currentTimeMillis() - (2 * Constants.MILLIS_PER_DAY)));
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        Set<String> tagIds = getTagIds(msg);
+        assertEquals(1, tagIds.size());
+        assertTrue(tagIds.contains(tagBeforeTomorrow.getId()));
+        
+        // Current message.
+        subject = NAME_PREFIX + " testDateFiltering current";
+        content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        tagIds = getTagIds(msg);
+        assertEquals(2, tagIds.size());
+        assertTrue(tagIds.contains(tagAfterYesterday.getId()));
+        assertTrue(tagIds.contains(tagBeforeTomorrow.getId()));
+        
+        // Future message.
+        subject = NAME_PREFIX + " testDateFiltering future";
+        content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME,
+            new Date(System.currentTimeMillis() + (2 * Constants.MILLIS_PER_DAY)));
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        tagIds = getTagIds(msg);
+        assertEquals(1, tagIds.size());
+        assertTrue(tagIds.contains(tagAfterYesterday.getId()));
+        
+        // No date header (bug 44079).
+        subject = NAME_PREFIX + " testDateFiltering no date header";
+        content = removeHeader(TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null), "Date");
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        tagIds = getTagIds(msg);
+        assertEquals(2, tagIds.size());
+        assertTrue(tagIds.contains(tagAfterYesterday.getId()));
+        assertTrue(tagIds.contains(tagBeforeTomorrow.getId()));
+    }
+    
+    private Set<String> getTagIds(ZMessage msg) {
+        Set<String> tagIds = new HashSet<String>();
+        String tagIdString = msg.getTagIds();
+        if (tagIdString != null) {
+            for (String tagId : tagIdString.split(",")) {
+                tagIds.add(tagId);
+            }
+        }
+        return tagIds;
+    }
+    
+    private String removeHeader(String content, String headerName)
+    throws IOException {
+        StringBuilder buf = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new StringReader(content));
+        String line = null;
+        String start = headerName + ": ";
+        while ((line = reader.readLine()) != null) {
+            if (!line.startsWith(start)) {
+                buf.append(line).append("\r\n");
+            }
+        }
+        return buf.toString();
     }
     
     /**
@@ -722,14 +808,6 @@ extends TestCase {
         tagIds = getTagIds(msg);
         assertEquals(1, tagIds.size());
         assertTrue(tagIds.contains(tag2.getId()));
-    }
-    
-    private Set<String> getTagIds(ZMessage msg) {
-        Set<String> ids = new HashSet<String>();
-        for (String id : msg.getTagIds().split(",")) {
-            ids.add(id);
-        }
-        return ids;
     }
     
     /**

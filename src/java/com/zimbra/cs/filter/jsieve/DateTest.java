@@ -108,8 +108,8 @@ public class DateTest extends AbstractTest {
         try {
             Date msgDate = mimeMsg.getSentDate();
             if (msgDate == null) {
-                // we don't understand the Date value in the message
-                throw new SieveException("Invalid date (" + mail.getHeader("Date").get(0) + ")");
+                // Date header not specified.  Use the current date.
+                msgDate = new Date();
             }
             if (BEFORE.equals(comparator)) {
                 return msgDate.before(date);
