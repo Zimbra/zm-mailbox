@@ -63,7 +63,7 @@ public class FirstServlet extends HttpServlet {
             System.setProperty("javax.net.ssl.keyStorePassword", LC.mailboxd_keystore_password.value());
             System.setProperty("javax.net.ssl.trustStorePassword", LC.mailboxd_truststore_password.value());
 
-            SocketFactories.registerProtocols();
+            SocketFactories.registerProtocolsServer();
 
             synchronized (mInitializedCondition) {
                 mInitialized = true;
