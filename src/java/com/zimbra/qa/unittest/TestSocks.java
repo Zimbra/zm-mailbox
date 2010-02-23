@@ -26,6 +26,7 @@ import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,10 +36,18 @@ public class TestSocks extends TestCase {
     private static final InetSocketAddress PROXY_ADDR =
         new InetSocketAddress(PROXY_HOST, PROXY_PORT);
 
+    private static final String HTTP_URL = "http://www.zimbra.com";
+    private static final String HTTPS_URL = "https://www.zimbra.com";
+    
     private static final int LOCAL_PORT = 9999;
 
+    static {
+        SocketFactories.registerProtocols();
+    }
+    
     public void testConnect() throws IOException {
         connect(new SimpleProxySelector());
+        connect(ProxySelectors.defaultProxySelector());
     }
 
     public void testSystemProxy() throws Exception {
@@ -51,13 +60,22 @@ public class TestSocks extends TestCase {
         assertEquals(PROXY_ADDR, proxy.address());
     }
 
+    public void testHttpProxy() throws Exception {
+        ProxySelector ps = ProxySelectors.defaultProxySelector();
+        List<Proxy> proxies = ps.select(new URI(HTTP_URL));
+        for (Proxy proxy : proxies) {
+            System.out.println("proxy = " + proxy);
+        }
+        new URL(HTTPS_URL).openConnection().getInputStream().read();
+    }
+    
     private Socket connect(ProxySelector ps) throws IOException {
         SocketFactory sf = SocketFactories.proxySelectorSocketFactory(ps);
         Socket sock = sf.createSocket();
         assertFalse(sock.isConnected());
         assertFalse(sock.isBound());
         sock.bind(new InetSocketAddress(0));
-        sock.connect(new InetSocketAddress("www.vmware.com", 80));
+        sock.connect(new InetSocketAddress("www.news.com", 80));
         assertTrue(sock.isConnected());
         return sock;
     }
