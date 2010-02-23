@@ -94,4 +94,13 @@ public final class ProxySelectors {
     private static SocketAddress saddr(String host, int port) {
         return new InetSocketAddress(host, port);
     }
+
+    public static void main(String[] args) throws Exception {
+        String url = args.length > 0 ? args[0] : "http://www.news.com";
+        System.out.printf("Proxy information for %s :\n", url);
+        List<Proxy> proxies = defaultProxySelector().select(new URI(url));
+        for (int i = 0; i < proxies.size(); i++) {
+            System.out.printf("proxy[%d] = %s\n", i, proxies.get(i));
+        }
+    }
 }
