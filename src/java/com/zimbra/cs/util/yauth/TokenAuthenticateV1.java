@@ -46,9 +46,8 @@ public class TokenAuthenticateV1 {
      * @return The token
      */
     public static String getToken(String username, String passwd) throws IOException, HttpException {
-        HttpClient client = new HttpClient();
         GetMethod method = new GetMethod("https://login.yahoo.com/config/pwtoken_get?src=ymsgr&login="+username+"&passwd="+passwd);
-        int response = HttpClientUtil.executeMethod(client, method);
+        int response = HttpClientUtil.executeMethod(method);
 
         if (response >= 200 && response < 300) { 
             String body = method.getResponseBodyAsString();
@@ -90,9 +89,8 @@ public class TokenAuthenticateV1 {
      * @return
      */
     public static TokenAuthenticateV1 doAuth(String username, String token) throws IOException, HttpException {
-        HttpClient client = new HttpClient();
         GetMethod method = new GetMethod("https://login.yahoo.com/config/pwtoken_login?src=ymsgr&token="+token);
-        int response = HttpClientUtil.executeMethod(client, method);
+        int response = HttpClientUtil.executeMethod(method);
         
         if (response >= 200 && response < 300) { 
             String body = method.getResponseBodyAsString();

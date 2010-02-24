@@ -21,7 +21,6 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.log4j.Logger;
@@ -138,7 +137,7 @@ public class RawAuth implements Auth {
         String uri = LC.yauth_baseuri.value() + '/' + action;
         GetMethod method = new GetMethod(uri);
         method.setQueryString(params);
-        int rc = HttpClientUtil.executeMethod(new HttpClient(), method);
+        int rc = HttpClientUtil.executeMethod(method);
         Response res = new Response(method);
         String error = res.getField(ERROR);
         // Request can sometimes fail even with a 200 status code, so always
