@@ -14,7 +14,6 @@
  */
 package com.zimbra.common.net;
 
-import com.zimbra.common.localconfig.LC;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;

@@ -26,6 +26,8 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
+
 class SocketWrapper extends Socket {
     private Socket sock;
     private SocketAddress bindpoint;
@@ -38,7 +40,7 @@ class SocketWrapper extends Socket {
     }
 
     public void connect(SocketAddress endpoint) throws IOException {
-        connect(endpoint, 0);
+        connect(endpoint, LC.socket_connect_timeout.intValue());
     }
 
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
@@ -58,6 +60,8 @@ class SocketWrapper extends Socket {
             sock.bind(bindpoint);
         }
         sock.connect(endpoint, timeout);
+        if (sock.getSoTimeout() == 0)
+            sock.setSoTimeout(LC.socket_so_timeout.intValue());
     }
 
     public void bind(SocketAddress bindpoint) throws IOException {

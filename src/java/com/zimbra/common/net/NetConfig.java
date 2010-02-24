@@ -37,6 +37,7 @@ public final class NetConfig {
         allowUntrustedCerts = LC.ssl_allow_untrusted_certs.booleanValue();
         allowMismatchedCerts = LC.ssl_allow_mismatched_certs.booleanValue();
         allowAcceptUntrustedCerts = LC.ssl_allow_accept_untrusted_certs.booleanValue();
+        useNativeProxySelector = LC.client_use_native_proxy_selector.booleanValue();
     }
 
     public boolean isSocksEnabled() {

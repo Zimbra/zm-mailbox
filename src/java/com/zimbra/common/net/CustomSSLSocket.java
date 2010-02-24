@@ -30,6 +30,8 @@ import javax.net.ssl.HandshakeCompletedListener;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
+import com.zimbra.common.localconfig.LC;
+
 class CustomSSLSocket extends SSLSocket {
     private CustomSSLSocketFactory factory;
     private SSLSocket sslSocket;
@@ -80,8 +82,8 @@ class CustomSSLSocket extends SSLSocket {
         else
             isHandshakeStarted = true;
 
-        if (sock.getSoTimeout() <= 0)
-            sock.setSoTimeout(60000);
+        if (sock.getSoTimeout() == 0)
+            sock.setSoTimeout(LC.socket_so_timeout.intValue());
 
         threadLocal.set(getHostname());
         try {
@@ -281,7 +283,7 @@ class CustomSSLSocket extends SSLSocket {
 
     @Override
     public void connect(SocketAddress endpoint) throws IOException {
-        connect(endpoint, 0);
+        connect(endpoint, LC.socket_connect_timeout.intValue());
     }
 
     @Override

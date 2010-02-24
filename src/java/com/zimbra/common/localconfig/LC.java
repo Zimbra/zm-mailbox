@@ -477,10 +477,11 @@ public class LC {
     public static final KnownKey httpclient_soaphttptransport_retry_count;
     public static final KnownKey httpclient_soaphttptransport_so_timeout;
     
-    public static final KnownKey httpclient_use_system_proxy;
-    
     // convertd
     public static final KnownKey httpclient_convertd_so_timeout;
+    
+    public static final KnownKey client_use_system_proxy;
+    public static final KnownKey client_use_native_proxy_selector;
     
     public static final KnownKey shared_mime_info_globs;
     public static final KnownKey shared_mime_info_magic;
@@ -564,7 +565,13 @@ public class LC {
     public static final KnownKey zimbra_slow_logging_threshold;
 
     public static final KnownKey socks_enabled = new KnownKey(
-        "enable_socks", "false", "enable optional support for SOCKS client");
+        "socks_enabled", "false", "enable optional support for SOCKS client");
+    
+    public static final KnownKey socket_connect_timeout = new KnownKey(
+        "socket_connect_timeout", "30000", "default socket connect timeout in milliseconds");
+    
+    public static final KnownKey socket_so_timeout = new KnownKey(
+        "socket_so_timeout", "30000", "default socket SO timeout in milliseconds");
     
     static {
         @SuppressWarnings("unused")
@@ -1461,9 +1468,6 @@ public class LC {
                 Long.toString(300 * Constants.MILLIS_PER_SECOND),
                 "socket timeout in milliseconds for SOAP clients using the SoapHttpTransport class");
         
-        httpclient_use_system_proxy = new KnownKey("httpclient_use_system_proxy", "false",
-                "whether to use system proxies");
-        
         httpclient_convertd_so_timeout = new KnownKey(
                 "httpclient_convertd_so_timeout", 
                 Long.toString(-1),
@@ -1471,6 +1475,11 @@ public class LC {
                 "if 0 - means no timeout." + 
                 "if -1 or not set - means use the default read timeout of the connection manager.");
         
+        client_use_system_proxy = new KnownKey("client_use_system_proxy", "false",
+                "whether to use system proxies");
+        
+        client_use_native_proxy_selector = new KnownKey("client_use_native_proxy_selector", "false",
+                "whether to use native code for reading system proxy data");
         
         shared_mime_info_globs = new KnownKey("shared_mime_info_globs",
             "${zimbra_home}" + FS + "conf" + FS + "globs2",

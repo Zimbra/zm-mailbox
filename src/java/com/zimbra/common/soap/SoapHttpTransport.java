@@ -78,7 +78,7 @@ public class SoapHttpTransport extends SoapTransport {
     public SoapHttpTransport(String uri) {
         super();
         mUri = uri;
-        mHostConfig = HttpProxyConfig.getProxyConfig(uri);
+        mHostConfig = HttpProxyConfig.getProxyConfig(mClient.getHostConfiguration(), uri);
     }
 
     public void setHttpDebugListener(HttpDebugListener listener) {

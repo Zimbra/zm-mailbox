@@ -111,6 +111,11 @@ public class ZimbraLog {
     public static final Log misc = LogFactory.getLog("zimbra.misc");
     
     /**
+     * the "zimbra.net" logger. For logging of network activities
+     */
+    public static final Log net = LogFactory.getLog("zimbra.net");
+    
+    /**
      * the "zimbra.index" logger. For general indexing-related events.
      */
     public static final Log index = LogFactory.getLog("zimbra.index");
