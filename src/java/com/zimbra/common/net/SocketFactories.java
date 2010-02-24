@@ -26,6 +26,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.net.ProxySelector;
 
+/*
+ * Factory class for various SocketFactory types.
+ */
 public final class SocketFactories {
     private static final boolean SOCKS_ENABLED = LC.socks_enabled.booleanValue();
 
@@ -34,15 +37,35 @@ public final class SocketFactories {
     private static final String HTTPS = "https";
     private static final String HTTP = "http";
 
+    /**
+     * Registers default HTTP and HTTPS protocol handlers for ZCS and ZDesktop
+     * using CustomSSLSocketFactory. If local config attribute "socks_enabled"
+     * is true then optional SOCKS proxy support will be enabled. If attribute
+     * "ssl_allow_untrusted_certs" is true then a dummy SSLSocketFactory will
+     * be configured that trusts all certificates.
+     */
     public static void registerProtocolsServer() {
         register(LC.ssl_allow_untrusted_certs.booleanValue() ?
             TrustManagers.dummyTrustManager() : TrustManagers.customTrustManager());
     }
-    
+
+    /**
+     * Registers default HTTP and HTTPS protocol handlers for CLI tools and
+     * standalone unit tests using the system default SSLSocketFactory. SOCKS
+     * proxy support is not enabled. If attribute "ssl_allow_untrusted_certs"
+     * is true then a dummy SSLSocketFactory will be configured that trusts
+     * all certificates.
+     */
     public static void registerProtocols() {
         registerProtocols(LC.ssl_allow_untrusted_certs.booleanValue());
     }
-    
+
+    /**
+     * Registers default HTTP and HTTPS protocol handlers for CLI tools and
+     * standalone unit tests using the system default SSLSocketFactory. SOCKS
+     * proxy support is not enabled. If allowUntrustedCerts is true then a
+     * dummy SSLSocketFactory will be configured that trusts all certificates.
+     */
     public static void registerProtocols(boolean allowUntrustedCerts) {
         register(allowUntrustedCerts ? TrustManagers.dummyTrustManager() : null);
     }
@@ -69,43 +92,90 @@ public final class SocketFactories {
         registered = true;
     }
 
+    /**
+     * Returns a ProtocolSocketFactory that wraps the specified SocketFactory.
+     *
+     * @param sf the SocketFactory
+     * @return a ProtocolSocketFactory wrapping the SocketFactory
+     */
     public static ProtocolSocketFactory protocolSocketFactory(SocketFactory sf) {
         return new ProtocolSocketFactoryWrapper(sf);
     }
 
+    /**
+     * Returns a ProtocolSocketFactory that wraps the default SocketFactory.
+     *
+     * @return ProtocolSocketFactory wrapping the default SocketFactory
+     */
     public static ProtocolSocketFactory defaultProtocolSocketFactory() {
         return protocolSocketFactory(defaultSocketFactory());
     }
 
+    /**
+     * Returns a SecureProtocolSocketFactory that wraps the specified
+     * SSLSocketFactory.
+     *
+     * @param ssf the SSLSocketFactory
+     * @return a SecureProtocolSocketFactory wrapping the SSLSocketFactory
+     */
     public static SecureProtocolSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
         return new SecureProtocolSocketFactoryWrapper(ssf);
     }
 
+    /**
+     * Returns a SecureProtocolSocketFactory that wraps the default SSLSocketFactory.
+     *
+     * @return a SecureProtocolSocketFactory wrapping the default SSLSocketFactory
+     */
     public static SecureProtocolSocketFactory defaultSecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(defaultSSLSocketFactory());
     }
 
+    /**
+     * Returns a SecureProtocolSocketFactory that trusts all certificates.
+     *
+     * @return a SecureProtocolSocketFactory trusting all certificates
+     */
     public static SecureProtocolSocketFactory dummySecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(dummySSLSocketFactory());
     }
 
+    /**
+     * Returns a SocketFactory that uses the specified ProxySelector for
+     * new connections.
+     * 
+     * @param ps the ProxySelector to use
+     * @return the SocketFactory using the ProtocolSelector
+     */
     public static SocketFactory proxySelectorSocketFactory(ProxySelector ps) {
         return new ProxySelectorSocketFactory(ps);
     }
 
+    /**
+     * Returns a SocketFactory that uses the default ProxySelector for new
+     * connections.
+     *
+     * @return the SocketFactory using the default ProxySelector
+     */
     public static SocketFactory proxySelectorSocketFactory() {
         return new ProxySelectorSocketFactory();
     }
 
+    /**
+     * Returns the default SSLSocketFactory based the default TrustManager
+     * (see TrustManagers.defaultTrustManager).
+     *
+     * @return the default SSLSocketFactory
+     */
     public static SSLSocketFactory defaultSSLSocketFactory() {
         return defaultSSLSocketFactory(LC.ssl_allow_mismatched_certs.booleanValue());
     }
 
-    public static SSLSocketFactory defaultSSLSocketFactory(boolean verifyHostname) {
+    private static SSLSocketFactory defaultSSLSocketFactory(boolean verifyHostname) {
         return defaultSSLSocketFactory(TrustManagers.defaultTrustManager(), verifyHostname);
     }
 
-    public static SSLSocketFactory defaultSSLSocketFactory(TrustManager tm, boolean verifyHostname) {
+    private static SSLSocketFactory defaultSSLSocketFactory(TrustManager tm, boolean verifyHostname) {
         SocketFactory sf = SOCKS_ENABLED ? defaultSocketFactory() : null;
         try {
             return new CustomSSLSocketFactory(tm, sf, verifyHostname);
@@ -113,13 +183,22 @@ public final class SocketFactories {
             throw new IllegalStateException("Unable to create CustomSSLSocketFactory", e);
         }
     }
-    
+
+    /**
+     * Returns the default SocketFactory using SOCKS if configured.
+     *
+     * @return the default SocketFactoryh
+     */
     public static SocketFactory defaultSocketFactory() {
         return SOCKS_ENABLED ? proxySelectorSocketFactory() : SocketFactory.getDefault();
     }
 
     // Factory methods used specifically for testing
 
+    /**
+     * Returns an SSLSocketFactory that trusts all certificates.
+     * @return an SSLSocketFactory that trusts all certificates
+     */
     public static SSLSocketFactory dummySSLSocketFactory() {
         return defaultSSLSocketFactory(TrustManagers.dummyTrustManager(), true);
     }

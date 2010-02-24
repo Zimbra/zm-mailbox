@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Factory class for various ProxySelector types.
+ */
 public final class ProxySelectors {
     private static final ProxySelector nativeProxySelector;
 
@@ -35,16 +38,30 @@ public final class ProxySelectors {
             Util.haveNativeCode() && ProxyInfo.isSupported() ?
                 new NativeProxySelector() : null;
     }
-    
+
+    /**
+     * On supported systems returns the native ProxySelector otherwise
+     * returns the system default.
+     * @return the default ProxySelector
+     */
     public static ProxySelector defaultProxySelector() {
         return nativeProxySelector != null ?
             nativeProxySelector : ProxySelector.getDefault();
     }
 
+    /**
+     * Returns the native ProxySelector if available, otherwise returns null.
+     * @return the native ProxySelector or null if not available
+     */
     public static ProxySelector nativeProxySelector() {
         return nativeProxySelector;
     }
 
+    /**
+     * Returns a "dummy" ProxySelector whose select method always returns
+     * a DIRECT connection. Used for testing.
+     * @return the dummy ProxySelector
+     */
     public static ProxySelector dummyProxySelector() {
         return new ProxySelector() {
             public List<Proxy> select(URI uri) {
@@ -57,6 +74,11 @@ public final class ProxySelectors {
         };
     }
 
+    /*
+     * Native ProxySelector implementation that uses native code to workaround
+     * issues with OS/X's default system ProxySelector. Specifically, the
+     * system default does not handle dynamic changes to proxy settings.
+     */
     private static class NativeProxySelector extends ProxySelector {
         public List<Proxy> select(URI uri) {
             List<Proxy> proxies = new ArrayList<Proxy>();
