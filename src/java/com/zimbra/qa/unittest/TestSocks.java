@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,8 +37,8 @@ public class TestSocks extends TestCase {
     private static final InetSocketAddress PROXY_ADDR =
         new InetSocketAddress(PROXY_HOST, PROXY_PORT);
 
-    private static final String HTTP_URL = "http://www.zimbra.com";
-    private static final String HTTPS_URL = "https://www.zimbra.com";
+    private static final String HTTP_URL = "http://www.news.com";
+    private static final String HTTPS_URL = "https://www.news.com";
     
     private static final int LOCAL_PORT = 9999;
 
@@ -66,7 +67,10 @@ public class TestSocks extends TestCase {
         for (Proxy proxy : proxies) {
             System.out.println("proxy = " + proxy);
         }
-        new URL(HTTPS_URL).openConnection().getInputStream().read();
+        URLConnection conn = new URL(HTTPS_URL).openConnection();
+        conn.setConnectTimeout(3000);
+        conn.connect();
+        conn.getInputStream().read();
     }
     
     private Socket connect(ProxySelector ps) throws IOException {
