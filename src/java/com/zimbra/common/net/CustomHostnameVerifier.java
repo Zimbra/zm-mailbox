@@ -21,7 +21,6 @@ import sun.security.util.HostnameChecker;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
-import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,7 +31,7 @@ import java.security.cert.X509Certificate;
 
 public class CustomHostnameVerifier implements HostnameVerifier {
     public static void verifyHostname(String hostname, SSLSession session) throws IOException {
-        if (LC.ssl_allow_mismatched_certs.booleanValue()) return;
+        if (NetConfig.getInstance().isAllowMismatchedCerts()) return;
 
         try {
             InetAddress.getByName(hostname);

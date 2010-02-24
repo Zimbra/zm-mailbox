@@ -30,7 +30,7 @@ import java.net.ProxySelector;
  * Factory class for various SocketFactory types.
  */
 public final class SocketFactories {
-    private static final boolean SOCKS_ENABLED = LC.socks_enabled.booleanValue();
+    private static NetConfig config = NetConfig.getInstance();
 
     private static boolean registered;
     
@@ -45,7 +45,7 @@ public final class SocketFactories {
      * be configured that trusts all certificates.
      */
     public static void registerProtocolsServer() {
-        register(LC.ssl_allow_untrusted_certs.booleanValue() ?
+        register(config.isAllowUntrustedCerts() ?
             TrustManagers.dummyTrustManager() : TrustManagers.customTrustManager());
     }
 
@@ -57,7 +57,7 @@ public final class SocketFactories {
      * all certificates.
      */
     public static void registerProtocols() {
-        registerProtocols(LC.ssl_allow_untrusted_certs.booleanValue());
+        registerProtocols(config.isAllowUntrustedCerts());
     }
 
     /**
@@ -168,7 +168,7 @@ public final class SocketFactories {
      * @return the default SSLSocketFactory
      */
     public static SSLSocketFactory defaultSSLSocketFactory() {
-        return defaultSSLSocketFactory(LC.ssl_allow_mismatched_certs.booleanValue());
+        return defaultSSLSocketFactory(config.isAllowMismatchedCerts());
     }
 
     private static SSLSocketFactory defaultSSLSocketFactory(boolean verifyHostname) {
@@ -176,7 +176,7 @@ public final class SocketFactories {
     }
 
     private static SSLSocketFactory defaultSSLSocketFactory(TrustManager tm, boolean verifyHostname) {
-        SocketFactory sf = SOCKS_ENABLED ? defaultSocketFactory() : null;
+        SocketFactory sf = config.isSocksEnabled() ? defaultSocketFactory() : null;
         try {
             return new CustomSSLSocketFactory(tm, sf, verifyHostname);
         } catch (Exception e) {
@@ -190,7 +190,8 @@ public final class SocketFactories {
      * @return the default SocketFactoryh
      */
     public static SocketFactory defaultSocketFactory() {
-        return SOCKS_ENABLED ? proxySelectorSocketFactory() : SocketFactory.getDefault();
+        return config.isSocksEnabled() ?
+            proxySelectorSocketFactory() : SocketFactory.getDefault();
     }
 
     // Factory methods used specifically for testing

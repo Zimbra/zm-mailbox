@@ -78,10 +78,4 @@ class ProxySelectorSocketFactory extends SocketFactory {
         }
         return sock;
     }
-
-    public static void main(String[] args) throws Exception {
-        for (Proxy proxy : ProxySelectors.defaultProxySelector().select(new URI("socket://www.news.com"))) {
-            System.out.println("proxy = " + proxy);
-        }
-    }
 }

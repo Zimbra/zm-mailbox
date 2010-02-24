@@ -118,7 +118,7 @@ public class CustomTrustManager implements X509TrustManager {
     }
 
     public synchronized void acceptCertificates(String alias) throws GeneralSecurityException {
-        if (!LC.ssl_allow_accept_untrusted_certs.booleanValue())
+        if (!NetConfig.getInstance().isAllowAcceptUntrustedCerts())
             throw new SecurityException("accepting untrusted certificates not allowed: " + alias);
 
         X509Certificate cert = pendingCerts.get(alias);

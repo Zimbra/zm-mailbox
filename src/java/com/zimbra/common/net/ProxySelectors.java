@@ -34,9 +34,12 @@ public final class ProxySelectors {
     private static final ProxySelector nativeProxySelector;
 
     static {
-        nativeProxySelector =
-            Util.haveNativeCode() && ProxyInfo.isSupported() ?
-                new NativeProxySelector() : null;
+        nativeProxySelector = useNativeProxySelector() ? new NativeProxySelector() : null;
+    }
+
+    private static boolean useNativeProxySelector() {
+        return NetConfig.getInstance().isUseNativeProxySelector() &&
+               Util.haveNativeCode() && ProxyInfo.isSupported();
     }
 
     /**
@@ -108,6 +111,8 @@ public final class ProxySelectors {
                 return new Proxy(Proxy.Type.HTTP, saddr(host, port));
             case SOCKS:
                 return new Proxy(Proxy.Type.SOCKS, saddr(host, port));
+            case NONE:
+                return Proxy.NO_PROXY;
             }
         }
         return null;
