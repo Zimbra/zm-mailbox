@@ -1509,6 +1509,34 @@ public class Recurrence
         return toRet;
     }
 
+    // Get the set of TZIDs referenced in a recurrence.  RDATE and EXDATE can use TZID parameter.
+    public static Set<String> getReferencedTZIDs(IRecurrence recur) {
+        Set<String> tzids = new HashSet<String>();
+        // RDATE
+        for (Iterator iter = recur.addRulesIterator(); iter!=null && iter.hasNext();) {
+            IRecurrence cur = (IRecurrence) iter.next();
+            if (cur.getType() == Recurrence.TYPE_SINGLE_DATES) {
+                Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
+                RdateExdate rdate = sd.getRdateExdate();
+                ICalTimeZone tz = rdate.getTimeZone();
+                if (tz != null)
+                    tzids.add(tz.getID());
+            }
+        }
+        // EXDATE
+        for (Iterator iter = recur.subRulesIterator(); iter!=null && iter.hasNext();) {
+            IRecurrence cur = (IRecurrence) iter.next();
+            if (cur.getType() == Recurrence.TYPE_SINGLE_DATES) {
+                Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
+                RdateExdate exdate = sd.getRdateExdate();
+                ICalTimeZone tz = exdate.getTimeZone();
+                if (tz != null)
+                    tzids.add(tz.getID());
+            }
+        }
+        return tzids;
+    }
+
     public static void main(String[] args) throws Exception {
         ICalTimeZone pacific = new ICalTimeZone(
                 "America/Los_Angeles",

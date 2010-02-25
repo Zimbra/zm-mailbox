@@ -21,6 +21,7 @@ package com.zimbra.cs.mailbox.calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import com.zimbra.common.calendar.TZIDMapper;
@@ -276,5 +277,21 @@ public class TimeZoneMap {
 
         s += "} }";
         return s;
+    }
+
+    // Reduce the timezone map to contain only the TZIDs passed in.
+    public void reduceTo(Set<String> tzids) {
+        for (Iterator<Map.Entry<String, String>> iter = mAliasMap.entrySet().iterator(); iter.hasNext(); ) {
+            Map.Entry<String, String> entry = iter.next();
+            String aliasTzid = entry.getKey();
+            if (!tzids.contains(aliasTzid))
+                iter.remove();
+        }
+        for (Iterator<Map.Entry<String, ICalTimeZone>> iter = mTzMap.entrySet().iterator(); iter.hasNext(); ) {
+            Map.Entry<String, ICalTimeZone> entry = iter.next();
+            String id = entry.getKey();
+            if (!tzids.contains(id))
+                iter.remove();
+        }
     }
 }

@@ -82,6 +82,8 @@ public class RdateExdate {
     public boolean isRDATE()  { return mIsRdate; }
     public boolean isEXDATE() { return !mIsRdate; }
 
+    public ICalTimeZone getTimeZone() { return mTimeZone; }
+
     public String toString() {
         StringBuilder sb = new StringBuilder(mPropertyName.toString());
         if (!ICalTok.DATE_TIME.equals(mValueType))

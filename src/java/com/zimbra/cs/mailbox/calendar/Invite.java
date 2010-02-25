@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
@@ -1614,22 +1616,15 @@ public class Invite {
     public ZVCalendar newToICalendar(boolean useOutlookCompatMode, boolean includePrivateData)
     throws ServiceException {
         ZVCalendar vcal = new ZVCalendar();
-        
+
         vcal.addProperty(new ZProperty(ICalTok.METHOD, mMethod.toString()));
-        
-        
+
         // timezones
-        ICalTimeZone local = mTzMap.getLocalTimeZone();
-        if (local != null && !mTzMap.contains(local)) {
-            vcal.addComponent(local.newToVTimeZone());
-        }
-        
         for (Iterator<ICalTimeZone> iter = mTzMap.tzIterator(); iter.hasNext();) {
             ICalTimeZone cur = (ICalTimeZone) iter.next();
             vcal.addComponent(cur.newToVTimeZone());
         }
-        
-        
+
         vcal.addComponent(newToVComponent(useOutlookCompatMode, includePrivateData));
         return vcal;
     }
@@ -2553,6 +2548,10 @@ public class Invite {
 
         mPercentComplete = limitIntegerRange(mPercentComplete, 0, 100, null);
         mPriority = limitIntegerRange(mPriority, 0, 9, null);
+
+        // Clean up the time zone map to remove unreferenced TZs.
+        Set<String> tzids = getReferencedTZIDs();
+        mTzMap.reduceTo(tzids);
     }
 
     /**
@@ -2584,5 +2583,35 @@ public class Invite {
                     null, null, 0, null, summary, null, null);
             inv.addAlarm(newAlarm);
         }
+    }
+
+    public Set<String> getReferencedTZIDs() {
+        Set<String> tzids = new HashSet<String>();
+        // DTSTART
+        if (mStart != null && mStart.hasTime()) {
+            ICalTimeZone tz = mStart.getTimeZone();
+            if (tz != null)
+                tzids.add(tz.getID());
+        }
+        // DTEND/DUE
+        if (mEnd != null && mEnd.hasTime()) {
+            ICalTimeZone tz = mEnd.getTimeZone();
+            if (tz != null)
+                tzids.add(tz.getID());
+        }
+        // RECURRENCE-ID
+        if (mRecurrenceId != null) {
+            ParsedDateTime dt = mRecurrenceId.getDt();
+            if (dt.hasTime()) {
+                ICalTimeZone tz = dt.getTimeZone();
+                if (tz != null)
+                    tzids.add(tz.getID());
+            }
+        }
+        // RDATE/EXDATE
+        IRecurrence recur = getRecurrence();
+        if (recur != null)
+            tzids.addAll(Recurrence.getReferencedTZIDs(recur));
+        return tzids;
     }
 }
