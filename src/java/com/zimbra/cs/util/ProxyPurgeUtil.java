@@ -24,6 +24,8 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.ParseException;
 import java.util.*;
 import java.io.*;
+
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.service.ServiceException;
@@ -116,25 +118,31 @@ public class ProxyPurgeUtil
         /* -i (info) indicates that account route info should be printed
            -p (purge) indicates that account route info should be purged
          */
-
         for (String a: accounts) {
+            Account account = prov.get(Provisioning.AccountBy.name, a);
             for (int i = 0; i < numServers; ++i) {
                 ZimbraMemcachedClient zmc = zmcs.get(i);
+                String httpKey = "route:proto=http;" + (account == null ? "user=" + a :
+                	"id=" + account.getId());
                 String imapKey = "route:proto=imap;user=" + a;
                 String pop3Key = "route:proto=pop3;user=" + a;
                 if (purge) {
+                    zmc.remove(httpKey, false);
                     zmc.remove(imapKey, false);
                     zmc.remove(pop3Key, false);
                 } else {
-                    Formatter pop3f, imapf;
+                    Formatter httpf, imapf, pop3f;
                     String server = servers.get(i);
 
+                    httpf = new Formatter ();
+                    httpf.format (outputformat, server, httpKey, zmc.get(httpKey));
+                    System.out.println (httpf.toString());
                     imapf = new Formatter ();
                     imapf.format (outputformat, server, imapKey, zmc.get(imapKey));
-                    System.out.println (imapf.toString ());
+                    System.out.println (imapf.toString());
                     pop3f = new Formatter ();
                     pop3f.format (outputformat, server, pop3Key, zmc.get(pop3Key));
-                    System.out.println (pop3f.toString ());
+                    System.out.println (pop3f.toString());
                 }
             }
         }
