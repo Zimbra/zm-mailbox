@@ -88,6 +88,9 @@ public final class SocketFactories {
             HttpsURLConnection.setDefaultHostnameVerifier(new CustomHostnameVerifier());
         }
 
+        // Set the system-wide default ProxySelector
+        ProxySelector.setDefault(ProxySelectors.defaultProxySelector());
+
         registered = true;
     }
 

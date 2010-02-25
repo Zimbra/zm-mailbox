@@ -31,9 +31,11 @@ import java.util.List;
  * Factory class for various ProxySelector types.
  */
 public final class ProxySelectors {
+    private static final ProxySelector systemProxySelector;
     private static final ProxySelector nativeProxySelector;
 
     static {
+        systemProxySelector = ProxySelector.getDefault();
         nativeProxySelector = useNativeProxySelector() ? new NativeProxySelector() : null;
     }
 
@@ -49,7 +51,15 @@ public final class ProxySelectors {
      */
     public static ProxySelector defaultProxySelector() {
         return nativeProxySelector != null ?
-            nativeProxySelector : ProxySelector.getDefault();
+            nativeProxySelector : systemProxySelector;
+    }
+
+    /**
+     * Returns the original system default ProxySelector.
+     * @return the system default ProxySelector
+     */
+    public static ProxySelector systemProxySelector() {
+        return systemProxySelector;
     }
 
     /**
