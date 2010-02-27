@@ -24,6 +24,7 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +34,7 @@ import java.util.TimeZone;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
+import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Message.RecipientType;
@@ -516,7 +518,16 @@ public class CalendarMailSender {
             String uid = inv.getUid();
             if (srcMm != null) {
                 MimeMessage mm = new MimeMessage(srcMm);  // Get a copy so we can modify it.
-                mm.setHeader("Message-ID", null);  // Don't reuse Message-ID header.
+                // Discard all old headers except Subject and Content-*.
+                Enumeration eh = srcMm.getAllHeaders();
+                while (eh.hasMoreElements()) {
+                    Header hdr = (Header) eh.nextElement();
+                    String hdrNameUpper = hdr.getName().toUpperCase();
+                    if (!hdrNameUpper.startsWith("CONTENT-") && !hdrNameUpper.equals("SUBJECT")) {
+                        mm.removeHeader(hdr.getName());
+                    }
+                }
+
                 mm.setSentDate(new Date());
     
                 if (toAddrs != null) {

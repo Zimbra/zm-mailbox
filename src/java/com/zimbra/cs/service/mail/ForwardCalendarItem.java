@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 import javax.activation.DataHandler;
 import javax.mail.Address;
+import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Message.RecipientType;
@@ -343,9 +345,17 @@ public class ForwardCalendarItem extends CalendarRequest {
             String uid = inv.getUid();
             if (mmInv != null) {
                 MimeMessage mm = new MimeMessage(mmInv);  // Get a copy so we can modify it.
-                mm.setHeader("Message-ID", null);  // Don't reuse Message-ID header.
+                // Discard all old headers except Subject and Content-*.
+                Enumeration eh = mmInv.getAllHeaders();
+                while (eh.hasMoreElements()) {
+                    Header hdr = (Header) eh.nextElement();
+                    String hdrNameUpper = hdr.getName().toUpperCase();
+                    if (!hdrNameUpper.startsWith("CONTENT-") && !hdrNameUpper.equals("SUBJECT")) {
+                        mm.removeHeader(hdr.getName());
+                    }
+                }
+
                 mm.setSentDate(new Date());
-    
                 mm.setRecipients(javax.mail.Message.RecipientType.TO, (Address[]) null);
                 mm.setRecipients(javax.mail.Message.RecipientType.CC, (Address[]) null);
                 mm.setRecipients(javax.mail.Message.RecipientType.BCC, (Address[]) null);

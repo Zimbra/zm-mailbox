@@ -108,8 +108,6 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
             setSentByAndAttendees(cal, sentByAddr, rcpts);
 
             mmFwd = getInstanceFwdMsg(senderAcct, firstInv, mmInv, mmFwdWrapper);
-            // TODO: Remove duplicate headers from the outgoing message.
-            // Start with no headers and add only the ones that are needed.
         }
         sendFwdMsg(octxt, mbox, mmFwd);
 
