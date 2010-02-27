@@ -23,10 +23,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetRecur extends DocumentHandler {
+public class GetRecur extends MailDocumentHandler {
 
     private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.A_ID };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };

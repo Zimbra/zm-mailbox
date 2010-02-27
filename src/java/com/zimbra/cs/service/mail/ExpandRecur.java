@@ -35,10 +35,9 @@ import com.zimbra.cs.mailbox.calendar.Recurrence.ExceptionRule;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IException;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ExpandRecur extends DocumentHandler {
+public class ExpandRecur extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
