@@ -1292,15 +1292,15 @@ public abstract class CalendarItem extends MailItem {
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
         boolean isCancel = newInvite.isCancel();
 
-        boolean skipPrivateCheck = shouldSkipPrivateCheck(newInvite);
+        boolean requirePrivateCheck = requirePrivateCheck(newInvite);
         short rightsNeeded = isCancel ? (short) (ACL.RIGHT_DELETE | ACL.RIGHT_WRITE) : ACL.RIGHT_WRITE;
-        if (!canAccess(rightsNeeded, authAccount, asAdmin, skipPrivateCheck))
+        if (!canAccess(rightsNeeded, authAccount, asAdmin, requirePrivateCheck))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
 
         // Don't allow moving a private appointment on behalf of another user,
         // unless that other user is a calendar resource.
         boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
-        boolean denyPrivateAccess = skipPrivateCheck ? false : !allowPrivateAccess(authAccount, asAdmin);
+        boolean denyPrivateAccess = requirePrivateCheck ? !allowPrivateAccess(authAccount, asAdmin) : false;
         if (!newInvite.isPublic() || !isPublic()) {
             if (folderId != getFolderId()) {
                 Folder folder = getMailbox().getFolderById(folderId);
@@ -2665,11 +2665,11 @@ public abstract class CalendarItem extends MailItem {
     public boolean processNewInviteReply(Invite reply)
     throws ServiceException {
         // Require private access permission only when we're replying to a private series/instance.
-        boolean skipPrivateCheck = shouldSkipPrivateCheck(reply);
+        boolean requirePrivateCheck = requirePrivateCheck(reply);
         OperationContext octxt = getMailbox().getOperationContext();
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
-        if (!canAccess(ACL.RIGHT_ACTION, authAccount, asAdmin, skipPrivateCheck))
+        if (!canAccess(ACL.RIGHT_ACTION, authAccount, asAdmin, requirePrivateCheck))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment/task's state");
 
         boolean dirty = false;
@@ -3276,9 +3276,9 @@ public abstract class CalendarItem extends MailItem {
         return canAccess(rightsNeeded, authuser, asAdmin, false);
     }
 
-    private boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin, boolean skipPrivateCheck)
+    private boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin, boolean requirePrivateCheck)
     throws ServiceException {
-        if (!skipPrivateCheck && !isPublic()) {
+        if (requirePrivateCheck && !isPublic()) {
             // If write/delete was requested on a private item, check private permission first.
             short writeAccess = ACL.RIGHT_WRITE | ACL.RIGHT_DELETE;
             if ((rightsNeeded & writeAccess) != 0) {
@@ -3291,29 +3291,40 @@ public abstract class CalendarItem extends MailItem {
 
     public void checkCancelPermission(Account authAccount, boolean asAdmin, Invite cancelInv)
     throws ServiceException {
-        boolean skipPrivateCheck = shouldSkipPrivateCheck(cancelInv);
-        if (!canAccess((short) (ACL.RIGHT_DELETE | ACL.RIGHT_WRITE), authAccount, asAdmin, skipPrivateCheck))
+        boolean requirePrivateCheck = requirePrivateCheck(cancelInv);
+        if (!canAccess((short) (ACL.RIGHT_DELETE | ACL.RIGHT_WRITE), authAccount, asAdmin, requirePrivateCheck))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to cancel this calendar item");
     }
 
     // If we're adding a private invite, we must make sure the authenticated user has permission to
-    // access private data.  If we're adding a non-public invite but the appointment currently has
+    // access private data.  If we're adding a public invite but the appointment currently has
     // some private data, private access permission is not needed as long as the instance(s) being
     // updated aren't currently private.
-    private boolean shouldSkipPrivateCheck(Invite newInvite) throws ServiceException {
-        if (!isPublic() && newInvite.isPublic()) {
+    private boolean requirePrivateCheck(Invite newInvite) throws ServiceException {
+        if (!newInvite.isPublic()) {
+            // adding a private invite
+            return true;
+        }
+        if (!isPublic()) {
             RecurId rid = newInvite.getRecurId();
             // If canceling whole series, requester must have private access permission.
             if (rid == null && newInvite.isCancel())
-                return false;
+                return true;
             Invite current = getInvite(rid);
             // If no matching recurrence-id was found, look at the current series.
             if (current == null && rid != null)
                 current = getInvite((RecurId) null);
-            if (current != null && current.isPublic())
+            if (current != null && !current.isPublic()) {
+                // updating a currently private invite to public
                 return true;
+            } else {
+                // no matching rid found, or current is public
+                return false;
+            }
+        } else {
+            // Both old and new are public.
+            return false;
         }
-        return false;
     }
 
     /**
