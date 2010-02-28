@@ -1107,7 +1107,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="201" name="zimbraSpamCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" deprecatedSince="4.5">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable spam checking</desc>
-  <deprecateDesc>Deprecated in favor of zimbraIsServiceEnabled</deprecateDesc>
+  <deprecateDesc>Deprecated in favor of zimbraServiceEnabled</deprecateDesc>
 </attr>
 
 <attr id="202" name="zimbraSpamKillPercent" type="integer" min="0" cardinality="single" optionalIn="globalConfig" requiresRestart="antispam">
@@ -1132,7 +1132,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="206" name="zimbraVirusCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" deprecatedSince="4.5">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable virus checking</desc>
-  <deprecateDesc>Deprecated in favor of zimbraIsServiceEnabled</deprecateDesc>
+  <deprecateDesc>Deprecated in favor of zimbraServiceEnabled</deprecateDesc>
 </attr>
 
 <attr id="207" name="zimbraVirusWarnAdmin" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta">
