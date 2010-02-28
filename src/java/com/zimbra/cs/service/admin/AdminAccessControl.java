@@ -28,6 +28,7 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -602,7 +603,7 @@ public abstract class AdminAccessControl {
             String domainName = getDomainFromEmail(email);
             Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
             if (domain == null)
-                throw ServiceException.PERM_DENIED("no such domain: " + domainName);
+                throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
             
             checkDomainStatus(domain);
             
