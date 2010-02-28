@@ -247,7 +247,7 @@ public class LdapDIT {
      * 
      * Param attrs is not used in this implementation of DIT
      */
-    public String dnToEmail(String dn, Attributes attrs) throws ServiceException, NamingException {
+    public String dnToEmail(String dn, Attributes attrs) throws ServiceException {
         String [] parts = dn.split(",");
         StringBuffer domain = new StringBuffer(dn.length());
         

@@ -57,6 +57,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
+import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -1538,17 +1539,22 @@ public class RightChecker {
     }
     
     private static class Visitor implements LdapUtil.SearchLdapVisitor {
-        private String mNameAttr;
+        private LdapDIT mLdapDIT;
         
         // set of names
         private Set<String> mNames = new HashSet<String>();
 
-        Visitor(String nameAttr) {
-            mNameAttr = nameAttr;
+        Visitor(LdapDIT ldapDIT) {
+            mLdapDIT = ldapDIT;
         }
         
         public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
-            mNames.add((String)attrs.get(mNameAttr));
+            try {
+                String name = mLdapDIT.dnToEmail(dn, ldapAttrs);
+                mNames.add(name);
+            } catch (ServiceException e) {
+                ZimbraLog.acl.warn("canno get name from dn [" + dn + "]", e);
+            }
         }
         
         private Set<String> getResult() {
@@ -1557,21 +1563,27 @@ public class RightChecker {
     }
     
     private static Set<String> getAllGroups(Provisioning prov) throws ServiceException {
-        String base = ((LdapProvisioning)prov).getDIT().mailBranchBaseDN();
+        LdapDIT ldapDIT = ((LdapProvisioning)prov).getDIT();
+        String base = ldapDIT.mailBranchBaseDN();
         String query = LdapFilter.allDistributionLists();
-        String[] returnAttrs = new String[] {Provisioning.A_mail};
         
-        Visitor visitor = new Visitor(Provisioning.A_mail);
+        // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
+        String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
+        
+        Visitor visitor = new Visitor(ldapDIT);
         LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }
     
     private static Set<String> getAllCalendarResources(Provisioning prov) throws ServiceException {
-        String base = ((LdapProvisioning)prov).getDIT().mailBranchBaseDN();
+        LdapDIT ldapDIT = ((LdapProvisioning)prov).getDIT();
+        String base = ldapDIT.mailBranchBaseDN();
         String query = LdapFilter.allCalendarResources();
-        String[] returnAttrs = new String[] {Provisioning.A_zimbraMailDeliveryAddress};
         
-        Visitor visitor = new Visitor(Provisioning.A_zimbraMailDeliveryAddress);
+        // hack, see LDAPDIT.dnToEmail, for now we get naming rdn for both default and possible custom DIT
+        String[] returnAttrs = new String[] {Provisioning.A_cn, Provisioning.A_uid}; 
+        
+        Visitor visitor = new Visitor(ldapDIT);
         LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
         return visitor.getResult();
     }

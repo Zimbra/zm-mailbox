@@ -239,10 +239,19 @@ public class CustomLdapDIT extends LdapDIT {
     /*
      * Get email local part attr from attrs and form the email with the default domain
      */
-    public String dnToEmail(String dn, Attributes attrs) throws ServiceException, NamingException {
-        String localPart = LdapUtil.getAttrString(attrs, DEFAULT_NAMING_RDN_ATTR_USER);
-                
-        return localPart + "@" + defaultDomain();
+    public String dnToEmail(String dn, Attributes attrs) throws ServiceException {
+        String localPart = null;
+        try {
+            localPart = LdapUtil.getAttrString(attrs, DEFAULT_NAMING_RDN_ATTR_USER);
+            
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", e);
+        }
+        
+        if (localPart != null)
+            return localPart + "@" + defaultDomain();
+        else
+            throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", null);
     }
     
     public String filterAccountsByDomain(Domain domain, boolean includeObjectClass) {
