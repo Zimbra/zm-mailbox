@@ -3008,11 +3008,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="599" name="zimbraGalTokenizeAutoCompleteKey" type="enum" value="and,or" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="599" name="zimbraGalTokenizeAutoCompleteKey" type="enum" value="and,or" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.2">
+  <globalConfigValue>and</globalConfigValue>
   <desc>whether to tokenize key and AND or OR the tokenized queries for GAL auto complete, if not set, key is not tokenized</desc>
 </attr>
 
-<attr id="600" name="zimbraGalTokenizeSearchKey" type="enum" value="and,or" cardinality="single" optionalIn="domain" since="5.0.2">
+<attr id="600" name="zimbraGalTokenizeSearchKey" type="enum" value="and,or" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.2">
+  <globalConfigValue>and</globalConfigValue>
   <desc>whether to tokenize key and AND or OR the tokenized queries for GAL search, if not set, key is not tokenized</desc>
 </attr>
 
