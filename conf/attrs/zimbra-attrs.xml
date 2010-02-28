@@ -1064,11 +1064,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>js</globalConfigValue>
   <globalConfigValue>jse</globalConfigValue>
   <globalConfigValue>lnk</globalConfigValue>
-  <globalConfigValue>mov</globalConfigValue>
   <globalConfigValue>ocx</globalConfigValue>
   <globalConfigValue>pif</globalConfigValue>
   <globalConfigValue>reg</globalConfigValue>
-  <globalConfigValue>rm</globalConfigValue>
   <globalConfigValue>scr</globalConfigValue>
   <globalConfigValue>shb</globalConfigValue>
   <globalConfigValue>shm</globalConfigValue>
@@ -1077,8 +1075,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>vbs</globalConfigValue>
   <globalConfigValue>vbx</globalConfigValue>
   <globalConfigValue>vxd</globalConfigValue>
-  <globalConfigValue>wav</globalConfigValue>
-  <globalConfigValue>wmf</globalConfigValue>
   <globalConfigValue>wsf</globalConfigValue>
   <globalConfigValue>wsh</globalConfigValue>
   <globalConfigValue>xl</globalConfigValue>
