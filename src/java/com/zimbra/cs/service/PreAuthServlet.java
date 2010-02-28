@@ -104,7 +104,7 @@ public class PreAuthServlet extends ZimbraServlet {
             Server server = prov.getLocalServer();
             String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
             
-            String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
+            boolean isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0").equals("1");
             String rawAuthToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);
             AuthToken authToken = null;
             if (rawAuthToken != null) {
@@ -112,19 +112,26 @@ public class PreAuthServlet extends ZimbraServlet {
                 if (authToken == null)
                     throw new AuthTokenException("unable to get auth token from " + PARAM_AUTHTOKEN);
             }
-
-            if (isRedirect.equals("1") && rawAuthToken != null) {
-                setCookieAndRedirect(req, resp, authToken);
-            } else if (rawAuthToken != null) {
-                // see if we need a redirect to the correct server
+            
+            if (rawAuthToken != null) {
+                // we've got an auth token in the request:
+                // See if we need a redirect to the correct server
                 boolean isAdmin = authToken != null && AuthToken.isAnyAdmin(authToken);
                 Account acct = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
-                if (isAdmin || !needReferral(acct, referMode)) {
+                if (isAdmin || !needReferral(acct, referMode, isRedirect)) {
+                    // no need to redirect to the correct server, just send them off to do business
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
+                    // redirect to the correct server with the incoming auth token
+                    // we no longer send the auth token we generate over when we redirect to the correct server, 
+                    // but customer can be sending a token in their preauth URL, in this case, just 
+                    // send over the auth token as is.
                     redirectToCorrectServer(req, resp, acct, rawAuthToken);
                 }
             } else {
+                // no auth token in the request URL.  See if we should redirect this request 
+                // to the correct server, or should do the preauth locally.
+                
                 String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
                 String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
                 String accountBy = getOptionalParam(req, PARAM_BY, AccountBy.name.name());
@@ -148,7 +155,10 @@ public class PreAuthServlet extends ZimbraServlet {
                         throw ServiceException.PERM_DENIED("not an admin account");
                 }
                 
-                if (admin || !needReferral(acct, referMode)) {
+                // all params are well, now see if we should preauth locally or redirect to the correct server.
+                
+                if (admin || !needReferral(acct, referMode, isRedirect)) {
+                    // do preauth locally
                     Map<String, Object> authCtxt = new HashMap<String, Object>();
                     authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, ZimbraServlet.getOrigIp(req));
                     authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
@@ -157,15 +167,18 @@ public class PreAuthServlet extends ZimbraServlet {
                 
                     AuthToken at;
     
-                    if (admin) {
+                    if (admin)
                         at = (expires ==  0) ? AuthProvider.getAuthToken(acct, admin) : AuthProvider.getAuthToken(acct, expires, admin, null);
-                    } else {
+                    else
                         at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
-                    }
+
                     setCookieAndRedirect(req, resp, at);
                     
                 } else {
-                    redirectToCorrectServer(req, resp, acct);
+                    // redirect to the correct server.  
+                    // Note: we do not send over the generated auth token (the auth token param passed to 
+                    // redirectToCorrectServer is null).
+                    redirectToCorrectServer(req, resp, acct, null);
                 }
             }
         } catch (ServiceException e) {
@@ -175,7 +188,11 @@ public class PreAuthServlet extends ZimbraServlet {
         }
     }
     
-    private boolean needReferral(Account acct, String referMode) throws ServiceException {
+    private boolean needReferral(Account acct, String referMode, boolean isRedirect) throws ServiceException {
+        // if this request is already a redirect, don't redirect again
+        if (isRedirect)
+            return false;
+        
         return (Provisioning.MAIL_REFER_MODE_ALWAYS.equals(referMode) ||
                 (Provisioning.MAIL_REFER_MODE_WRONGHOST.equals(referMode) && !Provisioning.onLocalServer(acct)));
     }
@@ -209,35 +226,30 @@ public class PreAuthServlet extends ZimbraServlet {
     
     /* 
      * As a fix for bug 35088, the preauth handler(servlet) will no longer send the authtoken 
-     * over when it needs to redirect to the correct server, it now send the original 
-     * preauth params insteads. 
+     * it generates over when it needs to redirect to the correct server, it now sends the original 
+     * preauth params instead, validating of the preauth will happen on the home server.
+     * In this case the token parameter will be null.
      * 
      * Although we no longer pass authtoken, some existing customers might be using it 
-     * as a way to inject an authtoken from a URL into a cookie so we might need to leave it. 
-     *
-     * This method is for the case when authtoken came in to the preauth servlet in the query param.
+     * as a way to inject an authtoken from a URL into a cookie so we might need to leave it.
+     * In this case the token parameter will be non-null.
+     *  
      */
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
         Provisioning prov = Provisioning.getInstance();        
         sb.append(URLUtil.getServiceURL(prov.getServer(acct), req.getRequestURI(), true));
         sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
-        sb.append('&').append(PARAM_AUTHTOKEN).append('=').append(token);
-        addQueryParams(req, sb, false, true);
-        resp.sendRedirect(sb.toString());
-    }
-    
-    /*
-     * bug: 35088
-     * redirect to correct server with all the preauth parameters, validating of the preauth will happen 
-     * on the home server
-     */
-    private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct) throws ServiceException, IOException {
-        StringBuilder sb = new StringBuilder();
-        Provisioning prov = Provisioning.getInstance();        
-        sb.append(URLUtil.getServiceURL(prov.getServer(acct), req.getRequestURI(), true));
-        sb.append('?').append(PARAM_ISREDIRECT).append('=').append('1');
-        addQueryParams(req, sb, false, false);
+        
+        if (token != null) {
+            sb.append('&').append(PARAM_AUTHTOKEN).append('=').append(token);
+            // send only non-preauth (i.e. customer's) params over, since there is already an auth token, the preauth params would be useless anyway
+            addQueryParams(req, sb, false, true);  
+        } else {
+            // send all incoming params over
+            addQueryParams(req, sb, false, false); 
+        }
+        
         resp.sendRedirect(sb.toString());
     }
 

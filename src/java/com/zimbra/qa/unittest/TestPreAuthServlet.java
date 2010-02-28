@@ -144,9 +144,23 @@ public class TestPreAuthServlet extends TestCase {
     
     public void testPreAuthServlet() throws Exception {
         doPreAuth("user1", false, false);
+        doPreAuth("admin", true, false);
+        doPreAuth("domainadmin", true, false);
         
-        // zmprov ca da@phoebe.mac test123 zimbraIsDelegatedAdminAccount TRUE
-        doPreAuth("da", true, false);
+        // test refer mde == always
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraMailReferMode, "always");
+        prov.modifyAttrs(server, attrs);
+        
+        doPreAuth("user1", false, false);
+        doPreAuth("admin", true, false);
+        doPreAuth("domainadmin", true, false);
+        
+        // set refer mode back
+        attrs.put(Provisioning.A_zimbraMailReferMode, "wronghost");
+        prov.modifyAttrs(server, attrs);
     }
     
     private Account dumpLockoutAttrs(String user) throws Exception {
