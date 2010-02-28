@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100119-1123 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100228-1443 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -7074,7 +7074,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpamApplyUserFilters = "zimbraSpamApplyUserFilters";
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable spam checking
      */
     @ZAttr(id=201)
@@ -7402,7 +7402,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVersionCheckSendNotifications = "zimbraVersionCheckSendNotifications";
 
     /**
-     * zimrbaId of the server that should perform the Zimbra version checks
+     * zimbraId of the server that should perform the Zimbra version checks
      *
      * @since ZCS 6.0.2
      */
@@ -7441,7 +7441,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVirusBlockEncryptedArchive = "zimbraVirusBlockEncryptedArchive";
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable virus checking
      */
     @ZAttr(id=206)

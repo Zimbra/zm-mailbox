@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100119-1123 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100228-1443 */
 
     /**
      * RFC2256: descriptive information
@@ -7206,13 +7206,13 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [and, or]
      *
-     * @return zimbraGalTokenizeAutoCompleteKey, or null if unset and/or has invalid value
+     * @return zimbraGalTokenizeAutoCompleteKey, or ZAttrProvisioning.GalTokenizeAutoCompleteKey.and if unset and/or has invalid value
      *
      * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public ZAttrProvisioning.GalTokenizeAutoCompleteKey getGalTokenizeAutoCompleteKey() {
-        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey); return v == null ? null : ZAttrProvisioning.GalTokenizeAutoCompleteKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey); return v == null ? ZAttrProvisioning.GalTokenizeAutoCompleteKey.and : ZAttrProvisioning.GalTokenizeAutoCompleteKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeAutoCompleteKey.and; }
     }
 
     /**
@@ -7221,13 +7221,13 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [and, or]
      *
-     * @return zimbraGalTokenizeAutoCompleteKey, or null if unset
+     * @return zimbraGalTokenizeAutoCompleteKey, or "and" if unset
      *
      * @since ZCS 5.0.2
      */
     @ZAttr(id=599)
     public String getGalTokenizeAutoCompleteKeyAsString() {
-        return getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
+        return getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "and");
     }
 
     /**
@@ -7345,13 +7345,13 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [and, or]
      *
-     * @return zimbraGalTokenizeSearchKey, or null if unset and/or has invalid value
+     * @return zimbraGalTokenizeSearchKey, or ZAttrProvisioning.GalTokenizeSearchKey.and if unset and/or has invalid value
      *
      * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public ZAttrProvisioning.GalTokenizeSearchKey getGalTokenizeSearchKey() {
-        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeSearchKey); return v == null ? null : ZAttrProvisioning.GalTokenizeSearchKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeSearchKey); return v == null ? ZAttrProvisioning.GalTokenizeSearchKey.and : ZAttrProvisioning.GalTokenizeSearchKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeSearchKey.and; }
     }
 
     /**
@@ -7360,13 +7360,13 @@ public class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [and, or]
      *
-     * @return zimbraGalTokenizeSearchKey, or null if unset
+     * @return zimbraGalTokenizeSearchKey, or "and" if unset
      *
      * @since ZCS 5.0.2
      */
     @ZAttr(id=600)
     public String getGalTokenizeSearchKeyAsString() {
-        return getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
+        return getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, "and");
     }
 
     /**

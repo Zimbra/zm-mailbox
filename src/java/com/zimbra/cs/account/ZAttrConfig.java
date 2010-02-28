@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100119-1123 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100228-1443 */
 
     /**
      * RFC2256: descriptive information
@@ -7961,6 +7961,284 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @return zimbraGalTokenizeAutoCompleteKey, or ZAttrProvisioning.GalTokenizeAutoCompleteKey.and if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public ZAttrProvisioning.GalTokenizeAutoCompleteKey getGalTokenizeAutoCompleteKey() {
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey); return v == null ? ZAttrProvisioning.GalTokenizeAutoCompleteKey.and : ZAttrProvisioning.GalTokenizeAutoCompleteKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeAutoCompleteKey.and; }
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @return zimbraGalTokenizeAutoCompleteKey, or "and" if unset
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public String getGalTokenizeAutoCompleteKeyAsString() {
+        return getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "and");
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeAutoCompleteKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public void setGalTokenizeAutoCompleteKey(ZAttrProvisioning.GalTokenizeAutoCompleteKey zimbraGalTokenizeAutoCompleteKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, zimbraGalTokenizeAutoCompleteKey.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeAutoCompleteKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public Map<String,Object> setGalTokenizeAutoCompleteKey(ZAttrProvisioning.GalTokenizeAutoCompleteKey zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, zimbraGalTokenizeAutoCompleteKey.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeAutoCompleteKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public void setGalTokenizeAutoCompleteKeyAsString(String zimbraGalTokenizeAutoCompleteKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, zimbraGalTokenizeAutoCompleteKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeAutoCompleteKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public Map<String,Object> setGalTokenizeAutoCompleteKeyAsString(String zimbraGalTokenizeAutoCompleteKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, zimbraGalTokenizeAutoCompleteKey);
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public void unsetGalTokenizeAutoCompleteKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * auto complete, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=599)
+    public Map<String,Object> unsetGalTokenizeAutoCompleteKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "");
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @return zimbraGalTokenizeSearchKey, or ZAttrProvisioning.GalTokenizeSearchKey.and if unset and/or has invalid value
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public ZAttrProvisioning.GalTokenizeSearchKey getGalTokenizeSearchKey() {
+        try { String v = getAttr(Provisioning.A_zimbraGalTokenizeSearchKey); return v == null ? ZAttrProvisioning.GalTokenizeSearchKey.and : ZAttrProvisioning.GalTokenizeSearchKey.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.GalTokenizeSearchKey.and; }
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @return zimbraGalTokenizeSearchKey, or "and" if unset
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public String getGalTokenizeSearchKeyAsString() {
+        return getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, "and");
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeSearchKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public void setGalTokenizeSearchKey(ZAttrProvisioning.GalTokenizeSearchKey zimbraGalTokenizeSearchKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, zimbraGalTokenizeSearchKey.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeSearchKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public Map<String,Object> setGalTokenizeSearchKey(ZAttrProvisioning.GalTokenizeSearchKey zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, zimbraGalTokenizeSearchKey.toString());
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeSearchKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public void setGalTokenizeSearchKeyAsString(String zimbraGalTokenizeSearchKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, zimbraGalTokenizeSearchKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param zimbraGalTokenizeSearchKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public Map<String,Object> setGalTokenizeSearchKeyAsString(String zimbraGalTokenizeSearchKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, zimbraGalTokenizeSearchKey);
+        return attrs;
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public void unsetGalTokenizeSearchKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to tokenize key and AND or OR the tokenized queries for GAL
+     * search, if not set, key is not tokenized
+     *
+     * <p>Valid values: [and, or]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.2
+     */
+    @ZAttr(id=600)
+    public Map<String,Object> unsetGalTokenizeSearchKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, "");
+        return attrs;
+    }
+
+    /**
      * help URL for admin
      *
      * @return zimbraHelpAdminURL, or null if unset
@@ -14573,7 +14851,7 @@ public class ZAttrConfig extends Entry {
      */
     @ZAttr(id=196)
     public String[] getMtaCommonBlockedExtension() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaCommonBlockedExtension); return value.length > 0 ? value : new String[] {"asd","bat","chm","cmd","com","dll","do","exe","hlp","hta","js","jse","lnk","mov","ocx","pif","reg","rm","scr","shb","shm","shs","vbe","vbs","vbx","vxd","wav","wmf","wsf","wsh","xl"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaCommonBlockedExtension); return value.length > 0 ? value : new String[] {"asd","bat","chm","cmd","com","dll","do","exe","hlp","hta","js","jse","lnk","ocx","pif","reg","scr","shb","shm","shs","vbe","vbs","vbx","vxd","wsf","wsh","xl"};
     }
 
     /**
@@ -25649,7 +25927,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable spam checking
      *
      * @return zimbraSpamCheckEnabled, or false if unset
@@ -25660,7 +25938,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable spam checking
      *
      * @param zimbraSpamCheckEnabled new value
@@ -25674,7 +25952,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable spam checking
      *
      * @param zimbraSpamCheckEnabled new value
@@ -25689,7 +25967,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable spam checking
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25702,7 +25980,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable spam checking
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -28169,7 +28447,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimrbaId of the server that should perform the Zimbra version checks
+     * zimbraId of the server that should perform the Zimbra version checks
      *
      * @return zimbraVersionCheckServer, or null if unset
      *
@@ -28181,7 +28459,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimrbaId of the server that should perform the Zimbra version checks
+     * zimbraId of the server that should perform the Zimbra version checks
      *
      * @param zimbraVersionCheckServer new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28196,7 +28474,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimrbaId of the server that should perform the Zimbra version checks
+     * zimbraId of the server that should perform the Zimbra version checks
      *
      * @param zimbraVersionCheckServer new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28212,7 +28490,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimrbaId of the server that should perform the Zimbra version checks
+     * zimbraId of the server that should perform the Zimbra version checks
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28226,7 +28504,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * zimrbaId of the server that should perform the Zimbra version checks
+     * zimbraId of the server that should perform the Zimbra version checks
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28380,7 +28658,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable virus checking
      *
      * @return zimbraVirusCheckEnabled, or false if unset
@@ -28391,7 +28669,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable virus checking
      *
      * @param zimbraVirusCheckEnabled new value
@@ -28405,7 +28683,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable virus checking
      *
      * @param zimbraVirusCheckEnabled new value
@@ -28420,7 +28698,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable virus checking
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28433,7 +28711,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of zimbraIsServiceEnabled.
+     * Deprecated since: 4.5. Deprecated in favor of zimbraServiceEnabled.
      * Orig desc: Whether to enable virus checking
      *
      * @param attrs existing map to populate, or null to create a new map
