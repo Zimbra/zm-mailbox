@@ -688,6 +688,27 @@ public class ZimbraLog {
         }
         PropertyConfigurator.configure(p);
     }
+    
+    public static void toolSetupLog4jConsole(String defaultLevel, boolean stderr, boolean showThreads) {
+        String level = System.getProperty("zimbra.log4j.level");
+        if (level == null) {
+            level = defaultLevel;
+        }
+        Properties p = new Properties();
+        p.put("log4j.rootLogger", level + ",A1");
+        
+        p.put("log4j.appender.A1", "org.apache.log4j.ConsoleAppender");
+        if (stderr)
+            p.put("log4j.appender.A1.target", "System.err");
+
+        p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
+        if (showThreads) {
+            p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
+        } else {
+            p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
+        }
+        PropertyConfigurator.configure(p);
+    }
 
     /**
      * Setup log4j for command line tool using specified log4j.properties file.
