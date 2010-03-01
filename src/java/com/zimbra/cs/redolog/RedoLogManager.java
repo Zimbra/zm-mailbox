@@ -539,7 +539,7 @@ public class RedoLogManager {
 	 * @return
 	 */
 	protected boolean isRolloverNeeded(boolean immediate) {
-		boolean result = false;
+        boolean result = false;
 		try {
 			if (immediate) {
 				result = !mLogWriter.isEmpty();
@@ -578,6 +578,9 @@ public class RedoLogManager {
 	 * @return java.io.File object for rolled over file; null if no rollover occurred
 	 */
 	protected File rollover(boolean force, boolean skipCheckpoint) {
+        if (!mEnabled)
+            return null;
+
         File rolledOverFile = null;
         // Grab a write lock on mRWLock.  No thread will be
         // able to log a new item until rollover is done.
