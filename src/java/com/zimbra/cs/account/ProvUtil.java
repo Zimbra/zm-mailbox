@@ -52,6 +52,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -2702,7 +2703,10 @@ public class ProvUtil implements HttpDebugListener {
     }
     
     public static void main(String args[]) throws IOException, ParseException, ServiceException {
-        CliUtil.toolSetup();
+        // CliUtil.toolSetup();
+        ZimbraLog.toolSetupLog4jConsole("INFO", true, false); // send all logs to stderr
+        SocketFactories.registerProtocols();
+        
         SoapTransport.setDefaultUserAgent("zmprov", BuildInfo.VERSION);
         
         ProvUtil pu = new ProvUtil();
