@@ -1219,6 +1219,7 @@ Tags:
                [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"] [field={default_field}]
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
                [allowableTaskStatus="need,inprogress,completed,canceled"]
+               [resultMode="{result-mode}"]
                >
   *(<header n="{header-name}/>)
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] 
@@ -1336,17 +1337,24 @@ if recip="1" is specified
             (date, after, before) and the "item:" operator should not be specified as default fields
             because of quirks in the search grammar.
 
-calExpandInstStart and calExpandInstEnd:
-   If these are specified, and the search types include calendar item
-   types (e.g. appointment), then the search results include the
-   instances for calendar items within that range in the form
-   described below.
+  calExpandInstStart and calExpandInstEnd:
+    If these are specified, and the search types include calendar item
+    types (e.g. appointment), then the search results include the
+    instances for calendar items within that range in the form
+    described below.
 
-   ***IMPORTANT NOTE: Calendar Items that have no instances within
-   that range are COMPLETELY EXCLUDED from the results (e.g. not even
-   an <appt> element>.  Calendar Items with no data (such as Tasks
-   with no date specified) are included, but with no instance
-   information***
+    ***IMPORTANT NOTE: Calendar Items that have no instances within
+    that range are COMPLETELY EXCLUDED from the results (e.g. not even
+    an <appt> element>.  Calendar Items with no data (such as Tasks
+    with no date specified) are included, but with no instance
+    information***
+
+  {result-mode} = Specifies the type of result
+                  default is "NORMAL"
+                  Valid choices:
+                      NORMAL|IDS
+                  NORMAL : everything
+                  IDS    : only IDs
    
   
 For the optional <cursor> element:
