@@ -28,7 +28,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -265,55 +264,57 @@ public class GalSearchControl {
     }
     
     private boolean doLocalGalAccountSync(Account galAcct) {
-    	GalSyncToken token = mParams.getGalSyncToken();
-		try {
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
-			OperationContext octxt = new OperationContext(mbox);
+        GalSyncToken token = mParams.getGalSyncToken();
+        try {
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
+            OperationContext octxt = new OperationContext(mbox);
             GalSearchResultCallback callback = mParams.getResultCallback();
             HashSet<Integer> folderIds = new HashSet<Integer>();
             GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
             String syncToken = null;
-    		for (DataSource ds : galAcct.getAllDataSources()) {
-    			if (ds.getType() != DataSource.Type.gal)
-    				continue;
-    			String galType = ds.getAttr(Provisioning.A_zimbraGalType);
-    			if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
-    				continue;
-    			if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
-    				continue;
-    			int fid = ds.getFolderId();
-				folderIds.add(fid);
-				DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
-				syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
-    		}
-			if (mParams.isIdOnly() && token.doMailboxSync()) {
-				int changeId = token.getChangeId(galAcct.getId());
-	    		List<Integer> deleted = mbox.getTombstones(changeId).getAll();
-				Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
+            for (DataSource ds : galAcct.getAllDataSources()) {
+                if (ds.getType() != DataSource.Type.gal)
+                    continue;
+                String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+                if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
+                    continue;
+                if (galMode == GalMode.zimbra && galType.compareTo("ldap") == 0)
+                    continue;
+                int fid = ds.getFolderId();
+                DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
+                if (folderMapping.md == null)
+                    continue;
+                folderIds.add(fid);
+                syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+            }
+            if (mParams.isIdOnly() && token.doMailboxSync()) {
+                int changeId = token.getChangeId(galAcct.getId());
+                List<Integer> deleted = mbox.getTombstones(changeId).getAll();
+                Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
 
-	            int count = 0;
-				for (int itemId : changed.getFirst()) {
-					MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
-					if (item instanceof Contact)
-						callback.handleContact((Contact)item);
-					count++;
-					if (count % 100 == 0)
-						ZimbraLog.gal.debug("processing #"+count);
-				}
+                int count = 0;
+                for (int itemId : changed.getFirst()) {
+                    MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
+                    if (item instanceof Contact)
+                        callback.handleContact((Contact)item);
+                    count++;
+                    if (count % 100 == 0)
+                        ZimbraLog.gal.debug("processing #"+count);
+                }
 
-				if (changeId > 0)
-					for (int itemId : deleted)
-						callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
-			}
-			GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
-			ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
+                if (changeId > 0)
+                    for (int itemId : deleted)
+                        callback.handleDeleted(new ItemId(galAcct.getId(), itemId));
+            }
+            GalSyncToken newToken = new GalSyncToken(syncToken, galAcct.getId(), mbox.getLastChangeID());
+            ZimbraLog.gal.debug("computing new sync token for "+galAcct.getId()+": "+newToken);
             callback.setNewToken(newToken);
             callback.setHasMoreResult(false);
-		} catch (Exception e) {
-			ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
-			return false;
-		}
-		return true;
+        } catch (Exception e) {
+            ZimbraLog.gal.warn("search on GalSync account failed for "+galAcct.getId(), e);
+            return false;
+        }
+        return true;
     }
     
     private boolean proxyGalAccountSearch(Account targetAcct) {
