@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Central place for updating server attributes that we cache in memory.
@@ -35,6 +36,11 @@ public class ServerConfig extends AttributeCallback {
     @Override
     public void postModify(Map context, String attrName, Entry entry,
                            boolean isCreate) {
+        
+        // do not run this callback unless inside the server
+        if (!Zimbra.started())
+            return;
+        
         try {
             if (attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxBytes) ||
                 attrName.equals(Provisioning.A_zimbraMailUncompressedCacheMaxFiles) ||
