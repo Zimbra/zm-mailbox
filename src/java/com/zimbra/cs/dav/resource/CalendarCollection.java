@@ -75,256 +75,256 @@ import com.zimbra.common.mime.MimeConstants;
  */
 public class CalendarCollection extends Collection {
 
-	public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
-		super(ctxt, f);
-		Account acct = f.getAccount();
+    public CalendarCollection(DavContext ctxt, Folder f) throws DavException, ServiceException {
+        super(ctxt, f);
+        Account acct = f.getAccount();
 
-		if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
-			addResourceType(DavElements.E_CALENDAR);
-		
-		if (f.getId() == Mailbox.ID_FOLDER_CALENDAR)
-			addResourceType(DavElements.E_DEFAULT_CALENDAR);
-			
-		// the display name can be a user friendly string like "John Smith's Calendar".
-		// but the problem is the name may be too long to fit into the field in UI.
-		Locale lc = acct.getLocale();
-		String description = L10nUtil.getMessage(MsgKey.caldavCalendarDescription, lc, acct.getAttr(Provisioning.A_displayName), f.getName());
-		ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
-		desc.setMessageLocale(lc);
-		desc.setStringValue(description);
-		desc.setVisible(false);
-		addProperty(desc);
-		addProperty(CalDavProperty.getSupportedCalendarComponentSet(f.getDefaultView()));
-		addProperty(CalDavProperty.getSupportedCalendarData());
-		addProperty(CalDavProperty.getSupportedCollationSet());
-		
-		mCtag = CtagInfo.makeCtag(f);
-		setProperty(DavElements.E_GETCTAG, mCtag);
-		
+        if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
+            addResourceType(DavElements.E_CALENDAR);
+
+        if (f.getId() == Provisioning.getInstance().getLocalServer().getCalendarCalDavDefaultCalendarId())
+            addResourceType(DavElements.E_DEFAULT_CALENDAR);
+
+        // the display name can be a user friendly string like "John Smith's Calendar".
+        // but the problem is the name may be too long to fit into the field in UI.
+        Locale lc = acct.getLocale();
+        String description = L10nUtil.getMessage(MsgKey.caldavCalendarDescription, lc, acct.getAttr(Provisioning.A_displayName), f.getName());
+        ResourceProperty desc = new ResourceProperty(DavElements.E_CALENDAR_DESCRIPTION);
+        desc.setMessageLocale(lc);
+        desc.setStringValue(description);
+        desc.setVisible(false);
+        addProperty(desc);
+        addProperty(CalDavProperty.getSupportedCalendarComponentSet(f.getDefaultView()));
+        addProperty(CalDavProperty.getSupportedCalendarData());
+        addProperty(CalDavProperty.getSupportedCollationSet());
+
+        mCtag = CtagInfo.makeCtag(f);
+        setProperty(DavElements.E_GETCTAG, mCtag);
+
         addProperty(getIcalColorProperty());
-		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
-		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
-		setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
+        setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
+        setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);
+        setProperty(DavElements.E_GROUP_MEMBERSHIP, null, true);
 
-		// remaining recommented attributes: calendar-timezone, max-resource-size,
-		// min-date-time, max-date-time, max-instances, max-attendees-per-instance,
-		//
-	}
-	
-	/* Returns all the appoinments stored in the calendar as DavResource. */
+        // remaining recommented attributes: calendar-timezone, max-resource-size,
+        // min-date-time, max-date-time, max-instances, max-attendees-per-instance,
+        //
+    }
+
+    /* Returns all the appoinments stored in the calendar as DavResource. */
     @Override
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
-    	return getChildren(ctxt, null);
-	}
+    public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+        return getChildren(ctxt, null);
+    }
 
     protected Map<String,DavResource> mAppts;
     protected boolean mMetadataOnly;
     protected String mCtag;
-    
-	/* Returns all the appointments specified in hrefs */
-	public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange range) throws DavException {
-		Map<String,DavResource> requestedAppts = null;
-		boolean fetchAppts = 
-			range != null || // ranged request
-			mAppts == null; // hasn't fetched before
-		if (fetchAppts) {
-			try {
-				requestedAppts = getAppointmentMap(ctxt, range);
-				// cache the full appt list
-				if (range == null && needCalendarData(ctxt))
-					mAppts = requestedAppts;
-			} catch (ServiceException se) {
-				ZimbraLog.dav.error("can't get calendar items", se);
-				return Collections.emptyList();
-			}
-		} else {
-			requestedAppts = mAppts;
-		}
-		return requestedAppts.values();
-	}
-	
-    protected Map<String,String> getUidToHrefMap(java.util.Collection<String> hrefs) {
-		HashMap<String,String> uidmap = new HashMap<String,String>();
-		for (String href : hrefs) {
-			try {
-				String hrefDecoded = URLDecoder.decode(href, "UTF-8");
-				int start = hrefDecoded.lastIndexOf('/') + 1;
-				int end = hrefDecoded.lastIndexOf(".ics");
-				if (start > 0 && end > 0 && end > start)
-					uidmap.put(hrefDecoded.substring(start, end), href);
-			} catch (IOException e) {
-				ZimbraLog.dav.warn("can't decode href "+href, e);
-			}
-		}
-		return uidmap;
+
+    /* Returns all the appointments specified in hrefs */
+    public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange range) throws DavException {
+        Map<String,DavResource> requestedAppts = null;
+        boolean fetchAppts = 
+            range != null || // ranged request
+            mAppts == null; // hasn't fetched before
+        if (fetchAppts) {
+            try {
+                requestedAppts = getAppointmentMap(ctxt, range);
+                // cache the full appt list
+                if (range == null && needCalendarData(ctxt))
+                    mAppts = requestedAppts;
+            } catch (ServiceException se) {
+                ZimbraLog.dav.error("can't get calendar items", se);
+                return Collections.emptyList();
+            }
+        } else {
+            requestedAppts = mAppts;
+        }
+        return requestedAppts.values();
     }
-    
-	// see if the request is only for the metadata, for which case we have a shortcut
-	// to prevent scanning and improve performance.
-	private static final HashSet<QName> sMetaProps;
-	static {
-		sMetaProps = new HashSet<QName>();
-		sMetaProps.add(DavElements.E_GETETAG);
-		sMetaProps.add(DavElements.E_RESOURCETYPE);
-		sMetaProps.add(DavElements.E_DISPLAYNAME);
-	}
-	protected boolean needCalendarData(DavContext ctxt) throws DavException {
-		String method = ctxt.getRequest().getMethod();
-		if (method.equals(Get.GET) || method.equals(Delete.DELETE))
-			return true;
-		for (QName prop : ctxt.getRequestProp().getProps())
-			if (!sMetaProps.contains(prop))
-				return true;
-		return false;
-	}
-	protected Mailbox getCalendarMailbox(DavContext ctxt) throws ServiceException, DavException {
-		return getMailbox(ctxt);
-	}
-	protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
-		Mailbox mbox = getCalendarMailbox(ctxt);
-		
+
+    protected Map<String,String> getUidToHrefMap(java.util.Collection<String> hrefs) {
+        HashMap<String,String> uidmap = new HashMap<String,String>();
+        for (String href : hrefs) {
+            try {
+                String hrefDecoded = URLDecoder.decode(href, "UTF-8");
+                int start = hrefDecoded.lastIndexOf('/') + 1;
+                int end = hrefDecoded.lastIndexOf(".ics");
+                if (start > 0 && end > 0 && end > start)
+                    uidmap.put(hrefDecoded.substring(start, end), href);
+            } catch (IOException e) {
+                ZimbraLog.dav.warn("can't decode href "+href, e);
+            }
+        }
+        return uidmap;
+    }
+
+    // see if the request is only for the metadata, for which case we have a shortcut
+    // to prevent scanning and improve performance.
+    private static final HashSet<QName> sMetaProps;
+    static {
+        sMetaProps = new HashSet<QName>();
+        sMetaProps.add(DavElements.E_GETETAG);
+        sMetaProps.add(DavElements.E_RESOURCETYPE);
+        sMetaProps.add(DavElements.E_DISPLAYNAME);
+    }
+    protected boolean needCalendarData(DavContext ctxt) throws DavException {
+        String method = ctxt.getRequest().getMethod();
+        if (method.equals(Get.GET) || method.equals(Delete.DELETE))
+            return true;
+        for (QName prop : ctxt.getRequestProp().getProps())
+            if (!sMetaProps.contains(prop))
+                return true;
+        return false;
+    }
+    protected Mailbox getCalendarMailbox(DavContext ctxt) throws ServiceException, DavException {
+        return getMailbox(ctxt);
+    }
+    protected Map<String,DavResource> getAppointmentMap(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+        Mailbox mbox = getCalendarMailbox(ctxt);
+
         HashMap<String,DavResource> appts = new HashMap<String,DavResource>();
         ctxt.setCollectionPath(getUri());
-		if (range == null)
-			range = new TimeRange(getOwner());
-		long start = range.getStart();
-		long end = range.getEnd();
-		start = start == Long.MIN_VALUE ? -1 : start;
-		end = end == Long.MAX_VALUE ? -1 : end;
+        if (range == null)
+            range = new TimeRange(getOwner());
+        long start = range.getStart();
+        long end = range.getEnd();
+        start = start == Long.MIN_VALUE ? -1 : start;
+        end = end == Long.MAX_VALUE ? -1 : end;
         if (!needCalendarData(ctxt)) {
-        	ZimbraLog.dav.debug("METADATA only");
-        	mMetadataOnly = true;
-        	for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), start, end))
-        		appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
+            ZimbraLog.dav.debug("METADATA only");
+            mMetadataOnly = true;
+            for (CalendarItem.CalendarMetadata item : mbox.getCalendarItemMetadata(ctxt.getOperationContext(), getId(), start, end))
+                appts.put(item.uid, new CalendarObject.LightWeightCalendarObject(getUri(), getOwner(), item));
         } else {
             for (CalendarItem calItem : mbox.getCalendarItemsForRange(ctxt.getOperationContext(), start, end, getId(), null))
                 appts.put(calItem.getUid(), new CalendarObject.LocalCalendarObject(ctxt, calItem));
         }
         return appts;
-	}
-	
-	public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {
-		Map<String,String> uidmap = getUidToHrefMap(hrefs);
-		Mailbox mbox = getCalendarMailbox(ctxt);
-		
+    }
+
+    public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {
+        Map<String,String> uidmap = getUidToHrefMap(hrefs);
+        Mailbox mbox = getCalendarMailbox(ctxt);
+
         ArrayList<DavResource> appts = new ArrayList<DavResource>();
         ctxt.setCollectionPath(getUri());
         Map<String,CalendarItem> calItems = mbox.getCalendarItemsByUid(ctxt.getOperationContext(), new ArrayList<String>(uidmap.keySet()));
         for (String uid : calItems.keySet()) {
-        	CalendarItem calItem = calItems.get(uid);
-        	if (calItem == null)
-				appts.add(new DavResource.InvalidResource(uidmap.get(uid), getOwner()));
-        	else
-        		appts.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
+            CalendarItem calItem = calItems.get(uid);
+            if (calItem == null)
+                appts.add(new DavResource.InvalidResource(uidmap.get(uid), getOwner()));
+            else
+                appts.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
         }
         return appts;
-	}
-	
-	private String findSummary(ZVCalendar cal) {
-		Iterator<ZComponent> iter = cal.getComponentIterator();
-		while (iter.hasNext()) {
-			ZComponent comp = iter.next();
-			String summary = comp.getPropVal(ICalTok.SUMMARY, null);
-			if (summary != null)
-				return summary;
-		}
-		return "calendar event";
-	}
-	
-	private String findEventUid(List<Invite> invites) throws DavException {
-		String uid = null;
-		LinkedList<Invite> inviteList = new LinkedList<Invite>();
-		for (Invite i : invites) {
-			byte type = i.getItemType();
+    }
+
+    private String findSummary(ZVCalendar cal) {
+        Iterator<ZComponent> iter = cal.getComponentIterator();
+        while (iter.hasNext()) {
+            ZComponent comp = iter.next();
+            String summary = comp.getPropVal(ICalTok.SUMMARY, null);
+            if (summary != null)
+                return summary;
+        }
+        return "calendar event";
+    }
+
+    private String findEventUid(List<Invite> invites) throws DavException {
+        String uid = null;
+        LinkedList<Invite> inviteList = new LinkedList<Invite>();
+        for (Invite i : invites) {
+            byte type = i.getItemType();
             if (type == MailItem.TYPE_APPOINTMENT || type == MailItem.TYPE_TASK) {
-				if (uid != null && uid.compareTo(i.getUid()) != 0)
-					throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
-				uid = i.getUid();
+                if (uid != null && uid.compareTo(i.getUid()) != 0)
+                    throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
+                uid = i.getUid();
             }
             if (i.isRecurrence())
-				inviteList.addFirst(i);
+                inviteList.addFirst(i);
             else
-				inviteList.addLast(i);
-		}
-		if (uid == null)
-			throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
-		invites.clear();
-		invites.addAll(inviteList);
-		return uid;
-	}
+                inviteList.addLast(i);
+        }
+        if (uid == null)
+            throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
+        invites.clear();
+        invites.addAll(inviteList);
+        return uid;
+    }
 
-	/* creates an appointment sent in PUT request in this calendar. */
+    /* creates an appointment sent in PUT request in this calendar. */
     @Override
-	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-    	if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR) ||
-    		 ctxt.getUpload().getSize() <= 0)
-			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
-		
-		/*
-		 * some of the CalDAV clients do not behave very well when it comes to
-		 * etags.
-		 * 
-		 * chandler doesn't set User-Agent header, doesn't understand 
-		 * If-None-Match or If-Match headers.
-		 * 
-		 * evolution 2.8 always sets If-None-Match although we return etag in REPORT.
-		 * 
-		 * ical correctly understands etag and sets If-Match for existing etags, but
-		 * does not use If-None-Match for new resource creation.
-		 */
-		HttpServletRequest req = ctxt.getRequest();
-		String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
-		boolean useEtag = (etag != null);
+    public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
+        if (!ctxt.getUpload().getContentType().startsWith(MimeConstants.CT_TEXT_CALENDAR) ||
+                ctxt.getUpload().getSize() <= 0)
+            throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 
-		//String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
-		
-		if (name.endsWith(CalendarObject.CAL_EXTENSION))
-			name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
-		
-		Provisioning prov = Provisioning.getInstance();
-		try {
+        /*
+         * some of the CalDAV clients do not behave very well when it comes to
+         * etags.
+         * 
+         * chandler doesn't set User-Agent header, doesn't understand 
+         * If-None-Match or If-Match headers.
+         * 
+         * evolution 2.8 always sets If-None-Match although we return etag in REPORT.
+         * 
+         * ical correctly understands etag and sets If-Match for existing etags, but
+         * does not use If-None-Match for new resource creation.
+         */
+        HttpServletRequest req = ctxt.getRequest();
+        String etag = req.getHeader(DavProtocol.HEADER_IF_MATCH);
+        boolean useEtag = (etag != null);
+
+        //String noneMatch = req.getHeader(DavProtocol.HEADER_IF_NONE_MATCH);
+
+        if (name.endsWith(CalendarObject.CAL_EXTENSION))
+            name = name.substring(0, name.length()-CalendarObject.CAL_EXTENSION.length());
+
+        Provisioning prov = Provisioning.getInstance();
+        try {
             String user = ctxt.getUser();
             Account account = prov.get(AccountBy.name, user);
             if (account == null)
                 throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
             InputStream is = ctxt.getUpload().getInputStream();
-			List<Invite> invites;
-			try {
-				ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
-				invites = Invite.createFromCalendar(account,
-						findSummary(vcalendar), 
-						vcalendar, 
-						true);
-			} catch (ServiceException se) {
-				throw new DavException("cannot parse ics", HttpServletResponse.SC_BAD_REQUEST, se);
-			}
+            List<Invite> invites;
+            try {
+                ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
+                invites = Invite.createFromCalendar(account,
+                        findSummary(vcalendar), 
+                        vcalendar, 
+                        true);
+            } catch (ServiceException se) {
+                throw new DavException("cannot parse ics", HttpServletResponse.SC_BAD_REQUEST, se);
+            }
 
-			String uid = findEventUid(invites);
-			if (!uid.equals(name)) {
-				// because we are keying off the URI, we don't have
-				// much choice except to use the UID of VEVENT for calendar item URI.
-				// Evolution doesn't use UID as the URI, so we'll force it
-				// by issuing redirect to the URI we want it to be at.
-				StringBuilder url = new StringBuilder();
-				url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(uid).append(CalendarObject.CAL_EXTENSION);
-				ctxt.getResponse().sendRedirect(url.toString());
-				throw new DavException("wrong url", HttpServletResponse.SC_MOVED_PERMANENTLY, null);
-			}
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			CalendarItem calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
-			if (calItem == null && useEtag)
-				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
-			
-			boolean isNewItem = true;
-			if (useEtag) {
-				String itemEtag = MailItemResource.getEtag(calItem);
-				if (!itemEtag.equals(etag))
-					throw new DavException("CalDAV client has stale event: event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT);
-				isNewItem = false;
-			}
+            String uid = findEventUid(invites);
+            if (!uid.equals(name)) {
+                // because we are keying off the URI, we don't have
+                // much choice except to use the UID of VEVENT for calendar item URI.
+                // Evolution doesn't use UID as the URI, so we'll force it
+                // by issuing redirect to the URI we want it to be at.
+                StringBuilder url = new StringBuilder();
+                url.append(DavServlet.getDavUrl(user)).append(mPath).append("/").append(uid).append(CalendarObject.CAL_EXTENSION);
+                ctxt.getResponse().sendRedirect(url.toString());
+                throw new DavException("wrong url", HttpServletResponse.SC_MOVED_PERMANENTLY, null);
+            }
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            CalendarItem calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), name);
+            if (calItem == null && useEtag)
+                throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
 
-			// prepare to call Mailbox.setCalendarItem()
+            boolean isNewItem = true;
+            if (useEtag) {
+                String itemEtag = MailItemResource.getEtag(calItem);
+                if (!itemEtag.equals(etag))
+                    throw new DavException("CalDAV client has stale event: event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT);
+                isNewItem = false;
+            }
+
+            // prepare to call Mailbox.setCalendarItem()
             int flags = 0; long tags = 0; List<ReplyInfo> replies = null;
             if (calItem != null) {
                 flags = calItem.getFlagBitmask();
@@ -338,22 +338,22 @@ public class CalendarCollection extends Collection {
 
             int idxExceptions = 0;
             boolean first = true;
-			for (Invite i : invites) {
-				// check for valid uid.
-				if (i.getUid() == null)
-				    i.setUid(uid);
-				// check for valid organizer field.
-				if (i.hasOrganizer() || i.hasOtherAttendees()) {
-					ZOrganizer org = i.getOrganizer();
-					// if ORGANIZER field is unset, set the field value with authUser's email addr.
-					if (org == null) {
-						org = new ZOrganizer(ctxt.getAuthAccount().getName(), null);
-						i.setOrganizer(org);
-					}
-					/*
-					 * this hack was to work around iCal setting ORGANIZER field
-					 * with principalURL.  iCal seemed to have fixed that bug.
-					 * 
+            for (Invite i : invites) {
+                // check for valid uid.
+                if (i.getUid() == null)
+                    i.setUid(uid);
+                // check for valid organizer field.
+                if (i.hasOrganizer() || i.hasOtherAttendees()) {
+                    ZOrganizer org = i.getOrganizer();
+                    // if ORGANIZER field is unset, set the field value with authUser's email addr.
+                    if (org == null) {
+                        org = new ZOrganizer(ctxt.getAuthAccount().getName(), null);
+                        i.setOrganizer(org);
+                    }
+                    /*
+                     * this hack was to work around iCal setting ORGANIZER field
+                     * with principalURL.  iCal seemed to have fixed that bug.
+                     * 
 					String addr = i.getOrganizer().getAddress();
 					String newAddr = getAddressFromPrincipalURL(addr);
 					if (!addr.equals(newAddr)) {
@@ -372,8 +372,8 @@ public class CalendarCollection extends Collection {
 						}
 						href.setValue(addr);
 					}
-					*/
-				}
+                     */
+                }
                 if (first) {
                     scidDefault.mInv = i;
                     first = false;
@@ -382,19 +382,19 @@ public class CalendarCollection extends Collection {
                     scid.mInv = i;
                     scidExceptions[idxExceptions++] = scid;
                 }
-			}
+            }
             calItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
-                                           scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
-			return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
-		} catch (ServiceException e) {
-			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
-		}
-	}
+                    scidDefault, scidExceptions, replies, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
+            return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
+        } catch (ServiceException e) {
+            throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+        }
+    }
 
-	/* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */
-	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
-		Mailbox mbox = getCalendarMailbox(ctxt);
-		FreeBusy fb = mbox.getFreeBusy(ctxt.getOperationContext(), range.getStart(), range.getEnd(), FreeBusyQuery.CALENDAR_FOLDER_ALL);
-		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
-	}
+    /* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */
+    public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+        Mailbox mbox = getCalendarMailbox(ctxt);
+        FreeBusy fb = mbox.getFreeBusy(ctxt.getOperationContext(), range.getStart(), range.getEnd(), FreeBusyQuery.CALENDAR_FOLDER_ALL);
+        return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
+    }
 }

@@ -4803,4 +4803,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1078" name="zimbraCalendarCalDavDefaultCalendarId" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.6">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Id of calendar folder to advertise as the default calendar to CalDAV client.</desc>
+</attr>
+
 </attrs>
