@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 import org.testng.TestNG;
 import org.testng.annotations.Test;
 
+import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -297,7 +298,10 @@ public class TestDataSource extends TestCase {
         assertEquals("2h", cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval));
     }
     
-    public void testRss()
+    // XXX bburtin: Disabled this test because it can cause a 10-minute timeout
+    // if the HTTP proxy is not configured.  We can look into reenabling it when
+    // the timeout delay is shortened for bug 45019.
+    public void disabledTestRss()
     throws Exception {
         // Create folder.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -307,7 +311,9 @@ public class TestDataSource extends TestCase {
         try {
             folder = mbox.createFolder(parentId, NAME_PREFIX + " testRss", null, null, null, urlString);
         } catch (ServiceException e) {
-            assertEquals(ServiceException.RESOURCE_UNREACHABLE, e.getCode());
+            assertTrue(e.getCode(),
+                e.getCode().equals(ServiceException.RESOURCE_UNREACHABLE) ||
+                e.getCode().equals(RemoteServiceException.TIMEOUT));
             ZimbraLog.test.info("Unable to test RSS data source for %s: %s.", urlString, e.toString());
             return;
         }
@@ -482,6 +488,7 @@ public class TestDataSource extends TestCase {
     throws Exception {
         TestUtil.cliSetup();
         TestNG testng = TestUtil.newTestNG();
+        testng.setJUnit(true);
         testng.setExcludedGroups("Server");
         testng.setTestClasses(new Class[] { TestDataSource.class });
         testng.run();
