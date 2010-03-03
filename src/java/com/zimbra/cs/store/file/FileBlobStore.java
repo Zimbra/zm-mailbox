@@ -294,6 +294,7 @@ public class FileBlobStore extends StoreManager {
             return false;
 
         ZimbraLog.store.debug("Deleting %s.", file.getPath());
+        BlobInputStream.getFileDescriptorCache().willPurge(file.getPath());
         boolean deleted = file.delete();
         if (deleted)
             return true;

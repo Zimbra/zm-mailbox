@@ -36,6 +36,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
  * is called or the cache entry is aged out.
  */
 public class FileDescriptorCache
+implements UncompressedFileCache.Listener<String>
 {
     // Create the file cache with default LinkedHashMap values, but sorted by last access time.
     private LinkedHashMap<String, SharedFile> mCache = new LinkedHashMap<String, SharedFile>(16, 0.75f, true);
@@ -45,6 +46,7 @@ public class FileDescriptorCache
 
     public FileDescriptorCache(UncompressedFileCache<String> uncompressedCache) {
         mUncompressedFileCache = uncompressedCache;
+        mUncompressedFileCache.addListener(this);
     }
     
     UncompressedFileCache<String> getUncompressedFileCache() {
@@ -125,7 +127,7 @@ public class FileDescriptorCache
             File file = new File(path);
             if (file.length() != rawSize && FileUtil.isGzipped(file)) {
                 ZimbraLog.store.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
-                sharedFile = mUncompressedFileCache.get(path, new File(path), !DebugConfig.disableMessageStoreFsync);
+                sharedFile = mUncompressedFileCache.get(path, file, !DebugConfig.disableMessageStoreFsync);
             } else {
                 ZimbraLog.store.debug("opening new file descriptor for " + path);
                 sharedFile = new SharedFile(file);
@@ -185,4 +187,12 @@ public class FileDescriptorCache
             }
         }
     }
+
+    /**
+     * Closes file descriptor for a file that will be removed from the uncompressed cache.
+     */
+    public void willPurge(String path) {
+        close(path);
+    }
+
 }

@@ -18,9 +18,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.util.CalculatorStream;
@@ -43,6 +45,7 @@ public class UncompressedFileCache<K> {
     private long mMaxBytes = 100 * 1024 * 1024; // 100MB default
     private int mMaxFiles = 10 * 1024; // 10k files default
     private File mCacheDir;
+    private Set<Listener> mListeners = new HashSet<Listener>();
     
     /** Maps the key to the cache to the uncompressed file digest. */
     private LinkedHashMap<K, String> mKeyToDigest;
@@ -56,6 +59,14 @@ public class UncompressedFileCache<K> {
             throw new NullPointerException("Path cannot be null.");
         }
         mCacheDir = new File(path);
+    }
+    
+    public interface Listener<K> {
+        /**
+         * Notifies listeners that a file is going away, to allow them
+         * to close any open file descriptors.
+         */
+        public void willPurge(K key);
     }
 
     /**
@@ -109,6 +120,10 @@ public class UncompressedFileCache<K> {
         }
 
         return this;
+    }
+    
+    public synchronized void addListener(Listener l) {
+        mListeners.add(l);
     }
 
     private class UncompressedFile {
@@ -204,13 +219,18 @@ public class UncompressedFileCache<K> {
         Iterator<Map.Entry<K, String>> iEntries = mKeyToDigest.entrySet().iterator();
         
         while (iEntries.hasNext()) {
-            // Remove key.
+            // Get key.
             Map.Entry<K, String> entry = iEntries.next();
             K key = entry.getKey();
             String digest = entry.getValue();
-            iEntries.remove();
             
-            // Remove file.
+            // Notify listeners.
+            for (Listener<K> listener : mListeners) {
+                listener.willPurge(key);
+            }
+
+            // Remove key and file.
+            iEntries.remove();
             File file = mDigestToFile.remove(digest);
             if (file != null) {
                 sLog.debug("Deleting %s: key=%s, digest=%s.", file.getPath(), key, digest);
