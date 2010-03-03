@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -22,11 +24,17 @@ import java.util.Map;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.Part;
+import javax.mail.internet.ContentType;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -34,8 +42,10 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -93,8 +103,34 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
                     }
                 }
             } else {
-                throw ServiceException.FAILURE("No invite data found in message " + iid.getId(), null);
-                // TODO: If no invites in metadata, parse from text/calendar MIME part.
+                // If no invites found in metadata, parse from text/calendar MIME part.
+                try {
+                    CalPartDetectVisitor visitor = new CalPartDetectVisitor();
+                    visitor.accept(mmInv);
+                    MimeBodyPart calPart = visitor.getCalendarPart();
+                    if (calPart != null) {
+                        String ctHdr = calPart.getContentType();
+                        ContentType ct = new ContentType(ctHdr);
+                        String charset = ct.getParameter(MimeConstants.P_CHARSET);
+                        if (charset == null || charset.length() == 0)
+                            charset = MimeConstants.P_CHARSET_UTF8;
+                        InputStream is = calPart.getInputStream();
+                        try {
+                            cal = ZCalendarBuilder.build(is, charset);
+                        } finally {
+                            ByteUtil.closeStream(is);
+                        }
+                        List<Invite> invList = Invite.createFromCalendar(senderAcct, msg.getFragment(), cal, false);
+                        if (invList != null && !invList.isEmpty())
+                            firstInv = invList.get(0);
+                        if (firstInv == null)
+                            throw ServiceException.FAILURE("Error building Invite for calendar part in message " + iid.getId(), null);
+                    }
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("Error getting calendar part in message " + iid.getId(), null);
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("Error getting calendar part in message " + iid.getId(), null);
+                }
             }
 
             // Set SENT-BY to sender's email address.  Required by Outlook.
@@ -107,11 +143,47 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
             }
             setSentByAndAttendees(cal, sentByAddr, rcpts);
 
-            mmFwd = getInstanceFwdMsg(senderAcct, firstInv, mmInv, mmFwdWrapper);
+            mmFwd = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
         }
         sendFwdMsg(octxt, mbox, mmFwd);
 
         Element response = getResponseElement(zsc);
         return response;
+    }
+
+    // MimeVisitor that finds text/calendar part.
+    private static class CalPartDetectVisitor extends MimeVisitor {
+        private MimeBodyPart mCalPart;
+
+        public CalPartDetectVisitor() {
+        }
+
+        public MimeBodyPart getCalendarPart() { return mCalPart; }
+
+        private static boolean matchingType(Part part, String ct) throws MessagingException {
+            String mmCtStr = part.getContentType();
+            if (mmCtStr != null) {
+                ContentType mmCt = new ContentType(mmCtStr);
+                return mmCt.match(ct);
+            }
+            return false;
+        }
+
+        @Override
+        protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
+            if (mCalPart == null && matchingType(bp, MimeConstants.CT_TEXT_CALENDAR))
+                mCalPart = bp;
+            return false;
+        }
+
+        @Override
+        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
+            return false;
+        }
+
+        @Override
+        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) throws MessagingException {
+            return false;
+        }
     }
 }

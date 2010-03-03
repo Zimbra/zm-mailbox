@@ -140,7 +140,14 @@ public class ForwardCalendarItem extends CalendarRequest {
                         throw ServiceException.INVALID_REQUEST("Invite not found for the requested RECURRENCE-ID", null);
                     }
                 }
-                MimeMessage mmFwd = getInstanceFwdMsg(senderAcct, inv, mmInv, mm);
+                ZVCalendar cal = inv.newToICalendar(true);
+                String sentByAddr = AccountUtil.getFriendlyEmailAddress(senderAcct).getAddress();
+                try {
+                    setSentByAndAttendees(cal, sentByAddr, mm.getAllRecipients());
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("Error modifying calendar part", e);
+                }
+                MimeMessage mmFwd = getInstanceFwdMsg(senderAcct, inv, cal, mmInv, mm);
                 fwdMsgs = new MimeMessage[] { mmFwd };
             }
         }
@@ -276,7 +283,7 @@ public class ForwardCalendarItem extends CalendarRequest {
     }
 
     protected static MimeMessage getInstanceFwdMsg(
-            Account senderAcct, Invite inv, MimeMessage mmInv, MimeMessage mmFwdWrapper)
+            Account senderAcct, Invite inv, ZVCalendar cal, MimeMessage mmInv, MimeMessage mmFwdWrapper)
     throws ServiceException {
         // Get plain and html texts entered by the forwarder.
         DescDetectVisitor visitor = new DescDetectVisitor();
@@ -290,9 +297,6 @@ public class ForwardCalendarItem extends CalendarRequest {
         MimeBodyPart htmlDescPart = visitor.getHtmlDescPart();
 
         try {
-            ZVCalendar cal = inv.newToICalendar(true);
-            String sentByAddr = AccountUtil.getFriendlyEmailAddress(senderAcct).getAddress();
-            setSentByAndAttendees(cal, sentByAddr, mmFwdWrapper.getAllRecipients());
             return makeFwdMsg(senderAcct, inv, mmInv, cal, mmFwdWrapper, plainDescPart, htmlDescPart, true);
         } catch (IOException e) {
             throw ServiceException.FAILURE("error creating forward message", e);
