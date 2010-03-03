@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,17 +47,33 @@ public class CreateDomain extends AdminDocumentHandler {
 	    String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
 	    Map<String, Object> attrs = AdminService.getAttrs(request, true);
 	    
-	    // check if the domain can be created 
-	    int firstDot = name.indexOf('.');
-	    if (firstDot == -1)
+	    // check permission
+	    if (name.indexOf('.') == -1) {
+	        // is a top domain
 	        checkRight(zsc, context, null, Admin.R_createTopDomain);
-	    else {
-	        String parentDomainName = name.substring(firstDot+1);
-	        Domain parentDomain = Provisioning.getInstance().get(DomainBy.name, parentDomainName);
-	        if (parentDomain == null)
-	            checkRight(zsc, context, null, Admin.R_createSubDomain);
-	        else
-	            checkRight(zsc, context, parentDomain, Admin.R_createSubDomain);
+	    } else {
+	        // go up the domain hierarchy see if any of the parent domains exist.
+            // If yes, check the createSubDomain right on the lowest existing parent domain.
+            // If not, allow it if the admin has both the createTopDomain on globalgrant; and 
+            // use a pseudo Domain object as the target to check the createSubDomain right
+            // (because createSubDomain is a domain right, we cannot use globalgrant for the target).
+    	    String domainName = name;
+    	    Domain parentDomain = null;
+    	    while (parentDomain == null) {
+    	        int nextDot = domainName.indexOf('.');
+                if (nextDot == -1) {
+                    // reached the top, check if the admin has the createTopDomain right on globalgrant
+                    checkRight(zsc, context, null, Admin.R_createTopDomain);
+                    
+                    // then create a pseudo domain for checking the createSubDomain right
+                    parentDomain = (Domain)PseudoTarget.createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
+                    break;
+                } else {
+                    domainName = domainName.substring(nextDot+1);
+                    parentDomain = Provisioning.getInstance().get(DomainBy.name, domainName);
+                }
+    	    }
+    	    checkRight(zsc, context, parentDomain, Admin.R_createSubDomain);
 	    }
 	    
 	    // check if all the attrs can be set and within constraints

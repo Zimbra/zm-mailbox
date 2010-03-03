@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Server;
@@ -46,6 +47,20 @@ public class PseudoTarget {
         static boolean isPseudoZimrbaId(String zid) {
             return (PSEUDO_ZIMBRA_ID.equals(zid));
         }
+    }
+    
+    public static boolean isPseudoEntry(Entry entry) {
+        if (entry instanceof PseudoAccount ||
+            entry instanceof PseudoCalendarResource ||
+            entry instanceof PseudoDistributionList ||
+            entry instanceof PseudoCos ||
+            entry instanceof PseudoDomain ||
+            entry instanceof PseudoServer ||
+            entry instanceof PseudoXMPPComponent ||
+            entry instanceof PseudoZimlet) {
+            return true;
+        } else
+            return false;
     }
     
     /*
@@ -119,6 +134,36 @@ public class PseudoTarget {
         }
     }
     
+    static class PseudoCos extends Cos{
+        private PseudoCos(String name, String id, Map<String,Object> attrs, Provisioning prov) {
+            super(name, id, attrs, prov);
+        }
+    }
+    
+    static class PseudoDomain extends Domain {
+        private PseudoDomain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
+            super(name, id, attrs, defaults, prov);
+        }
+    }
+    
+    static class PseudoServer extends Server {
+        private PseudoServer(String name, String id, Map<String,Object> attrs, Map<String,Object> defaults, Provisioning prov) {
+            super(name, id, attrs, defaults, prov);
+        }
+    }
+    
+    static class PseudoXMPPComponent extends XMPPComponent {
+        private PseudoXMPPComponent(String name, String id, Map<String,Object> attrs, Provisioning prov) {
+            super(name, id, attrs, prov);
+        }
+    }
+    
+    static class PseudoZimlet extends Zimlet {
+        private PseudoZimlet(String name, String id, Map<String, Object> attrs, Provisioning prov) {
+            super(name, id, attrs, prov);
+        }
+    }
+    
     /**
      * construct a pseudo target
      * 
@@ -142,7 +187,7 @@ public class PseudoTarget {
      * @return
      * @throws ServiceException
      */
-    static Entry createPseudoTarget(Provisioning prov,
+    public static Entry createPseudoTarget(Provisioning prov,
             TargetType targetType, 
             DomainBy domainBy, String domainStr, boolean createPseudoDomain,
             CosBy cosBy, String cosStr) throws ServiceException {
@@ -203,7 +248,7 @@ public class PseudoTarget {
             break;
             
         case cos:  
-            targetEntry = new Cos("pseudocos", zimbraId, attrMap, prov);
+            targetEntry = new PseudoCos("pseudocos", zimbraId, attrMap, prov);
             break;
         case dl:
             targetEntry = new PseudoDistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov, pseudoDomain);
@@ -211,16 +256,16 @@ public class PseudoTarget {
             dl.turnToAclGroup();
             break;
         case domain:
-            targetEntry = new Domain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
+            targetEntry = new PseudoDomain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
             break;
         case server:  
-            targetEntry = new Server("pseudo.pseudo", zimbraId, attrMap, config.getServerDefaults(), prov);
+            targetEntry = new PseudoServer("pseudo.pseudo", zimbraId, attrMap, config.getServerDefaults(), prov);
             break;
         case xmppcomponent:
-            targetEntry = new XMPPComponent("pseudo", zimbraId, attrMap, prov);
+            targetEntry = new PseudoXMPPComponent("pseudo", zimbraId, attrMap, prov);
             break;
         case zimlet:
-            targetEntry = new Zimlet("pseudo", zimbraId, attrMap, prov);
+            targetEntry = new PseudoZimlet("pseudo", zimbraId, attrMap, prov);
             break;
         default: 
             throw ServiceException.INVALID_REQUEST("unsupported target for createPseudoTarget: " + targetType.getCode(), null);

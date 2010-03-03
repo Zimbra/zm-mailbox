@@ -46,6 +46,7 @@ import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -680,13 +681,15 @@ public abstract class AdminAccessControl {
         
         private String printNeededRight(Entry target, Object needed) throws ServiceException {
             String targetInfo;
-            if (target instanceof Alias) // see comments in SearchDirectory.hasRightsToListDanglingAlias
-                targetInfo = "alias " + target.getLabel();
+            if (PseudoTarget.isPseudoEntry(target))
+                targetInfo = "";
+            else if (target instanceof Alias) // see comments in SearchDirectory.hasRightsToListDanglingAlias
+                targetInfo = " for alias " + target.getLabel();
             else
-                targetInfo = TargetType.getTargetType(target).name() + " " + target.getLabel();
+                targetInfo = " for " + TargetType.getTargetType(target).name() + " " + target.getLabel();
             
             if (needed instanceof AdminRight)
-                return "need right: " + ((AdminRight)needed).getName() + " for " + targetInfo;
+                return "need right: " + ((AdminRight)needed).getName() + targetInfo;
             else if (needed instanceof Set)
                 return "cannot get attrs on " + targetInfo;
             else if (needed instanceof Map)
