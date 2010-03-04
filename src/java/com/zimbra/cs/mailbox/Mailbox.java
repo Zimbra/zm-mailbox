@@ -6513,10 +6513,9 @@ public class Mailbox {
     public void optimize(OperationContext octxt, int level) throws ServiceException {
         synchronized (this) {
             try {
-                beginTransaction("optimize", octxt);
                 DbMailbox.optimize(this, level);
-            } finally {
-                endTransaction(true);
+            } catch (Exception e) {
+                ZimbraLog.mailbox.warn("db optimize failed for mailbox " + getId() + ": " + e);
             }
         }
     }
