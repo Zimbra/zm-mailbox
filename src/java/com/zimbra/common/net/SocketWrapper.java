@@ -59,9 +59,20 @@ class SocketWrapper extends Socket {
         if (bindpoint != null) {
             sock.bind(bindpoint);
         }
-        sock.connect(endpoint, timeout);
-        if (sock.getSoTimeout() == 0)
+        // Temporarily set SO_TIMEOUT to connect timeout if specified and
+        // restore after connection is complete. Otherwise, we may hang during
+        // SOCKS or SSL negotiation.
+        if (timeout > 0) {
+            int soTimeout = sock.getSoTimeout();
+            sock.setSoTimeout(timeout);
+            sock.connect(endpoint, timeout);
+            sock.setSoTimeout(soTimeout);
+        } else {
+            sock.connect(endpoint, timeout);
+        }
+        if (sock.getSoTimeout() == 0) {
             sock.setSoTimeout(LC.socket_so_timeout.intValue());
+        }
     }
 
     public void bind(SocketAddress bindpoint) throws IOException {
