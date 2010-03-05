@@ -32,6 +32,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.jsieve.CommandStateManager;
+import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
@@ -71,6 +72,7 @@ public class ZimbraMailAdapter implements MailAdapter
     private Integer mFlagBitmask;
     private String mTags;
     private boolean mAllowFilterToMountpoint = true;
+    private SieveContext mContext;
     
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -182,7 +184,7 @@ public class ZimbraMailAdapter implements MailAdapter
             // Handle explicit and implicit delivery actions
             for (Action action : deliveryActions) {
                 if (action instanceof ActionKeep) {
-                    if (((ActionKeep) action).isImplicit()) {
+                    if (isImplicitKeep()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
                         doDefaultFiling();
@@ -249,21 +251,21 @@ public class ZimbraMailAdapter implements MailAdapter
         return actions;
     }
     
-    private List<Action> getTagActions() {
-        List<Action> actions = new ArrayList<Action>();
+    private List<ActionTag> getTagActions() {
+        List<ActionTag> actions = new ArrayList<ActionTag>();
         for (Action action : mActions) {
             if (action instanceof ActionTag) {
-                actions.add(action);
+                actions.add((ActionTag) action);
             }
         }
         return actions;
     }
     
-    private List<Action> getFlagActions() {
-        List<Action> actions = new ArrayList<Action>();
+    private List<ActionFlag> getFlagActions() {
+        List<ActionFlag> actions = new ArrayList<ActionFlag>();
         for (Action action : mActions) {
             if (action instanceof ActionFlag) {
-                actions.add(action);
+                actions.add((ActionFlag) action);
             }
         }
         return actions;
@@ -281,7 +283,7 @@ public class ZimbraMailAdapter implements MailAdapter
         if (mFiledIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
-            msg = mHandler.implicitKeep(getFlagBitmask(), getTags());
+            msg = mHandler.implicitKeep(getFlagActions(), getTags());
             if (msg != null) {
                 mFiledIntoPaths.add(folderPath);
                 mAddedMessageIds.add(new ItemId(msg));
@@ -302,7 +304,7 @@ public class ZimbraMailAdapter implements MailAdapter
         if (mFiledIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
-            msg = mHandler.explicitKeep(getFlagBitmask(), getTags());
+            msg = mHandler.explicitKeep(getFlagActions(), getTags());
             if (msg != null) {
                 mFiledIntoPaths.add(folderPath);
                 mAddedMessageIds.add(new ItemId(msg));
@@ -321,7 +323,7 @@ public class ZimbraMailAdapter implements MailAdapter
         if (mFiledIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
-            ItemId id = mHandler.fileInto(folderPath, getFlagBitmask(), getTags());
+            ItemId id = mHandler.fileInto(folderPath, getFlagActions(), getTags());
             if (id != null) {
                 mFiledIntoPaths.add(folderPath);
                 mAddedMessageIds.add(id);
@@ -363,27 +365,6 @@ public class ZimbraMailAdapter implements MailAdapter
             }
         }
         return mTags;
-    }
-    
-    private int getFlagBitmask() {
-        if (mFlagBitmask == null) {
-            int flagBits = mHandler.getDefaultFlagBitmask();
-            for (Action action : getFlagActions()) {
-                ActionFlag flagAction = (ActionFlag) action;
-                int flagId = flagAction.getFlagId();
-                try {
-                    Flag flag = mMailbox.getFlagById(flagId);
-                    if (flagAction.isSetFlag())
-                        flagBits |= flag.getBitmask();
-                    else
-                        flagBits &= (~flag.getBitmask());
-                } catch (ServiceException e) {
-                    ZimbraLog.filter.warn("Unable to flag message", e);
-                }
-            }
-            mFlagBitmask = flagBits;
-        }
-        return mFlagBitmask;
     }
     
     private List<String> handleIDN(String headerName, String[] headers) {
@@ -528,5 +509,24 @@ public class ZimbraMailAdapter implements MailAdapter
             retVal[i] = new FilterAddress(addresses[i]);
         }
         return retVal;
+    }
+
+    // jSieve 0.4
+    public boolean isInBodyText(String substring) {
+        // No implementation.  We use our own body test.
+        return false;
+    }
+
+    public void setContext(SieveContext context) {
+        mContext = context;
+    }
+    
+    private boolean isImplicitKeep() {
+        if (mContext != null) {
+            return mContext.getCommandStateManager().isImplicitKeep();
+        } else {
+            ZimbraLog.filter.warn("Unable to determine if the keep was implicit because context was not set.");
+            return true;
+        }
     }
 }
