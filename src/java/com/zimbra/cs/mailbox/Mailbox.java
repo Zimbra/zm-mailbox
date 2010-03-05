@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,7 +69,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -6513,7 +6511,10 @@ public class Mailbox {
     public void optimize(OperationContext octxt, int level) throws ServiceException {
         synchronized (this) {
             try {
-                DbMailbox.optimize(this, level);
+            	Connection conn = DbPool.getConnection(this);
+            	
+                DbMailbox.optimize(conn, this, level);
+                DbPool.quietClose(conn);
             } catch (Exception e) {
                 ZimbraLog.mailbox.warn("db optimize failed for mailbox " + getId() + ": " + e);
             }

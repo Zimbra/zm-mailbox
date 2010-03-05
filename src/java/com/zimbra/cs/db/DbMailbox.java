@@ -1111,11 +1111,10 @@ public class DbMailbox {
         return results;
     }
 
-    public static void optimize(Mailbox mbox, int level) throws ServiceException {
+    public static void optimize(Connection conn, Mailbox mbox, int level) throws ServiceException {
         assert(Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
-        Connection conn = mbox.getOperationConnection();
-        String name = DbMailbox.getDatabaseName(mbox);
+        String name = getDatabaseName(mbox);
         
         try {
             Db.getInstance().optimize(conn, name, level);
