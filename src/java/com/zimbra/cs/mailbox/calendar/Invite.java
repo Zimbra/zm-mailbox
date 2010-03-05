@@ -77,7 +77,7 @@ public class Invite {
     private static final boolean OUTLOOK_COMPAT_ALLDAY =
         LC.calendar_outlook_compatible_allday_events.booleanValue();
     
-    private static final String HEADER_SEPARATOR = "*~*~*~*~*~*~*~*~*~*";
+    public static final String HEADER_SEPARATOR = "*~*~*~*~*~*~*~*~*~*";
 
     static Log sLog = LogFactory.getLog(Invite.class);
     

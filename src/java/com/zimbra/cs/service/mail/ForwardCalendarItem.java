@@ -141,12 +141,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                     }
                 }
                 ZVCalendar cal = inv.newToICalendar(true);
-                String sentByAddr = AccountUtil.getFriendlyEmailAddress(senderAcct).getAddress();
-                try {
-                    setSentByAndAttendees(cal, sentByAddr, mm.getAllRecipients());
-                } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("Error modifying calendar part", e);
-                }
                 MimeMessage mmFwd = getInstanceFwdMsg(senderAcct, inv, cal, mmInv, mm);
                 fwdMsgs = new MimeMessage[] { mmFwd };
             }
@@ -181,9 +175,6 @@ public class ForwardCalendarItem extends CalendarRequest {
         MimeBodyPart htmlDescPart = visitor.getHtmlDescPart();
 
         try {
-            String sentByAddr = AccountUtil.getFriendlyEmailAddress(senderAcct).getAddress();
-            Address[] rcpts = mmFwdWrapper.getAllRecipients();
-
             List<MimeMessage> msgs = new ArrayList<MimeMessage>();
             long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
             Invite[] invites = calItem.getInvites();
@@ -219,8 +210,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                         cal.addComponent(cancelComp);
                     }
                 }
-                // Set SENT-BY to sender's email address.  Required by Outlook.
-                setSentByAndAttendees(cal, sentByAddr, rcpts);
 
                 MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
                 MimeMessage mmFwd = makeFwdMsg(senderAcct, inv, mmInv, cal, mmFwdWrapper, plainDescPart, htmlDescPart, firstInv);
@@ -235,7 +224,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         }
     }
 
-    protected static void setSentByAndAttendees(ZVCalendar cal, String sentBy, Address[] rcpts) {
+    private static void setSentByAndAttendees(ZVCalendar cal, String sentBy, Address[] rcpts) {
         // Set SENT-BY to sender's email address in ORGANIZER property of all VEVENT/VTODO components.
         // Required by Outlook.
         // Also, remove existing ATTENDEEs and add ATTENDEE lines for forwardees.
@@ -282,6 +271,39 @@ public class ForwardCalendarItem extends CalendarRequest {
         }
     }
 
+    private static void setDescProps(ZVCalendar cal, String descPlain, String descHtml) {
+        for (Iterator<ZComponent> compIter = cal.getComponentIterator(); compIter.hasNext(); ) {
+            ZComponent comp = compIter.next();
+            ICalTok compName = ICalTok.lookup(comp.getName());
+            if (ICalTok.VEVENT.equals(compName) || ICalTok.VTODO.equals(compName)) {
+                // Remove existing DESCRIPTION and X-ALT-DESC properties.
+                for (Iterator<ZProperty> propIter = comp.getPropertyIterator(); propIter.hasNext(); ) {
+                    ZProperty prop = propIter.next();
+                    ICalTok tok = prop.getToken();
+                    if (ICalTok.DESCRIPTION.equals(tok) || ICalTok.X_ALT_DESC.equals(tok))
+                        propIter.remove();
+                }
+
+                if (descPlain != null && descPlain.length() > 0) {
+                    // Remove Outlook-style *~*~*~ header block.  Remove separator plus two newlines.
+                    int delim = descPlain.indexOf(Invite.HEADER_SEPARATOR);
+                    if (delim >= 0) {
+                        descPlain = descPlain.substring(delim + Invite.HEADER_SEPARATOR.length());
+                        descPlain = descPlain.replaceFirst("^\\r?\\n\\r?\\n", "");
+                    }
+                    if (descPlain.length() > 0)
+                        comp.addProperty(new ZProperty(ICalTok.DESCRIPTION, descPlain));
+                }
+                if (descHtml != null && descHtml.length() > 0) {
+                    ZProperty prop = new ZProperty(ICalTok.X_ALT_DESC, descHtml);
+                    prop.addParameter(new ZParameter(ICalTok.FMTTYPE, MimeConstants.CT_TEXT_HTML));
+                    comp.addProperty(prop);
+                }
+                break;  // only update the first component (comps are ordered correctly)
+            }
+        }
+    }
+
     protected static MimeMessage getInstanceFwdMsg(
             Account senderAcct, Invite inv, ZVCalendar cal, MimeMessage mmInv, MimeMessage mmFwdWrapper)
     throws ServiceException {
@@ -310,6 +332,12 @@ public class ForwardCalendarItem extends CalendarRequest {
             MimeMessage mmFwdWrapper, MimeBodyPart plainDesc, MimeBodyPart htmlDesc,
             boolean useFwdText)
     throws ServiceException, MessagingException, IOException {
+        // Set SENT-BY to sender's email address.  Required by Outlook.
+        // Also, set ATTENDEEs to the forwardees.  For consistency with Outlook.
+        setSentByAndAttendees(cal, AccountUtil.getFriendlyEmailAddress(senderAcct).getAddress(),
+                              mmFwdWrapper.getAllRecipients());
+
+        // From: and Sender: headers
         Address from = null;
         Address sender = null;
         sender = AccountUtil.getFriendlyEmailAddress(senderAcct);
@@ -322,11 +350,20 @@ public class ForwardCalendarItem extends CalendarRequest {
         } else {
             from = sender;
         }
+
         MimeMessage mm;
-        if (useFwdText)
+        if (useFwdText) {
+            String plainDescStr = null;
+            String htmlDescStr = null;
+            if (plainDesc != null)
+                plainDescStr = (String) plainDesc.getContent();
+            if (htmlDesc != null)
+                htmlDescStr = (String) htmlDesc.getContent();
+            setDescProps(cal, plainDescStr, htmlDescStr);
             mm = createMergedMessage(from, sender, mmInv, inv, cal, plainDesc, htmlDesc);
-        else
+        } else {
             mm = CalendarMailSender.createCalendarMessage(from, sender, null, mmInv, inv, cal, false);
+        }
         // Copy recipient headers from forward wrapper msg.
         RecipientType rcptTypes[] = { RecipientType.TO, RecipientType.CC, RecipientType.BCC };
         for (RecipientType rcptType : rcptTypes) {
@@ -489,8 +526,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                     // This message either had text/calendar at top level or none at all.
                     // In both cases, set the new calendar as top level content.
                     setCalendarContent(mm, mUid, mCalNew);
-                    // TODO: Hmm, what do we do here...  What if it's a multipart structure and has
-                    // calendar part, but no plain and html parts?
                 }
                 return true;
             } else {

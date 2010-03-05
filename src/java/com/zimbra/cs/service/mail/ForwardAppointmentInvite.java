@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.ContentType;
@@ -47,7 +46,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ForwardAppointmentInvite extends ForwardAppointment {
@@ -132,16 +130,6 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
                     throw ServiceException.FAILURE("Error getting calendar part in message " + iid.getId(), null);
                 }
             }
-
-            // Set SENT-BY to sender's email address.  Required by Outlook.
-            String sentByAddr = AccountUtil.getFriendlyEmailAddress(senderAcct).getAddress();
-            Address[] rcpts = null;
-            try {
-                rcpts = mmFwdWrapper.getAllRecipients();
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("error getting recipients", e);
-            }
-            setSentByAndAttendees(cal, sentByAddr, rcpts);
 
             mmFwd = getInstanceFwdMsg(senderAcct, firstInv, cal, mmInv, mmFwdWrapper);
         }
