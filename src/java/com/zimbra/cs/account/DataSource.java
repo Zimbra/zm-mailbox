@@ -112,16 +112,24 @@ public class DataSource extends AccountProperty {
     public boolean isEnabled() { return getBooleanAttr(Provisioning.A_zimbraDataSourceEnabled, false); }
 
     public ConnectionType getConnectionType() {
+        // First check for data source attribute
         String value = getAttr(Provisioning.A_zimbraDataSourceConnectionType);
-        ConnectionType connectionType = null;
+        if (value == null) {
+            // If data source attribute not found, use global setting
+            try {
+                value = Provisioning.getInstance().getConfig().getDataSourceConnectionTypeAsString();
+            } catch (ServiceException e) {
+                // Fall through...
+            }
+        }
         if (value != null) {
             try {
-                connectionType = ConnectionType.valueOf(value);
+                return ConnectionType.valueOf(value);
             } catch (IllegalArgumentException e) {
                 ZimbraLog.mailbox.warn("Illegal connection type: " + value);
             }
         }
-        return connectionType;
+        return ConnectionType.cleartext;
     }
 
     public boolean isSslEnabled() {
