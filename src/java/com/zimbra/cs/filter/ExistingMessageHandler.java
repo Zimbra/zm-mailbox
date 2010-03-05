@@ -14,12 +14,16 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.Collection;
+
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -84,11 +88,6 @@ extends FilterHandler {
         return mParsedMessage;
     }
     
-    @Override
-    public int getDefaultFlagBitmask() {
-        return 0;
-    }
-
     public boolean filtered() { return mFiltered; }
 
     @Override
@@ -101,39 +100,57 @@ extends FilterHandler {
 
 
     @Override
-    public Message implicitKeep(int flagBitmask, String tags)
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         ZimbraLog.filter.debug("Implicitly keeping existing message %d.", mMessageId);
         Message msg = mMailbox.getMessageById(null, mMessageId);
-        updateTagsAndFlagsIfNecessary(msg, flagBitmask, tags);
+        updateTagsAndFlagsIfNecessary(msg, flagActions, tags);
         mKept = true;
         return msg;
     }
 
     @Override
-    public Message explicitKeep(int flagBitmask, String tags)
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         ZimbraLog.filter.debug("Explicitly keeping existing message %d.", mMessageId);
         Message msg = mMailbox.getMessageById(null, mMessageId);
-        updateTagsAndFlagsIfNecessary(msg, flagBitmask, tags);
+        updateTagsAndFlagsIfNecessary(msg, flagActions, tags);
         mKept = true;
         return msg;
     }
     
-    private void updateTagsAndFlagsIfNecessary(Message msg, int flagBitmask, String tags)
+    private void updateTagsAndFlagsIfNecessary(Message msg, Collection<ActionFlag> flagActions, String tagString)
     throws ServiceException {
-        long tagBitmask = Tag.tagsToBitmask(tags);
-        if (((msg.getTagBitmask() & tagBitmask) != tagBitmask) ||
-            (msg.getFlagBitmask() & flagBitmask) != flagBitmask) {
+        long tags = msg.getTagBitmask() | Tag.tagsToBitmask(tagString);
+        int flags = getFlagBitmask(msg, flagActions);
+        if (msg.getTagBitmask() != tags || msg.getFlagBitmask() != flags) {
             ZimbraLog.filter.info("Updating flags to %d, tags to %d on message %d.",
-                flagBitmask, tagBitmask, msg.getId());
-            mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flagBitmask, tagBitmask);
+                flags, tags, msg.getId());
+            mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flags, tags);
             mFiltered = true;
         }
     }
     
+    /**
+     * Applies flag actions to the given <tt>Message</tt>'s existing flags
+     * and returns the result.  Does not modify the message.
+     */
+    private int getFlagBitmask(Message msg, Collection<ActionFlag> flagActions)
+    throws ServiceException {
+        int flags = msg.getFlagBitmask();
+        for (ActionFlag action : flagActions) {
+            Flag flag = mMailbox.getFlagById(action.getFlagId());
+            if (action.isSetFlag()) {
+                flags |= flag.getBitmask();
+            } else {
+                flags &= ~flag.getBitmask();
+            }
+        }
+        return flags;
+    }
+    
     @Override
-    public ItemId fileInto(String folderPath, int flagBitmask, String tags) throws ServiceException {
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags) throws ServiceException {
         Message source = mMailbox.getMessageById(null, mMessageId);
         
         // See if the message is already in the target folder.
@@ -165,7 +182,7 @@ extends FilterHandler {
         }
         
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mMailbox, getParsedMessage(),
-            mMailbox.getAccount().getName(), folderPath, flagBitmask, tags);
+            mMailbox.getAccount().getName(), folderPath, getFlagBitmask(source, flagActions), tags);
         if (id != null) {
             mFiltered = true;
             mFiled = true;

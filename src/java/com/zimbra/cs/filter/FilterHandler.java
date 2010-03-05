@@ -14,10 +14,13 @@
  */
 package com.zimbra.cs.filter;
 
+import java.util.Collection;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -29,7 +32,6 @@ public abstract class FilterHandler {
 
     public abstract ParsedMessage getParsedMessage() throws ServiceException;
     public abstract MimeMessage getMimeMessage() throws ServiceException;
-    public abstract int getDefaultFlagBitmask();
     
     /**
      * Returns the path to the default folder (usually <tt>Inbox</tt>).
@@ -56,7 +58,7 @@ public abstract class FilterHandler {
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
     @SuppressWarnings("unused")
-    public Message implicitKeep(int flagBitmask, String tags)
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         return null;
     }
@@ -68,7 +70,7 @@ public abstract class FilterHandler {
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
     @SuppressWarnings("unused")
-    public Message explicitKeep(int flagBitmask, String tags)
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         return null;
     }
@@ -79,7 +81,7 @@ public abstract class FilterHandler {
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
     @SuppressWarnings("unused")
-    public ItemId fileInto(String folderPath, int flagBitmask, String tags)
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         return null;
     }

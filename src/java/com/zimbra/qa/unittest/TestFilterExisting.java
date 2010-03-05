@@ -60,6 +60,7 @@ extends TestCase {
     private static final String KEEP_RULE_NAME = NAME_PREFIX + " keep";
     private static final String TAG_RULE_NAME = NAME_PREFIX + " tag";
     private static final String FLAG_RULE_NAME = NAME_PREFIX + " flag";
+    private static final String MARK_READ_RULE_NAME = NAME_PREFIX + " mark read";
     private static final String FOLDER1_RULE_NAME = NAME_PREFIX + " folder1";
     private static final String FOLDER2_RULE_NAME = NAME_PREFIX + " folder2";
     private static final String FOLDER3_RULE_NAME = NAME_PREFIX + " folder3";
@@ -204,6 +205,23 @@ extends TestCase {
         mbox.noOp();
         msg = mbox.getMessageById(id);
         assertTrue(msg.isFlagged());
+    }
+    
+    public void testMarkRead()
+    throws Exception {
+        // Add message
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String subject = NAME_PREFIX + " test mark read";
+        String id = TestUtil.addMessage(mbox, subject);
+        mbox.markMessageRead(id, false);
+        ZMessage msg = mbox.getMessageById(id);
+        assertTrue(msg.isUnread());
+        
+        // Run mark unread rule and validate.
+        Set<String> affectedIds = runRules(new String[] { MARK_READ_RULE_NAME }, id, null);
+        assertEquals(1, affectedIds.size());
+        mbox.noOp();
+        assertFalse(msg.isUnread());
     }
     
     public void testDiscard()
@@ -391,7 +409,14 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "flag"));
         actions.add(new ZMarkAction(MarkOp.FLAGGED));
         rules.add(new ZFilterRule(FLAG_RULE_NAME, true, false, conditions, actions));
-
+        
+        // if subject contains "mark read", mark read
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mark read"));
+        actions.add(new ZMarkAction(MarkOp.READ));
+        rules.add(new ZFilterRule(MARK_READ_RULE_NAME, true, false, conditions, actions));
+        
         // if subject contains "keep", keep
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
