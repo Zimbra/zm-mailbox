@@ -102,8 +102,6 @@
 <!--
     TODO:      
           - getMailboxDump                     : get mailbox dump for legal intercept
-          - reindexMailbox                     : reindex mailbox
-          - viewEmail                          : view the account's email
 -->
  
 <right name="setAccountPassword" type="preset" targetType="account">
@@ -238,17 +236,23 @@
   <desc>remove calendar resource alias</desc>
 </right>
 
+<right name="adminLoginCalendarResourceAs" type="preset" targetType="calresource">
+  <desc>login to the calendar resource as an admin.</desc>
+</right>
+
 <!-- 
    TODO:
 
           - getMailboxDump                     : get mailbox dump for legal intercept
-          - reindexMailbox                     : reindex mailbox
-          - viewEmail                          : view the calendar resource's email
 -->
        
 <right name="setCalendarResourcePassword" type="preset" targetType="calresource">
   <desc>set calendar resource password</desc>
 </right>     
+
+<right name="reindexCalendarResourceMailbox" type="preset" targetType="calresource">
+  <desc>reindex mailbox</desc>
+</right> 
 
 <right name="purgeCalendarResourceCalendarCache" type="preset" targetType="calresource">
   <desc>purge calendar resource calendar cache</desc>

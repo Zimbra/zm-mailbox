@@ -60,103 +60,105 @@ ${DOMAIN_ATTRS}
   =========================================================
 -->
 
-        <right type="combo" name="domainAdminAccountRights">
-          <desc>domain admin account right</desc>
-          <rights>
-            <r n="addAccountAlias"/>
-            <r n="adminLoginAs"/>
-            <r n="deleteAccount"/>
-            <r n="getAccount"/>
-            <r n="getAccountInfo"/>
-            <r n="getAccountMembership"/>
-            <r n="getMailboxInfo"/>
-            <r n="listAccount"/>
-            <r n="purgeAccountCalendarCache"/>
-            <r n="reindexMailbox"/>
-            <r n="removeAccountAlias"/>
-            <r n="renameAccount"/>
-            <r n="setAccountPassword"/>
-            <r n="setAdminSavedSearch"/>
-            <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
-            <r n="viewAccountAdminUI"/>
-            <r n="viewAdminSavedSearch"/>
-            <r n="viewPasswordStrength"/>
-          </rights>
-        </right>
-        <right type="combo" name="domainAdminCalendarResourceRights">
-          <desc>domain admin calresource right</desc>
-          <rights>
-            <r n="addCalendarResourceAlias"/>
-            <r n="deleteCalendarResource"/>
-            <r n="getCalendarResource"/>
-            <r n="listCalendarResource"/>
-            <r n="purgeCalendarResourceCalendarCache"/>
-            <r n="removeCalendarResourceAlias"/>
-            <r n="renameCalendarResource"/>
-            <r n="setAdminSavedSearch"/>
-            <r n="setCalendarResourcePassword"/>
-            <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
-            <r n="setDomainAdminCalendarResourceAttrs"/>
-            <r n="viewAdminSavedSearch"/>
-            <r n="viewPasswordStrength"/>
-          </rights>
-        </right>
-        <right type="combo" name="domainAdminCosRights">
-          <desc>domain admin cos right</desc>
-          <rights>
-            <r n="assignCos"/>
-            <r n="getCos"/>
-            <r n="listCos"/>
-            <r n="viewPasswordStrength"/>
-          </rights>
-        </right>
-        <right type="combo" name="domainAdminDistributionListRights">
-          <desc>domain admin dl right</desc>
-          <rights>
-            <r n="addDistributionListAlias"/>
-            <r n="addDistributionListMember"/>
-            <r n="deleteDistributionList"/>
-            <r n="getDistributionList"/>
-            <r n="getDistributionListMembership"/>
-            <r n="getDistributionListShareInfo"/>
-            <r n="listDistributionList"/>
-            <r n="publishDistributionListShareInfo"/>
-            <r n="removeDistributionListAlias"/>
-            <r n="removeDistributionListMember"/>
-            <r n="renameDistributionList"/>
-            <r n="setDomainAdminDistributionListAttrs"/>
-            <r n="viewDistributionListAdminUI"/>
-          </rights>
-        </right>
-        <right type="combo" name="domainAdminDomainRights">
-          <desc>domain admin domain right</desc>
-          <rights>
-            <r n="accessGAL"/>
-            <r n="checkDomainMXRecord"/>
-            <r n="countAccount"/>
-            <r n="createAccount"/>
-            <r n="createAlias"/>
-            <r n="createCalendarResource"/>
-            <r n="createDistributionList"/>
-            <r n="deleteAlias"/>
-            <r n="getDomain"/>
-            <r n="listDomain"/>
-            <r n="setDomainAdminDomainAttrs"/>
-          </rights>
-        </right>
-        <right type="combo" name="domainAdminServerRights">
-          <desc>domain admin server right</desc>
-          <rights>
-            <r n="flushCache"/>
-          </rights>
-        </right>
-        <right type="combo" name="domainAdminZimletRights">
-          <desc>domain admin zimlet right</desc>
-          <rights>
-            <r n="getZimlet"/>
-            <r n="listZimlet"/>
-          </rights>
-        </right>
+    <right type="combo" name="domainAdminAccountRights">
+      <desc>domain admin account right</desc>
+      <rights>
+        <r n="addAccountAlias"/>
+        <r n="adminLoginAs"/>
+        <r n="deleteAccount"/>
+        <r n="getAccount"/>
+        <r n="getAccountInfo"/>
+        <r n="getAccountMembership"/>
+        <r n="getMailboxInfo"/>
+        <r n="listAccount"/>
+        <r n="purgeAccountCalendarCache"/>
+        <r n="reindexMailbox"/>
+        <r n="removeAccountAlias"/>
+        <r n="renameAccount"/>
+        <r n="setAccountPassword"/>
+        <r n="setAdminSavedSearch"/>
+        <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
+        <r n="viewAccountAdminUI"/>
+        <r n="viewAdminSavedSearch"/>
+        <r n="viewPasswordStrength"/>
+      </rights>
+    </right>
+    <right type="combo" name="domainAdminCalendarResourceRights">
+      <desc>domain admin calresource right</desc>
+      <rights>
+        <r n="addCalendarResourceAlias"/>
+        <r n="adminLoginCalendarResourceAs"/>
+        <r n="deleteCalendarResource"/>
+        <r n="getCalendarResource"/>
+        <r n="listCalendarResource"/>
+        <r n="purgeCalendarResourceCalendarCache"/>
+        <r n="reindexCalendarResourceMailbox"/>
+        <r n="removeCalendarResourceAlias"/>
+        <r n="renameCalendarResource"/>
+        <r n="setAdminSavedSearch"/>
+        <r n="setCalendarResourcePassword"/>
+        <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
+        <r n="setDomainAdminCalendarResourceAttrs"/>
+        <r n="viewAdminSavedSearch"/>
+        <r n="viewPasswordStrength"/>
+      </rights>
+    </right>
+    <right type="combo" name="domainAdminCosRights">
+      <desc>domain admin cos right</desc>
+      <rights>
+        <r n="assignCos"/>
+        <r n="getCos"/>
+        <r n="listCos"/>
+        <r n="viewPasswordStrength"/>
+      </rights>
+    </right>
+    <right type="combo" name="domainAdminDistributionListRights">
+      <desc>domain admin dl right</desc>
+      <rights>
+        <r n="addDistributionListAlias"/>
+        <r n="addDistributionListMember"/>
+        <r n="deleteDistributionList"/>
+        <r n="getDistributionList"/>
+        <r n="getDistributionListMembership"/>
+        <r n="getDistributionListShareInfo"/>
+        <r n="listDistributionList"/>
+        <r n="publishDistributionListShareInfo"/>
+        <r n="removeDistributionListAlias"/>
+        <r n="removeDistributionListMember"/>
+        <r n="renameDistributionList"/>
+        <r n="setDomainAdminDistributionListAttrs"/>
+        <r n="viewDistributionListAdminUI"/>
+      </rights>
+    </right>
+    <right type="combo" name="domainAdminDomainRights">
+      <desc>domain admin domain right</desc>
+      <rights>
+        <r n="accessGAL"/>
+        <r n="checkDomainMXRecord"/>
+        <r n="countAccount"/>
+        <r n="createAccount"/>
+        <r n="createAlias"/>
+        <r n="createCalendarResource"/>
+        <r n="createDistributionList"/>
+        <r n="deleteAlias"/>
+        <r n="getDomain"/>
+        <r n="listDomain"/>
+        <r n="setDomainAdminDomainAttrs"/>
+      </rights>
+    </right>
+    <right type="combo" name="domainAdminServerRights">
+      <desc>domain admin server right</desc>
+      <rights>
+        <r n="flushCache"/>
+      </rights>
+    </right>
+    <right type="combo" name="domainAdminZimletRights">
+      <desc>domain admin zimlet right</desc>
+      <rights>
+        <r n="getZimlet"/>
+        <r n="listZimlet"/>
+      </rights>
+    </right>
 
 <!--
   =========================================================
