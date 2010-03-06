@@ -25,12 +25,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager.AttrRightChecker;
-import com.zimbra.cs.account.AccessManager.ViaGrant;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -44,6 +42,21 @@ public class ACLAccessManager extends AccessManager {
     public ACLAccessManager() throws ServiceException {
         // initialize RightManager
         RightManager.getInstance();
+    }
+    
+    private Account actualTargetForAdminLoginAs(Account target) throws ServiceException {
+        if (target.isCalendarResource())
+            // need a CalendarResource instance for RightChecker
+            return Provisioning.getInstance().get(CalendarResourceBy.id, target.getId());
+        else
+            return target;
+    }
+    
+    private AdminRight actualRightForAdminLoginAs(Account target) {
+        if (target.isCalendarResource())
+            return Admin.R_adminLoginCalendarResourceAs;
+        else
+            return Admin.R_adminLoginAs;
     }
     
     @Override
@@ -61,7 +74,7 @@ public class ACLAccessManager extends AccessManager {
             return true;
         
         if (asAdmin)
-            return canDo(at, target, Admin.R_adminLoginAs, asAdmin);
+            return canDo(at, actualTargetForAdminLoginAs(target), actualRightForAdminLoginAs(target), asAdmin);
         else
             return canDo(at, target, User.R_loginAs, asAdmin);
     }
@@ -80,11 +93,11 @@ public class ACLAccessManager extends AccessManager {
             return true;
         
         if (asAdmin)
-            return canDo(credentials, target, Admin.R_adminLoginAs, asAdmin);
+            return canDo(credentials, actualTargetForAdminLoginAs(target), actualRightForAdminLoginAs(target), asAdmin);
         else
             return canDo(credentials, target, User.R_loginAs, asAdmin);
     }
-
+    
     @Override
     public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
         return canAccessAccount(credentials, target, true);

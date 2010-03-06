@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090701-1453 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100305-1529 */
 
 
     public static AdminRight R_accessGAL;
@@ -50,6 +50,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleAccountsThemesTabRights;
     public static AdminRight R_adminConsoleAccountsZimletsTabRights;
     public static AdminRight R_adminConsoleAliasRights;
+    public static AdminRight R_adminConsoleBackupRights;
     public static AdminRight R_adminConsoleCOSACLTabRights;
     public static AdminRight R_adminConsoleCOSAdvancedTabRights;
     public static AdminRight R_adminConsoleCOSFeaturesTabRights;
@@ -60,6 +61,8 @@ public class AdminRights {
     public static AdminRight R_adminConsoleCOSServerPoolTabRights;
     public static AdminRight R_adminConsoleCOSThemesTabRights;
     public static AdminRight R_adminConsoleCOSZimletsTabRights;
+    public static AdminRight R_adminConsoleCertificateRights;
+    public static AdminRight R_adminConsoleCrossMailboxSearchRights;
     public static AdminRight R_adminConsoleDLACLTabRights;
     public static AdminRight R_adminConsoleDLAliasesTabRights;
     public static AdminRight R_adminConsoleDLMemberOfTabRights;
@@ -93,10 +96,12 @@ public class AdminRights {
     public static AdminRight R_adminConsoleGlobalPOPTabRights;
     public static AdminRight R_adminConsoleGlobalRights;
     public static AdminRight R_adminConsoleGlobalThemesTabRights;
+    public static AdminRight R_adminConsoleMailQueueRights;
     public static AdminRight R_adminConsoleResourceRights;
     public static AdminRight R_adminConsoleResourcesContactTabRights;
     public static AdminRight R_adminConsoleResourcesPropertiesTabRights;
     public static AdminRight R_adminConsoleRights;
+    public static AdminRight R_adminConsoleSavedSearchRights;
     public static AdminRight R_adminConsoleServerACLTabRights;
     public static AdminRight R_adminConsoleServerBackupRestoreTabRights;
     public static AdminRight R_adminConsoleServerIMAPTabRights;
@@ -105,10 +110,13 @@ public class AdminRights {
     public static AdminRight R_adminConsoleServerPOPTabRights;
     public static AdminRight R_adminConsoleServerRights;
     public static AdminRight R_adminConsoleServerServicesTabRights;
+    public static AdminRight R_adminConsoleServerStatisticRights;
+    public static AdminRight R_adminConsoleServerStatusRights;
     public static AdminRight R_adminConsoleServerVolumesTabRights;
     public static AdminRight R_adminConsoleZimletACLTabRights;
     public static AdminRight R_adminConsoleZimletRights;
     public static AdminRight R_adminLoginAs;
+    public static AdminRight R_adminLoginCalendarResourceAs;
     public static AdminRight R_assignCos;
     public static AdminRight R_backupAccount;
     public static AdminRight R_checkDirectoryOnFileSystem;
@@ -173,6 +181,7 @@ public class AdminRights {
     public static AdminRight R_domainAdminConsoleResourcesContactTabRights;
     public static AdminRight R_domainAdminConsoleResourcesPropertiesTabRights;
     public static AdminRight R_domainAdminConsoleRights;
+    public static AdminRight R_domainAdminConsoleSavedSearchRights;
     public static AdminRight R_domainAdminCosRights;
     public static AdminRight R_domainAdminDistributionListRights;
     public static AdminRight R_domainAdminDomainRights;
@@ -208,6 +217,7 @@ public class AdminRights {
     public static AdminRight R_listServer;
     public static AdminRight R_listXMPPComponent;
     public static AdminRight R_listZimlet;
+    public static AdminRight R_mailQueueRights;
     public static AdminRight R_manageAccountLogger;
     public static AdminRight R_manageCrossMailboxSearchTask;
     public static AdminRight R_manageMailQueue;
@@ -233,6 +243,7 @@ public class AdminRights {
     public static AdminRight R_purgeAccountCalendarCache;
     public static AdminRight R_purgeCalendarResourceCalendarCache;
     public static AdminRight R_purgeMessages;
+    public static AdminRight R_reindexCalendarResourceMailbox;
     public static AdminRight R_reindexMailbox;
     public static AdminRight R_removeAccountAlias;
     public static AdminRight R_removeCalendarResourceAlias;
@@ -322,6 +333,7 @@ public class AdminRights {
     public static AdminRight R_setDomainAdminConsoleResourcesPropertiesTab;
     public static AdminRight R_setDomainAdminDistributionListAttrs;
     public static AdminRight R_setDomainAdminDomainAttrs;
+    public static AdminRight R_taskSetPassword;
     public static AdminRight R_viewAccountAdminUI;
     public static AdminRight R_viewAdminConsoleAccountsACLTab;
     public static AdminRight R_viewAdminConsoleAccountsAliasesTab;
@@ -378,6 +390,7 @@ public class AdminRights {
     public static AdminRight R_viewAdminConsoleServerMTATab;
     public static AdminRight R_viewAdminConsoleServerPOPTab;
     public static AdminRight R_viewAdminConsoleServerServicesTab;
+    public static AdminRight R_viewAdminConsoleServerStatus;
     public static AdminRight R_viewAdminConsoleServerVolumesTab;
     public static AdminRight R_viewAdminConsoleZimletACLTab;
     public static AdminRight R_viewAdminSavedSearch;
@@ -418,6 +431,7 @@ public class AdminRights {
         R_adminConsoleAccountsThemesTabRights  = rm.getAdminRight(Right.RT_adminConsoleAccountsThemesTabRights);
         R_adminConsoleAccountsZimletsTabRights = rm.getAdminRight(Right.RT_adminConsoleAccountsZimletsTabRights);
         R_adminConsoleAliasRights              = rm.getAdminRight(Right.RT_adminConsoleAliasRights);
+        R_adminConsoleBackupRights             = rm.getAdminRight(Right.RT_adminConsoleBackupRights);
         R_adminConsoleCOSACLTabRights          = rm.getAdminRight(Right.RT_adminConsoleCOSACLTabRights);
         R_adminConsoleCOSAdvancedTabRights     = rm.getAdminRight(Right.RT_adminConsoleCOSAdvancedTabRights);
         R_adminConsoleCOSFeaturesTabRights     = rm.getAdminRight(Right.RT_adminConsoleCOSFeaturesTabRights);
@@ -428,6 +442,8 @@ public class AdminRights {
         R_adminConsoleCOSServerPoolTabRights   = rm.getAdminRight(Right.RT_adminConsoleCOSServerPoolTabRights);
         R_adminConsoleCOSThemesTabRights       = rm.getAdminRight(Right.RT_adminConsoleCOSThemesTabRights);
         R_adminConsoleCOSZimletsTabRights      = rm.getAdminRight(Right.RT_adminConsoleCOSZimletsTabRights);
+        R_adminConsoleCertificateRights        = rm.getAdminRight(Right.RT_adminConsoleCertificateRights);
+        R_adminConsoleCrossMailboxSearchRights = rm.getAdminRight(Right.RT_adminConsoleCrossMailboxSearchRights);
         R_adminConsoleDLACLTabRights           = rm.getAdminRight(Right.RT_adminConsoleDLACLTabRights);
         R_adminConsoleDLAliasesTabRights       = rm.getAdminRight(Right.RT_adminConsoleDLAliasesTabRights);
         R_adminConsoleDLMemberOfTabRights      = rm.getAdminRight(Right.RT_adminConsoleDLMemberOfTabRights);
@@ -461,10 +477,12 @@ public class AdminRights {
         R_adminConsoleGlobalPOPTabRights       = rm.getAdminRight(Right.RT_adminConsoleGlobalPOPTabRights);
         R_adminConsoleGlobalRights             = rm.getAdminRight(Right.RT_adminConsoleGlobalRights);
         R_adminConsoleGlobalThemesTabRights    = rm.getAdminRight(Right.RT_adminConsoleGlobalThemesTabRights);
+        R_adminConsoleMailQueueRights          = rm.getAdminRight(Right.RT_adminConsoleMailQueueRights);
         R_adminConsoleResourceRights           = rm.getAdminRight(Right.RT_adminConsoleResourceRights);
         R_adminConsoleResourcesContactTabRights = rm.getAdminRight(Right.RT_adminConsoleResourcesContactTabRights);
         R_adminConsoleResourcesPropertiesTabRights = rm.getAdminRight(Right.RT_adminConsoleResourcesPropertiesTabRights);
         R_adminConsoleRights                   = rm.getAdminRight(Right.RT_adminConsoleRights);
+        R_adminConsoleSavedSearchRights        = rm.getAdminRight(Right.RT_adminConsoleSavedSearchRights);
         R_adminConsoleServerACLTabRights       = rm.getAdminRight(Right.RT_adminConsoleServerACLTabRights);
         R_adminConsoleServerBackupRestoreTabRights = rm.getAdminRight(Right.RT_adminConsoleServerBackupRestoreTabRights);
         R_adminConsoleServerIMAPTabRights      = rm.getAdminRight(Right.RT_adminConsoleServerIMAPTabRights);
@@ -473,10 +491,13 @@ public class AdminRights {
         R_adminConsoleServerPOPTabRights       = rm.getAdminRight(Right.RT_adminConsoleServerPOPTabRights);
         R_adminConsoleServerRights             = rm.getAdminRight(Right.RT_adminConsoleServerRights);
         R_adminConsoleServerServicesTabRights  = rm.getAdminRight(Right.RT_adminConsoleServerServicesTabRights);
+        R_adminConsoleServerStatisticRights    = rm.getAdminRight(Right.RT_adminConsoleServerStatisticRights);
+        R_adminConsoleServerStatusRights       = rm.getAdminRight(Right.RT_adminConsoleServerStatusRights);
         R_adminConsoleServerVolumesTabRights   = rm.getAdminRight(Right.RT_adminConsoleServerVolumesTabRights);
         R_adminConsoleZimletACLTabRights       = rm.getAdminRight(Right.RT_adminConsoleZimletACLTabRights);
         R_adminConsoleZimletRights             = rm.getAdminRight(Right.RT_adminConsoleZimletRights);
         R_adminLoginAs                         = rm.getAdminRight(Right.RT_adminLoginAs);
+        R_adminLoginCalendarResourceAs         = rm.getAdminRight(Right.RT_adminLoginCalendarResourceAs);
         R_assignCos                            = rm.getAdminRight(Right.RT_assignCos);
         R_backupAccount                        = rm.getAdminRight(Right.RT_backupAccount);
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);
@@ -541,6 +562,7 @@ public class AdminRights {
         R_domainAdminConsoleResourcesContactTabRights = rm.getAdminRight(Right.RT_domainAdminConsoleResourcesContactTabRights);
         R_domainAdminConsoleResourcesPropertiesTabRights = rm.getAdminRight(Right.RT_domainAdminConsoleResourcesPropertiesTabRights);
         R_domainAdminConsoleRights             = rm.getAdminRight(Right.RT_domainAdminConsoleRights);
+        R_domainAdminConsoleSavedSearchRights  = rm.getAdminRight(Right.RT_domainAdminConsoleSavedSearchRights);
         R_domainAdminCosRights                 = rm.getAdminRight(Right.RT_domainAdminCosRights);
         R_domainAdminDistributionListRights    = rm.getAdminRight(Right.RT_domainAdminDistributionListRights);
         R_domainAdminDomainRights              = rm.getAdminRight(Right.RT_domainAdminDomainRights);
@@ -576,6 +598,7 @@ public class AdminRights {
         R_listServer                           = rm.getAdminRight(Right.RT_listServer);
         R_listXMPPComponent                    = rm.getAdminRight(Right.RT_listXMPPComponent);
         R_listZimlet                           = rm.getAdminRight(Right.RT_listZimlet);
+        R_mailQueueRights                      = rm.getAdminRight(Right.RT_mailQueueRights);
         R_manageAccountLogger                  = rm.getAdminRight(Right.RT_manageAccountLogger);
         R_manageCrossMailboxSearchTask         = rm.getAdminRight(Right.RT_manageCrossMailboxSearchTask);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
@@ -601,6 +624,7 @@ public class AdminRights {
         R_purgeAccountCalendarCache            = rm.getAdminRight(Right.RT_purgeAccountCalendarCache);
         R_purgeCalendarResourceCalendarCache   = rm.getAdminRight(Right.RT_purgeCalendarResourceCalendarCache);
         R_purgeMessages                        = rm.getAdminRight(Right.RT_purgeMessages);
+        R_reindexCalendarResourceMailbox       = rm.getAdminRight(Right.RT_reindexCalendarResourceMailbox);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);
         R_removeAccountAlias                   = rm.getAdminRight(Right.RT_removeAccountAlias);
         R_removeCalendarResourceAlias          = rm.getAdminRight(Right.RT_removeCalendarResourceAlias);
@@ -690,6 +714,7 @@ public class AdminRights {
         R_setDomainAdminConsoleResourcesPropertiesTab = rm.getAdminRight(Right.RT_setDomainAdminConsoleResourcesPropertiesTab);
         R_setDomainAdminDistributionListAttrs  = rm.getAdminRight(Right.RT_setDomainAdminDistributionListAttrs);
         R_setDomainAdminDomainAttrs            = rm.getAdminRight(Right.RT_setDomainAdminDomainAttrs);
+        R_taskSetPassword                      = rm.getAdminRight(Right.RT_taskSetPassword);
         R_viewAccountAdminUI                   = rm.getAdminRight(Right.RT_viewAccountAdminUI);
         R_viewAdminConsoleAccountsACLTab       = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsACLTab);
         R_viewAdminConsoleAccountsAliasesTab   = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsAliasesTab);
@@ -746,6 +771,7 @@ public class AdminRights {
         R_viewAdminConsoleServerMTATab         = rm.getAdminRight(Right.RT_viewAdminConsoleServerMTATab);
         R_viewAdminConsoleServerPOPTab         = rm.getAdminRight(Right.RT_viewAdminConsoleServerPOPTab);
         R_viewAdminConsoleServerServicesTab    = rm.getAdminRight(Right.RT_viewAdminConsoleServerServicesTab);
+        R_viewAdminConsoleServerStatus         = rm.getAdminRight(Right.RT_viewAdminConsoleServerStatus);
         R_viewAdminConsoleServerVolumesTab     = rm.getAdminRight(Right.RT_viewAdminConsoleServerVolumesTab);
         R_viewAdminConsoleZimletACLTab         = rm.getAdminRight(Right.RT_viewAdminConsoleZimletACLTab);
         R_viewAdminSavedSearch                 = rm.getAdminRight(Right.RT_viewAdminSavedSearch);

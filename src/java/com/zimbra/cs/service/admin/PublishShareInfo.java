@@ -79,7 +79,7 @@ public class PublishShareInfo extends ShareInfoHandler {
             
             // we will need to access the owner's mailbox, check if the admin can 
             // access the owner account's mailbox
-            checkAccountRight(zsc, ownerAcct, Admin.R_adminLoginAs);
+            checkAdminLoginAsRight(zsc, prov, ownerAcct);
             
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
             if (mbox == null)
@@ -104,7 +104,7 @@ public class PublishShareInfo extends ShareInfoHandler {
             // removing (unpublishing)
             
             /*
-             * do not have to check R_adminLoginAs right on the owner account because
+             * do not have to check admin login as right on the owner account because
              * we will be just going through published data on the DL.
              */ 
             
@@ -204,10 +204,13 @@ public class PublishShareInfo extends ShareInfoHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
+        relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
         relatedRights.add(Admin.R_publishDistributionListShareInfo);
         
         notes.add("Needs the " + Admin.R_publishDistributionListShareInfo.getName() + 
                 " right on the distribution list entry to publish; and the " + 
-                Admin.R_adminLoginAs.getName() + " right on the owner account.");
+                Admin.R_adminLoginAs.getName() + "/" + Admin.R_adminLoginCalendarResourceAs.getName()
+                + " right on the owner account/calendar resource.");
+        
     }
 }

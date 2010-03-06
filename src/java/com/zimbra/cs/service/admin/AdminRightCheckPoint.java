@@ -53,6 +53,10 @@ public interface AdminRightCheckPoint {
             "no PERM_DENIED exception will be thrown. " + 
             GET_ENTRY_1;
         
+        protected static final String ADMIN_LOGIN_AS = 
+            "If the target is an account, need the adminLoginAs right; " +
+            "If the target is a calendar resource, need the R_adminLoginCalendarResourceAs right.";
+        
     }
     
     public void docRights(List<AdminRight> relatedRights, List<String> notes);

@@ -67,11 +67,12 @@ public class RecalculateMailboxCounts extends AdminDocumentHandler {
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
 
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         
-        checkAccountRight(zsc, account, Admin.R_adminLoginAs);
+        checkAdminLoginAsRight(zsc, prov, account);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox == null)
@@ -89,5 +90,7 @@ public class RecalculateMailboxCounts extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
+        relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
+        notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
     }
 }

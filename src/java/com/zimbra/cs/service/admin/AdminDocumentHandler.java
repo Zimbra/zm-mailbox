@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
@@ -406,7 +407,19 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         aac.checkCalendarResourceRight(this, cr, needed);
         return aac;
     }
-        
+    
+    /*
+     * convenient method for checking the admin login as right
+     */
+    protected AdminAccessControl checkAdminLoginAsRight(ZimbraSoapContext zsc, Provisioning prov, Account account) throws ServiceException {
+        if (account.isCalendarResource()) {
+            // need a CalendarResource instance for RightChecker
+            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            return checkCalendarResourceRight(zsc, resource, Admin.R_adminLoginCalendarResourceAs);
+        } else
+            return checkAccountRight(zsc, account, Admin.R_adminLoginAs);
+    }
+    
     /* 
      * --------
      * DL right

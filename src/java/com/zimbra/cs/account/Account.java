@@ -260,8 +260,8 @@ public class Account extends ZAttrAccount  {
         }
     }
 
-    // need when when cal resource is loaded as an account and we need to know if 
-    // it actually a cal resource.
+    // needed when when cal resource is loaded as an account and we need to know if 
+    // it actually is a cal resource.
     public boolean isCalendarResource() {
         return getAttr(Provisioning.A_zimbraCalResType) != null;
     }

@@ -75,7 +75,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
         
-        checkAccountRight(zsc, account, Admin.R_adminLoginAs);
+        checkAdminLoginAsRight(zsc, prov, account);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DelegateAuth","accountId", account.getId(),"accountName", account.getName()})); 
@@ -99,7 +99,8 @@ public class DelegateAuth extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
-        notes.add("This right is needed for an delegated admin to login to users mailboxes to view and manage their mailboxes.");
+        relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
+        notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
     }
     
     /*

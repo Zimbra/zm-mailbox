@@ -25,8 +25,10 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.index.MailboxIndex;
@@ -58,11 +60,17 @@ public class ReIndex extends AdminDocumentHandler {
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
         
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         
-        checkAccountRight(zsc, account, Admin.R_reindexMailbox);
+        if (account.isCalendarResource()) {
+            // need a CalendarResource instance for RightChecker
+            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            checkCalendarResourceRight(zsc, resource, Admin.R_reindexCalendarResourceMailbox);
+        } else
+            checkAccountRight(zsc, account, Admin.R_reindexMailbox);
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
         if (mbox == null)
@@ -142,5 +150,6 @@ public class ReIndex extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_reindexMailbox);
+        relatedRights.add(Admin.R_reindexCalendarResourceMailbox);
     }
 }

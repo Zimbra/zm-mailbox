@@ -54,9 +54,7 @@ public class CreateDataSource extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        // is this really used by admin console?
-        // for now just use the adminLoginAs right.
-        checkAccountRight(zsc, account, Admin.R_adminLoginAs);
+        checkAdminLoginAsRight(zsc, prov, account);
 
         Element dsEl = request.getElement(AccountConstants.E_DATA_SOURCE);
         Map<String, Object> attrs = AdminService.getAttrs(dsEl);
@@ -82,5 +80,7 @@ public class CreateDataSource extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
+        relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
+        notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
     }
 }

@@ -53,13 +53,13 @@ public class PushFreeBusy extends AdminDocumentHandler {
         			ZimbraLog.misc.warn("account is not on this server: "+accountId);
         			continue;
         		}
-        		checkAccountRight(zsc, acct, Admin.R_adminLoginAs);
+                checkAdminLoginAsRight(zsc, prov, acct);
             	FreeBusyProvider.mailboxChanged(accountId);
         	}
         } else {
         	String[] domains = domainElem.getAttribute(AdminConstants.A_NAME).split(",");
         	Server s = prov.getLocalServer();
-    		NamedEntry.Visitor visitor = new PushFreeBusyVisitor(zsc, this);
+    		NamedEntry.Visitor visitor = new PushFreeBusyVisitor(zsc, prov, this);
         	for (String domain : domains) {
             	Domain d = prov.get(Provisioning.DomainBy.name, domain);
         		prov.getAllAccounts(d, s, visitor);
@@ -73,10 +73,12 @@ public class PushFreeBusy extends AdminDocumentHandler {
     private static class PushFreeBusyVisitor implements NamedEntry.Visitor {
         
         ZimbraSoapContext mZsc;
+        Provisioning mProv;
         AdminDocumentHandler mHandler;
         
-        PushFreeBusyVisitor(ZimbraSoapContext zsc, AdminDocumentHandler handler) {
+        PushFreeBusyVisitor(ZimbraSoapContext zsc, Provisioning prov, AdminDocumentHandler handler) {
             mZsc = zsc;
+            mProv = prov;
             mHandler = handler;
         }
         
@@ -89,7 +91,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
 						if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
 							int idx = fp.indexOf(':');
 							if (idx != -1) {
-				                mHandler.checkAccountRight(mZsc, acct, Admin.R_adminLoginAs);
+				                mHandler.checkAdminLoginAsRight(mZsc, mProv, acct);
 				                FreeBusyProvider.mailboxChanged(acct.getId());
 				                break;
 							}
@@ -103,5 +105,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
+        relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
+        notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
     }
 }

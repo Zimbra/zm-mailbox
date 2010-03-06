@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.0 pshao 20090701-1453 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100305-1529 */
 
 
     /*
@@ -149,6 +149,11 @@ public class RightConsts {
     public static final String RT_adminConsoleAliasRights = "adminConsoleAliasRights";
 
     /**
+     * Admin Console Backup Rights
+     */
+    public static final String RT_adminConsoleBackupRights = "adminConsoleBackupRights";
+
+    /**
      * Admin Console rights for COS ACL Tab
      */
     public static final String RT_adminConsoleCOSACLTabRights = "adminConsoleCOSACLTabRights";
@@ -197,6 +202,16 @@ public class RightConsts {
      * Admin Console rights for COS Zimlets Tab
      */
     public static final String RT_adminConsoleCOSZimletsTabRights = "adminConsoleCOSZimletsTabRights";
+
+    /**
+     * Admin Console Certificate Rights
+     */
+    public static final String RT_adminConsoleCertificateRights = "adminConsoleCertificateRights";
+
+    /**
+     * Admin Console Cross Mailbox Search Rights
+     */
+    public static final String RT_adminConsoleCrossMailboxSearchRights = "adminConsoleCrossMailboxSearchRights";
 
     /**
      * Admin Console rights for DL ACL Tab
@@ -364,6 +379,11 @@ public class RightConsts {
     public static final String RT_adminConsoleGlobalThemesTabRights = "adminConsoleGlobalThemesTabRights";
 
     /**
+     * Admin Console Mail Queue Rights
+     */
+    public static final String RT_adminConsoleMailQueueRights = "adminConsoleMailQueueRights";
+
+    /**
      * Admin Console Resource Rights
      */
     public static final String RT_adminConsoleResourceRights = "adminConsoleResourceRights";
@@ -382,6 +402,11 @@ public class RightConsts {
      * Admin Console Rights and Views
      */
     public static final String RT_adminConsoleRights = "adminConsoleRights";
+
+    /**
+     * Admin Console Extension Rights
+     */
+    public static final String RT_adminConsoleSavedSearchRights = "adminConsoleSavedSearchRights";
 
     /**
      * Admin Console rights for Server ACL Tab
@@ -424,6 +449,16 @@ public class RightConsts {
     public static final String RT_adminConsoleServerServicesTabRights = "adminConsoleServerServicesTabRights";
 
     /**
+     * Admin Console Server Statistics Rights
+     */
+    public static final String RT_adminConsoleServerStatisticRights = "adminConsoleServerStatisticRights";
+
+    /**
+     * Admin Console Server Status Rights
+     */
+    public static final String RT_adminConsoleServerStatusRights = "adminConsoleServerStatusRights";
+
+    /**
      * Admin Console rights for Server ACL Tab
      */
     public static final String RT_adminConsoleServerVolumesTabRights = "adminConsoleServerVolumesTabRights";
@@ -450,6 +485,11 @@ public class RightConsts {
      * admin.
      */
     public static final String RT_adminLoginAs = "adminLoginAs";
+
+    /**
+     * login to the calendar resource as an admin.
+     */
+    public static final String RT_adminLoginCalendarResourceAs = "adminLoginCalendarResourceAs";
 
     /**
      * assign the cos (to domains or accounts)
@@ -772,6 +812,11 @@ public class RightConsts {
     public static final String RT_domainAdminConsoleRights = "domainAdminConsoleRights";
 
     /**
+     * Admin Console Domain Admin Saved Search Rights
+     */
+    public static final String RT_domainAdminConsoleSavedSearchRights = "domainAdminConsoleSavedSearchRights";
+
+    /**
      * domain admin cos right
      */
     public static final String RT_domainAdminCosRights = "domainAdminCosRights";
@@ -948,6 +993,11 @@ public class RightConsts {
     public static final String RT_listZimlet = "listZimlet";
 
     /**
+     * rights for managing Mail Queue in admin console
+     */
+    public static final String RT_mailQueueRights = "mailQueueRights";
+
+    /**
      * add/remove account loggers
      */
     public static final String RT_manageAccountLogger = "manageAccountLogger";
@@ -1071,6 +1121,11 @@ public class RightConsts {
      * purge messages of an account
      */
     public static final String RT_purgeMessages = "purgeMessages";
+
+    /**
+     * reindex mailbox
+     */
+    public static final String RT_reindexCalendarResourceMailbox = "reindexCalendarResourceMailbox";
 
     /**
      * reindex mailbox
@@ -1523,6 +1578,12 @@ public class RightConsts {
     public static final String RT_setDomainAdminDomainAttrs = "setDomainAdminDomainAttrs";
 
     /**
+     * Admin Task that defines right needed to allow Set Password in the
+     * admin console
+     */
+    public static final String RT_taskSetPassword = "taskSetPassword";
+
+    /**
      * right to run the GetAdminConsoleUIComp SOAP call when an account other
      * than the authenticated account is provided. Note, this is a preset
      * right instead of a getAttrs right, because it carries extra meanings
@@ -1810,6 +1871,11 @@ public class RightConsts {
      * Admin Console view attr rights for Server ACL Tab
      */
     public static final String RT_viewAdminConsoleServerServicesTab = "viewAdminConsoleServerServicesTab";
+
+    /**
+     * Admin Console view attr rights for server status Tab
+     */
+    public static final String RT_viewAdminConsoleServerStatus = "viewAdminConsoleServerStatus";
 
     /**
      * Admin Console view attr rights for Server ACL Tab

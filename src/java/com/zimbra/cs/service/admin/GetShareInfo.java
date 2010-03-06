@@ -66,7 +66,7 @@ public class GetShareInfo extends ShareInfoHandler {
         if (ownerAcct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(key);
         
-        checkAccountRight(zsc, ownerAcct, Admin.R_adminLoginAs);
+        checkAdminLoginAsRight(zsc, prov, ownerAcct);
         
         Element response = zsc.createElement(AdminConstants.GET_SHARE_INFO_RESPONSE);
         
@@ -81,7 +81,7 @@ public class GetShareInfo extends ShareInfoHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_adminLoginAs);
-
-        notes.add("Needs the " + Admin.R_adminLoginAs.getName() + " right on the owner account.");
+        relatedRights.add(Admin.R_adminLoginCalendarResourceAs);
+        notes.add(AdminRightCheckPoint.Notes.ADMIN_LOGIN_AS);
     }
 }

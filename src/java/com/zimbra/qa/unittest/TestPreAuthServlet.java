@@ -147,6 +147,7 @@ public class TestPreAuthServlet extends TestCase {
         doPreAuth("admin", true, false);
         doPreAuth("domainadmin", true, false);
         
+        /*
         // test refer mde == always
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getLocalServer();
@@ -161,6 +162,7 @@ public class TestPreAuthServlet extends TestCase {
         // set refer mode back
         attrs.put(Provisioning.A_zimbraMailReferMode, "wronghost");
         prov.modifyAttrs(server, attrs);
+        */
     }
     
     private Account dumpLockoutAttrs(String user) throws Exception {
