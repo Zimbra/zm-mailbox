@@ -212,10 +212,10 @@ public class Search extends MailDocumentHandler  {
                 if (hit instanceof ConversationHit) {
                     // need to expand the contained messages
                     e = response.addElement("hit");
-                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getItemId()));
+                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getParsedItemID()));
                 } else {
                     e = response.addElement("hit");
-                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getItemId()));
+                    e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getParsedItemID()));
                 }
             }  else {
 
