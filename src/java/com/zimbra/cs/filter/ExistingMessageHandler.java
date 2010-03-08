@@ -162,6 +162,7 @@ extends FilterHandler {
         if (targetFolder != null && source.getFolderId() == targetFolder.getId()) {
             ZimbraLog.filter.debug("Ignoring fileinto action for message %d.  It is already in %s.",
                 mMessageId, folderPath);
+            updateTagsAndFlagsIfNecessary(source, flagActions, tags);
             return null;
         }
         

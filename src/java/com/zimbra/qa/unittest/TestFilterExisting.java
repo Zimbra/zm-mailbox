@@ -62,6 +62,7 @@ extends TestCase {
     private static final String FLAG_RULE_NAME = NAME_PREFIX + " flag";
     private static final String MARK_READ_RULE_NAME = NAME_PREFIX + " mark read";
     private static final String FOLDER1_RULE_NAME = NAME_PREFIX + " folder1";
+    private static final String FOLDER1_AND_FLAG_RULE_NAME = NAME_PREFIX + " folder1 and flag";
     private static final String FOLDER2_RULE_NAME = NAME_PREFIX + " folder2";
     private static final String FOLDER3_RULE_NAME = NAME_PREFIX + " folder3";
     private static final String DISCARD_RULE_NAME = NAME_PREFIX + " discard";
@@ -344,6 +345,26 @@ extends TestCase {
         assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
     }
+
+    /**
+     * Confirms that a flag rule runs when a message is filed into the same
+     * folder (bug 44588).
+     */
+    public void testFileIntoSameFolderAndFlag()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder folder1 = TestUtil.createFolder(mbox, FOLDER1_PATH);
+        String subject = NAME_PREFIX + " test folder1 and flag";
+        String id = TestUtil.addMessage(mbox, subject, folder1.getId(), null); 
+        ZMessage msg = mbox.getMessageById(id);
+        assertTrue(StringUtil.isNullOrEmpty(msg.getFlags()));
+        
+        // Run the rule, make sure the message was flagged but not moved.
+        Set<String> affectedIds = runRules(new String[] { FOLDER1_AND_FLAG_RULE_NAME }, id, null);
+        assertEquals(1, affectedIds.size());
+        msg = TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
+        assertEquals("f", msg.getFlags());
+    }
     
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
@@ -430,6 +451,14 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "folder1"));
         actions.add(new ZFileIntoAction(FOLDER1_PATH));
         rules.add(new ZFilterRule(FOLDER1_RULE_NAME, true, false, conditions, actions));
+        
+        // if the subject contains "folder1 and flag", file into folder1 and flag
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "folder1 and flag"));
+        actions.add(new ZFileIntoAction(FOLDER1_PATH));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule(FOLDER1_AND_FLAG_RULE_NAME, true, false, conditions, actions));
 
         // if subject contains "folder2", file into folder2
         conditions = new ArrayList<ZFilterCondition>();
