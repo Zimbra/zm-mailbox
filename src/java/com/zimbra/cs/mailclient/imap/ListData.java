@@ -94,7 +94,9 @@ public final class ListData {
     }
     
     private static Flags readFlags(ImapInputStream is) throws IOException {
-        Flags flags = Flags.read(is);
+        // bug 42163: LIST response from Cisco IMAP server omits flags if empty
+        is.skipSpaces();
+        Flags flags = is.peek() == '(' ? Flags.read(is) : new Flags();
         int count = 0;
         if (flags.isNoselect()) count++;
         if (flags.isMarked()) count++;
