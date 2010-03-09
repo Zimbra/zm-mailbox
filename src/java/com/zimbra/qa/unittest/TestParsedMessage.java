@@ -181,6 +181,7 @@ extends TestCase {
         mFile = createTempFile(content);
         pm = new ParsedMessage(mFile, null, false);
         verifyMutatedMessage(pm, substring, true);
+        mFile.delete();
         
         mFile = createTempFile(content);
         pm = new ParsedMessage(mFile, null, true);
