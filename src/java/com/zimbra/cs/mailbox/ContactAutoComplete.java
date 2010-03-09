@@ -55,8 +55,10 @@ public class ContactAutoComplete {
 			limit = l;
 		}
 		public void addEntry(ContactEntry entry) {
-			if (entries.size() >= limit)
-				return;
+			if (entries.size() >= limit) {
+			    canBeCached = false;
+                return;
+			}
 			String email;
 			if (entry.isDlist())
 				email = entry.mDisplayName;
@@ -233,10 +235,6 @@ public class ContactAutoComplete {
 		ContactRankings rankings = new ContactRankings(mAccountId);
 		for (ContactEntry e : rankings.query(str, folders)) {
 			result.addEntry(e);
-			if (result.entries.size() == limit) {
-				result.canBeCached = false;
-				break;
-			}
 		}
 	}
 	
@@ -247,7 +245,7 @@ public class ContactAutoComplete {
 		GalSearchParams params = new GalSearchParams(account);
 		params.setQuery(str);
 		params.setType(mSearchType);
-		params.setLimit(limit - result.entries.size());
+		params.setLimit(limit + 1);
 		params.setResultCallback(new AutoCompleteCallback(str, result, params));
 		try {
 	        GalSearchControl gal = new GalSearchControl(params);
@@ -288,10 +286,6 @@ public class ContactAutoComplete {
 	    public void setQueryOffset(int offset) {
 	    }
 	    public void setHasMoreResult(boolean more) {
-	    	if (more) {
-	    		ZimbraLog.gal.debug("result can't be cached by client");
-	    		result.canBeCached = false;
-	    	}
 	    }
 	}
 	private static boolean matches(String query, String text) {
@@ -305,18 +299,22 @@ public class ContactAutoComplete {
 	}
 	
 	public static void addMatchedContacts(String query, Map<String,? extends Object> attrs, Collection<String> emailKeys, int folderId, ItemId id, AutoCompleteResult result) {
-		String[] tokens = query.split(" ");
-		if (tokens.length == 2 && tokens[1].length() == 1)
-			query = tokens[0];
     	String firstName = (String)attrs.get(ContactConstants.A_firstName);
     	String lastName = (String)attrs.get(ContactConstants.A_lastName);
+        String middleName = (String)attrs.get(ContactConstants.A_middleName);
     	String fullName = (String)attrs.get(ContactConstants.A_fullName);
     	String nickname = (String)attrs.get(ContactConstants.A_nickname);
+    	String firstLastName = ((firstName == null) ? "" : firstName + " ") + lastName;
+    	if (fullName == null)
+    	    fullName = ((firstName == null) ? "" : firstName + " ") + 
+    	            ((middleName == null) ? "" : middleName + " ") +
+    	                    lastName;
         if (attrs.get(ContactConstants.A_dlist) == null) {
         	boolean nameMatches = 
         		matches(query, firstName) ||
                 matches(query, lastName) ||
                 matches(query, fullName) ||
+                matches(query, firstLastName) ||
                 matches(query, nickname);
         	
         	// matching algorithm is slightly different between matching
@@ -334,16 +332,7 @@ public class ContactAutoComplete {
         		if (email != null && (nameMatches || matches(query, email))) {
         			ContactEntry entry = new ContactEntry();
         			entry.mEmail = email;
-        			// use fullName if available
-        			if (fullName != null) {
-        				entry.setName(fullName);
-        			} else {
-        				// otherwise displayName is firstName." ".lastName
-        				entry.mLastName = lastName;
-        				if (entry.mLastName == null)
-        					entry.mLastName = "";
-        				entry.mDisplayName = (firstName == null) ? "" : firstName + " " + entry.mLastName;
-        			}
+                    entry.setName(fullName);
         			entry.mId = id;
         			entry.mFolderId = folderId;
         			result.addEntry(entry);
@@ -369,9 +358,6 @@ public class ContactAutoComplete {
 	
 	private void queryFolders(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
 		str = str.toLowerCase();
-		String[] tokens = str.split(" ");
-		if (tokens.length == 2 && tokens[1].length() == 1)
-			str = tokens[0];
         ZimbraQueryResults qres = null;
         try {
     		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
@@ -401,7 +387,7 @@ public class ContactAutoComplete {
     		}
     		String query = generateQuery(str, folders);
     		ZimbraLog.gal.debug("querying folders: "+query);
-			qres = mbox.search(octxt, query, CONTACT_TYPES, SortBy.NONE, limit);
+			qres = mbox.search(octxt, query, CONTACT_TYPES, SortBy.NONE, limit + 1);
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;
@@ -432,11 +418,6 @@ public class ContactAutoComplete {
                 	continue;
 
                 addMatchedContacts(str, fields, folderId, id, result);
-    			if (result.entries.size() == limit) {
-            		ZimbraLog.gal.debug("mbox query result exceeded request limit "+limit);
-    				result.canBeCached = false;
-    				break;
-    			}
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
