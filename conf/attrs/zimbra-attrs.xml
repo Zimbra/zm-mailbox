@@ -4512,9 +4512,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to pop-up reminder for past due appointments in the UI</desc>
 </attr>
 
-<attr id="1023" name="zimbraContactRankingTableRefreshInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">
+<attr id="1023" name="zimbraContactRankingTableRefreshInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2" deprecatedSince="6.0.6">
   <globalConfigValue>7d</globalConfigValue>
   <desc>How often do we refresh contact ranking table from address book and GAL to get friendly name for the email address.  Use 0 to disable the refresh.</desc>
+  <deprecateDesc>Deprecated per bug 40081</deprecateDesc>
 </attr>
 
 <attr id="1024" name="zimbraHsmPolicy" type="string" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.0_BETA2">

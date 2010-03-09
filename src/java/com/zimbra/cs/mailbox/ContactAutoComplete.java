@@ -64,6 +64,7 @@ public class ContactAutoComplete {
 				email = entry.mDisplayName;
 			else
 				email = entry.mEmail.toLowerCase();
+			entry.mRanking = rankings.query(email);
 			if (!emails.contains(email)) {
 				entries.add(entry);
 				emails.add(email);
@@ -74,6 +75,7 @@ public class ContactAutoComplete {
 		        addEntry(entry);
 		}
 		private HashSet<String> emails;
+		private ContactRankings rankings;
 	}
     public static class ContactEntry implements Comparable<ContactEntry> {
         String mEmail;
@@ -89,7 +91,7 @@ public class ContactAutoComplete {
         	if (mDlist != null)
         		return mDlist;
         	StringBuilder buf = new StringBuilder();
-        	if (mDisplayName.length() > 0) {
+        	if (mDisplayName != null && mDisplayName.length() > 0) {
         		buf.append("\"");
         		buf.append(mDisplayName);
         		buf.append("\" ");
@@ -153,7 +155,6 @@ public class ContactAutoComplete {
     
     private String mAccountId;
     private boolean mIncludeGal;
-    private boolean mIncludeRankingResults;
     
     private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
     
@@ -184,7 +185,6 @@ public class ContactAutoComplete {
 		mAccountId = accountId;
 		if (mEmailKeys == null)
 			mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
-		mIncludeRankingResults = true;
 		mSearchType = GAL_SEARCH_TYPE.USER_ACCOUNT;
 	}
 	
@@ -197,9 +197,6 @@ public class ContactAutoComplete {
 	public void setIncludeGal(boolean includeGal) {
 		mIncludeGal = includeGal;
 	}
-	public void setIncludeRankingResults(boolean includeRankingResults) {
-		mIncludeRankingResults = includeRankingResults;
-	}
 	public void setSearchType(GAL_SEARCH_TYPE type) {
 	    mSearchType = type;
 	}
@@ -208,11 +205,10 @@ public class ContactAutoComplete {
 		ZimbraLog.gal.debug("querying "+str);
 		long t0 = System.currentTimeMillis();
 		AutoCompleteResult result = new AutoCompleteResult(limit);
+		result.rankings = new ContactRankings(mAccountId);
 		if (limit <= 0)
 			return result;
 		
-		if (mIncludeRankingResults)
-			queryRankingTable(str, folders, limit, result);
 		if (result.entries.size() >= limit)
 			return result;
 		long t1 = System.currentTimeMillis();
@@ -229,13 +225,6 @@ public class ContactAutoComplete {
 		
 		ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, folder="+(t2-t1)+"ms, gal="+(t3-t2)+"ms");
 		return result;
-	}
-	
-	private void queryRankingTable(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
-		ContactRankings rankings = new ContactRankings(mAccountId);
-		for (ContactEntry e : rankings.query(str, folders)) {
-			result.addEntry(e);
-		}
 	}
 	
 	private void queryGal(String str, int limit, AutoCompleteResult result) throws ServiceException {
@@ -308,7 +297,7 @@ public class ContactAutoComplete {
     	if (fullName == null)
     	    fullName = ((firstName == null) ? "" : firstName + " ") + 
     	            ((middleName == null) ? "" : middleName + " ") +
-    	                    lastName;
+    	            ((lastName == null) ? "" : lastName);
         if (attrs.get(ContactConstants.A_dlist) == null) {
         	boolean nameMatches = 
         		matches(query, firstName) ||
