@@ -42,7 +42,9 @@ public class SQLite extends Db {
 
     private Map<Db.Error, String> mErrorCodes;
     private String cacheSize;
+    private String journalMode;
     private String pageSize;
+    private String syncMode;
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
@@ -95,16 +97,18 @@ public class SQLite extends Db {
 
 
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
-        cacheSize = LC.get("sqlite_cache_size");
+        cacheSize = LC.sqlite_cache_size.value();
         if (cacheSize.equals("0"))
             cacheSize = null;
-        ZimbraLog.dbconn.info("sqlite driver running with " + (cacheSize == null ? "default" : cacheSize) + " page cache");
-
-        pageSize = LC.get("sqlite_page_size");
+        journalMode = LC.sqlite_journal_mode.value();
+        pageSize = LC.sqlite_page_size.value();
         if (pageSize.equals("0"))
             pageSize = null;
-        ZimbraLog.dbconn.info("sqlite driver running with " + (pageSize == null ? "default" : pageSize + "-byte") + " page size");
-
+        syncMode = LC.sqlite_sync_mode.value();
+        ZimbraLog.dbconn.info("sqlite driver running with " +
+            (cacheSize == null ? "default" : cacheSize) + " cache cache, " +
+            (pageSize == null ? "default" : pageSize) + " page size, " +
+            journalMode + " journal mode, " + syncMode + " sync mode");
         super.startup(pool, poolSize);
     }
 
@@ -134,16 +138,16 @@ public class SQLite extends Db {
          * auto_vacuum causes databases to be locked permanently
          * pragma(conn, dbname, "auto_vacuum", "2");
          */
+        pragma(conn, dbname, "encoding", "\"UTF-8\"");
         pragma(conn, dbname, "foreign_keys", "ON");
         pragma(conn, dbname, "fullfsync", "OFF");
-        pragma(conn, dbname, "journal_mode", "PERSIST");
-        pragma(conn, dbname, "synchronous", "NORMAL");
-        pragma(conn, dbname, "encoding", "\"UTF-8\"");
+        pragma(conn, dbname, "journal_mode", journalMode);
+        pragma(conn, dbname, "synchronous", syncMode);
 
         if (cacheSize != null) {
             pragma(conn, dbname, "cache_size", cacheSize);
             // leaving this uncommented seems to break subsequent PRAGMAs
-//            pragma(conn, dbname, "default_cache_size", cacheSize);
+            // pragma(conn, dbname, "default_cache_size", cacheSize);
         }
         if (pageSize != null) {
             pragma(conn, dbname, "default_page_size", pageSize);
