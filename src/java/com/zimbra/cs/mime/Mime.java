@@ -1089,6 +1089,8 @@ public class Mime {
         List<MPartInfo> children;
         if (ctype.equals(MimeConstants.CT_MULTIPART_ALTERNATIVE))
             return getAlternativeBodySubpart(base.getChildren(), preferHtml);
+        else if (ctype.equals(MimeConstants.CT_MULTIPART_RELATED))
+            return getRelatedBodySubpart(base.getChildren(), preferHtml, base.getContentTypeParameter("start"));
         else if (ctype.equals(MimeConstants.CT_MULTIPART_MIXED) || !KNOWN_MULTIPART_TYPES.contains(ctype))
             children = base.getChildren();
         else
@@ -1100,11 +1102,13 @@ public class Mime {
             if (childType.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
                 Set<MPartInfo> found = getBodySubparts(mpi, preferHtml);
                 if (found != null) {
-                    if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(found.size());
+                    if (bodies == null)
+                        bodies = new LinkedHashSet<MPartInfo>(found.size());
                     bodies.addAll(found);
                 }
             } else if (!mpi.getDisposition().equals(Part.ATTACHMENT) && !childType.equalsIgnoreCase(MimeConstants.CT_MESSAGE_RFC822)) {
-                if (bodies == null)  bodies = new LinkedHashSet<MPartInfo>(1);
+                if (bodies == null)
+                    bodies = new LinkedHashSet<MPartInfo>(1);
                 bodies.add(mpi);
             }
         }
@@ -1112,9 +1116,14 @@ public class Mime {
         return bodies;
     }
 
+    private static <T> Set<T> setContaining(T mpi) {
+        Set<T> body = new LinkedHashSet<T>(1);
+        body.add(mpi);
+        return body;
+    }
+
     private static Set<MPartInfo> getAlternativeBodySubpart(List<MPartInfo> children, boolean preferHtml) {
         // go through top-level children, stopping at first text part we are interested in
-        Set<MPartInfo> body;
         MPartInfo alternative = null;
         for (MPartInfo mpi : children) {
             boolean isAttachment = mpi.getDisposition().equals(Part.ATTACHMENT);
@@ -1124,12 +1133,12 @@ public class Mime {
 
             String ctype = mpi.getContentType();
             if (!isAttachment && ctype.equals(wantType)) {
-                (body = new LinkedHashSet<MPartInfo>(1)).add(mpi);
-                return body;
+                return setContaining(mpi);
             } else if (!isAttachment && altTypes.contains(ctype)) {
                 if (alternative == null || !alternative.getContentType().equalsIgnoreCase(ctype))
                     alternative = mpi;
             } else if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+                Set<MPartInfo> body;
                 if ((body = getBodySubparts(mpi, preferHtml)) != null)
                     return body;
             }
@@ -1137,8 +1146,40 @@ public class Mime {
 
         if (alternative == null)
             return null;
-        (body = new LinkedHashSet<MPartInfo>(1)).add(alternative);
-        return body;
+        return setContaining(alternative);
+    }
+
+    private static Set<MPartInfo> getRelatedBodySubpart(List<MPartInfo> children, boolean preferHtml, String parentCID) {
+        // if the multipart/related part had a "parent" param, that names the body subpart by Content-ID
+        if (parentCID != null) {
+            for (MPartInfo mpi : children) {
+                if (!parentCID.equals(mpi.getContentID()))
+                    continue;
+
+                if (mpi.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX))
+                    return getBodySubparts(mpi, preferHtml);
+                else
+                    return setContaining(mpi);
+            }
+        }
+
+        // return the first text subpart, or, if none exists, the first subpart, period
+        MPartInfo first = null;
+        for (MPartInfo mpi : children) {
+            String ctype = mpi.getContentType();
+            if (ctype.startsWith(MimeConstants.CT_TEXT_PREFIX)) {
+                return setContaining(mpi);
+            } else if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+                return getBodySubparts(mpi, preferHtml);
+            } else if (first == null) {
+                first = mpi;
+            }
+        }
+
+        // falling through to here means there was no "parent" CID match and no text part
+        if (first == null)
+            return null;
+        return setContaining(first);
     }
 
     public static void main(String[] args) throws MessagingException, IOException {

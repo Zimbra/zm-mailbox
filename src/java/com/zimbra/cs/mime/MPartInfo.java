@@ -26,19 +26,19 @@ import javax.mail.internet.MimePart;
 import com.zimbra.common.mime.ContentType;
 
 public class MPartInfo {
-	MimePart mPart;
-	MPartInfo mParent;
-	List<MPartInfo> mChildren;
-	String mPartName;
-	String mContentType;
+    MimePart mPart;
+    MPartInfo mParent;
+    List<MPartInfo> mChildren;
+    String mPartName;
+    String mContentType;
     String mDisposition;
     String mFilename;
-	int mPartNum;
-	int mSize;
+    int mPartNum;
+    int mSize;
     boolean mIsFilterableAttachment;
     boolean mIsToplevelAttachment;
 
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("MPartInfo: {");
         sb.append("partName: ").append(mPartName).append(", ");
@@ -52,48 +52,48 @@ public class MPartInfo {
         return sb.toString();
     }
 
-	/**
-	 * Returns true if we consider this to be an attachment for the sake of "filtering" by attachments.
-	 * i.e., if someone searchs for messages with attachment types of "text/plain", we probably wouldn't want
-	 * every multipart/mixed message showing up, since 99% of them will have a first body part of text/plain.
-	 * 
-	 * @param part
-	 * @return
-	 */
+    /**
+     * Returns true if we consider this to be an attachment for the sake of "filtering" by attachments.
+     * i.e., if someone searches for messages with attachment types of "text/plain", we probably wouldn't want
+     * every multipart/mixed message showing up, since 99% of them will have a first body part of text/plain.
+     * 
+     * @param part
+     * @return
+     */
     public boolean isFilterableAttachment() {
         return mIsFilterableAttachment;
     }
 
-	public MimePart getMimePart() {
-		return mPart;
-	}
-	
-	public MPartInfo getParent() {
-		return mParent;
-	}
-	
-	public boolean hasChildren() {
-		return mChildren != null && !mChildren.isEmpty();
-	}
+    public MimePart getMimePart() {
+        return mPart;
+    }
 
-	public List<MPartInfo> getChildren() {
-		return mChildren;
-	}
-	
-	public String getPartName() {
-		return mPartName;
-	}
-	
-	public int getPartNum() {
-		return mPartNum;
-	}
+    public MPartInfo getParent() {
+        return mParent;
+    }
+
+    public boolean hasChildren() {
+        return mChildren != null && !mChildren.isEmpty();
+    }
+
+    public List<MPartInfo> getChildren() {
+        return mChildren;
+    }
+
+    public String getPartName() {
+        return mPartName;
+    }
+
+    public int getPartNum() {
+        return mPartNum;
+    }
 
     public String getContentType() {
         return mContentType;
     }
-    
+
     public int getSize() {
-    	return mSize;
+        return mSize;
     }
 
     public String getContentTypeParameter(String name) {
@@ -104,10 +104,18 @@ public class MPartInfo {
         }
     }
 
+    public String getContentID() {
+        try {
+            return mPart.getContentID();
+        } catch (MessagingException me) {
+            return null;
+        }
+    }
+
     public String getDisposition() {
         return mDisposition;
     }
-    
+
     public String getFilename() {
         return mFilename;
     }

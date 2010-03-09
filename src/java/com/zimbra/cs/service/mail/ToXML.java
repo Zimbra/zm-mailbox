@@ -1733,12 +1733,9 @@ public class ToXML {
         }
 
         // figure out content-id (used in displaying attached images)
-        try {
-            String cid = mp.getContentID();
-            if (cid != null)
-                elem.addAttribute(MailConstants.A_CONTENT_ID, StringUtil.stripControlCharacters(cid));
-        } catch (MessagingException me) { }
-
+        String cid = mpi.getContentID();
+        if (cid != null)
+            elem.addAttribute(MailConstants.A_CONTENT_ID, StringUtil.stripControlCharacters(cid));
 
         // figure out content-location (used in displaying attached images)
         try {
