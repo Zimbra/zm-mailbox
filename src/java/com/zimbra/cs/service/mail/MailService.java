@@ -25,6 +25,10 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.MailConstants;
 
 /**
+ * 
+ * @zm-service-description		The Mail Service includes commands for managing
+ * mail and calendar information.
+ * 
  * @author schemers
  */
 public class MailService implements DocumentService {

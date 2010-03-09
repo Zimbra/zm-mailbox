@@ -31,6 +31,10 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 
 /**
+ * 
+ * @zm-service-description		The Account Service includes commands for retrieving,
+ * storing and managing information user account information.
+ * 
  * @author schemers
  */
 public class AccountService implements DocumentService {

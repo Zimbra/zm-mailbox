@@ -18,6 +18,12 @@ import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.common.soap.IMConstants;
 
+/**
+ * 
+ * @zm-service-description		The IM Service includes commands for managing Instant Messaging
+ * items such as a user's buddy list and chats.
+ *
+ */
 public class IMService implements DocumentService {
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
