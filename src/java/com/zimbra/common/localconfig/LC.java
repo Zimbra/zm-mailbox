@@ -304,6 +304,11 @@ public class LC {
     public static final KnownKey postfix_virtual_mailbox_maps;
     public static final KnownKey postfix_virtual_transport;
 
+    public static final KnownKey sqlite_cache_size;
+    public static final KnownKey sqlite_journal_mode;
+    public static final KnownKey sqlite_page_size;
+    public static final KnownKey sqlite_sync_mode;
+
     public static final KnownKey mailboxd_directory;
     public static final KnownKey mailboxd_java_heap_memory_percent;
     public static final KnownKey mailboxd_java_heap_new_size_percent;
@@ -1135,6 +1140,11 @@ public class LC {
         postfix_virtual_transport  = new KnownKey("postfix_virtual_transport");
         postfix_virtual_transport.setDefault("error");
 
+        sqlite_cache_size = new KnownKey("sqlite_cache_size", "4000");
+        sqlite_journal_mode = new KnownKey("sqlite_journal_mode", "PERSIST");
+        sqlite_page_size = new KnownKey("sqlite_page_size", "2048");
+        sqlite_sync_mode = new KnownKey("sqlite_sync_mode", "NORMAL");
+        
         mailboxd_directory = new KnownKey("mailboxd_directory");
         mailboxd_directory.setDefault("${zimbra_home}" + FS + "mailboxd");
 
