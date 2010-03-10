@@ -501,7 +501,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 String option = req.readATOM();
                                 if (option.equals("SUBSCRIBED"))     returnOptions |= RETURN_SUBSCRIBED;
                                 else if (option.equals("CHILDREN"))  returnOptions |= RETURN_CHILDREN;
-                                else if (option.equals("STATUS") && extensionEnabled("X-DRAFT-I00-LIST-STATUS")) {
+                                else if (option.equals("STATUS") && extensionEnabled("LIST-STATUS")) {
                                     req.skipSpace();  status = parseStatusFields(req);
                                 } else
                                     throw new ImapParseException(tag, "unknown LIST return option \"" + option + '"');
@@ -868,10 +868,10 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1", "ID",
-        "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA",
-        "RIGHTS=ektx", "SASL-IR", "SEARCHRES", "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN",
-        "X-DRAFT-I00-LIST-STATUS"
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
+        "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
+        "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
+        "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN"
     ));
 
     protected String getCapabilityString() {
@@ -892,6 +892,7 @@ abstract class ImapHandler extends ProtocolHandler {
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
         // [LIST-EXTENDED]    RFC 5258: Internet Message Access Protocol version 4 - LIST Command Extensions
+        // [LIST-STATUS]      RFC 5819: IMAP4 Extension for Returning STATUS Information in Extended LIST
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
@@ -906,7 +907,6 @@ abstract class ImapHandler extends ProtocolHandler {
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
-        // [X-DRAFT-I00-LIST-STATUS]  draft-ietf-morg-status-in-list-01: IMAP4 Extension for returning STATUS information in extended LIST
 
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1");
 
@@ -944,7 +944,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return extensionEnabled("CONDSTORE");
         if (extension.equalsIgnoreCase("ESORT"))
             return extensionEnabled("SORT");
-        if (extension.equalsIgnoreCase("X-DRAFT-I00-LIST-STATUS"))
+        if (extension.equalsIgnoreCase("LIST-STATUS"))
             return extensionEnabled("LIST-EXTENDED");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
