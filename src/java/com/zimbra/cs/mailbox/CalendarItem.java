@@ -450,8 +450,18 @@ public abstract class CalendarItem extends MailItem {
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);
-        ZimbraLog.mailop.info("Adding CalendarItem: id=%d, Message-ID=%s, folderId=%d, folderName=%s, invite=%s.",
-            data.id, pm != null ? pm.getMessageID() : "none", folder.getId(), folder.getName(), firstInvite.getName());
+        if (!firstInvite.hasRecurId())
+            ZimbraLog.calendar.info(
+                    "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s",
+                    data.id, pm != null ? pm.getMessageID() : "(none)", folder.getId(),
+                    firstInvite.isPublic() ? firstInvite.getName() : "(private)",
+                    firstInvite.getUid());
+        else
+            ZimbraLog.calendar.info(
+                    "Adding CalendarItem: id=%d, Message-ID=\"%s\", folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                    data.id, pm != null ? pm.getMessageID() : "(none)", folder.getId(),
+                    firstInvite.isPublic() ? firstInvite.getName() : "(private)",
+                    firstInvite.getUid(), firstInvite.getRecurId().getDtZ());
         DbMailItem.create(mbox, data, sender);
 
         CalendarItem item = type == TYPE_APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
@@ -621,8 +631,8 @@ public abstract class CalendarItem extends MailItem {
         }
 
         if (timesChanged) {
-            if (ZimbraLog.mailop.isDebugEnabled()) {
-                ZimbraLog.mailop.debug("Updating recurrence for %s.  nextAlarm=%d.",
+            if (ZimbraLog.calendar.isDebugEnabled()) {
+                ZimbraLog.calendar.debug("Updating recurrence for %s.  nextAlarm=%d.",
                     getMailopContext(this), nextAlarm);
             }
             DbMailItem.updateInCalendarItemTable(this);
@@ -1285,6 +1295,16 @@ public abstract class CalendarItem extends MailItem {
                                                     boolean preserveAlarms,
                                                     boolean discardExistingInvites)
     throws ServiceException {
+        if (!newInvite.hasRecurId())
+            ZimbraLog.calendar.info(
+                    "Modifying CalendarItem: id=%d, folderId=%d, subject=\"%s\", UID=%s",
+                    mId, getFolderId(), newInvite.isPublic() ? newInvite.getName() : "(private)", mUid);
+        else
+            ZimbraLog.calendar.info(
+                    "Modifying CalendarItem: id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                    mId, getFolderId(), newInvite.isPublic() ? newInvite.getName() : "(private)", mUid,
+                    newInvite.getRecurId().getDtZ());
+
         newInvite.sanitize(true);
 
         OperationContext octxt = getMailbox().getOperationContext();
@@ -1885,7 +1905,7 @@ public abstract class CalendarItem extends MailItem {
             boolean isOrganizer = newInvite.isOrganizer();
             ZimbraLog.calendar.info("Changed organizer: old=" + origOrg + ", new=" + newOrg +
                                     ", wasOrg=" + wasOrganizer + ", isOrg=" + isOrganizer +
-                                    ", uid=\"" + newInvite.getUid() + "\", invId=" + newInvite.getMailItemId());
+                                    ", UID=\"" + newInvite.getUid() + "\", invId=" + newInvite.getMailItemId());
         }
         return changed;
     }
@@ -2938,8 +2958,8 @@ public abstract class CalendarItem extends MailItem {
             long newNextAlarm = mAlarmData.getNextAt();
             if (newNextAlarm > 0 && newNextAlarm < mStartTime)
                 mStartTime = newNextAlarm;
-            if (ZimbraLog.mailop.isDebugEnabled()) {
-                ZimbraLog.mailop.debug("Setting next alarm for %s to %d.",
+            if (ZimbraLog.calendar.isDebugEnabled()) {
+                ZimbraLog.calendar.debug("Setting next alarm for %s to %d.",
                     getMailopContext(this), nextAlarm);
             }
             DbMailItem.updateInCalendarItemTable(this);
@@ -3220,6 +3240,15 @@ public abstract class CalendarItem extends MailItem {
 
     @Override
     boolean move(Folder target) throws ServiceException {
+        Invite defInv = getDefaultInviteOrNull();
+        String sbj;
+        if (defInv != null)
+            sbj = defInv.isPublic() ? defInv.getName() : "(private)";
+        else
+            sbj = "(none)";
+        ZimbraLog.calendar.info(
+                "Moving CalendarItem: id=%d, old folderId=%d, new folderId=%d, subject=\"%s\", UID=%s",
+                mId, getFolderId(), target.getId(), sbj, mUid);
         if (!isPublic()) {
             if (!canAccess(ACL.RIGHT_PRIVATE))
                 throw ServiceException.PERM_DENIED(
@@ -3235,6 +3264,15 @@ public abstract class CalendarItem extends MailItem {
 
     @Override
     void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+        Invite defInv = getDefaultInviteOrNull();
+        String sbj;
+        if (defInv != null)
+            sbj = defInv.isPublic() ? defInv.getName() : "(private)";
+        else
+            sbj = "(none)";
+        ZimbraLog.calendar.info(
+                "Deleting CalendarItem: id=%d, folderId=%d, subject=\"%s\", UID=%s",
+                mId, getFolderId(), sbj, mUid);
         if (!isPublic() && !canAccess(ACL.RIGHT_PRIVATE))
             throw ServiceException.PERM_DENIED(
                     "you do not have permission to delete private calendar item from the current folder");
