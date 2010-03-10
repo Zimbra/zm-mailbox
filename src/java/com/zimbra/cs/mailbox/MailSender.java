@@ -44,6 +44,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.index.ContactHit;
@@ -339,12 +340,10 @@ public class MailSender {
                 } else {
                     // Set envelope sender to Sender or From, in that order.
                     Address envAddress = mm.getSender();
-                    if (envAddress == null) {
+                    if (envAddress == null)
                         envAddress = ArrayUtil.getFirstElement(mm.getFrom());
-                    }
-                    if (envAddress != null) {
+                    if (envAddress != null)
                         mEnvelopeFrom = ((InternetAddress) envAddress).getAddress();
-                    }
                 }
             }
             
@@ -414,7 +413,7 @@ public class MailSender {
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollback);
 
-            // Send intercept if save-to-sent didn't do it already.
+            // send intercept if save-to-sent didn't do it already
             if (!mSaveToSent) {
                 try {
                     Notification.getInstance().interceptIfNecessary(mbox, mm, "send message", null);
@@ -424,19 +423,8 @@ public class MailSender {
             }
 
             // check if this is a reply, and if so flag the msg appropriately
-            if (mOriginalMessageId != null && !isDelegatedRequest && mOriginalMessageId.belongsTo(mbox)) {
-                try {
-                    if (MSGTYPE_REPLY.equals(mReplyType))
-                        mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
-                    else if (MSGTYPE_FORWARD.equals(mReplyType))
-                        mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
-                } catch (ServiceException e) {
-                    // this is not an error case:
-                    //   - the original message may be gone when accepting/declining an appointment
-                    //   - we may have PERM_DENIED on delegated send
-                }
-            }
-
+            if (mOriginalMessageId != null)
+                updateRepliedStatus(octxt, authuser, isAdminRequest, mbox);
 
             // we can now purge the uploaded attachments
             if (mUploads != null)
@@ -488,13 +476,20 @@ public class MailSender {
             }
         }
     }
-    
+
     private Object getAuthenticatedMailbox(OperationContext octxt, Account authuser, boolean isAdminRequest) {
+        return getTargetMailbox(octxt, authuser, isAdminRequest, authuser);
+    }
+
+    private Object getTargetMailbox(OperationContext octxt, Account authuser, boolean isAdminRequest, Account targetUser) {
+        if (targetUser == null)
+            return null;
+
         try {
-            if (Provisioning.onLocalServer(authuser)) {
-                return MailboxManager.getInstance().getMailboxByAccount(authuser);
+            if (Provisioning.onLocalServer(targetUser)) {
+                return MailboxManager.getInstance().getMailboxByAccount(targetUser);
             } else {
-                String uri = AccountUtil.getSoapUri(authuser);
+                String uri = AccountUtil.getSoapUri(targetUser);
                 if (uri == null)
                     return null;
                 
@@ -506,6 +501,10 @@ public class MailSender {
                     
                 ZMailbox.Options options = new ZMailbox.Options(authToken.toZAuthToken(), uri);
                 options.setNoSession(true);
+                if (!targetUser.getId().equalsIgnoreCase(authuser.getId())) {
+                    options.setTargetAccount(targetUser.getId());
+                    options.setTargetAccountBy(AccountBy.id);
+                }
                 return ZMailbox.getMailbox(options);
             }
         } catch (Exception e) {
@@ -634,32 +633,58 @@ public class MailSender {
         mm.saveChanges();
     }
 
-    /*
-     * returns a Collection of successfully sent recipient Addresses
-     */
+    protected void updateRepliedStatus(OperationContext octxt, Account authuser, boolean isAdminRequest, Mailbox mboxPossible) {
+        try {
+            Object target = null;
+            if (mboxPossible != null && mOriginalMessageId.belongsTo(mboxPossible))
+                target = mboxPossible;
+            else
+                target = getTargetMailbox(octxt, authuser, isAdminRequest, Provisioning.getInstance().get(AccountBy.id, mOriginalMessageId.getAccountId()));
+
+            if (target instanceof Mailbox) {
+                Mailbox mbox = (Mailbox) target;
+                if (MSGTYPE_REPLY.equals(mReplyType))
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
+                else if (MSGTYPE_FORWARD.equals(mReplyType))
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
+            } else if (target instanceof ZMailbox) {
+                ZMailbox zmbx = (ZMailbox) target;
+                if (MSGTYPE_REPLY.equals(mReplyType))
+                    zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FLAG_REPLIED, true);
+                else if (MSGTYPE_FORWARD.equals(mReplyType))
+                    zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FLAG_FORWARDED, true);
+            }
+        } catch (ServiceException e) {
+            // this is not an error case:
+            //   - the original message may be gone when accepting/declining an appointment
+            //   - we may have PERM_DENIED on delegated send
+        }
+    }
+
+    /** @return a Collection of successfully sent recipient Addresses */
     protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean forceSendPartial, final RollbackData[] rollback)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
-    	HashSet<Address> sentAddresses = new HashSet<Address>();
-    	mCurrentHostIndex = 0;
-    	String hostname = getNextHost();
+        HashSet<Address> sentAddresses = new HashSet<Address>();
+        mCurrentHostIndex = 0;
+        String hostname = getNextHost();
 
-    	boolean sendPartial;
-    	if (mSession != null) {
-        	if (forceSendPartial) {
-        	    sendPartial = true;
-        	} else {
-        	    String prop = mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY);
-        	    sendPartial = prop != null && Boolean.parseBoolean(prop);
-        	}
-    	} else {
-    	    // We can get here when ZDesktop is doing SMTP send for a data source.
-    	    // We can't safely set sendPartial on the static transport, so just assume we're operating
-    	    // in sendPartial==false mode always.
-    	    sendPartial = false;
-    	}
+        boolean sendPartial;
+        if (mSession != null) {
+            if (forceSendPartial) {
+                sendPartial = true;
+            } else {
+                String prop = mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY);
+                sendPartial = prop != null && Boolean.parseBoolean(prop);
+            }
+        } else {
+            // We can get here when ZDesktop is doing SMTP send for a data source.
+            // We can't safely set sendPartial on the static transport, so just assume we're operating
+            // in sendPartial==false mode always.
+            sendPartial = false;
+        }
 
-    	try {
+        try {
             // Initialize recipient addresses from either the member variable
             // or the message.
             Address[] rcptAddresses = null;
@@ -671,7 +696,7 @@ public class MailSender {
                     rcptAddresses[i] = new InternetAddress(mRecipients.get(i));
                 }
             }
-            
+
             while (rcptAddresses != null && rcptAddresses.length > 0) {
                 try {
                     if (hostname != null) {
@@ -695,7 +720,7 @@ public class MailSender {
                     if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
                         String hostString = (hostname != null ? " " + hostname : "");
                         ZimbraLog.smtp.warn("Unable to connect to SMTP server%s: %s.", hostString, chained.toString());
-                        
+
                         if (mTrackBadHosts) {
                             JMSession.markSmtpHostBad(hostname);
                         }
@@ -894,7 +919,7 @@ public class MailSender {
         }
         
         @Override
-        public Exception getNextException() {
+        public synchronized Exception getNextException() {
             return mMex.getNextException();
         }
 

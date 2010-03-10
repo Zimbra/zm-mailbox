@@ -48,15 +48,19 @@ public class ItemId {
     public ItemId(MailItem item) {
         this(item.getMailbox(), item.getId());
     }
+
     public ItemId(Mailbox mbox, int id) {
         this(mbox.getAccountId(), id);
     }
+
     public ItemId(String acctId, int id) {
         mAccountId = acctId;  mId = id;
     }
+
     public ItemId(MailItem item, int subId) {
         this(item.getMailbox().getAccountId(), item.getId(), subId);
     }
+
     public ItemId(String acctId, int id, int subId) {
         mAccountId = acctId;  mId = id;  mSubpartId = subId;
     }
@@ -64,6 +68,7 @@ public class ItemId {
     public ItemId(String encoded, ZimbraSoapContext zsc) throws ServiceException {
         this(encoded, zsc.getRequestedAccountId());
     }
+
     public ItemId(String encoded, String defaultAccountId) throws ServiceException {
         if (encoded == null || encoded.equals(""))
             throw ServiceException.INVALID_REQUEST("empty/missing item ID", null);
@@ -101,10 +106,7 @@ public class ItemId {
 
     public boolean hasSubpart()   { return mSubpartId >= 0; }
 
-    /**
-     * @return TRUE if this item is on the local server
-     * @throws ServiceException
-     */
+    /** Returns whether this item is on the local server. */
     public boolean isLocal() throws ServiceException {
         if (mAccountId == null)
             return true;
@@ -114,38 +116,40 @@ public class ItemId {
         return DocumentHandler.getLocalHost().equalsIgnoreCase(acctTarget.getAttr(Provisioning.A_zimbraMailHost));
     }
 
-    /**
-     * @param acct
-     * @return TRUE if the item is in the passed-in account
-     */
+    /** Returns whether the item belongs to the mailbox owned by the passed-in
+     *  {@link Account}.  If <code>acct</code> is <tt>null</tt> and/or this
+     *  ItemId was unqualified, returns <tt>true</tt>. */
     public boolean belongsTo(Account acct) {
         return acct == null || mAccountId == null || mAccountId.equals(acct.getId());
     }
-    /**
-     * @param acctId
-     * @return TRUE if the item is in the passed-in account
-     */
+
+    /** Returns whether the item belongs to the mailbox owned by the passed-in
+     *  account.  If <code>acctId</code> is <tt>null</tt> and/or this ItemId
+     *  was unqualified, returns <tt>true</tt>. */
     public boolean belongsTo(String acctId) {
         return acctId == null || mAccountId == null || mAccountId.equals(acctId);
     }
-    /**
-     * @param mbox
-     * @return TRUE if the item is in the passed-in mailbox
-     */
+
+    /** Returns whether the item belongs to the specified {@link Mailbox}.  If
+     *  <code>mbox</code> is <tt>null</tt> and/or this ItemId was unqualified,
+     *  returns <tt>true</tt>. */
     public boolean belongsTo(Mailbox mbox) {
         return mbox == null || mAccountId == null || mAccountId.equals(mbox.getAccountId());
     }
 
-    @Override
-    public String toString() {
+
+    @Override public String toString() {
         return toString((String) null);
     }
+
     public String toString(Account authAccount) {
         return toString(authAccount == null ? null : authAccount.getId());
     }
+
     public String toString(ItemIdFormatter ifmt) {
         return toString(ifmt == null ? null : ifmt.getAuthenticatedId());
     }
+
     public String toString(String authAccountId) {
         StringBuffer sb = new StringBuffer();
         if (mAccountId != null && mAccountId.length() > 0 && !mAccountId.equals(authAccountId))
@@ -155,9 +159,8 @@ public class ItemId {
             sb.append(PART_DELIMITER).append(mSubpartId);
         return sb.toString();
     }
-    
-    @Override
-    public boolean equals(Object that) {
+
+    @Override public boolean equals(Object that) {
         if (this == that)
             return true;
         else if (!(that instanceof ItemId))
@@ -170,10 +173,10 @@ public class ItemId {
             return false;
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         return (mAccountId == null ? 0 : mAccountId.hashCode()) ^ mId;
     }
+
 
     // groups folders by account id
     // value is list of folder id integers
