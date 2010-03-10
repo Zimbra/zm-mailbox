@@ -90,7 +90,7 @@ public final class ResponseText {
             break;
         default:
             if (is.match(' ')) {
-                data = is.readText(" ]");
+                data = is.readText("]");
             }
         }
         is.skipSpaces();
