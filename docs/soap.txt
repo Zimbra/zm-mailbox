@@ -1817,10 +1817,17 @@ originally intended.
   For op="tag" or op="!tag", caller must specify tag="{id}".  This changes the state of
     the specified tag without altering other tags.  
 
+  A trash operation on a remote item will cause it to be moved to the trash folder of its
+  remote mailbox, not the local mailbox.
+  
   <action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
     - change the item's color to new color.  only one of color or rgb attribute
       needs to be present.  if both are present rgb value takes precedence.
       rgb is specified as CSS style #rrggbb
+      
+  The <action> element in the response always contains the same id list that the client
+  sent in the request.  Id's that were ignored due to constraints are included in the
+  id list. 
     
 ---------
 
