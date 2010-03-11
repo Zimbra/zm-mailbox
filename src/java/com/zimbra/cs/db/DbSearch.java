@@ -427,7 +427,7 @@ public class DbSearch {
         c.checkDates();
         
         // if there are no possible matches, short-circuit here...
-        TagConstraints tc = TagConstraints.getTagContraints(mbox, c, conn);
+        TagConstraints tc = TagConstraints.getTagConstraints(mbox, c, conn);
         if (c.automaticEmptySet() || tc.noMatches) {
             statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ?
                 "FALSE" : "0=1"); 
@@ -1028,7 +1028,7 @@ public class DbSearch {
         Boolean unread;
         boolean noMatches;
 
-        static TagConstraints getTagContraints(Mailbox mbox, DbSearchConstraints c, Connection conn) throws ServiceException {
+        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints c, Connection conn) throws ServiceException {
             TagConstraints tc = c.tagConstraints = new TagConstraints();
             if (ListUtil.isEmpty(c.tags) && ListUtil.isEmpty(c.excludeTags))
                 return tc;
@@ -1037,13 +1037,13 @@ public class DbSearch {
             long setTagMask = 0;
 
             if (!ListUtil.isEmpty(c.tags)) {
-                for (Tag curTag : c.tags) {
-                    if (curTag.getId() == Flag.ID_FLAG_UNREAD) {
+                for (Tag tag : c.tags) {
+                    if (tag.getId() == Flag.ID_FLAG_UNREAD) {
                         tc.unread = Boolean.TRUE; 
-                    } else if (curTag instanceof Flag) {
-                        setFlagMask |= curTag.getBitmask();
+                    } else if (tag instanceof Flag) {
+                        setFlagMask |= tag.getBitmask();
                     } else {
-                        setTagMask |= curTag.getBitmask();
+                        setTagMask |= tag.getBitmask();
                     }
                 }
             }
@@ -1052,16 +1052,26 @@ public class DbSearch {
             long tagMask = setTagMask;
 
             if (!ListUtil.isEmpty(c.excludeTags)) {
-                for (Tag t : c.excludeTags) {
-                    if (t.getId() == Flag.ID_FLAG_UNREAD) {
+                for (Tag tag : c.excludeTags) {
+                    if (tag.getId() == Flag.ID_FLAG_UNREAD) {
+                        if (tc.unread == Boolean.TRUE)
+                            tc.noMatches = true;
                         tc.unread = Boolean.FALSE;
-                    } else if (t instanceof Flag) {
-                        flagMask |= t.getBitmask();
+                    } else if (tag instanceof Flag) {
+                        if ((setFlagMask & tag.getBitmask()) != 0)
+                            tc.noMatches = true;
+                        flagMask |= tag.getBitmask();
                     } else {
-                        tagMask |= t.getBitmask();
+                        if ((setTagMask & tag.getBitmask()) != 0)
+                            tc.noMatches = true;
+                        tagMask |= tag.getBitmask();
                     }
                 }
             }
+
+            // if we know we have no matches (e.g. "is:flagged and is:unflagged"), just stop here...
+            if (tc.noMatches)
+                return tc;
 
             TagsetCache tcFlags = DbMailItem.getFlagsetCache(conn, mbox);
             TagsetCache tcTags  = DbMailItem.getTagsetCache(conn, mbox);
