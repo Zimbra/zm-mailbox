@@ -23,8 +23,7 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -41,8 +40,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class CreateCalendarItem extends CalendarRequest {
     
-    private static Log sLog = LogFactory.getLog(CreateCalendarItem.class);
-
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
@@ -73,8 +70,17 @@ public class CreateCalendarItem extends CalendarRequest {
         String defaultFolderStr = Integer.toString(defaultFolder);
         String folderIdStr = msgElem.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
         ItemId iidFolder = new ItemId(folderIdStr, zsc);
-        sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + zsc.toString());
-        
+
+        // trace logging
+        if (!dat.mInvite.hasRecurId())
+            ZimbraLog.calendar.info("<CreateCalendarItem> folderId=%d, subject=\"%s\", UID=%s",
+                    iidFolder.getId(), dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
+                    dat.mInvite.getUid());
+        else
+            ZimbraLog.calendar.info("<CreateCalendarItem> folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                    iidFolder.getId(), dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
+                    dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
+
         Element response = getResponseElement(zsc);
 
         // If we are sending this update to other people, then we MUST be the organizer!

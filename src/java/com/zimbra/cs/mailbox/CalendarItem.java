@@ -1295,15 +1295,17 @@ public abstract class CalendarItem extends MailItem {
                                                     boolean preserveAlarms,
                                                     boolean discardExistingInvites)
     throws ServiceException {
+        // trace logging
         if (!newInvite.hasRecurId())
             ZimbraLog.calendar.info(
-                    "Modifying CalendarItem: id=%d, folderId=%d, subject=\"%s\", UID=%s",
-                    mId, getFolderId(), newInvite.isPublic() ? newInvite.getName() : "(private)", mUid);
+                    "Modifying CalendarItem: id=%d, folderId=%d, method=%s, subject=\"%s\", UID=%s",
+                    mId, getFolderId(), newInvite.getMethod(),
+                    newInvite.isPublic() ? newInvite.getName() : "(private)", mUid);
         else
             ZimbraLog.calendar.info(
-                    "Modifying CalendarItem: id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
-                    mId, getFolderId(), newInvite.isPublic() ? newInvite.getName() : "(private)", mUid,
-                    newInvite.getRecurId().getDtZ());
+                    "Modifying CalendarItem: id=%d, folderId=%d, method=%s, subject=\"%s\", UID=%s, recurId=%s",
+                    mId, getFolderId(), newInvite.getMethod(),
+                    newInvite.isPublic() ? newInvite.getName() : "(private)", mUid, newInvite.getRecurId().getDtZ());
 
         newInvite.sanitize(true);
 
@@ -2681,9 +2683,27 @@ public abstract class CalendarItem extends MailItem {
         }
         saveMetadata();
     }
-    
+
     public boolean processNewInviteReply(Invite reply)
     throws ServiceException {
+        List<ZAttendee> attendees = reply.getAttendees();
+
+        // trace logging
+        ZAttendee att1 = !attendees.isEmpty() ? attendees.get(0) : null;
+        if (att1 != null) {
+            String ptst = IcalXmlStrMap.sPartStatMap.toIcal(att1.getPartStat());
+            if (!reply.hasRecurId())
+                ZimbraLog.calendar.info(
+                        "Processing CalendarItem reply: attendee=%s, partstat=%s, id=%d, folderId=%d, subject=\"%s\", UID=%s",
+                        att1.getAddress(), ptst, mId, getFolderId(),
+                        reply.isPublic() ? reply.getName() : "(private)", mUid);
+            else
+                ZimbraLog.calendar.info(
+                        "Processing CalendarItem reply: attendee=%s, partstat=%s, id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                        att1.getAddress(), ptst, mId, getFolderId(),
+                        reply.isPublic() ? reply.getName() : "(private)", mUid, reply.getRecurId().getDtZ());
+        }
+
         // Require private access permission only when we're replying to a private series/instance.
         boolean requirePrivateCheck = requirePrivateCheck(reply);
         OperationContext octxt = getMailbox().getOperationContext();
@@ -2735,7 +2755,6 @@ public abstract class CalendarItem extends MailItem {
         // if we got here then we have validated the sequencing against all of our Invites, 
         // OR alternatively we looked and couldn't find one with a matching RecurID (therefore 
         // they must be replying to a arbitrary instance)
-        List<ZAttendee> attendees = reply.getAttendees();
         for (ZAttendee at : attendees) {
             if (mReplyList.maybeStoreNewReply(reply, at)) {
                 dirty = true;
@@ -3247,8 +3266,8 @@ public abstract class CalendarItem extends MailItem {
         else
             sbj = "(none)";
         ZimbraLog.calendar.info(
-                "Moving CalendarItem: id=%d, old folderId=%d, new folderId=%d, subject=\"%s\", UID=%s",
-                mId, getFolderId(), target.getId(), sbj, mUid);
+                "Moving CalendarItem: id=%d, src=%s, dest=%s, subject=\"%s\", UID=%s",
+                mId, getMailopContext(getFolder()), getMailopContext(target), sbj, mUid);
         if (!isPublic()) {
             if (!canAccess(ACL.RIGHT_PRIVATE))
                 throw ServiceException.PERM_DENIED(

@@ -35,6 +35,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
 
 
@@ -139,6 +140,15 @@ public class ModifyCalendarItem extends CalendarRequest {
         
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
         dat.mDontNotifyAttendees = isInterMboxMove;
+
+        if (!dat.mInvite.hasRecurId())
+            ZimbraLog.calendar.info("<ModifyCalendarItem> id=%d, folderId=%d, subject=\"%s\", UID=%s",
+                    calItem.getId(), folderId, dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
+                    dat.mInvite.getUid());
+        else
+            ZimbraLog.calendar.info("<ModifyCalendarItem> id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                    calItem.getId(), folderId, dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
+                    dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
 
         // If we are sending this update to other people, then we MUST be the organizer!
         if (!inv.isOrganizer()) {

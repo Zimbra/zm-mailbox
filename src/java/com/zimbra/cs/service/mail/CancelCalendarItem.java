@@ -24,8 +24,7 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -50,7 +49,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class CancelCalendarItem extends CalendarRequest {
 
-    private static Log sLog = LogFactory.getLog(CancelCalendarItem.class);
     private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_ITEM_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
@@ -63,9 +61,7 @@ public class CancelCalendarItem extends CalendarRequest {
         
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
-        
-        sLog.info("<CancelCalendarItem id=" + iid + " comp=" + compNum + ">");
-        
+
         //synchronized (mbox) {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
             if (calItem == null)
@@ -82,9 +78,20 @@ public class CancelCalendarItem extends CalendarRequest {
                     tzmap.add(tz);
                 }
                 RecurId recurId = CalendarUtils.parseRecurId(recurElt, tzmap);
+
+                // trace logging
+                ZimbraLog.calendar.info("<CancelCalendarItem> id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                        calItem.getId(), calItem.getFolderId(), inv.isPublic() ? inv.getName() : "(private)",
+                        calItem.getUid(), recurId.getDtZ());
+
                 cancelInstance(zsc, octxt, request, acct, mbox, calItem, inv, recurId);
             } else {
                 // if recur is not set, then we're canceling the entire calendar item...
+
+                // trace logging
+                ZimbraLog.calendar.info("<CancelCalendarItem> id=%d, folderId=%d, subject=\"%s\", UID=%s",
+                        calItem.getId(), calItem.getFolderId(), inv.isPublic() ? inv.getName() : "(private)",
+                        calItem.getUid());
 
                 Invite seriesInv = calItem.getDefaultInviteOrNull();
                 if (seriesInv != null) {
@@ -107,10 +114,6 @@ public class CancelCalendarItem extends CalendarRequest {
         Account authAcct = getAuthenticatedAccount(zsc);
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
-
-        if (sLog.isDebugEnabled()) {
-            sLog.debug("Sending cancellation message for \"" + defaultInv.getName() + "\" for instance " + recurId + " of invite " + defaultInv);
-        }
 
         Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, calItem, defaultInv, text, recurId);
         CalSendData dat = new CalSendData();
@@ -165,9 +168,6 @@ public class CancelCalendarItem extends CalendarRequest {
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointment, locale);
 
-        if (sLog.isDebugEnabled())
-            sLog.debug("Sending cancellation message for \"" + inv.getName() + "\" for " + inv.toString());
-        
         CalSendData csd = new CalSendData();
         csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
         csd.mReplyType = MailSender.MSGTYPE_REPLY;

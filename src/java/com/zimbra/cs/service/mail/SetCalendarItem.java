@@ -104,6 +104,7 @@ public class SetCalendarItem extends CalendarRequest {
             ItemId iidFolder = new ItemId(folderIdStr, zsc);
             Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
             SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, folder, getItemType(), false);
+
             CalendarItem calItem = mbox.setCalendarItem(octxt, iidFolder.getId(),
                 flags, tags, parsed.defaultInv, parsed.exceptions,
                 parsed.replies, parsed.nextAlarm);
@@ -125,7 +126,7 @@ public class SetCalendarItem extends CalendarRequest {
             response.addAttribute(MailConstants.A_CAL_ID, itemId);
             if (!parsed.isTodo)
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
-            
+
             return response;
         } // synchronized(mbox)
     }

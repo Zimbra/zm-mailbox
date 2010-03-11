@@ -3693,6 +3693,15 @@ public class Mailbox {
                 }
             }
 
+            // trace logging
+            if (!scidList.isEmpty()) {
+                Invite invLog = scidList.get(0).mInv;
+                String idStr = calItem != null ? Integer.toString(calItem.getId()) : "(new)";
+                ZimbraLog.calendar.info("setCalendarItem: id=%s, folderId=%d, subject=\"%s\", UID=%s",
+                        idStr, folderId,
+                        invLog != null && invLog.isPublic() ? invLog.getName() : "(private)", invLog.getUid());
+            }
+
             redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
 
             boolean first = true;

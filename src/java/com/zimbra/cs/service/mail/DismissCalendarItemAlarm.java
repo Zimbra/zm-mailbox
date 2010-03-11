@@ -19,6 +19,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.Appointment;
@@ -64,6 +65,9 @@ public class DismissCalendarItemAlarm extends DocumentHandler {
                 Element calItemElem = iter.next();
                 ItemId iid = new ItemId(calItemElem.getAttribute(MailConstants.A_ID), zsc);
                 long dismissedAt = calItemElem.getAttributeLong(MailConstants.A_CAL_ALARM_DISMISSED_AT);
+
+                // trace logging
+                ZimbraLog.calendar.info("<DismissCalendarItemAlarm> id=%s, at=%d", iid.toString(), dismissedAt);
 
                 Mailbox ciMbox;  // mailbox for this calendar item; not necessarily same as requested mailbox
                 String ciAcctId = iid.getAccountId();

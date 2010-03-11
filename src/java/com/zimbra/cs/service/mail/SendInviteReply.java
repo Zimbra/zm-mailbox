@@ -26,8 +26,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -73,8 +72,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SendInviteReply extends CalendarRequest {
 
-    private static Log sLog = LogFactory.getLog(SendInviteReply.class);
-    
     private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
     protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
     protected boolean checkMountpointProxy(Element request)  { return false; }
@@ -97,11 +94,7 @@ public class SendInviteReply extends CalendarRequest {
         Verb verb = CalendarMailSender.parseVerb(verbStr);
         
         boolean updateOrg = request.getAttributeBool(MailConstants.A_CAL_UPDATE_ORGANIZER, true);
-        
-        if (sLog.isInfoEnabled()) {
-            sLog.info("<SendInviteReply id=" + new ItemIdFormatter(zsc).formatItemId(iid) + " verb=" + verb + " updateOrg=" + updateOrg + "> " + zsc.toString());
-        }
-        
+
         Element response = getResponseElement(zsc);
         
         //synchronized (mbox) {
@@ -150,6 +143,11 @@ public class SendInviteReply extends CalendarRequest {
                 }
 
                 if (intendedAcct != null) {
+                    // trace logging: let's just indicate we're replying to a remote appointment
+                    ZimbraLog.calendar.info("<SendInviteReply> (remote mbox) id=%s, verb=%s, notifyOrg=%s",
+                            new ItemIdFormatter(zsc).formatItemId(iid),
+                            verb.toString(), Boolean.toString(updateOrg));
+
                     // Replying to a remote appointment
                     calItem = null;
                     calItemId = 0;
@@ -158,6 +156,7 @@ public class SendInviteReply extends CalendarRequest {
                     AddInviteResult addInviteResult = sendAddInvite(zmbx, msg);
                     if (addInviteResult == null)
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+
                     // Forward the reply request.
                     remoteSendInviteReply(zmbx, request, addInviteResult);
                 } else {
@@ -235,7 +234,17 @@ public class SendInviteReply extends CalendarRequest {
                 } else if (oldInv.hasRecurId()) {
                     exceptDt = oldInv.getRecurId().getDt();
                 }
-    
+
+                // trace logging
+                if (exceptDt == null)
+                    ZimbraLog.calendar.info("<SendInviteReply> id=%d, folderId=%d, verb=%s, notifyOrg=%s, subject=\"%s\", UID=%s",
+                            calItem.getId(), calItem.getFolderId(), verb.toString(), Boolean.toString(updateOrg),
+                            oldInv.isPublic() ? oldInv.getName() : "(private)", calItem.getUid());
+                else
+                    ZimbraLog.calendar.info("<SendInviteReply> id=%d, folderId=%d, verb=%s, notifyOrg=%s, subject=\"%s\", UID=%s, recurId=%s",
+                            calItem.getId(), calItem.getFolderId(), verb.toString(), Boolean.toString(updateOrg),
+                            oldInv.isPublic() ? oldInv.getName() : "(private)", calItem.getUid(), exceptDt.getUtcString());
+
                 // If we're replying to a non-exception instance of a recurring appointment, create a local
                 // exception instance first.  Then reply to it.
                 if (calItem != null && oldInv.isRecurrence() && exceptDt != null) {
@@ -370,7 +379,7 @@ public class SendInviteReply extends CalendarRequest {
                     }
                     mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
                 } catch (MailServiceException.NoSuchItemException nsie) {
-                    sLog.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
+                    ZimbraLog.calendar.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
                 }
             }
         //}  // synchronized (mbox)

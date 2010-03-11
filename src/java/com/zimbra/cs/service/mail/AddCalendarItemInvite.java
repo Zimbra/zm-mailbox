@@ -110,6 +110,17 @@ public class AddCalendarItemInvite extends CalendarRequest {
             }
         }
 
+        // trace logging
+        String calItemIdStr = calItem != null ? Integer.toString(calItem.getId()) : "(new)";
+        if (!inv.hasRecurId())
+            ZimbraLog.calendar.info("<AddCalendarItemInvite> id=%s, folderId=%d, subject=\"%s\", UID=%s",
+                    calItemIdStr, folderId, inv.isPublic() ? inv.getName() : "(private)",
+                    inv.getUid());
+        else
+            ZimbraLog.calendar.info("<AddCalendarItemInvite> id=%s, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                    calItemIdStr, folderId, inv.isPublic() ? inv.getName() : "(private)",
+                    inv.getUid(), inv.getRecurId().getDtZ());
+
         int[] ids = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
 
         Element response = getResponseElement(zsc);

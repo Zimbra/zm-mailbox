@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -116,6 +117,16 @@ public class CreateCalendarItemException extends CalendarRequest {
             int folderId = calItem.getFolderId();
             if (!isInterMboxMove && iidFolder != null)
                 folderId = iidFolder.getId();
+
+            // trace logging
+            if (!dat.mInvite.hasRecurId())
+                ZimbraLog.calendar.info("<CreateCalendarItemException> id=%d, folderId=%d, subject=\"%s\", UID=%s",
+                        iid.getId(), folderId, dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
+                        dat.mInvite.getUid());
+            else
+                ZimbraLog.calendar.info("<CreateCalendarItemException> id=%d, folderId=%d, subject=\"%s\", UID=%s, recurId=%s",
+                        iid.getId(), folderId, dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
+                        dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
 
             // If we are sending this to other people, then we MUST be the organizer!
             if (!inv.isOrganizer()) {
