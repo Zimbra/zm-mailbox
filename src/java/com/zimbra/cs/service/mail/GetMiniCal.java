@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
@@ -85,7 +86,9 @@ public class GetMiniCal extends CalendarRequest {
             folderIids.add(iidFolder);
         }
 
-        ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(authAcct);  // requestor's time zone, not mailbox owner's
+        ICalTimeZone tz = parseTimeZone(request);
+        if (tz == null)
+            tz = ICalTimeZone.getAccountTimeZone(authAcct);  // requestor's time zone, not mailbox owner's
         TreeSet<String> busyDates = new TreeSet<String>();
 
         Provisioning prov = Provisioning.getInstance();
@@ -266,5 +269,27 @@ public class GetMiniCal extends CalendarRequest {
 		int month = cal.get(Calendar.MONTH) + 1;
 		int day = cal.get(Calendar.DAY_OF_MONTH);
 		return Integer.toString(year * 10000 + month * 100 + day);
+	}
+
+	private static ICalTimeZone parseTimeZone(Element request) throws ServiceException {
+        Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
+        if (tzElem != null) {
+            String tzid = tzElem.getAttribute(MailConstants.A_ID, null);
+            if (tzid != null) {
+                ICalTimeZone knownTZ = WellKnownTimeZones.getTimeZoneById(tzid);
+                if (knownTZ != null)
+                    return knownTZ;
+            }
+
+            // custom timezone            
+            String stdOffset = tzElem.getAttribute(MailConstants.A_CAL_TZ_STDOFFSET, null);
+            if (stdOffset == null)
+                throw ServiceException.INVALID_REQUEST(
+                        "Unknown TZ: \"" + tzid + "\" and no " + MailConstants.A_CAL_TZ_STDOFFSET + " specified", null);
+            
+            return CalendarUtils.parseTzElement(tzElem);
+        } else {
+            return null;
+        }
 	}
 }

@@ -1189,6 +1189,14 @@ OR
 
 <GetMiniCalRequest s="range start time in millis" e="range end time in millis">
   <folder id="folder id"/>+  // local and/or remote calendar folders
+
+  [ // optional timezone specifier
+    <tz id="timezonename"/>    // References an existing server-known timezone by ID
+
+    OR
+
+    <tz> ... </tz>  // full specification of a custom timezone; see CreateAppointmentRequest
+  ]
 </GetMiniCalRequest>
 
 <GetMiniCalResponse>
