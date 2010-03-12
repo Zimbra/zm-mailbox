@@ -31,8 +31,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.jsieve.CommandStateManager;
-import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
@@ -48,7 +46,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -69,10 +66,8 @@ public class ZimbraMailAdapter implements MailAdapter
 {
     private Mailbox mMailbox;
     private FilterHandler mHandler;
-    private Integer mFlagBitmask;
     private String mTags;
     private boolean mAllowFilterToMountpoint = true;
-    private SieveContext mContext;
     
     /**
      * Keeps track of folders into which we filed messages, so we don't file twice
@@ -184,7 +179,7 @@ public class ZimbraMailAdapter implements MailAdapter
             // Handle explicit and implicit delivery actions
             for (Action action : deliveryActions) {
                 if (action instanceof ActionKeep) {
-                    if (isImplicitKeep()) {
+                    if (((ActionKeep) action).isImplicit()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
                         doDefaultFiling();
@@ -515,18 +510,5 @@ public class ZimbraMailAdapter implements MailAdapter
     public boolean isInBodyText(String substring) {
         // No implementation.  We use our own body test.
         return false;
-    }
-
-    public void setContext(SieveContext context) {
-        mContext = context;
-    }
-    
-    private boolean isImplicitKeep() {
-        if (mContext != null) {
-            return mContext.getCommandStateManager().isImplicitKeep();
-        } else {
-            ZimbraLog.filter.warn("Unable to determine if the keep was implicit because context was not set.");
-            return true;
-        }
     }
 }
