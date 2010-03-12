@@ -2410,7 +2410,7 @@ public class Invite {
     }
 
     /**
-     * Returns true if this invite is same or newer version of the other invite based on SEQUENCE and DTSTAMP.
+     * Returns true if this invite's sequence is same or greater than other invite's sequence.
      * @param other
      * @return
      */
@@ -2418,7 +2418,7 @@ public class Invite {
         if (other == null) return false;
         int thisSeq = getSeqNo();
         int otherSeq = other.getSeqNo();
-        return thisSeq > otherSeq || (thisSeq == otherSeq && getDTStamp() >= other.getDTStamp());
+        return thisSeq >= otherSeq;
     }
 
     public Invite newCopy() {
