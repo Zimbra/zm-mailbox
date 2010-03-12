@@ -595,6 +595,7 @@ public class Message extends MailItem {
             }
         }
 
+        CalendarItem firstCalItem = null;
         Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
             // Bug 38550/41239: If ORGANIZER is missing, set it to email sender.  If that sender
@@ -758,6 +759,8 @@ public class Message extends MailItem {
                     getMailbox().uncache(calItem);
                 }
             }
+            if (firstCalItem == null)
+                firstCalItem = calItem;
         }
         
         if (updatedMetadata)
@@ -768,7 +771,7 @@ public class Message extends MailItem {
 
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward the message being added to Sent folder.
-        if (!isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT) {
+        if (!isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT && !invites.isEmpty()) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();
@@ -776,7 +779,28 @@ public class Message extends MailItem {
                 redoProvider.isMaster() &&
                 (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery());
             if (needToForward) {
-                String[] forwardTo = acct.getPrefCalendarForwardInvitesTo();
+                String[] forwardTo = null;
+
+                if (isOrganizerMethod) {
+                    forwardTo = acct.getPrefCalendarForwardInvitesTo();
+                } else {
+                    // If this is an attendee-originated message (REPLY, COUNTER, etc.), we only want
+                    // to forward it if the appointment was organized on-behalf-of, i.e. the appointment's
+                    // ORGANIZER has SENT-BY.  Furthermore, we want to forward it to the SENT-BY user,
+                    // not the users listed in the zimbraPrefCalendarForwardInvitesTo preference.
+                    if (firstCalItem != null) {
+                        Invite invCalItem = firstCalItem.getInvite(invites.get(0).getRecurId());
+                        if (invCalItem == null)
+                            invCalItem = firstCalItem.getDefaultInviteOrNull();
+                        if (invCalItem != null) {
+                            ZOrganizer org = invCalItem.getOrganizer();
+                            if (org.hasSentBy()) {
+                                forwardTo = new String[] { org.getSentBy() };
+                            }
+                        }
+                    }
+                }
+
                 if (forwardTo != null && forwardTo.length > 0) {
                     List<String> sanitizedTo = new ArrayList<String>();
                     for (String fwd : forwardTo) {
