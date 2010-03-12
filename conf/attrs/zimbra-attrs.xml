@@ -3838,7 +3838,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
-  <defaultCOSValue>email,email2,email3</defaultCOSValue>
+  <defaultCOSValue>email,email2,email3,workEmail1,workEmail2,workEmail3</defaultCOSValue>
   <desc>
     Comma separates list of attributes in contact object to search for
     email addresses when generating auto-complete contact list.  The
