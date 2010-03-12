@@ -234,7 +234,7 @@ public class ContactAutoComplete {
 		GalSearchParams params = new GalSearchParams(account);
 		params.setQuery(str);
 		params.setType(mSearchType);
-		params.setLimit(limit + 1);
+		params.setLimit(200);
 		params.setResultCallback(new AutoCompleteCallback(str, result, params));
 		try {
 	        GalSearchControl gal = new GalSearchControl(params);
@@ -407,6 +407,8 @@ public class ContactAutoComplete {
                 	continue;
 
                 addMatchedContacts(str, fields, folderId, id, result);
+        		if (result.entries.size() >= limit)
+        			return;
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
