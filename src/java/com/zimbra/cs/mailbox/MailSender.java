@@ -408,8 +408,6 @@ public class MailSender {
                 rollback[1] = new RollbackData(msg);
             }
 
-            logMessage(mm, mOriginalMessageId, mUploads, mReplyType);
-
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollback);
 
@@ -513,14 +511,12 @@ public class MailSender {
         }
     }
 
-    public void logMessage(MimeMessage mm, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
+    public void logMessage(MimeMessage mm, String smtpHost, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
             StringBuilder msg = new StringBuilder("Sending message");
-            if (mm instanceof FixedMimeMessage) {
-                Session session = ((FixedMimeMessage) mm).getSession();
-                msg.append(String.format(" to MTA at %s, port %s",
-                    session.getProperty("mail.smtp.host"), session.getProperty("mail.smtp.port")));
+            if (smtpHost != null) {
+                msg.append(" to MTA at ").append(smtpHost);
             }
             try {
                 msg.append(": Message-ID=" + mm.getMessageID());
@@ -699,6 +695,7 @@ public class MailSender {
 
             while (rcptAddresses != null && rcptAddresses.length > 0) {
                 try {
+                    logMessage(mm, hostname, mOriginalMessageId, mUploads, mReplyType);
                     if (hostname != null) {
                         sendMessageToHost(hostname, mm, rcptAddresses, sendPartial);
                     } else {
