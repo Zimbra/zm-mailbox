@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100305-1529 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100312-1449 */
 
 
     /*
@@ -875,6 +875,11 @@ public class RightConsts {
      * get all calendar resource attributes
      */
     public static final String RT_getCalendarResource = "getCalendarResource";
+
+    /**
+     * get account id, home server, cos id and name, and access URL
+     */
+    public static final String RT_getCalendarResourceInfo = "getCalendarResourceInfo";
 
     /**
      * get share info on calendar resource

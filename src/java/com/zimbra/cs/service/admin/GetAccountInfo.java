@@ -26,10 +26,12 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -65,7 +67,13 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
        
-        checkAccountRight(zsc, account, Admin.R_getAccountInfo);
+        if (account.isCalendarResource()) {
+            // need a CalendarResource instance for RightChecker
+            CalendarResource resource = prov.get(CalendarResourceBy.id, account.getId());
+            checkCalendarResourceRight(zsc, resource, Admin.R_getCalendarResourceInfo);
+        } else
+            checkAccountRight(zsc, account, Admin.R_getAccountInfo);
+        
 
         Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_INFO_RESPONSE);
         response.addElement(AdminConstants.E_NAME).setText(account.getName());
@@ -124,5 +132,6 @@ public class GetAccountInfo extends AdminDocumentHandler  {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getAccountInfo);
+        relatedRights.add(Admin.R_getCalendarResourceInfo);
     }
 }

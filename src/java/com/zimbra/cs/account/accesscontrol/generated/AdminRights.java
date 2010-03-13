@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100305-1529 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100312-1449 */
 
 
     public static AdminRight R_accessGAL;
@@ -194,6 +194,7 @@ public class AdminRights {
     public static AdminRight R_getAccountMembership;
     public static AdminRight R_getAccountShareInfo;
     public static AdminRight R_getCalendarResource;
+    public static AdminRight R_getCalendarResourceInfo;
     public static AdminRight R_getCalendarResourceShareInfo;
     public static AdminRight R_getCos;
     public static AdminRight R_getDistributionList;
@@ -575,6 +576,7 @@ public class AdminRights {
         R_getAccountMembership                 = rm.getAdminRight(Right.RT_getAccountMembership);
         R_getAccountShareInfo                  = rm.getAdminRight(Right.RT_getAccountShareInfo);
         R_getCalendarResource                  = rm.getAdminRight(Right.RT_getCalendarResource);
+        R_getCalendarResourceInfo              = rm.getAdminRight(Right.RT_getCalendarResourceInfo);
         R_getCalendarResourceShareInfo         = rm.getAdminRight(Right.RT_getCalendarResourceShareInfo);
         R_getCos                               = rm.getAdminRight(Right.RT_getCos);
         R_getDistributionList                  = rm.getAdminRight(Right.RT_getDistributionList);

@@ -1862,7 +1862,7 @@
 	<!--                          rights                           -->
 	<!-- ========================================================= -->
 	
-    <target name="generate-rights-xml" depends="set-buildinfo-vars,compile">
+    <target name="generate-domainadmin-rights-xml" depends="set-buildinfo-vars,compile">
         <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
             <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
             <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
@@ -1885,7 +1885,7 @@
     </target>
 	
 	<target name="generate-rights">
-		<antcall target="generate-rights-xml"/>
+		<antcall target="generate-domainadmin-rights-xml"/>
 		<antcall target="generate-rights-java"/>
     </target>
 	
