@@ -246,6 +246,10 @@
           - getMailboxDump                     : get mailbox dump for legal intercept
 -->
        
+<right name="getCalendarResourceInfo" type="preset" targetType="calresource">
+  <desc>get account id, home server, cos id and name, and access URL</desc>
+</right>
+       
 <right name="setCalendarResourcePassword" type="preset" targetType="calresource">
   <desc>set calendar resource password</desc>
 </right>     

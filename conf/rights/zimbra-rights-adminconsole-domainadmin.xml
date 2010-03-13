@@ -623,6 +623,7 @@
     <r n="viewDomainAdminConsoleResourcesPropertiesTab"/>
     <r n="addCalendarResourceAlias"/>
     <r n="removeCalendarResourceAlias"/>
+    <r n="getCalendarResourceInfo"/>
     <r n="createCalendarResource"/>
     <r n="renameCalendarResource"/>
     <r n="deleteCalendarResource"/>

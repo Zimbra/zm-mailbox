@@ -16,7 +16,7 @@
       domain admin modifiable attrs, the template 
       if filled by:
       
-      ZimbraServer> ant generate-rights-xml
+      ZimbraServer> ant generate-domainadmin-rights-xml
 ========================================================
 -->
 
@@ -90,6 +90,7 @@ ${DOMAIN_ATTRS}
         <r n="adminLoginCalendarResourceAs"/>
         <r n="deleteCalendarResource"/>
         <r n="getCalendarResource"/>
+        <r n="getCalendarResourceInfo"/>
         <r n="listCalendarResource"/>
         <r n="purgeCalendarResourceCalendarCache"/>
         <r n="reindexCalendarResourceMailbox"/>
