@@ -268,6 +268,167 @@
 
 
 <!-- Admin Console Accounts Preferences Tab -->
+<right name="setAdminConsoleAccountsPreferencesTab" type="setAttrs" targetType="account">
+  <desc> Admin Console set attr rights for Accounts Preferences Tab </desc>
+  <attrs>
+    <a n="zimbraPrefAppleIcalDelegationEnabled"/>
+    <a n="zimbraPrefCalendarShowPastDueReminders"/>
+    <a n="zimbraPrefCalendarToasterEnabled"/>
+    <a n="zimbraPrefCalendarAllowCancelEmailToSelf"/>
+    <a n="zimbraPrefCalendarAllowPublishMethodInvite"/>
+    <a n="zimbraPrefCalendarAllowForwardedInvite"/>
+    <a n="zimbraPrefCalendarReminderFlashTitle"/>
+    <a n="zimbraPrefCalendarNotifyDelegatedChanges"/>
+    <a n="zimbraPrefCalendarFirstDayOfWeek"/>
+    <a n="zimbraPrefCalendarInitialView"/>
+    <a n="zimbraPrefCalendarForwardInvitesTo"/>
+    <a n="zimbraPrefClientType"/>
+    <a n="zimbraPrefTimeZoneId"/>
+    <a n="zimbraAllowAnyFromAddress"/>
+    <a n="zimbraAllowFromAddress"/>
+    <a n="zimbraPrefCalendarAlwaysShowMiniCal"/>
+    <a n="zimbraPrefCalendarUseQuickAdd"/>
+    <a n="zimbraPrefSaveToSent"/>
+    <a n="zimbraPrefMailSignature"/>
+    <a n="zimbraPrefMailSignatureEnabled"/>
+    <a n="zimbraPrefSentMailFolder"/>
+    <a n="zimbraPrefGroupMailBy"/>
+    <a n="zimbraPrefIncludeSpamInSearch"/>
+    <a n="zimbraPrefIncludeTrashInSearch"/>
+    <a n="zimbraPrefMailInitialSearch"/>
+    <a n="zimbraMaxMailItemsPerPage"/>
+    <a n="zimbraPrefMailItemsPerPage"/>
+    <a n="zimbraPrefMailPollingInterval"/>
+    <a n="zimbraPrefMailFlashTitle"/>
+    <a n="zimbraPrefMailFlashIcon"/>
+    <a n="zimbraPrefMailSoundsEnabled"/>
+    <a n="zimbraMailMinPollingInterval"/>
+    <a n="zimbraPrefOutOfOfficeFromDate"/>
+    <a n="zimbraPrefOutOfOfficeUntilDate"/>
+    <a n="zimbraPrefOutOfOfficeReply"/>
+    <a n="zimbraPrefOutOfOfficeReplyEnabled"/>
+    <a n="zimbraPrefReplyToAddress"/>
+    <a n="zimbraPrefUseKeyboardShortcuts"/>
+    <a n="zimbraPrefContactsPerPage"/>
+    <a n="zimbraMemberOf"/>
+    <a n="zimbraPrefComposeInNewWindow"/>
+    <a n="zimbraPrefForwardReplyInOriginalFormat"/>
+    <a n="zimbraPrefAutoAddAddressEnabled"/>
+    <a n="zimbraPrefComposeFormat"/>
+    <a n="zimbraPrefMessageViewHtmlPreferred"/>
+    <a n="zimbraPrefNewMailNotificationAddress"/>
+    <a n="zimbraPrefNewMailNotificationEnabled"/>
+    <a n="zimbraPrefOutOfOfficeReply"/>
+    <a n="zimbraPrefShowSearchString"/>
+    <a n="zimbraPrefMailSignatureStyle"/>
+    <a n="zimbraPrefUseTimeZoneListInCalendar"/>
+    <a n="zimbraPrefImapSearchFoldersEnabled"/>
+    <a n="zimbraPrefMailForwardingAddress"/>
+    <a n="zimbraPrefMailLocalDeliveryDisabled"/>
+    <a n="zimbraPrefCalendarApptReminderWarningTime"/>
+    <a n="zimbraPrefSkin"/>
+    <a n="zimbraPrefGalAutoCompleteEnabled"/>
+    <a n="zimbraPrefWarnOnExit"/>
+    <a n="zimbraPrefShowSelectionCheckbox"/>
+    <a n="zimbraPrefHtmlEditorDefaultFontSize"/>
+    <a n="zimbraPrefHtmlEditorDefaultFontFamily"/>
+    <a n="zimbraPrefHtmlEditorDefaultFontColor"/>
+    <a n="zimbraMailSignatureMaxLength"/>
+    <a n="zimbraPrefDisplayExternalImages" />
+    <a n="zimbraPrefOutOfOfficeCacheDuration"/>
+    <a n="zimbraPrefMailDefaultCharset"/>
+    <a n="zimbraPrefLocale"/>
+    <a n="zimbraJunkMessagesIndexingEnabled"/>
+    <a n="zimbraPrefMailSendReadReceipts"/>
+    <a n="zimbraPrefReadReceiptsToAddress"/>
+    <a n="zimbraPrefAdminConsoleWarnOnExit" />
+    <a n="zimbraPrefMandatorySpellCheckEnabled"/>
+  </attrs>
+</right>
+<right name="viewAdminConsoleAccountsPreferencesTab" type="getAttrs" targetType="account">
+  <desc> Admin Console view attr rights for Accounts Preferences Tab </desc>
+  <attrs>
+    <a n="zimbraPrefAppleIcalDelegationEnabled"/>
+    <a n="zimbraPrefCalendarShowPastDueReminders"/>
+    <a n="zimbraPrefCalendarToasterEnabled"/>
+    <a n="zimbraPrefCalendarAllowCancelEmailToSelf"/>
+    <a n="zimbraPrefCalendarAllowPublishMethodInvite"/>
+    <a n="zimbraPrefCalendarAllowForwardedInvite"/>
+    <a n="zimbraPrefCalendarReminderFlashTitle"/>
+    <a n="zimbraPrefCalendarNotifyDelegatedChanges"/>
+    <a n="zimbraPrefCalendarFirstDayOfWeek"/>
+    <a n="zimbraPrefCalendarInitialView"/>
+    <a n="zimbraPrefCalendarForwardInvitesTo"/>
+    <a n="zimbraPrefClientType"/>
+    <a n="zimbraPrefTimeZoneId"/>
+    <a n="zimbraAllowAnyFromAddress"/>
+    <a n="zimbraAllowFromAddress"/>
+    <a n="zimbraPrefCalendarAlwaysShowMiniCal"/>
+    <a n="zimbraPrefCalendarUseQuickAdd"/>
+    <a n="zimbraPrefSaveToSent"/>
+    <a n="zimbraPrefMailSignature"/>
+    <a n="zimbraPrefMailSignatureEnabled"/>
+    <a n="zimbraPrefSentMailFolder"/>
+    <a n="zimbraPrefGroupMailBy"/>
+    <a n="zimbraPrefIncludeSpamInSearch"/>
+    <a n="zimbraPrefIncludeTrashInSearch"/>
+    <a n="zimbraPrefMailInitialSearch"/>
+    <a n="zimbraMaxMailItemsPerPage"/>
+    <a n="zimbraPrefMailItemsPerPage"/>
+    <a n="zimbraPrefMailPollingInterval"/>
+    <a n="zimbraPrefMailFlashTitle"/>
+    <a n="zimbraPrefMailFlashIcon"/>
+    <a n="zimbraPrefMailSoundsEnabled"/>
+    <a n="zimbraMailMinPollingInterval"/>
+    <a n="zimbraPrefOutOfOfficeFromDate"/>
+    <a n="zimbraPrefOutOfOfficeUntilDate"/>
+    <a n="zimbraPrefOutOfOfficeReply"/>
+    <a n="zimbraPrefOutOfOfficeReplyEnabled"/>
+    <a n="zimbraPrefReplyToAddress"/>
+    <a n="zimbraPrefUseKeyboardShortcuts"/>
+    <a n="zimbraPrefContactsPerPage"/>
+    <a n="zimbraMemberOf"/>
+    <a n="zimbraPrefComposeInNewWindow"/>
+    <a n="zimbraPrefForwardReplyInOriginalFormat"/>
+    <a n="zimbraPrefAutoAddAddressEnabled"/>
+    <a n="zimbraPrefComposeFormat"/>
+    <a n="zimbraPrefMessageViewHtmlPreferred"/>
+    <a n="zimbraPrefNewMailNotificationAddress"/>
+    <a n="zimbraPrefNewMailNotificationEnabled"/>
+    <a n="zimbraPrefOutOfOfficeReply"/>
+    <a n="zimbraPrefShowSearchString"/>
+    <a n="zimbraPrefMailSignatureStyle"/>
+    <a n="zimbraPrefUseTimeZoneListInCalendar"/>
+    <a n="zimbraPrefImapSearchFoldersEnabled"/>
+    <a n="zimbraPrefMailForwardingAddress"/>
+    <a n="zimbraPrefMailLocalDeliveryDisabled"/>
+    <a n="zimbraPrefCalendarApptReminderWarningTime"/>
+    <a n="zimbraPrefSkin"/>
+    <a n="zimbraPrefGalAutoCompleteEnabled"/>
+    <a n="zimbraPrefWarnOnExit"/>
+    <a n="zimbraPrefShowSelectionCheckbox"/>
+    <a n="zimbraPrefHtmlEditorDefaultFontSize"/>
+    <a n="zimbraPrefHtmlEditorDefaultFontFamily"/>
+    <a n="zimbraPrefHtmlEditorDefaultFontColor"/>
+    <a n="zimbraMailSignatureMaxLength"/>
+    <a n="zimbraPrefDisplayExternalImages" />
+    <a n="zimbraPrefOutOfOfficeCacheDuration"/>
+    <a n="zimbraPrefMailDefaultCharset"/>
+    <a n="zimbraPrefLocale"/>
+    <a n="zimbraJunkMessagesIndexingEnabled"/>
+    <a n="zimbraPrefMailSendReadReceipts"/>
+    <a n="zimbraPrefReadReceiptsToAddress"/>
+    <a n="zimbraPrefAdminConsoleWarnOnExit" />
+    <a n="zimbraPrefMandatorySpellCheckEnabled"/>
+  </attrs>
+</right>
+<right name="adminConsoleAccountsPreferencesTabRights" type="combo">
+  <desc> Admin Console rights for Accounts Preferences Tab </desc>
+  <rights>
+    <r n="setAdminConsoleAccountsPreferencesTab"/>
+    <r n="viewAdminConsoleAccountsPreferencesTab"/>
+  </rights>
+</right>
 
 <!-- Admin Console Accounts FreeBusyInterop Tab -->
 <right name="setAdminConsoleAccountsFreeBusyInteropTab" type="setAttrs" targetType="account">
@@ -2182,6 +2343,7 @@
     <r n="adminConsoleAccountsMemberOfTabRights"/>
     <r n="adminConsoleAccountsAliasesTabRights"/>
     <r n="adminConsoleAccountsForwardingTabRights"/>
+    <r n="adminConsoleAccountsThemesTabRights"/>
     <r n="listAccount"/>
     <r n="viewAccountAdminUI"/>
   </rights>
