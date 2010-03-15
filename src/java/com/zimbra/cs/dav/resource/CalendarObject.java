@@ -35,7 +35,10 @@ import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message;
@@ -191,6 +194,18 @@ public interface CalendarObject {
         }
         @Override public boolean isCollection() {
             return false;
+        }
+        // work around for bug 45241
+        // mark appointment invite email read instead of moving to trash.
+        @Override public void delete(DavContext ctxt) throws DavException {
+            try {
+                Mailbox mbox = getMailbox(ctxt);
+                mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+            } catch (ServiceException se) {
+                int resCode = se instanceof MailServiceException.NoSuchItemException ?
+                        HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+                throw new DavException("cannot delete item", resCode, se);
+            }
         }
         private Invite mInvite;
     }
