@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100301-1647 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100315-1156 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1863,13 +1863,13 @@ public class ZAttrCos extends NamedEntry {
      * attributes for GAL objects are mapped to Contact compatible attributes
      * via zimbraGalLdapAttrMap.
      *
-     * @return zimbraContactAutoCompleteEmailFields, or "email,email2,email3" if unset
+     * @return zimbraContactAutoCompleteEmailFields, or "email,email2,email3,workEmail1,workEmail2,workEmail3" if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=760)
     public String getContactAutoCompleteEmailFields() {
-        return getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields, "email,email2,email3");
+        return getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields, "email,email2,email3,workEmail1,workEmail2,workEmail3");
     }
 
     /**
@@ -19276,6 +19276,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefIncludeTrashInSearch(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefIncludeTrashInSearch, "");
+        return attrs;
+    }
+
+    /**
+     * number of messages/conversations per virtual page
+     *
+     * @return zimbraPrefItemsPerVirtualPage, or 50 if unset
+     *
+     * @since ZCS 6.0.6
+     */
+    @ZAttr(id=1079)
+    public int getPrefItemsPerVirtualPage() {
+        return getIntAttr(Provisioning.A_zimbraPrefItemsPerVirtualPage, 50);
+    }
+
+    /**
+     * number of messages/conversations per virtual page
+     *
+     * @param zimbraPrefItemsPerVirtualPage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.6
+     */
+    @ZAttr(id=1079)
+    public void setPrefItemsPerVirtualPage(int zimbraPrefItemsPerVirtualPage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefItemsPerVirtualPage, Integer.toString(zimbraPrefItemsPerVirtualPage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of messages/conversations per virtual page
+     *
+     * @param zimbraPrefItemsPerVirtualPage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.6
+     */
+    @ZAttr(id=1079)
+    public Map<String,Object> setPrefItemsPerVirtualPage(int zimbraPrefItemsPerVirtualPage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefItemsPerVirtualPage, Integer.toString(zimbraPrefItemsPerVirtualPage));
+        return attrs;
+    }
+
+    /**
+     * number of messages/conversations per virtual page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.6
+     */
+    @ZAttr(id=1079)
+    public void unsetPrefItemsPerVirtualPage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefItemsPerVirtualPage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of messages/conversations per virtual page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.6
+     */
+    @ZAttr(id=1079)
+    public Map<String,Object> unsetPrefItemsPerVirtualPage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefItemsPerVirtualPage, "");
         return attrs;
     }
 

@@ -4810,4 +4810,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Id of calendar folder to advertise as the default calendar to CalDAV client.</desc>
 </attr>
 
+<attr id="1079" name="zimbraPrefItemsPerVirtualPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.6">
+  <defaultCOSValue>50</defaultCOSValue>
+  <desc>number of messages/conversations per virtual page</desc>
+</attr>
+
 </attrs>

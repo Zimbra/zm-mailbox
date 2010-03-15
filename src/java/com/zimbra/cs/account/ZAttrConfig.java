@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100301-1647 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100315-1156 */
 
     /**
      * RFC2256: descriptive information
@@ -4819,9 +4819,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * <p>Use getContactRankingTableRefreshIntervalAsString to access value as a string.
      *
@@ -4837,9 +4837,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * @return zimbraContactRankingTableRefreshInterval, or "7d" if unset
      *
@@ -4851,9 +4851,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * @param zimbraContactRankingTableRefreshInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4868,9 +4868,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * @param zimbraContactRankingTableRefreshInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4886,9 +4886,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4902,9 +4902,9 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

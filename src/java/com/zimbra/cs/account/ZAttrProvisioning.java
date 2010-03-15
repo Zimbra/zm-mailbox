@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100301-1647 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100315-1156 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1955,9 +1955,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
 
     /**
-     * How often do we refresh contact ranking table from address book and
-     * GAL to get friendly name for the email address. Use 0 to disable the
-     * refresh.
+     * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
+     * often do we refresh contact ranking table from address book and GAL to
+     * get friendly name for the email address. Use 0 to disable the refresh.
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -5696,6 +5696,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=56)
     public static final String A_zimbraPrefIncludeTrashInSearch = "zimbraPrefIncludeTrashInSearch";
+
+    /**
+     * number of messages/conversations per virtual page
+     *
+     * @since ZCS 6.0.6
+     */
+    @ZAttr(id=1079)
+    public static final String A_zimbraPrefItemsPerVirtualPage = "zimbraPrefItemsPerVirtualPage";
 
     /**
      * Retention period of messages in the Junk folder. 0 means that all
