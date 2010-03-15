@@ -519,7 +519,7 @@ extends Assert {
     /**
      * Sets up the environment for command-line unit tests.
      */
-    static void cliSetup()
+    public static void cliSetup()
     throws ServiceException {
         if (!sIsCliInitialized) {
             CliUtil.toolSetup();
