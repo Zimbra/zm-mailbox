@@ -49,34 +49,31 @@ public class DateUtil {
     public static Date parseGeneralizedTime(String time) {
         return parseGeneralizedTime(time, true);
     }
-    
+
     /**
      * from LDAP generalized time string
      */
     public static Date parseGeneralizedTime(String time, boolean strict) {
-        int maxLen;
-        if (strict)
-            maxLen = 15;
+        int maxLen = strict ? 15 : 17;
+        if (time.length() < 14 || time.length() > maxLen)
+            return null;
+
+        TimeZone tz;
+        if (time.endsWith("Z"))
+            tz = TimeZone.getTimeZone("GMT");
         else
-            maxLen = 17;
-        
-    	if (time.length() < 14 || time.length() > maxLen)
-    		return null;
-    	TimeZone tz;
-    	if (time.endsWith("Z"))
-    		tz = TimeZone.getTimeZone("GMT");
-    	else
-    		tz = TimeZone.getDefault();
-    	int year = Integer.parseInt(time.substring(0, 4));
-    	int month = Integer.parseInt(time.substring(4, 6)) - 1;  // months are 0 base
-    	int date = Integer.parseInt(time.substring(6, 8));
-    	int hour = Integer.parseInt(time.substring(8, 10));
-    	int min = Integer.parseInt(time.substring(10, 12));
-    	int sec = Integer.parseInt(time.substring(12, 14));
-    	Calendar calendar = new GregorianCalendar(tz);
-    	calendar.clear();
-    	calendar.set(year, month, date, hour, min, sec);
-    	return calendar.getTime();
+            tz = TimeZone.getDefault();
+        int year = Integer.parseInt(time.substring(0, 4));
+        int month = Integer.parseInt(time.substring(4, 6)) - 1;  // months are 0 base
+        int date = Integer.parseInt(time.substring(6, 8));
+        int hour = Integer.parseInt(time.substring(8, 10));
+        int min = Integer.parseInt(time.substring(10, 12));
+        int sec = Integer.parseInt(time.substring(12, 14));
+
+        Calendar calendar = new GregorianCalendar(tz);
+        calendar.clear();
+        calendar.set(year, month, date, hour, min, sec);
+        return calendar.getTime();
     }
 
     /** Serializes a date in full ISO8601 date/time format.
@@ -167,6 +164,7 @@ public class DateUtil {
 
         Calendar cal = new GregorianCalendar();
         cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
 
         try {
             int pos = skipCFWS(encoded, 0);
