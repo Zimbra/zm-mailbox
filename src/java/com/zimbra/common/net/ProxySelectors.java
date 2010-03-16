@@ -25,6 +25,7 @@ import java.net.SocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -33,10 +34,17 @@ import java.util.List;
 public final class ProxySelectors {
     private static final ProxySelector systemProxySelector;
     private static final ProxySelector nativeProxySelector;
+    private static final ProxySelector defaultProxySelector;
 
     static {
         systemProxySelector = ProxySelector.getDefault();
-        nativeProxySelector = useNativeProxySelector() ? new NativeProxySelector() : null;
+        if (useNativeProxySelector()) {
+            nativeProxySelector = new NativeProxySelector();
+            defaultProxySelector = nativeProxySelector;
+        } else {
+            nativeProxySelector = null;
+            defaultProxySelector = new CustomProxySelector(systemProxySelector);
+        }
     }
 
     private static boolean useNativeProxySelector() {
@@ -47,11 +55,11 @@ public final class ProxySelectors {
     /**
      * On supported systems returns the native ProxySelector otherwise
      * returns the system default.
+     *
      * @return the default ProxySelector
      */
     public static ProxySelector defaultProxySelector() {
-        return nativeProxySelector != null ?
-            nativeProxySelector : systemProxySelector;
+        return defaultProxySelector;
     }
 
     /**
@@ -64,6 +72,7 @@ public final class ProxySelectors {
 
     /**
      * Returns the native ProxySelector if available, otherwise returns null.
+     *
      * @return the native ProxySelector or null if not available
      */
     public static ProxySelector nativeProxySelector() {
@@ -73,6 +82,7 @@ public final class ProxySelectors {
     /**
      * Returns a "dummy" ProxySelector whose select method always returns
      * a DIRECT connection. Used for testing.
+     *
      * @return the dummy ProxySelector
      */
     public static ProxySelector dummyProxySelector() {
@@ -89,8 +99,8 @@ public final class ProxySelectors {
 
     /*
      * Native ProxySelector implementation that uses native code to workaround
-     * issues with OS/X's default system ProxySelector. Specifically, the
-     * system default does not handle dynamic changes to proxy settings.
+     * issues with OS/X's default system ProxySelector. This implementation
+     * correctly handles dynamic changes to system proxy settings.
      */
     private static class NativeProxySelector extends ProxySelector {
         public List<Proxy> select(URI uri) {
@@ -107,7 +117,7 @@ public final class ProxySelectors {
             return proxies;
         }
 
-        public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
+        public void connectFailed(URI uri, SocketAddress sa, IOException e) {
             // Do nothing...
         }
     }
@@ -128,11 +138,56 @@ public final class ProxySelectors {
         return null;
     }
 
+    /*
+     * Custom proxy selector that replaces system default if no native proxy
+     * is available. This proxy selector will delegate to the system default
+     * for HTTP as well as SOCKS if SOCKS support is enabled. Also excludes
+     * invalid proxy results (i.e. invalid port) which works around issues
+     * on Linux hosts with incorrect settings.
+     */
+    private static class CustomProxySelector extends ProxySelector {
+        private final ProxySelector ps;
+
+        CustomProxySelector(ProxySelector ps) {
+            this.ps = ps;
+        }
+
+        public List<Proxy> select(URI uri) {
+            List<Proxy> proxies = ps.select(uri);
+            for (Iterator<Proxy> it = proxies.iterator(); it.hasNext(); ) {
+                if (!isValidProxy(it.next())) {
+                    it.remove();
+                }
+            }
+            if (proxies.isEmpty()) {
+                proxies.add(Proxy.NO_PROXY);
+            }
+            return proxies;
+        }
+
+        public void connectFailed(URI uri, SocketAddress sa, IOException e) {
+            ps.connectFailed(uri, sa, e);
+        }
+    }
+
+    private static boolean isValidProxy(Proxy proxy) {
+        InetSocketAddress addr = (InetSocketAddress) proxy.address();
+        switch (proxy.type()) {
+        case SOCKS:
+            return NetConfig.getInstance().isSocksEnabled() && addr.getPort() > 0;
+        case HTTP:
+            return addr.getPort() > 0;
+        default:
+            return true;
+        }
+    }
+
     private static SocketAddress saddr(String host, int port) {
         return new InetSocketAddress(host, port);
     }
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("java.net.useSystemProxies", "true");
         String url = args.length > 0 ? args[0] : "http://www.news.com";
         System.out.printf("Proxy information for %s :\n", url);
         List<Proxy> proxies = defaultProxySelector().select(new URI(url));
