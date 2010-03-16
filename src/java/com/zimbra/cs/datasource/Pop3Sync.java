@@ -60,7 +60,6 @@ public class Pop3Sync extends MailItemImport {
 
     private Pop3Config getPop3Config(DataSource ds) {
         Pop3Config config = new Pop3Config();
-
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
@@ -73,13 +72,20 @@ public class Pop3Sync extends MailItemImport {
         config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
         return config;
     }
-    
+
     public synchronized void test() throws ServiceException {
         validateDataSource();
         setTimeout(LC.javamail_pop3_test_timeout.intValue());
         enableTrace(connection.getPop3Config());
         try {
             connect();
+            if (dataSource.leaveOnServer() && !hasUIDL()) {
+                throw RemoteServiceException.POP3_UIDL_REQUIRED();
+            }
+            connection.quit();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE(
+                "Unable to connect to POP3 server: " + dataSource, e);
         } finally {
             connection.close();
         }
@@ -125,30 +131,37 @@ public class Pop3Sync extends MailItemImport {
 
     private void connect() throws ServiceException {
         if (!connection.isClosed()) return;
-        boolean hasUIDL;
         try {
             connection.connect();
-            // Bug 41213: Make sure to check if UIDL is supported both before
-            // and after authentication.
-            hasUIDL = hasUIDL();
             try {
                 connection.login(dataSource.getDecryptedPassword());
             } catch (CommandFailedException e) {
                 throw new LoginException(e.getError());
             }
-            hasUIDL |= hasUIDL();
         } catch (Exception e) {
             connection.close();
             throw ServiceException.FAILURE(
                 "Unable to connect to POP3 server: " + dataSource, e);
         }
-        if (dataSource.leaveOnServer() && !hasUIDL) {
-            throw RemoteServiceException.POP3_UIDL_REQUIRED();
-        }
     }
 
-    private boolean hasUIDL() {
-        return connection.hasCapability(Pop3Capabilities.UIDL);
+    private boolean hasUIDL() throws IOException {
+        if (connection.hasCapability(Pop3Capabilities.UIDL)) {
+            return true;
+        }
+        // Additional check for servers that don't support CAPA
+        // (i.e. Hotmail) but do support UIDL.
+        try {
+            if (connection.getMessageCount() > 0) {
+                // Only need to test UIDL on first message
+                connection.getMessageUid(1);
+            } else {
+                connection.getMessageUids();
+            }
+        } catch (CommandFailedException e) {
+            return false;
+        }
+        return true;
     }
     
     private void fetchAndDeleteMessages()
