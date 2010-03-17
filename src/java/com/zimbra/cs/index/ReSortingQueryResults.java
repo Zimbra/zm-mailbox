@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.localconfig.DebugConfig;
 
 /**
  * QueryResults wrapper that implements Re-Sorting.  It does this by caching **ALL** 
@@ -188,6 +189,12 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
 
             boolean skipHit = false;
             
+            boolean handleCursorFilteringForFirstHit = true;
+            if (DebugConfig.enableContactLocalizedSort) {
+                if (mDesiredSort.getType() == SortBy.Type.NAME_LOCALIZED_ASCENDING || mDesiredSort.getType() == SortBy.Type.NAME_LOCALIZED_DESCENDING)
+                    handleCursorFilteringForFirstHit = false;
+            }
+            
             // handle cursor filtering
             if (mParams != null && mParams.hasCursor()) {
                 ZimbraHit firstHit = null;
@@ -205,8 +212,10 @@ public class ReSortingQueryResults implements ZimbraQueryResults {
                                                        0);
                 
                 // fail if cur < first OR cur >= end 
-                if (firstHit != null && comp.compare(cur, firstHit) < 0)
-                    skipHit = true;
+                if (handleCursorFilteringForFirstHit) {
+                    if (firstHit != null && comp.compare(cur, firstHit) < 0)
+                        skipHit = true;
+                }
                 if (endHit != null && comp.compare(cur, endHit) >= 0)
                     skipHit = true;
             }

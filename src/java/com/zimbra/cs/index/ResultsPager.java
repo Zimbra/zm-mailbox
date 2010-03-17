@@ -16,8 +16,10 @@ package com.zimbra.cs.index;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 
@@ -42,6 +44,8 @@ public final class ResultsPager
     private AbstractList<ZimbraHit> mBufferedHits = null;;
     private SearchParams mParams;
     private boolean mForward = true;
+    
+    private Comparator mComparator; 
     
     public SortBy getSortOrder() { return mParams.getSortBy(); }
     
@@ -68,10 +72,17 @@ public final class ResultsPager
                 break;
             case NAME_LOCALIZED_ASCENDING:
             case NAME_LOCALIZED_DESCENDING:
-                dontUseCursor = true;
+                if (DebugConfig.enableContactLocalizedSort)
+                    dontUseCursor = false;
+                else
+                    dontUseCursor = true;
+                
                 // for localized sorts, the cursor is actually simulated by the 
                 // ReSortingQueryResults....so we need to zero out the offset here
-                skipOffsetHack = true;
+                if (DebugConfig.enableContactLocalizedSort)
+                    skipOffsetHack = false;
+                else
+                    skipOffsetHack = true;
         }
         
         if (dontUseCursor || !params.hasCursor()) {
@@ -99,6 +110,14 @@ public final class ResultsPager
         mFixedOffset = !useCursor;
         mIgnoreOffsetHack = skipOffset;
         mForward = forward;
+        
+        if (DebugConfig.enableContactLocalizedSort) {
+            SortBy desiredSort = mParams.getSortBy();
+            if (desiredSort instanceof LocalizedSortBy) {
+                mComparator = ((LocalizedSortBy)desiredSort).getZimbraHitComparator();
+            }
+        }
+            
         assert(forward || !mFixedOffset); // only can go backward if using cursor 
         reset();
     }
@@ -153,7 +172,14 @@ public final class ResultsPager
                 return mResults.getNext();
             }
             
-            int comp = hit.compareBySortField(mParams.getSortBy(), prevHit); 
+            int comp;
+            if (DebugConfig.enableContactLocalizedSort) {
+                if (mComparator != null)
+                    comp = mComparator.compare(hit, prevHit);
+                else
+                    comp = hit.compareBySortField(mParams.getSortBy(), prevHit); 
+            } else
+                comp = hit.compareBySortField(mParams.getSortBy(), prevHit); 
 
             // if (hit at the SAME TIME as prevSortValue) AND the ID is > prevHitId
             //   --> this depends on a secondary sort-order of HitID.  This doesn't

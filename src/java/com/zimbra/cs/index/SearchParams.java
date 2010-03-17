@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
@@ -194,30 +195,41 @@ public final class SearchParams implements Cloneable {
         checkForLocalizedContactSearch();
     }
     
+    private boolean isSystemDefaultLocale() {
+        if (mLocale == null)
+            return true;
+        
+        // Gets the current value of the default locale for this instance of the Java Virtual Machine.
+        Locale systemDefaultLocale = Locale.getDefault();
+        
+        return mLocale.equals(systemDefaultLocale);
+    }
+    
     private void checkForLocalizedContactSearch() {
-//        
-// FIXME: for bug 41920, disable localized contact sorting
-//        
-//        // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
-//        if (types != null && types.length == 1 && types[0] == MailItem.TYPE_CONTACT) {
-//            if (mLocale != null) {
-//                if (mSortBy != null) {
-//                    if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
-//                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING, 
-//                                                      null,
-//                                                      SortBy.SortCriterion.NAME,
-//                                                      SortBy.SortDirection.ASCENDING,
-//                                                      mLocale);
-//                    } else if (mSortBy.getType() == SortBy.Type.NAME_DESCENDING) {
-//                        mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING, 
-//                                                      null,
-//                                                      SortBy.SortCriterion.NAME,
-//                                                      SortBy.SortDirection.DESCENDING,
-//                                                      mLocale);
-//                    }
-//                }
-//            }
-//        }
+        if (DebugConfig.enableContactLocalizedSort) {
+        
+            // FIXME: for bug 41920, disable localized contact sorting
+            // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
+            if (types != null && types.length == 1 && types[0] == MailItem.TYPE_CONTACT && !isSystemDefaultLocale()) {
+                if (mLocale != null) {
+                    if (mSortBy != null) {
+                        if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
+                            mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_ASCENDING, 
+                                                          null,
+                                                          SortBy.SortCriterion.NAME,
+                                                          SortBy.SortDirection.ASCENDING,
+                                                          mLocale);
+                        } else if (mSortBy.getType() == SortBy.Type.NAME_DESCENDING) {
+                            mSortBy = new LocalizedSortBy(SortBy.Type.NAME_LOCALIZED_DESCENDING, 
+                                                          null,
+                                                          SortBy.SortCriterion.NAME,
+                                                          SortBy.SortDirection.DESCENDING,
+                                                          mLocale);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void setSortBy(SortBy sortBy) {
