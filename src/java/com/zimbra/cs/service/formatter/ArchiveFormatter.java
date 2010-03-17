@@ -827,6 +827,29 @@ public abstract class ArchiveFormatter extends Formatter {
         return fldr;
     }
 
+    private long getTagMask(Mailbox mbox, ItemData id) throws IOException {
+    	long bitmask = 0;
+    	
+    	if (id.tags != null && id.tags.length() > 0) {
+	    	try {
+		        for (String name : id.tags.split(":")) {
+			    	try {
+			        	Tag tag = mbox.getTagByName(name);
+			        	
+			        	if (tag != null)
+			        		bitmask |= tag.getBitmask();
+			    	} catch (MailServiceException e) {
+			    		if (e.getCode() != MailServiceException.NO_SUCH_TAG)
+			    			throw e;
+			    	}
+		        }
+	    	} catch (Exception e) {
+	            throw new IOException("tag error: " + e);
+	    	}
+    	}
+        return bitmask;
+    }
+
     private static byte[] readArchiveEntry(ArchiveInputStream ais,
         ArchiveInputEntry aie) throws IOException {
         if (aie == null)
@@ -1284,17 +1307,17 @@ public abstract class ArchiveFormatter extends Formatter {
                         mi.getColor());
                 
                 if (!id.flags.equals(newItem.getFlagString()) ||
-                    !id.tags.equals(newItem.getTagString()))
+                    !id.tags.equals(ItemData.getTagString(newItem)))
                     mbox.setTags(oc, newItem.getId(), newItem.getType(),
-                        id.flags, id.tags, null);
+                        Flag.flagsToBitmask(id.flags), getTagMask(mbox, id), null);
             } else if (oldItem != null && r == Resolve.Modify) {
                 if (mi.getColor() != oldItem.getColor())
                     mbox.setColor(oc, oldItem.getId(), oldItem.getType(),
                         mi.getColor());
                 if (!id.flags.equals(oldItem.getFlagString()) ||
-                    !id.tags.equals(oldItem.getTagString()))
+                    !id.tags.equals(ItemData.getTagString(oldItem)))
                     mbox.setTags(oc, oldItem.getId(), oldItem.getType(),
-                        id.flags, id.tags, null);
+                        Flag.flagsToBitmask(id.flags), getTagMask(mbox, id), null);
             }
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.QUOTA_EXCEEDED) {

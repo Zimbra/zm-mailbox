@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.Tag;
 
 public class ItemData {
     public String sender, extra, flags, path, tags;
@@ -44,7 +45,7 @@ public class ItemData {
             extra = userData;
             flags = mi.getFlagString();
             path = mi.getPath();
-            tags = mi.getTagString();
+            tags = getTagString(mi);
             ud = mi.getUnderlyingData();
         } catch (Exception e) {
             throw new IOException("data error: " + e);
@@ -149,5 +150,20 @@ public class ItemData {
         } catch (Exception e) {
             throw new IOException("encode error: " + e);
         }
+    }
+
+    public static String getTagString(MailItem mi) throws IOException {
+    	String tags = "";
+    	
+    	try {
+	        for (Tag tag : mi.getTagList()) {
+	        	if (tags != null)
+	        		tags += ':';
+	        	tags += tag.getName();
+	        }
+    	} catch (Exception e) {
+            throw new IOException("tag error: " + e);
+    	}
+        return tags;
     }
 }
