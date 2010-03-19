@@ -278,7 +278,7 @@ public class LC {
     public static final KnownKey postfix_in_flow_delay;
     public static final KnownKey postfix_lmtp_connection_cache_destinations;
     public static final KnownKey postfix_lmtp_connection_cache_time_limit;
-    public static final KnownKey postfix_lmtp_host_lookup;;
+    public static final KnownKey postfix_lmtp_host_lookup;
     public static final KnownKey postfix_mailq_path;
     public static final KnownKey postfix_manpage_directory;
     public static final KnownKey postfix_maximal_backoff_time;
@@ -308,7 +308,7 @@ public class LC {
     public static final KnownKey sqlite_journal_mode;
     public static final KnownKey sqlite_page_size;
     public static final KnownKey sqlite_sync_mode;
-
+                                                                  
     public static final KnownKey mailboxd_directory;
     public static final KnownKey mailboxd_java_heap_memory_percent;
     public static final KnownKey mailboxd_java_heap_new_size_percent;
@@ -350,9 +350,14 @@ public class LC {
     public static final KnownKey calendar_cache_range_months;
     public static final KnownKey calendar_cache_max_stale_items;
 
-    public static final KnownKey nio_imap_enabled;
-    public static final KnownKey nio_pop3_enabled;
-    public static final KnownKey nio_lmtp_enabled;
+    public static final KnownKey nio_imap_enabled =
+        new KnownKey("nio_imap_enabled", "false");
+
+    public static final KnownKey nio_pop3_enabled =
+        new KnownKey("nio_pop3_enabled", "false");
+
+    public static final KnownKey nio_lmtp_enabled =
+        new KnownKey("nio_lmtp_enabled", "false");
     
     public static final KnownKey imap_max_request_size =
         new KnownKey("imap_max_request_size").setDefault(10 * 1024);
@@ -364,14 +369,12 @@ public class LC {
         new KnownKey("nio_imap_min_threads").setDefault(20);
     public static final KnownKey nio_imap_max_sessions =
         new KnownKey("nio_imap_max_sessions").setDefault(200);
-    public static final KnownKey nio_imap_write_queue_low_watermark =
-        new KnownKey("nio_imap_write_queue_low_watermark").setDefault(64*1024);
-    public static final KnownKey nio_imap_write_queue_high_watermark =
-        new KnownKey("nio_imap_write_queue_high_watermark").setDefault(1024*1024);
+    public static final KnownKey nio_imap_max_scheduled_write_bytes =
+        new KnownKey("nio_imap_max_scheduled_write_bytes").setDefault(1024*1024);
     public static final KnownKey nio_imap_write_timeout =
         new KnownKey("nio_imap_write_timeout").setDefault(60);
-    public static final KnownKey nio_imap_max_chunk_size =
-        new KnownKey("nio_imap_max_chunk_size").setDefault(8*1024);
+    public static final KnownKey nio_imap_write_chunk_size =
+        new KnownKey("nio_imap_write_chunk_size").setDefault(8*1024);
     public static final KnownKey nio_imap_thread_keep_alive_time =
         new KnownKey("nio_imap_thread_keep_alive_time").setDefault(60);
 
@@ -1256,15 +1259,6 @@ public class LC {
         calendar_cache_max_stale_items = new KnownKey("calendar_cache_max_stale_items");
         calendar_cache_max_stale_items.setDefault("10");
 
-        nio_imap_enabled = new KnownKey("nio_imap_enabled");
-        nio_imap_enabled.setDefault("false");
-
-        nio_pop3_enabled = new KnownKey("nio_pop3_enabled");
-        nio_pop3_enabled.setDefault("false");
-
-        nio_lmtp_enabled = new KnownKey("nio_lmtp_enabled");
-        nio_lmtp_enabled.setDefault("false");
-        
         krb5_keytab = new KnownKey("krb5_keytab");
         krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
         
