@@ -22,8 +22,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaCodecFactory;
+import com.zimbra.cs.mina.MinaSession;
 import com.zimbra.cs.server.ServerConfig;
-import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
@@ -42,7 +42,7 @@ public class MinaPop3Server extends MinaServer {
             config.isSSLEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
     }
 
-    @Override public MinaHandler createHandler(IoSession session) {
+    @Override public MinaHandler createHandler(MinaSession session) {
         return new MinaPop3Handler(this, session);
     }
 

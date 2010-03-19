@@ -18,34 +18,30 @@ package com.zimbra.cs.lmtpserver;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaIoSessionOutputStream;
-import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.LineBuffer;
+import com.zimbra.cs.mina.MinaSession;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
-import org.apache.mina.common.IdleStatus;
-import org.apache.mina.common.IoSession;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
 public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
-    private final IoSession mSession;
+    private final MinaSession mSession;
+    private final OutputStream mOutputStream;
     private BlobBuilder data;
-    private MinaOutputStream mOutputStream;
 
     private static final long WRITE_TIMEOUT = 5000;
     
-    public MinaLmtpHandler(MinaLmtpServer server, IoSession session) {
+    public MinaLmtpHandler(MinaLmtpServer server, MinaSession session) {
         super(server);
         mSession = session;
         mEnvelope = new LmtpEnvelope();
-        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        mOutputStream = mSession.getOutputStream();
         mWriter = new LmtpWriter(mOutputStream);
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
+        mSession.setMaxIdleSeconds(mConfig.getMaxIdleSeconds());
     }
     
     public void messageReceived(Object msg) throws IOException {
@@ -79,7 +75,7 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     }
 
     public void connectionOpened() {
-        setupConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
+        setupConnection(mSession.getRemoteAddress().getAddress());
     }
 
     public void connectionClosed() {
@@ -108,7 +104,8 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     }
 
     public void dropConnection(long timeout) {
-        if (!mSession.isConnected()) return;
+        if (mSession.isClosed())
+            return;
         try {
             mOutputStream.close();
         } catch (IOException e) {
@@ -116,7 +113,7 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
         }
         if (timeout >= 0) {
             // Wait for all remaining bytes to be written
-            if (!mOutputStream.join(timeout)) {
+            if (!mSession.drainWriteQueue(timeout)) {
                 ZimbraLog.lmtp.warn("Force closing session because write timed out: " + mSession);
             }
         }

@@ -27,7 +27,7 @@ public class MinaImapDecoder extends ProtocolDecoderAdapter {
     private final LineBuffer buf = new LineBuffer();
     private int count = -1;
 
-    private static final int MAX_BYTES = LC.nio_imap_max_chunk_size.intValue();
+    private static final int MAX_BYTES = LC.nio_imap_write_chunk_size.intValue();
 
     MinaImapDecoder(MinaStats stats) {
         this.stats = stats;

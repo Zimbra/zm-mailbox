@@ -19,7 +19,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetUtil;
-import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
@@ -40,7 +39,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManagerFactory;
-import javax.security.sasl.SaslServer;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -156,11 +154,11 @@ public abstract class MinaServer implements Server {
         }
         return mSslEnabledCipherSuites;
     }
-    
-    private static SSLFilter getSSLFilter(ServerConfig serverConfig) {
+
+    public SSLFilter newSSLFilter() {
         SSLContext sslCtxt = getSSLContext();
         SSLFilter sslFilter = new SSLFilter(sslCtxt);
-        String [] enabledCiphers = getSSLEnabledCiphers(sslCtxt, serverConfig);
+        String [] enabledCiphers = getSSLEnabledCiphers(sslCtxt, mServerConfig);
         if (enabledCiphers.length > 0)
             sslFilter.setEnabledCipherSuites(enabledCiphers);
         return sslFilter;
@@ -214,7 +212,7 @@ public abstract class MinaServer implements Server {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = mAcceptorConfig.getFilterChain();
         if (sc.isSSLEnabled()) {
-            fc.addFirst("ssl", getSSLFilter(getConfig()));
+            fc.addFirst("ssl", newSSLFilter());
         }
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
         fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
@@ -290,33 +288,13 @@ public abstract class MinaServer implements Server {
     }
 
     /**
-     * Starts TLS handshake for the specified I/O session. Disables encryption
-     * once so that notification can be sent to the client to start the
-     * handshake.
-     *
-     * @param session the IoSession on which to start the TLS handshake
-     * @param serverConfig server configuration
-     */
-    public static void startTLS(IoSession session, ServerConfig serverConfig) {
-        SSLFilter filter = getSSLFilter(serverConfig);
-        session.getFilterChain().addFirst("ssl", filter);
-        session.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
-    }
-
-    public static void addSaslFilter(IoSession session, SaslServer server) {
-        SaslFilter filter = new SaslFilter(server);
-        session.getFilterChain().addFirst("sasl", filter);
-        session.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
-    }
-    
-    /**
      * Creates a new handler for handling requests received by the
      * specified MINA session (connection).
      *
      * @param session the I/O session (connection) being opened
      * @return the MinaHandler for handling requests
      */
-    protected abstract MinaHandler createHandler(IoSession session);
+    protected abstract MinaHandler createHandler(MinaSession session);
 
     protected abstract ProtocolCodecFactory getProtocolCodecFactory();
     

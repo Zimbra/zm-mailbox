@@ -31,30 +31,30 @@ class MinaIoHandler implements IoHandler {
     private final MinaServer server;
     private final MinaStats stats;
 
-    private static final String MINA_HANDLER_ATTR = "MinaHandler";
+    private static final String MINA_SESSION = "MinaSession";
+    private static final String MINA_HANDLER = "MinaHandler";
 
     MinaIoHandler(MinaServer server) {
         this.server = server;
         stats = server.getStats();
     }
 
-    public void sessionCreated(IoSession session) throws IOException {
-        session.setAttribute(MINA_HANDLER_ATTR, server.createHandler(session));
+    public void sessionCreated(IoSession ioSession) throws IOException {
+        MinaSession session = new MinaSession(server, ioSession);
+        ioSession.setAttribute(MINA_SESSION, session);
+        ioSession.setAttribute(MINA_HANDLER, server.createHandler(session));
     }
 
     public void sessionOpened(IoSession session) throws IOException {
         getMinaHandler(session).connectionOpened();
-        if (stats != null) {
-            stats.activeSessions.incrementAndGet();
-            stats.totalSessions.incrementAndGet();
-        }
+        stats.activeSessions.incrementAndGet();
+        stats.totalSessions.incrementAndGet();
     }
 
     public void sessionClosed(IoSession session) throws IOException {
         getMinaHandler(session).connectionClosed();
-        if (stats != null) {
-            stats.activeSessions.decrementAndGet();
-        }
+        getMinaSession(session).close();
+        stats.activeSessions.decrementAndGet();
     }
 
     public void sessionIdle(IoSession session, IdleStatus status) throws IOException{
@@ -70,13 +70,18 @@ class MinaIoHandler implements IoHandler {
     }
 
     public void messageSent(IoSession session, Object msg) {
-        if (stats != null && msg instanceof ByteBuffer) {
+        if (msg instanceof ByteBuffer) {
             ByteBuffer bb = (ByteBuffer) msg;
             stats.sentBytes.addAndGet(bb.remaining());
+            getMinaSession(session).messageSent();
         }
     }
 
     public static MinaHandler getMinaHandler(IoSession session) {
-        return (MinaHandler) session.getAttribute(MINA_HANDLER_ATTR);
+        return (MinaHandler) session.getAttribute(MINA_HANDLER);
+    }
+
+    private static MinaSession getMinaSession(IoSession session) {
+        return (MinaSession) session.getAttribute(MINA_SESSION);
     }
 }

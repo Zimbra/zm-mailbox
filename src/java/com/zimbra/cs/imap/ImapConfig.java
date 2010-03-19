@@ -129,21 +129,26 @@ public class ImapConfig extends ServerConfig {
         return mSaslGssapiEnabled;
     }
     
-    /**
-     * Maximum request size excluding APPEND literal data.
-     */
     public int getMaxRequestSize() {
         return mMaxRequestSize;
     }
 
-    /**
-     * Maximum APPEND message size.
-     */
     public int getMaxMessageSize() {
         return mMaxMessageSize;
     }
 
-    // TODO can this value be cached?
+    public int getNioMaxScheduledWriteBytes() {
+        return LC.nio_imap_max_scheduled_write_bytes.intValue();
+    }
+
+    public int getNioWriteTimeout() {
+        return LC.nio_imap_write_timeout.intValue();
+    }
+
+    public int getNioWriteChunkSize() {
+        return LC.nio_imap_write_chunk_size.intValue();
+    }
+
     public boolean allowCleartextLogins() {
         try {
             Server server = Provisioning.getInstance().getLocalServer();

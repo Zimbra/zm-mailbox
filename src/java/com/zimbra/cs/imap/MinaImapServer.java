@@ -22,6 +22,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaCodecFactory;
+import com.zimbra.cs.mina.MinaSession;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
@@ -46,7 +47,7 @@ public class MinaImapServer extends MinaServer {
     }
 
     @Override
-    public MinaHandler createHandler(IoSession session) {
+    public MinaHandler createHandler(MinaSession session) {
         return new MinaImapHandler(this, session);
     }
 

@@ -31,6 +31,10 @@ public class ServerConfig {
     private boolean mSSLEnabled;
     private String[] mSSLExcludeCiphers;
 
+    private static final int NIO_WRITE_CHUNK_SIZE = 8192;
+    private static final int NIO_WRITE_TIMEOUT = 60;
+    private static final int NIO_MAX_SCHEDULED_WRITE_BYTES = 1024 * 1024;
+    
     public ServerConfig() {
         String name = LC.zimbra_server_hostname.value();
         if (name != null) setName(name);
@@ -103,6 +107,18 @@ public class ServerConfig {
         return mSSLExcludeCiphers;
     }
 
+    public int getNioWriteChunkSize() {
+        return NIO_WRITE_CHUNK_SIZE;
+    }
+
+    public int getNioWriteTimeout() {
+        return NIO_WRITE_TIMEOUT;
+    }
+
+    public int getNioMaxScheduledWriteBytes() {
+        return NIO_MAX_SCHEDULED_WRITE_BYTES;
+    }
+    
     public ServerSocket getServerSocket() throws ServiceException {
         return isSSLEnabled() ?
             NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSSLExcludeCiphers()) :

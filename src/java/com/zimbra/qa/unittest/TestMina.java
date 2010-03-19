@@ -118,7 +118,8 @@ public class TestMina extends TestCase {
         } catch (IllegalArgumentException e) {
         }
     }
-    
+
+    /*
     public void testMinaOutputStream() throws IOException {
         TestMinaOutputStream tos = new TestMinaOutputStream();
         ByteBuffer data = testData(BIG_DATA_SIZE);
@@ -136,6 +137,7 @@ public class TestMina extends TestCase {
         }
     }
 
+
     private static class TestMinaOutputStream extends MinaOutputStream {
         ByteBuffer buf;
         TestMinaOutputStream() { super(23); }
@@ -146,6 +148,8 @@ public class TestMina extends TestCase {
             return true;
         }
     }
+
+    */
     
     private static ByteBuffer testData(int size) {
         ByteBuffer bb = ByteBuffer.allocate(size);

@@ -18,35 +18,28 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
-import com.zimbra.cs.mina.MinaServer;
+import com.zimbra.cs.mina.MinaSession;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
-import org.apache.mina.common.IdleStatus;
-import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
 import java.net.Socket;
 
 class MinaImapHandler extends ImapHandler implements MinaHandler {
     private MinaImapServer mServer;
-    private IoSession mSession;
+    private MinaSession mSession;
     private MinaImapRequest mRequest;
 
     private static final long WRITE_TIMEOUT = LC.nio_imap_write_timeout.longValue() * 1000;
     private static final int MAX_SESSIONS = LC.nio_imap_max_sessions.intValue();
     
-    MinaImapHandler(MinaImapServer server, IoSession session) {
+    MinaImapHandler(MinaImapServer server, MinaSession session) {
         super(server);
         this.mServer = server;
         this.mSession = session;
-        mOutputStream = new MinaIoSessionOutputStream(
-            mSession, LC.nio_imap_max_chunk_size.intValue())
-            .setHighWatermark(LC.nio_imap_write_queue_high_watermark.intValue())
-            .setLowWatermark(LC.nio_imap_write_queue_low_watermark.intValue())
-            .setTimeout(WRITE_TIMEOUT);
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getUnauthMaxIdleSeconds());
+        mOutputStream = mSession.getOutputStream();
+        mSession.setMaxIdleSeconds(mConfig.getUnauthMaxIdleSeconds());
     }
 
     @Override boolean doSTARTTLS(String tag) throws IOException {
@@ -57,7 +50,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             return true;
         }
 
-        MinaServer.startTLS(mSession, mConfig);
+        mSession.startTls();
         sendOK(tag, "begin TLS negotiation now");
         mStartedTLS = true;
         return true;
@@ -149,18 +142,15 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             unsetSelectedFolder(false);
         } catch (Exception e) { }
 
-        if (!mSession.isConnected())
+        if (mSession.isClosed())
             return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         cleanup();
         if (sendBanner && !mGoodbyeSent) {
             sendBYE();
         }
-        MinaOutputStream out = (MinaOutputStream) mOutputStream;
-        if (timeout >= 0 && out != null) {
-            // Wait for all remaining bytes to be written
-            if (!out.join(timeout))
-                ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
+        if (!mSession.drainWriteQueue(timeout)) {
+            ZimbraLog.imap.warn("Force closing connection with unsent data");
         }
         mSession.close();
     }
@@ -202,12 +192,13 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override protected void enableInactivityTimer() {
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE, ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
+        mSession.setMaxIdleSeconds(ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
     }
 
     @Override protected void completeAuthentication() throws IOException {
-        if (mAuthenticator.isEncryptionEnabled())
-            MinaServer.addSaslFilter(mSession, mAuthenticator.getSaslServer());
+        if (mAuthenticator.isEncryptionEnabled()) {
+            mSession.startSasl(mAuthenticator.getSaslServer());
+        }
         mAuthenticator.sendSuccess();
     }
 
