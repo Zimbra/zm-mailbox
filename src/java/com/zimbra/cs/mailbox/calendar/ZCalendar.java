@@ -916,8 +916,24 @@ public class ZCalendar {
             
         }
 
+        private static final byte[] BOM_UTF8 = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+
         public static void parse(InputStream is, String charset, ZICalendarParseHandler handler) throws ServiceException {
             BufferedInputStream bis = new BufferedInputStream(is);
+            // Skip UTF-8 Byte Order Mark.  (EF BB BF)
+            if (MimeConstants.P_CHARSET_UTF8.equalsIgnoreCase(charset)) {
+                byte[] buf = new byte[3];
+                try {
+                    boolean bomFound = false;
+                    bis.mark(4);
+                    if (bis.read(buf) == 3)
+                        bomFound = buf[0] == BOM_UTF8[0] && buf[1] == BOM_UTF8[1] && buf[2] == BOM_UTF8[2];
+                    if (!bomFound)
+                        bis.reset();
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("Caught IOException during UTF-8 BOM check", e);
+                }
+            }
             bis.mark(32 * 1024);
             CalendarParser parser = new CalendarParserImpl();
             try {
