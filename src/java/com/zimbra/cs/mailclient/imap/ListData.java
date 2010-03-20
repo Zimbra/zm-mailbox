@@ -55,8 +55,14 @@ public final class ListData {
     }
     
     private void readMailboxList(ImapInputStream is) throws IOException {
-        flags = readFlags(is);
-        is.skipChar(' ');
+        is.skipSpaces();
+        // bug 42163: LIST response from Cisco IMAP server omits flags if empty
+        if (is.peek() == '(') {
+            flags = readFlags(is);
+            is.skipChar(' ');
+        } else {
+            flags = new Flags();
+        }
         String delim = is.readNString();
         if (delim != null) {
             if (delim.length() != 1) {
@@ -94,9 +100,7 @@ public final class ListData {
     }
     
     private static Flags readFlags(ImapInputStream is) throws IOException {
-        // bug 42163: LIST response from Cisco IMAP server omits flags if empty
-        is.skipSpaces();
-        Flags flags = is.peek() == '(' ? Flags.read(is) : new Flags();
+        Flags flags = Flags.read(is);
         int count = 0;
         if (flags.isNoselect()) count++;
         if (flags.isMarked()) count++;
