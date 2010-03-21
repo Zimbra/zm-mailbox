@@ -1258,14 +1258,14 @@ public class ParsedMessage {
             return;
 
         try {
-            mNormalizedSubject = mSubject = Mime.getSubject(getMimeMessage());
+            mNormalizedSubject = mSubject = StringUtil.stripControlCharacters(Mime.getSubject(getMimeMessage()));
         } catch (MessagingException e) { }
 
         if (mSubject == null) {
             mNormalizedSubject = mSubject = "";
             mSubjectIsReply = false;
         } else {
-            Pair<String, Boolean> normalized = trimPrefixes(StringUtil.stripControlCharacters(mSubject));
+            Pair<String, Boolean> normalized = trimPrefixes(mSubject);
             mNormalizedSubject = compressWhitespace(normalized.getFirst());
             mSubjectIsReply = normalized.getSecond();
             if (mNormalizedSubject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
