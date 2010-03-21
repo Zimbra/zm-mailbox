@@ -87,30 +87,30 @@ public class StringUtil {
         return count;
     }
 
-	public static String stripControlCharacters(String raw) {
-		if (raw == null)
-			return null;
-		int i;
-		for (i = 0; i < raw.length(); i++) {
-			char c = raw.charAt(i);
-			// invalid control characters
-			if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D)
-				break;
-			// byte-order markers and high/low surrogates
-			if (c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
-				break;
-		}
-		if (i >= raw.length())
-			return raw;
-		StringBuilder sb = new StringBuilder(raw.substring(0, i));
-		for ( ; i < raw.length(); i++) {
-			char c = raw.charAt(i);
-			if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D)
-				if (c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000))
-					sb.append(c);
-		}
-		return sb.toString();
-	}
+    public static String stripControlCharacters(String raw) {
+        if (raw == null)
+            return null;
+        int i;
+        for (i = 0; i < raw.length(); i++) {
+            char c = raw.charAt(i);
+            // invalid control characters
+            if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D)
+                break;
+            // byte-order markers and high/low surrogates
+            if (c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
+                break;
+        }
+        if (i >= raw.length())
+            return raw;
+        StringBuilder sb = new StringBuilder(raw.substring(0, i));
+        for ( ; i < raw.length(); i++) {
+            char c = raw.charAt(i);
+            if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D)
+                if (c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000))
+                    sb.append(c);
+        }
+        return sb.toString();
+    }
 
     /** Returns whether the passed-in <code>String</code> is comprised only of
      *  printable ASCII characters.  The "printable ASCII characters" are CR,
@@ -297,9 +297,8 @@ public class StringUtil {
         StringBuilder sb = new StringBuilder(32);
         int term = TERM_WHITESPACE;
         boolean inStr = false;
-        
-        scan: 
-            while (i < line.length()) {
+
+        scan: while (i < line.length()) {
             char ch = line.charAt(i++);
             boolean escapedTerm = false;
             
