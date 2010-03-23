@@ -25,6 +25,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.Collection;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
+import com.zimbra.cs.dav.resource.Notebook;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
@@ -47,7 +48,7 @@ public class Move extends DavMethod {
 	}
 	
 	protected void renameIfNecessary(DavContext ctxt, DavResource rs, MailItemResource destCollection) throws DavException {
-	    if (!(rs instanceof Collection))
+	    if (!(rs instanceof Collection) && !(rs instanceof Notebook))
 	        return;
 		String oldName = ctxt.getItem();
 		String dest = getDestination(ctxt);

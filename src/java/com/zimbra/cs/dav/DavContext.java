@@ -210,6 +210,9 @@ public class DavContext {
                     mUser = mUri.substring(start);
                     mPath = "/";
                 }
+                index = mPath.lastIndexOf('/');
+                if (index < mPath.length() - 1 && index > 0)
+                    mCollectionPath = mPath.substring(0, index);
             }
 		}
 		mStatus = HttpServletResponse.SC_OK;
