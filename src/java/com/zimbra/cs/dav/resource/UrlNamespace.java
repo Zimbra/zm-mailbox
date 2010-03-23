@@ -74,7 +74,7 @@ public class UrlNamespace {
 	    UrlComponents uc = new UrlComponents();
 	    
 	    int index = url.indexOf(DavServlet.DAV_PATH);
-	    if (index > 0) {
+	    if (index >= 0) {
             url = url.substring(index + DavServlet.DAV_PATH.length());
             int delim = url.indexOf('/', 1);
             if (delim > 0) {
