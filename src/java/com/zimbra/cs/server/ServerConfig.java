@@ -17,94 +17,99 @@ package com.zimbra.cs.server;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
 import com.zimbra.common.util.NetUtil;
+import com.zimbra.cs.account.Provisioning;
 
 import java.net.ServerSocket;
 import java.nio.channels.ServerSocketChannel;
 
-public class ServerConfig {
-    private String mName;
-    private int mMaxIdleSeconds = 0;
-    private String mBindAddress;
-    private int mBindPort = -1;
-    private int mNumThreads = -1;
-    private boolean mSSLEnabled;
-    private String[] mSSLExcludeCiphers;
+public abstract class ServerConfig {
+    private String protocol;
+    private boolean ssl;
 
+    private static final int SHUTDOWN_GRACE_PERIOD = 60;
+    private static final int NUM_THREADS = 20;
+    private static final int MAX_IDLE_SECONDS = 600;
+    private static final int NIO_MAX_SESSIONS = 200;
     private static final int NIO_WRITE_CHUNK_SIZE = 8192;
     private static final int NIO_WRITE_TIMEOUT = 60;
     private static final int NIO_MAX_SCHEDULED_WRITE_BYTES = 1024 * 1024;
     
-    public ServerConfig() {
-        String name = LC.zimbra_server_hostname.value();
-        if (name != null) setName(name);
+    public ServerConfig(String protocol, boolean ssl) {
+        this.protocol = protocol;
+        this.ssl = ssl;
     }
 
-    public void validate() throws ServiceException {
-        if (mName == null) failure("missing configuration name");
-        if (mMaxIdleSeconds < 0) failure("invalid MaxIdleSeconds value: " + mMaxIdleSeconds);
-        if (mBindPort < 0) failure("invalid BindPort value: " + mBindPort);
-        if (mNumThreads < 0) failure("invalid NumThreads value: " + mNumThreads);
+    public String getServerName() {
+        return LC.zimbra_server_hostname.value();
     }
-
-    protected void failure(String msg) throws ServiceException {
-        throw ServiceException.FAILURE(msg, null);
+    
+    public String getServerVersion() {
+        return null;
     }
-
-    public void setName(String name) {
-        mName = name;
-    }
-
-    public String getName() {
-        return mName;
-    }
-
-    public void setMaxIdleSeconds(int secs) {
-        mMaxIdleSeconds = secs;
-    }
-
-    public int getMaxIdleSeconds() {
-        return mMaxIdleSeconds;
-    }
-
-    public void setBindAddress(String addr) {
-        mBindAddress = addr;
-    }
-
+    
     public String getBindAddress() {
-        return mBindAddress;
+        return null;
     }
-
-    public void setBindPort(int port) {
-        mBindPort = port;
-    }
-
-    public int getBindPort() {
-        return mBindPort;
-    }
-
-    public void setNumThreads(int numThreads) {
-        mNumThreads = numThreads;
+    
+    public abstract int getBindPort();
+    public abstract Log getLog();
+    
+    public int getMaxIdleSeconds() {
+        return MAX_IDLE_SECONDS;
     }
 
     public int getNumThreads() {
-        return mNumThreads;
+        return NUM_THREADS;
     }
 
-    public void setSSLEnabled(boolean enabled) {
-        mSSLEnabled = enabled;
+    public String getProtocol() {
+        return protocol;
     }
 
-    public boolean isSSLEnabled() {
-        return mSSLEnabled;
+    public boolean isSslEnabled() {
+        return ssl;
     }
-    
-    public void setSSLExcludeCiphers(String[] excludeCiphers) {
-        mSSLExcludeCiphers = excludeCiphers;
+
+    public String getGreeting() {
+        return getDescription() + " ready";
     }
-    
-    public String[] getSSLExcludeCiphers() {
-        return mSSLExcludeCiphers;
+
+    public String getGoodbye() {
+        return getDescription() + " closing connection";
+    }
+
+    public String getDescription() {
+        StringBuilder sb = new StringBuilder();
+        String name = getServerName();
+        if (name != null && name.length() > 0) {
+            sb.append(name).append(' ');
+        }
+        sb.append("Zimbra ");
+        String version = getServerVersion();
+        if (version != null && version.length() > 0) {
+            sb.append(version).append(' ');
+        }
+        return sb.append(getProtocol()).append(" server").toString();
+    }
+
+    public String[] getSslExcludedCiphers() {
+        String key = Provisioning.A_zimbraSSLExcludeCipherSuites;
+        try {
+            return Provisioning.getInstance().getConfig().getMultiAttr(key);
+        } catch (ServiceException e) {
+            getLog().warn("Unable to get global attribute: " + key, e);
+            return null;
+        }
+    }
+
+    public int getShutdownGracePeriod() {
+       return SHUTDOWN_GRACE_PERIOD;
+    }
+
+    public int getNioMaxSessions() {
+        return NIO_MAX_SESSIONS;
     }
 
     public int getNioWriteChunkSize() {
@@ -120,15 +125,48 @@ public class ServerConfig {
     }
     
     public ServerSocket getServerSocket() throws ServiceException {
-        return isSSLEnabled() ?
-            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSSLExcludeCiphers()) :
+        return isSslEnabled() ?
+            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers()) :
             NetUtil.getTcpServerSocket(getBindAddress(), getBindPort());
     }
 
-    public ServerSocketChannel getServerSocketChannel()
-            throws ServiceException {
-        return NetUtil.getNioServerSocket(getBindAddress(),
-                                          getBindPort()).getChannel();
+    public ServerSocketChannel getServerSocketChannel() throws ServiceException {
+        return NetUtil.getNioServerSocket(getBindAddress(), getBindPort()).getChannel();
+    }
+
+    protected String getAttr(String key, String defaultValue) {
+        try {
+            return getLocalServer().getAttr(key, defaultValue);
+        } catch (ServiceException e) {
+            getLog().warn("Unable to get server attribute: " + key, e);
+            return defaultValue;
+        }
+    }
+
+    protected int getIntAttr(String key, int defaultValue) {
+        try {
+            return getLocalServer().getIntAttr(key, defaultValue);
+        } catch (ServiceException e) {
+            getLog().warn("Unable to get server attribute: " + key, e);
+            return defaultValue;
+        }
+    }
+
+    protected boolean getBooleanAttr(String key, boolean defaultValue) {
+        try {
+            return getLocalServer().getBooleanAttr(key, defaultValue);
+        } catch (ServiceException e) {
+            getLog().warn("Unable to get server attribute: " + key, e);
+            return defaultValue;
+        }
+    }
+
+    protected com.zimbra.cs.account.Server getLocalServer() throws ServiceException {
+        return Provisioning.getInstance().getLocalServer();
+    }
+
+    protected com.zimbra.cs.account.Config getGlobalConfig() throws ServiceException {
+        return Provisioning.getInstance().getConfig();
     }
 }
 

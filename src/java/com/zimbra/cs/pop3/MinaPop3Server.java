@@ -39,7 +39,7 @@ public class MinaPop3Server extends MinaServer {
         throws IOException, ServiceException {
         super(config, pool);
         registerMinaStatsMBean(
-            config.isSSLEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
+            config.isSslEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
     }
 
     @Override public MinaHandler createHandler(MinaSession session) {

@@ -71,7 +71,7 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
     }
 
     public boolean allowCleartextLogin() {
-        return mHandler.mConfig.allowCleartextLogins();
+        return mHandler.mConfig.isCleartextLoginsEnabled();
     }
 
     public boolean isGssapiAvailable() {

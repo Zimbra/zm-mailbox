@@ -41,6 +41,7 @@ class MinaIoHandler implements IoHandler {
 
     public void sessionCreated(IoSession ioSession) throws IOException {
         MinaSession session = new MinaSession(server, ioSession);
+        session.setMaxIdleSeconds(server.getConfig().getMaxIdleSeconds());
         ioSession.setAttribute(MINA_SESSION, session);
         ioSession.setAttribute(MINA_HANDLER, server.createHandler(session));
     }

@@ -16,8 +16,6 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.NetUtil;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mina.MinaThreadFactory;
 import com.zimbra.cs.server.Server;
 import com.zimbra.common.stats.RealtimeStatsCallback;
@@ -39,18 +37,12 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
     private static final String HANDLER_THREAD_NAME = "Pop3Handler";
     
     private Pop3Server(Pop3Config config) throws ServiceException {
-        super(config.isSSLEnabled() ? "Pop3SSLServer" : "Pop3Server", config);
+        super(config.isSslEnabled() ? "Pop3SSLServer" : "Pop3Server", config);
         ZimbraPerf.addStatsCallback(this);
     }
 
     protected ProtocolHandler newProtocolHandler() {
         return new TcpPop3Handler(this);
-    }
-
-    // not used?
-    public static void bindServerSocket(String addr, int port, boolean ssl)
-            throws IOException {
-        NetUtil.bindServerSocket(addr, port, ssl, MinaPop3Server.isEnabled(), null);
     }
 
     public synchronized static void startupPop3Server() throws ServiceException {
@@ -68,7 +60,7 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
     private static ExecutorService sPop3HandlerThreadPool;        
 
     private static Server startServer(boolean ssl) throws ServiceException {
-        Pop3Config config = new Pop3Config(Provisioning.getInstance(), ssl);
+        Pop3Config config = new Pop3Config(ssl);
         Server server;
         if (MinaPop3Server.isEnabled()) {
              if (sPop3HandlerThreadPool == null) {
@@ -109,7 +101,7 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
      */
     public Map<String, Object> getStatData() {
         Map<String, Object> data = new HashMap<String, Object>();
-        String statName = getConfig().isSSLEnabled() ?
+        String statName = getConfig().isSslEnabled() ?
             ZimbraPerf.RTS_POP_SSL_CONN : ZimbraPerf.RTS_POP_CONN;
         data.put(statName, numActiveHandlers());
         return data;

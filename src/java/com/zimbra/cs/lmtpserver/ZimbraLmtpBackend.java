@@ -497,7 +497,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 } catch (ServiceException se) {
                     if (se.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
                         ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": overquota");
-                        if (mConfig.permanentFailureWhenOverQuota()) {
+                        if (mConfig.isPermanentFailureWhenOverQuota()) {
                             reply = LmtpReply.PERMANENT_FAILURE_OVER_QUOTA;
                         } else {
                             reply = LmtpReply.TEMPORARY_FAILURE_OVER_QUOTA;

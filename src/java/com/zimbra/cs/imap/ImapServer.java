@@ -48,7 +48,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     private static final String HANDLER_THREAD_NAME = "ImapHandler";
 
     private ImapServer(ImapConfig config) throws ServiceException {
-        super(config.isSSLEnabled() ? "ImapSSLServer" : "ImapServer", config);
+        super(config.isSslEnabled() ? "ImapSSLServer" : "ImapServer", config);
         ZimbraPerf.addStatsCallback(this);
     }
 
@@ -57,12 +57,6 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         return new TcpImapHandler(this);
     }
 
-    // not used?                                             
-    public static void bindServerSocket(String addr, int port, boolean ssl)
-            throws IOException {
-        NetUtil.bindServerSocket(addr, port, ssl, MinaImapServer.isEnabled(), null);
-    }
-    
     public synchronized static void startupImapServer() throws ServiceException {
         if (sImapServer == null) sImapServer = startServer(false);
     }
@@ -75,7 +69,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     private static ExecutorService sHandlerThreadPool;
     
     private static Server startServer(boolean ssl) throws ServiceException {
-        ImapConfig config = new ImapConfig(Provisioning.getInstance(), ssl);
+        ImapConfig config = new ImapConfig(ssl);
         Server server;
         if (MinaImapServer.isEnabled()) {
             if (sHandlerThreadPool == null) {
@@ -125,7 +119,7 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
      */
     public Map<String, Object> getStatData() {
         Map<String, Object> data = new HashMap<String, Object>();
-        String statName = getConfig().isSSLEnabled() ?
+        String statName = getConfig().isSslEnabled() ?
             ZimbraPerf.RTS_IMAP_SSL_CONN : ZimbraPerf.RTS_IMAP_CONN;
         data.put(statName, numActiveHandlers());
         return data;

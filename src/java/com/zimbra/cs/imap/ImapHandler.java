@@ -118,13 +118,13 @@ abstract class ImapHandler extends ProtocolHandler {
     ImapHandler(MinaImapServer server) {
         super(null);
         mConfig = (ImapConfig) server.getConfig();
-        mStartedTLS = mConfig.isSSLEnabled();
+        mStartedTLS = mConfig.isSslEnabled();
     }
 
     ImapHandler(ImapServer server) {
         super(server);
         mConfig = (ImapConfig) server.getConfig();
-        mStartedTLS = mConfig.isSSLEnabled();
+        mStartedTLS = mConfig.isSslEnabled();
     }
 
     ImapCredentials getCredentials()  { return mCredentials; }
@@ -911,7 +911,7 @@ abstract class ImapHandler extends ProtocolHandler {
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1");
 
         if (!isAuthenticated()) {
-            if (!mStartedTLS && !mConfig.allowCleartextLogins())
+            if (!mStartedTLS && !mConfig.isCleartextLoginEnabled())
                 capability.append(" LOGINDISABLED");
             if (!mStartedTLS && extensionEnabled("STARTTLS"))
                 capability.append(" STARTTLS");
@@ -933,7 +933,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
     boolean extensionEnabled(String extension) {
         // check whether the extension is explicitly disabled on the server
-        if (mConfig.isExtensionDisabled(extension))
+        if (mConfig.isCapabilityDisabled(extension))
             return false;
         // check whether one of the extension's prerequisites is disabled on the server
         if (extension.equalsIgnoreCase("SEARCHRES"))
@@ -1115,7 +1115,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        if (!mStartedTLS && !mConfig.allowCleartextLogins()) {
+        if (!mStartedTLS && !mConfig.isCleartextLoginEnabled()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
@@ -3703,6 +3703,10 @@ abstract class ImapHandler extends ProtocolHandler {
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
 
+    void sendGreeting() throws IOException {
+        sendUntagged("OK " + mConfig.getGreeting(), true);
+    }
+    
     void sendBYE() {
         sendBYE(mConfig.getGoodbye());
     }

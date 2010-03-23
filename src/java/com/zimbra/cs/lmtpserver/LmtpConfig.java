@@ -15,104 +15,83 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.Config;
 
 import static com.zimbra.cs.account.Provisioning.*;
 
 public class LmtpConfig extends ServerConfig {
-    private String mRecipientDelimiter;
-    private LmtpBackend mBackend;
+    private final LmtpBackend lmtpBackend;
 
-    private static final int DEFAULT_MAX_IDLE_SECONDS = 300;
+    private static final String PROTOCOL = "LMTP";
+    private static final int MAX_IDLE_SECONDS = 300;
+
+    public static final LmtpConfig INSTANCE = new LmtpConfig();
+
+    public static LmtpConfig getInstance() {
+        return INSTANCE;
+    }
     
-    public LmtpConfig() {}
-
-    public LmtpConfig(Provisioning provisioning) throws ServiceException {
-	setName(getServerName());
-	Server server = provisioning.getLocalServer();
-        // TODO get this from configuration
-        setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
-        setNumThreads(server.getIntAttr(A_zimbraLmtpNumThreads, -1));
-        setBindPort(server.getIntAttr(A_zimbraLmtpBindPort, -1));
-        setBindAddress(server.getAttr(A_zimbraLmtpBindAddress));
-        setRecipientDelimiter(provisioning.getConfig().getAttr(A_zimbraMtaRecipientDelimiter));
-        setLmtpBackend(new ZimbraLmtpBackend(this));
-        validate();
+    private LmtpConfig() {
+        super(PROTOCOL, false);
+        lmtpBackend = new ZimbraLmtpBackend(this);
     }
 
     @Override
-    public void validate() throws ServiceException {
-        if (getNumThreads() < 0) {
-            failure("invalid value " + getNumThreads() + " for " + A_zimbraLmtpNumThreads);
-        }
-        if (getBindPort() < 0) {
-            failure("invalid value " + getBindPort() + " for " + A_zimbraLmtpBindPort);
-        }
-//        if (getRecipientDelimiter() == null) {
-//            failure("missing recipient delimiter");
-//        }
-        if (getLmtpBackend() == null) {
-            failure("missing lmtp backend");
-        }
-        super.validate();
+    public String getServerName() {
+        return getAttr(A_zimbraLmtpAdvertisedName, LC.zimbra_server_hostname.value());
     }
 
-    public static String getServerName() {
-	try {
-	    Server server = Provisioning.getInstance().getLocalServer();
-	    String name = server.getAttr(A_zimbraLmtpAdvertisedName);
-	    if (name != null && name.length() > 0) {
-		return name;
-	    }
-	    
-	    name = LC.zimbra_server_hostname.value();
-	    if (name != null) {
-		return name;
-	    }
-	} catch (ServiceException se) {}
-        return "";
+    @Override
+    public String getServerVersion() {
+        return getBooleanAttr(A_zimbraLmtpExposeVersionOnBanner, false) ?
+            BuildInfo.VERSION : null;
     }
 
-    public static String getServerVersion() {
-        String version = "";
+    @Override
+    public int getMaxIdleSeconds() {
+        return MAX_IDLE_SECONDS;
+    }
+
+    @Override
+    public int getNumThreads() {
+        return getIntAttr(A_zimbraLmtpNumThreads, super.getNumThreads());
+    }
+
+    @Override
+    public int getBindPort() {
+        return getIntAttr(A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
+    }
+
+    @Override
+    public String getBindAddress() {
+        return getAttr(A_zimbraLmtpBindAddress, null);
+    }
+
+    @Override
+    public Log getLog() {
+        return ZimbraLog.lmtp;
+    }
+
+    public String getMtaRecipientDelimiter() {
         try {
-            Server server = Provisioning.getInstance().getLocalServer();
-            if (server.getBooleanAttr(Provisioning.A_zimbraLmtpExposeVersionOnBanner, false))
-                version = " " + BuildInfo.VERSION;
-        } catch (ServiceException se) {}
-        return version;
-    }
-    
-    public String getRecipientDelimiter() {
-        return mRecipientDelimiter;
-    }
-
-    public void setRecipientDelimiter(String delimiter) {
-        mRecipientDelimiter = delimiter;
-    }
-    
-    public LmtpBackend getLmtpBackend() { return mBackend; }
-    
-    public void setLmtpBackend(LmtpBackend backend) {
-        mBackend = backend;
-    }
-    
-    public boolean permanentFailureWhenOverQuota() {
-        boolean isPermanent = false;
-        try {
-            isPermanent = Provisioning.getInstance().getLocalServer().getBooleanAttr(
-                Provisioning.A_zimbraLmtpPermanentFailureWhenOverQuota, false);
+            return getGlobalConfig().getAttr(A_zimbraMtaRecipientDelimiter);
         } catch (ServiceException e) {
-            ZimbraLog.lmtp.warn("Unable to determine value of %s.  Defaulting to false.",
-                Provisioning.A_zimbraLmtpPermanentFailureWhenOverQuota);
+            getLog().warn("Unable to get global attribute: " + A_zimbraMtaRecipientDelimiter, e);
+            return null;
         }
-        return isPermanent;
     }
-    
+
+    public LmtpBackend getLmtpBackend() {
+        return lmtpBackend;
+    }
+
+    public boolean isPermanentFailureWhenOverQuota() {
+        return getBooleanAttr(A_zimbraLmtpPermanentFailureWhenOverQuota, false);
+    }
 }

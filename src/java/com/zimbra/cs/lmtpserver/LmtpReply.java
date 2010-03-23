@@ -25,15 +25,15 @@ public enum LmtpReply {
     OK_TO_SEND_DATA(354, null, "End data with <CR><LF>.<CR><LF>"),
     USE_RCPT_INSTEAD(252, "2.3.3", "Use RCPT to deliver messages"),
 
-    BYE(221, null, new DetailCB() { protected String detail() { return LmtpConfig.getServerName() + " closing connection"; } }),
-    GREETING(220, null, new DetailCB() { protected String detail() { return LmtpConfig.getServerName() + " Zimbra" + LmtpConfig.getServerVersion() + " LMTP ready"; } }),
+    BYE(221, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getGoodbye(); }}),
+    GREETING(220, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getGreeting(); }}),
     
     SERVICE_DISABLED(421, "4.3.2", "Service not available, closing transmission channel"),
     MAILBOX_DISABLED(450, "4.2.1", "Mailbox disabled, not accepting messages"),
     MAILBOX_NOT_ON_THIS_SERVER(450, "4.2.0", "Mailbox is not on this server"),
     TEMPORARY_FAILURE(451, "4.0.0", "Temporary message delivery failure try again"),
     TEMPORARY_FAILURE_OVER_QUOTA(452, "4.2.2", "Over quota"),
-    TIMEOUT(421, null, new DetailCB() { protected String detail() { return LmtpConfig.getServerName() + " Timeout exceeded"; } }),
+    TIMEOUT(421, null, new DetailCB() { protected String detail() { return LmtpConfig.getInstance().getDescription() + " Timeout exceeded"; } }),
     
     NESTED_MAIL_COMMAND(503, "5.5.1", "Nested MAIL command"),
     NO_RECIPIENTS(503, "5.5.1", "No recipients"),

@@ -39,7 +39,6 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         this.mServer = server;
         this.mSession = session;
         mOutputStream = mSession.getOutputStream();
-        mSession.setMaxIdleSeconds(mConfig.getUnauthMaxIdleSeconds());
     }
 
     @Override boolean doSTARTTLS(String tag) throws IOException {
@@ -65,7 +64,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             sendBYE("Server too busy");
             dropConnection();
         } else {
-            sendUntagged(mConfig.getBanner(), true);
+            sendGreeting();
         }
     }
 
@@ -192,7 +191,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override protected void enableInactivityTimer() {
-        mSession.setMaxIdleSeconds(ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
+        mSession.setMaxIdleSeconds(mConfig.getAuthenticatedMaxIdleSeconds());
     }
 
     @Override protected void completeAuthentication() throws IOException {

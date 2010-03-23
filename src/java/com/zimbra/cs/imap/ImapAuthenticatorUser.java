@@ -76,7 +76,7 @@ class ImapAuthenticatorUser implements AuthenticatorUser {
     }
 
     public boolean allowCleartextLogin() {
-        return mHandler.getConfig().allowCleartextLogins();
+        return mHandler.getConfig().isCleartextLoginEnabled();
     }
 
     public boolean isGssapiAvailable() {

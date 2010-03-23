@@ -48,14 +48,14 @@ extends TestCase {
     private static final String POP3_XOIP = "XOIP 100.99.98.97" + CRLF;
     private static final String POP3_XOIP_RESPONSE = "\\+OK";
     
-    private static final String IMAP_CONNECT_RESPONSE = "\\* OK .* Zimbra IMAP4rev1 service ready";
+    private static final String IMAP_CONNECT_RESPONSE = "\\* OK .* Zimbra IMAP4rev1 server ready";
     private static final String IMAP_LOGIN = "1 LOGIN user1 test123" + CRLF;
     private static final String IMAP_LOGIN_RESPONSE = "1 OK.*LOGIN completed";
     private static final String IMAP_CLEARTEXT_FAILED_RESPONSE = "1 NO cleartext logins disabled";
     private static final String IMAP_STARTTLS = "2 STARTTLS" + CRLF;
     private static final String IMAP_STARTTLS_RESPONSE = "2 OK Begin TLS negotiation now";
     private static final String IMAP_LOGOUT = "3 LOGOUT" + CRLF;
-    private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server terminating connection";
+    private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server closing connection";
     private static final String IMAP_LOGOUT_RESPONSE2 = "3 OK LOGOUT completed";
     private static final String IMAP_ID = "4 ID (\"X-ORIGINATING-IP\" \"100.99.98.97\" \"name\" \"foobar\" \"version\" \"1.0\")" + CRLF;
     private static final String IMAP_ID_RESPONSE1 = "\\* ID.*";

@@ -130,7 +130,7 @@ public abstract class MinaServer implements Server {
     private static synchronized String[] getSSLEnabledCiphers(SSLContext sslCtxt, ServerConfig serverConfig) {
         if (mSslEnabledCipherSuites == null) {
             try {
-                String[] excludeCiphers = serverConfig.getSSLExcludeCiphers();
+                String[] excludeCiphers = serverConfig.getSslExcludedCiphers();
 
                 if (excludeCiphers != null && excludeCiphers.length > 0) {
                     // create a SSLEngine to get the ciphers enabled for the engine
@@ -211,7 +211,7 @@ public abstract class MinaServer implements Server {
     public void start() throws IOException {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = mAcceptorConfig.getFilterChain();
-        if (sc.isSSLEnabled()) {
+        if (sc.isSslEnabled()) {
             fc.addFirst("ssl", newSSLFilter());
         }
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
@@ -221,7 +221,7 @@ public abstract class MinaServer implements Server {
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
         getLog().info("Starting listener on %s%s",
                       mChannel.socket().getLocalSocketAddress(),
-                      sc.isSSLEnabled() ? " (SSL)" : "");
+                      sc.isSslEnabled() ? " (SSL)" : "");
     }
 
     /**

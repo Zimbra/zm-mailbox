@@ -23,7 +23,6 @@ import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaCodecFactory;
 import com.zimbra.cs.mina.MinaSession;
-import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
@@ -42,7 +41,7 @@ public class MinaImapServer extends MinaServer {
             throws IOException, ServiceException {
         super(config, pool);
         registerMinaStatsMBean(
-            config.isSSLEnabled() ? "MinaImapSSLServer" : "MinaImapServer");
+            config.isSslEnabled() ? "MinaImapSSLServer" : "MinaImapServer");
 
     }
 

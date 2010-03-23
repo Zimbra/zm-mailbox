@@ -258,7 +258,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
 	    doSyntaxError("no parameter to lhlo");
 	    return;
 	}
-	mWriter.println("250-" + mConfig.getName());
+	mWriter.println("250-" + mConfig.getServerName());
 	mWriter.println("250-8BITMIME");
 	mWriter.println("250-ENHANCEDSTATUSCODES");
 	mWriter.println("250-SIZE ");
@@ -322,7 +322,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
 	    return;
 	}
 
-	LmtpAddress addr = new LmtpAddress(arg, null, mConfig.getRecipientDelimiter());
+	LmtpAddress addr = new LmtpAddress(arg, null, mConfig.getMtaRecipientDelimiter());
 	if (!addr.isValid()) {
 	    sendReply(LmtpReply.INVALID_RECIPIENT_ADDRESS);
 	    return;

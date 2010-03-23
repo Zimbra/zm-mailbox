@@ -39,7 +39,7 @@ class TcpImapHandler extends ImapHandler {
     }
                                                       
     @Override protected boolean setupConnection(Socket connection) throws IOException {
-        connection.setSoTimeout(mConfig.getUnauthMaxIdleSeconds() * 1000);        
+        connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);        
         mRemoteAddress = connection.getInetAddress().getHostAddress();
         INFO("connected");
 
@@ -52,7 +52,7 @@ class TcpImapHandler extends ImapHandler {
             return false;
         }
 
-        sendUntagged(mConfig.getBanner(), true);
+        sendGreeting();
 
         return true;
     }
@@ -138,7 +138,7 @@ class TcpImapHandler extends ImapHandler {
 
         SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
         SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
-        NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSSLExcludeCiphers());
+        NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSslExcludedCiphers());
         tlsconn.setUseClientMode(false);
         tlsconn.startHandshake();
         ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());

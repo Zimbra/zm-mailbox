@@ -84,13 +84,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
     Pop3Handler(Pop3Server server) {
         super(server);
         mConfig = (Pop3Config) server.getConfig();
-        mStartedTLS = mConfig.isSSLEnabled();
+        mStartedTLS = mConfig.isSslEnabled();
     }
 
     Pop3Handler(MinaPop3Server server) {
         super(null);
         mConfig = (Pop3Config) server.getConfig();
-        mStartedTLS = mConfig.isSSLEnabled();
+        mStartedTLS = mConfig.isSslEnabled();
     }
 
     protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
@@ -114,7 +114,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             dropConnection();
             return false;
         }
-        sendOK(mConfig.getBanner());
+        sendOK(mConfig.getGreeting());
         mState = STATE_AUTHORIZATION;
         dropConnection = false;
         return true;
@@ -580,7 +580,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
 
     private void checkIfLoginPermitted() throws Pop3CmdException {
-        if (!mStartedTLS && !mConfig.allowCleartextLogins()) 
+        if (!mStartedTLS && !mConfig.isCleartextLoginsEnabled()) 
             throw new Pop3CmdException("only valid after entering TLS mode");        
     }
 
@@ -595,7 +595,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
     
     private void doSTLS() throws Pop3CmdException, IOException {
-        if (mConfig.isSSLEnabled())
+        if (mConfig.isSslEnabled())
             throw new Pop3CmdException("command not valid over SSL");
 
         if (mState != STATE_AUTHORIZATION)
@@ -714,7 +714,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendLine("TOP", false);
         sendLine("USER", false);
         sendLine("UIDL", false);
-        if (!mConfig.isSSLEnabled()) {
+        if (!mConfig.isSslEnabled()) {
             sendLine("STLS", false);
         }
         sendLine("SASL" + getSaslCapabilities(), false);

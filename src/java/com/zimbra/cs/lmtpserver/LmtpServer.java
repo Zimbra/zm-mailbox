@@ -16,9 +16,8 @@
 package com.zimbra.cs.lmtpserver;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.NetUtil;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mina.MinaThreadFactory;
+import com.zimbra.cs.server.Server;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Zimbra;
@@ -28,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class LmtpServer extends TcpServer {
-    private static com.zimbra.cs.server.Server lmtpServer;
+    private static Server server;
 
     private static final String HANDLER_THREAD_NAME = "LmtpHandler";
     
@@ -40,29 +39,23 @@ public class LmtpServer extends TcpServer {
         return new TcpLmtpHandler(this);
     }
 
-    // not used?
-    public static void bindServerSocket(String addr, int port)
-            throws IOException {
-        NetUtil.bindServerSocket(addr, port, false, MinaLmtpServer.isEnabled(), null);
-    }
-    
     public static void startupLmtpServer() throws ServiceException {
-        if (lmtpServer != null) return;
+        if (server != null) return;
 
-        LmtpConfig config = new LmtpConfig(Provisioning.getInstance());
+        LmtpConfig config = LmtpConfig.getInstance();
         ExecutorService pool = Executors.newFixedThreadPool(
             config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME));
         if (MinaLmtpServer.isEnabled()) {
             try {
-                lmtpServer = new MinaLmtpServer(config, pool);
+                server = new MinaLmtpServer(config, pool);
             } catch (IOException e) {
                 Zimbra.halt("failed to create MinaLmtpServer", e);
             }
         } else {
-            lmtpServer = new LmtpServer(config);
+            server = new LmtpServer(config);
         }
         try {
-            lmtpServer.start();
+            server.start();
         } catch (IOException e) {
             Zimbra.halt("failed to start LmtpServer", e);
         }
@@ -70,17 +63,17 @@ public class LmtpServer extends TcpServer {
     }
 
     public static void shutdownLmtpServer() {
-        if (lmtpServer != null) {
-            lmtpServer.shutdown(10); // TODO shutdown grace period from config
-            lmtpServer = null;
+        if (server != null) {
+            server.shutdown(10); // TODO shutdown grace period from config
+            server = null;
         }
     }
     
     public static LmtpServer getInstance() {
-	return (LmtpServer)lmtpServer;
+	return (LmtpServer) server;
     }
-    
+
     public LmtpConfig getLmtpConfig() {
-	return (LmtpConfig)getConfig();
+	return (LmtpConfig) getConfig();
     }
 }

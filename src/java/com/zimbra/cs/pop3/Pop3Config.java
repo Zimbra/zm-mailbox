@@ -15,84 +15,69 @@
 
 package com.zimbra.cs.pop3;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.Config;
 
 import static com.zimbra.cs.account.Provisioning.*;
-import static com.zimbra.cs.util.Config.*;
 
 public class Pop3Config extends ServerConfig {
-    private String mBanner;
-    private String mGoodbye;
-    private boolean mSaslGssapiEnabled;
+    private static final String PROTOCOL = "POP3";
+    private static final int MAX_IDLE_SECONDS = 600;
 
-    private static final int DEFAULT_NUM_THREADS = 10;
-    private static final int DEFAULT_MAX_IDLE_SECONDS = 600;
-    private static final int DEFAULT_BIND_PORT = D_POP3_BIND_PORT;
-    private static final int DEFAULT_SSL_BIND_PORT = D_POP3_SSL_BIND_PORT;
-
-    public Pop3Config() {
-        setNumThreads(DEFAULT_NUM_THREADS);
-        setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
+    public Pop3Config(boolean ssl) {
+        super(PROTOCOL, ssl);
     }
 
-    public Pop3Config(Provisioning prov, boolean ssl) throws ServiceException {
-        Server server = prov.getLocalServer();
-        String name = server.getAttr(A_zimbraPop3AdvertisedName);
-        if (name != null && name.length() > 0)
-            setName(name);
-        // TODO actually get this from configuration
-        setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
-        setNumThreads(server.getIntAttr(A_zimbraPop3NumThreads, DEFAULT_NUM_THREADS));
-        
-        // set excluded ciphers for SSL and StartTLS
-        Config config = prov.getConfig();
-        setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
-        
-        if (ssl) {
-            setSSLEnabled(ssl);
-            setBindAddress(server.getAttr(A_zimbraPop3SSLBindAddress));
-            setBindPort(server.getIntAttr(A_zimbraPop3SSLBindPort, DEFAULT_SSL_BIND_PORT));
-        } else {
-            setBindAddress(server.getAttr(A_zimbraPop3BindAddress));
-            setBindPort(server.getIntAttr(A_zimbraPop3BindPort, DEFAULT_BIND_PORT));
-        }
-        mSaslGssapiEnabled = server.getBooleanAttr(A_zimbraPop3SaslGssapiEnabled, false);
-        validate();
+    @Override
+    public String getServerName() {
+        return getAttr(A_zimbraPop3AdvertisedName, LC.zimbra_server_hostname.value());
     }
 
-    @Override public void setName(String name) {
-        super.setName(name);
-
-        String version = "";
-        try {
-            Server server = Provisioning.getInstance().getLocalServer();
-            if (server.getBooleanAttr(Provisioning.A_zimbraPop3ExposeVersionOnBanner, false))
-                version = " " + BuildInfo.VERSION;
-        } catch (ServiceException e) { }
-
-        mBanner = name + " Zimbra" + version + " POP3 server ready";
-        mGoodbye = name + " closing connection";
+    @Override
+    public String getServerVersion() {
+        return getBooleanAttr(A_zimbraPop3ExposeVersionOnBanner, false) ?
+            BuildInfo.VERSION : null;
     }
 
-    public String getBanner()   { return mBanner; }
-    public String getGoodbye()  { return mGoodbye; }
-
-    // TODO Can this result be cached?
-    public boolean allowCleartextLogins() {
-        try {
-            Server server = Provisioning.getInstance().getLocalServer();
-            return server.getBooleanAttr(A_zimbraPop3CleartextLoginEnabled, false);
-        } catch (ServiceException e) {
-            ZimbraLog.pop.warn("Unable to determine state of " + A_zimbraPop3CleartextLoginEnabled, e);
-            return false;
-        }
+    @Override
+    public String getBindAddress() {
+        return getAttr(isSslEnabled() ?
+            A_zimbraPop3SSLBindAddress : A_zimbraPop3BindAddress, null);
     }
 
-    public boolean isSaslGssapiEnabled() { return mSaslGssapiEnabled; }
+    @Override
+    public int getBindPort() {
+        return isSslEnabled() ?
+            getIntAttr(A_zimbraPop3SSLBindPort, Config.D_POP3_SSL_BIND_PORT) :
+            getIntAttr(A_zimbraPop3BindPort, Config.D_POP3_BIND_PORT);
+    }
+
+    @Override
+    public int getMaxIdleSeconds() {
+        return MAX_IDLE_SECONDS;
+    }
+
+    @Override
+    public int getNumThreads() {
+        return getIntAttr(A_zimbraPop3NumThreads, super.getNumThreads());
+    }
+
+    @Override
+    public Log getLog() {
+        return ZimbraLog.pop;
+    }
+
+    public boolean isCleartextLoginsEnabled() {
+        return getBooleanAttr(A_zimbraPop3CleartextLoginEnabled, false);
+    }
+
+    public boolean isSaslGssapiEnabled() {
+        return getBooleanAttr(A_zimbraPop3SaslGssapiEnabled, false);
+    }
+    
+    
 }
