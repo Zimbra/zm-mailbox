@@ -57,7 +57,7 @@ public class PasswordUtil {
                     SecureRandom sr = new SecureRandom();
                     sr.nextBytes(salt);
                 } 
-                md.update(password.getBytes());
+                md.update(password.getBytes("UTF-8"));
                 md.update(salt);
                 byte[] digest = md.digest();
                 byte[] buff = new byte[digest.length + salt.length];
@@ -65,6 +65,9 @@ public class PasswordUtil {
                 System.arraycopy(salt, 0, buff, digest.length, salt.length);
                 return SSHA_ENCODING + new String(Base64.encodeBase64(buff));
             } catch (NoSuchAlgorithmException e) {
+                // this shouldn't happen unless JDK is foobar
+                throw new RuntimeException(e);
+            } catch (UnsupportedEncodingException e) {
                 // this shouldn't happen unless JDK is foobar
                 throw new RuntimeException(e);
             }
