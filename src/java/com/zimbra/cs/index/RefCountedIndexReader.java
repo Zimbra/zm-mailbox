@@ -48,7 +48,7 @@ final class RefCountedIndexReader {
     private enum DebugAction {
         CRT("*"),  // creating 
         ADD("+"),  // add ref
-        DEC("-") ; // dev ref
+        DEC("-") ; // dec ref
         
         private String mSymbol; 
         DebugAction(String symbol) {
