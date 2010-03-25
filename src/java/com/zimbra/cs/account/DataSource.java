@@ -50,7 +50,7 @@ public class DataSource extends AccountProperty {
         StringUtil.getSimpleClassName(DataSource.class.getName());
 
     public enum Type {
-        pop3, imap, caldav, yab, rss, cal, gal, xsync;
+        pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync;
         
         public static Type fromString(String s) throws ServiceException {
             try {
