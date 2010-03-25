@@ -188,6 +188,15 @@ public class DavContext {
 		sEmptyProp = new RequestProp(false);
 	}
 	
+	public DavContext(DavContext copy, String path) {
+		mReq = copy.mReq;
+		mResp = copy.mResp;
+		mAuthAccount = copy.mAuthAccount;
+		mOpCtxt = copy.mOpCtxt;
+		mUser = copy.mUser;
+		mPath = path;
+	}
+	
 	public DavContext(HttpServletRequest req, HttpServletResponse resp, Account authUser) {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo();

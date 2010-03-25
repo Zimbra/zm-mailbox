@@ -107,7 +107,7 @@ public class UrlNamespace {
 		String user = uc.user;
 		if (user == null)
 		    user = ctxt.getUser();
-		DavResource rsc = getResourceAt(ctxt, user, path);
+		DavResource rsc = getResourceAt(new DavContext(ctxt, path), user, path);
 		if (rsc instanceof Collection)
 			return (Collection)rsc;
 		throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
