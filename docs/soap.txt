@@ -15,7 +15,7 @@ http://server/service/home/[&tilde;][{username}]/[{folder}]?[{query-params}]
        
           {types}   = comma-separated list.  Legal values are:
                       appointment|chat|contact|conversation|document|
-                      message|note|tag|task|wiki
+                      message|tag|task|wiki
                       (default is &quot;conversation&quot;)
                        
           {auth-types} = comma-separated list. Legal values are:
@@ -154,9 +154,6 @@ element involving the session.)  If there is a session, there will be a
           <modified>
             <tag id="65" u="0"/>
             <m id="553" f="ua"/>
-            <note id="774" color="4">
-              This is the new content.
-            </note>
           </modified>
         </notify>]+
      </context>
@@ -221,9 +218,6 @@ response:
           <modified>
             <tag id="65" u="0"/>
             <m id="553" t="ua"/>
-            <note id="774" color="4">
-              This is the new content.
-            </note>
           </modified>
         </notify>]+
      </context>
@@ -975,7 +969,6 @@ urn:zimbraMail
    mail.NO_SUCH_FOLDER     - no such folder
    mail.NO_SUCH_TAG        - no such tag
    mail.NO_SUCH_CONTACT    - no such contact
-   mail.NO_SUCH_NOTE       - no such note
    mail.NO_SUCH_CALITEM    - no such calendar item
    mail.NO_SUCH_APPT       - no such appointment
    mail.NO_SUCH_TASK       - no such task
@@ -1200,7 +1193,7 @@ Mountpoints:
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}:
-                   conversation|message|contact|appointment|note|task|etc
+                   conversation|message|contact|appointment|task|etc
 
 Tags:
 
@@ -1307,7 +1300,7 @@ if recip="1" is specified
 
    {group-by} = DEPRECATED.  Use TYPES instead.	
    {types} 	= comma-separated list.  Legal values are:
-               conversation|message|contact|appointment|task|note|wiki|document
+               conversation|message|contact|appointment|task|wiki|document
                (default is "conversation")
 
         **NOTE: only ONE of message, conversation may be set. If
@@ -1420,10 +1413,6 @@ contact result:
 
 type is assumed to be "contact" if not present. If it is present and set to "group", then the contact is a
 personal distribution list.
-
-note result:
-------------
-DOCUMENT ME
 
 appointment result:
 -------------------
@@ -1745,18 +1734,6 @@ originally intended.
 
 ------------
 
-<GetNoteRequest>
-  <note id="{note-id}"/>
-</GetNoteRequest>
-
-<GetNoteResponse>
-  <note id="{note-id}" [t="{tags}"] d="{date}" l="{folder}" [pos="{x,y,width,height}"] color="{color}">
-    <content>...</content>
-  </note>
-</GetNoteResponse>
-
----------
-
 <CreateFolderRequest>
   <folder name="..." [l="{parent-folder}"] [fie="1"] [view="{default-type}"] [color="{color}"] [f="{flags}"] [url="{url}"] [sync="1"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key="{access-key}"]/>* </acl>]
@@ -1773,20 +1750,6 @@ originally intended.
 
   - name and l are omitted on response for root folder
   - u and/or n attributes are present on response iff count > 0
-
----------
-
-<CreateNoteRequest>
-  <note l="{parent-folder}" (pos="{x,y,width,height}") (color="...")>
-    <content>...</content>
-  </note>
-</CreateNoteRequest>
-
-<CreateNoteResponse>
-  <note id="{note-id}" [t="{tags}"] d="{date}" l="{folder}" [pos="{x,y,width,height}"] color="{color}">
-    <content>...</content>
-  </note>
-</CreateNoteResponse>
 
 ---------
 
@@ -1967,24 +1930,6 @@ output of "grant" action includes the zimbra id the rights were granted on
 
 note that "delete", "empty", "rename", "move", "color", "update" can be used on search folders as well as standard folders
 
----------
-
-<NoteActionRequest>
-  <action id="{list}" op="delete|edit|move|trash|repos|flag|tag|color|update" [tag="{id}"] [l="{target-folder}"] [color="{color}"] [pos="{x,y,width,height}"]/>
-</NoteActionRequest>
-
-<NoteActionResponse>
-  <action id="{list}" op="delete|edit|move|trash|repos|flag|tag|color|update"/>
-</NoteActionResponse>
-
-  {list} = on input, list of notes to act on, on output, list of
-           notes that were acted on;
-           list may only have 1 element for actions "edit", "repos", "color"
-
-  for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list}", f="{flags}", color="{color}", pos="{x,y,width,height}"
-
-  See <ItemActionRequest> for more details.
-  
 ---------
 
 <TagActionRequest>
