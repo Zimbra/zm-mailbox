@@ -113,10 +113,12 @@ public class Pop3Sync extends MailItemImport {
         setTimeout(LC.javamail_pop3_timeout.intValue());
         connect();
         try {
-            if (dataSource.leaveOnServer()) {
-                fetchAndRetainMessages();
-            } else {
-                fetchAndDeleteMessages();
+            if (connection.getMessageCount() > 0) {
+                if (dataSource.leaveOnServer()) {
+                    fetchAndRetainMessages();
+                } else {
+                    fetchAndDeleteMessages();
+                }
             }
             connection.quit();
         } catch (ServiceException e) {
