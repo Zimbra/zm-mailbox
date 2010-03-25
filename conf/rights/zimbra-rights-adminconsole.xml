@@ -643,6 +643,8 @@
     <r n="deleteDistributionList"/>
     <r n="addDistributionListMember"/>
     <r n="removeDistributionListMember"/>
+    <r n="addDistributionListAlias"/>
+    <r n="removeDistributionListAlias"/>
   </rights>
 </right>
 <!-- Admin Console DL Notes Tab -->
