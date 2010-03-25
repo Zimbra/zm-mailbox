@@ -47,12 +47,12 @@ public class ImapCapabilities {
 
     private void readCapabilities(ImapInputStream is) throws IOException {
         is.skipSpaces();
-        while (Chars.isAtomChar(is.peekChar())) {       
-            addCapability(is.readAtom().getName());
+        while (Chars.isCapabilityChar(is.peekChar())) {
+            addCapability(is.readChars(Chars.CAPABILITY_CHARS));
             is.skipSpaces();
         }
     }
-    
+
     private void addCapability(String cap) {
         capabilities.add(new Atom(cap));
     }

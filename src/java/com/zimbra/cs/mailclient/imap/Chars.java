@@ -33,6 +33,7 @@ public final class Chars {
     public static final boolean[] FETCH_CHARS = new boolean[256];
     public static final boolean[] NUMBER_CHARS = new boolean[256];
     public static final boolean[] TEXT_CHARS = new boolean[256];
+    public static final boolean[] CAPABILITY_CHARS = new boolean[256];
 
     private static final String QUOTED_SPECIALS = "\"\\";
     private static final String ASTRING_SPECIALS = "(){%*" + QUOTED_SPECIALS;
@@ -40,7 +41,8 @@ public final class Chars {
 
     static {
         for (int i = 0x21; i < 0x7f; i++) {
-            ATOM_CHARS[i] = ASTRING_CHARS[i] = TAG_CHARS[i] = FETCH_CHARS[i] = true;
+            ATOM_CHARS[i] = ASTRING_CHARS[i] = TAG_CHARS[i] = FETCH_CHARS[i] =
+            CAPABILITY_CHARS[i] = true;
         }
         for (int i = 0x01; i < 0x80; i++) {
             TEXT_CHARS[i] = true;
@@ -51,6 +53,7 @@ public final class Chars {
         set(FETCH_CHARS, ATOM_SPECIALS + "[]", false);
         set(NUMBER_CHARS, "0123456789", true);
         set(TEXT_CHARS, "\000\r\n", false);
+        set(CAPABILITY_CHARS, QUOTED_SPECIALS + "]", false);
     }
 
     private static void set(boolean[] ba, String chars, boolean b) {
@@ -73,6 +76,10 @@ public final class Chars {
     
     public static boolean isAStringChar(char c) {
         return c < 256 && ASTRING_CHARS[c];
+    }
+
+    public static boolean isCapabilityChar(char c) {
+        return c < 256 && CAPABILITY_CHARS[c];
     }
     
     public static boolean isQuotedSpecialChar(char c) {
