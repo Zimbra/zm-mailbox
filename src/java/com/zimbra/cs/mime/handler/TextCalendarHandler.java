@@ -15,8 +15,13 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.activation.DataSource;
+
+import net.fortuna.ical4j.data.ParserException;
 
 import org.apache.lucene.document.Document;
 
@@ -24,6 +29,8 @@ import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
@@ -42,24 +49,21 @@ public class TextCalendarHandler extends MimeHandler {
     }
 
     @Override public ZVCalendar getICalendar() throws MimeHandlerException {
-        analyze();
+        analyze(true);
         return miCalendar;
     }
 
     @Override protected String getContentImpl() throws MimeHandlerException {
-        analyze();
+        analyze(false);
         return mContent;
     }
 
-    private static final ICalTok COMPONENT_TYPES[] = { ICalTok.VEVENT, ICalTok.VTODO };
-
-    private void analyze() throws MimeHandlerException {
+    private void analyze(boolean needCal) throws MimeHandlerException {
         if (mContent != null)
             return;
 
         DataSource source = getDataSource();
         InputStream is = null;
-        int maxLength = MimeHandlerManager.getIndexedTextLimit();
         try {
             is = source.getInputStream();
             String charset = MimeConstants.P_CHARSET_UTF8;
@@ -69,30 +73,31 @@ public class TextCalendarHandler extends MimeHandler {
                 if (cs != null)
                     charset = cs;
             }
-            miCalendar = ZCalendarBuilder.build(is, charset);
-
-            mContent = "";
-            StringBuilder buf = new StringBuilder(1024);
-            for (ICalTok type : COMPONENT_TYPES) {
-                ZComponent comp = miCalendar.getComponent(type);
-                if (comp == null)
-                    continue;
-
-                String content = comp.getPropVal(ICalTok.DESCRIPTION, "").trim();
-                if (content.equals(""))
-                    content = comp.getPropVal(ICalTok.SUMMARY, "").trim();
-                if (content.equals(""))
-                    continue;
-
-                if (buf.length() > 0)
-                    buf.append(' ');
-                if (buf.length() + content.length() > maxLength) {
-                    buf.append(content.substring(0, maxLength - buf.length()));
-                    break;
+            if (needCal) {
+                miCalendar = ZCalendarBuilder.build(is, charset);
+                StringBuilder buf = new StringBuilder(1024);
+                int maxLength = MimeHandlerManager.getIndexedTextLimit();
+                for (Iterator<ZComponent> compIter = miCalendar.getComponentIterator();
+                     compIter.hasNext() && buf.length() < maxLength; ) {
+                    ZComponent comp = compIter.next();
+                    for (Iterator<ZProperty> propIter = comp.getPropertyIterator(); propIter.hasNext(); ) {
+                        ZProperty prop = propIter.next();
+                        if (sIndexedProps.contains(prop.getName())) {
+                            String value = prop.getValue();
+                            if (value != null && value.length() > 0) {
+                                if (buf.length() > 0)
+                                    buf.append(' ');
+                                buf.append(value);
+                            }
+                        }
+                    }
                 }
-                buf.append(content);
+                mContent = buf.toString();
+            } else {
+                IcsParseHandler handler = new IcsParseHandler();
+                ZCalendarBuilder.parse(is, charset, handler);
+                mContent = handler.getContent();
             }
-            mContent = buf.toString();
         } catch (Exception e) {
             mContent = "";
             ZimbraLog.index.warn("error reading text/calendar mime part", e);
@@ -111,5 +116,81 @@ public class TextCalendarHandler extends MimeHandler {
 
     @Override public boolean doConversion() {
         return false;
+    }
+
+    private static final Set<String> sIndexedProps;
+    static {
+        sIndexedProps = new HashSet<String>();
+        sIndexedProps.add(ICalTok.SUMMARY.toString());
+        sIndexedProps.add(ICalTok.DESCRIPTION.toString());
+        sIndexedProps.add(ICalTok.COMMENT.toString());
+        sIndexedProps.add(ICalTok.LOCATION.toString());
+    }
+
+    public class IcsParseHandler implements ZICalendarParseHandler {
+
+        private StringBuilder mContentBuf;
+        private int mMaxLength;
+        private boolean mMaxedOut;
+
+        private String mCurProp;
+        private int mNumCals;
+        private boolean mInZCalendar;
+
+        public IcsParseHandler() {
+            mContentBuf = new StringBuilder(1024);
+            mMaxLength = MimeHandlerManager.getIndexedTextLimit();
+        }
+
+        public String getContent() {
+            return mContentBuf.toString();
+        }
+
+        private void appendContent(String str) {
+            if (str != null && str.length() > 0) {
+                if (mContentBuf.length() > 0)
+                    mContentBuf.append(' ');
+                mContentBuf.append(str);
+                mMaxedOut = mContentBuf.length() >= mMaxLength;
+            }
+        }
+
+        public void startCalendar() throws ParserException {
+            mInZCalendar = true;
+        }
+
+        public void endCalendar() throws ParserException {
+            mInZCalendar = false;
+            mNumCals++;
+        }
+
+        public boolean inZCalendar() { return mInZCalendar; }
+        public int getNumCals() { return mNumCals; }
+
+        public void startComponent(String name) {
+            // nothing to do
+        }
+
+        public void endComponent(String name) throws ParserException {
+            // nothing to do
+        }
+
+        public void startProperty(String name) {
+            mCurProp = name != null ? name.toUpperCase() : null;
+        }
+
+        public void propertyValue(String value) throws ParserException {
+            if (!mMaxedOut && sIndexedProps.contains(mCurProp)) {
+                appendContent(value);
+            }
+        }
+
+        public void endProperty(String name) {
+            mCurProp = null;
+        }
+
+        public void parameter(String name, String value) {
+            // nothing to do
+        }
     }
 }
