@@ -1514,21 +1514,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         getFolder().updateUIDNEXT();
     }
 
-    @Deprecated
-    final MailboxBlob setContent(byte[] data, String digest, Object content)
-    throws ServiceException, IOException {
-        if (data == null)
-            return setContent(null, content);
-
-        StoreManager sm = StoreManager.getInstance();
-        StagedBlob staged = sm.stage(new ByteArrayInputStream(data), data.length, null, mMailbox);
-        try {
-            return setContent(staged, content);
-        } finally {
-            sm.quietDelete(staged);
-        }
-    }
-
     MailboxBlob setContent(StagedBlob staged, Object content)
     throws ServiceException, IOException {
         addRevision(false);

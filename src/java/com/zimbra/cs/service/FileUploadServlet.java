@@ -44,11 +44,13 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.httpclient.Header;
@@ -154,8 +156,18 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getId()           { return uuid; }
         public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
+
         public InputStream getInputStream() throws IOException {
-            return file == null ? new ByteArrayInputStream(new byte[0]) : file.getInputStream();
+            if (file == null)
+                return new ByteArrayInputStream(new byte[0]);
+            if (!file.isInMemory() && (file instanceof DiskFileItem)) {
+                // If it's backed by a File, return a BlobInputStream so that any use by JavaMail
+                // will avoid loading the whole thing in memory.
+                File f = ((DiskFileItem) file).getStoreLocation();
+                return new BlobInputStream(f, f.length());
+            } else {
+                return file.getInputStream();
+            }
         }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }

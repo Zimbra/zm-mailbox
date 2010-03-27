@@ -75,6 +75,8 @@ import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
@@ -1940,11 +1942,12 @@ public abstract class CalendarItem extends MailItem {
          * @throws IOException
          */
         public InputStream getInputStream() throws IOException {
-            if (mPm == null) {
-                return new ByteArrayInputStream(new byte[0]);
-            } else {
-                return new ByteArrayInputStream(mPm.getRawData());
-            }
+            InputStream is = null;
+            if (mPm != null)
+                is = mPm.getRawInputStream();
+            if (is == null)
+                is = new ByteArrayInputStream(new byte[0]);
+            return is;
         }
 
         public OutputStream getOutputStream() {
@@ -1954,14 +1957,24 @@ public abstract class CalendarItem extends MailItem {
 
     private MailboxBlob storeUpdatedBlob(MimeMessage mm) throws ServiceException, IOException {
         ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
-        byte[] data = pm.getRawData();
-        if (data == null)
-            ZimbraLog.calendar.warn(
-                "Invalid state: updating blob with null data for calendar item " + getId() +
-                " in mailbox " + getMailboxId());
-        return setContent(data, pm.getRawDigest(), pm);
+        StoreManager sm = StoreManager.getInstance();
+        InputStream is = null;
+        try {
+            is = pm.getRawInputStream();
+            if (is != null) {
+                StagedBlob sblob = sm.stage(is, -1, null, mMailbox);
+                return setContent(sblob, pm);
+            } else {
+                ZimbraLog.calendar.warn(
+                        "Invalid state: updating blob with null data for calendar item " + getId() +
+                        " in mailbox " + getMailboxId());
+                return setContent(null, pm);
+            }
+        } finally {
+            ByteUtil.closeStream(is);
+        }
     }
-    
+
     @Override void reanalyze(Object data) throws ServiceException {
         String subject = null;
         Invite firstInvite = getDefaultInviteOrNull();
@@ -2183,7 +2196,7 @@ public abstract class CalendarItem extends MailItem {
             
             if (mmp.getCount() == 0) {
                 markBlobForDeletion();
-                setContent(null, null, null);
+                setContent(null, null);
                 if (forceSave)
                     saveMetadata();
             } else {
