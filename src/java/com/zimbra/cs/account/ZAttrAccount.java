@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100315-1156 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100326-1723 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -23019,35 +23019,38 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
-     * @return zimbraPrefForwardIncludeOriginalText, or ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody if unset and/or has invalid value
+     * @return zimbraPrefForwardIncludeOriginalText, or ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBodyAndHeaders if unset and/or has invalid value
      */
     @ZAttr(id=134)
     public ZAttrProvisioning.PrefForwardIncludeOriginalText getPrefForwardIncludeOriginalText() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody : ZAttrProvisioning.PrefForwardIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBodyAndHeaders : ZAttrProvisioning.PrefForwardIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBodyAndHeaders; }
     }
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
-     * @return zimbraPrefForwardIncludeOriginalText, or "includeBody" if unset
+     * @return zimbraPrefForwardIncludeOriginalText, or "includeBodyAndHeaders" if unset
      */
     @ZAttr(id=134)
     public String getPrefForwardIncludeOriginalTextAsString() {
-        return getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText, "includeBody");
+        return getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText, "includeBodyAndHeaders");
     }
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23061,9 +23064,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23078,9 +23082,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23094,9 +23099,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
      * @param zimbraPrefForwardIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23111,9 +23117,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -23126,9 +23133,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBody, includeBodyWithPrefix]
+     * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -29049,35 +29057,38 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
-     * @return zimbraPrefReplyIncludeOriginalText, or ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody if unset and/or has invalid value
+     * @return zimbraPrefReplyIncludeOriginalText, or ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBodyAndHeaders if unset and/or has invalid value
      */
     @ZAttr(id=133)
     public ZAttrProvisioning.PrefReplyIncludeOriginalText getPrefReplyIncludeOriginalText() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody : ZAttrProvisioning.PrefReplyIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBodyAndHeaders : ZAttrProvisioning.PrefReplyIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBodyAndHeaders; }
     }
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
-     * @return zimbraPrefReplyIncludeOriginalText, or "includeBody" if unset
+     * @return zimbraPrefReplyIncludeOriginalText, or "includeBodyAndHeaders" if unset
      */
     @ZAttr(id=133)
     public String getPrefReplyIncludeOriginalTextAsString() {
-        return getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText, "includeBody");
+        return getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText, "includeBodyAndHeaders");
     }
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29091,9 +29102,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29108,9 +29120,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29124,9 +29137,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
      * @param zimbraPrefReplyIncludeOriginalText new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29141,9 +29155,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -29156,9 +29171,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      *
-     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeSmartWithPrefix, includeSmart]
+     * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

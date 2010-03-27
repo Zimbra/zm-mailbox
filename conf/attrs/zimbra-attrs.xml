@@ -730,14 +730,20 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>true if this server is the monitor host</desc>
 </attr>
 
-<attr id="133" name="zimbraPrefReplyIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix,includeNone,includeSmart,includeBodyAndHeadersWithPrefix,includeBodyAndHeaders,includeSmartWithPrefix,includeSmartAndHeaders,includeSmartAndHeadersWithPrefix" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>includeBody</defaultCOSValue>
-  <desc>what part of the original message to include during replies (deprecatedSince 5.0 in identity)</desc>
+<attr id="133" name="zimbraPrefReplyIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix,includeNone,includeSmart,includeBodyAndHeadersWithPrefix,includeBodyAndHeaders,includeSmartWithPrefix,includeSmartAndHeaders,includeSmartAndHeadersWithPrefix,includeBodyOnly" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>includeBodyAndHeaders</defaultCOSValue>
+  <desc>
+    what part of the original message to include during replies (deprecatedSince 5.0 in identity).
+    The value includeBody has been deprecated since 6.0.6, use includeBodyAndHeaders instead.
+  </desc>
 </attr>
 
-<attr id="134" name="zimbraPrefForwardIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix,includeBodyAndHeadersWithPrefix,includeBodyAndHeaders" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>includeBody</defaultCOSValue>
-  <desc>what part of the original message to include during forwards (deprecatedSince 5.0 in identity)</desc>
+<attr id="134" name="zimbraPrefForwardIncludeOriginalText" type="enum" value="includeAsAttachment,includeBody,includeBodyWithPrefix,includeBodyAndHeadersWithPrefix,includeBodyAndHeaders,includeBodyOnly" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>includeBodyAndHeaders</defaultCOSValue>
+  <desc>
+    what part of the original message to include during forwards (deprecatedSince 5.0 in identity).
+    The value includeBody has been deprecated since 6.0.6, use includeBodyAndHeaders instead.
+  </desc>
 </attr>
 
 <attr id="135" name="zimbraFeatureContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">

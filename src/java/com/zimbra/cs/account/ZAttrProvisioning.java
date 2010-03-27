@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100315-1156 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100326-1723 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -563,7 +563,8 @@ public class ZAttrProvisioning {
         includeBodyWithPrefix("includeBodyWithPrefix"),
         includeAsAttachment("includeAsAttachment"),
         includeBodyAndHeaders("includeBodyAndHeaders"),
-        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix");
+        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix"),
+        includeBodyOnly("includeBodyOnly");
         private String mValue;
         private PrefForwardIncludeOriginalText(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -578,6 +579,7 @@ public class ZAttrProvisioning {
         public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
         public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
+        public boolean isIncludeBodyOnly() { return this == includeBodyOnly;}
     }
 
     public static enum PrefForwardReplyFormat {
@@ -730,6 +732,7 @@ public class ZAttrProvisioning {
         includeBodyAndHeaders("includeBodyAndHeaders"),
         includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix"),
         includeSmartWithPrefix("includeSmartWithPrefix"),
+        includeBodyOnly("includeBodyOnly"),
         includeSmart("includeSmart");
         private String mValue;
         private PrefReplyIncludeOriginalText(String value) { mValue = value; }
@@ -749,6 +752,7 @@ public class ZAttrProvisioning {
         public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
         public boolean isIncludeSmartWithPrefix() { return this == includeSmartWithPrefix;}
+        public boolean isIncludeBodyOnly() { return this == includeBodyOnly;}
         public boolean isIncludeSmart() { return this == includeSmart;}
     }
 
@@ -5429,7 +5433,8 @@ public class ZAttrProvisioning {
 
     /**
      * what part of the original message to include during forwards
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      */
     @ZAttr(id=134)
     public static final String A_zimbraPrefForwardIncludeOriginalText = "zimbraPrefForwardIncludeOriginalText";
@@ -5986,7 +5991,8 @@ public class ZAttrProvisioning {
 
     /**
      * what part of the original message to include during replies
-     * (deprecatedSince 5.0 in identity)
+     * (deprecatedSince 5.0 in identity). The value includeBody has been
+     * deprecated since 6.0.6, use includeBodyAndHeaders instead.
      */
     @ZAttr(id=133)
     public static final String A_zimbraPrefReplyIncludeOriginalText = "zimbraPrefReplyIncludeOriginalText";
