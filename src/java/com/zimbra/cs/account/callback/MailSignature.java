@@ -59,10 +59,20 @@ public class MailSignature extends AttributeCallback {
             } catch (NumberFormatException e) {
                 ZimbraLog.account.warn("encountered invalid " + CALLBACK_KEY_MAX_SIGNATURE_LEN + ": " + maxInContext);
             }
-        } 
+        }
 
         if (maxLen == -1) {
-            // we don't have a good KEY_MAX_SIGNATURE_LEN value, see if we can getAccount
+            String maxInAttrsToModify = (String) attrsToModify.get(Provisioning.A_zimbraMailSignatureMaxLength);
+            if (maxInAttrsToModify != null) {
+                try {
+                    maxLen = Integer.parseInt(maxInAttrsToModify);
+                } catch (NumberFormatException e) {
+                    ZimbraLog.account.warn("encountered invalid " + Provisioning.A_zimbraMailSignatureMaxLength + ": " + maxInAttrsToModify);
+                }
+            }
+        }
+
+        if (maxLen == -1) {
             if (entry == null)
                 return;
             
