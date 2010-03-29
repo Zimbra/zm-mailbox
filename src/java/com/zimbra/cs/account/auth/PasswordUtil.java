@@ -82,15 +82,21 @@ public class PasswordUtil {
     public static class SHA1 {
         
         private static String SHA1_ENCODING = "{SHA1}";
+        private static String SHA_ENCODING = "{SHA}";
         
         public static boolean isSHA1(String encodedPassword) {
-            return encodedPassword.startsWith(SHA1_ENCODING);
+            return encodedPassword.startsWith(SHA1_ENCODING) ||
+				encodedPassword.startsWith(SHA_ENCODING);
         }
         
         public static boolean verifySHA1(String encodedPassword, String password) {
-            if (!encodedPassword.startsWith(SHA1_ENCODING))
-                return false;
-            byte[] encodedBuff = encodedPassword.substring(SHA1_ENCODING.length()).getBytes();
+            byte[] encodedBuff;
+            if (encodedPassword.startsWith(SHA1_ENCODING))
+				encodedBuff = encodedPassword.substring(SHA1_ENCODING.length()).getBytes();
+			else if (encodedPassword.startsWith(SHA_ENCODING))
+				encodedBuff = encodedPassword.substring(SHA_ENCODING.length()).getBytes();
+			else 
+				return false;
             byte[] buff = Base64.decodeBase64(encodedBuff);
             String generated = generateSHA1(password);
             return generated.equals(encodedPassword);
