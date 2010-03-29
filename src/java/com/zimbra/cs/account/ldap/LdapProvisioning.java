@@ -2124,9 +2124,17 @@ public class LdapProvisioning extends Provisioning {
                 
                 String newDomainDN = mDIT.domainToAccountSearchDN(newDomain);
                 
+                String[] aliasNewAddrs = replacedAliases.newAddrs();
                 // check up front if any of renamed aliases already exists in the new domain (if domain also got changed)
-                if (domainChanged && addressExists(zlc, newDomainDN, replacedAliases.newAddrs()))
+                if (domainChanged && addressExists(zlc, newDomainDN, aliasNewAddrs))
                     throw AccountServiceException.ACCOUNT_EXISTS(newName);    
+                
+                // if any of the renamed aliases clashes with the account's new name, it won't be caught by the 
+                // above check, do a separate check.
+                for (int i=0; i < aliasNewAddrs.length; i++) { 
+                    if (newName.equalsIgnoreCase(aliasNewAddrs[i]))
+                        throw AccountServiceException.ACCOUNT_EXISTS(newName);
+                }
             }
  
             Attributes attributes = new BasicAttributes(true);
