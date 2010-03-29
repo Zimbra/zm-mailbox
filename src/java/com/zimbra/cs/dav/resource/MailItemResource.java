@@ -132,10 +132,13 @@ public abstract class MailItemResource extends DavResource {
 	
 	private static String getItemPath(DavContext ctxt, MailItem item) throws ServiceException {
 		String path = ctxt.getCollectionPath();
-		if (path != null)
-			path += "/" + item.getName();
-		else
-			path = ctxt.getPath();
+		if (path != null) {
+		    if (!path.endsWith("/"))
+		        path += "/";
+            path += item.getName();
+		} else {
+            path = ctxt.getPath();
+		}
 		if ((item.getType() == MailItem.TYPE_CONTACT || item.getType() == MailItem.TYPE_FOLDER || item.getType() == MailItem.TYPE_MOUNTPOINT) && !path.endsWith("/"))
 			path += "/";
 		if (item.getType() == MailItem.TYPE_CONTACT)
