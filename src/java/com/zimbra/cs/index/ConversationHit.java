@@ -117,9 +117,17 @@ public final class ConversationHit extends ZimbraHit {
         return mCachedSubj;
     }
 
-    public String getName() {
+    public String getName() throws ServiceException {
+        /*
         // FIXME: not sure what to return here -- maybe Name from first message hit?
         return "CONV_HAS_NO_NAME";
+        */
+        
+        if (mCachedName == null) {
+            MessageHit mh = getFirstMessageHit();
+            mCachedName = mh == null ? "" : mh.getName();
+        }
+        return mCachedName;
     }
 
     public long getHitDate() throws ServiceException {
