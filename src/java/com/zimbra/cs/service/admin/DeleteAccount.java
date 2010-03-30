@@ -71,11 +71,6 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
         
-        // cannot delete if the account is the global wiki account
-        String globalWikiAcctName = prov.getConfig().getAttr(Provisioning.A_zimbraNotebookAccount);
-        if (globalWikiAcctName != null && globalWikiAcctName.equals(account.getName()))
-            throw ServiceException.INVALID_REQUEST("Can not delete account " + id + " because it is the default(global) wiki accoun. ", null);
-        
         IMPersona.deleteIMPersona(account.getName());
         prov.deleteAccount(id);
         if (mbox != null)
