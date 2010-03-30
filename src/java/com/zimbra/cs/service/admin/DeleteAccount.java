@@ -70,16 +70,6 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         checkAccountRight(zsc, account, Admin.R_deleteAccount);        
 
-        //check if domain-level wiki account
-        SearchOptions options = new SearchOptions();
-        options.setFlags(Provisioning.SA_DOMAIN_FLAG);
-        options.setMaxResults(1);
-        options.setQuery(String.format("(%s=%s)",Provisioning.A_zimbraNotebookAccount,account.getName()));
-        List domains = prov.searchDirectory(options);
-        if (!domains.isEmpty() && domains.get(0) != null) {
-            throw ServiceException.INVALID_REQUEST(String.format("Can not delete account %s because it is a domain-level wiki account for domain %s. If you intend to delete the domain, you need to remove the value in zimbraNotebookAccount attribute of the domain before deleting accounts in this account.",account.getName(),((NamedEntry)domains.get(0)).getName()) ,null);
-        }
-        
         Mailbox mbox = Provisioning.onLocalServer(account) ? 
                 MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
                 
