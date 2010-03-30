@@ -34,6 +34,8 @@ public class Options extends DavMethod {
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		HttpServletResponse resp = ctxt.getResponse();
 		DavServlet.setAllowHeader(resp);
+		if (ctxt.isMsft())
+		    resp.addHeader(DavProtocol.HEADER_MS_AUTHOR_VIA, "DAV");
 		resp.setContentLength(0);
 		try {
 	        DavResource rs = ctxt.getRequestedResource();

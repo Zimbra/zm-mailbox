@@ -455,6 +455,7 @@ public class DavContext {
 	private static final String ICAL = "iCal/";
 	private static final String IPHONE = "iPhone/";
     private static final String ADDRESSBOOK = "Address";
+    private static final String MICROSOFT = "Microsoft";
 	
 	private boolean userAgentHeaderContains(String str) {
 		String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
@@ -469,6 +470,10 @@ public class DavContext {
 
 	public boolean isIcalClient() {
 		return userAgentHeaderContains(ICAL);
+	}
+	
+	public boolean isMsft() {
+	    return userAgentHeaderContains(MICROSOFT);
 	}
 
     public static enum KnownUserAgent {

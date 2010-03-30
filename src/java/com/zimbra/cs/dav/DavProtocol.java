@@ -127,6 +127,10 @@ public class DavProtocol {
 	public static final String HEADER_ORIGINATOR = "Originator";
 	public static final String HEADER_RECIPIENT = "Recipient";
 	
+	// Microsoft WebDAV extension
+	// http://msdn.microsoft.com/en-us/library/cc250215%28v=PROT.10%29.aspx
+	public static final String HEADER_MS_AUTHOR_VIA = "MS-Author-Via";
+	
 	public static final int STATUS_PROCESSING = 102;
 	public static final int STATUS_MULTI_STATUS = 207;
 	public static final int STATUS_UNPROCESSABLE_ENTITY = 422;
