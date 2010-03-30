@@ -3471,7 +3471,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="684" name="zimbraAdminConsoleLogoutURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.7">
-  <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
+  <desc>logout URL for admin console to send the user to upon explicit logging out</desc>
 </attr>
 
 <attr id="685" name="zimbraReverseProxyMailMode" type="enum" value="http,https,both,mixed,redirect" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.7">
@@ -3522,7 +3522,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="696" name="zimbraAdminConsoleLoginURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable" since="5.0.9">
-  <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
+  <desc>login URL for admin console to send the user to upon explicit logging in</desc>
 </attr>
 
 <attr id="697" name="zimbraReverseProxyAdminIPAddress" type="astring" max="256" cardinality="multi" optionalIn="globalConfig" since="5.0.9">
