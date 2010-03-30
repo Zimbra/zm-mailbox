@@ -467,29 +467,60 @@ public abstract class Wiki {
 		return findWikiPageByPath(ctxt, accountId, new WikiUrl(path, fid), traverse);
 	}
 	
-	public static WikiPage getChrome(WikiContext ctxt, String pageName, String accountId) throws ServiceException {
-		Wiki wiki;
-		WikiPage page;
+
+    /**
+     * Given a user account id, returns the domain wiki account for the user accounts.
+	 * If there is a valid domain wiki account, returns the domain wiki account.
+	 * Otherwise:
+	 *   - fallbackToDefault is true, returns the global wiki account
+	 *   - fallbackToDefault is false, returns null
+	 *
+     * @param ctxt
+     * @param accountId
+     * @param fallbackToDefault
+     * @return
+     * @throws ServiceException
+     */
+	public static Account getDomainWikiAccount(String userAcctId, boolean fallbackToDefault) throws ServiceException {
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(Provisioning.AccountBy.id, accountId, ctxt.auth);
+		Account acct = prov.get(Provisioning.AccountBy.id, userAcctId);
         Domain domain = prov.getDomain(acct);
 		String domainWiki = domain == null ? null : domain.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 		
 		if (domainWiki != null) {
-			acct = prov.get(Provisioning.AccountBy.name, domainWiki);
-			wiki = getInstance(ctxt, acct.getId(), TEMPLATE_FOLDER_NAME);
+			Account wikiAcct = prov.get(Provisioning.AccountBy.name, domainWiki);
+			if (wikiAcct != null)
+				return wikiAcct;
+			else
+				ZimbraLog.wiki.warn("domain wiki account " + domainWiki + " for domain " + domain.getName() + " does not exist.");
+		}
+		
+		if (fallbackToDefault) {
+			return getDefaultWikiAccount();
+		}
+		
+		return null;
+	}
+	
+	public static WikiPage getChrome(WikiContext ctxt, String pageName, String accountId) throws ServiceException {
+		Wiki wiki;
+		WikiPage page;
+		
+		Account wikiAcct = getDomainWikiAccount(accountId, false);
+		if (wikiAcct != null) {
+		    wiki = getInstance(ctxt, wikiAcct.getId(), TEMPLATE_FOLDER_NAME);
 			page = wiki.lookupWiki(ctxt, pageName);
 			if (page != null)
 				return page;
 		}
-		String defaultWiki = prov.getConfig().getAttr(Provisioning.A_zimbraNotebookAccount, null);
-		if (defaultWiki != null) {
-			acct = prov.get(Provisioning.AccountBy.name, defaultWiki);
-			wiki = getInstance(ctxt, acct.getId(), TEMPLATE_FOLDER_NAME);
-			page = wiki.lookupWiki(ctxt, pageName);
-			if (page != null)
-				return page;
-		}
+		
+		wikiAcct = getDefaultWikiAccount();
+		// getDefaultWikiAccount would not return null if returned
+		wiki = getInstance(ctxt, wikiAcct.getId(), TEMPLATE_FOLDER_NAME);
+		page = wiki.lookupWiki(ctxt, pageName);
+		if (page != null)
+			return page;
+		
 		throw new WikiServiceException.NoSuchWikiException(pageName);
 	}
 	

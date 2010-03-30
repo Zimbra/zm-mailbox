@@ -70,15 +70,11 @@ public class DeleteAccount extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
-        //check if domain-level wiki account
-        SearchOptions options = new SearchOptions();
-        options.setFlags(Provisioning.SA_DOMAIN_FLAG);
-        options.setMaxResults(1);
-        options.setQuery(String.format("(%s=%s)",Provisioning.A_zimbraNotebookAccount,account.getName()));
-        List domains = prov.searchDirectory(options);
-        if(!domains.isEmpty() && domains.get(0) != null) {
-        	throw  ServiceException.INVALID_REQUEST(String.format("Can not delete account %s because it is a domain-level wiki account for domain %s. If you intend to delete the domain, you need to remove the value in zimbraNotebookAccount attribute of the domain before deleting accounts in this account.",account.getName(),((NamedEntry)domains.get(0)).getName()) ,null);
-        }
+        
+        // cannot delete if the account is the global wiki account
+        String globalWikiAcctName = prov.getConfig().getAttr(Provisioning.A_zimbraNotebookAccount);
+        if (globalWikiAcctName != null && globalWikiAcctName.equals(account.getName()))
+            throw ServiceException.INVALID_REQUEST("Can not delete account " + id + " because it is the default(global) wiki accoun. ", null);
         
         IMPersona.deleteIMPersona(account.getName());
         prov.deleteAccount(id);
