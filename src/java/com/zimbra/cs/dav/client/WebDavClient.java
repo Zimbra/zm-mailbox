@@ -247,6 +247,10 @@ public class WebDavClient {
 	    mDebugEnabled = b; 
 	}
 	
+	public void setUserAgent(String ua) {
+	    mUserAgent = ua;
+	}
+	
 	public void setAppName(String app) {
 		mUserAgent = "Zimbra " + app + "/" + BuildInfo.VERSION + " (" + BuildInfo.DATE + ")";
 	}
