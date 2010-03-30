@@ -153,17 +153,17 @@ public class ItemData {
     }
 
     public static String getTagString(MailItem mi) throws IOException {
-    	String tags = "";
-    	
-    	try {
-	        for (Tag tag : mi.getTagList()) {
-	        	if (tags != null)
-	        		tags += ':';
-	        	tags += tag.getName();
-	        }
-    	} catch (Exception e) {
+        String tags = "";
+
+        try {
+            for (Tag tag : mi.getTagList()) {
+                if (tags != null)
+                    tags += ':';
+                    tags += tag.getName();
+                }
+        } catch (Exception e) {
             throw new IOException("tag error: " + e);
-    	}
+        }
         return tags;
     }
 }
