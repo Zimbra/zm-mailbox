@@ -49,10 +49,6 @@ implements UncompressedFileCache.Listener<String>
         mUncompressedFileCache.addListener(this);
     }
     
-    UncompressedFileCache<String> getUncompressedFileCache() {
-        return mUncompressedFileCache;
-    }
-    
     public synchronized FileDescriptorCache setMaxSize(int maxSize) {
         if (maxSize < 0)
             throw new IllegalArgumentException("maxSize value of " + maxSize + " is invalid (must be at least 0)");
@@ -148,7 +144,8 @@ implements UncompressedFileCache.Listener<String>
      * descriptor is not in the cache.
      */
     public synchronized void close(String path) {
-        SharedFile file = mCache.remove(path); 
+        mUncompressedFileCache.remove(path);
+        SharedFile file = mCache.remove(path);
         
         if (file != null) {
             ZimbraLog.store.debug("closing file descriptor for " + path);

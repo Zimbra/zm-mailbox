@@ -2079,8 +2079,14 @@ public abstract class CalendarItem extends MailItem {
                 return;
             }
             
-            // it'll be multipart/digest
-            MimeMultipart mmp = (MimeMultipart)mm.getContent();
+            MimeMultipart mmp = null;
+            Object obj = mm.getContent();
+            if (obj instanceof MimeMultipart)
+                mmp = (MimeMultipart) obj;
+            else
+                throw ServiceException.FAILURE(
+                        "Expected MimeMultipart, but got " + obj.getClass().getName() + ": " +
+                        obj.toString(), null);
             
             boolean updated = false;
 

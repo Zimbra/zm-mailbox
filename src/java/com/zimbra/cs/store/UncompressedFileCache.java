@@ -205,7 +205,13 @@ public class UncompressedFileCache<K> {
         mNumBytes += fileSize;
         pruneIfNecessary();
     }
-    
+
+    synchronized void remove(K key) {
+        String digest = mKeyToDigest.remove(key);
+        if (digest != null)
+            mDigestToFile.remove(digest);
+    }
+
     /**
      * Removes the least recently accessed files from the cache and deletes them
      * from disk so that the cache size doesn't exceed {@link #mMaxFiles} and

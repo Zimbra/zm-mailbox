@@ -52,6 +52,8 @@ public class MimeMessageOutputThread implements Runnable {
             ZimbraLog.misc.warn("Unable to write MimeMessage to output stream.", e);
         } catch (MessagingException e) {
             ZimbraLog.misc.warn("Unable to write MimeMessage to output stream.", e);
+        } catch (Throwable t) {
+            ZimbraLog.misc.warn("Unable to write MimeMessage to output stream.", t);
         } finally {
             ByteUtil.closeStream(mOut);
         }
