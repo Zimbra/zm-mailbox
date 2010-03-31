@@ -91,24 +91,31 @@ public class PasswordUtil {
         
         public static boolean verifySHA1(String encodedPassword, String password) {
             byte[] encodedBuff;
+			String prefix = SHA1_ENCODING;
             if (encodedPassword.startsWith(SHA1_ENCODING))
-				encodedBuff = encodedPassword.substring(SHA1_ENCODING.length()).getBytes();
+				prefix = SHA1_ENCODING;
 			else if (encodedPassword.startsWith(SHA_ENCODING))
-				encodedBuff = encodedPassword.substring(SHA_ENCODING.length()).getBytes();
+				prefix = SHA_ENCODING;
 			else 
 				return false;
+			encodedBuff = encodedPassword.substring(prefix.length()).getBytes();
             byte[] buff = Base64.decodeBase64(encodedBuff);
-            String generated = generateSHA1(password);
+            String generated = generateSHA1(password, prefix);
             return generated.equals(encodedPassword);
         }
         
         public static String generateSHA1(String password) {
+			return generateSHA1(password, SHA1_ENCODING);
+		}
+
+        public static String generateSHA1(String password, String prefix) {
+			if (prefix == null) prefix = SHA1_ENCODING;
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA1");
                 md.update(password.getBytes("UTF-8"));
                 
                 byte[] digest = md.digest();
-                return SHA1_ENCODING + new String(Base64.encodeBase64(digest));
+                return prefix + new String(Base64.encodeBase64(digest));
             } catch (NoSuchAlgorithmException e) {
                 // this shouldn't happen unless JDK is foobar
                 throw new RuntimeException(e);
