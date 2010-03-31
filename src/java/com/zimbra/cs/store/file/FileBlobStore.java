@@ -116,7 +116,7 @@ public class FileBlobStore extends StoreManager {
 
         String srcPath = src.getPath();
         File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolume.getId(), false);
-        BlobInputStream.getFileDescriptorCache().willPurge(dest.getPath());  // Prevent stale cache read.
+        BlobInputStream.getFileDescriptorCache().remove(dest.getPath());  // Prevent stale cache read.
         String destPath = dest.getAbsolutePath();
 
         if (ZimbraLog.store.isDebugEnabled()) {
@@ -172,7 +172,7 @@ public class FileBlobStore extends StoreManager {
         File dest = getMailboxBlobFile(destMbox, destMsgId, destRevision, destVolumeId, false);
         String srcPath = src.getPath();
         String destPath = dest.getAbsolutePath();
-        BlobInputStream.getFileDescriptorCache().willPurge(destPath);  // Prevent stale cache read.
+        BlobInputStream.getFileDescriptorCache().remove(destPath);  // Prevent stale cache read.
         
         if (ZimbraLog.store.isDebugEnabled()) {
             long srcSize = srcFile.length();
@@ -238,7 +238,7 @@ public class FileBlobStore extends StoreManager {
         
         File destFile = getMailboxBlobFile(destMbox, destMsgId, destRevision, volume.getId(), false);
         String destPath = destFile.getAbsolutePath();
-        BlobInputStream.getFileDescriptorCache().willPurge(destPath);  // Prevent stale cache read.
+        BlobInputStream.getFileDescriptorCache().remove(destPath);  // Prevent stale cache read.
         ensureParentDirExists(destFile);
 
         if (ZimbraLog.store.isDebugEnabled()) {
@@ -297,7 +297,7 @@ public class FileBlobStore extends StoreManager {
             return false;
 
         ZimbraLog.store.debug("Deleting %s.", file.getPath());
-        BlobInputStream.getFileDescriptorCache().willPurge(file.getPath());  // Prevent stale cache read.
+        BlobInputStream.getFileDescriptorCache().remove(file.getPath());  // Prevent stale cache read.
         boolean deleted = file.delete();
         if (deleted)
             return true;

@@ -163,7 +163,7 @@ implements SharedInputStream {
      * Closes the file descriptor referenced by this stream.
      */
     public void closeFile() {
-        getFileDescriptorCache().close(mRoot.mFile.getPath());
+        getFileDescriptorCache().remove(mRoot.mFile.getPath());
     }
 
     /**

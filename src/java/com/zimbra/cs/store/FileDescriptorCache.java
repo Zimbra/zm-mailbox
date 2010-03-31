@@ -139,12 +139,16 @@ implements UncompressedFileCache.Listener<String>
         return sharedFile;
     }
     
+    public void remove(String path) {
+        mUncompressedFileCache.remove(path);
+        close(path);
+    }
+
     /**
      * Closes the file descriptor to the given file.  Does nothing if the file
      * descriptor is not in the cache.
      */
-    public synchronized void close(String path) {
-        mUncompressedFileCache.remove(path);
+    private synchronized void close(String path) {
         SharedFile file = mCache.remove(path);
         
         if (file != null) {
