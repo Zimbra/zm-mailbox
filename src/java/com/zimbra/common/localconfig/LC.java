@@ -440,7 +440,6 @@ public class LC {
     public static final KnownKey zimbra_authtoken_cookie_domain;
     
     public static final KnownKey zimbra_zmjava_options;
-    public static final KnownKey zimbra_zmjava_java_home;
     public static final KnownKey zimbra_zmjava_java_library_path;
     public static final KnownKey zimbra_zmjava_java_ext_dirs;
     
@@ -1360,7 +1359,6 @@ public class LC {
         zimbra_authtoken_cookie_domain.setDefault("");
         
         zimbra_zmjava_options = new KnownKey("zimbra_zmjava_options", "-Xmx256m");
-        zimbra_zmjava_java_home = new KnownKey("zimbra_zmjava_java_home", "");
         zimbra_zmjava_java_library_path = new KnownKey("zimbra_zmjava_java_library_path", "");
         zimbra_zmjava_java_ext_dirs = new KnownKey("zimbra_zmjava_java_ext_dirs", "");
         
