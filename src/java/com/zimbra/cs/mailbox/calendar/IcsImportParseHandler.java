@@ -155,7 +155,8 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         ZParameter param = new ZParameter(name, value);
         if (mCurProperty != null) {
             mCurProperty.mParameters.add(param);
-            if (ICalTok.TZID.equals(param.getToken()))
+            // Keep track of TZIDs we've encountered.  Do it only for well-known properties.
+            if (ICalTok.TZID.equals(param.getToken()) && mCurProperty.getToken() != null)
                 mTZIDsSeen.add(value);
         } else {
             ZimbraLog.calendar.debug("ERROR: got parameter " + name + "," + value + " outside of Property");
