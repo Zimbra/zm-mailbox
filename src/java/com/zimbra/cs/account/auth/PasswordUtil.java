@@ -179,6 +179,14 @@ public class PasswordUtil {
         System.out.println("encoded MD5:  " + MD5.generateMD5(plain));
         System.out.println();
         
+        plain = "testme";
+        String encodedSHA1 = SHA1.generateSHA1(plain, SHA1.SHA1_ENCODING);
+        String encodedSHA  = SHA1.generateSHA1(plain, SHA1.SHA_ENCODING);
+        boolean result;
+        result = SHA1.verifySHA1(encodedSHA1, plain);
+        System.out.println("result is " + (result?"good":"bad"));
+        result = SHA1.verifySHA1(encodedSHA, plain);
+        System.out.println("result is " + (result?"good":"bad"));
     }
 
 }
