@@ -827,22 +827,28 @@ public abstract class ArchiveFormatter extends Formatter {
         return fldr;
     }
 
-    private long getTagMask(Mailbox mbox, ItemData id) throws IOException {
+    private long getTagBitmask(OperationContext oc, Mailbox mbox, ItemData id)
+        throws IOException {
         long bitmask = 0;
     	
         if (id.tags != null && id.tags.length() > 0) {
+            // pre 6.0.6 versions had numeric tags strings, not names
+            if (Character.isDigit(id.tags.charAt(0)) && id.tags.indexOf(':') == -1)
+                return id.ud.tags;
             try {
                 for (String name : id.tags.split(":")) {
+                    Tag tag;
+                    
                     try {
-                        Tag tag = mbox.getTagByName(name);
-
-                        if (tag != null)
-                            bitmask |= tag.getBitmask();
-                        } catch (MailServiceException e) {
-                            if (e.getCode() != MailServiceException.NO_SUCH_TAG)
-                                throw e;
-                        }
+                        tag = mbox.getTagByName(name);
+                    } catch (MailServiceException e) {
+                        if (e.getCode() == MailServiceException.NO_SUCH_TAG)
+                            tag = mbox.createTag(oc, name, (byte)0);
+                        else
+                            throw e;
                     }
+                    bitmask |= tag.getBitmask();
+                }
             } catch (Exception e) {
                 throw new IOException("tag error: " + e);
             }
@@ -1309,7 +1315,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (!id.flags.equals(newItem.getFlagString()) ||
                     !id.tags.equals(ItemData.getTagString(newItem)))
                     mbox.setTags(oc, newItem.getId(), newItem.getType(),
-                        Flag.flagsToBitmask(id.flags), getTagMask(mbox, id),
+                        Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
                         null);
             } else if (oldItem != null && r == Resolve.Modify) {
                 if (mi.getColor() != oldItem.getColor())
@@ -1318,7 +1324,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (!id.flags.equals(oldItem.getFlagString()) ||
                     !id.tags.equals(ItemData.getTagString(oldItem)))
                     mbox.setTags(oc, oldItem.getId(), oldItem.getType(),
-                        Flag.flagsToBitmask(id.flags), getTagMask(mbox, id),
+                        Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
                         null);
             }
         } catch (MailServiceException e) {
