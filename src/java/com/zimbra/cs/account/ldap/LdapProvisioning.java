@@ -2346,6 +2346,10 @@ public class LdapProvisioning extends Provisioning {
             sAccountCache.remove(acct);
             ZimbraLdapContext.closeContext(zlc);
         }
+        
+        // reload it to cache using the master, bug 45736
+        getAccountById(zimbraId, null, true);
+        
     }
 
     public void deleteDomain(String zimbraId) throws ServiceException {
