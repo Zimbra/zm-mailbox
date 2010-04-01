@@ -2078,8 +2078,9 @@ public abstract class CalendarItem extends MailItem {
                 }
                 return;
             }
-            
-            MimeMultipart mmp = null;
+
+            // It should be a multipart/digest.
+            MimeMultipart mmp;
             Object obj = mm.getContent();
             if (obj instanceof MimeMultipart)
                 mmp = (MimeMultipart) obj;
@@ -2897,8 +2898,15 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
             
-            // it'll be multipart/digest
-            MimeMultipart mmp = (MimeMultipart)mm.getContent();
+            // It should be multipart/digest.
+            MimeMultipart mmp;
+            Object obj = mm.getContent();
+            if (obj instanceof MimeMultipart)
+                mmp = (MimeMultipart) obj;
+            else
+                throw ServiceException.FAILURE(
+                        "Expected MimeMultipart, but got " + obj.getClass().getName() + ": " +
+                        obj.toString(), null);
             
             // find the matching parts...
             int numParts = mmp.getCount();
@@ -3415,7 +3423,17 @@ public abstract class CalendarItem extends MailItem {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(digestBlob);
             FixedMimeMessage digestMm = new FixedMimeMessage(JMSession.getSession(), bais);
-            MimeMultipart mmp = (MimeMultipart) digestMm.getContent();
+
+            // It should be multipart/digest.
+            MimeMultipart mmp;
+            Object obj = digestMm.getContent();
+            if (obj instanceof MimeMultipart)
+                mmp = (MimeMultipart) obj;
+            else
+                throw ServiceException.FAILURE(
+                        "Expected MimeMultipart, but got " + obj.getClass().getName() + ": " +
+                        obj.toString(), null);
+
             int numParts = mmp.getCount();
             for (int i = 0; i < numParts; i++) {
                 MimeBodyPart mbp = (MimeBodyPart) mmp.getBodyPart(i);
@@ -3423,7 +3441,14 @@ public abstract class CalendarItem extends MailItem {
                 String[] hdrs = mbp.getHeader("invId");
                 if (hdrs != null && hdrs.length > 0) {
                     invId = Integer.parseInt(hdrs[0]);
-                    MimeMessage mm = (MimeMessage) mbp.getContent();
+                    MimeMessage mm;
+                    Object objMbp = mbp.getContent();
+                    if (objMbp instanceof MimeMessage)
+                        mm = (MimeMessage) objMbp;
+                    else
+                        throw ServiceException.FAILURE(
+                                "Expected MimeMessage, but got " + objMbp.getClass().getName() + ": " +
+                                objMbp.toString(), null);
                     map.put(invId, mm);
                 }
             }
