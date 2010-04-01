@@ -2086,9 +2086,9 @@ public abstract class CalendarItem extends MailItem {
                 mmp = (MimeMultipart) obj;
             else
                 throw ServiceException.FAILURE(
-                        "Expected MimeMultipart, but got " + obj.getClass().getName() + ": " +
-                        obj.toString(), null);
-            
+                        "Expected MimeMultipart, but got " + obj.getClass().getName() +
+                        ": id=" + mId + ", content=" + obj.toString(), null);
+
             boolean updated = false;
 
             // remove invites
@@ -2905,8 +2905,8 @@ public abstract class CalendarItem extends MailItem {
                 mmp = (MimeMultipart) obj;
             else
                 throw ServiceException.FAILURE(
-                        "Expected MimeMultipart, but got " + obj.getClass().getName() + ": " +
-                        obj.toString(), null);
+                        "Expected MimeMultipart, but got " + obj.getClass().getName() +
+                        ": id=" + mId + ", content=" + obj.toString(), null);
             
             // find the matching parts...
             int numParts = mmp.getCount();
