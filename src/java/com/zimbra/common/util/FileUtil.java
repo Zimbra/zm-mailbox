@@ -520,12 +520,6 @@ public class FileUtil {
     }
     
     public static void rename(File src, File dst) throws IOException {
-        if (src.renameTo(dst))
-            return;
-        if (!src.exists())
-            throw new IOException("renaming source file " + src.getPath() + " doesn't exist");
-        if (dst.exists())
-            throw new IOException("renaming destination file " + dst.getPath() + " already exists");
         if (SystemUtil.ON_WINDOWS) {
             //HACK: according to http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6213298 there's a jvm bug on windows
             //HACK: this is the recommended hack
@@ -537,7 +531,15 @@ public class FileUtil {
                 if (src.renameTo(dst))
                     return;
             }
+        } else if (src.renameTo(dst)) {
+            return;
         }
+        
+        if (!src.exists())
+            throw new IOException("renaming source file " + src.getPath() + " doesn't exist");
+        if (dst.exists())
+            throw new IOException("renaming destination file " + dst.getPath() + " already exists");
+
         throw new IOException("file renaming failed: src=\"" + src.getPath() + "\" dst=\"" + dst.getPath() + "\"");
     }
 }
