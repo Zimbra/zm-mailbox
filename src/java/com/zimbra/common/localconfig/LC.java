@@ -580,6 +580,8 @@ public class LC {
     public static final KnownKey socket_so_timeout = new KnownKey(
         "socket_so_timeout", "30000", "default socket SO timeout in milliseconds");
     
+    public static final KnownKey networkaddress_cache_ttl;
+    
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1160,7 +1162,7 @@ public class LC {
         mailboxd_java_heap_new_size_percent.setDefault("25");
         
         mailboxd_java_options = new KnownKey("mailboxd_java_options");
-        mailboxd_java_options.setDefault("-server -Djava.awt.headless=true -XX:+UseConcMarkSweepGC -XX:NewRatio=2 -XX:PermSize=128m -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
+        mailboxd_java_options.setDefault("-server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl} -XX:+UseConcMarkSweepGC -XX:NewRatio=2 -XX:PermSize=128m -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
 
         mailboxd_pidfile = new KnownKey("mailboxd_pidfile");
         mailboxd_pidfile.setDefault("${zimbra_log_directory}" + FS + "mailboxd.pid");
@@ -1575,6 +1577,13 @@ public class LC {
         
         zimbra_slow_logging_enabled = new KnownKey("zimbra_slow_logging_enabled", "false");
         zimbra_slow_logging_threshold = new KnownKey("zimbra_slow_logging_threshold", "5000");
+        
+        
+        networkaddress_cache_ttl = new KnownKey("networkaddress_cache_ttl");
+        networkaddress_cache_ttl.setDefault("60");
+        networkaddress_cache_ttl.setDoc("Value for the java.security.Security networkaddress.cache.ttl property, " +
+                "set through -Dsun.net.inetaddr.ttl JVM system property. " +
+                "Number of seconds to cache successful hostname-to-IP address lookup from the name service. ");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
