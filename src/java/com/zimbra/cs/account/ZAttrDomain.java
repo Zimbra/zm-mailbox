@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100326-1723 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100401-2229 */
 
     /**
      * RFC2256: descriptive information
@@ -643,8 +643,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @return zimbraAdminConsoleLoginURL, or null if unset
      *
@@ -656,8 +656,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @param zimbraAdminConsoleLoginURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -672,8 +672,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @param zimbraAdminConsoleLoginURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -689,8 +689,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -704,8 +704,8 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -720,7 +720,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @return zimbraAdminConsoleLogoutURL, or null if unset
@@ -733,7 +733,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @param zimbraAdminConsoleLogoutURL new value
@@ -749,7 +749,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @param zimbraAdminConsoleLogoutURL new value
@@ -766,7 +766,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -781,7 +781,7 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @param attrs existing map to populate, or null to create a new map

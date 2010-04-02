@@ -4821,4 +4821,20 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of messages/conversations per virtual page</desc>
 </attr>
 
+<attr id="1080" name="zimbraImapShutdownGraceSeconds" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.7">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>number of seconds to wait before forcing IMAP server shutdown</desc>
+</attr>
+
+<attr id="1081" name="zimbraPop3ShutdownGraceSeconds" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.7">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>number of seconds to wait before forcing POP3 server shutdown</desc>
+</attr>
+
+<attr id="1082" name="zimbraLmtpShutdownGraceSeconds" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.7">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>number of seconds to wait before forcing LMTP server shutdown</desc>
+</attr>
+
+
 </attrs>

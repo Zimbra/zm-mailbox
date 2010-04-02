@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100326-1723 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100401-2229 */
 
     /**
      * RFC2256: descriptive information
@@ -893,8 +893,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @return zimbraAdminConsoleLoginURL, or null if unset
      *
@@ -906,8 +906,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @param zimbraAdminConsoleLoginURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -922,8 +922,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @param zimbraAdminConsoleLoginURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -939,8 +939,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -954,8 +954,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -970,7 +970,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @return zimbraAdminConsoleLogoutURL, or null if unset
@@ -983,7 +983,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @param zimbraAdminConsoleLogoutURL new value
@@ -999,7 +999,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @param zimbraAdminConsoleLogoutURL new value
@@ -1016,7 +1016,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1031,7 +1031,7 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -10517,6 +10517,78 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * number of seconds to wait before forcing IMAP server shutdown
+     *
+     * @return zimbraImapShutdownGraceSeconds, or 10 if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1080)
+    public int getImapShutdownGraceSeconds() {
+        return getIntAttr(Provisioning.A_zimbraImapShutdownGraceSeconds, 10);
+    }
+
+    /**
+     * number of seconds to wait before forcing IMAP server shutdown
+     *
+     * @param zimbraImapShutdownGraceSeconds new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1080)
+    public void setImapShutdownGraceSeconds(int zimbraImapShutdownGraceSeconds) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapShutdownGraceSeconds, Integer.toString(zimbraImapShutdownGraceSeconds));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of seconds to wait before forcing IMAP server shutdown
+     *
+     * @param zimbraImapShutdownGraceSeconds new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1080)
+    public Map<String,Object> setImapShutdownGraceSeconds(int zimbraImapShutdownGraceSeconds, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapShutdownGraceSeconds, Integer.toString(zimbraImapShutdownGraceSeconds));
+        return attrs;
+    }
+
+    /**
+     * number of seconds to wait before forcing IMAP server shutdown
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1080)
+    public void unsetImapShutdownGraceSeconds() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapShutdownGraceSeconds, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of seconds to wait before forcing IMAP server shutdown
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1080)
+    public Map<String,Object> unsetImapShutdownGraceSeconds(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapShutdownGraceSeconds, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 5.0. Installed skin list is a per server property,
      * the list is now generated by directory scan of skin files. Orig desc:
      * Skins installed and available on all servers (this is global config
@@ -11201,6 +11273,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetLmtpServerEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraLmtpServerEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * number of seconds to wait before forcing LMTP server shutdown
+     *
+     * @return zimbraLmtpShutdownGraceSeconds, or 10 if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1082)
+    public int getLmtpShutdownGraceSeconds() {
+        return getIntAttr(Provisioning.A_zimbraLmtpShutdownGraceSeconds, 10);
+    }
+
+    /**
+     * number of seconds to wait before forcing LMTP server shutdown
+     *
+     * @param zimbraLmtpShutdownGraceSeconds new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1082)
+    public void setLmtpShutdownGraceSeconds(int zimbraLmtpShutdownGraceSeconds) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpShutdownGraceSeconds, Integer.toString(zimbraLmtpShutdownGraceSeconds));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of seconds to wait before forcing LMTP server shutdown
+     *
+     * @param zimbraLmtpShutdownGraceSeconds new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1082)
+    public Map<String,Object> setLmtpShutdownGraceSeconds(int zimbraLmtpShutdownGraceSeconds, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpShutdownGraceSeconds, Integer.toString(zimbraLmtpShutdownGraceSeconds));
+        return attrs;
+    }
+
+    /**
+     * number of seconds to wait before forcing LMTP server shutdown
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1082)
+    public void unsetLmtpShutdownGraceSeconds() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpShutdownGraceSeconds, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of seconds to wait before forcing LMTP server shutdown
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1082)
+    public Map<String,Object> unsetLmtpShutdownGraceSeconds(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLmtpShutdownGraceSeconds, "");
         return attrs;
     }
 
@@ -18305,6 +18449,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPop3ServerEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ServerEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * number of seconds to wait before forcing POP3 server shutdown
+     *
+     * @return zimbraPop3ShutdownGraceSeconds, or 10 if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1081)
+    public int getPop3ShutdownGraceSeconds() {
+        return getIntAttr(Provisioning.A_zimbraPop3ShutdownGraceSeconds, 10);
+    }
+
+    /**
+     * number of seconds to wait before forcing POP3 server shutdown
+     *
+     * @param zimbraPop3ShutdownGraceSeconds new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1081)
+    public void setPop3ShutdownGraceSeconds(int zimbraPop3ShutdownGraceSeconds) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, Integer.toString(zimbraPop3ShutdownGraceSeconds));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of seconds to wait before forcing POP3 server shutdown
+     *
+     * @param zimbraPop3ShutdownGraceSeconds new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1081)
+    public Map<String,Object> setPop3ShutdownGraceSeconds(int zimbraPop3ShutdownGraceSeconds, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, Integer.toString(zimbraPop3ShutdownGraceSeconds));
+        return attrs;
+    }
+
+    /**
+     * number of seconds to wait before forcing POP3 server shutdown
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1081)
+    public void unsetPop3ShutdownGraceSeconds() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of seconds to wait before forcing POP3 server shutdown
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1081)
+    public Map<String,Object> unsetPop3ShutdownGraceSeconds(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3ShutdownGraceSeconds, "");
         return attrs;
     }
 

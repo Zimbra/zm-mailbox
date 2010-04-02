@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100326-1723 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100401-2229 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1240,8 +1240,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminConsoleLoginMessage = "zimbraAdminConsoleLoginMessage";
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
-     * out
+     * login URL for admin console to send the user to upon explicit logging
+     * in
      *
      * @since ZCS 5.0.9
      */
@@ -1249,7 +1249,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminConsoleLoginURL = "zimbraAdminConsoleLoginURL";
 
     /**
-     * logout URL for admin console to send the user to upon explicit loggin
+     * logout URL for admin console to send the user to upon explicit logging
      * out
      *
      * @since ZCS 5.0.7
@@ -3571,6 +3571,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapServerEnabled = "zimbraImapServerEnabled";
 
     /**
+     * number of seconds to wait before forcing IMAP server shutdown
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1080)
+    public static final String A_zimbraImapShutdownGraceSeconds = "zimbraImapShutdownGraceSeconds";
+
+    /**
      * interface address(es) on which IMAP server should listen; if empty,
      * binds to all interfaces
      */
@@ -3815,6 +3823,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=630)
     public static final String A_zimbraLmtpServerEnabled = "zimbraLmtpServerEnabled";
+
+    /**
+     * number of seconds to wait before forcing LMTP server shutdown
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1082)
+    public static final String A_zimbraLmtpShutdownGraceSeconds = "zimbraLmtpShutdownGraceSeconds";
 
     /**
      * locale of entry, e.g. en_US
@@ -5021,6 +5037,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=177)
     public static final String A_zimbraPop3ServerEnabled = "zimbraPop3ServerEnabled";
+
+    /**
+     * number of seconds to wait before forcing POP3 server shutdown
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1081)
+    public static final String A_zimbraPop3ShutdownGraceSeconds = "zimbraPop3ShutdownGraceSeconds";
 
     /**
      * interface address(es) on which POP3 server should listen; if empty,
