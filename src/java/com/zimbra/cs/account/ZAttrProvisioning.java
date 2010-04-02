@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100401-2229 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100402-1101 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -2070,6 +2070,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceConnectionType = "zimbraDataSourceConnectionType";
 
     /**
+     * Connect timeout in seconds for the data source
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1083)
+    public static final String A_zimbraDataSourceConnectTimeout = "zimbraDataSourceConnectTimeout";
+
+    /**
      * domain name of data source
      *
      * @since ZCS 6.0.0_RC1
@@ -2243,6 +2251,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=421)
     public static final String A_zimbraDataSourcePort = "zimbraDataSourcePort";
+
+    /**
+     * Read timeout in seconds
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1084)
+    public static final String A_zimbraDataSourceReadTimeout = "zimbraDataSourceReadTimeout";
 
     /**
      * The time interval between automated data imports for a Rss data

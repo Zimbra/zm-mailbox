@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100401-2229 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100402-1101 */
 
     /**
      * RFC2256: descriptive information
@@ -5321,6 +5321,78 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * Connect timeout in seconds for the data source
+     *
+     * @return zimbraDataSourceConnectTimeout, or 30 if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1083)
+    public int getDataSourceConnectTimeout() {
+        return getIntAttr(Provisioning.A_zimbraDataSourceConnectTimeout, 30);
+    }
+
+    /**
+     * Connect timeout in seconds for the data source
+     *
+     * @param zimbraDataSourceConnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1083)
+    public void setDataSourceConnectTimeout(int zimbraDataSourceConnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceConnectTimeout, Integer.toString(zimbraDataSourceConnectTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Connect timeout in seconds for the data source
+     *
+     * @param zimbraDataSourceConnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1083)
+    public Map<String,Object> setDataSourceConnectTimeout(int zimbraDataSourceConnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceConnectTimeout, Integer.toString(zimbraDataSourceConnectTimeout));
+        return attrs;
+    }
+
+    /**
+     * Connect timeout in seconds for the data source
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1083)
+    public void unsetDataSourceConnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceConnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Connect timeout in seconds for the data source
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1083)
+    public Map<String,Object> unsetDataSourceConnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceConnectTimeout, "");
+        return attrs;
+    }
+
+    /**
      * Which security layer to use for connection (cleartext, ssl, tls, or
      * tls if available). If not set on data source, fallback to the value on
      * global config.
@@ -5448,6 +5520,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetDataSourceConnectionType(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "");
+        return attrs;
+    }
+
+    /**
+     * Read timeout in seconds
+     *
+     * @return zimbraDataSourceReadTimeout, or 60 if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1084)
+    public int getDataSourceReadTimeout() {
+        return getIntAttr(Provisioning.A_zimbraDataSourceReadTimeout, 60);
+    }
+
+    /**
+     * Read timeout in seconds
+     *
+     * @param zimbraDataSourceReadTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1084)
+    public void setDataSourceReadTimeout(int zimbraDataSourceReadTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceReadTimeout, Integer.toString(zimbraDataSourceReadTimeout));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Read timeout in seconds
+     *
+     * @param zimbraDataSourceReadTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1084)
+    public Map<String,Object> setDataSourceReadTimeout(int zimbraDataSourceReadTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceReadTimeout, Integer.toString(zimbraDataSourceReadTimeout));
+        return attrs;
+    }
+
+    /**
+     * Read timeout in seconds
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1084)
+    public void unsetDataSourceReadTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceReadTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Read timeout in seconds
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1084)
+    public Map<String,Object> unsetDataSourceReadTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceReadTimeout, "");
         return attrs;
     }
 
