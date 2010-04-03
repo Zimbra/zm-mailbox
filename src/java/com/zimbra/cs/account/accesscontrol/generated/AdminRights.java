@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100312-1449 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100403-1414 */
 
 
     public static AdminRight R_accessGAL;
@@ -47,6 +47,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleAccountsFreeBusyInteropTabRights;
     public static AdminRight R_adminConsoleAccountsInfoTabRights;
     public static AdminRight R_adminConsoleAccountsMemberOfTabRights;
+    public static AdminRight R_adminConsoleAccountsPreferencesTabRights;
     public static AdminRight R_adminConsoleAccountsThemesTabRights;
     public static AdminRight R_adminConsoleAccountsZimletsTabRights;
     public static AdminRight R_adminConsoleAliasRights;
@@ -206,6 +207,7 @@ public class AdminRights {
     public static AdminRight R_getMailboxInfo;
     public static AdminRight R_getMailboxStats;
     public static AdminRight R_getServer;
+    public static AdminRight R_getServerStats;
     public static AdminRight R_getServiceStatus;
     public static AdminRight R_getSessions;
     public static AdminRight R_getXMPPComponent;
@@ -264,6 +266,7 @@ public class AdminRights {
     public static AdminRight R_setAdminConsoleAccountsForwardingTab;
     public static AdminRight R_setAdminConsoleAccountsFreeBusyInteropTab;
     public static AdminRight R_setAdminConsoleAccountsInfoTab;
+    public static AdminRight R_setAdminConsoleAccountsPreferencesTab;
     public static AdminRight R_setAdminConsoleAccountsThemesTab;
     public static AdminRight R_setAdminConsoleAccountsZimletsTab;
     public static AdminRight R_setAdminConsoleCOSACLTab;
@@ -343,6 +346,7 @@ public class AdminRights {
     public static AdminRight R_viewAdminConsoleAccountsForwardingTab;
     public static AdminRight R_viewAdminConsoleAccountsFreeBusyInteropTab;
     public static AdminRight R_viewAdminConsoleAccountsInfoTab;
+    public static AdminRight R_viewAdminConsoleAccountsPreferencesTab;
     public static AdminRight R_viewAdminConsoleAccountsThemesTab;
     public static AdminRight R_viewAdminConsoleAccountsZimletsTab;
     public static AdminRight R_viewAdminConsoleCOSACLTab;
@@ -429,6 +433,7 @@ public class AdminRights {
         R_adminConsoleAccountsFreeBusyInteropTabRights = rm.getAdminRight(Right.RT_adminConsoleAccountsFreeBusyInteropTabRights);
         R_adminConsoleAccountsInfoTabRights    = rm.getAdminRight(Right.RT_adminConsoleAccountsInfoTabRights);
         R_adminConsoleAccountsMemberOfTabRights = rm.getAdminRight(Right.RT_adminConsoleAccountsMemberOfTabRights);
+        R_adminConsoleAccountsPreferencesTabRights = rm.getAdminRight(Right.RT_adminConsoleAccountsPreferencesTabRights);
         R_adminConsoleAccountsThemesTabRights  = rm.getAdminRight(Right.RT_adminConsoleAccountsThemesTabRights);
         R_adminConsoleAccountsZimletsTabRights = rm.getAdminRight(Right.RT_adminConsoleAccountsZimletsTabRights);
         R_adminConsoleAliasRights              = rm.getAdminRight(Right.RT_adminConsoleAliasRights);
@@ -588,6 +593,7 @@ public class AdminRights {
         R_getMailboxInfo                       = rm.getAdminRight(Right.RT_getMailboxInfo);
         R_getMailboxStats                      = rm.getAdminRight(Right.RT_getMailboxStats);
         R_getServer                            = rm.getAdminRight(Right.RT_getServer);
+        R_getServerStats                       = rm.getAdminRight(Right.RT_getServerStats);
         R_getServiceStatus                     = rm.getAdminRight(Right.RT_getServiceStatus);
         R_getSessions                          = rm.getAdminRight(Right.RT_getSessions);
         R_getXMPPComponent                     = rm.getAdminRight(Right.RT_getXMPPComponent);
@@ -646,6 +652,7 @@ public class AdminRights {
         R_setAdminConsoleAccountsForwardingTab = rm.getAdminRight(Right.RT_setAdminConsoleAccountsForwardingTab);
         R_setAdminConsoleAccountsFreeBusyInteropTab = rm.getAdminRight(Right.RT_setAdminConsoleAccountsFreeBusyInteropTab);
         R_setAdminConsoleAccountsInfoTab       = rm.getAdminRight(Right.RT_setAdminConsoleAccountsInfoTab);
+        R_setAdminConsoleAccountsPreferencesTab = rm.getAdminRight(Right.RT_setAdminConsoleAccountsPreferencesTab);
         R_setAdminConsoleAccountsThemesTab     = rm.getAdminRight(Right.RT_setAdminConsoleAccountsThemesTab);
         R_setAdminConsoleAccountsZimletsTab    = rm.getAdminRight(Right.RT_setAdminConsoleAccountsZimletsTab);
         R_setAdminConsoleCOSACLTab             = rm.getAdminRight(Right.RT_setAdminConsoleCOSACLTab);
@@ -725,6 +732,7 @@ public class AdminRights {
         R_viewAdminConsoleAccountsForwardingTab = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsForwardingTab);
         R_viewAdminConsoleAccountsFreeBusyInteropTab = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsFreeBusyInteropTab);
         R_viewAdminConsoleAccountsInfoTab      = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsInfoTab);
+        R_viewAdminConsoleAccountsPreferencesTab = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsPreferencesTab);
         R_viewAdminConsoleAccountsThemesTab    = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsThemesTab);
         R_viewAdminConsoleAccountsZimletsTab   = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsZimletsTab);
         R_viewAdminConsoleCOSACLTab            = rm.getAdminRight(Right.RT_viewAdminConsoleCOSACLTab);

@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100312-1449 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100403-1414 */
 
 
     /*
@@ -132,6 +132,11 @@ public class RightConsts {
      * Admin Console rights for Accounts MemberOf Tab
      */
     public static final String RT_adminConsoleAccountsMemberOfTabRights = "adminConsoleAccountsMemberOfTabRights";
+
+    /**
+     * Admin Console rights for Accounts Preferences Tab
+     */
+    public static final String RT_adminConsoleAccountsPreferencesTabRights = "adminConsoleAccountsPreferencesTabRights";
 
     /**
      * Admin Console rights for Accounts Themes Tab
@@ -937,6 +942,11 @@ public class RightConsts {
     public static final String RT_getServer = "getServer";
 
     /**
+     * get stats of server
+     */
+    public static final String RT_getServerStats = "getServerStats";
+
+    /**
      * get service status of server
      */
     public static final String RT_getServiceStatus = "getServiceStatus";
@@ -1226,6 +1236,11 @@ public class RightConsts {
      * Admin Console set attr rights for accounts contact tab
      */
     public static final String RT_setAdminConsoleAccountsInfoTab = "setAdminConsoleAccountsInfoTab";
+
+    /**
+     * Admin Console set attr rights for Accounts Preferences Tab
+     */
+    public static final String RT_setAdminConsoleAccountsPreferencesTab = "setAdminConsoleAccountsPreferencesTab";
 
     /**
      * Admin Console set attr rights for Accounts Themes Tab
@@ -1636,6 +1651,11 @@ public class RightConsts {
      * Admin Console view attr rights for accounts contact tab
      */
     public static final String RT_viewAdminConsoleAccountsInfoTab = "viewAdminConsoleAccountsInfoTab";
+
+    /**
+     * Admin Console view attr rights for Accounts Preferences Tab
+     */
+    public static final String RT_viewAdminConsoleAccountsPreferencesTab = "viewAdminConsoleAccountsPreferencesTab";
 
     /**
      * Admin Console view attr rights for Accounts Themes Tab

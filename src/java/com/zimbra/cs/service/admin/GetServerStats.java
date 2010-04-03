@@ -24,6 +24,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -32,6 +36,9 @@ public class GetServerStats extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        Server localServer = Provisioning.getInstance().getLocalServer();
+        checkRight(zsc, context, localServer, Admin.R_getServerStats);
         
         // Assemble list of requested stat names.
         List<Element> eStats = request.listElements(AdminConstants.E_STAT);
@@ -82,5 +89,10 @@ public class GetServerStats extends AdminDocumentHandler {
         } else {
             return value.toString();
         }
+    }
+    
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        relatedRights.add(Admin.R_getServerStats);
     }
 }
