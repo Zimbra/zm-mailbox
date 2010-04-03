@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100402-1101 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100403-1029 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4197,6 +4197,78 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetImapExposeVersionOnBanner(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraImapExposeVersionOnBanner, "");
+        return attrs;
+    }
+
+    /**
+     * maximum size of IMAP request in bytes excluding literal data
+     *
+     * @return zimbraImapMaxRequestSize, or 10 if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1085)
+    public int getImapMaxRequestSize() {
+        return getIntAttr(Provisioning.A_zimbraImapMaxRequestSize, 10);
+    }
+
+    /**
+     * maximum size of IMAP request in bytes excluding literal data
+     *
+     * @param zimbraImapMaxRequestSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1085)
+    public void setImapMaxRequestSize(int zimbraImapMaxRequestSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxRequestSize, Integer.toString(zimbraImapMaxRequestSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum size of IMAP request in bytes excluding literal data
+     *
+     * @param zimbraImapMaxRequestSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1085)
+    public Map<String,Object> setImapMaxRequestSize(int zimbraImapMaxRequestSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxRequestSize, Integer.toString(zimbraImapMaxRequestSize));
+        return attrs;
+    }
+
+    /**
+     * maximum size of IMAP request in bytes excluding literal data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1085)
+    public void unsetImapMaxRequestSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxRequestSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum size of IMAP request in bytes excluding literal data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1085)
+    public Map<String,Object> unsetImapMaxRequestSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxRequestSize, "");
         return attrs;
     }
 

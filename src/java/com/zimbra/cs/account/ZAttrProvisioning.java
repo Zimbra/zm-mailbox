@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100402-1101 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100403-1029 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -3559,6 +3559,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=693)
     public static final String A_zimbraImapExposeVersionOnBanner = "zimbraImapExposeVersionOnBanner";
+
+    /**
+     * maximum size of IMAP request in bytes excluding literal data
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1085)
+    public static final String A_zimbraImapMaxRequestSize = "zimbraImapMaxRequestSize";
 
     /**
      * number of handler threads

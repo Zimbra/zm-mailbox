@@ -4846,5 +4846,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Read timeout in seconds</desc>
 </attr>
 
+<attr id="1085" name="zimbraImapMaxRequestSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.7">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>maximum size of IMAP request in bytes excluding literal data</desc>
+</attr>
+
 
 </attrs>
