@@ -615,6 +615,11 @@
 <right name="manageCrossMailboxSearchTask" type="preset" targetType="server">
   <desc>create/abort/delete/purge/get status of a cross mailbox search task</desc>
 </right>
+
+<right name="getServerStats" type="preset" targetType="server">
+  <desc>get stats of server</desc>
+</right>
+
        
 <!-- 
   TODO:
