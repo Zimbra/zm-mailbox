@@ -187,8 +187,25 @@ public class Contact extends MailItem {
 
     /** Returns a new <tt>Map</tt> containing all the contact's
      *  field/value pairs. */
-    public Map<String, String> getFields() {
+    public Map<String, String> getAllFields() {
         return new HashMap<String, String>(mFields);
+    }
+    
+    /** Returns a new <tt>Map</tt> containing all the visible
+     *  field/value pairs in the contact. */
+    public Map<String, String> getFields() {
+        HashMap<String, String> fields = new HashMap<String, String>(mFields);
+        try {
+            String hiddenAttrList = Provisioning.getInstance().getLocalServer().getContactHiddenAttributes();
+            if (hiddenAttrList != null) {
+                for (String attr : hiddenAttrList.split(",")) {
+                    fields.remove(attr);
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailop.warn("can't get A_zimbraContactHiddenAttributes", e);
+        }
+        return fields;
     }
 
     /** Returns a list of all the contact's attachments.  If the contact has
