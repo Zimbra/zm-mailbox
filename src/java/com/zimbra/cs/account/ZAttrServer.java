@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100403-1029 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100405-1408 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4203,13 +4203,13 @@ public class ZAttrServer extends NamedEntry {
     /**
      * maximum size of IMAP request in bytes excluding literal data
      *
-     * @return zimbraImapMaxRequestSize, or 10 if unset
+     * @return zimbraImapMaxRequestSize, or 10240 if unset
      *
      * @since ZCS 6.0.7
      */
     @ZAttr(id=1085)
     public int getImapMaxRequestSize() {
-        return getIntAttr(Provisioning.A_zimbraImapMaxRequestSize, 10);
+        return getIntAttr(Provisioning.A_zimbraImapMaxRequestSize, 10240);
     }
 
     /**
