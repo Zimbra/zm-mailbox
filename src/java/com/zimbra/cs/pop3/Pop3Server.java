@@ -86,11 +86,11 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
 
     public synchronized static void shutdownPop3Servers() {
         if (sPopServer != null) {
-            sPopServer.shutdown(10); // TODO shutdown grace period from config
+            sPopServer.shutdown();
             sPopServer = null;
         }
         if (sPopSSLServer != null) {
-            sPopSSLServer.shutdown(10); // TODO shutdown grace period from config
+            sPopSSLServer.shutdown();
             sPopSSLServer = null;
         }
     }

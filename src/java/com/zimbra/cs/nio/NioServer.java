@@ -49,6 +49,10 @@ public abstract class NioServer implements Server {
 
     public abstract NioStatsMBean getStats();
 
+    public void shutdown() {
+        shutdown(getConfig().getShutdownGraceSeconds());
+    }
+    
     protected void registerStatsMBean(String type) {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try {

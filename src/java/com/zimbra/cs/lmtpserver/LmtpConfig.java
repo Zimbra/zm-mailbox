@@ -59,6 +59,11 @@ public class LmtpConfig extends ServerConfig {
     }
 
     @Override
+    public int getShutdownGraceSeconds() {
+       return getIntAttr(A_zimbraLmtpShutdownGraceSeconds, super.getShutdownGraceSeconds());
+    }
+    
+    @Override
     public int getNumThreads() {
         return getIntAttr(A_zimbraLmtpNumThreads, super.getNumThreads());
     }

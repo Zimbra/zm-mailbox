@@ -57,6 +57,11 @@ public class Pop3Config extends ServerConfig {
     }
 
     @Override
+    public int getShutdownGraceSeconds() {
+       return getIntAttr(A_zimbraPop3ShutdownGraceSeconds, super.getShutdownGraceSeconds());
+    }
+
+    @Override
     public int getMaxIdleSeconds() {
         return MAX_IDLE_SECONDS;
     }

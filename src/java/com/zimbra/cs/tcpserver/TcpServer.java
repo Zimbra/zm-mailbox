@@ -126,6 +126,10 @@ public abstract class TcpServer implements Runnable, Server {
         t.start();
     }
 
+    public void shutdown() {
+        shutdown(mConfig.getShutdownGraceSeconds());
+    }
+    
     public void shutdown(int forceShutdownAfterSeconds) {
         mLog.info(mName + " initiating shutdown");
         mShutdownRequested = true;

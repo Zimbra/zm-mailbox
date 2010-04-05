@@ -64,7 +64,7 @@ public class LmtpServer extends TcpServer {
 
     public static void shutdownLmtpServer() {
         if (server != null) {
-            server.shutdown(10); // TODO shutdown grace period from config
+            server.shutdown();
             server = null;
         }
     }

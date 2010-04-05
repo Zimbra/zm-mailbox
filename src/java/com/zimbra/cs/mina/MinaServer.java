@@ -258,6 +258,10 @@ public abstract class MinaServer implements Server {
         mHandlerThreadPool.shutdownNow();
     }
 
+    public void shutdown() {
+        shutdown(getConfig().getShutdownGraceSeconds());
+    }
+
     private void closeSessions(long timeout) {
         // Close currently open sessions and get active handlers
         List<MinaHandler> handlers = new ArrayList<MinaHandler>();

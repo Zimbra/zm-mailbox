@@ -104,11 +104,11 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     
     public synchronized static void shutdownImapServers() {
         if (sImapServer != null) {
-            sImapServer.shutdown(10);
+            sImapServer.shutdown();
             sImapServer = null;
         }
         if (sImapSSLServer != null) {
-            sImapSSLServer.shutdown(10);
+            sImapSSLServer.shutdown();
             sImapSSLServer = null;
         }
     }

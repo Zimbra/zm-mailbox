@@ -28,7 +28,7 @@ public abstract class ServerConfig {
     private String protocol;
     private boolean ssl;
 
-    private static final int SHUTDOWN_GRACE_PERIOD = 60;
+    private static final int SHUTDOWN_GRACE_SECONDS = 10;
     private static final int NUM_THREADS = 20;
     private static final int MAX_IDLE_SECONDS = 600;
     private static final int NIO_MAX_SESSIONS = 200;
@@ -104,8 +104,8 @@ public abstract class ServerConfig {
         }
     }
 
-    public int getShutdownGracePeriod() {
-       return SHUTDOWN_GRACE_PERIOD;
+    public int getShutdownGraceSeconds() {
+       return SHUTDOWN_GRACE_SECONDS;
     }
 
     public int getNioMaxSessions() {

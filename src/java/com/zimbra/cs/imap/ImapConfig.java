@@ -90,6 +90,11 @@ public class ImapConfig extends ServerConfig {
         return ZimbraLog.imap;
     }
 
+    @Override
+    public int getShutdownGraceSeconds() {
+       return getIntAttr(A_zimbraImapShutdownGraceSeconds, super.getShutdownGraceSeconds());
+    }
+
     public int getAuthenticatedMaxIdleSeconds() {
         return ImapFolder.IMAP_IDLE_TIMEOUT_SEC;
     }

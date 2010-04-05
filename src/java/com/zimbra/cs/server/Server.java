@@ -23,5 +23,6 @@ import java.io.IOException;
 public interface Server {
     ServerConfig getConfig();
     void start() throws IOException;
+    void shutdown();
     void shutdown(int graceSecs);
 }

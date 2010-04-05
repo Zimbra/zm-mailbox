@@ -114,7 +114,7 @@ public abstract class MinaServer extends NioServer {
      * to stop, otherwise the server is forced to shut down.
      */
     public void stop() {
-        int graceSecs = getConfig().getShutdownGracePeriod();
+        int graceSecs = getConfig().getShutdownGraceSeconds();
         if (graceSecs <= 0) {
             graceSecs = 10;
         }
