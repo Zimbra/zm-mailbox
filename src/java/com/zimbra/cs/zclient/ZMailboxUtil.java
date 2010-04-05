@@ -1375,14 +1375,20 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
+    /*
+     * after bug 40178, grantee names are not returned in the refresh block,
+     * they are only returned in GetFolderResponse.
+     * lookupFolder returns the cached folder (inited from the refresh block), after that,
+     * do a GetFolderRequest with the folder id to get the full grant info that includes grantee name.
+     */
+    private ZFolder getFolderWithFullGrantInfo(String pathOrId) throws ServiceException {
+        ZFolder f = lookupFolder(pathOrId);
+        return mMbox.getFolderRequestById(f.getId());
+    }
+    
     private void doGetFolderGrant(String[] args) throws ServiceException {
-        ZFolder f = lookupFolder(args[0]);
-        // after bug 40178, grantee names are not returned in the refresh block,
-        // they are only returned in GetFolderResponse.
-        // Do not use the cached folder (inited from the refresh block), do a 
-        // GetFolderRequest instead.
-        f = mMbox.getFolderRequestById(f.getId());
-        
+        ZFolder f = getFolderWithFullGrantInfo(args[0]);
+                
         if (verboseOpt()) {
             StringBuilder sb = new StringBuilder();
             for (ZGrant g : f.getGrants()) {
@@ -1468,7 +1474,7 @@ public class ZMailboxUtil implements DebugListener {
 
         if (revoke) {
             // convert grantee to grantee id if it is a name
-            ZFolder f = lookupFolder(folderId);
+            ZFolder f = getFolderWithFullGrantInfo(folderId);
             String zid = null;
             for (ZGrant g : f.getGrants()) {
                 if (grantee.equalsIgnoreCase(g.getGranteeName()) ||
