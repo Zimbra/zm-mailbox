@@ -40,6 +40,17 @@ public class ZimletPresence {
             }
         }
         
+        public static Presence fromPrefix(char prefix) {
+            if (prefix == mandatory.mPrefix) {
+                return Presence.mandatory;
+            } else if (prefix == enabled.mPrefix) {
+                return Presence.enabled;
+            } else if (prefix == disabled.mPrefix) {
+                return Presence.disabled;
+            } else
+                return null; // leave it to the caller to decide that action
+        }
+        
         public char prefix() {
             return mPrefix;
         }
@@ -61,18 +72,17 @@ public class ZimletPresence {
     Map<String, Presence> mZimlets = new HashMap<String, Presence>();
     
     public void put(String zimletWithPrefix) {
-        Presence presence;
-        String zimletName;
+        
+        if (zimletWithPrefix.length() == 0)
+            return;
         
         char prefix = zimletWithPrefix.charAt(0);
-        if (prefix == Presence.mandatory.mPrefix) {
-            presence = Presence.mandatory;
-            zimletName = zimletWithPrefix.substring(1);
-        } else if (prefix == Presence.enabled.mPrefix) {
-            presence = Presence.enabled;
-            zimletName = zimletWithPrefix.substring(1);
-        } else if (prefix == Presence.disabled.mPrefix) {
-            presence = Presence.disabled;
+        Presence presence = Presence.fromPrefix(prefix);
+        String zimletName;
+        
+        if (presence != null) {
+            if (zimletWithPrefix.length() <= 1)
+                return;
             zimletName = zimletWithPrefix.substring(1);
         } else {
             presence = Presence.enabled;
