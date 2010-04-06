@@ -4263,6 +4263,10 @@ public class ZMailbox implements ToZJSONObject {
         mMessageCache.clear();
     }
 
+    public void clearContactCache() {
+        mContactCache.clear();
+    }
+
     public static class ZImportAppointmentsResult {
 
         private String mIds;
