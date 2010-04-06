@@ -602,7 +602,7 @@ public class LC {
         
         zimbra_java_home = new KnownKey("zimbra_java_home");
         if (System.getProperty("os.name").equalsIgnoreCase("Mac OS X")) {
-            zimbra_java_home.setDefault("/System/Library/Frameworks/JavaVM.framework/Versions/1.5/Home");
+            zimbra_java_home.setDefault("/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home");
         } else {
             zimbra_java_home.setDefault("${zimbra_home}" + FS + "${zimbra_java_path}");
         }
