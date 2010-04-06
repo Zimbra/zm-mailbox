@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.TreeSet;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -49,7 +50,7 @@ public class ContactAutoComplete {
 		public boolean canBeCached;
 		public int limit;
 		public AutoCompleteResult(int l) { 
-			entries = new ArrayList<ContactEntry>(); 
+			entries = new TreeSet<ContactEntry>(); 
 			emails = new HashSet<String>();
 			canBeCached = true;
 			limit = l;
@@ -124,7 +125,7 @@ public class ContactAutoComplete {
     			mLastName = name.substring(space+1);
         }
         public int compareTo(ContactEntry that) {
-        	int diff = this.mRanking - that.mRanking;
+        	int diff = that.mRanking - this.mRanking;
         	if (diff != 0)
             	return diff;
         	return this.mEmail.compareToIgnoreCase(that.mEmail);
@@ -288,6 +289,9 @@ public class ContactAutoComplete {
 	}
 	
 	public static void addMatchedContacts(String query, Map<String,? extends Object> attrs, Collection<String> emailKeys, int folderId, ItemId id, AutoCompleteResult result) {
+	    if (!result.canBeCached)
+	        return;
+	    
     	String firstName = (String)attrs.get(ContactConstants.A_firstName);
     	String lastName = (String)attrs.get(ContactConstants.A_lastName);
         String middleName = (String)attrs.get(ContactConstants.A_middleName);
@@ -407,8 +411,8 @@ public class ContactAutoComplete {
                 	continue;
 
                 addMatchedContacts(str, fields, folderId, id, result);
-        		if (result.entries.size() >= limit)
-        			return;
+                if (!result.canBeCached)
+                    return;
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
