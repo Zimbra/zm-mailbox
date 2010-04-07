@@ -18,6 +18,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -59,10 +60,15 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         // if the admin can remove an alias in the domain
         checkDomainRightByEmail(zsc, alias, Admin.R_deleteAlias);
         
+        // even if dl is null, we still invoke removeAlias and throw an exception afterwards.
+        // this is so dangling aliases can be cleaned up as much as possible
         prov.removeAlias(dl, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RemoveDistributionListAlias", "name", dlName, "alias", alias})); 
+        
+        if (dl == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
         
 	    Element response = zsc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE);
 	    return response;

@@ -1003,11 +1003,23 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case REMOVE_DISTRIBUTION_LIST_ALIAS:
             DistributionList dl = lookupDistributionList(args[1], false);
-            mProv.removeAlias(dl, args[2]);
-            // even if dl is null, we still invoke removeAlias and throw an exception afterwards.
-            // this is so dangling aliases can be cleaned up as much as possible
+            // Even if dl is null, we still invoke removeAlias.
+            // This is so dangling aliases can be cleaned up as much as possible.
+            // If dl is null, the NO_SUCH_DISTRIBUTION_LIST thrown by SOAP will contain
+            // null as the dl identity, because SoapProvisioning sends no id to the server.
+            // In this case, we catch the NO_SUCH_DISTRIBUTION_LIST and throw another one 
+            // with the named/id entered on the comand line.
+            try {
+                mProv.removeAlias(dl, args[2]);
+            } catch (ServiceException e) {
+                if (!(dl == null && AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(e.getCode())))
+                    throw e;
+                // else eat the exception, we will throw below
+            }
+            
             if (dl == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(args[1]);
+            
             break;
         case RENAME_DISTRIBUTION_LIST:
             mProv.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);
