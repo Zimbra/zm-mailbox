@@ -27,4 +27,32 @@ public class RemoteCommands {
     public static final String COLLECT_LDAP_ZIMBRA = "zmcollectldapzimbra";
     
     public static final String ZM_SERVER_IPS = "zmserverips";
+    
+    public static final String START_MAILBOX = "start mailbox";
+    
+    public static final String STOP_MAILBOX = "stop mailbox";
+    
+    public static final String START_LDAP = "start ldap";
+    
+    public static final String STOP_LDAP = "stop ldap";
+    
+    public static final String START_MTA = "start mta";
+    
+    public static final String STOP_MTA = "stop mta";
+    
+    public static final String START_AS = "start antispam";
+    
+    public static final String STOP_AS = "stop antispam";
+ 
+    public static final String START_AV = "start antivirus";
+    
+    public static final String STOP_AV = "stop antivirus";    
+    
+    public static final String START_SNMP = "start snmp";
+    
+    public static final String STOP_SNMP = "stop snmp";
+    
+    public static final String START_SPELL = "start spell";
+    
+    public static final String STOP_SPELL = "stop spell";   
 }
