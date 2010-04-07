@@ -3052,6 +3052,7 @@ public class ZMailbox implements ToZJSONObject {
 
 		if (params.getTypes().equals(ZSearchParams.TYPE_VOICE_MAIL) ||
 			params.getTypes().equals(ZSearchParams.TYPE_CALL)) {
+			getAllPhoneAccounts();
 			setVoiceStorePrincipal(req);
 		}
         Element resp = invoke(req);
