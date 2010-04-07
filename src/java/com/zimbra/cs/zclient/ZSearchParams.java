@@ -73,7 +73,7 @@ public class ZSearchParams implements ToZJSONObject {
             else if (s.startsWith("g") && TYPE_GAL.startsWith(s))
                 sb.append(TYPE_GAL);
             else
-                throw ZClientException.CLIENT_ERROR("invlaid search type: "+s, null);
+                throw ZClientException.CLIENT_ERROR("invalid search type: "+s, null);
         }
         return sb.toString();
     }
