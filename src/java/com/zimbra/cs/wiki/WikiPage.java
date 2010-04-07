@@ -21,6 +21,7 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Header;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -132,6 +133,9 @@ public abstract class WikiPage {
 	
 	public static WikiPage findPage(WikiPage.WikiContext ctxt, String accountId, int id) throws ServiceException {
 		Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId, ctxt.auth);
+		if (account == null)
+		    throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+		
 		if (!Provisioning.onLocalServer(account)) {
 			throw new WikiServiceException.NoSuchWikiException("not on local host");
 		}
