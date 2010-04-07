@@ -4,7 +4,24 @@
 <rights>
 
 <include file="zimbra-rights.xml"/>
+<!-- 
+========================================================
+      domain admin read-only attrs
+========================================================
+-->
 
+<right name="getDomainAdminAccountAttrs" type="getAttrs" targetType="account">
+  <desc>account and calendar resource attrs read only for domain admins</desc>
+  <attrs>
+  	<a n="zimbraMailHost"/>
+  </attrs>
+ </right>
+ <right name="getDomainAdminCalendarResourceAttrs" type="getAttrs" targetType="calresource">
+  <desc>account and calendar resource attrs read only for domain admins</desc>
+  <attrs>
+  	<a n="zimbraMailHost"/>
+  </attrs>
+ </right>
 <!--
   =======================================================
     Admin Console Accounts List View
@@ -704,6 +721,7 @@
   <desc>Admin Console Domain Admin Account Rights</desc>
   <rights>
     <r n="getMailboxInfo"/> <!-- where does this go -->
+    <r n="getDomainAdminAccountAttrs"/>
     <r n="domainAdminConsoleAccountsInfoTabRights"/>
     <r n="domainAdminConsoleAccountsContactTabRights"/>
     <r n="domainAdminConsoleAccountsMemberOfTabRights"/>
@@ -737,6 +755,8 @@
 <right type="combo" name="domainAdminConsoleResourceRights">
   <desc>Admin Console Domain Admin Resource Rights</desc>
   <rights>
+    <r n="getMailboxInfo"/>
+    <r n="getDomainAdminCalendarResourceAttrs"/>
     <r n="domainAdminConsoleResourcesPropertiesTabRights"/>
     <r n="domainAdminConsoleResourcesContactTabRights"/>
     <r n="listCalendarResource"/>
