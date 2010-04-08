@@ -224,7 +224,8 @@ public class ForwardCalendarItem extends CalendarRequest {
         }
     }
 
-    private static void setSentByAndAttendees(ZVCalendar cal, String sentBy, Address[] rcpts) {
+    private static void setSentByAndAttendees(ZVCalendar cal, String sentBy, Address[] rcpts)
+    throws ServiceException {
         // Set SENT-BY to sender's email address in ORGANIZER property of all VEVENT/VTODO components.
         // Required by Outlook.
         // Also, remove existing ATTENDEEs and add ATTENDEE lines for forwardees.
@@ -256,6 +257,8 @@ public class ForwardCalendarItem extends CalendarRequest {
                     comp.addProperty(xMsOlkSender);
                 }
                 // ATTENDEEs
+                if (rcpts == null)
+                    throw ServiceException.INVALID_REQUEST("Missing forwardees", null);
                 for (Address r : rcpts) {
                     InternetAddress rcpt = (InternetAddress) r;
                     String email = "mailto:" + rcpt.getAddress();
