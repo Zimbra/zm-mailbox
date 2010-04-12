@@ -677,7 +677,7 @@ import and export of addressbook.
   
 ----------------------------
 
- <AutoCompleteGalRequest [type="{type}"] limit="limit-returned">
+ <AutoCompleteGalRequest [type="{type}"]>
    <name>...</name>
  </AutoCompleteGalRequest>
  
@@ -685,7 +685,8 @@ import and export of addressbook.
    <cn>...</cn>*
  </AutoCompleteGalResponse>
 
-  {limit} = an integer specifying the maximum number of results to return
+  - the number of entries in the response is limited by Account/COS attribute
+    zimbraContactAutoCompleteMaxResults with default value of 20.
 
   {type} = type of addresses to auto-complete on
            "account" for regular user accounts, aliases and distribution lists
@@ -705,7 +706,7 @@ import and export of addressbook.
 
 ----------------------------
 
-<AutoCompleteRequest folders="{folders}" includeGal="0|1" limit="...">
+<AutoCompleteRequest folders="{folders}" includeGal="0|1">
   <name>...</name>
 </AutoCompleteRequest>
 
@@ -715,6 +716,8 @@ import and export of addressbook.
 
   {folders} - comma separates list of folder IDs.
   
+  - the number of entries in the response is limited by Account/COS attribute
+    zimbraContactAutoCompleteMaxResults with default value of 20.
   - email field contains comma separated email addresses in case of group
   - display field contains string that should be displayed by the client
 
