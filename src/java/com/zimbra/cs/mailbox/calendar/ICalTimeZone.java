@@ -1013,9 +1013,12 @@ public class ICalTimeZone extends SimpleTimeZone {
                              MSEC_PER_HOUR;
                     offset++;
                 }
-                toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
-                         MSEC_PER_MIN;
-                offset += 2;
+                // MM part is required, but let's allow omitting.  (for American Express travel app)
+                if (len - offset >= 2) {
+                    toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
+                             MSEC_PER_MIN;
+                    offset += 2;
+                }
                 if (len - offset >= 2)
                     toRet += Integer.parseInt(utcOffset.substring(offset, offset + 2)) *
                              MSEC_PER_SEC;
