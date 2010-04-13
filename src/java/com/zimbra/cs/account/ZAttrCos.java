@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100412-1202 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100413-1140 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -16795,11 +16795,11 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
-     * @return zimbraPrefForwardIncludeOriginalText, or ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBodyAndHeaders if unset and/or has invalid value
+     * @return zimbraPrefForwardIncludeOriginalText, or ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody if unset and/or has invalid value
      */
     @ZAttr(id=134)
     public ZAttrProvisioning.PrefForwardIncludeOriginalText getPrefForwardIncludeOriginalText() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBodyAndHeaders : ZAttrProvisioning.PrefForwardIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBodyAndHeaders; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody : ZAttrProvisioning.PrefForwardIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefForwardIncludeOriginalText.includeBody; }
     }
 
     /**
@@ -16809,11 +16809,11 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeAsAttachment, includeBodyAndHeaders, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeBody, includeBodyWithPrefix]
      *
-     * @return zimbraPrefForwardIncludeOriginalText, or "includeBodyAndHeaders" if unset
+     * @return zimbraPrefForwardIncludeOriginalText, or "includeBody" if unset
      */
     @ZAttr(id=134)
     public String getPrefForwardIncludeOriginalTextAsString() {
-        return getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText, "includeBodyAndHeaders");
+        return getAttr(Provisioning.A_zimbraPrefForwardIncludeOriginalText, "includeBody");
     }
 
     /**
@@ -21342,11 +21342,11 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
-     * @return zimbraPrefReplyIncludeOriginalText, or ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBodyAndHeaders if unset and/or has invalid value
+     * @return zimbraPrefReplyIncludeOriginalText, or ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody if unset and/or has invalid value
      */
     @ZAttr(id=133)
     public ZAttrProvisioning.PrefReplyIncludeOriginalText getPrefReplyIncludeOriginalText() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBodyAndHeaders : ZAttrProvisioning.PrefReplyIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBodyAndHeaders; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText); return v == null ? ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody : ZAttrProvisioning.PrefReplyIncludeOriginalText.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReplyIncludeOriginalText.includeBody; }
     }
 
     /**
@@ -21356,11 +21356,11 @@ public class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [includeSmartAndHeadersWithPrefix, includeSmartAndHeaders, includeBody, includeBodyWithPrefix, includeAsAttachment, includeBodyAndHeaders, includeNone, includeBodyAndHeadersWithPrefix, includeBodyOnly, includeSmartWithPrefix, includeSmart]
      *
-     * @return zimbraPrefReplyIncludeOriginalText, or "includeBodyAndHeaders" if unset
+     * @return zimbraPrefReplyIncludeOriginalText, or "includeBody" if unset
      */
     @ZAttr(id=133)
     public String getPrefReplyIncludeOriginalTextAsString() {
-        return getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText, "includeBodyAndHeaders");
+        return getAttr(Provisioning.A_zimbraPrefReplyIncludeOriginalText, "includeBody");
     }
 
     /**

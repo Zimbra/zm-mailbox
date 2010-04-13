@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100412-1202 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100413-1140 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
