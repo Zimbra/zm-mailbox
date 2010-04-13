@@ -502,6 +502,8 @@ effect if called in a <nosession> context.
     <accessed>{last-SOAP-access}</accessed>
     <recent>{recent-messages}</recent>
    ]
+   <docSizeLimit>{document-size-limit}</docSizeLimit>
+   <attSizeLimit>{attachment-size-limit}</attSizeLimit>
    <cos name="cos-name" id="cos-id"/>
    <attrs>
     <attr name="{name}">{value}</a>

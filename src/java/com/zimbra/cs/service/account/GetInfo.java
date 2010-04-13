@@ -32,10 +32,12 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.AuthToken;
@@ -103,6 +105,17 @@ public class GetInfo extends AccountDocumentHandler  {
         long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Server server = prov.getLocalServer();
+            if (server != null)
+                response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
+            Config config = prov.getConfig();
+            if (config != null)
+                response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, config.getMtaMaxMessageSize());
+            
+        } catch (ServiceException e) {}
+        
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
             response.addAttribute(AccountConstants.E_REST, UserServlet.getRestUrl(account), Element.Disposition.CONTENT);
             try {
