@@ -45,7 +45,7 @@ implements SharedInputStream {
     /**
      * Position of the last call to {@link #mark}.
      */
-    private Long mMarkPos;
+    private long mMarkPos = Long.MIN_VALUE;
     
     /**
      * Position of the next byte to read.
@@ -233,7 +233,7 @@ implements SharedInputStream {
 
     @Override
     public synchronized void reset() throws IOException {
-        if (mMarkPos == null) {
+        if (mMarkPos == Long.MIN_VALUE) {
             throw new IOException("reset() called before mark()");
         }
         if (mPos - mMarkPos > mMarkReadLimit) {
