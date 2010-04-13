@@ -204,4 +204,8 @@ public class AccountConstants {
     
     // XMPPComponent APIs
     public static final String E_XMPP_COMPONENT = "xmppcomponent";
+    
+    // upload limits
+    public static final String A_ATTACHMENT_SIZE_LIMIT = "attSizeLimit";
+    public static final String A_DOCUMENT_SIZE_LIMIT = "docSizeLimit";
 }
