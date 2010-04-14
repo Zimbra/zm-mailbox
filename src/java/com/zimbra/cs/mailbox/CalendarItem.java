@@ -388,7 +388,7 @@ public abstract class CalendarItem extends MailItem {
     static CalendarItem create(int id, Folder folder, int flags, long tags, String uid,
     						   ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom)
     throws ServiceException {
-        firstInvite.sanitize(true);
+        firstInvite.sanitize(false);
 
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
@@ -1309,7 +1309,7 @@ public abstract class CalendarItem extends MailItem {
                     mId, getFolderId(), newInvite.getMethod(),
                     newInvite.isPublic() ? newInvite.getName() : "(private)", mUid, newInvite.getRecurId().getDtZ());
 
-        newInvite.sanitize(true);
+        newInvite.sanitize(false);
 
         OperationContext octxt = getMailbox().getOperationContext();
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;

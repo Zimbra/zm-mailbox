@@ -670,6 +670,7 @@ public class Message extends MailItem {
             boolean success = false;
             try {
                 if (intendedForMe) {
+                    cur.sanitize(true);
                     calItem = mMailbox.getCalendarItemByUid(cur.getUid());
                     if (createCalItem && !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
                         if (calItem == null) {

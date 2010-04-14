@@ -109,7 +109,6 @@ public class ImportAppointments extends MailDocumentHandler  {
                 } else {
                     addRevision = false;
                 }
-                inv.sanitize(false);  // Clean up known bad patterns to increase the chance of successful import.
                 // and add the invite to the calendar!
                 try {
                     int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, addRevision);

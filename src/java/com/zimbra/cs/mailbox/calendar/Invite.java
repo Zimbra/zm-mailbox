@@ -2503,8 +2503,12 @@ public class Invite {
     }
 
     public void sanitize(boolean throwException) throws ServiceException {
-        if ((mUid == null || mUid.length() == 0) && throwException)
-            throw ServiceException.INVALID_REQUEST("missing UID", null);
+        if ((mUid == null || mUid.length() == 0)) {
+            if (throwException)
+                throw ServiceException.INVALID_REQUEST("missing UID; subject=" + mName, null);
+            else
+                ZimbraLog.calendar.warn("UID missing; subject=" + mName);
+        }
 
         // Keep all-day flag and DTSTART in sync.
         if (mStart == null) {
@@ -2524,14 +2528,19 @@ public class Invite {
 
         // ORGANIZER is required if there is at least one ATTENDEE.
         if (isOrganizerMethod(mMethod) && hasOtherAttendees() && !hasOrganizer()) {
-            if (throwException)
-                throw ServiceException.INVALID_REQUEST("ORGANIZER missing when ATTENDEEs are present", null);
-            else
+            if (throwException) {
+                throw ServiceException.INVALID_REQUEST(
+                        "ORGANIZER missing when ATTENDEEs are present; UID=" + mUid + ", subject=" + mName,
+                        null);
+            } else {
+                // If we don't know who the organizer is, remove attendees.  Some clients will assume missing
+                // organizer means current user is the organizer.  If attendees were kept, these clients will
+                // send cancel notice to the attendees when appointment is deleted.  The attendees will get
+                // confused because the cancel notice came from someone other than the organizer.
+                ZimbraLog.calendar.warn(
+                        "ORGANIZER missing; clearing ATTENDEEs to avoid confusing clients; UID=" + mUid + ", subject=" + mName);
                 clearAttendees();
-            // If we don't know who the organizer is, remove attendees.  Some clients will assume missing
-            // organizer means current user is the organizer.  If attendees were kept, these clients will
-            // send cancel notice to the attendees when appointment is deleted.  The attendees will get
-            // confused because the cancel notice came from someone other than the organizer.
+            }
         }
 
         // DTEND or DUE, if specified, can't be earlier than DTSTART.
@@ -2540,10 +2549,12 @@ public class Invite {
 
         // Recurrence rule can't be set without DTSTART.
         if (mRecurrence != null && mStart == null) {
-            if (throwException)
-                throw ServiceException.INVALID_REQUEST("recurrence used without DTSTART", null);
-            else
+            if (throwException) {
+                throw ServiceException.INVALID_REQUEST("recurrence used without DTSTART; UID=" + mUid + ", subject=" + mName, null);
+            } else {
+                ZimbraLog.calendar.warn("recurrence used without DTSTART; removing recurrence; UID=" + mUid + ", subject=" + mName);
                 mRecurrence = null;
+            }
         }
 
         mPercentComplete = limitIntegerRange(mPercentComplete, 0, 100, null);

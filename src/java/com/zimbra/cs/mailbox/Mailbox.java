@@ -5989,7 +5989,6 @@ public class Mailbox {
                     } else {
                         addRevision = false;
                     }
-                    inv.sanitize(false);  // Clean up known bad patterns to increase the chance of successful import.
                     try {
                         int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
                         if (calIds != null && calIds.length > 0)
