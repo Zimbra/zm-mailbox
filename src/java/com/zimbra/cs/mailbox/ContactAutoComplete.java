@@ -174,7 +174,7 @@ public class ContactAutoComplete {
 		try {
 			Account acct = prov.get(Provisioning.AccountBy.id, accountId);
 			mIncludeSharedFolders = acct.getBooleanAttr(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, false);
-			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactAutoCompleteEmailFields);
+			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactEmailFields);
 			if (emailKeys != null)
 				mEmailKeys = Arrays.asList(emailKeys.split(","));
 	        mIncludeGal = acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&

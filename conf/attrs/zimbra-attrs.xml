@@ -3843,7 +3843,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether end-user wants auto-complete from shared address books.</desc>
 </attr>
 
-<attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
+<attr id="760" name="zimbraContactAutoCompleteEmailFields" type="string" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="6.0.7" since="6.0.0_BETA1">
   <defaultCOSValue>email,email2,email3,workEmail1,workEmail2,workEmail3</defaultCOSValue>
   <desc>
     Comma separates list of attributes in contact object to search for
@@ -3852,6 +3852,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     LDAP attributes for GAL objects are mapped to Contact compatible
     attributes via zimbraGalLdapAttrMap.
   </desc>
+  <deprecateDesc>deprecated in favor of zimbraContactEmailFields, for bug 45475</deprecateDesc>
 </attr>
 
 <attr id="761" name="zimbraAdminConsoleUIComponents" type="string" cardinality="multi" optionalIn="account,distributionList" flags="accountInfo" since="6.0.0_BETA1">
@@ -4862,6 +4863,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1087" name="zimbraCalendarResourceDoubleBookingAllowed" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.7">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether calendar reasources can be double booked</desc>
+</attr>
+
+<attr id="1088" name="zimbraContactEmailFields" type="string" max="4096" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
+  <defaultCOSValue>email,email2,email3,email4,email5,email6,email7,email8,email9,email10,workEmail1,workEmail2,workEmail3</defaultCOSValue>
+  <desc>
+    Comma separates list of attributes in contact object to search for
+    email addresses when generating auto-complete contact list.  The
+    same set of fields are used for GAL contacts as well because
+    LDAP attributes for GAL objects are mapped to Contact compatible
+    attributes via zimbraGalLdapAttrMap.
+  </desc>
 </attr>
 
 </attrs>

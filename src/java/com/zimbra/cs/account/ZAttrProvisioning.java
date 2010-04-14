@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100413-1140 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100414-0939 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1941,11 +1941,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraConstraint = "zimbraConstraint";
 
     /**
-     * Comma separates list of attributes in contact object to search for
-     * email addresses when generating auto-complete contact list. The same
-     * set of fields are used for GAL contacts as well because LDAP
-     * attributes for GAL objects are mapped to Contact compatible attributes
-     * via zimbraGalLdapAttrMap.
+     * Deprecated since: 6.0.7. deprecated in favor of
+     * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
+     * list of attributes in contact object to search for email addresses
+     * when generating auto-complete contact list. The same set of fields are
+     * used for GAL contacts as well because LDAP attributes for GAL objects
+     * are mapped to Contact compatible attributes via zimbraGalLdapAttrMap.
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -1959,6 +1960,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=827)
     public static final String A_zimbraContactAutoCompleteMaxResults = "zimbraContactAutoCompleteMaxResults";
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1088)
+    public static final String A_zimbraContactEmailFields = "zimbraContactEmailFields";
 
     /**
      * Comma separated list of Contact attributes that should be hidden from

@@ -43,6 +43,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
@@ -165,11 +167,70 @@ public class Contact extends MailItem {
      *  values (<tt>"John"</tt>). */
     private Map<String, String> mFields;
     private List<Attachment> mAttachments;
+    
+    // The list of all *simple* "email" fields in the contact's map
+    // IMPORTANT NOTE - does not include the Contact Group 'dlist' entry, which is 
+    // * a multi-value entry (comma-separated) 
+    private static final String[] EMAIL_FIELDS = new String[] { 
+        ContactConstants.A_email, 
+        ContactConstants.A_email2, 
+        ContactConstants.A_email3, 
+        ContactConstants.A_workEmail1, 
+        ContactConstants.A_workEmail2, 
+        ContactConstants.A_workEmail3 };
+    
+    private String[] mEmailFields; 
 
+
+    /**
+     * Returns the email fields in contact for the account.
+     * 
+     * This gets called whenever a Contact object is constructed.
+     * With the high call rate, we cache it on the account to avoid 
+     * repeated computing from the attr value.
+     *
+     * @param acct
+     * @return
+     */
+    public static String[] getEmailFields(Account acct) {
+        String[] emailFields = null;
+        
+        // see if it is in cache
+        emailFields = (String[])acct.getCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS.getKeyName());
+                
+        if (emailFields == null) {
+            String[] fields = null;
+            String emailFieldsStr = acct.getAttr(Provisioning.A_zimbraContactEmailFields);
+            if (emailFieldsStr != null)
+                fields = emailFieldsStr.split(",");
+                    
+            if (fields != null) {
+                // remove dlist if it is there
+                List<String> temp = new ArrayList<String>(fields.length);
+                for (String field : fields) {
+                    if (!ContactConstants.A_dlist.equals(field))
+                        temp.add(field);
+                }
+                if (temp.size() > 0)
+                    emailFields = temp.toArray(new String[0]);
+            }
+                    
+            if (emailFields == null)
+                emailFields = EMAIL_FIELDS;
+                    
+            // we now have a non empty emailFields, cache it on the acccount
+            acct.setCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS.getKeyName(), emailFields);
+        }
+        
+        return emailFields;
+    }
+    
     public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
         if (mData.type != TYPE_CONTACT)
             throw new IllegalArgumentException();
+        
+        mEmailFields = getEmailFields(getAccount());
     }
 
     @Override public String getSender() {
@@ -424,27 +485,18 @@ public class Contact extends MailItem {
         attrs.put(ContactConstants.A_fileAs, new Integer(ContactConstants.FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
-    /** The list of all *simple* "email" fields in the contact's map.
-     *  
-     * IMPORTANT NOTE - does not include the Contact Group 'dlist' entry, which is 
-     * a multi-value entry (comma-separated) 
-     * 
-     * You most certainly want to use getEmailAddresses() or getEmailAddresses(Map) instead of this
-     */
-    private static final String[] EMAIL_FIELDS = new String[] { ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3, ContactConstants.A_workEmail1, ContactConstants.A_workEmail2, ContactConstants.A_workEmail3 };
-    
     /** Returns a list of all email address fields for this contact.  This is used
      *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
      *  "To" field with the contact's email addresses. */
     public List<String> getEmailAddresses() {
-        return getEmailAddresses(mFields);
+        return getEmailAddresses(mEmailFields, mFields);
     }
     
-    public static final boolean isEmailField(String fieldName) {
+    public static final boolean isEmailField(String[] emailFields, String fieldName) {
         if (fieldName == null)
             return false;
         String lcField = fieldName.toLowerCase();
-        for (String e : EMAIL_FIELDS) {
+        for (String e : emailFields) {
             if (lcField.equals(e))
                 return true;
         }
@@ -453,9 +505,9 @@ public class Contact extends MailItem {
         return false;
     }
     
-    public static final List<String> getEmailAddresses(Map<String, String> fields) {
+    public static final List<String> getEmailAddresses(String[] emailFields, Map<String, String> fields) {
         ArrayList<String> result = new ArrayList<String>();
-        for (String field : EMAIL_FIELDS) {
+        for (String field : emailFields) {
             String value = fields.get(field);
             if (value != null && !value.trim().equals(""))
                 result.add(value);

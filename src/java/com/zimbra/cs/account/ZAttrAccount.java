@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100413-1140 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100414-0939 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4356,11 +4356,12 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Comma separates list of attributes in contact object to search for
-     * email addresses when generating auto-complete contact list. The same
-     * set of fields are used for GAL contacts as well because LDAP
-     * attributes for GAL objects are mapped to Contact compatible attributes
-     * via zimbraGalLdapAttrMap.
+     * Deprecated since: 6.0.7. deprecated in favor of
+     * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
+     * list of attributes in contact object to search for email addresses
+     * when generating auto-complete contact list. The same set of fields are
+     * used for GAL contacts as well because LDAP attributes for GAL objects
+     * are mapped to Contact compatible attributes via zimbraGalLdapAttrMap.
      *
      * @return zimbraContactAutoCompleteEmailFields, or "email,email2,email3,workEmail1,workEmail2,workEmail3" if unset
      *
@@ -4372,11 +4373,12 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Comma separates list of attributes in contact object to search for
-     * email addresses when generating auto-complete contact list. The same
-     * set of fields are used for GAL contacts as well because LDAP
-     * attributes for GAL objects are mapped to Contact compatible attributes
-     * via zimbraGalLdapAttrMap.
+     * Deprecated since: 6.0.7. deprecated in favor of
+     * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
+     * list of attributes in contact object to search for email addresses
+     * when generating auto-complete contact list. The same set of fields are
+     * used for GAL contacts as well because LDAP attributes for GAL objects
+     * are mapped to Contact compatible attributes via zimbraGalLdapAttrMap.
      *
      * @param zimbraContactAutoCompleteEmailFields new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4391,11 +4393,12 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Comma separates list of attributes in contact object to search for
-     * email addresses when generating auto-complete contact list. The same
-     * set of fields are used for GAL contacts as well because LDAP
-     * attributes for GAL objects are mapped to Contact compatible attributes
-     * via zimbraGalLdapAttrMap.
+     * Deprecated since: 6.0.7. deprecated in favor of
+     * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
+     * list of attributes in contact object to search for email addresses
+     * when generating auto-complete contact list. The same set of fields are
+     * used for GAL contacts as well because LDAP attributes for GAL objects
+     * are mapped to Contact compatible attributes via zimbraGalLdapAttrMap.
      *
      * @param zimbraContactAutoCompleteEmailFields new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4411,11 +4414,12 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Comma separates list of attributes in contact object to search for
-     * email addresses when generating auto-complete contact list. The same
-     * set of fields are used for GAL contacts as well because LDAP
-     * attributes for GAL objects are mapped to Contact compatible attributes
-     * via zimbraGalLdapAttrMap.
+     * Deprecated since: 6.0.7. deprecated in favor of
+     * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
+     * list of attributes in contact object to search for email addresses
+     * when generating auto-complete contact list. The same set of fields are
+     * used for GAL contacts as well because LDAP attributes for GAL objects
+     * are mapped to Contact compatible attributes via zimbraGalLdapAttrMap.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4429,11 +4433,12 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Comma separates list of attributes in contact object to search for
-     * email addresses when generating auto-complete contact list. The same
-     * set of fields are used for GAL contacts as well because LDAP
-     * attributes for GAL objects are mapped to Contact compatible attributes
-     * via zimbraGalLdapAttrMap.
+     * Deprecated since: 6.0.7. deprecated in favor of
+     * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
+     * list of attributes in contact object to search for email addresses
+     * when generating auto-complete contact list. The same set of fields are
+     * used for GAL contacts as well because LDAP attributes for GAL objects
+     * are mapped to Contact compatible attributes via zimbraGalLdapAttrMap.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -4516,6 +4521,98 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetContactAutoCompleteMaxResults(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAutoCompleteMaxResults, "");
+        return attrs;
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @return zimbraContactEmailFields, or "email,email2,email3,email4,email5,email6,email7,email8,email9,email10,workEmail1,workEmail2,workEmail3" if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1088)
+    public String getContactEmailFields() {
+        return getAttr(Provisioning.A_zimbraContactEmailFields, "email,email2,email3,email4,email5,email6,email7,email8,email9,email10,workEmail1,workEmail2,workEmail3");
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @param zimbraContactEmailFields new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1088)
+    public void setContactEmailFields(String zimbraContactEmailFields) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactEmailFields, zimbraContactEmailFields);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @param zimbraContactEmailFields new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1088)
+    public Map<String,Object> setContactEmailFields(String zimbraContactEmailFields, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactEmailFields, zimbraContactEmailFields);
+        return attrs;
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1088)
+    public void unsetContactEmailFields() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactEmailFields, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Comma separates list of attributes in contact object to search for
+     * email addresses when generating auto-complete contact list. The same
+     * set of fields are used for GAL contacts as well because LDAP
+     * attributes for GAL objects are mapped to Contact compatible attributes
+     * via zimbraGalLdapAttrMap.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1088)
+    public Map<String,Object> unsetContactEmailFields(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactEmailFields, "");
         return attrs;
     }
 

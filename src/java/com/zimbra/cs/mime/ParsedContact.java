@@ -41,6 +41,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
@@ -374,7 +375,7 @@ public class ParsedContact {
 
     public ParsedContact analyze(Mailbox mbox) throws ServiceException {
         try {
-            analyzeContact(mbox.attachmentsIndexingEnabled());
+            analyzeContact(mbox.getAccount(), mbox.attachmentsIndexingEnabled());
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -386,7 +387,7 @@ public class ParsedContact {
     boolean mHasTemporaryAnalysisFailure = false;
     public boolean hasTemporaryAnalysisFailure() { return mHasTemporaryAnalysisFailure; } 
 
-    private void analyzeContact(boolean indexAttachments) throws ServiceException {
+    private void analyzeContact(Account acct, boolean indexAttachments) throws ServiceException {
         if (mZDocuments != null)
             return;
 
@@ -417,7 +418,7 @@ public class ParsedContact {
             }
         }
 
-        mZDocuments.add(new IndexDocument(getPrimaryDocument(attachContent.toString())));
+        mZDocuments.add(new IndexDocument(getPrimaryDocument(acct, attachContent.toString())));
     }
     
     public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
@@ -469,15 +470,17 @@ public class ParsedContact {
         }
     }
     
-    private org.apache.lucene.document.Document getPrimaryDocument(String contentStrIn) throws ServiceException {
+    private org.apache.lucene.document.Document getPrimaryDocument(Account acct, String contentStrIn) throws ServiceException {
         org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
         
         StringBuilder fieldText = new StringBuilder();
         StringBuilder contentText = new StringBuilder();
         
+        String emailFields[] = Contact.getEmailFields(acct);
+        
         Map<String, String> m = getFields();
         for (Map.Entry<String, String> entry : m.entrySet()) {
-            if (!Contact.isEmailField(entry.getKey())) { // skip email addrs, they're added to CONTENT below
+            if (!Contact.isEmailField(emailFields, entry.getKey())) { // skip email addrs, they're added to CONTENT below
                 if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey())) 
                     contentText.append(entry.getValue()).append(' ');
             }
@@ -490,7 +493,7 @@ public class ParsedContact {
         String emailStr; 
         {
             StringBuilder emailSb  = new StringBuilder();
-            for (String email : Contact.getEmailAddresses(getFields())) {
+            for (String email : Contact.getEmailAddresses(emailFields, getFields())) {
                 emailSb.append(email).append(' ');
             }
             emailStr = emailSb.toString();

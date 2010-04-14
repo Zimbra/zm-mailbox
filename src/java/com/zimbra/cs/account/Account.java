@@ -265,5 +265,27 @@ public class Account extends ZAttrAccount  {
     public boolean isCalendarResource() {
         return getAttr(Provisioning.A_zimbraCalResType) != null;
     }
+    
+    /*
+    public boolean isGalSyncAccount() throws ServiceException {
+        Boolean isGalSyncAcct = (Boolean)getCachedData(EntryCacheDataKey.ACCOUNT_IS_GAL_SYNC_ACCOUNT.getKeyName());
+        if (isGalSyncAcct == null) {
+            isGalSyncAcct = Boolean.FALSE;
+            if (isIsSystemResource()) {
+                // see if there is a GalDataSource in the account 
+                List<DataSource> dataSources = getProvisioning().getAllDataSources(this);
+                for (DataSource ds : dataSources) {
+                    if (DataSource.Type.gal == ds.getType()) {
+                        isGalSyncAcct = Boolean.TRUE;
+                        break;
+                    }
+                }
+            }
+            setCachedData(EntryCacheDataKey.ACCOUNT_IS_GAL_SYNC_ACCOUNT.getKeyName(), isGalSyncAcct);
+        }
+        return isGalSyncAcct.booleanValue();
+    }
+    */
+    
 }
  
