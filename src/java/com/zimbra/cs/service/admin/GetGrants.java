@@ -36,6 +36,7 @@ public class GetGrants extends RightDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Provisioning prov = Provisioning.getInstance();
         
         String targetType = null;
         TargetBy targetBy = null;
@@ -47,6 +48,14 @@ public class GetGrants extends RightDocumentHandler {
                 targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
                 target = eTarget.getText();
             }
+            
+            // check if the authed admin has right to view grants on the desired target
+            TargetType tt = TargetType.fromCode(targetType);
+            Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+            
+            // targetEntry cannot be null by now, because lookupTarget would have thrown 
+            // if the specified target does not exist 
+            checkRight(zsc, targetEntry, Admin.R_viewGrants);
         }
         
         String granteeType = null;
@@ -60,8 +69,6 @@ public class GetGrants extends RightDocumentHandler {
             grantee = eGrantee.getText();
             granteeIncludeGroupsGranteeBelongs = eGrantee.getAttributeBool(AdminConstants.A_ALL);
         }
-        
-        Provisioning prov = Provisioning.getInstance();
         
         RightCommand.Grants grants = RightCommand.getGrants(
                 prov,
