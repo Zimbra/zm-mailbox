@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100414-0939 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100414-1001 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14084,6 +14084,88 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefCalendarAlwaysShowMiniCal(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarAlwaysShowMiniCal, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to allow attendees to make local edits to appointments. The
+     * change is only on the attendees copy of the message and changes from
+     * the organizer will overwrite the local changes.
+     *
+     * @return zimbraPrefCalendarApptAllowAtendeeEdit, or true if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1089)
+    public boolean isPrefCalendarApptAllowAtendeeEdit() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarApptAllowAtendeeEdit, true);
+    }
+
+    /**
+     * Whether to allow attendees to make local edits to appointments. The
+     * change is only on the attendees copy of the message and changes from
+     * the organizer will overwrite the local changes.
+     *
+     * @param zimbraPrefCalendarApptAllowAtendeeEdit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1089)
+    public void setPrefCalendarApptAllowAtendeeEdit(boolean zimbraPrefCalendarApptAllowAtendeeEdit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptAllowAtendeeEdit, zimbraPrefCalendarApptAllowAtendeeEdit ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow attendees to make local edits to appointments. The
+     * change is only on the attendees copy of the message and changes from
+     * the organizer will overwrite the local changes.
+     *
+     * @param zimbraPrefCalendarApptAllowAtendeeEdit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1089)
+    public Map<String,Object> setPrefCalendarApptAllowAtendeeEdit(boolean zimbraPrefCalendarApptAllowAtendeeEdit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptAllowAtendeeEdit, zimbraPrefCalendarApptAllowAtendeeEdit ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to allow attendees to make local edits to appointments. The
+     * change is only on the attendees copy of the message and changes from
+     * the organizer will overwrite the local changes.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1089)
+    public void unsetPrefCalendarApptAllowAtendeeEdit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptAllowAtendeeEdit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to allow attendees to make local edits to appointments. The
+     * change is only on the attendees copy of the message and changes from
+     * the organizer will overwrite the local changes.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1089)
+    public Map<String,Object> unsetPrefCalendarApptAllowAtendeeEdit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarApptAllowAtendeeEdit, "");
         return attrs;
     }
 

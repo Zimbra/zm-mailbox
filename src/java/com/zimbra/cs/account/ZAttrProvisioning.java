@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100414-0939 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100414-1001 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5233,6 +5233,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=276)
     public static final String A_zimbraPrefCalendarAlwaysShowMiniCal = "zimbraPrefCalendarAlwaysShowMiniCal";
+
+    /**
+     * Whether to allow attendees to make local edits to appointments. The
+     * change is only on the attendees copy of the message and changes from
+     * the organizer will overwrite the local changes.
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1089)
+    public static final String A_zimbraPrefCalendarApptAllowAtendeeEdit = "zimbraPrefCalendarApptAllowAtendeeEdit";
 
     /**
      * number of minutes (0 = never) before appt to show reminder dialog

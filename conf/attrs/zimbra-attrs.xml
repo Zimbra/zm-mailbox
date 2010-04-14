@@ -4854,10 +4854,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1086" name="zimbraContactHiddenAttributes" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.7">
   <globalConfigValue>dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail</globalConfigValue>
-  <desc>
-      Comma separated list of Contact attributes that should be hidden from clients
-      and export of contacts.
-  </desc>
+  <desc>Comma separated list of Contact attributes that should be hidden from clients and export of contacts.</desc>
 </attr>
 
 <attr id="1087" name="zimbraCalendarResourceDoubleBookingAllowed" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.7">
@@ -4875,5 +4872,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     attributes via zimbraGalLdapAttrMap.
   </desc>
 </attr>
+
+
+<attr id="1089" name="zimbraPrefCalendarApptAllowAtendeeEdit" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    Whether to allow attendees to make local edits to appointments.
+    The change is only on the attendees copy of the message and changes from the organizer will overwrite the local changes.
+  </desc>
+</attr>
+
 
 </attrs>
