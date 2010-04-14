@@ -131,8 +131,9 @@ public class ZimletResources extends DiskCacheServlet {
                 RequestDispatcher dispatcher = clientContext.getRequestDispatcher(RESOURCE_PATH);
 
                 for (String zimletName : zimletNames) {
-                    HttpServletRequest wrappedReq = new RequestWrapper(req, RESOURCE_PATH + zimletName);
-                    HttpServletResponse wrappedResp = new ResponseWrapper(resp, printer);
+                    RequestWrapper wrappedReq = new RequestWrapper(req, RESOURCE_PATH + zimletName);
+                    ResponseWrapper wrappedResp = new ResponseWrapper(resp, printer);
+                    wrappedReq.setParameter("debug", "1"); // bug 45922: avoid cached messages
                     dispatcher.include(wrappedReq, wrappedResp);
                 }
             }
@@ -421,6 +422,7 @@ public class ZimletResources extends DiskCacheServlet {
 
     static class RequestWrapper extends HttpServletRequestWrapper {
         private String filename;
+        private Map<String,String> parameters;
 
         public RequestWrapper(HttpServletRequest req, String filename) {
             super(req);
@@ -429,6 +431,15 @@ public class ZimletResources extends DiskCacheServlet {
 
         public String getRequestURI() {
             return filename + ".js";
+        }
+
+        public void setParameter(String name, String value) {
+            if (this.parameters == null) this.parameters = new HashMap<String,String>();
+            this.parameters.put(name, value);
+        }
+        public String getParameter(String name) {
+            String value = this.parameters != null ? this.parameters.get(name) : null;
+            return value == null ? super.getParameter(name) : value;
         }
     }
 
