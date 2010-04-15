@@ -1336,8 +1336,8 @@ public class LC {
         zmstat_disk_interval = new KnownKey("zmstat_disk_interval");
         zmstat_disk_interval.setDefault("600");
 
-        zmstat_interval = new KnownKey("zmstat_max_retention");
-        zmstat_interval.setDefault("0");
+        zmstat_max_retention = new KnownKey("zmstat_max_retention");
+        zmstat_max_retention.setDefault("0");
 
         zimbra_noop_default_timeout = new KnownKey("zimbra_noop_default_timeout", "300");
         zimbra_noop_min_timeout = new KnownKey("zimbra_noop_min_timeout", "30");
