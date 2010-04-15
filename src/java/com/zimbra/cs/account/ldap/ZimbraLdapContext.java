@@ -54,6 +54,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.SSLSocketFactoryWrapper;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -260,15 +261,21 @@ public class ZimbraLdapContext {
             sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
             
             if (ConnType.isLDAPS(master)) {
-                if (LC.ssl_allow_untrusted_certs.booleanValue())
-                    sEnv.put("java.naming.ldap.factory.socket", "com.zimbra.common.util.EasySSLSocketFactory");
+                if (LC.ssl_allow_untrusted_certs.booleanValue()) {
+                    sEnv.put("java.naming.ldap.factory.socket", DummySSLSocketFactory.class.getName());
+                }
             }
-            
         }
-        
+
         return sEnv;
     }
-    
+
+    public static class DummySSLSocketFactory extends SSLSocketFactoryWrapper {
+        public DummySSLSocketFactory() {
+            super(SocketFactories.dummySSLSocketFactory());
+        }
+    }
+
     private static synchronized Hashtable<String, String> getCustomEnv(boolean master, LdapConfig ldapConfig) {
         Hashtable<String, String> env = new Hashtable<String, String>(); 
         
