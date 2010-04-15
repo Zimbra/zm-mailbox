@@ -749,6 +749,14 @@ abstract class ImapHandler extends ProtocolHandler {
                         return doUNSELECT(tag);
                     }
                     break;
+                case 'X':
+                    if (command.equals("XLIST")) {
+                        req.skipSpace();  String base = req.readFolder();
+                        req.skipSpace();  Set<String> patterns = Collections.singleton(req.readFolderPattern());
+                        checkEOF(tag, req);
+                        return doLIST(tag, base, patterns, (byte) 0, RETURN_XLIST, (byte) 0);
+                    }
+                    break;
             }
         } while (byUID);
 
@@ -871,7 +879,7 @@ abstract class ImapHandler extends ProtocolHandler {
         "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
         "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
         "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
-        "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN"
+        "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
     ));
 
     protected String getCapabilityString() {
@@ -1590,6 +1598,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
     private static final byte RETURN_SUBSCRIBED = 0x01;
     private static final byte RETURN_CHILDREN   = 0x02;
+    private static final byte RETURN_XLIST      = 0x04;
 
     boolean doLIST(String tag, String referenceName, Set<String> mailboxNames, byte selectOptions, byte returnOptions, byte status)
     throws IOException {
@@ -1850,6 +1859,26 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
             }
             attrs.append(attrs.length() == 0 ? "" : " ").append(children ? "\\HasChildren" : "\\HasNoChildren");
+        }
+
+        // not exactly the same set as proposed by draft-ietf-morg-list-specialuse-01.txt
+        if ((returnOptions & RETURN_XLIST) != 0 && path.belongsTo(mCredentials)) {
+            switch (iid.getId()) {
+                case Mailbox.ID_FOLDER_INBOX:   attrs.append(attrs.length() == 0 ? "" : " ").append("\\Inbox");   break;
+                case Mailbox.ID_FOLDER_DRAFTS:  attrs.append(attrs.length() == 0 ? "" : " ").append("\\Drafts");  break;
+                case Mailbox.ID_FOLDER_TRASH:   attrs.append(attrs.length() == 0 ? "" : " ").append("\\Trash");   break;
+                case Mailbox.ID_FOLDER_SENT:    attrs.append(attrs.length() == 0 ? "" : " ").append("\\Sent");    break;
+                case Mailbox.ID_FOLDER_SPAM:    attrs.append(attrs.length() == 0 ? "" : " ").append("\\Spam");    break;
+                default:
+                    String query = path.getFolder() instanceof SearchFolder ? ((SearchFolder) path.getFolder()).getQuery() : null;
+                    if (query != null) {
+                        if (query.equalsIgnoreCase("is:flagged"))
+                            attrs.append(attrs.length() == 0 ? "" : " ").append("\\Starred");
+                        else if (query.equalsIgnoreCase("is:local"))
+                            attrs.append(attrs.length() == 0 ? "" : " ").append("\\AllMail");
+                    }
+                    break;
+            }
         }
 
         return attrs.toString();
