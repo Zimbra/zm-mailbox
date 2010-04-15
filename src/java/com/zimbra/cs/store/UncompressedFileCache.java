@@ -168,7 +168,10 @@ public class UncompressedFileCache<K> {
             if (uncompressedFile != null) {
                 sLog.debug("Found existing uncompressed file for digest %s.  Deleting %s.", temp.digest, temp.file.getPath());
                 mKeyToDigest.put(key, temp.digest);
-                temp.file.delete();
+                try {
+                    FileUtil.delete(temp.file);
+                } catch (Exception e) {
+                }
                 shared = new SharedFile(uncompressedFile);
             } else {
                 uncompressedFile = new File(mCacheDir, temp.digest);
@@ -241,8 +244,9 @@ public class UncompressedFileCache<K> {
             if (file != null) {
                 sLog.debug("Deleting %s: key=%s, digest=%s.", file.getPath(), key, digest);
                 mNumBytes -= file.length();
-                if (!file.delete()) {
-                    sLog.warn("Unable to delete %s.", file.getPath());
+                try {
+                    FileUtil.delete(file);
+                } catch (Exception e) {
                 }
             }
             
