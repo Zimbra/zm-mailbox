@@ -97,6 +97,7 @@ public class CalendarCollection extends Collection {
         addProperty(CalDavProperty.getSupportedCalendarComponentSet(f.getDefaultView()));
         addProperty(CalDavProperty.getSupportedCalendarData());
         addProperty(CalDavProperty.getSupportedCollationSet());
+        addProperty(CalDavProperty.getCalendarTimezone(acct));
 
         mCtag = CtagInfo.makeCtag(f);
         setProperty(DavElements.E_GETCTAG, mCtag);

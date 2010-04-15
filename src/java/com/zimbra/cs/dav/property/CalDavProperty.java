@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.dav.property;
 
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +26,7 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -37,6 +39,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 
 /**
@@ -89,6 +92,10 @@ public class CalDavProperty extends ResourceProperty {
 	
 	public static ResourceProperty getCalendarUserType(Principal p) {
 		return new CalendarUserType(p);
+	}
+	
+	public static ResourceProperty getCalendarTimezone(Account a) {
+		return new CalendarTimezone(a);
 	}
 	
 	protected CalDavProperty(QName name) {
@@ -317,4 +324,24 @@ public class CalDavProperty extends ResourceProperty {
 		}
 	}
 	
+    private static class CalendarTimezone extends CalDavProperty {
+        private Account account;
+        public CalendarTimezone(Account a) {
+            super(DavElements.E_CALENDAR_TIMEZONE);
+            account = a;
+        }
+        public Element toElement(DavContext ctxt, Element parent, boolean nameOnly) {
+            Element timezone = super.toElement(ctxt, parent, nameOnly);
+            ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(account); 
+            CharArrayWriter wr = new CharArrayWriter();
+            try {
+                tz.newToVTimeZone().toICalendar(wr, true);
+                wr.flush();
+                timezone.addCDATA(new String(wr.toCharArray()));
+                wr.close();
+            } catch (IOException e) {
+            }
+            return timezone;
+        }
+    }
 }
