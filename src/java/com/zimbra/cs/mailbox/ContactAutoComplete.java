@@ -128,7 +128,7 @@ public class ContactAutoComplete {
         	int diff = that.mRanking - this.mRanking;
         	if (diff != 0)
             	return diff;
-        	return this.mEmail.compareToIgnoreCase(that.mEmail);
+        	return this.getEmail().compareToIgnoreCase(that.getEmail());
         }
         public boolean equals(Object obj) {
         	if (obj instanceof ContactEntry)
