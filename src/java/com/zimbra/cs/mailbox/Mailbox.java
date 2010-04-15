@@ -442,33 +442,33 @@ public class Mailbox {
             }
 
             // check for mailbox upgrade
-    		if (!getVersion().atLeast(1, 2)) {
-    		    mIndexHelper.upgradeMailboxTo1_2();
-    		}
+            if (!getVersion().atLeast(1, 2)) {
+                mIndexHelper.upgradeMailboxTo1_2();
+            }
 
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
             if (!getVersion().atLeast(1, 4)) {
                 recalculateFolderAndTagCounts();
                 updateVersion(new MailboxVersion((short) 1, (short) 4));
-    		}
-            
+            }
+
             if (!getVersion().atLeast(1, 5)) {
                 mIndexHelper.indexAllDeferredFlagItems();            
             }
 
-			// bug 41144: map "workEmail" contact fields to "email"
-			if (!getVersion().atLeast(1, 6)) {
-				MailboxUpgrade.upgradeTo1_6(this);
-				updateVersion(new MailboxVersion((short) 1, (short) 6));
-			}
+            // bug 41144: map "workEmail" contact fields to "email"
+            if (!getVersion().atLeast(1, 6)) {
+                MailboxUpgrade.upgradeTo1_6(this);
+                updateVersion(new MailboxVersion((short) 1, (short) 6));
+            }
 
-			// bug 41893: revert folder colors back to mapped value
-			// bug 42874: re-index all contacts
-			if (!getVersion().atLeast(1, 7)) {
-				MailboxUpgrade.upgradeTo1_7(this);
-				mIndexHelper.upgradeMailboxTo1_7();
-				updateVersion(new MailboxVersion((short)1, (short)7));
-			}
+            // bug 41893: revert folder colors back to mapped value
+            // bug 42874: re-index all contacts
+            if (!getVersion().atLeast(1, 7)) {
+                MailboxUpgrade.upgradeTo1_7(this);
+                mIndexHelper.upgradeMailboxTo1_7();
+                updateVersion(new MailboxVersion((short)1, (short)7));
+            }
 
             // bug 41850: revert tag colors back to mapped value
             if (!getVersion().atLeast(1, 8)) {
@@ -476,11 +476,11 @@ public class Mailbox {
                 updateVersion(new MailboxVersion((short)1, (short)8));
             }
 
-			// done!
-    		mInitializationComplete = true;
-    		return true;
-    	}
-    	return false;
+            // done!
+            mInitializationComplete = true;
+            return true;
+        }
+        return false;
     }
     
     /** Returns the server-local numeric ID for this mailbox.  To get a
@@ -1208,7 +1208,7 @@ public class Mailbox {
         // we can only start a redoable operation as the transaction's base change
         if (recorder != null && needRedo && mCurrentChange.depth > 1)
             throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction " +
-            		"(current recorder="+mCurrentChange.recorder+")", null);
+                    "(current recorder="+mCurrentChange.recorder+")", null);
 
         // we'll need folders and tags loaded in order to handle ACLs
         loadFoldersAndTags();
@@ -1949,11 +1949,15 @@ public class Mailbox {
                 if (item == null && ids[i] <= -FIRST_USER_ID) {
                     if (!MailItem.isAcceptableType(type, MailItem.TYPE_CONVERSATION))
                         throw MailItem.noSuchItem(ids[i], type);
-                    Message msg = getCachedMessage(key = -ids[i]);
+                    Message msg = getCachedMessage(-ids[i]);
                     if (msg != null) {
                         if (msg.getConversationId() == ids[i])
                             item = new VirtualConversation(this, msg);
+                        else
+                            item = getCachedConversation(key = msg.getConversationId());
                     } else {
+                        // need to fetch the message in order to get its conv...
+                        key = -ids[i];
                         relaxType = true;
                     }
                 }
@@ -1973,7 +1977,7 @@ public class Mailbox {
         MailItem.getById(this, uncached, relaxType ? MailItem.TYPE_UNKNOWN : type);
 
         uncached.clear();
-        for (int i = 0; i < ids.length; i++)
+        for (int i = 0; i < ids.length; i++) {
             if (ids[i] != ID_AUTO_INCREMENT && items[i] == null) {
                 if (ids[i] <= -FIRST_USER_ID) {
                     // special-case virtual conversations
@@ -1987,15 +1991,17 @@ public class Mailbox {
                         if (items[i] == null)
                             uncached.add(item.getParentId());
                     }
-                } else
+                } else {
                     if ((items[i] = getCachedItem(ids[i])) == null)
                         throw MailItem.noSuchItem(ids[i], type);
+                }
             }
+        }
 
         // special case asking for VirtualConversation but having it be a real Conversation
         if (!uncached.isEmpty()) {
             MailItem.getById(this, uncached, MailItem.TYPE_CONVERSATION);
-            for (int i = 0; i < ids.length; i++)
+            for (int i = 0; i < ids.length; i++) {
                 if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
                     MailItem item = getCachedItem(-ids[i]);
                     if (!(item instanceof Message) || item.getParentId() == ids[i])
@@ -2004,6 +2010,7 @@ public class Mailbox {
                     if (items[i] == null)
                         throw MailItem.noSuchItem(ids[i], type);
                 }
+            }
         }
 
         return items;
@@ -2172,7 +2179,7 @@ public class Mailbox {
             return getFolderById(octxt, folderId);
 
         if (name.equals("/"))
-        	return getFolderById(octxt, ID_FOLDER_USER_ROOT);
+            return getFolderById(octxt, ID_FOLDER_USER_ROOT);
         
         if (name.startsWith("/")) {
             folderId = ID_FOLDER_USER_ROOT;
@@ -2283,9 +2290,9 @@ public class Mailbox {
                     if (data != null)
                         result.add((T) getItem(data));
                 // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
-            	if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER)
-            	    sort = SortBy.NONE;
-            	success = true;
+                if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER)
+                    sort = SortBy.NONE;
+                success = true;
             }
         } finally {
             endTransaction(success);
@@ -3052,11 +3059,11 @@ public class Mailbox {
             beginTransaction("getCalendarItemMetadata", null);
             Folder f = getFolderById(folderId);
             if (!f.canAccess(ACL.RIGHT_READ))
-            	throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             success = true;
             return DbMailItem.getCalendarItemMetadata(f, start, end);
         } finally {
-        	endTransaction(success);
+            endTransaction(success);
         }
     }
 
@@ -4034,7 +4041,7 @@ public class Mailbox {
     }
 
     public synchronized Map<String,CalendarItem> getCalendarItemsByUid(OperationContext octxt, List<String> uids)
-    		throws ServiceException {
+    throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarItemsByUid", octxt);
@@ -4052,7 +4059,7 @@ public class Mailbox {
             }
             success = true;
             for (String missingUid : uidList)
-            	calItems.put(missingUid, null);
+                calItems.put(missingUid, null);
             return calItems;
         } finally {
             endTransaction(success);
@@ -4813,9 +4820,9 @@ public class Mailbox {
         setColor(octxt, new int[] { itemId }, type, color);
     }
     public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, byte color) throws ServiceException {
-    	setColor(octxt, itemIds, type, new MailItem.Color(color));
+        setColor(octxt, itemIds, type, new MailItem.Color(color));
     }
-    	
+
     public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, MailItem.Color color) throws ServiceException {
         ColorItem redoRecorder = new ColorItem(mId, itemIds, type, color);
 
@@ -5789,7 +5796,7 @@ public class Mailbox {
     
     //for offline override to filter flags
     public String getItemFlagString(MailItem mi) {
-    	return mi.getFlagString();
+        return mi.getFlagString();
     }
 
     public synchronized ACL.Grant grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, String args) throws ServiceException {
@@ -6262,7 +6269,7 @@ public class Mailbox {
     throws ServiceException {
         return createDocument(octxt, folderId, filename, mimeType, author, data, MailItem.TYPE_DOCUMENT);
     }
-    	
+
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author,
                                    InputStream data, byte type)
     throws ServiceException {
@@ -6519,8 +6526,8 @@ public class Mailbox {
     public void optimize(OperationContext octxt, int level) throws ServiceException {
         synchronized (this) {
             try {
-            	Connection conn = DbPool.getConnection(this);
-            	
+                Connection conn = DbPool.getConnection(this);
+
                 DbMailbox.optimize(conn, this, level);
                 DbPool.quietClose(conn);
             } catch (Exception e) {
