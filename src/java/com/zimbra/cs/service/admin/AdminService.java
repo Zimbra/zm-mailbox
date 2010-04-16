@@ -248,21 +248,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST, new ReloadMemcachedClientConfig());
         dispatcher.registerHandler(AdminConstants.GET_MEMCACHED_CLIENT_CONFIG_REQUEST, new GetMemcachedClientConfig());
         
-        //service control
-        dispatcher.registerHandler(AdminConstants.START_MAILBOX_REQUEST, new StartMailbox());
-        dispatcher.registerHandler(AdminConstants.STOP_MAILBOX_REQUEST, new StopMailbox());     
-        dispatcher.registerHandler(AdminConstants.START_LDAP_REQUEST, new StartLDAP());
-        dispatcher.registerHandler(AdminConstants.STOP_LDAP_REQUEST, new StopLDAP());
-        dispatcher.registerHandler(AdminConstants.START_AV_REQUEST, new StartAV());
-        dispatcher.registerHandler(AdminConstants.STOP_AV_REQUEST, new StopAV()); 
-        dispatcher.registerHandler(AdminConstants.START_AS_REQUEST, new StartAS());
-        dispatcher.registerHandler(AdminConstants.STOP_AS_REQUEST, new StopAS());
-        dispatcher.registerHandler(AdminConstants.START_SNMP_REQUEST, new StartSNMP());
-        dispatcher.registerHandler(AdminConstants.STOP_SNMP_REQUEST, new StopSNMP());             
-        dispatcher.registerHandler(AdminConstants.START_SPELL_REQUEST, new StartSpell());
-        dispatcher.registerHandler(AdminConstants.STOP_SPELL_REQUEST, new StopSpell());
-        dispatcher.registerHandler(AdminConstants.START_MTA_REQUEST, new StartMTA());
-        dispatcher.registerHandler(AdminConstants.STOP_MTA_REQUEST, new StopMTA());        
     }
 
     /**
