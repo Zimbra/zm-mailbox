@@ -48,12 +48,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
     static final int MIN_EXPIRE_DAYS = 31;
     static final int MAX_RESPONSE = 512;
     static final int MAX_RESPONSE_TEXT = MAX_RESPONSE - 7; // "-ERR" + " " + "\r\n"
-    
+
     private static final byte[] LINE_SEPARATOR = { '\r', '\n'};
     private static final String TERMINATOR = ".";
     private static final int TERMINATOR_C = '.';    
     private static final byte[] TERMINATOR_BYTE = { '.' };
-    
+
     // Connection specific data
     protected Pop3Config mConfig;
     protected OutputStream mOutputStream;
@@ -67,7 +67,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private String mCommand;
     private long mStartTime;
     protected int mState;
-                      
+
     protected boolean dropConnection;
     protected Authenticator mAuthenticator;
     private String mClientAddress;
@@ -94,21 +94,21 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
 
     protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
-    
+
     protected void setOrigRemoteIpAddr(String ip) { mOrigRemoteAddress = ip; }
-    
+
     @Override protected boolean authenticate() {
         // we auth with the USER/PASS commands
         return true;
     }
 
     protected boolean startConnection(InetAddress remoteAddr)
-            throws IOException {
+    throws IOException {
         // Set the logging context for anything logged before the first command. 
         ZimbraLog.clearContext();
         mClientAddress = remoteAddr.getHostAddress();
         ZimbraLog.addIpToContext(mClientAddress);
-        
+
         ZimbraLog.pop.info("connected");
         if (!Config.userServicesEnabled()) {
             dropConnection();
@@ -119,22 +119,22 @@ public abstract class Pop3Handler extends ProtocolHandler {
         dropConnection = false;
         return true;
     }
-    
+
     protected boolean processCommand(String line) throws IOException {
         // XXX bburtin: Do we really need to set/reset the logging context for every command? 
         ZimbraLog.addAccountNameToContext(mAccountName);
         ZimbraLog.addIpToContext(mClientAddress);
         ZimbraLog.addOrigIpToContext(mOrigRemoteAddress);
-        
+
         // TODO: catch IOException too?
         if (line != null && mAuthenticator != null && !mAuthenticator.isComplete()) {
             return continueAuthentication(line);
         }
-        
+
         mCommand = null;
         mStartTime = 0;
         mCurrentCommandLine = line;
-        
+
         try {
             boolean result = processCommandInternal();
 
@@ -159,7 +159,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             ZimbraLog.clearContext();
         }
     }
-    
+
     protected boolean processCommandInternal() throws Pop3CmdException, IOException, ServiceException {
         mStartTime = System.currentTimeMillis();
         //ZimbraLog.pop.info("command("+mCurrentCommandLine+")");
@@ -197,7 +197,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             throw new Pop3CmdException("invalid request. please specify a command");
 
         // check account status before executing command
-        if (mAccountId != null)
+        if (mAccountId != null) {
             try {
                 Provisioning prov = Provisioning.getInstance();
                 Account acct = prov.get(AccountBy.id, mAccountId);
@@ -206,108 +206,110 @@ public abstract class Pop3Handler extends ProtocolHandler {
             } catch (ServiceException e) {
                 return false;
             }
+        }
 
         int ch = mCommand.charAt(0);
-        
+
         // Breaking out of this switch causes a syntax error to be returned
         // So if you process a command then return immediately (even if the
         // command handler reported a syntax error or failed otherwise)
-        
+
         switch (ch) {
-        case 'a':
-        case 'A':
-            if ("AUTH".equalsIgnoreCase(mCommand)) {
-                doAUTH(arg);
-                return true;
-            }
-        case 'c':
-        case 'C':
-            if ("CAPA".equalsIgnoreCase(mCommand)) {
-                doCAPA();
-                return true;
-            }
-            break;
-        case 'd':
-        case 'D':
-            if ("DELE".equalsIgnoreCase(mCommand)) {
-                doDELE(arg);
-                return true;
-            }
-            break;            
-        case 'l':
-        case 'L':
-            if ("LIST".equalsIgnoreCase(mCommand)) {
-                doLIST(arg);
-                return true;
-            }
-            break;                                    
-        case 'n':
-        case 'N':
-            if ("NOOP".equalsIgnoreCase(mCommand)) {
-                doNOOP();
-                return true;
-            }
-            break;
-        case 'p':
-        case 'P':
-            if ("PASS".equalsIgnoreCase(mCommand)) {
-                doPASS(arg);
-                return true;
-            }
-            break;
-        case 'q':
-        case 'Q':
-            if ("QUIT".equalsIgnoreCase(mCommand)) {
-                doQUIT();
-                return false;
-            }
-            break;
-        case 'r':
-        case 'R':
-            if ("RETR".equalsIgnoreCase(mCommand)) {
-                doRETR(arg);
-                return true;
-            } else if ("RSET".equalsIgnoreCase(mCommand)) {
-                doRSET();
-                return true;
-            }
-            break;            
-        case 's':
-        case 'S':
-            if ("STAT".equalsIgnoreCase(mCommand)) {
-                doSTAT();
-                return true;
-            } else if ("STLS".equalsIgnoreCase(mCommand)) {
-                doSTLS();
-                return true;
-            }
-            break;            
-        case 't':
-        case 'T':
-            if ("TOP".equalsIgnoreCase(mCommand)) {
-                doTOP(arg);
-                return true;
-            }
-            break;                        
-        case 'u':
-        case 'U':
-            if ("UIDL".equalsIgnoreCase(mCommand)) {
-                doUIDL(arg);
-                return true;
-            } else if ("USER".equalsIgnoreCase(mCommand)) {
-                doUSER(arg);
-                return true;            
-            }
-            break;
-        case 'x':
-        case 'X':
-            if ("XOIP".equalsIgnoreCase(mCommand)) {
-                doXOIP(arg);
-                return true;
-            }
-            break;           
-        default:
-            break;
+            case 'a':
+            case 'A':
+                if ("AUTH".equalsIgnoreCase(mCommand)) {
+                    doAUTH(arg);
+                    return true;
+                }
+                break;
+            case 'c':
+            case 'C':
+                if ("CAPA".equalsIgnoreCase(mCommand)) {
+                    doCAPA();
+                    return true;
+                }
+                break;
+            case 'd':
+            case 'D':
+                if ("DELE".equalsIgnoreCase(mCommand)) {
+                    doDELE(arg);
+                    return true;
+                }
+                break;            
+            case 'l':
+            case 'L':
+                if ("LIST".equalsIgnoreCase(mCommand)) {
+                    doLIST(arg);
+                    return true;
+                }
+                break;                                    
+            case 'n':
+            case 'N':
+                if ("NOOP".equalsIgnoreCase(mCommand)) {
+                    doNOOP();
+                    return true;
+                }
+                break;
+            case 'p':
+            case 'P':
+                if ("PASS".equalsIgnoreCase(mCommand)) {
+                    doPASS(arg);
+                    return true;
+                }
+                break;
+            case 'q':
+            case 'Q':
+                if ("QUIT".equalsIgnoreCase(mCommand)) {
+                    doQUIT();
+                    return false;
+                }
+                break;
+            case 'r':
+            case 'R':
+                if ("RETR".equalsIgnoreCase(mCommand)) {
+                    doRETR(arg);
+                    return true;
+                } else if ("RSET".equalsIgnoreCase(mCommand)) {
+                    doRSET();
+                    return true;
+                }
+                break;            
+            case 's':
+            case 'S':
+                if ("STAT".equalsIgnoreCase(mCommand)) {
+                    doSTAT();
+                    return true;
+                } else if ("STLS".equalsIgnoreCase(mCommand)) {
+                    doSTLS();
+                    return true;
+                }
+                break;            
+            case 't':
+            case 'T':
+                if ("TOP".equalsIgnoreCase(mCommand)) {
+                    doTOP(arg);
+                    return true;
+                }
+                break;                        
+            case 'u':
+            case 'U':
+                if ("UIDL".equalsIgnoreCase(mCommand)) {
+                    doUIDL(arg);
+                    return true;
+                } else if ("USER".equalsIgnoreCase(mCommand)) {
+                    doUSER(arg);
+                    return true;            
+                }
+                break;
+            case 'x':
+            case 'X':
+                if ("XOIP".equalsIgnoreCase(mCommand)) {
+                    doXOIP(arg);
+                    return true;
+                }
+                break;           
+            default:
+                break;
         }
         throw new Pop3CmdException("unknown command");        
     }
@@ -325,7 +327,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     protected void sendOK(String response) throws IOException {
         sendResponse("+OK", response, true);        
     }
-    
+
     private void sendOK(String response, boolean flush) throws IOException {
         sendResponse("+OK", response, flush);        
     }
@@ -333,7 +335,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     protected void sendContinuation(String s) throws IOException {
         sendLine("+ " + s, true);
     }
-    
+
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
         String response = (msg == null || msg.length() == 0) ? status : status+" "+msg;
@@ -354,7 +356,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private void sendLine(String line) throws IOException {
         sendLine(line, true);
     }
-    
+
     private void sendLine(String line, boolean flush) throws IOException {
         mOutputStream.write(line.getBytes());
         mOutputStream.write(LINE_SEPARATOR);
@@ -368,7 +370,6 @@ public abstract class Pop3Handler extends ProtocolHandler {
      *   hit end of a line
      */
     private void sendMessage(InputStream is, int maxNumBodyLines) throws IOException {
-        
         boolean inBody = false;
         int numBodyLines = 0;
         
@@ -382,7 +383,8 @@ public abstract class Pop3Handler extends ProtocolHandler {
             if (c == '\r' || c == '\n') {
                 if (c == '\r') {
                     int peek = stream.read();
-                    if (peek != '\n' && peek != -1) stream.unread(peek);
+                    if (peek != '\n' && peek != -1)
+                        stream.unread(peek);
                 }
     
                 if (!inBody) {
@@ -391,20 +393,23 @@ public abstract class Pop3Handler extends ProtocolHandler {
                 } else {
                     numBodyLines++;
                 }                         
-                if (inBody && numBodyLines >= maxNumBodyLines)
-                    break;
                 startOfLine = true;
                 lineLength = 0;
                 mOutputStream.write(LINE_SEPARATOR);
+
+                if (inBody && numBodyLines >= maxNumBodyLines)
+                    break;
                 continue;
             } else if (c == TERMINATOR_C && startOfLine) {
                 mOutputStream.write(c); // we'll end up writing it twice
             }
-            if (startOfLine) startOfLine = false;
+            if (startOfLine)
+                startOfLine = false;
             lineLength++;
             mOutputStream.write(c);
         }     
-        if (lineLength != 0 || maxNumBodyLines == 0) mOutputStream.write(LINE_SEPARATOR);
+        if (lineLength != 0)
+            mOutputStream.write(LINE_SEPARATOR);
         mOutputStream.write(TERMINATOR_BYTE);
         mOutputStream.write(LINE_SEPARATOR);
         mOutputStream.flush();
