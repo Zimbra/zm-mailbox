@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100405-1305 */
+    /* build: 6.0.2_BETA1_1111 gsolovyev 20100416-1332 */
 
 
     /*
@@ -1606,76 +1606,6 @@ public class RightConsts {
      * manager
      */
     public static final String RT_setDomainAdminDomainAttrs = "setDomainAdminDomainAttrs";
-
-    /**
-     * Start antispam service (call start antispam via zmrcd)
-     */
-    public static final String RT_startAntiSpam = "startAntiSpam";
-
-    /**
-     * Start antivirus service (call start antivirus via zmrcd)
-     */
-    public static final String RT_startAntiVirus = "startAntiVirus";
-
-    /**
-     * Start LDAP service (call start ldap via zmrcd)
-     */
-    public static final String RT_startLDAP = "startLDAP";
-
-    /**
-     * Start MTA service (call start mta via zmrcd)
-     */
-    public static final String RT_startMTA = "startMTA";
-
-    /**
-     * Start mailbox service (call start mailbox via zmrcd)
-     */
-    public static final String RT_startMailbox = "startMailbox";
-
-    /**
-     * Start SNMP service (call start snmp via zmrcd)
-     */
-    public static final String RT_startSNMP = "startSNMP";
-
-    /**
-     * Start spell checker service (call start spell via zmrcd)
-     */
-    public static final String RT_startSpell = "startSpell";
-
-    /**
-     * Stop antispam service (call stop antispam via zmrcd)
-     */
-    public static final String RT_stopAntiSpam = "stopAntiSpam";
-
-    /**
-     * Stop antivirus service (call stop antivirus via zmrcd)
-     */
-    public static final String RT_stopAntiVirus = "stopAntiVirus";
-
-    /**
-     * Stop LDAP service (call stop ldap via zmrcd)
-     */
-    public static final String RT_stopLDAP = "stopLDAP";
-
-    /**
-     * Stop MTA service (call stop mta via zmrcd)
-     */
-    public static final String RT_stopMTA = "stopMTA";
-
-    /**
-     * Stop mailbox service (call stop mailbox via zmrcd)
-     */
-    public static final String RT_stopMailbox = "stopMailbox";
-
-    /**
-     * Stop SNMP service (call stop snmp via zmrcd)
-     */
-    public static final String RT_stopSNMP = "stopSNMP";
-
-    /**
-     * Stop spell checker service (call stop spell via zmrcd)
-     */
-    public static final String RT_stopSpell = "stopSpell";
 
     /**
      * Admin Task that defines right needed to allow Set Password in the

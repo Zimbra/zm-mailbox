@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100405-1305 */
+    /* build: 6.0.2_BETA1_1111 gsolovyev 20100416-1332 */
 
 
     public static AdminRight R_accessGAL;
@@ -339,20 +339,6 @@ public class AdminRights {
     public static AdminRight R_setDomainAdminConsoleResourcesPropertiesTab;
     public static AdminRight R_setDomainAdminDistributionListAttrs;
     public static AdminRight R_setDomainAdminDomainAttrs;
-    public static AdminRight R_startAntiSpam;
-    public static AdminRight R_startAntiVirus;
-    public static AdminRight R_startLDAP;
-    public static AdminRight R_startMTA;
-    public static AdminRight R_startMailbox;
-    public static AdminRight R_startSNMP;
-    public static AdminRight R_startSpell;
-    public static AdminRight R_stopAntiSpam;
-    public static AdminRight R_stopAntiVirus;
-    public static AdminRight R_stopLDAP;
-    public static AdminRight R_stopMTA;
-    public static AdminRight R_stopMailbox;
-    public static AdminRight R_stopSNMP;
-    public static AdminRight R_stopSpell;
     public static AdminRight R_taskSetPassword;
     public static AdminRight R_viewAccountAdminUI;
     public static AdminRight R_viewAdminConsoleAccountsACLTab;
@@ -741,20 +727,6 @@ public class AdminRights {
         R_setDomainAdminConsoleResourcesPropertiesTab = rm.getAdminRight(Right.RT_setDomainAdminConsoleResourcesPropertiesTab);
         R_setDomainAdminDistributionListAttrs  = rm.getAdminRight(Right.RT_setDomainAdminDistributionListAttrs);
         R_setDomainAdminDomainAttrs            = rm.getAdminRight(Right.RT_setDomainAdminDomainAttrs);
-        R_startAntiSpam                        = rm.getAdminRight(Right.RT_startAntiSpam);
-        R_startAntiVirus                       = rm.getAdminRight(Right.RT_startAntiVirus);
-        R_startLDAP                            = rm.getAdminRight(Right.RT_startLDAP);
-        R_startMTA                             = rm.getAdminRight(Right.RT_startMTA);
-        R_startMailbox                         = rm.getAdminRight(Right.RT_startMailbox);
-        R_startSNMP                            = rm.getAdminRight(Right.RT_startSNMP);
-        R_startSpell                           = rm.getAdminRight(Right.RT_startSpell);
-        R_stopAntiSpam                         = rm.getAdminRight(Right.RT_stopAntiSpam);
-        R_stopAntiVirus                        = rm.getAdminRight(Right.RT_stopAntiVirus);
-        R_stopLDAP                             = rm.getAdminRight(Right.RT_stopLDAP);
-        R_stopMTA                              = rm.getAdminRight(Right.RT_stopMTA);
-        R_stopMailbox                          = rm.getAdminRight(Right.RT_stopMailbox);
-        R_stopSNMP                             = rm.getAdminRight(Right.RT_stopSNMP);
-        R_stopSpell                            = rm.getAdminRight(Right.RT_stopSpell);
         R_taskSetPassword                      = rm.getAdminRight(Right.RT_taskSetPassword);
         R_viewAccountAdminUI                   = rm.getAdminRight(Right.RT_viewAccountAdminUI);
         R_viewAdminConsoleAccountsACLTab       = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsACLTab);
