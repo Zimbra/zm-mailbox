@@ -407,35 +407,6 @@ public class AdminConstants {
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("GetMemcachedClientConfigRequest", NAMESPACE);
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("GetMemcachedClientConfigResponse", NAMESPACE);
 
-    //service control
-    public static final QName START_MAILBOX_REQUEST = QName.get("StartMailboxRequest", NAMESPACE);
-    public static final QName START_MAILBOX_RESPONSE = QName.get("StartMailboxResponse", NAMESPACE);
-    public static final QName STOP_MAILBOX_REQUEST = QName.get("StopMailboxRequest", NAMESPACE);
-    public static final QName STOP_MAILBOX_RESPONSE = QName.get("StopMailboxResponse", NAMESPACE);
-    public static final QName START_LDAP_REQUEST = QName.get("StartLdapRequest", NAMESPACE);
-    public static final QName START_LDAP_RESPONSE = QName.get("StartLdapResponse", NAMESPACE);
-    public static final QName STOP_LDAP_REQUEST = QName.get("StopLdapRequest", NAMESPACE);
-    public static final QName STOP_LDAP_RESPONSE = QName.get("StopLdapResponse", NAMESPACE);    
-    public static final QName START_MTA_REQUEST = QName.get("StartMtaRequest", NAMESPACE);
-    public static final QName START_MTA_RESPONSE = QName.get("StartMtaResponse", NAMESPACE);
-    public static final QName STOP_MTA_REQUEST = QName.get("StopMtaRequest", NAMESPACE);
-    public static final QName STOP_MTA_RESPONSE = QName.get("StopMtaResponse", NAMESPACE);
-    public static final QName START_AV_REQUEST = QName.get("StartAntivirusRequest", NAMESPACE);
-    public static final QName START_AV_RESPONSE = QName.get("StartAntivirusResponse", NAMESPACE);
-    public static final QName STOP_AV_REQUEST = QName.get("StopAntivirusRequest", NAMESPACE);
-    public static final QName STOP_AV_RESPONSE = QName.get("StopAntivirusResponse", NAMESPACE); 
-    public static final QName START_AS_REQUEST = QName.get("StartAntispamRequest", NAMESPACE);
-    public static final QName START_AS_RESPONSE = QName.get("StartAntispamResponse", NAMESPACE);
-    public static final QName STOP_AS_REQUEST = QName.get("StopAntispamRequest", NAMESPACE);
-    public static final QName STOP_AS_RESPONSE = QName.get("StopAntispamResponse", NAMESPACE);     
-    public static final QName START_SNMP_REQUEST = QName.get("StartSNMPRequest", NAMESPACE);
-    public static final QName START_SNMP_RESPONSE = QName.get("StartSNMPResponse", NAMESPACE);
-    public static final QName STOP_SNMP_REQUEST = QName.get("StopSNMPRequest", NAMESPACE);
-    public static final QName STOP_SNMP_RESPONSE = QName.get("StopSNMPResponse", NAMESPACE);      
-    public static final QName START_SPELL_REQUEST = QName.get("StartSpellRequest", NAMESPACE);
-    public static final QName START_SPELL_RESPONSE = QName.get("StartSpellResponse", NAMESPACE);
-    public static final QName STOP_SPELL_REQUEST = QName.get("StopSpellRequest", NAMESPACE);
-    public static final QName STOP_SPELL_RESPONSE = QName.get("StopSpellResponse", NAMESPACE);          
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
