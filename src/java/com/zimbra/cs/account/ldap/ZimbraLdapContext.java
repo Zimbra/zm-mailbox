@@ -48,6 +48,7 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
@@ -271,10 +272,23 @@ public class ZimbraLdapContext {
     }
 
     public static class DummySSLSocketFactory extends SSLSocketFactoryWrapper {
+        // Bug 46264: JNDI actually calls getDefault() rather than just
+        // creating a new instance.
+        public static SocketFactory getDefault() {
+            return new DummySSLSocketFactory();
+        }
         public DummySSLSocketFactory() {
             super(SocketFactories.dummySSLSocketFactory());
         }
     }
+
+    public static void main(String[] args) throws Exception {
+        String name = DummySSLSocketFactory.class.getName();
+        System.out.println("name = " + name);
+        SSLSocketFactory ssf = (SSLSocketFactory) Class.forName(name).newInstance();
+        ssf.createSocket("foo", 123);
+    }
+
 
     private static synchronized Hashtable<String, String> getCustomEnv(boolean master, LdapConfig ldapConfig) {
         Hashtable<String, String> env = new Hashtable<String, String>(); 
