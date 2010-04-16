@@ -43,6 +43,8 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Collections;
@@ -389,6 +391,19 @@ public class ImapSync extends MailItemImport {
 
         if (dataSource.ignoreRemotePath(relativePath)) {
             return null; // Do not synchronize folder
+        }
+        // check if there's already a remote folder with the same name
+        Iterator<String> it = trackedFolders.getRemotePathsIterator();
+        // lets also count the number of folders having the same name that we
+        // have already encountered
+        int count = 0;
+        while (it.hasNext()) {
+            if (it.next().equalsIgnoreCase(remotePath)) {
+                count ++;
+            }
+        }
+        if (count > 0) {
+            relativePath += "." + (count + 1);
         }
         String zimbraPath = dataSource.mapRemoteToLocalPath(relativePath);
         if (zimbraPath == null) {

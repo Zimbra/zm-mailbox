@@ -53,10 +53,15 @@ public final class ImapUtil {
         for (ListData ld : folders) {
             String name = ld.getMailbox();
             if (name.equalsIgnoreCase(INBOX)) {
-                if (inbox == null) {
-                    inbox = ld; // Ignore duplicate INBOX (fixes bug 26483)
-                }
-            } else if (isInboxInferior(ld)) {
+                inbox = ld;
+                // Ignore duplicate INBOX (fixes bug 26483)
+                break;
+            }
+        }
+        for (ListData ld : folders) {
+            if (ld == inbox) {
+                // do nothing
+            } else if (isInboxInferior(ld, inbox)) {
                 inboxInferiors.add(ld);
             } else {
                 otherFolders.add(ld);
@@ -75,7 +80,6 @@ public final class ImapUtil {
         sorted.addAll(inboxInferiors);
         Collections.sort(otherFolders, COMPARATOR);
         sorted.addAll(otherFolders);
-        removeDuplicates(sorted);
         return sorted;
     }
 
@@ -96,7 +100,7 @@ public final class ImapUtil {
     
     private static ListData getDefaultInbox(List<ListData> sorted) {
         for (ListData ld : sorted) {
-            if (isInboxInferior(ld)) {
+            if (isInboxInferior(ld, null)) {
                 return new ListData(INBOX, ld.getDelimiter());
             }
         }
@@ -107,11 +111,17 @@ public final class ImapUtil {
      * Returns true if specified ListData refers to am inferior of INBOX
      * (i.e. "INBOX/Foo").
      */
-    private static boolean isInboxInferior(ListData ld) {
+    private static boolean isInboxInferior(ListData ld, ListData inbox) {
         String name = ld.getMailbox();
-        return name.length() > INBOX_LEN &&
-               name.substring(0, INBOX_LEN).equalsIgnoreCase(INBOX) &&
-               name.charAt(INBOX_LEN) == ld.getDelimiter();
+        if (inbox == null) {
+            return name.length() > INBOX_LEN &&
+                   name.substring(0, INBOX_LEN).equalsIgnoreCase(INBOX) &&
+                   name.charAt(INBOX_LEN) == ld.getDelimiter();
+        } else {
+            return name.length() > INBOX_LEN &&
+                   name.substring(0, INBOX_LEN).equals(inbox.getMailbox()) &&
+                   name.charAt(INBOX_LEN) == ld.getDelimiter();
+        }
     }
 
     public static boolean isYahoo(ImapConnection ic) {

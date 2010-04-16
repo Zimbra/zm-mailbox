@@ -75,8 +75,8 @@ public class TestImapUtil extends TestCase {
     };
 
     private static final String[] SORTED_FOLDERS = {
-        "INBOX", "Inbox/Foo", "INBOX/bar", "Foobar/Blah Blah/XXX",
-        "Foobar/Blah Blah", "Foobar", "BOOBOO/BEAR"
+        "INBOX", "INBOX/bar", "BOOBOO/BEAR", "Foobar", "Foobar/Blah Blah",
+        "Foobar/Blah Blah/XXX", "Inbox", "Inbox/Foo", "foobar"
     };
 
     public void testSortFolders() throws Exception {
