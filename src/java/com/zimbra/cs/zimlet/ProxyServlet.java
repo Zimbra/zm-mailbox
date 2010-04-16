@@ -54,7 +54,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.servlet.ZimbraServlet;
-
+import com.zimbra.common.localconfig.LC;
 /**
  * @author jylee
  */
@@ -68,6 +68,7 @@ public class ProxyServlet extends ZimbraServlet {
     private static final String FILENAME_PARAM = "filename";
     private static final String AUTH_PARAM = "auth";
     private static final String AUTH_BASIC = "basic";
+   
 
     private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -160,7 +161,15 @@ public class ProxyServlet extends ZimbraServlet {
 
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
-        AuthToken authToken = getAuthTokenFromCookie(req, resp);
+        AuthToken authToken = null;
+        boolean isAdmin = false;
+        if(req.getServerPort() ==  LC.zimbra_admin_service_port.intValue()) {
+        	authToken = getAdminAuthTokenFromCookie(req, resp);
+        	isAdmin = true;
+        } else {
+        	authToken = getAuthTokenFromCookie(req, resp);
+        }
+        
         if (authToken == null)
             return;
 
@@ -176,7 +185,7 @@ public class ProxyServlet extends ZimbraServlet {
 
         // check for permission
         URL url = new URL(target);
-        if (!checkPermissionOnTarget(req, url, authToken)) {
+        if (!isAdmin && !checkPermissionOnTarget(req, url, authToken)) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
