@@ -369,7 +369,7 @@ public class SendInviteReply extends CalendarRequest {
             }
             
             // move the invite to the Trash if the user wants it
-            if (acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true)) {
+            if (deleteInviteOnReply(acct)) {
                 try {
                     if (onBehalfOf) {
                         // HACK: Run the move in the context of the organizer
@@ -385,6 +385,10 @@ public class SendInviteReply extends CalendarRequest {
         //}  // synchronized (mbox)
         
         return response;
+    }
+
+    protected boolean deleteInviteOnReply(Account acct) throws ServiceException {
+        return acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true);
     }
 
     private static class AddInviteResult {
