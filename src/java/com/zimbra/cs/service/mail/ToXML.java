@@ -1586,8 +1586,26 @@ public class ToXML {
                 // Do staleness check for invitation messages.
                 if (ICalTok.REQUEST.equals(method) || ICalTok.PUBLISH.equals(method)) {
                     if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
-                        invite = calItem.getInvite(msg.getId(), info.getComponentNo());
-                        // invite == null if the invite was outdated by a newer update
+                        if (invCi != null) {
+                            // See if the messsage's invite is outdated.
+                            Invite invCurr = calItem.getInvite(invCi.getRecurId());
+                            if (invCurr != null) {
+                                if (invCi.getSeqNo() >= invCurr.getSeqNo()) {
+                                    // Invite is new or same as what's in the appointment.  Show it.
+                                    invite = invCi;
+                                } else {
+                                    // Outdated.  Don't show it.
+                                    invite = null;
+                                }
+                            } else {
+                                // New invite.  Show it.
+                                invite = invCi;
+                            }
+                        } else {
+                            // legacy case
+                            invite = calItem.getInvite(msg.getId(), info.getComponentNo());
+                            // invite == null if the invite was outdated by a newer update
+                        }
                     }
                 }
             } else {

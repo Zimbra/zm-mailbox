@@ -166,7 +166,26 @@ public class SendInviteReply extends CalendarRequest {
                         calItem = mbox.getCalendarItemById(octxt, calItemId);
                         if (calItem == null)
                         	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-                        oldInv = calItem.getInvite(inviteMsgId, compNum);
+                        Invite invCi = info.getInvite();
+                        if (invCi != null) {
+                            // See if the messsage's invite is outdated.
+                            Invite invCurr = calItem.getInvite(invCi.getRecurId());
+                            if (invCurr != null) {
+                                if (invCi.getSeqNo() >= invCurr.getSeqNo()) {
+                                    // Invite is new or same as what's in the appointment.
+                                    oldInv = invCi;
+                                } else {
+                                    // Outdated.
+                                    oldInv = null;
+                                }
+                            } else {
+                                // New invite.
+                                oldInv = invCi;
+                            }
+                        } else {
+                            // legacy case
+                            oldInv = calItem.getInvite(inviteMsgId, compNum);
+                        }
                     } else if (info.getInvite() != null) {
                         // Appointment wasn't auto-added upon invite delivery.  Add it now.
                         Invite inv = info.getInvite().newCopy();
