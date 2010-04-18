@@ -481,7 +481,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (path.contains("=")) {
             String[] parts = path.split("=");
             path = parts[0];
-            value = parts[1];
+            if (parts.length > 1)
+                value = parts[1];
         }
         
         // Find the first element.
