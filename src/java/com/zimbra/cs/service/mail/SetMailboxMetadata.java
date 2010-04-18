@@ -17,6 +17,8 @@ package com.zimbra.cs.service.mail;
 import java.util.List;
 import java.util.Map;
 
+import org.dom4j.QName;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -45,22 +47,43 @@ public class SetMailboxMetadata extends MailDocumentHandler {
         if (section.length() == 0 || section.length() > 36 || section.indexOf(':') < 1)
             throw ServiceException.INVALID_REQUEST("invalid mailbox metadata section name", null);
         SectionNames.valueOf(section.substring(0, section.indexOf(':'))); //will throw IllegalArgumentException if not known
-
-        Metadata metadata = null;
-        int roughSize = 0;
+        
+        Metadata metadata = isModify() ? mbox.getConfig(octxt, section) : null;
         List<Element.KeyValuePair> keyvals = meta.listKeyValuePairs();
         if (!keyvals.isEmpty()) {
-            metadata = new Metadata();
+            metadata = metadata != null ? metadata : new Metadata();
             for (Element.KeyValuePair kvp : keyvals) {
-                roughSize += kvp.getKey().length() + kvp.getValue().length();
-                if (roughSize > TOTAL_METADATA_LIMIT)
-                    throw MailServiceException.TOO_MUCH_METADATA(TOTAL_METADATA_LIMIT);
-                metadata.put(kvp.getKey(), kvp.getValue());
+                String key = kvp.getKey();
+                if (key == null || key.equals(""))
+                    throw ServiceException.INVALID_REQUEST("empty key not allowed", null);
+                String val = kvp.getValue();
+                if (val == null || val.equals("")) {
+                    if (isModify())
+                        metadata.remove(key);
+                    else
+                        throw ServiceException.INVALID_REQUEST("empty value not allowed", null);
+                } else {
+                    metadata.put(kvp.getKey(), kvp.getValue());
+                }
             }
+            if (metadata.isEmpty())
+                metadata = null;
+            else if (metadata.toString().length() > TOTAL_METADATA_LIMIT)
+                throw MailServiceException.TOO_MUCH_METADATA(TOTAL_METADATA_LIMIT);
+        } else if (isModify()) {
+            throw ServiceException.INVALID_REQUEST("empty key/value set not allowed", null);
         }
         mbox.setConfig(octxt, section, metadata);
 
-        Element response = zsc.createElement(MailConstants.SET_MAILBOX_METADATA_RESPONSE);
+        Element response = zsc.createElement(getResponseName());
         return response;
+    }
+    
+    boolean isModify() {
+        return false;
+    }
+    
+    QName getResponseName() {
+        return MailConstants.SET_MAILBOX_METADATA_RESPONSE;
     }
 }

@@ -2516,10 +2516,23 @@ zimbra_noop_max_timeout)
 
     -- setting a mailbox metadata section but providing no key/value pairs
        will remove the section from mailbox metadata
-
+    -- empty value not allowed
     -- {metadata-section-key} must be no more than 36 characters long and must be
        in the format of {namespace}:{section-name}.  currently the only valid
        namespace is "zwc".
+
+<ModifyMailboxMetadataRequest>
+  <meta section="{metadata-section-key}">
+    (<a n="{key}">{value}</a>)+
+  </meta>
+</ModifyMailboxMetadataRequest>
+
+<ModifyMailboxMetadataResponse/>
+
+    -- modify request must contain one or more key/value pairs
+    -- existing keys' values will be replaced by new values
+       empty or null value will remove a key
+    -- new keys can be added
 
 <GetMailboxMetadataRequest>
   <meta section="{metadata-section-key}"/>
