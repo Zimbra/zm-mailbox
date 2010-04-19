@@ -2,7 +2,7 @@ Zimbra supports server side extensions, in order to solve two
 problems:
 
        - have a generic mechanism to add things to the server that
-         doesn't require modifying web.xml and other tomcat config
+         doesn't require modifying web.xml and other jetty config
          files.
 
        - be able to add classes than can subclass from the server
@@ -11,12 +11,12 @@ problems:
 
 The latter requires that the Zimbra server code create a classloader
 to load the classes, and set the parent of this classloader to be the
-the server's own classloader (since we use tomcat, the parent is a
+the server's own classloader (since we use jetty, the parent is a
 WebappClassLoader object).  The classloader parenting relationship is:
 
     (Zimbra) ZimbraExtensionClassLoader ->
     (Zimbra) URLClassLoader for loading /opt/zimbra/lib/ext-common/ ->
-    (Tomcat) WebappClassLoader (and others tomcat classloaders) -> 
+    (Jetty) WebappClassLoader (and others jetty classloaders) -> 
     (JRE) Application ClassLoader ->
     (JRE) Extension ClassLoader ->
     (JVM) Bootstrap ClassLoader 
