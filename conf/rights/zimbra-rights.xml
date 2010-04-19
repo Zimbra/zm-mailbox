@@ -758,5 +758,19 @@
   </attrs>
 </right>
 
-      
+<right name="getCertificateInfo" type="preset" targetType="server">
+	<desc>view SSL certificates installed on the target server</desc>
+</right>
+<right name="installCertificate" type="preset" targetType="server">
+	<desc>install SSL certificates on the target server</desc>
+</right>
+<right name="getCSR" type="preset" targetType="server">
+	<desc>get CSR from the target server</desc>
+</right>	 
+<right name="generateCSR" type="preset" targetType="server">
+	<desc>generate CSR on the target server</desc>
+</right>	
+<right name="installZCSLicense" type="preset" targetType="global">
+	<desc>install Zimbra License file on the target server</desc>
+</right>     
 </rights>
