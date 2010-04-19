@@ -245,14 +245,17 @@ public class StringUtil {
     
     public static List<String> parseSieveStringList(String value) throws ServiceException {
         List<String> result = new ArrayList<String>();
-        if (value == null) return result;
+        if (value == null)
+            return result;
         value = value.trim();
-        if (value.length() == 0) return result;
+        if (value.length() == 0)
+            return result;
+
         int i = 0;
         boolean inStr = false;
         boolean inList = false;
         StringBuilder sb = null;
-        while(i < value.length()) {
+        while (i < value.length()) {
             char ch = value.charAt(i++);
             if (inStr) {
                 if (ch == '"') {
@@ -585,21 +588,21 @@ public class StringUtil {
      */
     public static String escapeHtml(String text) {
         if (text == null || text.length() == 0) return "";
-		StringBuilder result = new StringBuilder(text.length());
-		for (int i = 0; i < text.length(); i++) {
-			char c = text.charAt(i);
-			switch (c) {
-				case '<' : result.append("&lt;"); break;
-				case '>' : result.append("&gt;"); break;
-				case '&' : result.append("&amp;"); break;
-				case '\"' : result.append("&quot;"); break;
-				case '\'' : result.append("&#039;"); break;
-				case 0x0a : // Follow through...
-				case 0x0d : result.append(" "); break;
-				default: result.append(c); break;
-			}
-		}
-		return result.toString();
+        StringBuilder result = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            switch (c) {
+                case '<':  result.append("&lt;");   break;
+                case '>':  result.append("&gt;");   break;
+                case '&':  result.append("&amp;");  break;
+                case '\"': result.append("&quot;"); break;
+                case '\'': result.append("&#039;"); break;
+                case 0x0A: // fall through...
+                case 0x0D: result.append(" ");      break;
+                default:   result.append(c);        break;
+            }
+        }
+        return result.toString();
     }
 
     /**
@@ -687,17 +690,18 @@ public class StringUtil {
 
     /**
      * Escape (if needed) given identifer. Invalid characters are replaced with an "_".
-     * If the whole word is a Java Identifier, then it is prefixed with a "_".
+     * If the whole word is a Java Identifier, then it is suffixed with a "_".
      * @param s identifier that potentially needs escaping
      * @return escaped (if needed) identifier
      */
     public static String escapeJavaIdentifier(String s) {
-        if (isNullOrEmpty(s)) return s;
-        else if (isJavaReservedWord(s)) return s+"_";
+        if (isNullOrEmpty(s))
+            return s;
+        else if (isJavaReservedWord(s))
+            return s + "_";
 
         StringBuilder result = new StringBuilder();
-
-        for (int i=0; i<s.length(); i++) {
+        for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if (i == 0) result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
             else result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
