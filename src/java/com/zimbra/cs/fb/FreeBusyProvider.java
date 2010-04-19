@@ -46,11 +46,9 @@ public abstract class FreeBusyProvider {
 			requestor = req; email = em; 
     		Calendar cal = GregorianCalendar.getInstance();
     		cal.setTimeInMillis(s);
-    		cal.set(Calendar.MINUTE, 0);
     		cal.set(Calendar.SECOND, 0);
     		start = cal.getTimeInMillis();
     		cal.setTimeInMillis(e);
-    		cal.set(Calendar.MINUTE, 0);
     		cal.set(Calendar.SECOND, 0);
     		end = cal.getTimeInMillis();
     		folder = f;
