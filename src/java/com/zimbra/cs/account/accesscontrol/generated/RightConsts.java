@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100416-1332 */
+    /* build: 6.0.2_BETA1_1111 gsolovyev 20100419-1412 */
 
 
     /*
@@ -857,6 +857,11 @@ public class RightConsts {
     public static final String RT_flushCache = "flushCache";
 
     /**
+     * generate CSR on the target server
+     */
+    public static final String RT_generateCSR = "generateCSR";
+
+    /**
      * get all account attributes
      */
     public static final String RT_getAccount = "getAccount";
@@ -877,6 +882,11 @@ public class RightConsts {
     public static final String RT_getAccountShareInfo = "getAccountShareInfo";
 
     /**
+     * get CSR from the target server
+     */
+    public static final String RT_getCSR = "getCSR";
+
+    /**
      * get all calendar resource attributes
      */
     public static final String RT_getCalendarResource = "getCalendarResource";
@@ -890,6 +900,11 @@ public class RightConsts {
      * get share info on calendar resource
      */
     public static final String RT_getCalendarResourceShareInfo = "getCalendarResourceShareInfo";
+
+    /**
+     * view SSL certificates installed on the target server
+     */
+    public static final String RT_getCertificateInfo = "getCertificateInfo";
 
     /**
      * get all cos attributes
@@ -975,6 +990,16 @@ public class RightConsts {
      * get all zimlet attributes
      */
     public static final String RT_getZimlet = "getZimlet";
+
+    /**
+     * install SSL certificates on the target server
+     */
+    public static final String RT_installCertificate = "installCertificate";
+
+    /**
+     * install Zimbra License file on the target server
+     */
+    public static final String RT_installZCSLicense = "installZCSLicense";
 
     /**
      * see account in GetAllAccounts/SearchDirectoryResponse

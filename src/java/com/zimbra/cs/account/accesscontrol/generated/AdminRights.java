@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100416-1332 */
+    /* build: 6.0.2_BETA1_1111 gsolovyev 20100419-1412 */
 
 
     public static AdminRight R_accessGAL;
@@ -190,13 +190,16 @@ public class AdminRights {
     public static AdminRight R_domainAdminServerRights;
     public static AdminRight R_domainAdminZimletRights;
     public static AdminRight R_flushCache;
+    public static AdminRight R_generateCSR;
     public static AdminRight R_getAccount;
     public static AdminRight R_getAccountInfo;
     public static AdminRight R_getAccountMembership;
     public static AdminRight R_getAccountShareInfo;
+    public static AdminRight R_getCSR;
     public static AdminRight R_getCalendarResource;
     public static AdminRight R_getCalendarResourceInfo;
     public static AdminRight R_getCalendarResourceShareInfo;
+    public static AdminRight R_getCertificateInfo;
     public static AdminRight R_getCos;
     public static AdminRight R_getDistributionList;
     public static AdminRight R_getDistributionListMembership;
@@ -214,6 +217,8 @@ public class AdminRights {
     public static AdminRight R_getSessions;
     public static AdminRight R_getXMPPComponent;
     public static AdminRight R_getZimlet;
+    public static AdminRight R_installCertificate;
+    public static AdminRight R_installZCSLicense;
     public static AdminRight R_listAccount;
     public static AdminRight R_listCalendarResource;
     public static AdminRight R_listCos;
@@ -578,13 +583,16 @@ public class AdminRights {
         R_domainAdminServerRights              = rm.getAdminRight(Right.RT_domainAdminServerRights);
         R_domainAdminZimletRights              = rm.getAdminRight(Right.RT_domainAdminZimletRights);
         R_flushCache                           = rm.getAdminRight(Right.RT_flushCache);
+        R_generateCSR                          = rm.getAdminRight(Right.RT_generateCSR);
         R_getAccount                           = rm.getAdminRight(Right.RT_getAccount);
         R_getAccountInfo                       = rm.getAdminRight(Right.RT_getAccountInfo);
         R_getAccountMembership                 = rm.getAdminRight(Right.RT_getAccountMembership);
         R_getAccountShareInfo                  = rm.getAdminRight(Right.RT_getAccountShareInfo);
+        R_getCSR                               = rm.getAdminRight(Right.RT_getCSR);
         R_getCalendarResource                  = rm.getAdminRight(Right.RT_getCalendarResource);
         R_getCalendarResourceInfo              = rm.getAdminRight(Right.RT_getCalendarResourceInfo);
         R_getCalendarResourceShareInfo         = rm.getAdminRight(Right.RT_getCalendarResourceShareInfo);
+        R_getCertificateInfo                   = rm.getAdminRight(Right.RT_getCertificateInfo);
         R_getCos                               = rm.getAdminRight(Right.RT_getCos);
         R_getDistributionList                  = rm.getAdminRight(Right.RT_getDistributionList);
         R_getDistributionListMembership        = rm.getAdminRight(Right.RT_getDistributionListMembership);
@@ -602,6 +610,8 @@ public class AdminRights {
         R_getSessions                          = rm.getAdminRight(Right.RT_getSessions);
         R_getXMPPComponent                     = rm.getAdminRight(Right.RT_getXMPPComponent);
         R_getZimlet                            = rm.getAdminRight(Right.RT_getZimlet);
+        R_installCertificate                   = rm.getAdminRight(Right.RT_installCertificate);
+        R_installZCSLicense                    = rm.getAdminRight(Right.RT_installZCSLicense);
         R_listAccount                          = rm.getAdminRight(Right.RT_listAccount);
         R_listCalendarResource                 = rm.getAdminRight(Right.RT_listCalendarResource);
         R_listCos                              = rm.getAdminRight(Right.RT_listCos);
