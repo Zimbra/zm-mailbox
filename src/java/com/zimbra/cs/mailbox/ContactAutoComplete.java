@@ -124,10 +124,18 @@ public class ContactAutoComplete {
     		if (space > 0)
     			mLastName = name.substring(space+1);
         }
+        // ascending order
         public int compareTo(ContactEntry that) {
+            // check the ranking
         	int diff = that.mRanking - this.mRanking;
         	if (diff != 0)
             	return diff;
+        	// make addressbook contacts more prominent than gal contact
+        	if (this.mFolderId == FOLDER_ID_GAL && that.mFolderId != FOLDER_ID_GAL)
+        	    return 1;
+            if (this.mFolderId != FOLDER_ID_GAL && that.mFolderId == FOLDER_ID_GAL)
+                return -1;
+            // alphabetical
         	return this.getEmail().compareToIgnoreCase(that.getEmail());
         }
         public boolean equals(Object obj) {

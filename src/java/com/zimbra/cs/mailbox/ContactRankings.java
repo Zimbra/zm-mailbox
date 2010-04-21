@@ -76,9 +76,9 @@ public class ContactRankings {
 			entry.mLastAccessed = now;
 			
 			if (mEntrySet.size() >= mTableSize) {
-				ContactEntry firstEntry = mEntrySet.first();
-				if (firstEntry.mRanking <= 1)
-					remove(firstEntry);
+				ContactEntry lastEntry = mEntrySet.last();
+				if (lastEntry.mRanking <= 1)
+					remove(lastEntry);
 			}
 			if (mEntrySet.size() < mTableSize) {
 				add(entry);
