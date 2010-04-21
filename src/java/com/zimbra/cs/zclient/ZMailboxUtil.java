@@ -1483,14 +1483,33 @@ public class ZMailboxUtil implements DebugListener {
                     break;
                 }
             }
-            if (zid == null) {
-                if (type != GranteeType.all && type != GranteeType.pub)
-                    throw ZClientException.CLIENT_ERROR("unable to resolve zimbra id for: "+grantee, null);
-            } else {
+            
+            if (zid != null || (type == GranteeType.all || type == GranteeType.pub)) {
                 grantee = zid;
+                mMbox.modifyFolderRevokeGrant(folderId, grantee);
+            } else {
+                // zid is null
+                /*
+                 * It could be we are trying to revoke a grant on a sub folder.  
+                 * e.g. /top/sub
+                 *      mfg /top account user2 r
+                 *      mfg /top/sub account user2 none
+                 *      or
+                 *      mfg /top account all r
+                 *      mfg /top/sub account user3 none
+                 *      
+                 * or simply just want to grant "no right" to a user
+                 * e.g.
+                 *      mfg /top account user2 none
+                 *      
+                 * If this is the case zid wil be null because there is no such 
+                 * grant on the specified folder.   Just let it go through by issuing 
+                 * a grant action, instead of revoke.  
+                 */
+                mMbox.modifyFolderGrant(folderId, type, grantee, "", password);
             }
-
-            mMbox.modifyFolderRevokeGrant(folderId, grantee);
+            
+            
         } else {
             // need a password for guest if granting
             if (type == GranteeType.guest && password == null)
