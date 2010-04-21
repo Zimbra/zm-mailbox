@@ -459,9 +459,9 @@ public class LuceneViewer {
             System.err.println();
             System.err.println();
             System.err.println("Sample command lines:");
-            System.err.println("zmjava com.zimbra.cs.index.LuceneViewer -i /opt/zimbra/index/0/2/index/0 -o /tmp/user1-index-dump.txt");
-            System.err.println("zmjava com.zimbra.cs.index.LuceneViewer -v -f1 l.content -t1 jay -f2 subject -t2 howdy -i /opt/zimbra/index/0/2/index/0 -o /tmp/user1-index-dump.txt");
-            System.err.println("zmjava com.zimbra.cs.index.LuceneViewer -f1 from jay@test.com -i /opt/zimbra/index/0/2/index/0 -o /tmp/user1-index-dump.txt");
+            System.err.println("zmjava com.zimbra.cs.index.LuceneViewer -a dump -i /opt/zimbra/index/0/2/index/0 -o /tmp/user1-index-dump.txt");
+            System.err.println("zmjava com.zimbra.cs.index.LuceneViewer -a dump -v -f1 l.content -t1 jay -f2 subject -t2 howdy -i /opt/zimbra/index/0/2/index/0 -o /tmp/user1-index-dump.txt");
+            System.err.println("zmjava com.zimbra.cs.index.LuceneViewer -a dump -f1 from jay@test.com -i /opt/zimbra/index/0/2/index/0 -o /tmp/user1-index-dump.txt");
             
             if (exit)
                 System.exit(1);
