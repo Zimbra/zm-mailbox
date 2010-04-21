@@ -95,6 +95,17 @@ public class SendInviteReply extends CalendarRequest {
         
         boolean updateOrg = request.getAttributeBool(MailConstants.A_CAL_UPDATE_ORGANIZER, true);
 
+        // Get the identity/persona being used in the reply.  It is set at the request level, but
+        // let's also look for it in the <m> child element too, because that is the precedent in
+        // the SendMsg request.  For SendInviteReply we have to insist it at request level because
+        // <m> is an optional element.
+        String identityId = request.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        if (identityId == null) {
+            Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
+            if (msgElem != null)
+                identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
+        }
+
         Element response = getResponseElement(zsc);
         
         //synchronized (mbox) {
@@ -281,7 +292,7 @@ public class SendInviteReply extends CalendarRequest {
     
                     String partStat = verb.getXmlPartStat();
                     localException.setPartStat(partStat);
-                    ZAttendee at = localException.getMatchingAttendee(acct);
+                    ZAttendee at = localException.getMatchingAttendee(acct, identityId);
                     if (at != null)
                         at.setPartStat(partStat);
     
@@ -314,7 +325,7 @@ public class SendInviteReply extends CalendarRequest {
                     CalSendData csd = new CalSendData();
                     csd.mOrigId = new ItemId(mbox, oldInv.getMailItemId());
                     csd.mReplyType = MailSender.MSGTYPE_REPLY;
-                    csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, onBehalfOf, allowPrivateAccess, oldInv, verb, replySubject, exceptDt);
+                    csd.mInvite = CalendarMailSender.replyToInvite(acct, identityId, authAcct, onBehalfOf, allowPrivateAccess, oldInv, verb, replySubject, exceptDt);
     
                     ZVCalendar iCal = csd.mInvite.newToICalendar(true);
                     

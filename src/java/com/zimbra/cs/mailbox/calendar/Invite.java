@@ -37,6 +37,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -1405,6 +1406,47 @@ public class Invite {
     }
 
     /**
+     * Find the (first) Attendee in our list that matches the passed-in account.  If multiple attendees
+     * match this account (because an account can have multiple addresses), the address that matches
+     * the given identity (persona) id is returned.  Account's default identity is used if identityId
+     * is null or invalid.
+     * 
+     * @param acct
+     * @param identityId
+     * @return The first matching attendee
+     * @throws ServiceException
+     */
+    public ZAttendee getMatchingAttendee(Account acct, String identityId) throws ServiceException {
+        Identity identity;
+        if (identityId != null) {
+            identity = acct.getIdentityById(identityId);
+            if (identity == null) {
+                ZimbraLog.calendar.warn("No such identity " + identityId + " for account " + acct.getName());
+                identity = acct.getDefaultIdentity();
+            }
+        } else {
+            identity = acct.getDefaultIdentity();
+        }
+
+        String identityEmail = identity.getAttr(Provisioning.A_zimbraPrefFromAddress);
+        ZAttendee acctMatch = null;
+        List<ZAttendee> attendees = getAttendees();
+        for (ZAttendee at : attendees) {
+            String thisAtEmail = at.getAddress();
+            // Does this attendee match our identity?
+            if (identityEmail != null && identityEmail.equalsIgnoreCase(thisAtEmail))
+                return at;
+            if (acctMatch == null && AccountUtil.allowFromAddress(acct, thisAtEmail)) {
+                acctMatch = at;
+                // If we didn't have identity email for some reason, we have our best match.
+                if (identityEmail == null)
+                    return at;
+            }
+        }
+        return acctMatch;
+    }
+
+    /**
      * Find the (first) Attendee in our list that matches the passed-in account
      * 
      * @param acct
@@ -1412,15 +1454,7 @@ public class Invite {
      * @throws ServiceException
      */
     public ZAttendee getMatchingAttendee(Account acct) throws ServiceException {
-        // Find my ATTENDEE record in the Invite, it must be in our response
-        List<ZAttendee> attendees = getAttendees();
-        for (ZAttendee at : attendees) {
-            String thisAtEmail = at.getAddress();
-            if (AccountUtil.addressMatchesAccount(acct, thisAtEmail)) {
-                return at;
-            } 
-        }
-        return null;
+        return getMatchingAttendee(acct, null);
     }
     
     /**

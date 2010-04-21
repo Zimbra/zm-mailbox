@@ -48,6 +48,7 @@ import javax.mail.internet.MimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -684,6 +685,16 @@ public class CalendarMailSender {
         senderThread.start();
     }
 
+    public static Invite replyToInvite(Account acct, Account authAcct,
+            boolean onBehalfOf, boolean allowPrivateAccess,
+            Invite oldInv,
+            Verb verb, String replySubject,
+            ParsedDateTime exceptDt)
+    throws ServiceException {
+        return replyToInvite(acct, null, authAcct, onBehalfOf, allowPrivateAccess,
+                             oldInv, verb, replySubject, exceptDt);
+    }
+
     /**
      * RFC2446 4.2.2:
      * 
@@ -694,7 +705,8 @@ public class CalendarMailSender {
      * REQUEST-STATUS:2.0;Success DTSTAMP:19970612T190000Z END:VEVENT
      * END:VCALENDAR
      * 
-     * @param acct
+     * @param acct replying account
+     * @param identityId use this identity/persona in the reply
      * @param authAcct authenticated account acting on behalf of acct
      * @param oldInv
      * @param verb
@@ -702,7 +714,7 @@ public class CalendarMailSender {
      * @return
      * @throws ServiceException
      */
-    public static Invite replyToInvite(Account acct, Account authAcct,
+    public static Invite replyToInvite(Account acct, String identityId, Account authAcct,
                                        boolean onBehalfOf, boolean allowPrivateAccess,
                                        Invite oldInv,
                                        Verb verb, String replySubject,
@@ -718,29 +730,48 @@ public class CalendarMailSender {
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
 //        reply.setIsAllDayEvent(oldInv.isAllDayEvent());
 
+        Identity identity = null;
+        if (identityId != null) {
+            identity = acct.getIdentityById(identityId);
+            if (identity == null) {
+                ZimbraLog.calendar.warn("No such identity " + identityId + " for account " + acct.getName());
+                identity = acct.getDefaultIdentity();
+            }
+        } else {
+            identity = acct.getDefaultIdentity();
+        }
+        String identityAddr = identity.getAttr(Provisioning.A_zimbraPrefFromAddress);
+        String identityCn = identity.getAttr(Provisioning.A_zimbraPrefFromDisplay);
+
         // ATTENDEE -- send back this attendee with the proper status
         ZAttendee meReply = null;
-        ZAttendee me = oldInv.getMatchingAttendee(acct);
+        ZAttendee me = oldInv.getMatchingAttendee(acct, identityId);
         if (me != null) {
-            meReply = new ZAttendee(me.getAddress());
+            String atAddr = me.getAddress();
+            // Use identity's address/cn if possible, overriding the case/name used by the organizer.
+            if (identityAddr.equalsIgnoreCase(atAddr)) {
+                meReply = new ZAttendee(identityAddr);
+                if (identityCn != null)
+                    meReply.setCn(identityCn);
+            } else {
+                meReply = new ZAttendee(atAddr);
+                if (me.hasCn())
+                    meReply.setCn(me.getCn());
+            }
             meReply.setPartStat(verb.getXmlPartStat());
             if (me.hasRole())
                 meReply.setRole(me.getRole());
             if (me.hasCUType())
                 meReply.setCUType(me.getCUType());
-            if (me.hasCn())
-                meReply.setCn(me.getCn());
-            if (onBehalfOf)
-                meReply.setSentBy(authAcct.getName());
-            reply.addAttendee(meReply);
         } else {
-            String name = acct.getName();
-            meReply = new ZAttendee(name);
+            meReply = new ZAttendee(identityAddr);
             meReply.setPartStat(verb.getXmlPartStat());
-            if (onBehalfOf)
-                meReply.setSentBy(authAcct.getName());
-            reply.addAttendee(meReply);
+            if (identityCn != null)
+                meReply.setCn(identityCn);
         }
+        if (onBehalfOf)
+            meReply.setSentBy(authAcct.getName());
+        reply.addAttendee(meReply);
 
         boolean hidePrivate = !oldInv.isPublic() && !allowPrivateAccess;
         reply.setClassProp(oldInv.getClassProp());
