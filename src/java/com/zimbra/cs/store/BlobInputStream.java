@@ -29,6 +29,10 @@ implements SharedInputStream {
     
     private static final Log sLog = LogFactory.getLog(BlobInputStream.class);
 
+    static {
+        sLog.info("Using patched version of BlobInputStream.");
+    }
+    
     /**
      * The file that stores the content of this stream.  Only the parent
      * stream stores the file.  All child objects get the path from the top-level
