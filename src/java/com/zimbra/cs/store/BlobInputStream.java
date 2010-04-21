@@ -20,6 +20,7 @@ import java.io.InputStream;
 
 import javax.mail.internet.SharedInputStream;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -69,6 +70,24 @@ implements SharedInputStream {
 
     private BlobInputStream mRoot;
 
+    private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
+    
+    /**
+     * Read buffer.
+     */
+    private byte[] mBuf = new byte[BUFFER_SIZE];
+    
+    /**
+     * Buffer start position, relative to the file on disk, not {@link #mPos}.
+     */
+    private long mBufPos = 0;
+    
+    /**
+     * Read buffer size (may be less than <tt>mBuf.length</tt>).  A value of
+     * 0 means that the buffer is not initialized.
+     */
+    private int mBufSize = 0;
+    
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire blob.
      */
@@ -202,13 +221,32 @@ implements SharedInputStream {
         if (mPos >= mEnd) {
             return -1;
         }
-        int retVal = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, mPos);
-        if (retVal >= 0) {
-            mPos++;
-        } else {
-            close();
+        if (mPos < mBufPos || mPos >= (mBufPos + mBufSize)) {
+            // Tried to read outside buffer bounds.
+            int numRead = fillBuffer(mPos);
+            if (numRead <= 0) {
+                return -1;
+            }
         }
-        return retVal;
+        byte b = mBuf[(int) (mPos - mBufPos)];
+        mPos++;
+        return b;
+    }
+    
+    /**
+     * Fills the buffer at the given position in the file.
+     * @return number of bytes read
+     */
+    private int fillBuffer(long pos) throws IOException {
+        int numToRead = (int) Math.min(mBuf.length, mEnd - pos);
+        int numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, pos, mBuf, 0, numToRead);
+        if (numRead > 0) {
+            mBufPos = pos;
+            mBufSize = numRead;
+        } else {
+            mBufSize = 0;
+        }
+        return numRead;
     }
     
     @Override
