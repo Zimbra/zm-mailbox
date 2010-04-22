@@ -583,7 +583,10 @@ public class LC {
         "socket_so_timeout", "30000", "default socket SO timeout in milliseconds");
     
     public static final KnownKey networkaddress_cache_ttl;
-    
+
+    public static final KnownKey zdesktop_local_account_id = new KnownKey(
+        "zdesktop_local_account_id", null, "ZDesktop special local account");
+
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
