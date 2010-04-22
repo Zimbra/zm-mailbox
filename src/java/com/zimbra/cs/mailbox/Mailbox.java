@@ -104,6 +104,7 @@ import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -5989,6 +5990,10 @@ public class Mailbox {
                         uid = LdapUtil.generateUUID();
                         inv.setUid(uid);
                     }
+                    // Create the event in accepted state.  (bug 41639)
+                    inv.setPartStat(IcalXmlStrMap.PARTSTAT_ACCEPTED);
+                    inv.setRsvp(false);
+
                     boolean addRevision;
                     if (!calUidsSeen.contains(uid)) {
                         addRevision = true;
