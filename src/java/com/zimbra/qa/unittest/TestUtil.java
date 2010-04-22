@@ -259,7 +259,7 @@ extends Assert {
         Provisioning prov = Provisioning.getInstance();
         LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
-        boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, sender, "TestUtil", (long) data.length);
+        boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, addDomainIfNecessary(sender), "TestUtil", (long) data.length);
         lmtp.close();
         return success;
     }

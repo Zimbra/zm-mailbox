@@ -42,6 +42,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.RuleManager;
@@ -93,6 +94,8 @@ extends TestCase {
     private ZMailbox mMbox;
     private ZFilterRules mOriginalRules;
     private String mOriginalSpamApplyUserFilters;
+    private String mOriginalSmtpPort = null;
+    private String mOriginalSetEnvelopeSender = null;
 
     public void setUp()
     throws Exception {
@@ -109,6 +112,8 @@ extends TestCase {
         
         Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
+        mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
+        mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender); 
     }
     
     public void testQuoteEscape()
@@ -716,10 +721,11 @@ extends TestCase {
         ZFilterRules zRules = new ZFilterRules(rules);
         saveRules(mMbox, zRules);
 
-        // Add a message.
-        String address = TestUtil.getAddress(USER_NAME);
+        // Add a message.  Set the From header to something bogus to make
+        // sure we're not rewriting it
+        String from = "joebob@mycompany.com";
         String subject = NAME_PREFIX + " testRedirect";
-        TestUtil.addMessageLmtp(subject, address, address);
+        TestUtil.addMessageLmtp(subject, USER_NAME, from);
         
         // Confirm that user1 did not receive it.
         List<ZMessage> messages = TestUtil.search(mMbox, "subject:\"" + subject + "\"");
@@ -732,7 +738,30 @@ extends TestCase {
         MimeMessage mimeMsg = new MimeMessage(new ByteArrayInputStream(content));
         Account user1 = TestUtil.getAccount(USER_NAME);
         assertEquals(user1.getName(), mimeMsg.getHeader(FilterUtil.HEADER_FORWARDED));
+        assertEquals(from, mimeMsg.getHeader("From"));
+        
+        // Check zimbraMailRedirectSetEnvelopeSender=FALSE. 
+        int port = 6025;
+        DummySmtpServer smtp = new DummySmtpServer(port);
+        Thread smtpServerThread = new Thread(smtp);
+        smtpServerThread.start();
+        Server server = Provisioning.getInstance().getLocalServer();
+        server.setSmtpPort(port);
+        server.setMailRedirectSetEnvelopeSender(false);
+        
+        TestUtil.addMessageLmtp(subject, USER_NAME, from);
+        assertEquals(from, smtp.getMailFrom());
+
+        // Check zimbraMailRedirectSetEnvelopeSender=TRUE. 
+        smtp = new DummySmtpServer(port);
+        smtpServerThread = new Thread(smtp);
+        smtpServerThread.start();
+        server.setMailRedirectSetEnvelopeSender(true);
+        
+        TestUtil.addMessageLmtp(subject, USER_NAME, from);
+        assertEquals(TestUtil.getAddress(USER_NAME), smtp.getMailFrom());
     }
+    
     
     /**
      * Confirms that the message gets delivered even when a mail loop occurs.
@@ -900,6 +929,8 @@ extends TestCase {
     protected void tearDown() throws Exception {
         mMbox.saveFilterRules(mOriginalRules);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, mOriginalSetEnvelopeSender);
         cleanUp();
     }
 

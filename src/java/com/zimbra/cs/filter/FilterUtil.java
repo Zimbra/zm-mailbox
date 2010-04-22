@@ -18,13 +18,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.DateParser;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -342,13 +345,22 @@ public class FilterUtil {
             }
         }
         
+        MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true);
         if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
             // Set envelope sender to the account name (bug 31309).
             Account account = sourceMbox.getAccount();
-            outgoingMsg.setEnvelopeFrom(account.getName());
+            sender.setEnvelopeFrom(account.getName());
+        } else {
+            try {
+                Address from = ArrayUtil.getFirstElement(outgoingMsg.getFrom());
+                if (from != null) {
+                    sender.setEnvelopeFrom(((InternetAddress) from).getAddress());
+                }
+            } catch (MessagingException e) {
+                ZimbraLog.filter.warn("Unable to determine From header value.  " +
+                    "Envelope sender will be set to the default value.", e);
+            }
         }
-        MailSender sender = sourceMbox.getMailSender();
-        sender.setSaveToSent(false);
         sender.setRecipients(destinationAddress);
         sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
     }

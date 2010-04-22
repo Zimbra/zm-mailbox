@@ -14,15 +14,7 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,7 +25,6 @@ import javax.mail.internet.MimeMessage;
 import junit.framework.TestCase;
 
 import com.zimbra.common.service.ServiceException.Argument;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -46,108 +37,13 @@ import com.zimbra.cs.util.JMSession;
 public class TestMailSender
 extends TestCase {
 
-    private static final int TEST_SMTP_PORT = 6025;
+    static final int TEST_SMTP_PORT = 6025;
     private static final String NAME_PREFIX = TestMailSender.class.getSimpleName();
     private static final String SENDER_NAME = "user1";
     private static final String RECIPIENT_NAME = "user2";
     private String mOriginalSmtpPort = null;
     private String mOriginalSmtpSendPartial;
     private String mOriginalAllowAnyFrom;
-    
-    private static class DummySmtpServer
-    implements Runnable
-    {
-        private String mRejectRcpt;
-        private String mErrorMsg;
-        private PrintWriter mOut;
-        private List<String> mDataLines = new ArrayList<String>();
-        private String mMailFrom;
-        private static final Pattern PAT_RCPT = Pattern.compile("RCPT TO:<(.*)>", Pattern.CASE_INSENSITIVE);
-        private static final Pattern PAT_MAIL_FROM = Pattern.compile("MAIL FROM:<(.*)>", Pattern.CASE_INSENSITIVE);
-        
-        private void setRejectedRecipient(String rcpt, String error) {
-            mRejectRcpt = rcpt;
-            mErrorMsg = error;
-        }
-        
-        public String getMailFrom() {
-            return mMailFrom;
-        }
-        
-        public List<String> getDataLines() {
-            return mDataLines;
-        }
-        
-        public void run() {
-            ServerSocket server = null;
-            Socket socket = null;
-            InputStream in = null;
-            try {
-                server = new ServerSocket(TEST_SMTP_PORT);
-                socket = server.accept();
-                in = socket.getInputStream();
-                mOut = new PrintWriter(socket.getOutputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                String line = null;
-                
-                send("220 " + DummySmtpServer.class.getSimpleName());
-                while ((line = reader.readLine()) != null) {
-                    String uc = line.toUpperCase();
-                    if (uc.startsWith("MAIL FROM")) {
-                        Matcher m = PAT_MAIL_FROM.matcher(line);
-                        if (m.matches()) {
-                            mMailFrom = m.group(1);
-                        }
-                        send("250 OK");
-                    } else if (uc.startsWith("DATA")) {
-                        send("354 OK");
-                        line = reader.readLine();
-                        while (!line.equals(".")) {
-                            mDataLines.add(line);
-                            line = reader.readLine();
-                        }
-                        send("250 OK");
-                    } else if (uc.startsWith("QUIT")) {
-                        send("221 Buh-bye.");
-                        break;
-                    } else if (uc.startsWith("RCPT")){
-                        Matcher m = PAT_RCPT.matcher(line);
-                        if (m.matches() && m.group(1).equals(mRejectRcpt)) {
-                            send("550 " + mErrorMsg);
-                        } else {
-                            send("250 OK");
-                        }
-                    } else {
-                        send("250 OK");
-                    }
-                }
-            } catch (Exception e) {
-                ZimbraLog.test.error("Error in %s.", DummySmtpServer.class.getSimpleName(), e);
-            } finally {
-                try {
-                    if (mOut != null) {
-                        mOut.close();
-                    }
-                    if (in != null) {
-                        in.close();
-                    }
-                    if (socket != null) {
-                        socket.close();
-                    }
-                    if (server != null) {
-                        server.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        
-        private void send(String response) {
-            mOut.print(response + "\r\n");
-            mOut.flush();
-        }
-    }
     
     public void setUp()
     throws Exception {
@@ -156,8 +52,8 @@ extends TestCase {
         mOriginalAllowAnyFrom = TestUtil.getAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress);
     }
     
-    // XXX bburtin: commenting out test until we're back to using our own SMTP client
-    public void xtestRejectRecipient()
+    // XXX bburtin: disabling test until we're back to using our own SMTP client
+    public void disabledTestRejectRecipient()
     throws Exception {
         String errorMsg = "Sender address rejected: User unknown in relay recipient table";
         String bogusAddress = TestUtil.getAddress("bogus");
@@ -306,7 +202,7 @@ extends TestCase {
     }
     
     private DummySmtpServer startDummySmtpServer(String rejectedRecipient, String errorMsg) {
-        DummySmtpServer smtp = new DummySmtpServer();
+        DummySmtpServer smtp = new DummySmtpServer(TEST_SMTP_PORT);
         smtp.setRejectedRecipient(rejectedRecipient, errorMsg);
         Thread smtpServerThread = new Thread(smtp);
         smtpServerThread.start();
@@ -337,7 +233,7 @@ extends TestCase {
     throws Exception {
         // Simply starts the test SMTP server for ad-hoc testing.  Doesn't
         // run unit tests, since they need to run on the server side.
-        DummySmtpServer smtp = new DummySmtpServer();
+        DummySmtpServer smtp = new DummySmtpServer(TEST_SMTP_PORT);
         if (args.length >= 2) {
             smtp.setRejectedRecipient(args[0], args[1]);
         }
