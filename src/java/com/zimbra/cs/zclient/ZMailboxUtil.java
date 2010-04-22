@@ -1271,7 +1271,7 @@ public class ZMailboxUtil implements DebugListener {
         boolean first = true;
         for (ZAppointmentHit appt : result.getAppointments()) {
             if (!first) stdout.println(",");
-            stdout.print(appt);
+            stdout.print(ZJSONObject.toString(appt));
             if (first) first = false;
         }
         stdout.println("]");
