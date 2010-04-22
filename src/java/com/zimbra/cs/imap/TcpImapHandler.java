@@ -222,7 +222,7 @@ class TcpImapHandler extends ImapHandler {
     }
     
     @Override protected void enableInactivityTimer() throws SocketException {
-        mConnection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
+        mConnection.setSoTimeout(mConfig.getAuthenticatedMaxIdleSeconds() * 1000);
     }
 
     @Override protected void flushOutput() throws IOException {
