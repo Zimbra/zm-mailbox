@@ -6002,9 +6002,22 @@ public class Mailbox {
                         addRevision = false;
                     }
                     try {
-                        int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
-                        if (calIds != null && calIds.length > 0)
-                            existingCalItems.remove(calIds[0]);
+                        // Don't import if invite is for an existing appointment in a non-feed calendar.
+                        // Regular appointments are more important than those created from a feed.
+                        boolean skip = false;
+                        CalendarItem calItem = getCalendarItemByUid(uid);
+                        if (calItem != null) {
+                            Folder curFolder = calItem.getFolder();
+                            if (curFolder.getId() != Mailbox.ID_FOLDER_TRASH && curFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
+                                String feedUrl = curFolder.getUrl();
+                                skip = feedUrl == null || feedUrl.length() == 0;
+                            }
+                        }
+                        if (!skip) {
+                            int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
+                            if (calIds != null && calIds.length > 0)
+                                existingCalItems.remove(calIds[0]);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
                     }
