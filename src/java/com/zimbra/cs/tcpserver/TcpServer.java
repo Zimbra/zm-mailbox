@@ -26,6 +26,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
+import com.zimbra.cs.util.Zimbra;
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
@@ -188,7 +189,7 @@ public abstract class TcpServer implements Runnable, Server {
                 // TODO !mShutdownRequested check should be wrapped in a synchronized
                 // to guarantee we see the variable change right away.  This may cause
                 // bogus "accept loop failed" messages to be logged.
-                mLog.fatal("accept loop failed", ioe);
+                Zimbra.halt("accept loop failed", ioe);
             }
         }
         mLog.info("finished accept loop");
