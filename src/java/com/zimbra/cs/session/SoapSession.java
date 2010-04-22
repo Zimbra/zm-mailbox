@@ -409,11 +409,15 @@ public class SoapSession extends Session {
 
     @Override public SoapSession register() throws ServiceException {
         super.register();
+
         Mailbox mbox = mMailbox;
         if (mbox != null) {
             mRecentMessages = mbox.getRecentMessageCount();
             mPreviousAccess = mbox.getLastSoapAccessTime();
             mUnregistered = false;
+
+            if (ZimbraLog.session.isDebugEnabled())
+                ZimbraLog.session.debug("initializing session recent count to " + mRecentMessages);
         }
         return this;
     }
@@ -771,8 +775,12 @@ public class SoapSession extends Session {
                             isReceived = false;
                         else if (source != null)
                             isReceived = false;
-                        if (isReceived)
+
+                        if (isReceived) {
                             mRecentMessages++;
+                            if (ZimbraLog.session.isDebugEnabled())
+                                ZimbraLog.session.debug("incrementing session recent count to " + mRecentMessages);
+                        }
                     }
                 }
             }

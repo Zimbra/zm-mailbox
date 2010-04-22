@@ -6878,8 +6878,11 @@ public class Mailbox {
                 mCurrentChange.recent = 0;
         }
 
-        if (mCurrentChange.isMailboxRowDirty(mData))
+        if (mCurrentChange.isMailboxRowDirty(mData)) {
+            if (mCurrentChange.recent != MailboxChange.NO_CHANGE && ZimbraLog.mailbox.isDebugEnabled())
+                ZimbraLog.mailbox.debug("setting recent count to " + mCurrentChange.recent);
             DbMailbox.updateMailboxStats(this);
+        }
 
         if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
             if (mCurrentChange.mDirty.created != null) {
