@@ -60,6 +60,8 @@ public class CancelCalendarItem extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
         
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
+        if (!iid.hasSubpart())
+            throw ServiceException.INVALID_REQUEST("missing invId subpart: id should be specified as \"item-inv\"", null);
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
 
         //synchronized (mbox) {
@@ -67,6 +69,8 @@ public class CancelCalendarItem extends CalendarRequest {
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CancelCalendarItemRequest(" + iid + "," + compNum + ")");
             Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
+            if (inv == null)
+                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
 
             Element recurElt = request.getOptionalElement(MailConstants.E_INSTANCE);
             if (recurElt != null) {
