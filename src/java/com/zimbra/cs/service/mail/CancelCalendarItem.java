@@ -110,7 +110,7 @@ public class CancelCalendarItem extends CalendarRequest {
     
     void cancelInstance(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite defaultInv, RecurId recurId) 
     throws ServiceException {
-        boolean onBehalfOf = zsc.isDelegatedRequest();
+        boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointmentInstance, locale);
@@ -163,7 +163,7 @@ public class CancelCalendarItem extends CalendarRequest {
 
     protected void cancelInvite(ZimbraSoapContext zsc, OperationContext octxt, Element request, Account acct, Mailbox mbox, CalendarItem calItem, Invite inv)
     throws ServiceException {
-        boolean onBehalfOf = zsc.isDelegatedRequest();
+        boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
         String text = L10nUtil.getMessage(MsgKey.calendarCancelAppointment, locale);

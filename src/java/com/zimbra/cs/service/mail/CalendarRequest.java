@@ -63,6 +63,7 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -270,7 +271,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Element response,
         boolean updateOwnAppointment)
     throws ServiceException {
-        boolean onBehalfOf = zsc.isDelegatedRequest();
+        boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
         if (notifyOwner) {
             try {
@@ -480,7 +481,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
     
-            boolean onBehalfOf = zsc.isDelegatedRequest();
+            boolean onBehalfOf = isOnBehalfOfRequest(zsc);
             Account authAcct = getAuthenticatedAccount(zsc);
             boolean hidePrivate =
                 !calItem.isPublic() && !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
@@ -631,7 +632,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 }
             }
     
-            boolean onBehalfOf = zsc.isDelegatedRequest();
+            boolean onBehalfOf = isOnBehalfOfRequest(zsc);
             Account authAcct = getAuthenticatedAccount(zsc);
             Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
     
@@ -668,5 +669,22 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                         invToCancel.toString() + " b/c of exception: " + ex.toString());
             }
         }
+    }
+
+    /**
+     * Is this an on-behalf-of request?  It is if the requested and authenticated account are different.
+     * Special case for ZDesktop: If auth account is the "local" account, consider the request to NOT be
+     * on-behalf-of.
+     * @param zsc
+     * @return
+     * @throws ServiceException
+     */
+    public static boolean isOnBehalfOfRequest(ZimbraSoapContext zsc) throws ServiceException {
+        if (!zsc.isDelegatedRequest())
+            return false;
+        String zdLocalAcctId = LC.zdesktop_local_account_id.value();
+        if (zdLocalAcctId != null && zdLocalAcctId.equalsIgnoreCase(zsc.getAuthtokenAccountId()))
+            return false;
+        return true;
     }
 }

@@ -85,7 +85,7 @@ public class SendInviteReply extends CalendarRequest {
         boolean isAdmin = zsc.isUsingAdminPrivileges();
         OperationContext octxt = getOperationContext(zsc, context);
 
-        boolean onBehalfOf = zsc.isDelegatedRequest();
+        boolean onBehalfOf = isOnBehalfOfRequest(zsc);
 
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMPONENT_NUM);
