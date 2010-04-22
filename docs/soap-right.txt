@@ -133,7 +133,7 @@ Check if a principal has the specified right on target.
 Returns all grants on the specified target entry, or all grants
 granted to the specified grantee entry.
 The authenticated admin must have an effective "viewGrants" (TBD) system 
-right on the specified target/grantdee.
+right on the specified target/grantee.
 
 At least one of <target> or <grantee> must be specified.  
 If both <target> and <grantee> are specified, only grants that are granted 

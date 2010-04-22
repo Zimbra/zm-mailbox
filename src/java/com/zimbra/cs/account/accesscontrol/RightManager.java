@@ -53,9 +53,11 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.FileGenUtil;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 
 
 public class RightManager {
+    
     private static final String E_A            = "a";
     private static final String E_ATTRS        = "attrs";
     private static final String E_DEFAULT      = "default";
@@ -83,6 +85,32 @@ public class RightManager {
     private Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();  
     private Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();  
 
+    static private class CoreRightDefFiles {
+        private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
+        
+        static {
+            sCoreRightDefFiles.add("zimbra-rights.xml");
+            sCoreRightDefFiles.add("zimbra-user-rights.xml");
+        }
+        
+        static boolean isCoreRightFile(File file) {
+            return sCoreRightDefFiles.contains(file.getName());
+        }
+        
+        static String listCoreDefFiles() {
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (String file : sCoreRightDefFiles) {
+                if (!first)
+                    sb.append(", ");
+                else
+                    first = false;
+                sb.append(file);
+            }
+            return sb.toString();
+        }
+    }
+    
     public static synchronized RightManager getInstance() throws ServiceException {
         if (mInstance != null) {
             return mInstance;
@@ -320,6 +348,9 @@ public class RightManager {
         if (!root.getName().equals(E_RIGHTS))
             throw ServiceException.PARSE_ERROR("root tag is not " + E_RIGHTS, null);
 
+        // preset rights can only be defined in our core right definition file
+        boolean allowPresetRight = CoreRightDefFiles.isCoreRightFile(file);
+        
         boolean seenRight = false;
         for (Iterator iter = root.elementIterator(); iter.hasNext();) {
             Element elem = (Element) iter.next();
@@ -362,6 +393,13 @@ public class RightManager {
             
             try {
                 Right right = parseRight(eRight); 
+                if (!allowPresetRight && RightType.preset == right.getRightType())
+                    throw ServiceException.PARSE_ERROR(
+                            "Encountered preset right " + name + " in " + file.getName() + 
+                            ", preset right can only be defined in one of the core right definition files: " +
+                            CoreRightDefFiles.listCoreDefFiles(), 
+                            null);
+                
                 if (right instanceof UserRight)
                     sUserRights.put(name, (UserRight)right);
                 else

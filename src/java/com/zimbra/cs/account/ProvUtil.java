@@ -86,6 +86,7 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.ComboRight;
@@ -94,6 +95,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
@@ -276,8 +278,17 @@ public class ProvUtil implements HttpDebugListener {
             
             if (printRights) {
                 try {
-                    for (com.zimbra.cs.account.accesscontrol.Right r : RightManager.getInstance().getAllAdminRights().values())
-                        System.out.println("        " + r.getName());
+                    Map<String, AdminRight> allAdminRights = RightManager.getInstance().getAllAdminRights();
+                    // print non-combo rights first
+                    for (com.zimbra.cs.account.accesscontrol.Right r : allAdminRights.values()) {
+                        if (RightType.combo != r.getRightType())
+                        System.out.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                    }
+                    // then combo rights
+                    for (com.zimbra.cs.account.accesscontrol.Right r : allAdminRights.values()) {
+                        if (RightType.combo == r.getRightType())
+                            System.out.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                    }
                 } catch (ServiceException e) {
                     System.out.println("cannot get RightManager instance: " + e.getMessage());
                 }
