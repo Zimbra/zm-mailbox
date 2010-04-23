@@ -171,7 +171,7 @@ public abstract class MailItemResource extends DavResource {
 	    return mbox.getItemById(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN);
 	}
 	
-	/* Deletes this resource. */
+	/* Deletes this resource by moving to Trash folder. */
 	public void delete(DavContext ctxt) throws DavException {
 		if (mId == 0) 
 			throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
@@ -179,12 +179,30 @@ public abstract class MailItemResource extends DavResource {
 			Mailbox mbox = getMailbox(ctxt);
 			mbox.move(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, Mailbox.ID_FOLDER_TRASH);
 		} catch (ServiceException se) {
+		    if (se.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+		        hardDelete(ctxt);
+		        return;
+		    }
 			int resCode = se instanceof MailServiceException.NoSuchItemException ?
 					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
 			throw new DavException("cannot delete item", resCode, se);
 		}
 	}
 
+	/* hard delete */
+	public void hardDelete(DavContext ctxt) throws DavException {
+        if (mId == 0) 
+            throw new DavException("cannot hard delete resource", HttpServletResponse.SC_FORBIDDEN, null);
+        try {
+            Mailbox mbox = getMailbox(ctxt);
+            mbox.delete(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN);
+        } catch (ServiceException se) {
+            int resCode = se instanceof MailServiceException.NoSuchItemException ?
+                    HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+            throw new DavException("cannot delete item", resCode, se);
+        }
+	}
+	
 	/* Moves this resource to another Collection. */
 	public void move(DavContext ctxt, Collection dest) throws DavException {
 		if (mFolderId == dest.getId())
