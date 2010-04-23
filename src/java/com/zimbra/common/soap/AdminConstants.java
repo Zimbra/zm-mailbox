@@ -697,6 +697,7 @@ public class AdminConstants {
     public static final String A_INHERITED   = "inherited";
     public static final String A_RIGHT       = "right";
     public static final String A_TARGET_TYPE = "targetType";
+    public static final String A_SECRET      = "secret";
     
     public static final String E_WAITSET = "waitSet";
     
