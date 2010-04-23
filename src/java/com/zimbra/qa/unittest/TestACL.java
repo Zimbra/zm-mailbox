@@ -145,136 +145,6 @@ public abstract class TestACL extends TestCase {
         ZimbraLog.toolSetupLog4j(level, "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
     }
     
-    /*
-     * for testing key grantees
-     */
-    protected class KeyAuthToken extends AuthToken {
-
-        private String mName;
-        private String mAccessKey;
-        
-        KeyAuthToken(String name, String accessKey) {
-            mName = name;
-            mAccessKey = accessKey;
-        }
-        
-        @Override
-        public void encode(HttpClient client, HttpMethod method,
-                boolean isAdminReq, String cookieDomain) throws ServiceException {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void encode(HttpState state, boolean isAdminReq, String cookieDomain)
-                throws ServiceException {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void encode(HttpServletResponse resp, boolean isAdminReq, boolean secureCookie)
-                throws ServiceException {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void encodeAuthResp(Element parent, boolean isAdmin)
-                throws ServiceException {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public String getAccountId() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public String getAdminAccountId() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public String getCrumb() throws AuthTokenException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public String getDigest() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public String getEncoded() throws AuthTokenException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public long getExpires() {
-            // TODO Auto-generated method stub
-            return 0;
-        }
-
-        @Override
-        public String getExternalUserEmail() {
-            // TODO Auto-generated method stub
-            return mName;
-        }
-
-        @Override
-        public boolean isAdmin() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public boolean isDomainAdmin() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-        
-        @Override
-        public boolean isDelegatedAdmin() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public boolean isExpired() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public boolean isZimbraUser() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public ZAuthToken toZAuthToken() throws ServiceException {
-            // TODO Auto-generated method stub
-            return null;
-        }
-        
-        public String getAccessKey() {
-            return mAccessKey;
-        }
-    }
-    
     
     /*
      * ======================
@@ -304,7 +174,7 @@ public abstract class TestACL extends TestCase {
     }
     
     protected Account keyAccount(String name, String accesKey) {
-        AuthToken authToken = new KeyAuthToken(name, accesKey);
+        AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
         return new ACL.GuestAccount(authToken);
     }
     
