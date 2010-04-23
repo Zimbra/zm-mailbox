@@ -92,7 +92,6 @@ public class ZimbraServlet extends HttpServlet {
 
     private int[] mAllowedPorts;
 
-    @SuppressWarnings("unused")
     @Override public void init() throws ServletException {
         try {
             String portsCSV = getInitParameter(PARAM_ALLOWED_PORTS);
@@ -323,6 +322,9 @@ public class ZimbraServlet extends HttpServlet {
         if (hopcount >= MAX_PROXY_HOPCOUNT)
             throw ServiceException.TOO_MANY_HOPS(HttpUtil.getFullRequestURL(req));
         method.addRequestHeader("X-Zimbra-Hopcount", Integer.toString(hopcount + 1));
+        String ua = req.getHeader("User-Agent");
+        if (ua != null)
+            method.setRequestHeader("User-Agent", ua);
 
         // dispatch the request and copy over the results
         int statusCode = -1;
