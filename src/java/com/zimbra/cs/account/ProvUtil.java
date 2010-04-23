@@ -3623,6 +3623,7 @@ public class ProvUtil implements HttpDebugListener {
         String mTargetIdOrName;
         String mGranteeType;
         String mGranteeIdOrName;
+        String mSecret;
         String mRight;
         RightModifier mRightModifier;
         
@@ -3657,7 +3658,7 @@ public class ProvUtil implements HttpDebugListener {
             ra.mTargetIdOrName = null;
     }
     
-    private void getRightArgsGrantee(RightArgs ra, boolean needGranteeType) throws ServiceException, ArgException {
+    private void getRightArgsGrantee(RightArgs ra, boolean needGranteeType, boolean needSecret) throws ServiceException, ArgException {
         if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
         
         if (needGranteeType)
@@ -3667,6 +3668,14 @@ public class ProvUtil implements HttpDebugListener {
         
         if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
         ra.mGranteeIdOrName = ra.mArgs[ra.mCurPos++];
+        
+        if (needSecret && ra.mGranteeType != null) {
+            GranteeType gt = GranteeType.fromCode(ra.mGranteeType);
+            if (gt.allowSecret()) {
+                if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
+                ra.mSecret = ra.mArgs[ra.mCurPos++];
+            }
+        }
     }
     
     private void getRightArgsRight(RightArgs ra) throws ServiceException, ArgException {
@@ -3678,15 +3687,15 @@ public class ProvUtil implements HttpDebugListener {
             ra.mRight = ra.mRight.substring(1);
     }
     
-    private void getRightArgs(RightArgs ra, boolean needGranteeType) throws ServiceException, ArgException {
+    private void getRightArgs(RightArgs ra, boolean needGranteeType, boolean needSecret) throws ServiceException, ArgException {
         getRightArgsTarget(ra);
-        getRightArgsGrantee(ra, needGranteeType);
+        getRightArgsGrantee(ra, needGranteeType, needSecret);
         getRightArgsRight(ra);
     }
     
     private void doCheckRight(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
-        getRightArgs(ra, false);
+        getRightArgs(ra, false, false); // todo, handle secret
         
         Map<String, Object> attrs = getMap(args, ra.mCurPos);
         
@@ -3715,11 +3724,11 @@ public class ProvUtil implements HttpDebugListener {
         
         if (mProv instanceof LdapProvisioning) {
             // must provide grantee info
-            getRightArgsGrantee(ra, true);
+            getRightArgsGrantee(ra, true, false);
         } else {
             // has more args, use it for the requested grantee
             if (ra.mCurPos < args.length)
-                getRightArgsGrantee(ra, true);
+                getRightArgsGrantee(ra, true, false);
         }
         
         boolean expandSetAttrs = false;
@@ -3797,11 +3806,11 @@ public class ProvUtil implements HttpDebugListener {
         
         if (mProv instanceof LdapProvisioning) {
             // must provide grantee info
-            getRightArgsGrantee(ra, false);
+            getRightArgsGrantee(ra, false, false);
         } else {
             // has more args, use it for the requested grantee
             if (ra.mCurPos < args.length)
-                getRightArgsGrantee(ra, false);
+                getRightArgsGrantee(ra, false, false);
         }
         
         boolean expandSetAttrs = false;
@@ -3929,7 +3938,7 @@ public class ProvUtil implements HttpDebugListener {
             if ("-t".equals(arg))
                 getRightArgsTarget(ra);
             else if ("-g".equals(arg)) {
-                getRightArgsGrantee(ra, true);
+                getRightArgsGrantee(ra, true, false);
                 if (ra.hasNext()) {
                     String includeGroups = ra.getNextArg();
                     if ("1".equals(includeGroups))
@@ -3978,19 +3987,19 @@ public class ProvUtil implements HttpDebugListener {
     
     private void doGrantRight(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
-        getRightArgs(ra, true);
+        getRightArgs(ra, true, true);
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
     
         mProv.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
-                         ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
+                         ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, ra.mSecret,
                          ra.mRight, ra.mRightModifier);
     }
     
     private void doRevokeRight(String[] args) throws ServiceException, ArgException {
         RightArgs ra = new RightArgs(args);
-        getRightArgs(ra, true);
+        getRightArgs(ra, true, false);
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);

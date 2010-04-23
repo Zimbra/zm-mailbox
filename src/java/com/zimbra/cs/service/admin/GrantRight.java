@@ -48,6 +48,7 @@ public class GrantRight extends RightDocumentHandler {
         String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
         GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
+        String secret = eGrantee.getAttribute(AdminConstants.A_SECRET, null);
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
@@ -59,7 +60,7 @@ public class GrantRight extends RightDocumentHandler {
         RightCommand.grantRight(Provisioning.getInstance(),
                                 getAuthenticatedAccount(zsc),
                                 targetType, targetBy, target,
-                                granteeType, granteeBy, grantee,
+                                granteeType, granteeBy, grantee, secret,
                                 right, rightModifier);
         
         Element response = zsc.createElement(AdminConstants.GRANT_RIGHT_RESPONSE);

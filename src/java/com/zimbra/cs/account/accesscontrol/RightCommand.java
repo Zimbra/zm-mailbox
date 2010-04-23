@@ -1032,11 +1032,10 @@ public class RightCommand {
         return grants;
     }
     
-    private static void verifyGrant(Account authedAcct,
-                                    TargetType targetType, Entry targetEntry,
-                                    GranteeType granteeType, NamedEntry granteeEntry,
-                                    Right right, 
-                                    boolean revoking) throws ServiceException {
+    private static void validateGrant(Account authedAcct,
+            TargetType targetType, Entry targetEntry,
+            GranteeType granteeType, NamedEntry granteeEntry, String secret,
+            Right right, boolean revoking) throws ServiceException {
         
         // TODO: currently user right does not go through RightCommand, it goes 
         //       directly to RightUtil, need to fix for the target type check.
@@ -1044,7 +1043,6 @@ public class RightCommand {
         //       method after we switch to the new access manager(the canPerform method is 
         //       not supported in the current access manager).   or should we?
         if (!right.isUserRight()) {
-            verifyAccessManager();
             
             /*
              * check if the grantee is an admin account or admin group
@@ -1059,6 +1057,13 @@ public class RightCommand {
                     throw ServiceException.INVALID_REQUEST("grantee must be a delegated admin account or admin group, " +
                             "it cannot be a global admin account.", null);
             }
+            
+            /*
+             * check if the grantee type can be used for an admin right
+             */
+            if (!granteeType.allowedForAdminRights())
+                throw ServiceException.INVALID_REQUEST("grantee type " + granteeType.getCode() +
+                        " is not allowed for admin right", null);
         }
         
         /*
@@ -1077,10 +1082,9 @@ public class RightCommand {
          * same target or a subset of target on which the grantors own rights 
          * were granted.
          * 
-         * if authedAcct==null, the call site is LdapProvisioning, treat it as a 
-         * system admin and skip this check.
+         * if authedAcct==null, the call site is LdapProvisioning, treat it 
+         * as a system admin and skip this check.
          */
-        
         if (authedAcct != null) {
             AccessManager am = AccessManager.getInstance();
             boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
@@ -1089,13 +1093,16 @@ public class RightCommand {
             
             RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
         }
+        
+        if (secret != null && !granteeType.allowSecret())
+            throw ServiceException.PERM_DENIED("password is not alloed for grantee type " + granteeType.getCode());
     }
             
     public static void grantRight(Provisioning prov,
-                                  Account authedAcct,
-                                  String targetType, TargetBy targetBy, String target,
-                                  String granteeType, GranteeBy granteeBy, String grantee,
-                                  String right, RightModifier rightModifier) throws ServiceException {
+            Account authedAcct,
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
+            String right, RightModifier rightModifier) throws ServiceException {
         
         verifyAccessManager();
         
@@ -1105,15 +1112,25 @@ public class RightCommand {
         
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
+        NamedEntry granteeEntry = null;
+        String granteeId;
+        if (gt.isZimbraEntry()) {
+            granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
+            granteeId = granteeEntry.getId();
+        } else {
+            // for all and pub, ZimbraACE will use the correct id, granteeId here will be ignored
+            // for guest, grantee id is the email
+            // for key, grantee id is the display name
+            granteeId = grantee;
+        }
         
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, false);
+        validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, secret, r, false);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        ZimbraACE ace = new ZimbraACE(granteeEntry.getId(), gt, r, rightModifier, null);
+        ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, secret);
         aces.add(ace);
         
         ACLUtil.grantRight(prov, targetEntry, aces);
@@ -1161,7 +1178,7 @@ public class RightCommand {
         Right r = RightManager.getInstance().getRight(right);
         
         if (granteeEntry != null)
-            verifyGrant(authedAcct, tt, targetEntry, gt, granteeEntry, r, true);
+            validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, null, r, true);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, null);

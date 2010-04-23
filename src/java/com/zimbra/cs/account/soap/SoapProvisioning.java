@@ -1925,11 +1925,18 @@ public class SoapProvisioning extends Provisioning {
         
     // grantee
     private Element toXML(Element req,
-                       String granteeType, GranteeBy granteeBy, String grantee) {
+            String granteeType, GranteeBy granteeBy, String grantee) {
+        return toXML(req, granteeType,  granteeBy,  grantee, null);
+    }
+    
+    private Element toXML(Element req,
+                       String granteeType, GranteeBy granteeBy, String grantee, String secret) {
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
         if (granteeType != null)
             eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType);
         eGrantee.addAttribute(AdminConstants.A_BY, granteeBy.toString());
+        if (secret != null)
+            eGrantee.addAttribute(AdminConstants.A_SECRET, secret);
         eGrantee.setText(grantee);
         
         return eGrantee;
@@ -2140,7 +2147,7 @@ public class SoapProvisioning extends Provisioning {
     
     @Override
     public void grantRight(String targetType, TargetBy targetBy, String target,
-                           String granteeType, GranteeBy granteeBy, String grantee,
+                           String granteeType, GranteeBy granteeBy, String grantee, String secret,
                            String right, RightModifier rightModifier) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GRANT_RIGHT_REQUEST);
         toXML(req, targetType, targetBy, target);

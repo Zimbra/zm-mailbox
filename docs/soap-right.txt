@@ -7,7 +7,7 @@ Grant a right on a target to an individual or group grantee.
     
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
-  <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
+  <grantee type={grantee-type} by="{grantee-by}" [secret="{secret}"]>{grantee-name-or-id}</grantee>
   <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
 </GrantRightRequest>    
 
@@ -15,9 +15,17 @@ Grant a right on a target to an individual or group grantee.
 
 {target-by}   = name | id
   
-{grantee-type} = usr | grp
+{grantee-type} = usr | grp | all | dom | gst | key | pub
+                 all: user right only 
+                 dom: user right only unless the right is crossDomainAdmin
+                 gst: user right only 
+                 key: user right only 
+                 pub: user right only 
   
-{grantee-bt}   = name | id
+{grantee-by}   = name | id
+
+{secret} : for user right only
+           password for guest grantee or the access key for key grantee
 
 {deny} = 1 | 0(default)
 
@@ -50,7 +58,6 @@ an individual or group grantee.
 </RevokeRightRequest>    
 
 <RevokeRightResponse/>
-
 
 ----------------------------------------------------------
 Check if a principal has the specified right on target.

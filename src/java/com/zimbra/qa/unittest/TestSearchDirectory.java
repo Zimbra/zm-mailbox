@@ -260,11 +260,11 @@ public class TestSearchDirectory extends TestCase {
             // Right right = AdminRight.RT_adminConsoleDomainRights;
             String right = AdminRight.RT_domainAdminConsoleRights;
             prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain1.getId(), 
-                    GranteeType.GT_GROUP.getCode(), GranteeBy.id, adminGroup1.getId(), 
+                    GranteeType.GT_GROUP.getCode(), GranteeBy.id, adminGroup1.getId(), null,
                     right, null);
             
             prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain2.getId(), 
-                    GranteeType.GT_GROUP.getCode(), GranteeBy.id, adminGroup2.getId(), 
+                    GranteeType.GT_GROUP.getCode(), GranteeBy.id, adminGroup2.getId(), null,
                     right, null);
             
             //
@@ -427,15 +427,15 @@ public class TestSearchDirectory extends TestCase {
             // grant positive adminConsoleDomainRights to both da on globalgrant
             String right = AdminRight.RT_adminConsoleDomainRights;
             prov.grantRight(TargetType.global.getCode(), null, null, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, denyAdmin.getId(), 
+                    GranteeType.GT_USER.getCode(), GranteeBy.id, denyAdmin.getId(), null,
                     right, null);
             prov.grantRight(TargetType.global.getCode(), null, null, 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, allowAdmin.getId(), 
+                    GranteeType.GT_USER.getCode(), GranteeBy.id, allowAdmin.getId(), null,
                     right, null);
             
             // grant negative adminConsoleDomainRights to one the the da's on a domain
             prov.grantRight(TargetType.domain.getCode(), TargetBy.id, denyDomain.getId(), 
-                    GranteeType.GT_USER.getCode(), GranteeBy.id, denyAdmin.getId(), 
+                    GranteeType.GT_USER.getCode(), GranteeBy.id, denyAdmin.getId(), null,
                     right, RightModifier.RM_DENY);
             
             

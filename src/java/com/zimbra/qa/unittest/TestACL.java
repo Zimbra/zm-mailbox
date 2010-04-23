@@ -786,7 +786,7 @@ public abstract class TestACL extends TestCase {
         
         RightCommand.grantRight(mProv, authedAcct,
                                 targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
-                                granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                                granteeType.getCode(), GranteeBy.name, grantee.getName(), null,
                                 right.getName(), grant.toRightModifier());
     }
     
@@ -797,7 +797,7 @@ public abstract class TestACL extends TestCase {
 
         RightCommand.grantRight(mProv, authedAcct,
                       targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
-                      granteeType.getCode(), GranteeBy.name, grantee.getName(),
+                      granteeType.getCode(), GranteeBy.name, grantee.getName(), null,
                       right.getName(), RightModifier.RM_CAN_DELEGATE);
     }
         
@@ -862,7 +862,9 @@ public abstract class TestACL extends TestCase {
   Note: do *not* copy it to /Users/pshao/p4/main/ZimbraServer/conf
         that could accidently generate a RightDef.java with our test rights.
         
-  cp /Users/pshao/p4/main/ZimbraServer/data/unittest/* /opt/zimbra/conf/rights
+  cp /Users/pshao/p4/main/ZimbraServer/data/unittest/*.xml /opt/zimbra/conf/rights
+  and
+  uncomment sCoreRightDefFiles.add("rights-unittest.xml"); in RightManager
   
   zmlocalconfig -e zimbra_class_accessmanager=com.zimbra.cs.account.accesscontrol.ACLAccessManager
   then restart server

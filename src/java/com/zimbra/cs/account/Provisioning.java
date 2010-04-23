@@ -1797,7 +1797,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             
     public void grantRight(
             String targetType, TargetBy targetBy, String target,
-            String granteeType, GranteeBy granteeBy, String grantee,
+            String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }

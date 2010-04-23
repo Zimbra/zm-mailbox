@@ -28,13 +28,13 @@ import com.zimbra.cs.account.Provisioning.GranteeBy;
 
 public enum GranteeType {
 
-    GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL)),
-    GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
-    GT_AUTHUSER("all", GranteeFlag.F_AUTHUSER),
-    GT_DOMAIN("dom",   GranteeFlag.F_ADMIN),  // only for the crossDomainAdmin right
-    GT_GUEST("gst",    GranteeFlag.F_INDIVIDUAL),
-    GT_KEY("key",      GranteeFlag.F_INDIVIDUAL),
-    GT_PUBLIC("pub",   GranteeFlag.F_PUBLIC);
+    GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
+    GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP      | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
+    GT_AUTHUSER("all", (short)(                      GranteeFlag.F_AUTHUSER)),
+    GT_DOMAIN("dom",   (short)(GranteeFlag.F_ADMIN                            | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
+    GT_GUEST("gst",    (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
+    GT_KEY("key",      (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
+    GT_PUBLIC("pub",   (short)(                      GranteeFlag.F_PUBLIC));
 
     private static class GT {
         static Map<String, GranteeType> sCodeMap = new HashMap<String, GranteeType>();
@@ -50,10 +50,6 @@ public enum GranteeType {
     }
     
     public static GranteeType fromCode(String granteeType) throws ServiceException {
-        // GUEST-TODO master control for turning off guest grantee for now
-        if (granteeType.equals(GT_GUEST.getCode()))
-            throw ServiceException.FAILURE("guest grantee not yet supported", null);
-        
         GranteeType gt = GT.sCodeMap.get(granteeType);
         if (gt == null)
             throw ServiceException.PARSE_ERROR("invalid grantee type: " + granteeType, null);
@@ -72,8 +68,22 @@ public enum GranteeType {
         return mCode;    
     }
 
+    /*
+     * whether the grantee type is allowed for amin rights
+     */
     public boolean allowedForAdminRights() {
         return hasFlags(GranteeFlag.F_ADMIN);
+    }
+    
+    /*
+     * whether this grantee type can take a secret
+     */
+    public boolean allowSecret() {
+        return hasFlags(GranteeFlag.F_HAS_SECRET);
+    }
+    
+    public boolean isZimbraEntry() {
+        return hasFlags(GranteeFlag.F_IS_ZIMBRA_ENTRY);
     }
     
     public boolean hasFlags(short flags) {
@@ -111,7 +121,7 @@ public enum GranteeType {
                 throw AccountServiceException.NO_SUCH_DOMAIN(grantee); 
             break;
         default:
-            ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + 
+            throw ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + 
                     granteeType.getCode(), null);
         }
     

@@ -5908,12 +5908,12 @@ public class LdapProvisioning extends Provisioning {
     
     @Override
     public void grantRight(String targetType, TargetBy targetBy, String target,
-                           String granteeType, GranteeBy granteeBy, String grantee,
+                           String granteeType, GranteeBy granteeBy, String grantee, String secret,
                            String right, RightModifier rightModifier) throws ServiceException {
         RightCommand.grantRight(this,
                                 null,
                                 targetType, targetBy, target,
-                                granteeType, granteeBy, grantee,
+                                granteeType, granteeBy, grantee, secret,
                                 right, rightModifier);          
     }
 

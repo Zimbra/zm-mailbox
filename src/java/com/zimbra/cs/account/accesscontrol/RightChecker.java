@@ -1351,7 +1351,7 @@ public class RightChecker {
             // all the rights, but here we want the union of all the target 
             // types of all the sub-rights of the combo right.
             //
-            // e.g. a ComboRight that include rights on doamin, dl, account, 
+            // e.g. a ComboRight that include rights on domain, dl, account, 
             //      cr can only be granted on domain or global config 
             //      (what ComboRight.getGrantableTargetTypes returns)
             //      But here we wnat target types dl, account, cr too.

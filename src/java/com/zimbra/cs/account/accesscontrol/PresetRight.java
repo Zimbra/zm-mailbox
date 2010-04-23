@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
 
 public class PresetRight extends AdminRight {
@@ -25,6 +28,36 @@ public class PresetRight extends AdminRight {
     @Override
     public boolean isPresetRight() {
         return true;
+    }
+    
+    
+    // don't allow an account right to be granted on calendar resource and vice versa
+    // it is only allowed for user rights
+    // TODO: revisit, may be able to do with just removing account from setInheritedByTargetTypes for calresource
+    //       and remove this very ugly check.   
+    //       warning, need to examine all call sites of inherited by/from
+    private boolean mutualExcludeAccountAndCalResource(TargetType targetType) {
+        return ((mTargetType == TargetType.account && targetType == TargetType.calresource) ||
+                (mTargetType == TargetType.calresource && targetType == TargetType.account));
+    }
+    
+    @Override
+    boolean grantableOnTargetType(TargetType targetType) {
+        
+        if (mutualExcludeAccountAndCalResource(targetType))
+            return false;
+        
+        return targetType.isInheritedBy(mTargetType);
+    }
+    
+    @Override
+    protected Set<TargetType> getGrantableTargetTypes() {
+        Set<TargetType> targetTypes = new HashSet<TargetType>();
+        for (TargetType targetType : mTargetType.inheritFrom()) {
+            if (!mutualExcludeAccountAndCalResource(targetType))
+                targetTypes.add(targetType);
+        }
+        return targetTypes;
     }
     
     @Override

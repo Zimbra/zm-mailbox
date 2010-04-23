@@ -169,8 +169,16 @@ public class ZimbraACE {
     
     
     public ZimbraACE(String granteeId, GranteeType granteeType, Right right, RightModifier rightModifier, String secret) throws ServiceException {
-        mGrantee = granteeId;
+        
         mGranteeType = granteeType;
+        
+        if (mGranteeType == GranteeType.GT_AUTHUSER)
+            mGrantee = ACL.GUID_AUTHUSER;
+        else if (mGranteeType == GranteeType.GT_PUBLIC)
+            mGrantee = ACL.GUID_PUBLIC;
+        else
+            mGrantee = granteeId;
+            
         mRightModifier = rightModifier;
         mRight = right;
         mSecret = secret;

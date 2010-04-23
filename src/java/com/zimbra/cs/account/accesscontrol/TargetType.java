@@ -177,7 +177,7 @@ public enum TargetType {
      * returns the set of sub target types this target type can be inherited by.
      * do not include the target type itself.
      * 
-     * e.g. if this is domain, then accouunt, calresource, and dl will be returned
+     * e.g. if this is domain, then account, calresource, and dl will be returned
      * 
      * @return
      */
