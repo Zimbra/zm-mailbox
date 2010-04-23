@@ -46,7 +46,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -92,7 +91,8 @@ public class SendInviteReply extends CalendarRequest {
         
         String verbStr = request.getAttribute(MailConstants.A_VERB);
         Verb verb = CalendarMailSender.parseVerb(verbStr);
-        
+        boolean isDecline = CalendarMailSender.VERB_DECLINE.equals(verb);
+
         boolean updateOrg = request.getAttributeBool(MailConstants.A_CAL_UPDATE_ORGANIZER, true);
 
         // Get the identity/persona being used in the reply.  It is set at the request level, but
@@ -114,15 +114,16 @@ public class SendInviteReply extends CalendarRequest {
             Invite oldInv = null;
             int calItemId; 
             int inviteMsgId;
-            CalendarItem calItem;
-            
+            CalendarItem calItem = null;
+            boolean wasInTrash = false;
+
             // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
             // calendar item (id="aaaa-nnnn") --- work in both cases
             if (iid.hasSubpart()) {
                 // directly accepting the calendar item
                 calItemId = iid.getId();
                 inviteMsgId = iid.getSubpartId();
-                calItem = mbox.getCalendarItemById(octxt, calItemId); 
+                calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
                 if (calItem == null)
                 	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
                 oldInv = calItem.getInvite(inviteMsgId, compNum);
@@ -172,63 +173,60 @@ public class SendInviteReply extends CalendarRequest {
                     remoteSendInviteReply(zmbx, request, addInviteResult);
                 } else {
                     // Replying to a local appointment
-                    calItemId = info.getCalendarItemId();
-                    if (info.calItemCreated()) {
-                        calItem = mbox.getCalendarItemById(octxt, calItemId);
-                        if (calItem == null)
-                        	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-                        Invite invCi = info.getInvite();
-                        if (invCi != null) {
-                            // See if the messsage's invite is outdated.
-                            Invite invCurr = calItem.getInvite(invCi.getRecurId());
-                            if (invCurr != null) {
-                                if (invCi.getSeqNo() >= invCurr.getSeqNo()) {
-                                    // Invite is new or same as what's in the appointment.
-                                    oldInv = invCi;
-                                } else {
-                                    // Outdated.
-                                    oldInv = null;
-                                }
-                            } else {
-                                // New invite.
-                                oldInv = invCi;
-                            }
-                        } else {
-                            // legacy case
-                            oldInv = calItem.getInvite(inviteMsgId, compNum);
+                    if (info.getInvite() != null) {
+                        calItem = mbox.getCalendarItemByUid(octxt, info.getInvite().getUid());
+                        wasInTrash = calItem != null && calItem.inTrash();
+
+                        if (calItem != null && !wasInTrash) {
+                            Invite newInv = info.getInvite();
+                            // If appointment exists, check if our invite has been outdated.
+                            Invite curr = calItem.getInvite(newInv.getRecurId());
+                            if (curr != null && !newInv.isSameOrNewerVersion(curr))
+                                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                         }
-                    } else if (info.getInvite() != null) {
-                        // Appointment wasn't auto-added upon invite delivery.  Add it now.
+
                         Invite inv = info.getInvite().newCopy();
                         Invite.setDefaultAlarm(inv, acct);
                         inv.setMailItemId(inviteMsgId);
-                        // Let's first try to lookup the appointment by UID.
-                        calItem = mbox.getCalendarItemByUid(octxt, inv.getUid());
-                        calItemId = calItem != null ? calItem.getId() : CalendarItemInfo.CALITEM_ID_NONE;
-                        if (calItem != null) {
-                            // If appointment exists, check if our invite has been outdated.
-                            Invite curr = calItem.getInvite(inv.getRecurId());
-                            if (curr != null && !inv.isSameOrNewerVersion(curr))
-                                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
-                        }
-                        // If appointment already exists, we must apply the new invite, even when declining.
-                        // If appointment doesn't already exist and we're declining, skip the add.
-                        if (calItem != null || !CalendarMailSender.VERB_DECLINE.equals(verb)) {
+
+                        // If appointment doesn't exist, add it if the reply is not a decline.  No need to
+                        // add to calendar if we're declining.
+                        // If appointment already exists, apply the invite against it so the appointment has
+                        // the latest data we replied on.  This is true even when declining.
+                        // (TODO: Is it better to delete the existing appointment/instance when declining?)
+                        if (calItem != null || !isDecline) {
                             // Add the invite.  This will either create or update the appointment.
                             int folder;
-                            if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH)
-                                folder = calItem.getFolderId();
-                            else
+                            boolean untrashing = wasInTrash && !isDecline;
+                            if (calItem == null || untrashing) {
+                                // If appointment/task doesn't exist, create in default folder.
+                                // If it exists but is in Trash and is not a decline, move it out of Trash.
+                                // If it's in trash and we're declining, leave it in trash.
                                 folder = inv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+                            } else {
+                                folder = calItem.getFolderId();
+                            }
                             ParsedMessage pm = new ParsedMessage(msg.getMimeMessage(false), false);
-                            int[] ids = mbox.addInvite(octxt, inv, folder, pm);
-                            if (ids != null && ids.length > 0)
-                                calItemId = ids[0];
-                            calItem = mbox.getCalendarItemById(octxt, calItemId);
-                            if (calItem == null)
+                            int[] ids = mbox.addInvite(octxt, inv, folder, pm, false, untrashing, true);
+                            if (ids == null || ids.length == 0)
                                 throw ServiceException.FAILURE("Could not create/update calendar item", null);
+                            calItemId = ids[0];
+                            // Refetch updated item.
+                            calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
+                            if (calItem == null)
+                                throw ServiceException.FAILURE("Could not refetch created/updated calendar item", null);
+                        } else {
+                            calItemId = 0;
                         }
                         oldInv = inv;
+                    } else if (info.calItemCreated()) {
+                        calItemId = info.getCalendarItemId();
+                        // legacy case (before we added Invite info to Message metadata)
+                        calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
+                        if (calItem == null)
+                            throw ServiceException.FAILURE("Missing invite data", null);
+                        wasInTrash = calItem.inTrash();
+                        oldInv = calItem.getInvite(inviteMsgId, compNum);
                     } else {
                         throw ServiceException.FAILURE("Missing invite data", null);
                     }
@@ -266,14 +264,16 @@ public class SendInviteReply extends CalendarRequest {
                 }
 
                 // trace logging
+                String calItemIdStr = calItem != null ? Integer.toString(calItem.getId()) : "none";
+                String folderIdStr = calItem != null ? Integer.toString(calItem.getFolderId()) : "none";
                 if (exceptDt == null)
-                    ZimbraLog.calendar.info("<SendInviteReply> id=%d, folderId=%d, verb=%s, notifyOrg=%s, subject=\"%s\", UID=%s",
-                            calItem.getId(), calItem.getFolderId(), verb.toString(), Boolean.toString(updateOrg),
-                            oldInv.isPublic() ? oldInv.getName() : "(private)", calItem.getUid());
+                    ZimbraLog.calendar.info("<SendInviteReply> id=%s, folderId=%s, verb=%s, notifyOrg=%s, subject=\"%s\", UID=%s",
+                            calItemIdStr, folderIdStr, verb.toString(), Boolean.toString(updateOrg),
+                            oldInv.isPublic() ? oldInv.getName() : "(private)", oldInv.getUid());
                 else
-                    ZimbraLog.calendar.info("<SendInviteReply> id=%d, folderId=%d, verb=%s, notifyOrg=%s, subject=\"%s\", UID=%s, recurId=%s",
-                            calItem.getId(), calItem.getFolderId(), verb.toString(), Boolean.toString(updateOrg),
-                            oldInv.isPublic() ? oldInv.getName() : "(private)", calItem.getUid(), exceptDt.getUtcString());
+                    ZimbraLog.calendar.info("<SendInviteReply> id=%s, folderId=%s, verb=%s, notifyOrg=%s, subject=\"%s\", UID=%s, recurId=%s",
+                            calItemIdStr, folderIdStr, verb.toString(), Boolean.toString(updateOrg),
+                            oldInv.isPublic() ? oldInv.getName() : "(private)", oldInv.getUid(), exceptDt.getUtcString());
 
                 // If we're replying to a non-exception instance of a recurring appointment, create a local
                 // exception instance first.  Then reply to it.
@@ -299,14 +299,25 @@ public class SendInviteReply extends CalendarRequest {
                     // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
                     MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
                     ParsedMessage pm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
-    
-                    mbox.addInvite(octxt, localException, calItem.getFolderId(), pm, true, false, true);
+
+                    int folder;
+                    boolean untrashing = wasInTrash && !isDecline;
+                    if (untrashing) {
+                        // If it exists but is in Trash and is not a decline, move it out of Trash.
+                        // If it's in trash and we're declining, leave it in trash.
+                        folder = localException.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+                    } else {
+                        folder = calItem.getFolderId();
+                    }
+                    mbox.addInvite(octxt, localException, folder, pm, true, untrashing, true);
     
                     // Refetch the updated calendar item and set oldInv to refetched local exception instance.
-                    calItem = mbox.getCalendarItemById(octxt, calItemId);
+                    calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
+                    if (calItem == null)
+                        throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
                     oldInv = calItem.getInvite(rid);
                 }
-    
+
                 if (updateOrg && oldInv.hasOrganizer()) {
                     Locale locale;
                     Account organizer = oldInv.getOrganizerAccount();
@@ -477,5 +488,21 @@ public class SendInviteReply extends CalendarRequest {
         req.addAttribute(MailConstants.A_ID, idStr);
         req.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, ids.getCompNum());
         zmbx.invoke(req);
+    }
+
+    private static CalendarItem safeGetCalendarItemById(Mailbox mbox, OperationContext octxt, int calItemId)
+    throws ServiceException {
+        try {
+            return mbox.getCalendarItemById(octxt, calItemId);
+        } catch (MailServiceException e) {
+            String code = e.getCode();
+            if (MailServiceException.NO_SUCH_ITEM.equals(code)
+                || MailServiceException.NO_SUCH_CALITEM.equals(code)
+                || MailServiceException.NO_SUCH_APPT.equals(code)
+                || MailServiceException.NO_SUCH_TASK.equals(code))
+                return null;
+            else
+                throw e;
+        }
     }
 }
