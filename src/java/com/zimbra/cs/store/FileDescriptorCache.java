@@ -125,11 +125,18 @@ implements UncompressedFileCache.Listener<String>
                 ZimbraLog.store.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
                 sharedFile = mUncompressedFileCache.get(path, file, !DebugConfig.disableMessageStoreFsync);
             } else {
-                ZimbraLog.store.debug("opening new file descriptor for " + path);
+                ZimbraLog.store.debug("Opening new file descriptor for %s.", path);
                 sharedFile = new SharedFile(file);
             }
+            
             synchronized (this) {
-                mCache.put(path, sharedFile);
+                if (mCache.containsKey(path)) {
+                    // Another thread just opened the same file.  Close our copy and return the other one.
+                    sharedFile.close();
+                    sharedFile = mCache.get(path);
+                } else {
+                    mCache.put(path, sharedFile);
+                }
             }
             pruneIfNecessary();
         } else {
