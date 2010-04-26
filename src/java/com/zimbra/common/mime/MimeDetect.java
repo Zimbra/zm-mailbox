@@ -17,6 +17,7 @@ package com.zimbra.common.mime;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -122,7 +123,6 @@ public class MimeDetect {
     }
     
     private class Magic implements Comparable<Magic> {
-        @SuppressWarnings("unused")
         public class Rule {
             public int indent;
             public byte mask[];
@@ -405,15 +405,24 @@ public class MimeDetect {
     }
 
     public void parseGlobs(String fileList) throws IOException {
-        String files[] = fileList.split(":");
         
         if (fileList == null || fileList.length() == 0) {
             globs.clear();
             return;
         }
+        ArrayList<String> files = new ArrayList<String>();
+        for (String file : fileList.split(":")) {
+            files.add(file);
+            files.add(file + ".zimbra");
+        }
         for (String file : files) {
-            BufferedInputStream is = new BufferedInputStream(
-                new FileInputStream(new File(file)));
+            BufferedInputStream is = null;
+            try {
+                is = new BufferedInputStream(
+                        new FileInputStream(new File(file)));
+            } catch (FileNotFoundException e) {
+                continue;
+            }
             String line;
             
             while ((line = readLine(is)) != null) {
@@ -426,28 +435,41 @@ public class MimeDetect {
                         globs.put(new Glob(tokens[2],
                             Integer.parseInt(tokens[0])), tokens[1]);
                     else
-                        throw new IOException("invalid glob syntax " + line);
+                        ZimbraLog.system.warn("invalid glob syntax " + line);
                 }
             }
         }
     }
     
     public void parseMagic(String fileList) throws IOException {
-        String files[] = fileList.split(":");
         final String MAGIC_MAGIC = "MIME-Magic\0";
 
         if (fileList == null || fileList.length() == 0) {
             magics.clear();
             return;
         }
+        ArrayList<String> files = new ArrayList<String>();
+        for (String file : fileList.split(":")) {
+            files.add(file);
+            files.add(file + ".zimbra");
+        }
         for (String file : files) {
-            InputStream is = new BufferedInputStream(new FileInputStream(new File(file)));
+            InputStream is = null;
+            try {
+                is = new BufferedInputStream(new FileInputStream(new File(file)));
+            } catch (FileNotFoundException e) {
+                continue;
+            }
             String line = readLine(is);
             
-            if (line == null || !line.equals(MAGIC_MAGIC))
-                throw new IOException("invalid magic file ");
-            if (is.read() != '[')
-                throw new IOException("invalid magic section");
+            if (line == null || !line.equals(MAGIC_MAGIC)) {
+                ZimbraLog.system.warn("invalid magic file %s", file);
+                continue;
+            }
+            if (is.read() != '[') {
+                ZimbraLog.system.warn("invalid magic section in %s", file);
+                continue;
+            }
             while (is.available() > 0) {
                 Magic magic = new Magic(is);
 
