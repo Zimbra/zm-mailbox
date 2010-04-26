@@ -286,19 +286,23 @@ public class ContactAutoComplete {
 	    public void setHasMoreResult(boolean more) {
 	    }
 	}
-	private static boolean matches(String query, String text) {
+	private boolean matches(String query, String text) {
 		if (query == null || text == null)
 			return false;
 		return text.toLowerCase().startsWith(query);
 	}
 	
-	private void addMatchedContacts(String query, Map<String,? extends Object> attrs, int folderId, ItemId id, AutoCompleteResult result) {
-	    addMatchedContacts(query, attrs, mEmailKeys, folderId, id, result);
-	}
-	
-	public static void addMatchedContacts(String query, Map<String,? extends Object> attrs, Collection<String> emailKeys, int folderId, ItemId id, AutoCompleteResult result) {
+	public void addMatchedContacts(String query, Map<String,? extends Object> attrs, int folderId, ItemId id, AutoCompleteResult result) {
 	    if (!result.canBeCached)
 	        return;
+	    
+	    Provisioning prov = Provisioning.getInstance();
+	    Account acct = null;
+	    try {
+            acct = prov.getAccountById(mAccountId);
+        } catch (ServiceException e) {
+            ZimbraLog.gal.warn("can't get owner's account for id %s", mAccountId, e);
+        }
 	    
     	String firstName = (String)attrs.get(ContactConstants.A_firstName);
     	String lastName = (String)attrs.get(ContactConstants.A_lastName);
@@ -328,7 +332,7 @@ public class ContactAutoComplete {
         	// available for the Contact entry.  but for GAL we need to show
         	// just one email address.
         		
-        	for (String emailKey : emailKeys) {
+        	for (String emailKey : mEmailKeys) {
         		String email = (String)attrs.get(emailKey);
         		if (email != null && (nameMatches || matches(query, email))) {
         			ContactEntry entry = new ContactEntry();
@@ -346,6 +350,11 @@ public class ContactAutoComplete {
         		}
         	}
         } else {
+            if (acct != null && 
+                    acct.isPrefContactsDisableAutocompleteOnContactGroupMembers() &&
+                    !matches(query, nickname)) {
+                return;
+            }
         	// distribution list
         	ContactEntry entry = new ContactEntry();
         	entry.mDisplayName = nickname;

@@ -4873,7 +4873,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-
 <attr id="1089" name="zimbraPrefCalendarApptAllowAtendeeEdit" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
@@ -4882,5 +4881,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1090" name="zimbraPrefContactsDisableAutocompleteOnContactGroupMembers" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Disables autocomplete matching against the members email address.</desc>
+</attr>
 
 </attrs>
