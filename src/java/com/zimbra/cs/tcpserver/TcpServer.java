@@ -37,9 +37,9 @@ public abstract class TcpServer implements Runnable, Server {
     private final String mName;
     private final ServerSocket mServerSocket;
     private final List<ProtocolHandler> mActiveHandlers;
-    private boolean mShutdownRequested;
     private boolean mSSLEnabled;
     private ServerConfig mConfig;
+    private volatile boolean mShutdownRequested;
 
     public TcpServer(String name, ServerConfig config) throws ServiceException {
         this(name, config.getNumThreads(), config.getServerSocket());
@@ -186,9 +186,6 @@ public abstract class TcpServer implements Runnable, Server {
             }
         } catch (IOException ioe) {
             if (!mShutdownRequested) {
-                // TODO !mShutdownRequested check should be wrapped in a synchronized
-                // to guarantee we see the variable change right away.  This may cause
-                // bogus "accept loop failed" messages to be logged.
                 Zimbra.halt("accept loop failed", ioe);
             }
         }
