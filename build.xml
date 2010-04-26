@@ -708,6 +708,7 @@
 
         <!-- conf -->
         <copy todir="${dist.dir}/conf" file="${config.dir}/globs2" overwrite="true"/>
+        <copy todir="${dist.dir}/conf" file="${config.dir}/globs2.zimbra" overwrite="true"/>
         <copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}"
               overwrite="true"/>
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
@@ -728,6 +729,7 @@
         <copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}"
               overwrite="true"/>
         <copy todir="${dist.dir}/conf" file="${config.dir}/magic" overwrite="true"/>
+        <copy todir="${dist.dir}/conf" file="${config.dir}/magic.zimbra" overwrite="true"/>
         <copy todir="${dist.dir}/conf" file="${config.dir}/timezones.ics" overwrite="true"/>
         <copy todir="${dist.dir}/conf/msgs" overwrite="true">
             <fileset dir="${config.dir}/msgs"/>
