@@ -21,10 +21,11 @@ public class GranteeFlag {
     
     public static final short F_INDIVIDUAL = 0x0002;
     public static final short F_GROUP      = 0x0004;
-    public static final short F_AUTHUSER   = 0x0008;
-    public static final short F_PUBLIC     = 0x0010;
+    public static final short F_DOMAIN     = 0x0008;
+    public static final short F_AUTHUSER   = 0x0010;
+    public static final short F_PUBLIC     = 0x0020;
     
-    public static final short F_IS_ZIMBRA_ENTRY = 0x0020;
+    public static final short F_IS_ZIMBRA_ENTRY = 0x0040;
     
-    public static final short F_HAS_SECRET = 0x0040;
+    public static final short F_HAS_SECRET = 0x0080;
 }

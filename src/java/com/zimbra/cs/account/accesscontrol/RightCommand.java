@@ -1086,19 +1086,28 @@ public class RightCommand {
          * as a system admin and skip this check.
          */
         if (authedAcct != null) {
-            AccessManager am = AccessManager.getInstance();
-            boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
-            if (!canGrant)
-                throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
-            
-            RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
+            if (right.isUserRight()) {
+                // TODO:
+                // - if authed is user
+                // - if authed is admin
+                // - if grant/revoke target is/is not account??   
+                
+            } else {
+                AccessManager am = AccessManager.getInstance();
+                boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
+                if (!canGrant)
+                    throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
+                
+                RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
+            }
         }
         
         if (secret != null && !granteeType.allowSecret())
-            throw ServiceException.PERM_DENIED("password is not alloed for grantee type " + granteeType.getCode());
+            throw ServiceException.PERM_DENIED("password is not allowed for grantee type " + granteeType.getCode());
     }
             
-    public static void grantRight(Provisioning prov,
+    public static void grantRight(
+            Provisioning prov,
             Account authedAcct,
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee, String secret,
@@ -1136,11 +1145,12 @@ public class RightCommand {
         ACLUtil.grantRight(prov, targetEntry, aces);
     }
 
-    public static void revokeRight(Provisioning prov,
-                                   Account authedAcct,
-                                   String targetType, TargetBy targetBy, String target,
-                                   String granteeType, GranteeBy granteeBy, String grantee,
-                                   String right, RightModifier rightModifier) throws ServiceException {
+    public static void revokeRight(
+            Provisioning prov,
+            Account authedAcct,
+            String targetType, TargetBy targetBy, String target,
+            String granteeType, GranteeBy granteeBy, String grantee,
+            String right, RightModifier rightModifier) throws ServiceException {
         
         verifyAccessManager();
         
@@ -1153,8 +1163,15 @@ public class RightCommand {
         NamedEntry granteeEntry = null;
         String granteeId = null;
         try {
-            granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
-            granteeId = granteeEntry.getId();
+            if (gt.isZimbraEntry()) {
+                granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
+                granteeId = granteeEntry.getId();
+            } else {
+                // for all and pub, ZimbraACE will use the correct id, granteeId here will be ignored
+                // for guest, grantee id is the email
+                // for key, grantee id is the display name
+                granteeId = grantee;
+            }
         } catch (AccountServiceException e) {
             String code = e.getCode();
             if (AccountServiceException.NO_SUCH_ACCOUNT.equals(code) ||

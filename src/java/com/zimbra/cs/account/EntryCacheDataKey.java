@@ -10,11 +10,17 @@ public enum EntryCacheDataKey {
     /*
      * account
      */
+    ACCOUNT_COS,
     ACCOUNT_IS_GAL_SYNC_ACCOUNT,
-    ACCOUNT_EMAIL_FIELDS;
+    ACCOUNT_EMAIL_FIELDS,
+    
+    /*
+     * MailTarget
+     */
+    MAILTARGET_DOMAIN_ID;
     
     
-    // all access fo the key name must be through this, 
+    // all access of the key name must be through this, 
     // not calling name() or toString() directly
     public String getKeyName() {
         return name();

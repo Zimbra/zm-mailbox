@@ -31,7 +31,7 @@ public enum GranteeType {
     GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
     GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP      | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
     GT_AUTHUSER("all", (short)(                      GranteeFlag.F_AUTHUSER)),
-    GT_DOMAIN("dom",   (short)(GranteeFlag.F_ADMIN                            | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
+    GT_DOMAIN("dom",   (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_DOMAIN     | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
     GT_GUEST("gst",    (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
     GT_KEY("key",      (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
     GT_PUBLIC("pub",   (short)(                      GranteeFlag.F_PUBLIC));
@@ -84,6 +84,10 @@ public enum GranteeType {
     
     public boolean isZimbraEntry() {
         return hasFlags(GranteeFlag.F_IS_ZIMBRA_ENTRY);
+    }
+    
+    public boolean needsGranteeIdentity() {
+        return !(GT_AUTHUSER == this || GT_PUBLIC == this);
     }
     
     public boolean hasFlags(short flags) {

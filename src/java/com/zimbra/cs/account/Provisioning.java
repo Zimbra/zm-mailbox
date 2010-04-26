@@ -34,7 +34,6 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.AddressException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -369,7 +368,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return (serverId == null ? null : get(ServerBy.name, serverId));
     } 
     
-    private static final String DATA_COS = "COS";
+    
     
     /**
      * @return the COS object for this account, or null if account has no COS
@@ -378,7 +377,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Cos getCOS(Account acct) throws ServiceException {
         // CACHE. If we get reloaded from LDAP, cached data is cleared
-        Cos cos = (Cos) acct.getCachedData(DATA_COS);
+        Cos cos = (Cos) acct.getCachedData(EntryCacheDataKey.ACCOUNT_COS);
         if (cos == null) {
             String id = acct.getCOSId();
                 if (id != null) cos = get(CosBy.id, id); 
@@ -388,7 +387,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                     if (domainCosId != null) cos = get(CosBy.id, domainCosId);
                 }
                 if (cos == null) cos = get(CosBy.name, Provisioning.DEFAULT_COS_NAME);
-                if (cos != null) acct.setCachedData(DATA_COS, cos);
+                if (cos != null) acct.setCachedData(EntryCacheDataKey.ACCOUNT_COS, cos);
         }
         return cos;
     }

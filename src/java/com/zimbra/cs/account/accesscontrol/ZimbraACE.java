@@ -310,6 +310,7 @@ public class ZimbraACE {
             case GT_PUBLIC:   return true;
             case GT_AUTHUSER: return !(acct instanceof ACL.GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
             case GT_GROUP:    return prov.inDistributionList(acct, mGrantee);
+            case GT_DOMAIN:   return mGrantee.equals(acct.getDomainId());
             case GT_USER:     return mGrantee.equals(acct.getId());
             case GT_GUEST:    return matchesGuestAccount(acct);
             case GT_KEY:      return matchesAccessKey(acct);

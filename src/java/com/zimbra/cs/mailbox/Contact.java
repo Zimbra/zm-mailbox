@@ -196,7 +196,7 @@ public class Contact extends MailItem {
         String[] emailFields = null;
         
         // see if it is in cache
-        emailFields = (String[])acct.getCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS.getKeyName());
+        emailFields = (String[])acct.getCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS);
                 
         if (emailFields == null) {
             String[] fields = null;
@@ -219,7 +219,7 @@ public class Contact extends MailItem {
                 emailFields = EMAIL_FIELDS;
                     
             // we now have a non empty emailFields, cache it on the acccount
-            acct.setCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS.getKeyName(), emailFields);
+            acct.setCachedData(EntryCacheDataKey.ACCOUNT_EMAIL_FIELDS, emailFields);
         }
         
         return emailFields;

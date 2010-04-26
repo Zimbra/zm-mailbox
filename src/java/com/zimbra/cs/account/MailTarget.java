@@ -16,11 +16,17 @@ package com.zimbra.cs.account;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.DomainBy;
+
 public abstract class MailTarget extends NamedEntry {
     
     protected String mDomain;
     protected String mUnicodeDomain;
     protected String mUnicodeName;
+    
+    private static final String NO_DOMAIN_ID = "";
     
     public MailTarget(String name, String id, Map<String,Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
@@ -47,6 +53,33 @@ public abstract class MailTarget extends NamedEntry {
     
     public String getUnicodeName() {
         return mUnicodeName;
+    }
+    
+    public String getDomainId() {
+        String domainId = (String)getCachedData(EntryCacheDataKey.MAILTARGET_DOMAIN_ID);
+        
+        if (domainId == null) {
+            try {
+                String dname = getDomainName();
+                Provisioning prov = getProvisioning();
+                Domain domain =  dname == null ? null : (prov == null ? null : prov.get(DomainBy.name, dname));
+                if (domain != null)
+                    domainId = domain.getId();
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to get domain id for domain " + getDomainName() , e);
+            }
+            
+            if (domainId == null)
+                domainId = NO_DOMAIN_ID; // set it to a non-null string so we don't repeatedly look up the domain
+            
+            setCachedData(EntryCacheDataKey.MAILTARGET_DOMAIN_ID, domainId);
+        }
+        
+        // OK and more efficient to use == instead of equal
+        if (domainId == NO_DOMAIN_ID)
+            return null;
+        else
+            return domainId;
     }
 
 }

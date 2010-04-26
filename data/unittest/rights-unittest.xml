@@ -6,9 +6,19 @@
 
 <!-- 
 ========================================================
-                 for unittest only - remove
+                 for unittest only
 ========================================================
 -->
+
+<!--  
+      =============
+      user rights 
+      =============
+-->
+
+<right name="test-user" userRight="1">
+  <desc>a user right</desc>
+</right>
 
 <!--  
       =============
@@ -45,6 +55,10 @@
 
 <right name="test-preset-server" type="preset" targetType="server">
   <desc>a preset server right</desc>
+</right>
+
+<right name="test-preset-xmppcomponent" type="preset" targetType="xmppcomponent">
+  <desc>a preset xmppcomponent right</desc>
 </right>
 
 <right name="test-preset-zimlet" type="preset" targetType="zimlet">

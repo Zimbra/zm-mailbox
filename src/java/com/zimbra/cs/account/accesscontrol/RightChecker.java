@@ -215,7 +215,7 @@ public class RightChecker {
         
         //
         // if the target is a domain-ed entry, get the domain of the target.
-        // It is need for checking the cross domain right.
+        // It is needed for checking the cross domain right.
         //
         Domain targetDomain = TargetType.getTargetDomain(prov, target);
         
@@ -298,8 +298,14 @@ public class RightChecker {
         if (result != null) 
             return result;
        
-        // if right is an user right, check authed users and public
+        // if right is an user right, check domain, authed users and public grantees
         if (rightNeeded.isUserRight()) {
+            // as an zimbra user in the same domain
+            result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, 
+                    (short)(GranteeFlag.F_DOMAIN), via, seenRight);
+            if (result != null) 
+                return result;
+            
             // all authed zimbra user
             result = checkPresetRight(acl, targetType, grantee, rightNeeded, canDelegateNeeded, 
                     (short)(GranteeFlag.F_AUTHUSER), via, seenRight);
@@ -427,7 +433,7 @@ public class RightChecker {
      * "eligible" group the account is in.  
      *
      * Eligible:
-     *   - for admin rights granted to a group, the grant iseffective only if the group has
+     *   - for admin rights granted to a group, the grant is effective only if the group has
      *     zimbraIsAdminGroup=TRUE.  The the group's zimbraIsAdminGroup is set to false after 
      *     if grant is made, the grant is still there on the targe entry, but becomes useless.
      */

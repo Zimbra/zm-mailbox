@@ -322,15 +322,21 @@ public class ProvUtil implements HttpDebugListener {
             // grantee types
             System.out.println();
             StringBuilder gt = new StringBuilder();
+            StringBuilder gtNeedsGranteeIdentity = new StringBuilder();
             GranteeType[] gts = GranteeType.values();
             for (int i = 0; i < gts.length; i++) {
-                if (gts[i].allowedForAdminRights()) {
-                    if (i > 0)
-                        gt.append(", ");
-                    gt.append(gts[i].getCode());
-                }
+                if (i > 0)
+                    gt.append(", ");
+                gt.append(gts[i].getCode());
+                
+                if (gts[i].needsGranteeIdentity())
+                    gtNeedsGranteeIdentity.append(gts[i].getCode() + " ");
             }
             System.out.println("    {grantee-type} = " + gt.toString());
+            System.out.println();
+            System.out.println("    {grantee-id|grantee-name} is required if grantee-type is: " + gtNeedsGranteeIdentity + ",");
+            System.out.println("        otherwise {target-id|target-name} should not be specified");
+            
         }
         
         static void helpLOG() {
@@ -442,7 +448,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
-        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} {grantee-id|grantee-name} {[-]right}", Category.RIGHT, 4, 5, null, new RightCommandHelp()),
+        GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {[-]right}", Category.RIGHT, 4, 6, null, new RightCommandHelp()),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -3661,16 +3667,20 @@ public class ProvUtil implements HttpDebugListener {
     private void getRightArgsGrantee(RightArgs ra, boolean needGranteeType, boolean needSecret) throws ServiceException, ArgException {
         if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
         
-        if (needGranteeType)
+        GranteeType gt = null;
+        if (needGranteeType) {
             ra.mGranteeType = ra.mArgs[ra.mCurPos++];
-        else
+            gt = GranteeType.fromCode(ra.mGranteeType);
+        } else
             ra.mGranteeType = null;
+        
+        if (gt == GranteeType.GT_AUTHUSER || gt == GranteeType.GT_PUBLIC)
+            return;
         
         if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
         ra.mGranteeIdOrName = ra.mArgs[ra.mCurPos++];
         
-        if (needSecret && ra.mGranteeType != null) {
-            GranteeType gt = GranteeType.fromCode(ra.mGranteeType);
+        if (needSecret && gt != null) {
             if (gt.allowSecret()) {
                 if (ra.mCurPos >= ra.mArgs.length) throw new ArgException("not enough number of arguments");
                 ra.mSecret = ra.mArgs[ra.mCurPos++];
@@ -3990,7 +4000,7 @@ public class ProvUtil implements HttpDebugListener {
         getRightArgs(ra, true, true);
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
     
         mProv.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
                          ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, ra.mSecret,

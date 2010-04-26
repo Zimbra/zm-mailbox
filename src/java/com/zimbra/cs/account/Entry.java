@@ -440,6 +440,20 @@ public abstract class Entry implements ToZJSONObject {
             mData = new HashMap<String, Object>();
         mData.put(key, value);
     }
+    
+    /**
+     * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared via
+     * a call to resetData.
+     *
+     * TODO: retire setCachedData(String key, Object value) and use only this signature
+     *       IMPORTANT: REMEMBER TO ADD synchronized TO THIS METHOD WHEN WE DO THE REFACTORING. 
+
+     * @param key
+     * @param value
+     */
+    public void setCachedData(EntryCacheDataKey key, Object value) {
+        setCachedData(key.getKeyName(), value);
+    }
 
     /**
      * get an entry from the cache.
@@ -449,6 +463,19 @@ public abstract class Entry implements ToZJSONObject {
     public synchronized Object getCachedData(String key) {
         if (mData == null) return null;
         return mData.get(key);
+    }
+    
+    /**
+     * get an entry from the cache.
+     * 
+     * TODO: retire getCachedData(String key) and use only this signature
+     *       IMPORTANT: REMEMBER TO ADD synchronized TO THIS METHOD WHEN WE DO THE REFACTORING. 
+     * 
+     * @param key
+     * @return
+     */
+    public Object getCachedData(EntryCacheDataKey key) {
+        return getCachedData(key.getKeyName());
     }
     
     protected void getDefaults(AttributeFlag flag, Map<String,Object> defaults) throws ServiceException {
