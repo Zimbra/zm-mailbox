@@ -908,12 +908,23 @@ extends TestCase {
         assertEquals("[\"x\"", RuleRewriter.stripBracketsAndQuotes("[\"x\""));
     }
     
+    /**
+     * Confirms that we handle the negative test flag properly when the first
+     * test is negative and the second test is not (bug 46007).
+     */
+    public void testNegativeAndPositiveTest()
+    throws Exception {
+        String script = new String(ByteUtil.getContent(new File("/opt/zimbra/unittest/bug46007.sieve")));
+        String normalized = normalize(script); // Convert to XML and back again.
+        assertEquals(normalizeWhiteSpace(script), normalizeWhiteSpace(normalized));
+    }
+    
     private String normalizeWhiteSpace(String script) {
         StringBuilder buf = new StringBuilder(script.length());
         boolean inWhiteSpace = false;
         for (int i = 0; i < script.length(); i++) {
             String c = script.substring(i, i + 1);
-            if (c.matches("\\s") || c.equals("\\n")) {
+            if (c.matches("\\s") || c.equals("\r") || c.equals("\n")) {
                 if (!inWhiteSpace) {
                     buf.append(" ");
                     inWhiteSpace = true;

@@ -179,86 +179,92 @@ public abstract class SieveVisitor {
         if ("not".equalsIgnoreCase(nodeName)) {
             props.isNegativeTest = true;
             accept(node, props);
-        } else if ("allof".equalsIgnoreCase(nodeName)) {
-            props.condition = Condition.allof;
-            visitRule(node, VisitPhase.begin, props);
-            accept(node, props);
-            visitRule(node, VisitPhase.end, props);
-        } else if ("anyof".equalsIgnoreCase(nodeName)) {
-            props.condition = Condition.anyof;
-            visitRule(node, VisitPhase.begin, props);
-            accept(node, props);
-            visitRule(node, VisitPhase.end, props);
-        } else if ("header".equalsIgnoreCase(nodeName)) {
-            String s = stripLeadingColon(getValue(node, 0, 0));
-            StringComparison comparison = StringComparison.fromString(s);
-            String header = getValue(node, 0, 1, 0, 0);
-            String value = getValue(node, 0, 2, 0, 0);
-            
-            visitHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
-            accept(node, props);
-            visitHeaderTest(node, VisitPhase.end, props, header, comparison, value);
-        } else if ("exists".equalsIgnoreCase(nodeName)) {
-            String header = getValue(node, 0, 0, 0, 0);
-            
-            visitHeaderExistsTest(node, VisitPhase.begin, props, header);
-            accept(node, props);
-            visitHeaderExistsTest(node, VisitPhase.end, props, header);
-        } else if ("size".equalsIgnoreCase(nodeName)) {
-            String s = stripLeadingColon(getValue(node, 0, 0));
-            NumberComparison comparison = NumberComparison.fromString(s);
-            SieveNode sizeNode = (SieveNode) getNode(node, 0, 1);
-            String sizeString = sizeNode.getFirstToken().toString();
-            int size = 0;
-            try {
-                size = FilterUtil.parseSize(sizeString);
-            } catch (NumberFormatException e) {
-                throw ServiceException.INVALID_REQUEST("Invalid size value " + sizeString, e);
-            }
-            
-            visitSizeTest(node, VisitPhase.begin, props, comparison, size, sizeString);
-            accept(node, props);
-            visitSizeTest(node, VisitPhase.end, props, comparison, size, sizeString);
-        } else if ("date".equalsIgnoreCase(nodeName)) {
-            String s = stripLeadingColon(getValue(node, 0, 0));
-            DateComparison comparison = DateComparison.fromString(s);
-            String dateString = getValue(node, 0, 1, 0, 0);
-            Date date = FilterUtil.SIEVE_DATE_PARSER.parse(dateString);
-            if (date == null) {
-                throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
-            }
-            
-            visitDateTest(node, VisitPhase.begin, props, comparison, date);
-            accept(node, props);
-            visitDateTest(node, VisitPhase.end, props, comparison, date);
-        } else if ("body".equalsIgnoreCase(nodeName)) {
-            String value = getValue(node, 0, 1, 0, 0);
-            
-            visitBodyTest(node, VisitPhase.begin, props, value);
-            accept(node, props);
-            visitBodyTest(node, VisitPhase.end, props, value);
-        } else if ("attachment".equalsIgnoreCase(nodeName)) {
-            visitAttachmentTest(node, VisitPhase.begin, props);
-            accept(node, props);
-            visitAttachmentTest(node, VisitPhase.end, props);
-        } else if ("addressbook".equalsIgnoreCase(nodeName)) {
-            String header = getValue(node, 0, 1, 0, 0);
-            String folderPath = getValue(node, 0, 2, 0, 0);
-            visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
-            accept(node, props);
-            visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
-        } else if ("invite".equalsIgnoreCase(nodeName)) {
-            List<String> methods = Collections.emptyList();
-            if (getNode(node, 0).jjtGetNumChildren() > 0) {
-                // Arguments node has children.
-                methods = getMultiValue(node, 0, 1, 0);
-            }
-            visitInviteTest(node, VisitPhase.begin, props, methods);
-            accept(node, props);
-            visitInviteTest(node, VisitPhase.end, props, methods);
         } else {
-            ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
-            accept(node, props);
+            if ("allof".equalsIgnoreCase(nodeName)) {
+                props.condition = Condition.allof;
+                visitRule(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitRule(node, VisitPhase.end, props);
+            } else if ("anyof".equalsIgnoreCase(nodeName)) {
+                props.condition = Condition.anyof;
+                visitRule(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitRule(node, VisitPhase.end, props);
+            } else if ("header".equalsIgnoreCase(nodeName)) {
+                String s = stripLeadingColon(getValue(node, 0, 0));
+                StringComparison comparison = StringComparison.fromString(s);
+                String header = getValue(node, 0, 1, 0, 0);
+                String value = getValue(node, 0, 2, 0, 0);
+
+                visitHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
+                accept(node, props);
+                visitHeaderTest(node, VisitPhase.end, props, header, comparison, value);
+            } else if ("exists".equalsIgnoreCase(nodeName)) {
+                String header = getValue(node, 0, 0, 0, 0);
+
+                visitHeaderExistsTest(node, VisitPhase.begin, props, header);
+                accept(node, props);
+                visitHeaderExistsTest(node, VisitPhase.end, props, header);
+            } else if ("size".equalsIgnoreCase(nodeName)) {
+                String s = stripLeadingColon(getValue(node, 0, 0));
+                NumberComparison comparison = NumberComparison.fromString(s);
+                SieveNode sizeNode = (SieveNode) getNode(node, 0, 1);
+                String sizeString = sizeNode.getFirstToken().toString();
+                int size = 0;
+                try {
+                    size = FilterUtil.parseSize(sizeString);
+                } catch (NumberFormatException e) {
+                    throw ServiceException.INVALID_REQUEST("Invalid size value " + sizeString, e);
+                }
+
+                visitSizeTest(node, VisitPhase.begin, props, comparison, size, sizeString);
+                accept(node, props);
+                visitSizeTest(node, VisitPhase.end, props, comparison, size, sizeString);
+            } else if ("date".equalsIgnoreCase(nodeName)) {
+                String s = stripLeadingColon(getValue(node, 0, 0));
+                DateComparison comparison = DateComparison.fromString(s);
+                String dateString = getValue(node, 0, 1, 0, 0);
+                Date date = FilterUtil.SIEVE_DATE_PARSER.parse(dateString);
+                if (date == null) {
+                    throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
+                }
+
+                visitDateTest(node, VisitPhase.begin, props, comparison, date);
+                accept(node, props);
+                visitDateTest(node, VisitPhase.end, props, comparison, date);
+            } else if ("body".equalsIgnoreCase(nodeName)) {
+                String value = getValue(node, 0, 1, 0, 0);
+
+                visitBodyTest(node, VisitPhase.begin, props, value);
+                accept(node, props);
+                visitBodyTest(node, VisitPhase.end, props, value);
+            } else if ("attachment".equalsIgnoreCase(nodeName)) {
+                visitAttachmentTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitAttachmentTest(node, VisitPhase.end, props);
+            } else if ("addressbook".equalsIgnoreCase(nodeName)) {
+                String header = getValue(node, 0, 1, 0, 0);
+                String folderPath = getValue(node, 0, 2, 0, 0);
+                visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
+                accept(node, props);
+                visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
+            } else if ("invite".equalsIgnoreCase(nodeName)) {
+                List<String> methods = Collections.emptyList();
+                if (getNode(node, 0).jjtGetNumChildren() > 0) {
+                    // Arguments node has children.
+                    methods = getMultiValue(node, 0, 1, 0);
+                }
+                visitInviteTest(node, VisitPhase.begin, props, methods);
+                accept(node, props);
+                visitInviteTest(node, VisitPhase.end, props, methods);
+            } else {
+                ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
+                accept(node, props);
+            }
+            
+            // Done processing the current test.  Reset the negative test flag for
+            // the next test (bug 46007).
+            props.isNegativeTest = false;
         }
 
         visitTest(node, VisitPhase.end, props);
