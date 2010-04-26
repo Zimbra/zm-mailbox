@@ -24,15 +24,17 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ModifyIdentity extends DocumentHandler {
-	
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
+        Identity identity = null;
         
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
@@ -47,17 +49,39 @@ public class ModifyIdentity extends DocumentHandler {
             if (!it.next().toLowerCase().startsWith("zimbrapref")) // if this changes, make sure we don't let them ever change objectclass
                 it.remove();
 
-        Identity ident = null;
         String key, id = eIdentity.getAttribute(AccountConstants.A_ID, null);
         if (id != null) {
-            ident = prov.get(account, IdentityBy.id, key = id);
+            identity = prov.get(account, IdentityBy.id, key = id);
         } else {
-            ident = prov.get(account, IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
+            identity = prov.get(account, IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
         }
-        if (ident == null)
+
+        if (identity == null) {
+            String[] childIds = account.getChildAccount();
+            for (String childId : childIds) {
+                Account childAccount = prov.get(AccountBy.id, childId, zsc.getAuthToken());
+                if (childAccount != null) {
+                    Identity childIdentity;
+
+                    if (id != null) {
+                        childIdentity = prov.get(childAccount, IdentityBy.id, key = id);
+                    } else {
+                        childIdentity = prov.get(childAccount, IdentityBy.name, key = eIdentity.getAttribute(AccountConstants.A_NAME));
+                    }
+
+                    if (childIdentity != null) {
+                        identity = childIdentity;
+                        account = childAccount;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (identity == null)
             throw AccountServiceException.NO_SUCH_IDENTITY(key);
 
-        prov.modifyIdentity(account, ident.getName(), attrs);
+        prov.modifyIdentity(account, identity.getName(), attrs);
         
         Element response = zsc.createElement(AccountConstants.MODIFY_IDENTITY_RESPONSE);
         return response;
