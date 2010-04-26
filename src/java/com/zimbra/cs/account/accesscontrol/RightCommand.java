@@ -41,6 +41,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.SearchGrantsResults;
@@ -1035,14 +1036,13 @@ public class RightCommand {
     private static void validateGrant(Account authedAcct,
             TargetType targetType, Entry targetEntry,
             GranteeType granteeType, NamedEntry granteeEntry, String secret,
-            Right right, boolean revoking) throws ServiceException {
-        
-        // TODO: currently user right does not go through RightCommand, it goes 
-        //       directly to RightUtil, need to fix for the target type check.
-        //       should change the mail GrantPermission to call RightCommand or provisioning
-        //       method after we switch to the new access manager(the canPerform method is 
-        //       not supported in the current access manager).   or should we?
-        if (!right.isUserRight()) {
+            Right right, RightModifier rightModifier, boolean revoking) throws ServiceException {
+            
+        /*
+         * check grantee if the right is an admin right, or if the right is an user right with 
+         * can_delegate modifier    
+         */
+        if (!right.isUserRight() || RightModifier.RM_CAN_DELEGATE == rightModifier){
             
             /*
              * check if the grantee is an admin account or admin group
@@ -1054,8 +1054,9 @@ public class RightCommand {
                 boolean isCDARight = CrossDomain.validateCrossDomainAdminGrant(right, granteeType);
                 if (!isCDARight &&
                     !RightChecker.isValidGranteeForAdminRights(granteeType, granteeEntry))
-                    throw ServiceException.INVALID_REQUEST("grantee must be a delegated admin account or admin group, " +
-                            "it cannot be a global admin account.", null);
+                    throw ServiceException.INVALID_REQUEST("grantee for admin right or for user right " + 
+                            "with the can delegate modifier must be a delegated admin account or admin group, " +
+                            "it cannot be a global admin account or a regular user account.", null);
             }
             
             /*
@@ -1078,28 +1079,28 @@ public class RightCommand {
         /*
          * check if the authed account can grant this right on this target
          * 
-         * a grantor can only delegate the whole or part of his rights on the 
-         * same target or a subset of target on which the grantors own rights 
-         * were granted.
+         * A grantor can only delegate the whole or part of his delegable rights 
+         * (rights with t he canDelegate modifier) on the same target or a subset 
+         * of targets on which the grantor's own rights were granted.   
+         * 
+         * Once that check is passed, the admin can grant the right to any grantees
+         * (e.g. to a group, or for user rights to pub, all, guest, ...).
+         * 
+         * The same rule applies when and admin is granting an user right.
+         * e.g. if and admin is granting the invite right on a domain, the 
+         *      admin must have effective +invite right on the domain.
          * 
          * if authedAcct==null, the call site is LdapProvisioning, treat it 
          * as a system admin and skip this check.
          */
         if (authedAcct != null) {
-            if (right.isUserRight()) {
-                // TODO:
-                // - if authed is user
-                // - if authed is admin
-                // - if grant/revoke target is/is not account??   
+            
+            AccessManager am = AccessManager.getInstance();
+            boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
+            if (!canGrant)
+                throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
                 
-            } else {
-                AccessManager am = AccessManager.getInstance();
-                boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
-                if (!canGrant)
-                    throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
-                
-                RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
-            }
+            RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
         }
         
         if (secret != null && !granteeType.allowSecret())
@@ -1136,7 +1137,7 @@ public class RightCommand {
         // right
         Right r = RightManager.getInstance().getRight(right);
         
-        validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, secret, r, false);
+        validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, secret, r, rightModifier, false);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, secret);
@@ -1195,7 +1196,7 @@ public class RightCommand {
         Right r = RightManager.getInstance().getRight(right);
         
         if (granteeEntry != null)
-            validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, null, r, true);
+            validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, null, r, rightModifier, true);
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, null);

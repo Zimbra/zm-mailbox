@@ -57,6 +57,8 @@ public class UserRight extends Right {
     
     @Override
     boolean overlaps(Right other) throws ServiceException {
-        throw ServiceException.FAILURE("internal error, unsupported", null);
+        return this==other; 
+        // no need to check is other is a combo right, because
+        // combo right can only contain admin rights.
     }
 }

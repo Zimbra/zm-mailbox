@@ -242,6 +242,11 @@ public class RightManager {
             throw ServiceException.PARSE_ERROR("missing right name", null);   
             
         Right r = getRight(rightName); // getRight will throw if the right does not exist.
+        // combo right can only contain admin rights
+        if (r.isUserRight())
+            throw ServiceException.PARSE_ERROR(r.getName() + " is an user right, combo right " +
+                    "can only contain admin rights.", null);   
+            
         right.addRight(r);
     }
     

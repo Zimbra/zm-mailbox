@@ -56,7 +56,10 @@ public class ComboRight extends AdminRight {
         
         return sb.toString();
     }
-    void addRight(Right right) {
+    void addRight(Right right) throws ServiceException {
+        // sanity check, combo right can only contain admin rights
+        if (right.isUserRight())
+            throw ServiceException.FAILURE("internal error", null);
         mRights.add(right);
     }
     
