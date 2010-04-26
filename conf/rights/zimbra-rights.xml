@@ -53,17 +53,17 @@
 <right name="adminLoginAs" type="preset" targetType="account">
   <desc>login as the user as an admin.
         This is different from the loginAs user right as follows:
-            - loginAs is effective only when logged in as an user
-            - adminLoginAs is effective only when logged in as an admin
+            - loginAs is effective only when login as an user
+            - adminLoginAs is effective only when login as an admin (i.e. present an admn auth token)
         
-        That is:
-            If you are an admin and has the adminLoginAs right on user1,
-            the adminLoginAs is effective only when you login as an admin.
-            It is not effective if you login as a regular user.
+        For example:
+            If an admin account has the adminLoginAs right on user1,
+            the adminLoginAs is effective only when the admin account login as an admin.
+            It is not effective when the admin account login as a regular user.
             
-            Likewise if another user granted you the loginAs right, the 
-            right is effective when you logged in as a regular user, it is 
-            not effective when you logged in as an admin.
+            Likewise if an user granted the loginAs right to an admin account, the 
+            right is effective when the account account login as a regular user, 
+            it is not effective when the admin account login as an admin.
   </desc>
 </right>
 
