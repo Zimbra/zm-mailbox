@@ -29,10 +29,6 @@ implements SharedInputStream {
     
     private static final Log sLog = LogFactory.getLog(BlobInputStream.class);
 
-    static {
-        sLog.info("Using patched version of BlobInputStream.");
-    }
-    
     /**
      * The file that stores the content of this stream.  Only the parent
      * stream stores the file.  All child objects get the path from the top-level
@@ -262,9 +258,29 @@ implements SharedInputStream {
             return 0;
         }
         
-        // Make sure we don't read past the endpoint passed to the constructor
+        // Make sure we don't read past the endpoint passed to the constructor.
         len = (int) Math.min(len, mEnd - mPos);
-        int numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, mPos, b, off, len);
+        int numRead = 0;
+        
+        if (mPos >= mBufPos && mPos < (mBufPos + mBufSize)) {
+            // Current position is inside the buffer.  Read from the buffer.
+            numRead = (int) Math.min(len, mBufPos + mBufSize - mPos); // Don't read past the end of the buffer.
+            int bufStartIndex = (int) (mPos - mBufPos);
+            System.arraycopy(mBuf, bufStartIndex, b, off, numRead);
+        } else {
+            if (len > mBuf.length) {
+                // Read directly from the file.
+                numRead = getFileDescriptorCache().read(mRoot.mFile.getPath(), mRawSize, mPos, b, off, len);
+            } else {
+                // Fill the buffer and copy data.
+                int numReadIntoBuffer = fillBuffer(mPos);
+                if (numReadIntoBuffer <= 0) {
+                    return -1;
+                }
+                System.arraycopy(mBuf, 0, b, off, len);
+                numRead = len;
+            }
+        }
         if (numRead > 0) {
             mPos += numRead;
         } else {

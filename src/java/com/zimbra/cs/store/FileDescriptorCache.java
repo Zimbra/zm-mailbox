@@ -79,17 +79,6 @@ implements UncompressedFileCache.Listener<String>
 
 
     /**
-     * Reads one byte from the specified file.
-     */
-    public int read(String path, long rawSize, long fileOffset)
-    throws IOException {
-        SharedFile file = getSharedFile(path, rawSize);
-        int retVal = file.read(fileOffset);
-        closeIfPruned(path, file);
-        return retVal;
-    }
-    
-    /**
      * Reads from the specified file.
      */
     public int read(String path, long rawSize, long fileOffset, byte[] buf, int bufferOffset, int len)

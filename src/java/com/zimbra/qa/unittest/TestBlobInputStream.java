@@ -28,7 +28,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.StoreManager;
 
-
+/**
+ * This test is server-side because it depends on <tt>FileDescriptorCache</tt>.
+ */
 public class TestBlobInputStream extends TestCase {
 
     private File mFile;
@@ -296,12 +298,5 @@ public class TestBlobInputStream extends TestCase {
     		mFile.delete();
     	}
     	TestUtil.setServerAttr(Provisioning.A_zimbraMailFileDescriptorBufferSize, mOrigBufferSize);
-    }
-
-    public static void main(String[] args)
-    throws Exception {
-        TestUtil.cliSetup();
-        StoreManager.getInstance().startup();
-        TestUtil.runTest(TestBlobInputStream.class);
     }
 }
