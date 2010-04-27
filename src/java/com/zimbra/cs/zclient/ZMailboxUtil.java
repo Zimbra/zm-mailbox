@@ -286,7 +286,8 @@ public class ZMailboxUtil implements DebugListener {
         ITEM("help on item-related commands"),
         MESSAGE("help on message-related commands"),
         MISC("help on misc commands"),
-        PERMISSION("help on permission commands"),
+        PERMISSION("help on permission commands",
+                "To grant/revoke permission on entries an account can inherit grants from(group, domain, global), use \"zmprov grr/rvr\" commands."),
         SEARCH("help on search-related commands"),
         TAG("help on tag-related commands");
 
@@ -386,7 +387,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
                 O_OUTPUT_FILE, O_START_TIME, O_END_TIME, O_URL),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
-        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|key {name} [{access key}]|all|public {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
+        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
         LIST_PERMISSION("listPermission", "lp", "", "list and describe all rights that can be granted", Category.PERMISSION, 0, 0, O_VERBOSE),
@@ -419,7 +420,7 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
-        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|key {name}|all|public {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 3),
+        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
@@ -1574,6 +1575,7 @@ public class ZMailboxUtil implements DebugListener {
         switch (type) {
         case usr:
         case grp:
+        case dom:    
             if (args.length != 3) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
             granteeName = args[1];
             right = args[2];
@@ -1630,7 +1632,7 @@ public class ZMailboxUtil implements DebugListener {
         ZAce ace = getAceFromArgs(args);
 
         ZAce.GranteeType granteeType= ace.getGranteeType();
-        if (granteeType == ZAce.GranteeType.usr || granteeType == ZAce.GranteeType.grp) {
+        if (granteeType == ZAce.GranteeType.usr || granteeType == ZAce.GranteeType.grp || granteeType == ZAce.GranteeType.dom) {
             // convert grantee to grantee id if it is a name
             String zid = null;
             String granteeName = ace.getGranteeName();
@@ -1643,7 +1645,7 @@ public class ZMailboxUtil implements DebugListener {
                 }
             }
             if (zid == null)
-                throw ZClientException.CLIENT_ERROR("unable to resolve zimbra id for: "+granteeName, null);
+                throw ZClientException.CLIENT_ERROR("no such grant", null);
             ace.setGranteeId(zid);
         }
 

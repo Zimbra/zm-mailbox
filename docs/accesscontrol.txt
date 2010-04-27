@@ -43,17 +43,21 @@ user A(e.g. allow all authed users).
 
 GRANTEES
 ========
-Like mail object based access controls, to avoid support calls:
+Like mail object based access controls:
 (1) a user always has full, irrevocable rights to their own mailbox.
-and 
-(2) administrators are allowed full access to everything on the system,
-    until we have a full-featured role based delegated admin implementation.
+
+(2) global administrators are allowed full access to everything on the system.
+
+(3) delegated administrators are allowed full access to a user's 
+    mailbox if the delegated admin as effective adminLoginAs/adminLoginCalendarResourceAs
+    right on the user.
 
 Rights can be granted(allowed or denied) to other principals.  
 The type of supported grantees are:
 
         user        - a Zimbra user
         group       - a Zimbra group(distribution list)
+        domain      - a Zimbra domain
         all-authed  - all authed Zimbra usres
         key         - an external user with an access key
         public      - the public
@@ -151,10 +155,13 @@ Note: zimbraACE should NOT be directly modified via zmprov or any LDAP tools.
       
 GRANTING TOOLS
 ==============
-Before WEB UI is available for granting, revoking, viewing rights, zmmailbox is the sole 
-tool that should be used for those tasks.
+(A) WEB UI
 
-zmmailbox commands:
+(B) zmmailbox commands
+    - for granting/revoking rights on the selected user account 
+    - does not have privilege to grant/revoke rights on targets 
+      other than the selected account.  To grant a right on 
+      group, domain, or global level use the zmprov command.
 
 1. List all permission related commands
    command: help permission
@@ -167,12 +174,14 @@ zmmailbox commands:
           getPermission(gp)            [opts] [right1 [right2...]]
             -v/--verbose                 verbose output
         
-          grantPermission(grp)         {account {name}|group {name}|all|public {[-]permission}}
+          grantPermission(grp)         {account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}
         
           listPermission(lp)           [opts] 
             -v/--verbose                 verbose output
         
-          revokePermission(rvp)        {account {name}|group {name}|all|public {[-]permission}}
+          revokePermission(rvp)        {account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}
+        
+          To grant/revoke permission on entries an account can inherit grants from(group, domain, global), use "zmprov grr/rvr" commands.
             
        
 2. List and describe all permissions that can be granted 
@@ -252,6 +261,10 @@ zmmailbox commands:
           granted: 
             group group2@example.com invite
             
+       mbox user1@example.com> grp domain example.com invite       
+            granted: 
+              domain example.com invite
+            
        mbox user1@example.com> grp all viewFreeBusy
           granted: 
             all  viewFreeBusy
@@ -266,6 +279,7 @@ zmmailbox commands:
                  invite   account  user3@example.com
                  invite     group  group2@example.com
           -viewFreeBusy     group  group1@foo.com
+                 invite    domain  example.com
           -viewFreeBusy    public  
            viewFreeBusy       all  
    
@@ -326,6 +340,58 @@ zmmailbox commands:
                
    Note: when revoking a negative permission, "-" has to be prepended to the right, 
          otherwise the permission will not be revoked.  See example above.
+      
          
-          
+(C) zmprov commands
+1. Granting
+   - use the grr(grantRight) command
    
+   - "zmprov help right" for help
+   
+   - legitimate granting target types for user rights:
+     account, calresource, dl, domain, global
+     
+   - global adminS (zimbraIsAdminAccount is TRUE) can grant any user right on 
+     targets of any of the legitimate granting types.
+     e.g. - grant the invite right on a domain to public
+            > zmprov grr domain test.com pub invite
+          
+     e.g. - grant the viewFreeBusy right on a domain to all zimbra users in the same domain
+            zmprov grr domain test.com dom test.com viewFreeBusy
+            
+     e.g. - grant the viewFreeBusy right on a domain to all zimbra users in another domain
+            (all users in domain test2.com can access fb data on all users in domain test1.com)
+            zmprov grr domain test1.com dom test2.com viewFreeBusy 
+            
+     e.g. - grant the viewFreeBusy right on the global target to all zimbra users on the system
+            zmprov grr global all viewFreeBusy
+            
+     e.g. - grant negative viewFreeBusy on the global target to all users in a domain  
+            zmprov grr global domain test.com -viewFreeBusy 
+            
+     e.g. - grant delegable viewFreeBusy right on a domain to a delegated admin
+            zmprov grr domain test.com usr admin1@example.com +viewFreeBusy     
+   
+   - delegated admins (zimbraIsDelegatedAdminAccount IS true) can grant on targets 
+     on which the admin has effective "can delegate" privilege for the right.
+     e.g. - auth as an delegated admin, try to grant the viewFreeBusy right on a domain 
+            when the delegated admin does not have effective "can delegate" privilege for 
+            the right on the domain -> will get PERM-DENIED
+                zmprov cd example.com
+                zmprov ca da@example.com test123 zimbraIsDelegatedAdminAccount TRUE
+                zmprov cd test1.com
+                zmprov cd test2.com
+                zmprov -a da@example.com -p test123 grr domain test1.com dom test2.com viewFreeBusy
+                ERROR: service.PERM_DENIED (permission denied: insuffcient right to grant)
+            
+          - global admin granrt the "can delegate" privilege to the delegated admin for 
+            the right on the domain
+                zmprov grr domain test1.com usr da@example.com +viewFreeBusy
+            
+          - now the delegated admin can grant it on the domain
+                zmprov -a da@example.com -p test123 grr domain test1.com dom test2.com viewFreeBusy
+
+2. Revoking              
+   - use the rvr(revokeRight) command
+   
+   - "zmprov help right" for help

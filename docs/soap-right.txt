@@ -167,7 +167,7 @@ all = whether to include grants granted to groups the specified grantee belongs 
 
          
 ----------------------------------------------------------
-Returns *effective* rights the authenticated admin has on the specified target entry.
+Returns *effective* *admin* rights the authenticated admin has on the specified target entry.
         
 Effective rights are the rights the admin is actually allowed.  It is the net result of 
 applying ACL checking rules given the target and grantee.  Specifically denied rights 
@@ -342,7 +342,7 @@ e.g. 2 creating a server:
 </GetCreateObjectAttrsResponse>
     
 ----------------------------------------------------------
-Get all effective rights.
+Get all effective *admin* rights.
 
       
 <GetAllEffectiveRightsRequest>

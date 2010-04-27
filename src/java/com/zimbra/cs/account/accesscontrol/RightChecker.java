@@ -956,7 +956,7 @@ public class RightChecker {
         
         if (rightBearer instanceof GlobalAdmin) {
             // all preset rights on the target type
-            presetRights = getAllExecutablePresetRights(targetType);
+            presetRights = getAllExecutableAdminPresetRights(targetType);
             
             // all attrs on the target type
             allowSetAttrs = AllowedAttrs.ALLOW_ALL_ATTRS();
@@ -968,7 +968,7 @@ public class RightChecker {
             Grantee grantee = (Grantee)rightBearer;
             
             // get effective preset rights
-            presetRights = getEffectivePresetRights(grantee, target);
+            presetRights = getEffectiveAdminPresetRights(grantee, target);
             
             // get effective setAttrs rights
             allowSetAttrs = accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
@@ -1049,7 +1049,7 @@ public class RightChecker {
         return effAttrs;
     }
     
-    private static Set<Right> getEffectivePresetRights(Grantee grantee, Entry target) throws ServiceException {
+    private static Set<Right> getEffectiveAdminPresetRights(Grantee grantee, Entry target) throws ServiceException {
         
         Provisioning prov = Provisioning.getInstance();
         
@@ -1068,7 +1068,7 @@ public class RightChecker {
         // check the target entry itself
         List<ZimbraACE> acl = ACLUtil.getAllACEs(target);
         if (acl != null) {
-            collectPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
+            collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
             relativity += 2;
         }
         
@@ -1111,7 +1111,7 @@ public class RightChecker {
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null) {
-                        collectPresetRightOnTarget(aclsOnGroupTargets, targetType, granteeIds, relativity, allowed, denied);
+                        collectAdminPresetRightOnTarget(aclsOnGroupTargets, targetType, granteeIds, relativity, allowed, denied);
                         relativity += 2;
                     }
                         
@@ -1121,7 +1121,7 @@ public class RightChecker {
                     
                 if (acl == null)
                     continue;
-                collectPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
+                collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
                 relativity += 2;
             }
         }
@@ -1149,20 +1149,20 @@ public class RightChecker {
         return allowed.keySet();
     }
     
-    private static void collectPresetRightOnTarget(List<ZimbraACE> acl, TargetType targeType,
+    private static void collectAdminPresetRightOnTarget(List<ZimbraACE> acl, TargetType targeType,
             Set<String> granteeIds, Integer relativity,
             Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        collectPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
+        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
         
         // as a group member, bump up the relativity
-        granteeFlags = (short)(GranteeFlag.F_GROUP);
-        collectPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
+        granteeFlags = (short)(GranteeFlag.F_GROUP | GranteeFlag.F_ADMIN);
+        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
     }
     
 
-    private static void collectPresetRights(List<ZimbraACE> acl, TargetType targetType,
+    private static void collectAdminPresetRights(List<ZimbraACE> acl, TargetType targetType,
             Set<String> granteeIds, short granteeFlags, 
             Integer relativity,
             Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
@@ -1176,6 +1176,9 @@ public class RightChecker {
                 continue;
             
             Right right = ace.getRight();
+            
+            if (right.isUserRight())
+                continue;
                     
             if (right.isComboRight()) {
                 ComboRight comboRight = (ComboRight)right;
@@ -1202,7 +1205,7 @@ public class RightChecker {
      * get all executable preset rights on a target type
      * combo rights are expanded
      */
-    private static Set<Right> getAllExecutablePresetRights(TargetType targetType) throws ServiceException {
+    private static Set<Right> getAllExecutableAdminPresetRights(TargetType targetType) throws ServiceException {
         Map<String, AdminRight> allRights = RightManager.getInstance().getAllAdminRights();
         
         Set<Right> rights = new HashSet<Right>();

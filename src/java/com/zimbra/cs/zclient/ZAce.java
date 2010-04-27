@@ -48,6 +48,10 @@ public class ZAce implements ToZJSONObject {
          */
         grp,
         /**
+         * access is granted to all users in a domain
+         */
+        dom,
+        /**
          * accesss is granted to public. no authentication needed.
          */
         pub,
@@ -66,9 +70,6 @@ public class ZAce implements ToZJSONObject {
 
         public static GranteeType fromString(String s) throws ServiceException {
             try {
-                // GUEST-TODO master control for turning off guest grantee for now
-                if (gst.name().equals(s))
-                    throw ZClientException.CLIENT_ERROR("guest grantee not yet supported", null);
                 return GranteeType.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ZClientException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
@@ -193,6 +194,7 @@ public class ZAce implements ToZJSONObject {
         switch (mGranteeType) {
         case usr: return "account";
         case grp: return "group";
+        case dom: return "domain";
         case pub: return "public";
         case all: return "all";
         case gst: return "guest";
@@ -205,20 +207,22 @@ public class ZAce implements ToZJSONObject {
         switch (mGranteeType) {
         case usr: return 0;
         case grp: return 3;
-        case pub: return 5;
-        case all: return 4;
+        case dom: return 4;
+        case pub: return 6;
+        case all: return 5;
         case gst: return 1;
         case key: return 2;
-        default: return 6; // ??
+        default: return 7; // ??
         }
     }
     
     public static ZAce.GranteeType getGranteeTypeFromDisplay(String name) throws ServiceException {
         if (name.equalsIgnoreCase("account")) return GranteeType.usr;
         else if (name.equalsIgnoreCase("group")) return GranteeType.grp; 
+        else if (name.equalsIgnoreCase("domain")) return GranteeType.dom; 
         else if (name.equalsIgnoreCase("public")) return GranteeType.pub;
         else if (name.equalsIgnoreCase("all")) return GranteeType.all;
-        // else if (name.equalsIgnoreCase("guest")) return GranteeType.gst;  // GUEST-TODO master control for turning off guest grantee for now 
+        else if (name.equalsIgnoreCase("guest")) return GranteeType.gst;
         else if (name.equalsIgnoreCase("key")) return GranteeType.key;
         else throw ZClientException.CLIENT_ERROR("unknown grantee type: "+name, null);
     }
