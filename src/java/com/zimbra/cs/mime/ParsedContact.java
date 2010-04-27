@@ -419,6 +419,8 @@ public class ParsedContact {
         }
 
         mZDocuments.add(new IndexDocument(getPrimaryDocument(acct, attachContent.toString())));
+        
+        // dumpLuceneDocuments();
     }
     
     public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
