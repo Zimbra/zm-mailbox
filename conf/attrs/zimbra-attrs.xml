@@ -4886,4 +4886,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Disables autocomplete matching against the members email address.</desc>
 </attr>
 
+<attr id="1091" name="zimbraPrefAutoCompleteQuickCompletionOnComma" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to end auto-complete on comma</desc>
+</attr>
+
 </attrs>
