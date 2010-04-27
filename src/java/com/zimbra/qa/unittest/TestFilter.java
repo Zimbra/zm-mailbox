@@ -909,10 +909,10 @@ extends TestCase {
     }
     
     /**
-     * Confirms that we handle the negative test flag properly when the first
-     * test is negative and the second test is not (bug 46007).
+     * Confirms that we handle the negative test flag properly with multiple
+     * tests (bug 46007).
      */
-    public void testNegativeAndPositiveTest()
+    public void testPositiveAndNegative()
     throws Exception {
         String script = new String(ByteUtil.getContent(new File("/opt/zimbra/unittest/bug46007.sieve")));
         String normalized = normalize(script); // Convert to XML and back again.
