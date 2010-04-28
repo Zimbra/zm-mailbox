@@ -598,7 +598,7 @@ public class Contact extends MailItem {
     @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         synchronized (mMailbox) {
             try {
-                ParsedContact pc = new ParsedContact(this);
+                ParsedContact pc = new ParsedContact(this, true);
                 pc.analyze(mMailbox);
                 if (pc.hasTemporaryAnalysisFailure())
                     throw new TemporaryIndexingException();

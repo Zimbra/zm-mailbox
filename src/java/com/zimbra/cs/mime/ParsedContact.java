@@ -121,7 +121,22 @@ public class ParsedContact {
     }
 
     public ParsedContact(Contact con) throws ServiceException {
-        init(con.getFields(), con.getContentStream());
+        this(con, false);
+    }
+
+    /**
+     * 
+     * @param con
+     * @param getAllFields 
+     *          if true, all fields are passed to the ParsedContact
+     *          if false, only non-hidden fields are passed to the ParsedContact
+     * @throws ServiceException
+     */
+    public ParsedContact(Contact con, boolean getAllFields) throws ServiceException {
+        if (getAllFields)
+            init(con.getAllFields(), con.getContentStream());
+        else
+            init(con.getFields(), con.getContentStream());
     }
 
     private void init(Map<String, ? extends Object> fields, InputStream in)
