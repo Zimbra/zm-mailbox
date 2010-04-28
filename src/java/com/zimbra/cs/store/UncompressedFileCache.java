@@ -45,7 +45,7 @@ public class UncompressedFileCache<K> {
     private long mMaxBytes = 100 * 1024 * 1024; // 100MB default
     private int mMaxFiles = 10 * 1024; // 10k files default
     private File mCacheDir;
-    private Set<Listener> mListeners = new HashSet<Listener>();
+    private Set<Listener<K>> mListeners = new HashSet<Listener<K>>();
     
     /** Maps the key to the cache to the uncompressed file digest. */
     private LinkedHashMap<K, String> mKeyToDigest;
@@ -122,7 +122,7 @@ public class UncompressedFileCache<K> {
         return this;
     }
     
-    public synchronized void addListener(Listener l) {
+    public synchronized void addListener(Listener<K> l) {
         mListeners.add(l);
     }
 
@@ -168,10 +168,7 @@ public class UncompressedFileCache<K> {
             if (uncompressedFile != null) {
                 sLog.debug("Found existing uncompressed file for digest %s.  Deleting %s.", temp.digest, temp.file.getPath());
                 mKeyToDigest.put(key, temp.digest);
-                try {
-                    FileUtil.delete(temp.file);
-                } catch (Exception e) {
-                }
+                FileUtil.delete(temp.file);
                 shared = new SharedFile(uncompressedFile);
             } else {
                 uncompressedFile = new File(mCacheDir, temp.digest);
@@ -221,7 +218,9 @@ public class UncompressedFileCache<K> {
      * {@link #mMaxBytes}.
      */
     private synchronized void pruneIfNecessary() {
-        if (mKeyToDigest == null || (mNumBytes < mMaxBytes && mDigestToFile.size() < mMaxFiles)) {
+        if (mKeyToDigest == null ||
+            mDigestToFile.size() <= 1 || // Leave at least one file so we don't constantly add/remove.
+            (mNumBytes < mMaxBytes && mDigestToFile.size() < mMaxFiles)) {
             return;
         }
         
@@ -246,7 +245,8 @@ public class UncompressedFileCache<K> {
                 mNumBytes -= file.length();
                 try {
                     FileUtil.delete(file);
-                } catch (Exception e) {
+                } catch (Exception e) { // Handle IOException and SecurityException
+                    sLog.warn("Unable to delete %s.", file, e);
                 }
             }
             
