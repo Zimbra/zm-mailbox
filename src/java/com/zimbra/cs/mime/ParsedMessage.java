@@ -38,6 +38,7 @@ import java.util.Set;
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
@@ -55,6 +56,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -579,21 +581,20 @@ public class ParsedMessage {
      * from a file, otherwise returns <tt>null</tt>.
      */
     public BlobInputStream getBlobInputStream() {
-        if (mSharedStream instanceof BlobInputStream) {
+        if (mSharedStream instanceof BlobInputStream)
             return (BlobInputStream) mSharedStream;
-        }
         return null;
     }
     
     public boolean isStreamedFromDisk() {
-        return (getBlobInputStream() != null);
+        return getBlobInputStream() != null;
     }
 
     public int getPriorityBitmask() {
-        parse();
+        MimeMessage mm = getMimeMessage();
 
         try {
-            String xprio = getMimeMessage().getHeader("X-Priority", null);
+            String xprio = mm.getHeader("X-Priority", null);
             if (xprio != null) {
                 xprio = xprio.trim();
                 if (xprio.startsWith("1") || xprio.startsWith("2"))
@@ -606,7 +607,7 @@ public class ParsedMessage {
         } catch (MessagingException me) { }
 
         try {
-            String impt = getMimeMessage().getHeader("Importance", null);
+            String impt = mm.getHeader("Importance", null);
             if (impt != null) {
                 impt = impt.trim().toLowerCase();
                 if (impt.startsWith("high"))
@@ -619,6 +620,40 @@ public class ParsedMessage {
         } catch (MessagingException me) { }
 
         return 0;
+    }
+
+    public boolean isList(String envSenderString) {
+        MimeMessage mm = getMimeMessage();
+
+        try {
+            if (mm.getHeader("List-ID") != null)
+                return true;
+        } catch (MessagingException e) { }
+
+        try {
+            if ("list".equalsIgnoreCase(mm.getHeader("Precedence", null)))
+                return true;
+        } catch (MessagingException e) { }
+
+        if (envSenderString != null) {
+            try {
+                // NB: 'strict' being 'true' causes <> to except
+                InternetAddress envSender = new InternetAddress(envSenderString, true);
+                if (envSender.getAddress() != null) {
+                    String[] envSenderAddrParts = EmailUtil.getLocalPartAndDomain(envSender.getAddress());
+                    if (envSenderAddrParts != null) {
+                        String sender = envSenderAddrParts[0].toLowerCase();
+                        if (sender.startsWith("owner-") || sender.endsWith("-owner") ||
+                                sender.indexOf("-request") != -1 || sender.equals("mailer-daemon") ||
+                                sender.equals("majordomo") || sender.equals("listserv")) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (AddressException ae) { }
+        }
+
+        return false;
     }
 
     public boolean isReply() {
@@ -645,13 +680,12 @@ public class ParsedMessage {
         return mFragment;
     }
 
-    /**
-     * Returns the message ID, or <tt>null</tt> if the message id cannot be determined.
-     */
+    /** Returns the message ID, or <tt>null</tt> if the message id cannot be
+     *  determined. */
     public String getMessageID() {
         return Mime.getMessageID(getMimeMessage());
     }
-    
+
     public String getRecipients() {
         if (mRecipients == null) {
             String recipients = null;
@@ -660,6 +694,7 @@ public class ParsedMessage {
             } catch (MessagingException e) { }
             if (recipients == null)
                 recipients = "";
+
             try {
                 mRecipients = MimeUtility.decodeText(recipients);
             } catch (UnsupportedEncodingException e1) {
@@ -675,9 +710,8 @@ public class ParsedMessage {
      * <tt>String</tt> if neither header is available.
      */
     public String getSender() {
-        if (mSender == null) {
+        if (mSender == null)
             mSender = Mime.getSender(getMimeMessage());
-        }
         return mSender;
     }
 
@@ -701,6 +735,7 @@ public class ParsedMessage {
                 Address[] froms = getMimeMessage().getFrom();
                 if (froms != null && froms.length > 0 && froms[0] instanceof InternetAddress)
                     return ((InternetAddress) froms[0]).getAddress();
+
                 Address sender = getMimeMessage().getSender();
                 if (sender instanceof InternetAddress)
                     return ((InternetAddress) sender).getAddress();
@@ -709,11 +744,13 @@ public class ParsedMessage {
                 Address sender = getMimeMessage().getSender();
                 if (sender instanceof InternetAddress)
                     return ((InternetAddress) sender).getAddress();
+
                 Address[] froms = getMimeMessage().getFrom();
                 if (froms != null && froms.length > 0 && froms[0] instanceof InternetAddress)
                     return ((InternetAddress) froms[0]).getAddress();
             }
         } catch (MessagingException e) {}
+
         return null;
     }
 
@@ -724,7 +761,6 @@ public class ParsedMessage {
     }
 
     public String getReplyTo() {
-        String sender = getSender();
         String replyTo = null;
         try {
             replyTo = getMimeMessage().getHeader("Reply-To", null);
@@ -732,6 +768,8 @@ public class ParsedMessage {
                 return null;
             replyTo = MimeUtility.decodeText(replyTo);
         } catch (Exception e) { }
+
+        String sender = getSender();
         if (sender != null && sender.equals(replyTo))
             return null;
         return replyTo;
@@ -740,6 +778,7 @@ public class ParsedMessage {
     public long getDateHeader() {
         if (mDateHeader != -1)
             return mDateHeader;
+
         mDateHeader = getReceivedDate();
         try {
             Date dateHeader = getMimeMessage().getSentDate();
