@@ -356,7 +356,7 @@ public class Message extends MailItem {
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                           boolean unread, int flags, long tags, DraftInfo dinfo,
                           boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
-    throws ServiceException, IOException {
+    throws ServiceException {
         return createInternal(id, folder, conv, pm, staged, unread, flags, tags,
                               dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
@@ -364,7 +364,7 @@ public class Message extends MailItem {
     protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                                             boolean unread, int flags, long tags, DraftInfo dinfo,
                                             boolean noICal, ZVCalendar cal, CustomMetadataList extended, MessageCreateFactory fact)
-    throws ServiceException, IOException {
+    throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN(folder, TYPE_MESSAGE);
         if (!folder.canAccess(ACL.RIGHT_INSERT))
