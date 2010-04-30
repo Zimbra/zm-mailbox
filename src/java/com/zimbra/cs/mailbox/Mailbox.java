@@ -6893,11 +6893,15 @@ public class Mailbox {
                     }
                 }
             }
-            boolean isSoapRequest = octxt != null && octxt.getSession() instanceof SoapSession;
-            if (isNewMessage)
+            
+            if (isNewMessage) {
                 mCurrentChange.recent = mData.recentMessages + 1;
-            else if (isSoapRequest && mData.recentMessages != 0)
-                mCurrentChange.recent = 0;
+            } else if (octxt != null && mData.recentMessages != 0) {
+                Session s = octxt.getSession();
+                if (s instanceof SoapSession || (s instanceof SoapSession.DelegateSession &&
+                    ((SoapSession.DelegateSession)s).getParentSession().isOfflineSoapSession()))
+                    mCurrentChange.recent = 0;
+            }
         }
 
         if (mCurrentChange.isMailboxRowDirty(mData)) {

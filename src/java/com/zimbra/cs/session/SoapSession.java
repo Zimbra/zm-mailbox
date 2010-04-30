@@ -472,6 +472,11 @@ public class SoapSession extends Session {
         return SOAP_SESSION_TIMEOUT_MSEC;
     }
 
+    private boolean mIsOffline = false;
+    
+    public boolean isOfflineSoapSession() { return mIsOffline; }
+    
+    public void setOfflineSoapSession() { mIsOffline = true; }
 
     public Session getDelegateSession(String targetAccountId) {
         if (mUnregistered || targetAccountId == null)
