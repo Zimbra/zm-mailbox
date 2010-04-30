@@ -21,9 +21,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -47,7 +47,7 @@ import com.zimbra.common.util.StringUtil;
 public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     private static final Map<String, Namespace> sTypeToNamespace =
-        new HashMap<String, Namespace>();
+        new TreeMap<String, Namespace>();
 
     private static final String DEFAULT_ADMIN_URL = String.format("https://%s:%d/service/admin/soap",
         LC.zimbra_zmprov_default_soap_server.value(),
@@ -63,6 +63,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String LO_URL = "url";
     private static final String LO_ZADMIN = "zadmin";
     private static final String LO_VERBOSE = "verbose";
+    private static final String LO_VERY_VERBOSE = "very-verbose";
     private static final String LO_NO_OP = "no-op";
     private static final String LO_SELECT = "select";
     private static final String LO_JSON = "json";
@@ -96,7 +97,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mPassword;
     private String[] mPaths;
     private String mAuthToken;
-    private int mVerbose = 0;
+    private boolean mVerbose = false;
+    private boolean mVeryVerbose = false;
     private boolean mUseSession = false;
     private boolean mNoOp = false;
     private String mSelect;
@@ -136,9 +138,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt.setArgName("url");
         mOptions.addOption(opt);
         
-        mOptions.addOption(new Option("z", LO_ZADMIN, false, "Authenticate with zimbra admin name/password from localconfig."));
+        mOptions.addOption(new Option("z", LO_ZADMIN, false,
+            "Authenticate with zimbra admin name/password from localconfig."));
         mOptions.addOption(new Option("v", LO_VERBOSE, false, 
-            "Print the SOAP request and other status information. Specify twice for fully verbose output."));
+            "Print the request."));
+        mOptions.addOption(new Option("vv", LO_VERY_VERBOSE, false,
+            "Print URLs and all requests and responses with envelopes."));
         mOptions.addOption(new Option("n", LO_NO_OP, false, "Print the SOAP request only.  Don't send it."));
         
         opt = new Option(null, LO_SELECT, true, "Select an element or attribute from the response.");
@@ -151,8 +156,9 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt.setArgName("path");
         mOptions.addOption(opt);
         
+        String types = StringUtil.join(",", sTypeToNamespace.keySet());
         opt = new Option("t", LO_TYPE, true,
-            "SOAP request type (mail, account, admin, im, mobile).  Default is admin, or mail if mailbox is specified.");
+            "SOAP request type: " + types + ".  Default is admin, or mail if -m is specified.");
         opt.setArgName("type");
         mOptions.addOption(opt);
 
@@ -251,12 +257,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mTargetAccountName = CliUtil.getOptionValue(cl, LO_TARGET);
         }
         
-        mVerbose = 0;
-        for (Option opt : cl.getOptions()) {
-            if (StringUtil.equal(opt.getLongOpt(), LO_VERBOSE)) {
-                mVerbose++;
-            }
-        }
+        mVeryVerbose = CliUtil.hasOption(cl, LO_VERY_VERBOSE);
+        mVerbose = CliUtil.hasOption(cl, LO_VERBOSE);
         
         mPaths = cl.getArgs();
         mNoOp = CliUtil.hasOption(cl, LO_NO_OP);
@@ -266,15 +268,29 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mFactory = (mUseJson ? JSONElement.mFactory : XMLElement.mFactory);
     }
     
+    private static final String[] XPATH_PASSWORD = new String[] { "Body", AdminConstants.AUTH_REQUEST.getName(), AdminConstants.E_PASSWORD };
+    
     public void sendSoapMessage(Element envelope) {
-        if (mVerbose > 1) {
-            mOut.println(DomUtil.toString(envelope.toXML(), true));
+        if (mVeryVerbose) {
+            // Obscure password if this is an AuthRequest.
+            Element passwordElement = envelope.getPathElement(XPATH_PASSWORD);
+            String originalPassword = null;
+            if (passwordElement != null) {
+                originalPassword = passwordElement.getText();
+                passwordElement.setText("***");
+            }
+            
+            mOut.println(envelope.prettyPrint());
+            
+            if (passwordElement != null) {
+                passwordElement.setText(originalPassword);
+            }
         }
     }
     
     public void receiveSoapMessage(Element envelope) {
-        if (mVerbose > 1) {
-            mOut.println(DomUtil.toString(envelope.toXML(), true));
+        if (mVeryVerbose) {
+            mOut.println(envelope.prettyPrint());
         }
     }
     
@@ -291,7 +307,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         // Authenticate and get auth token
         Element response = null;
         
-        if (mVerbose > 0) {
+        if (mVeryVerbose) {
             mOut.println("Sending admin auth request to " + mUrl);
         }
         
@@ -300,14 +316,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         transport.setAuthToken(mAuthToken);
         
         // Do delegate auth if this is a mail or account service request
-        if (mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) {
+        if (!mType.equals(TYPE_ADMIN)) {
             Element getInfo = mFactory.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
             Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
             account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
-            response = transport.invoke(getInfo, false, !mUseSession, null);
-            if (mVerbose > 0) {
-                mOut.println(response.prettyPrint());
+            if (mVeryVerbose) {
+                mOut.println(getInfo.prettyPrint());
             }
+            response = transport.invoke(getInfo, false, !mUseSession, null);
             mUrl = response.getElement(AdminConstants.E_SOAP_URL).getText();
             
             // Get delegate auth token
@@ -321,7 +337,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     
     private void mailboxAuth()
     throws ServiceException, IOException {
-        if (mVerbose > 0) {
+        if (mVeryVerbose) {
             mOut.println("Sending auth request to " + mUrl);
         }
         
@@ -335,12 +351,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
         
         // Authenticate and get auth token
-        Element response = null;
-        
-        response = transport.invoke(auth, false, !mUseSession, null);
-        if (mVerbose > 0) {
-            mOut.println(response.prettyPrint());
-        }
+        Element response = transport.invoke(auth, false, !mUseSession, null);
         mAuthToken = response.getAttribute(AccountConstants.E_AUTH_TOKEN);
     }
     
@@ -389,10 +400,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             request = request.getParent();
         }
         
-        if (mVerbose == 1 || mNoOp) {
-            mOut.println(request.prettyPrint());
-        }
         if (mNoOp) {
+            mOut.println(request.prettyPrint());
             return;
         }
 
@@ -413,6 +422,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             transport.setTargetAcctName(mTargetAccountName);
         }
         Element response = null;
+        
+        if (mVeryVerbose) {
+            System.out.println("Sending request to " + mUrl);
+        }
+        if (mVerbose) {
+            System.out.println(request);
+        }
+        
         response = transport.invoke(request, false, !mUseSession, null);
 
         // Select result.
@@ -440,7 +457,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             results.add(response);
         }
         
-        if (mVerbose <= 1) {
+        if (!mVeryVerbose) { // Envelope was already printed if we're doing very verbose logging.
             if (resultString == null && results != null) {
                 StringBuilder buf = new StringBuilder();
                 boolean first = true;
@@ -535,12 +552,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             app.run();
         } catch (ServiceException e) {
             System.err.println(formatServiceException(e));
-            if (app.mVerbose > 0) {
+            if (app.mVerbose) {
                 e.printStackTrace(System.err);
             }
             System.exit(1);
         } catch (Exception e) {
-            if (app.mVerbose > 0) {
+            if (app.mVerbose) {
                 e.printStackTrace(System.err);
             } else {
                 System.err.println(e);
