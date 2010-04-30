@@ -4223,14 +4223,12 @@ public class Mailbox {
     
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags, int conversationId)
     throws IOException, ServiceException {
-        DeliveryContext dctxt = new DeliveryContext();
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", null, dctxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, conversationId, ":API:", null, new DeliveryContext());
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags)
     throws IOException, ServiceException {
-        DeliveryContext dctxt = new DeliveryContext();
-        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", null, dctxt);
+        return addMessage(octxt, pm, folderId, noICal, flags, tags, ID_AUTO_INCREMENT, ":API:", null, new DeliveryContext());
     }
 
     public Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags, String tags,
@@ -4271,8 +4269,7 @@ public class Mailbox {
                 throw ServiceException.INVALID_REQUEST("Message content is invalid.", null);
             }
                 
-            pm = new ParsedMessage(new ParsedMessageOptions(blob, bs.isPartial() ?
-                null : bs.getBuffer(), receivedDate, attachmentsIndexingEnabled()));
+            pm = new ParsedMessage(new ParsedMessageOptions(blob, bs.isPartial() ? null : bs.getBuffer(), receivedDate, attachmentsIndexingEnabled()));
             cs.release();
             if (dctxt == null)
                 dctxt = new DeliveryContext();
@@ -4366,6 +4363,18 @@ public class Mailbox {
         ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         return msg;
     }
+
+    /** The number of milliseconds of inactivity (i.e. time since last message
+     *  receipt) after which a conversation is considered "closed". */
+    private static final long CONVERSATION_REPLY_WINDOW = Constants.MILLIS_PER_MONTH;
+    /** The number of milliseconds of inactivity (i.e. time since last message
+     *  receipt) after which a non-reply is not grouped with an existing
+     *  conversation with the same subject. */
+    private static final long CONVERSATION_NONREPLY_WINDOW = 2 * Constants.MILLIS_PER_DAY;
+    /** The maximum size for a conversation beyond which non-reply messages
+     *  are not grouped with it, even if their delivery time is within
+     *  {@link #CONVERSATION_NONREPLY_WINDOW}. */
+    private static final int  CONVERSATION_NONREPLY_SIZE_LIMIT = 50;
 
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                                                     int flags, String tagStr, int conversationId, String rcptEmail,
@@ -4467,34 +4476,45 @@ public class Mailbox {
 
             Folder folder = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
+            String hash = getHash(subject);
             long tags = Tag.tagsToBitmask(tagStr);
 
             // step 1: get an ID assigned for the new message
-            int messageId  = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+            int messageId = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
             if (isRedo)
                 conversationId = redoPlayer.getConvId();
 
             // step 2: figure out where the message belongs
             Conversation conv = null;
-            String hash = null;
             if (!DebugConfig.disableConversation) {
+                boolean isReply = pm.isReply();
                 if (conversationId != ID_AUTO_INCREMENT) {
                     try {
+                        // fetch the requested conversation...
                         conv = getConversationById(conversationId);
+                        // ... and ensure that it's receiving new mail
+                        //   (note: don't do this for virtual convs, since they get promoted to real convs in step 4)
+                        if (!(conv instanceof VirtualConversation))
+                            openConversation(conv, hash);
                         if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation " + conv.getId());
                     } catch (ServiceException e) {
                         if (e.getCode() != MailServiceException.NO_SUCH_CONV)
                             throw e;
                         if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
                     }
-                } else if (!isRedo && !isSpam && !isDraft && pm.isReply()) {
-                    conv = getConversationByHash(hash = getHash(subject));
-                    if (debug)  ZimbraLog.mailbox.debug("  found conversation " + (conv == null ? -1 : conv.getId()) + " for hash: " + hash);
+                } else if (!isRedo && !isSpam && !isDraft && (isReply || (!isSent && !subject.equals("")))) {
+                    conv = getConversationByHash(hash);
+                    if (debug && conv != null)  ZimbraLog.mailbox.debug("  found conversation " + conv.getId() + " for hash: " + hash);
                     // the caller can specify the received date via ParsedMessge constructor or X-Zimbra-Received header
-                    if (conv != null && pm.getReceivedDate() > conv.getDate() + Constants.MILLIS_PER_MONTH) {
+                    if (conv != null && pm.getReceivedDate() > conv.getDate() + (isReply ? CONVERSATION_REPLY_WINDOW : CONVERSATION_NONREPLY_WINDOW)) {
                         // if the last message in the conv was more than 1 month ago, it's probably not related...
                         conv = null;
                         if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too old");
+                    }
+                    if (conv != null && !isReply && conv.getSize() > CONVERSATION_NONREPLY_SIZE_LIMIT) {
+                        // put a cap on the number of non-reply messages accumulating in a conversation
+                        conv = null;
+                        if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too big to add a non-reply");
                     }
                 }
             }
