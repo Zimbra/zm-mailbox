@@ -125,6 +125,7 @@ public class AccountUtil {
         String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
         String[] accountAliases = acct.getMailAlias();
+        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
         Address[] recipients = mm.getAllRecipients();
         
         if (recipients == null) {
@@ -134,7 +135,7 @@ public class AccountUtil {
         int numRecipientsToCheck = (maxToCheck <= 0 ? recipients.length : Math.min(recipients.length, maxToCheck));
         for (int i = 0; i < numRecipientsToCheck; i++) {
             String msgAddress = ((InternetAddress) recipients[i]).getAddress();
-            if (addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, msgAddress)) 
+            if (addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, allowedFromAddrs, msgAddress)) 
                 return true;
             
             if (otherAccountAddrs != null) {
@@ -182,20 +183,8 @@ public class AccountUtil {
     public static boolean allowFromAddress(Account acct, String fromAddr) throws ServiceException {
         if (fromAddr == null)
             return false;
-
-        if (acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false))
-            return true;
-        if (addressMatchesAccount(acct, fromAddr))
-            return true;
-
-        String[] allowedAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-        if (allowedAddrs == null)
-            return false;
-        for (String addr : allowedAddrs) {
-            if (fromAddr.equalsIgnoreCase(addr))
-                return true;
-        }
-        return false;
+        return addressMatchesAccount(acct, fromAddr)
+            || acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false);
     }
 
     /**
@@ -207,10 +196,13 @@ public class AccountUtil {
         String accountAddress = acct.getName();
         String canonicalAddress = getCanonicalAddress(acct);
         String[] accountAliases = acct.getMailAlias();
-        return addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, givenAddress);
+        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+        return addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, allowedFromAddrs, givenAddress);
     }
-    
-    private static boolean addressMatchesAccount(String accountAddress, String canonicalAddress, String[] accountAliases, String givenAddress) {
+
+    private static boolean addressMatchesAccount(
+            String accountAddress, String canonicalAddress, String[] accountAliases, String[] allowedFromAddrs,
+            String givenAddress) {
         if (givenAddress == null)
             return false;
 
@@ -219,9 +211,17 @@ public class AccountUtil {
         if (givenAddress.equalsIgnoreCase(canonicalAddress))
             return true;
 
-        for (int j = 0; j < accountAliases.length; j++) {
-            if (givenAddress.equalsIgnoreCase(accountAliases[j]))
-                return true;
+        if (accountAliases != null) {
+            for (int j = 0; j < accountAliases.length; j++) {
+                if (givenAddress.equalsIgnoreCase(accountAliases[j]))
+                    return true;
+            }
+        }
+        if (allowedFromAddrs != null) {
+            for (int j = 0; j < allowedFromAddrs.length; j++) {
+                if (givenAddress.equalsIgnoreCase(allowedFromAddrs[j]))
+                    return true;
+            }
         }
         
         try {

@@ -1436,7 +1436,7 @@ public class Invite {
             // Does this attendee match our identity?
             if (identityEmail != null && identityEmail.equalsIgnoreCase(thisAtEmail))
                 return at;
-            if (acctMatch == null && AccountUtil.allowFromAddress(acct, thisAtEmail)) {
+            if (acctMatch == null && AccountUtil.addressMatchesAccount(acct, thisAtEmail)) {
                 acctMatch = at;
                 // If we didn't have identity email for some reason, we have our best match.
                 if (identityEmail == null)
