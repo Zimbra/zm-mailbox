@@ -182,7 +182,7 @@ public final class ImapConnection extends MailConnection {
         List<IDInfo> results = new ArrayList<IDInfo>(1);
         req.setResponseHandler(new BasicResponseHandler(CAtom.ID, results));
         req.sendCheckStatus();
-        return results.isEmpty() ? null : results.get(0);
+        return results.isEmpty() ? new IDInfo() : results.get(0);
     }
 
     public synchronized boolean isSelected(String name) {
