@@ -27,8 +27,11 @@ import java.util.concurrent.RejectedExecutionException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.accesscontrol.ZimbraACL;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
@@ -50,6 +53,8 @@ import com.zimbra.cs.index.queryparser.ParseException;
  * to try to keep it all in one place
  */
 public class IndexHelper {
+    private static final Log sLogger = LogFactory.getLog(IndexHelper.class);
+    
     private static final long sBatchIndexMaxBytesPerTransaction = LC.zimbra_index_max_transaction_bytes.longValue();
     private static final int sBatchIndexMaxItemsPerTransaction = LC.zimbra_index_max_transaction_items.intValue();
 
@@ -871,12 +876,12 @@ public class IndexHelper {
                 // Second step: we have a chunk of items and their corresponding index data -- add them to the index
                 //
                 try { 
-                    if (ZimbraLog.index_add.isDebugEnabled()) {
+                    if (sLogger.isDebugEnabled()) {
                         StringBuilder sb = new StringBuilder();
                         for (Mailbox.IndexItemEntry ie : chunk) {
                             sb.append(ie.mMailItem.getId()).append('-').append(ie.mModContent).append('-').append(ie.mMailItem.getType()).append(',');
                         }
-                        ZimbraLog.index_add.debug("Batch Indexing: Mailbox "+ 
+                        sLogger.debug("Batch Indexing: Mailbox "+ 
                                 getMailbox().getId() + "(" + getMailbox().getAccountId() + ")" + 
                                 ", batchedIndexingCount=" + getBatchedIndexingCount() +
                                 ", indexing " + chunk.size() +" items: " + sb.toString());
