@@ -66,6 +66,7 @@ public class GalSearchControl {
 		if (query.endsWith("*"))
 			query = query.substring(0, query.length()-1);
 		mParams.setQuery(query);
+		mParams.setOp(GalOp.autocomplete);
 		if (mParams.getAccount().isGalSyncAccountBasedAutoCompleteEnabled()) {
 			try {
 				Account galAcct = mParams.getGalSyncAccount();
@@ -84,7 +85,7 @@ public class GalSearchControl {
 		mParams.setQuery(query+"*");
 		mParams.getResultCallback().reset(mParams);
 		mParams.setLimit(100);
-		ldapSearch(GalOp.autocomplete);
+		ldapSearch();
 	}
 	
 	public void search() throws ServiceException {
@@ -92,6 +93,7 @@ public class GalSearchControl {
 		if (query == null)
 			query = "";
 		mParams.setQuery(query);
+		mParams.setOp(GalOp.search);
 		try {
 			Account galAcct = mParams.getGalSyncAccount();
 			if (galAcct != null) {
@@ -110,12 +112,13 @@ public class GalSearchControl {
 			mParams.setQuery(query);
 			mParams.getResultCallback().reset(mParams);
 			mParams.setLimit(100);
-			ldapSearch(GalOp.search);
+			ldapSearch();
 		}
 	}
 	
 	public void sync() throws ServiceException {
 		mParams.setQuery("");
+		mParams.setOp(GalOp.sync);
 		Account galAcct = mParams.getGalSyncAccount();
 		try {
 			if (galAcct != null) {
@@ -135,7 +138,7 @@ public class GalSearchControl {
 			// fallback to ldap search
 			mParams.getResultCallback().reset(mParams);
 		}
-		ldapSearch(GalOp.sync);
+		ldapSearch();
 	}
 	
 	private Account[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
@@ -360,7 +363,7 @@ public class GalSearchControl {
 		return true;
     }
     
-    private void ldapSearch(GalOp op) throws ServiceException {
+    private void ldapSearch() throws ServiceException {
         GalMode galMode = mParams.getDomain().getGalMode();
         int limit = mParams.getLimit();
         if (galMode == GalMode.both) {
@@ -372,7 +375,7 @@ public class GalSearchControl {
         	// do zimbra gal search
         	type = GalType.zimbra;
         }
-    	mParams.createSearchConfig(op, type);
+    	mParams.createSearchConfig(type);
     	try {
         	LdapUtil.galSearch(mParams);
     	} catch (Exception e) {
@@ -385,7 +388,7 @@ public class GalSearchControl {
     		hadMore = true;
     	if (galMode == GalMode.both) {
         	// do the second query
-        	mParams.createSearchConfig(op, GalType.ldap);
+        	mParams.createSearchConfig(GalType.ldap);
         	try {
             	LdapUtil.galSearch(mParams);
         	} catch (Exception e) {
@@ -397,7 +400,7 @@ public class GalSearchControl {
         		hadMore = true;
     	}
 
-    	if (op == GalOp.sync)
+    	if (mParams.getOp() == GalOp.sync)
     		mParams.getResultCallback().setNewToken(newToken);
     	mParams.getResultCallback().setHasMoreResult(hadMore);
     }

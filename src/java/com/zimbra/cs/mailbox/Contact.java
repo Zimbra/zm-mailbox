@@ -598,7 +598,7 @@ public class Contact extends MailItem {
     @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         synchronized (mMailbox) {
             try {
-                ParsedContact pc = new ParsedContact(this, true);
+                ParsedContact pc = new ParsedContact(this);
                 pc.analyze(mMailbox);
                 if (pc.hasTemporaryAnalysisFailure())
                     throw new TemporaryIndexingException();
@@ -773,6 +773,8 @@ public class Contact extends MailItem {
     	return attr.startsWith(ZMVALENCODED);
     }
     public static String[] parseMultiValueAttr(String attr) throws JSONException {
+        if (!isMultiValueAttr(attr))
+            return new String[] { attr };
     	JSONObject jsonobj = new JSONObject(attr);
     	JSONArray array = jsonobj.getJSONArray(ZMVAL);
     	String[] mv = new String[array.length()];

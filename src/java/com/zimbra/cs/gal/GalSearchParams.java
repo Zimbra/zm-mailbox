@@ -50,6 +50,7 @@ public class GalSearchParams {
     private QName mResponse;
     private DataSource mDataSource;
     private boolean mIdOnly;
+    private GalOp mOp;
 	
 	public GalSearchParams(Account account) {
         mAccount = account;
@@ -141,6 +142,10 @@ public class GalSearchParams {
 	public QName getResponseName() {
 		return mResponse;
 	}
+    
+    public GalOp getOp() {
+        return mOp;
+    }
 	
 	public boolean isIdOnly() {
 		return mIdOnly;
@@ -209,8 +214,8 @@ public class GalSearchParams {
 		mResponse = response;
 	}
 	
-	public void createSearchConfig(GalOp op, GalSearchConfig.GalType type) throws ServiceException {
-		mConfig = GalSearchConfig.create(getDomain(), op, type, mType);
+	public void createSearchConfig(GalSearchConfig.GalType type) throws ServiceException {
+		mConfig = GalSearchConfig.create(getDomain(), mOp, type, mType);
 	}
 	
 	public String generateLdapQuery() throws ServiceException {
@@ -225,5 +230,9 @@ public class GalSearchParams {
 	
 	public void setIdOnly(boolean idOnly) {
 		mIdOnly = idOnly;
+	}
+	
+	public void setOp(GalOp op) {
+	    mOp = op;
 	}
 }

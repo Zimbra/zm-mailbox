@@ -120,10 +120,6 @@ public class ParsedContact {
         }
     }
 
-    public ParsedContact(Contact con) throws ServiceException {
-        this(con, false);
-    }
-
     /**
      * 
      * @param con
@@ -132,11 +128,8 @@ public class ParsedContact {
      *          if false, only non-hidden fields are passed to the ParsedContact
      * @throws ServiceException
      */
-    public ParsedContact(Contact con, boolean getAllFields) throws ServiceException {
-        if (getAllFields)
-            init(con.getAllFields(), con.getContentStream());
-        else
-            init(con.getFields(), con.getContentStream());
+    public ParsedContact(Contact con) throws ServiceException {
+        init(con.getAllFields(), con.getContentStream());
     }
 
     private void init(Map<String, ? extends Object> fields, InputStream in)

@@ -85,6 +85,7 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -431,11 +432,11 @@ public class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, Collection<String> attrFilter) {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, List<String> attrFilter, int fields) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, Collection<String> attrFilter, int fields) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -483,15 +484,14 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_FILE_AS_STR, contact.getFileAsString());
         } catch (ServiceException e) { }
 
-        Map<String, String> attrs = contact.getFields();
         List<Attachment> attachments = contact.getAttachments();
         if (attrFilter != null) {
             for (String name : attrFilter) {
                 // XXX: How to distinguish between a non-existent attribute and
                 //      an existing attribute with null or empty string value?
-                String value = attrs.get(name);
+                String value = contact.get(name);
                 if (value != null && !value.equals("")) {
-                    elem.addKeyValuePair(name, value);
+                    encodeContactAttr(elem, name, value);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name))
@@ -500,18 +500,11 @@ public class ToXML {
                 }
             }
         } else {
-            for (Map.Entry<String, String> me : attrs.entrySet()) {
+            for (Map.Entry<String, String> me : contact.getFields().entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
                 if (name != null && !name.trim().equals("") && value != null && !value.equals("")) {
-                	if (Contact.isMultiValueAttr(value)) {
-                		try {
-                    		for (String v : Contact.parseMultiValueAttr(value))
-                    			elem.addKeyValuePair(name, v);
-                    		continue;
-                		} catch (JSONException e) {}
-                	}
-                	elem.addKeyValuePair(name, value);
+                    encodeContactAttr(elem, name, value);
                 }
             }
             if (attachments != null) {
@@ -523,6 +516,17 @@ public class ToXML {
         return elem;
     }
 
+    private static void encodeContactAttr(Element elem, String name, String value) {
+        if (Contact.isMultiValueAttr(value)) {
+            try {
+                for (String v : Contact.parseMultiValueAttr(value))
+                    elem.addKeyValuePair(name, v);
+                return;
+            } catch (JSONException e) {}
+        }
+        elem.addKeyValuePair(name, value);
+    }
+    
     private static void encodeContactAttachment(Element elem, Attachment attach) {
         Element.KeyValuePair kvp = elem.addKeyValuePair(attach.getName(), null);
         kvp.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());

@@ -159,7 +159,7 @@ public class MailboxUpgrade {
 		}
 
 		// save modified metadata
-		ParsedContact pcontact = new ParsedContact(contact, true);
+		ParsedContact pcontact = new ParsedContact(contact);
 		pcontact.modify(nfields, null);
 		mbox.modifyContact(octxt, contact.getId(), pcontact);
 	}

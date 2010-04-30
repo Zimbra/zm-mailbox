@@ -24,6 +24,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
@@ -33,9 +34,11 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     private Element mResponse;
 	private ItemIdFormatter mFormatter;
 	private boolean mIdOnly;
+	private GalOp mOp;
     
     public GalSearchResultCallback(GalSearchParams params) {
     	reset(params);
+    	mOp = params.getOp();
     }
     
     public void reset(GalSearchParams params) {
@@ -61,8 +64,10 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     public Element handleContact(Contact c) throws ServiceException {
     	if (mIdOnly)
             return mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
+    	else if (mOp == GalOp.autocomplete)
+    		return ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
     	else
-    		return ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+            return ToXML.encodeContact(mResponse, mFormatter, c, true, null);
     }
     
     public void handleContact(GalContact c) throws ServiceException {
