@@ -882,15 +882,17 @@ public class Mailbox {
     void updateSize(long delta, boolean checkQuota) throws ServiceException {
         if (delta == 0)
             return;
-        // if we go negative, that's OK!  just pretend we're at 0.
-        mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
-        mCurrentChange.size = Math.max(0, (mCurrentChange.size == MailboxChange.NO_CHANGE ? mData.size : mCurrentChange.size) + delta);
 
-        if (delta < 0 || !checkQuota)
-            return;
-        long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
-        if (quota != 0 && mCurrentChange.size > quota)
-            throw MailServiceException.QUOTA_EXCEEDED(quota);
+        // if we go negative, that's OK!  just pretend we're at 0.
+        long size = Math.max(0, (mCurrentChange.size == MailboxChange.NO_CHANGE ? mData.size : mCurrentChange.size) + delta);
+
+        if (delta > 0 && checkQuota) {
+            long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+            if (quota != 0 && size > quota)
+                throw MailServiceException.QUOTA_EXCEEDED(quota);
+        }
+        mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
+        mCurrentChange.size = size;
     }
 
     /** Returns the last time that the mailbox had a write op caused by a SOAP
@@ -7133,9 +7135,8 @@ public class Mailbox {
 
     private void logCacheActivity(Integer key, byte type, MailItem item) {
         // The global item cache counter always gets updated
-        if (!isCachedType(type)) {
+        if (!isCachedType(type))
             ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 100);
-        }
 
         // the per-access log only gets updated when cache or perf debug logging is on
         if (!ZimbraLog.cache.isDebugEnabled())
