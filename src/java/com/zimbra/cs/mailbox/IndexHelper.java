@@ -871,6 +871,17 @@ public class IndexHelper {
                 // Second step: we have a chunk of items and their corresponding index data -- add them to the index
                 //
                 try { 
+                    if (ZimbraLog.index_add.isDebugEnabled()) {
+                        StringBuilder sb = new StringBuilder();
+                        for (Mailbox.IndexItemEntry ie : chunk) {
+                            sb.append(ie.mMailItem.getId()).append('-').append(ie.mModContent).append('-').append(ie.mMailItem.getType()).append(',');
+                        }
+                        ZimbraLog.index_add.debug("Batch Indexing: Mailbox "+ 
+                                getMailbox().getId() + "(" + getMailbox().getAccountId() + ")" + 
+                                ", batchedIndexingCount=" + getBatchedIndexingCount() +
+                                ", indexing " + chunk.size() +" items: " + sb.toString());
+                    }
+                    
                     synchronized(getMailbox()) {
                         if (status.mCancel) {
                             ZimbraLog.mailbox.warn("CANCELLING batch index of Mailbox "+getMailbox().getId()
