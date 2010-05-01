@@ -369,6 +369,30 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
     
+    static class ReindexCommandHelp implements CommandHelp {
+        public void printHelp() {
+            /*
+             * copied from soap-admin.txt
+             * Not exactly match all types in MailboxIndex
+             * TODO: cleanup
+             */
+            System.out.println();
+            System.out.println("Valid types:");
+            System.out.println("    appointment");
+            // System.out.println("    briefcase");
+            // System.out.println("    chat");
+            System.out.println("    contact");
+            System.out.println("    conversation");
+            System.out.println("    document");
+            System.out.println("    message");
+            System.out.println("    note");
+            // System.out.println("    tag");
+            System.out.println("    task");
+            System.out.println("    wiki");
+            System.out.println();
+        }
+    }
+    
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
@@ -480,7 +504,7 @@ public class ProvUtil implements HttpDebugListener {
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
-        REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
+        REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [,type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE, null, new ReindexCommandHelp()),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {[-]right}", Category.RIGHT, 3, 5, null, new RightCommandHelp()),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
