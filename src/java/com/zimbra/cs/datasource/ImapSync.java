@@ -43,8 +43,6 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Collections;
@@ -236,7 +234,6 @@ public class ImapSync extends MailItemImport {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         trackedFolders = ImapFolder.getFolders(dataSource);
-        //trackedFolders = ImapFolder.getImapFolders(dataSource);
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
         syncLocalFolders(getLocalFolders());
@@ -248,8 +245,8 @@ public class ImapSync extends MailItemImport {
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
         List<Folder> mailFolders = new ArrayList<Folder>(folders.size());
         for (Folder f : folders)
-        	if (f.getDefaultView() == MailItem.TYPE_MESSAGE)
-        		mailFolders.add(f);
+            if (f.getDefaultView() == MailItem.TYPE_MESSAGE)
+                mailFolders.add(f);
         // Reverse order of local folders to ensure that children are
         // processed before parent folders. This avoids problems when
         // deleting folders.
@@ -372,7 +369,7 @@ public class ImapSync extends MailItemImport {
      * IMAP folder. The Zimbra folder has the same path as the IMAP folder,
      * but is relative to the root folder specified by the DataSource.
      */
-    String getLocalPath(ListData ld) {
+    String getLocalPath(ListData ld) throws ServiceException {
         String remotePath = ld.getMailbox();
         char localDelimiter = ld.getDelimiter();
         String relativePath = ld.getMailbox();
@@ -392,32 +389,48 @@ public class ImapSync extends MailItemImport {
         if (dataSource.ignoreRemotePath(relativePath)) {
             return null; // Do not synchronize folder
         }
-        // check if there's already a remote folder with the same name
-        Iterator<String> it = trackedFolders.getRemotePathsIterator();
-        // lets also count the number of folders having the same name that we
-        // have already encountered
-        int count = 0;
-        while (it.hasNext()) {
-            if (it.next().equalsIgnoreCase(remotePath)) {
-                count ++;
-            }
-        }
-        if (count > 0) {
-            relativePath += "." + (count + 1);
-        }
-        String zimbraPath = dataSource.mapRemoteToLocalPath(relativePath);
-        if (zimbraPath == null) {
+
+        String localPath = dataSource.mapRemoteToLocalPath(relativePath);
+        if (localPath == null) {
             // Remove leading slashes and append to root folder
             while (relativePath.startsWith("/")) {
                 relativePath = relativePath.substring(1);
             }
             if (localRootFolder.getId() == com.zimbra.cs.mailbox.Mailbox.ID_FOLDER_USER_ROOT) {
-                zimbraPath = "/" + relativePath;
+                localPath = "/" + relativePath;
             } else {
-                zimbraPath = localRootFolder.getPath() + "/" + relativePath;
+                localPath = localRootFolder.getPath() + "/" + relativePath;
             }
         }
-        return zimbraPath;
+
+        if (isUniqueLocalPathNeeded(localPath)) {
+            int count = 1;
+            for (;;) {
+                String path = String.format("%s-%d", localPath, count++);
+                if (LocalFolder.fromPath(mbox, path) == null) {
+                    return path;
+                }
+            }
+        } else {
+            return localPath;
+        }
+    }
+
+    /*
+     * When mapping a new remote folder, check if original local path can be
+     * used or a new unique name must be generated. A unique name must be
+     * generated if the local path is already associated with a tracked
+     * folder, or the local path refers to a system folder that is not one
+     * of the known IMAP folders (e.g. INBOX, Sent). This ensures that a
+     * remote folder named 'Contacts', for example, will get mapped to a unique
+     * name since a local non-IMAP system folder already exists with the same
+     * name.
+     */
+    private boolean isUniqueLocalPathNeeded(String localPath) throws ServiceException {
+        LocalFolder lf = LocalFolder.fromPath(mbox, localPath);
+        return lf != null && (
+            trackedFolders.getByItemId(lf.getId()) != null ||
+            lf.isSystem() && !lf.isKnown());
     }
 
     /*

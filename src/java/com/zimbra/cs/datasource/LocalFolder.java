@@ -42,6 +42,14 @@ final class LocalFolder {
             return null;
         }
     }
+
+    public static LocalFolder fromPath(Mailbox mbox, String path) throws ServiceException {
+        try {
+            return new LocalFolder(mbox, mbox.getFolderByPath(null, path));
+        } catch (MailServiceException.NoSuchItemException e) {
+            return null;
+        }
+    }
     
     LocalFolder(Mailbox mbox, String path) throws ServiceException {
         this.mbox = mbox;
@@ -153,6 +161,29 @@ final class LocalFolder {
         return folder != null ? folder.getPath() : path;
     }
 
+    /*
+     * Returns true if this is one of the known IMAP system folders
+     * (e.g. INBOX, Sent). In this case, if we encounter a remote folder
+     * with the same name then we will not map it to a unique local
+     * folder name.
+     */
+    public boolean isKnown() {
+        switch (folder.getId()) {
+        case Mailbox.ID_FOLDER_INBOX:
+        case Mailbox.ID_FOLDER_TRASH:
+        case Mailbox.ID_FOLDER_SPAM:
+        case Mailbox.ID_FOLDER_SENT:
+        case Mailbox.ID_FOLDER_DRAFTS:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    public boolean isSystem() {
+        return folder.getId() < Mailbox.FIRST_USER_ID;
+    }
+    
     public void debug(String fmt, Object... args) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(errmsg(String.format(fmt, args)));
