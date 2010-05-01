@@ -110,7 +110,7 @@ public class ImapFolderMonitor {
     }
 
     private void connect() throws IOException, ServiceException {
-        ImapConfig config = ImapSync.getImapConfig(ds);
+        ImapConfig config = ImapSync.newImapConfig(ds);
         config.setReadTimeout(TIMEOUT);
         config.setConnectTimeout(TIMEOUT);
         connection = new ImapConnection(config);

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.datasource;
                              
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -25,7 +26,6 @@ import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -34,7 +34,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.datasource.SyncState;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
@@ -63,7 +62,7 @@ public class ImapSync extends MailItemImport {
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
-        connection = new ImapConnection(getImapConfig(ds));
+        connection = new ImapConnection(newImapConfig(ds));
     }
 
     public ImapConnection getConnection() { return connection; }
@@ -95,7 +94,7 @@ public class ImapSync extends MailItemImport {
         return syncedFolders.get(folderId);
     }
 
-    public static ImapConfig getImapConfig(DataSource ds) {
+    public static ImapConfig newImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
@@ -108,17 +107,18 @@ public class ImapSync extends MailItemImport {
         config.setUseLiteralPlus(false);
         if (ds.isDebugTraceEnabled()) {
             config.setDebug(true);
-            enableTrace(config, ds);
+            enableTrace(ds, config);
         }
         config.setSocketFactory(SocketFactories.defaultSocketFactory());
         config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
+        config.setConnectTimeout(ds.getConnectTimeout(LC.javamail_imap_timeout.intValue()));
+        config.setReadTimeout(ds.getReadTimeout(LC.javamail_imap_timeout.intValue()));
         return config;
     }
 
     public synchronized void test() throws ServiceException {
         validateDataSource();
-        setTimeout(LC.javamail_imap_test_timeout.intValue());
-        enableTrace(connection.getImapConfig(), dataSource);
+        enableTrace(dataSource, connection.getImapConfig());
         try {
             connect();
         } finally {
@@ -126,28 +126,17 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private void setTimeout(int timeout) {
-        ImapConfig config = connection.getImapConfig();
-        config.setReadTimeout(timeout);
-        config.setConnectTimeout(timeout);
-    }
-    
-    private static void enableTrace(ImapConfig config, DataSource ds) {
+    private static void enableTrace(DataSource ds, ImapConfig config) {
         config.setTrace(true);
-        config.setMaxLiteralTraceSize(
-            ds.getIntAttr(Provisioning.A_zimbraDataSourceMaxTraceSize, 64));
-        if (ds.isOffline()) {
-            config.setTraceStream(
-                new PrintStream(new LogOutputStream(ZimbraLog.imap), true));
-        } else {
-            config.setTraceStream(System.out);
-        }
+        config.setMaxLiteralTraceSize(ds.getMaxTraceSize());
+        PrintStream ps = ds.isOffline() ?
+            new PrintStream(new LogOutputStream(ZimbraLog.imap), true) : System.out;
+        config.setTraceStream(ps);
     }
 
     public synchronized void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         validateDataSource();
-        setTimeout(LC.javamail_imap_timeout.intValue());
         connect();
         int folderId = dataSource.getFolderId();
         localRootFolder = getMailbox().getFolderById(null, folderId);

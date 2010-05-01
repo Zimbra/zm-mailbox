@@ -29,6 +29,8 @@ import java.util.UUID;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.zimbra.common.localconfig.KnownKey;
+import com.zimbra.common.localconfig.LC;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.datasource.SyncState;
@@ -156,13 +158,24 @@ public class DataSource extends AccountProperty {
         return data == null ? null : decryptData(getId(), data); 
     }
 
+    public Integer getConnectTimeout(int defaultValue) {
+        return getIntAttr(Provisioning.A_zimbraDataSourceConnectTimeout, defaultValue);
+    }
+
+    public int getReadTimeout(int defaultValue) {
+        return getIntAttr(Provisioning.A_zimbraDataSourceReadTimeout, defaultValue);
+    }
+
+    public int getMaxTraceSize() {
+        return getIntAttr(Provisioning.A_zimbraDataSourceMaxTraceSize, 64);
+    }
+
     /**
      * Returns the polling interval in milliseconds.  If <tt>zimbraDataSourcePollingInterval</tt>
      * is not specified on the data source, uses the value set for the account.  If not
      * set on either the data source or account, returns <tt>0</tt>.
      */
-    public long getPollingInterval()
-    throws ServiceException {
+    public long getPollingInterval() throws ServiceException {
         long interval;
         String val = getAttr(Provisioning.A_zimbraDataSourcePollingInterval);
         Provisioning prov = Provisioning.getInstance();
