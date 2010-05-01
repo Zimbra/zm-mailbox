@@ -108,7 +108,7 @@ public final class Chars {
             char c = s.charAt(i);
             if (!isNumber(c)) return -1;
             n = n * 10 + (c - '0');
-            if (n > 0xffffffffL) return -1;
+            if (n < 0) return -1;
         }
         return n;
     }
