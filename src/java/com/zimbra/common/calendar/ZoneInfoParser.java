@@ -693,6 +693,10 @@ public class ZoneInfoParser {
             if (numFields < 4)
                 throw new TZDataParseException("Not enough fields in a Zone line");
             mName = tokens.get(0);
+            if ("Etc/UTC".equalsIgnoreCase(mName)) {
+                // Map Etc/UTC to built-in "UTC" time zone.
+                mName = "UTC";
+            }
             mGmtOff = new Time(tokens.get(1));
             String ruleSave = tokens.get(2);
             if (ruleSave.equals("-")) {
@@ -900,6 +904,7 @@ public class ZoneInfoParser {
         mRules = new HashMap<String, Rule>();
         mZones = new HashMap<String, Zone>();
         mLinks = new HashMap<String, String>();
+        mLinks.put("Etc/UTC", "UTC");  // Map Etc/UTC to built-in "UTC" time zone.
         mLeaps = new ArrayList<Leap>();
     }
 
@@ -1041,7 +1046,8 @@ public class ZoneInfoParser {
                 aliasesToRemove.add(alias);
                 while ((real = mLinks.get(real)) != null) {
                     if (mZones.containsKey(real)) {
-                        flattenedLinks.put(alias, real);
+                        if (!alias.equals(real))
+                            flattenedLinks.put(alias, real);
                         break;
                     }
                 }
