@@ -126,7 +126,7 @@ class TcpImapHandler extends ImapHandler {
             mRequest = null;
         }
     }
-    
+                                             
     @Override boolean doSTARTTLS(String tag) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return CONTINUE_PROCESSING;
@@ -140,7 +140,7 @@ class TcpImapHandler extends ImapHandler {
         SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
         NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSslExcludedCiphers());
         tlsconn.setUseClientMode(false);
-        tlsconn.startHandshake();
+        startHandshake(tlsconn);
         ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(tlsconn.getInputStream());
         mOutputStream = new BufferedOutputStream(tlsconn.getOutputStream());

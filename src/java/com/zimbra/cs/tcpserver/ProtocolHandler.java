@@ -20,7 +20,10 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
 
+import javax.net.ssl.HandshakeCompletedEvent;
+import javax.net.ssl.HandshakeCompletedListener;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
@@ -127,6 +130,10 @@ public abstract class ProtocolHandler implements Runnable {
         ZimbraLog.clearContext();
         
         try {
+            if (mConnection instanceof SSLSocket) {
+                startHandshake((SSLSocket) mConnection);
+            }
+
             if (setupConnection(mConnection)) {
                 if (authenticate())
                     processConnection();
@@ -166,6 +173,20 @@ public abstract class ProtocolHandler implements Runnable {
         mServer.removeActiveHandler(this);
         mHandlerThread = null;
         mLog.info("Handler exiting normally");
+    }
+
+    /*
+     * Starts handshake on specified SSL socket. Also adds handshake listener
+     * so that connection will be automatically closed upon SSL renegotiation
+     * attempt (see bug 42857).
+     */
+    protected void startHandshake(final SSLSocket sock) throws IOException {
+        sock.startHandshake();
+        sock.addHandshakeCompletedListener(new HandshakeCompletedListener() {
+            public void handshakeCompleted(HandshakeCompletedEvent event) {
+                hardShutdown("SSL renegotiation denied: " + sock);
+            }
+        });
     }
 
     private void processConnection() throws Exception {
