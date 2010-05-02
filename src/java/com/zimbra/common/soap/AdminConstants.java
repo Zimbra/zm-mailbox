@@ -721,4 +721,7 @@ public class AdminConstants {
     public static final String A_USER = "user";
     public static final String A_PASS = "pass";
     public static final String A_SCHEME = "scheme";
+    
+    // flush cache
+    public static final String A_ALLSERVERS = "allServers";
 }
