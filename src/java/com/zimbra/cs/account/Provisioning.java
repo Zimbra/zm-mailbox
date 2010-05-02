@@ -1856,7 +1856,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException;
-    
+
     public static class CountAccountResult {
         public static class CountAccountByCos {
             

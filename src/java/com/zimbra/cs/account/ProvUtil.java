@@ -428,7 +428,7 @@ public class ProvUtil implements HttpDebugListener {
         DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{xmpp-component-name}", Category.CONFIG, 1, 1),
         DESCRIBE("describe", "desc", "[[-v] [-ni] [{entry-type}]] | [-a {attribute-name}]", Category.MISC, 0, Integer.MAX_VALUE, null, null, true),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
-        FLUSH_CACHE("flushCache", "fc", "{skin|locale|license|account|config|cos|domain|group|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
+        FLUSH_CACHE("flushCache", "fc", "[-a] {skin|locale|license|account|config|cos|domain|group|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name|id|foreignPrincipal} {by} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -3333,23 +3333,32 @@ public class ProvUtil implements HttpDebugListener {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         
+        boolean allServers = false;
+        
+        int argIdx = 1;
+        if (args[argIdx].equals("-a")) {
+            allServers = true;
+            argIdx++;
+        }
+        String type = args[argIdx++];
+        
         CacheEntry[] entries = null;
         
-        if (args.length > 2) {
-            entries = new CacheEntry[args.length - 2];
-            for (int i=2; i<args.length; i++) {
+        if (args.length > argIdx) {
+            entries = new CacheEntry[args.length - argIdx];
+            for (int i=argIdx; i<args.length; i++) {
                 CacheEntryBy entryBy;
                 if (Provisioning.isUUID(args[i]))
                     entryBy = CacheEntryBy.id;
                 else
                     entryBy = CacheEntryBy.name;
                 
-                entries[i-2] = new CacheEntry(entryBy, args[i]);
+                entries[i-argIdx] = new CacheEntry(entryBy, args[i]);
             }
         }
         
         SoapProvisioning sp = (SoapProvisioning)mProv;
-        sp.flushCache(args[1], entries);
+        sp.flushCache(type, entries, allServers);
         
     }
 

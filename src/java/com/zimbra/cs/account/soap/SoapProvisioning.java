@@ -2175,16 +2175,18 @@ public class SoapProvisioning extends Provisioning {
     }
      
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
-        flushCache(type.name(), entries);
+        flushCache(type.name(), entries, false);
     }
     
     /*
      * invoked from ProvUtil, as it has to support skin and locale caches, which are not 
      * managed by Provisioning.
      */
-    public void flushCache(String type, CacheEntry[] entries) throws ServiceException {
+    public void flushCache(String type, CacheEntry[] entries, boolean allServers) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.FLUSH_CACHE_REQUEST);
-        Element eCache = req.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, type);
+        Element eCache = req.addElement(AdminConstants.E_CACHE);
+        eCache.addAttribute(AdminConstants.A_TYPE, type);
+        eCache.addAttribute(AdminConstants.A_ALLSERVERS, allServers);
 
         if (entries != null) {
             for (CacheEntry entry : entries) {

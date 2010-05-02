@@ -2130,10 +2130,15 @@ in soap-waitset.txt
 # Flush memory cache for specified LDAP or directory scan type/entries
 
 <FlushCacheRequest>
-  <cache type='skin|locale|account|cos|domain|server|zimlet'>
+  <cache type='skin|locale|account|cos|domain|server|zimlet' [allServers="1|0"]>
     [<entry by={id|name}>value</entry>+]
   </cache>
 </FlushCacheRequest>
+
+  allServers: 
+      0 (default) = flush cache only on the local server
+      1           = flush cache on all servers (this can take on systems with lots of servers)
+    
 
   Directory scan caches(source of data is on local disk of the server):
       skin|locale
@@ -2141,8 +2146,8 @@ in soap-waitset.txt
   LDAP caches(source of data is LDAP):
       account|cos|domain|server|zimlet
   	      
-  For LDAP caches, one or more optional <entry> can be given for specific 
-  entries of the type for that its cache entry is to be flushed.  
+  For LDAP caches, one or more optional <entry> can be specified.
+  If <entry>(s) are specified, only the specified entries will be flushed.
   If no <entry> is given, all enties of the type will be flushed from cache.
 
   type can contain a combination of skin, locale and zimlet. E.g. type='skin,locale,zimlet' or type='zimletskin'

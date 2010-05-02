@@ -15,7 +15,6 @@
 package com.zimbra.cs.service.admin;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +63,7 @@ public class FlushCache extends AdminDocumentHandler {
         
         Element eCache = request.getElement(AdminConstants.E_CACHE);
         String typeStr = eCache.getAttribute(AdminConstants.A_TYPE);
+        boolean allServers = eCache.getAttributeBool(AdminConstants.A_ALLSERVERS, false);
         
         String[] types = typeStr.split(",");
         
@@ -83,10 +83,13 @@ public class FlushCache extends AdminDocumentHandler {
             }
         }
 
+        if (allServers)
+            flushCacheOnAllServers(zsc, request);
+        
         Element response = zsc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);
         return response;
     }
-    
+   
     private void doFlush(Map<String, Object> context, CacheEntryType cacheType, Element eCache) throws ServiceException {
         
         switch (cacheType) {
@@ -166,6 +169,41 @@ public class FlushCache extends AdminDocumentHandler {
 		req.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, cacheType);
 		mTransport.invoke(req);		
     }
+    
+    private void flushCacheOnAllServers(ZimbraSoapContext zsc, Element origReq) throws ServiceException {
+       
+        Provisioning prov = Provisioning.getInstance();
+        String localServerId = prov.getLocalServer().getId();
+        
+        for (Server server : prov.getAllServers(Provisioning.SERVICE_MAILBOX)) {
+            
+            if (localServerId.equals(server.getId()))
+                continue;
+            
+            ZimbraLog.misc.debug("Flushing cache on server: " + server.getName());
+            
+            Element req = origReq.clone();
+            Element eCache = req.getElement(AdminConstants.E_CACHE);
+            eCache.addAttribute(AdminConstants.A_ALLSERVERS, false);
+            
+            String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
+            SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
+            mTransport.setAuthToken(zsc.getRawAuthToken());
+            
+            try {
+                mTransport.invoke(req);     
+            } catch (ServiceException e) {
+                // log and continue
+                ZimbraLog.misc.warn("Encountered exception while FlushCache on server: " + server.getName() + 
+                        ", skip and continue with the next server", e);
+            } catch (IOException e) {
+                // log and continue
+                ZimbraLog.misc.warn("Encountered exception while FlushCache on server: " + server.getName() + 
+                        ", skip and continue with the next server", e);
+            }
+        }
+    }
+    
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
