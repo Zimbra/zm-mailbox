@@ -2130,7 +2130,7 @@ in soap-waitset.txt
 # Flush memory cache for specified LDAP or directory scan type/entries
 
 <FlushCacheRequest>
-  <cache type='skin|locale|account|cos|domain|server|zimlet' [allServers="1|0"]>
+  <cache type="skin|locale|account|cos|domain|server|zimlet" [allServers="1|0"]>
     [<entry by={id|name}>value</entry>+]
   </cache>
 </FlushCacheRequest>
