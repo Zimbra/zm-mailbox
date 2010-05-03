@@ -877,12 +877,15 @@ public class DbMailbox {
             DbPool.closeStatement(stmt);
         }
 
-        removeFromDeletedAccount(conn, email);
+        boolean supportsReplaceInto = Db.supports(Db.Capability.REPLACE_INTO);
+        if (!supportsReplaceInto)
+            removeFromDeletedAccount(conn, email);
 
         try {
             // add the mailbox's account to deleted_account table
+            String command = supportsReplaceInto ? "REPLACE" : "INSERT";
             stmt = conn.prepareStatement(
-                    "INSERT INTO deleted_account (email, account_id, mailbox_id, deleted_at) " +
+                    command + " INTO deleted_account (email, account_id, mailbox_id, deleted_at) " +
                     "SELECT ?, account_id, id, ? FROM mailbox WHERE id = ?");
             stmt.setString(1, email.toLowerCase());
             stmt.setLong(2, System.currentTimeMillis() / 1000);
