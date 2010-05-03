@@ -41,12 +41,14 @@ import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
 	private static final int CREATE_ACCOUNT = 10;
-	private static final int DELETE_ACCOUNT = 11;
-	private static final int TRICKLE_SYNC = 12;
-	private static final int FULL_SYNC = 13;
-	private static final int FORCE_SYNC = 14;
+	private static final int CREATE_DATASOURCE = 11;  // CREATE_DATASOURCE is just an alias of CREATE_ACCOUNT, see https://bugzilla.zimbra.com/show_bug.cgi?id=41322#c2
+	private static final int DELETE_ACCOUNT = 12;
+	private static final int TRICKLE_SYNC = 13;
+	private static final int FULL_SYNC = 14;
+	private static final int FORCE_SYNC = 15;
 
 	private static final String CREATE_ACCOUNT_COMMAND = "createaccount";
+	private static final String CREATE_DATASOURCE_COMMAND = "createdatasource";
 	private static final String DELETE_ACCOUNT_COMMAND = "deleteaccount";
 	private static final String TRICKLE_SYNC_COMMAND = "tricklesync";
 	private static final String FULL_SYNC_COMMAND = "fullsync";
@@ -57,6 +59,7 @@ public class GalSyncAccountUtil {
 	private static void usage() {
 		System.out.println("zmgsautil: {command}");
 		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
+		System.out.println("\tcreateDataSource -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
 		System.out.println("\tdeleteAccount [-a {account-name} | -i {account-id}]");
 		System.out.println("\ttrickleSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
 		System.out.println("\tfullSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
@@ -79,6 +82,7 @@ public class GalSyncAccountUtil {
 	private static void setup() {
 		mCommands = new HashMap<String,Integer>();
 		addCommand(CREATE_ACCOUNT_COMMAND, CREATE_ACCOUNT);
+		addCommand(CREATE_DATASOURCE_COMMAND, CREATE_DATASOURCE);
 		addCommand(DELETE_ACCOUNT_COMMAND, DELETE_ACCOUNT);
 		addCommand(TRICKLE_SYNC_COMMAND, TRICKLE_SYNC);
 		addCommand(FULL_SYNC_COMMAND, FULL_SYNC);
@@ -269,6 +273,7 @@ public class GalSyncAccountUtil {
 				cli.syncGalAccount();
 				break;
 			case CREATE_ACCOUNT:
+			case CREATE_DATASOURCE:    
 				String acctName = cl.getOptionValue('a');
 				String dsName = cl.getOptionValue('n');
 				String domain = cl.getOptionValue('x');

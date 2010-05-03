@@ -139,13 +139,14 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 	    }
 	    
 	    int folderId = contactFolder.getId();
-	    
-        mbox.grantAccess(null, folderId, domain.getId(), ACL.GRANTEE_DOMAIN, ACL.stringToRights("r"), null);
-	    
+	   
 	    // check if there is another datasource already that maps to the same contact folder.
 	    for (DataSource ds : account.getAllDataSources())
 	    	if (ds.getFolderId() == folderId)
-	    		throw MailServiceException.ALREADY_EXISTS(ds.getName());
+	    		throw MailServiceException.ALREADY_EXISTS("data source " + ds.getName() + " already contains folder " + folder);
+	    
+	    
+        mbox.grantAccess(null, folderId, domain.getId(), ACL.GRANTEE_DOMAIN, ACL.stringToRights("r"), null);
 	    
 	    // create datasource
 	    Map<String,Object> attrs = AdminService.getAttrs(request, true);
