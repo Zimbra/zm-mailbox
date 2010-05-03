@@ -119,7 +119,7 @@ public class ImapConfig extends ServerConfig {
     }
 
     public int getMaxRequestSize() {
-        return LC.imap_max_request_size.intValue();
+        return getIntAttr(A_zimbraImapMaxRequestSize, LC.imap_max_request_size.intValue());
     }
 
     public int getMaxMessageSize() {
