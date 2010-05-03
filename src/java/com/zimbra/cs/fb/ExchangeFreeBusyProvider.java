@@ -127,7 +127,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 						if (val != null)
 							return val;
 						Domain dom = prov.getDomain(acct);
-						val = dom.getAttr(attr, null);
+						if (dom != null)
+						    val = dom.getAttr(attr, null);
 						if (val != null)
 							return val;
 					}
