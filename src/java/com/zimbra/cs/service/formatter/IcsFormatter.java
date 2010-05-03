@@ -91,10 +91,12 @@ public class IcsFormatter extends Formatter {
         String filename = context.itemPath;
         if (filename == null || filename.length() == 0)
             filename = "contacts";
-        String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".ics");
-        context.resp.addHeader("Content-Disposition", cd);
+        if (mayAttach(context)) {
+            String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".ics");
+            context.resp.addHeader("Content-Disposition", cd);
+        }
         context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
-        context.resp.setContentType(MimeConstants.CT_TEXT_CALENDAR );
+        context.resp.setContentType(getContentType(context, MimeConstants.CT_TEXT_CALENDAR));
 
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);

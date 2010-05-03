@@ -43,6 +43,7 @@ import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.mime.MimeConstants;
 
 public abstract class Formatter {
     public abstract String getType();
@@ -123,11 +124,11 @@ public abstract class Formatter {
     // Caller is responsible for filtering out Appointments/Tasks marked private if the requester
     // is not the mailbox owner.
     public Iterator<? extends MailItem> getMailItems(Context context, long startTime, long endTime, long chunkSize) throws ServiceException {
-    	if (context.respListItems != null) {
-    		return context.respListItems.iterator();
-    	}
-    	
-    	assert(context.target != null);
+        if (context.respListItems != null) {
+            return context.respListItems.iterator();
+        }
+        
+        assert(context.target != null);
         String query = context.getQueryString();
         if (query != null) {
             try {
@@ -335,5 +336,21 @@ public abstract class Formatter {
             out.println("</body>");
             out.println("</html>");
         }
+    }
+
+    protected String getContentType(Context context, String fallback) {
+        String mime = context.req.getParameter("mime");
+        if (mime != null && !mime.equals("")) {
+            return mime;
+        } else if (fallback != null && !fallback.equals("")) {
+            return fallback;
+        } else {
+            return MimeConstants.CT_TEXT_PLAIN;
+        }
+    }
+
+    protected boolean mayAttach(Context context) {
+        String noAttach = context.req.getParameter("noAttach");
+        return !(noAttach != null && (noAttach.equals("1") || noAttach.equalsIgnoreCase("true")));
     }
 }
