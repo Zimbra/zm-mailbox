@@ -39,7 +39,7 @@ public abstract class ImapImport extends MailItemImport {
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
-        config.setSecurity(getSecurity(ds.getConnectionType()));
+        // config.setSecurity(getSecurity(ds.getConnectionType()));
         // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
         // Avoiding LITERAL+ also gives servers a chance to reject uploaded
         // messages that are too big, since the server must send a continuation

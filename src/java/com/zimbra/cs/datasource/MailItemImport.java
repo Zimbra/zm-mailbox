@@ -104,22 +104,6 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return msg;
     }
 
-    protected static MailConfig.Security getSecurity(DataSource.ConnectionType type) {
-        if (type != null) {
-            switch (type) {
-            case cleartext:
-                return MailConfig.Security.NONE;
-            case ssl:
-                return MailConfig.Security.SSL;
-            case tls:
-                return MailConfig.Security.TLS;
-            case tls_if_available:
-                return MailConfig.Security.TLS_IF_AVAILABLE;
-            }
-        }
-        return MailConfig.Security.NONE;
-    }
-    
     public boolean isSslEnabled() {
         return dataSource.getConnectionType() == DataSource.ConnectionType.ssl;
     }
