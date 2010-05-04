@@ -2502,8 +2502,9 @@
 <right type="combo" name="adminConsoleServerStatisticRights">
   <desc>Admin Console Server Statistics Rights</desc>
   <rights>
-    <r n="getServiceStatus"/>
+    <r n="getServerStats"/>
     <r n="listServer"/>
+    <r n="getSessions"/>
   </rights>
 </right>
 
