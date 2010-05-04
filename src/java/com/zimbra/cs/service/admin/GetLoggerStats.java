@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -105,7 +106,7 @@ public class GetLoggerStats extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
+        
         
         // this command can only execute on the monitor host, so proxy if necessary
         Provisioning prov = Provisioning.getInstance();
@@ -113,11 +114,14 @@ public class GetLoggerStats extends AdminDocumentHandler {
         if (monitorHost == null || monitorHost.trim().equals(""))
             throw ServiceException.FAILURE("zimbraLogHostname is not configured", null);
         Server monitorServer = prov.get(ServerBy.name, monitorHost);
+        
+        checkRight(zsc, context, monitorServer, Admin.R_getServerStats);
+        
         if (monitorServer == null)
             throw ServiceException.FAILURE("could not find zimbraLogHostname server: " + monitorServer, null);
         if (!prov.getLocalServer().getId().equalsIgnoreCase(monitorServer.getId()))
             return proxyRequest(request, context, monitorServer);
-        
+       
         Element response = zsc.createElement(AdminConstants.GET_LOGGER_STATS_RESPONSE);
         boolean loggerEnabled = false;
         Server local = prov.getLocalServer();
@@ -450,6 +454,6 @@ public class GetLoggerStats extends AdminDocumentHandler {
 
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);
+    	relatedRights.add(Admin.R_getServerStats);
     }
 }
