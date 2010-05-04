@@ -4891,4 +4891,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to end auto-complete on comma</desc>
 </attr>
 
+<attr id="1092" name="zimbraCalendarShowResourceTabs" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.7">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether to show Find Locations and Find Resources tabs for editing appointments</desc>
+</attr>
+
 </attrs>

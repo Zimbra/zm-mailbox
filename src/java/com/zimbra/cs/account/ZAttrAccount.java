@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100427-0136 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100504-1549 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4102,6 +4102,83 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetCalendarMaxRevisions(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarMaxRevisions, "");
+        return attrs;
+    }
+
+    /**
+     * whether to show Find Locations and Find Resources tabs for editing
+     * appointments
+     *
+     * @return zimbraCalendarShowResourceTabs, or true if unset
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1092)
+    public boolean isCalendarShowResourceTabs() {
+        return getBooleanAttr(Provisioning.A_zimbraCalendarShowResourceTabs, true);
+    }
+
+    /**
+     * whether to show Find Locations and Find Resources tabs for editing
+     * appointments
+     *
+     * @param zimbraCalendarShowResourceTabs new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1092)
+    public void setCalendarShowResourceTabs(boolean zimbraCalendarShowResourceTabs) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarShowResourceTabs, zimbraCalendarShowResourceTabs ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to show Find Locations and Find Resources tabs for editing
+     * appointments
+     *
+     * @param zimbraCalendarShowResourceTabs new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1092)
+    public Map<String,Object> setCalendarShowResourceTabs(boolean zimbraCalendarShowResourceTabs, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarShowResourceTabs, zimbraCalendarShowResourceTabs ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to show Find Locations and Find Resources tabs for editing
+     * appointments
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1092)
+    public void unsetCalendarShowResourceTabs() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarShowResourceTabs, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to show Find Locations and Find Resources tabs for editing
+     * appointments
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1092)
+    public Map<String,Object> unsetCalendarShowResourceTabs(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarShowResourceTabs, "");
         return attrs;
     }
 

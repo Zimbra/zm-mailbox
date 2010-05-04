@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100427-0136 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100504-1549 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1772,6 +1772,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=753)
     public static final String A_zimbraCalendarResourceExtraObjectClass = "zimbraCalendarResourceExtraObjectClass";
+
+    /**
+     * whether to show Find Locations and Find Resources tabs for editing
+     * appointments
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1092)
+    public static final String A_zimbraCalendarShowResourceTabs = "zimbraCalendarShowResourceTabs";
 
     /**
      * Whether this calendar resource accepts/declines meeting invites
