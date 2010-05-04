@@ -67,6 +67,7 @@ public class ContactRankings {
 	}
 	public synchronized void increment(String email) {
 		long now = System.currentTimeMillis();
+		email = email.toLowerCase();
 		ContactEntry entry = mEntryMap.get(email);
 		if (entry == null) {
 			entry = new ContactEntry();
@@ -98,7 +99,7 @@ public class ContactRankings {
 		}
 	}
 	public int query(String email) {
-	    ContactEntry entry = mEntryMap.get(email);
+	    ContactEntry entry = mEntryMap.get(email.toLowerCase());
 	    if (entry != null)
 	        return entry.mRanking;
 	    return 0;
@@ -116,7 +117,7 @@ public class ContactRankings {
                 @SuppressWarnings("unchecked")
                 Map<Object,Object> m = (Map<Object,Object>) v;
                 ContactEntry entry = new ContactEntry();
-                entry.mEmail = (String) k;
+                entry.mEmail = ((String) k).toLowerCase();
                 Long num = (Long)m.get(KEY_RANKING);
                 entry.mRanking = num.intValue();
                 num = (Long)m.get(KEY_LAST_ACCESSED);
