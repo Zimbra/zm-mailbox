@@ -216,12 +216,7 @@ public class L10nUtil {
     static {
 		String msgsDir = LC.localized_msgs_directory.value();
         sMsgClassLoader = getClassLoader(msgsDir);
-
-        Locale[] locales = Locale.getAvailableLocales();
-        sLocaleMap = new HashMap<String, Locale>(locales.length);
-        for (Locale lc : locales) {
-            sLocaleMap.put(lc.toString(), lc);
-        }
+        sLocaleMap = new HashMap<String, Locale>();
     }
 
 	public static String getMessage(MsgKey key,
