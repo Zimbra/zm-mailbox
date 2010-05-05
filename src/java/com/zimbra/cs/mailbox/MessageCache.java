@@ -114,6 +114,12 @@ public class MessageCache {
                 mTotalSize -= cnode.mSize;
             }
         }
+        
+        if (cnode == null) {
+            ZimbraLog.cache.debug("msgcache: attempted to purge %s but could not find it in the cache.", digest);
+        } else {
+            ZimbraLog.cache.debug("msgcache: purged %s, size=%d.", digest, cnode.mSize);
+        }
     }
     
     /** Returns the raw, uncompressed content of the item.  For messages,
@@ -125,6 +131,7 @@ public class MessageCache {
      * @see #getRawContent() */
     static byte[] getItemContent(MailItem item) throws ServiceException {
         String key = item.getDigest();
+        ZimbraLog.cache.debug("msgcache: getItemContent(): id=%d, size=%d, digest=%s.", item.getId(), item.getSize(), key);
         if (key == null || key.equals(""))
             return null;
 
@@ -135,8 +142,10 @@ public class MessageCache {
             cacheHit = cnode != null && cnode.mContent != null;
 
             if (!cacheHit && cnode != null) {
-                // can't use a cached MimeMessage because of TNEF conversion
                 mCache.remove(key);  mTotalSize -= cnode.mSize;
+                ZimbraLog.cache.debug(
+                    "msgcache: can't use a cached MimeMessage because of TNEF conversion.  Removing item with size=%d.  Cache size is now %d.",
+                    cnode.mSize, mTotalSize);
             }
         }
 
@@ -174,6 +183,7 @@ public class MessageCache {
      * @see #getItemContent() */
     static InputStream getRawContent(MailItem item) throws ServiceException {
         String key = item.getDigest();
+        ZimbraLog.cache.debug("msgcache: getRawContent(): id=%d, size=%d, digest=%s.", item.getId(), item.getSize(), key);
         if (key == null || key.equals(""))
             return null;
         if (item.getSize() < mMaxCacheSize) {
@@ -204,16 +214,19 @@ public class MessageCache {
      * @see com.zimbra.cs.mime.UUEncodeConverter */
     static MimeMessage getMimeMessage(MailItem item, boolean expand) throws ServiceException {
         String key = item.getDigest();
+        ZimbraLog.cache.debug("msgcache: getMimeMessage(): id=%d, size=%d, digest=%s, expand=%b.", item.getId(), item.getSize(), key, expand);
         boolean cacheHit = false;
         CacheNode cnode = null, cnOrig = null;
         synchronized (mCache) {
             cnode = cnOrig = mCache.get(key);
-            if (cnode != null && cnode.mMessage != null)
+            if (cnode != null && cnode.mMessage != null) {
                 cacheHit = cnode.mConvertersRun == ConvertedState.BOTH || cnode.mConvertersRun == (expand ? ConvertedState.EXPANDED : ConvertedState.RAW);
+                ZimbraLog.cache.debug("msgcache: found node: size=%d, convertersRun=%s, cacheHit=%b", cnode.mSize, cnode.mConvertersRun, cacheHit);
+            }
 
             if (!cacheHit && cnode != null) {
-                // replacing the cached byte array with a MimeMessage
                 mCache.remove(key);  mTotalSize -= cnode.mSize;
+                ZimbraLog.cache.debug("msgcache: replacing the cached byte array with a MimeMessage.  New cache size=%d.", mTotalSize);
             }
         }
 
@@ -223,7 +236,7 @@ public class MessageCache {
                 // wasn't cached; fetch the content and create the MimeMessage
                 long size = item.getSize();
                 if (expand && cnOrig != null && cnOrig.mMessage != null && cnOrig.mConvertersRun == ConvertedState.RAW) {
-                    // switching from RAW to EXPANDED -- can reuse an existing raw MimeMessage
+                    ZimbraLog.cache.debug("msgcache: switching from RAW to EXPANDED");
                     cnode = new CacheNode(cnOrig.mSize, cnOrig.mMessage, ConvertedState.BOTH);
                 } else {
                     // use the raw byte array to construct the MimeMessage if possible, else read from disk
@@ -232,6 +245,7 @@ public class MessageCache {
                         if (is instanceof BlobInputStream)
                             size = STREAMED_MESSAGE_SIZE;
                     } else {
+                        ZimbraLog.cache.debug("msgcache: creating MimeMessage from existing content");
                         is = new SharedByteArrayInputStream(cnOrig.mContent);
                     }
                     
@@ -245,6 +259,7 @@ public class MessageCache {
                             if (((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage)) {
                                 cnode.mConvertersRun = ConvertedState.EXPANDED;
                                 size = item.getSize(); // Even with BlobInputStream, an expanded message will be stored in memory
+                                ZimbraLog.cache.debug("msgcache: expanded MimeMessage, new size=%d.", size);
                             }
                         }
                     } catch (Exception e) {
@@ -274,9 +289,6 @@ public class MessageCache {
                     ByteUtil.closeStream(is);
                 }
             }
-        } else {
-            if (ZimbraLog.cache.isDebugEnabled())
-                ZimbraLog.cache.debug("msgcache: found mime message in cache: " + item.getDigest());
         }
 
         ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 100 : 0);
@@ -285,6 +297,7 @@ public class MessageCache {
     }
 
     private static InputStream fetchFromStore(MailItem item) throws ServiceException, IOException {
+        ZimbraLog.cache.debug("msgcache: fetchFromStore(): id=%d, size=%d, digest=%s.", item.getId(), item.getSize(), item.getDigest());
         MailboxBlob msgBlob = item.getBlob();
         if (msgBlob == null)
             throw ServiceException.FAILURE("missing blob for id: " + item.getId() + ", change: " + item.getModifiedSequence(), null);
@@ -298,6 +311,7 @@ public class MessageCache {
      * @param msg a <tt>MimeMessage</tt> that is being streamed from disk
      */
     public static void cacheStreamedMessage(String digest, MimeMessage msg) {
+        ZimbraLog.cache.debug("msgcache: cacheStreamedMessage(): digest=%s", digest);
         // Remove/update size, in case an older version is already in the cache
         purge(digest);
         CacheNode cnode = new CacheNode(STREAMED_MESSAGE_SIZE, msg, ConvertedState.BOTH);
@@ -305,21 +319,27 @@ public class MessageCache {
     }
 
     private static void cacheItem(String key, CacheNode cnode) {
-        if (cnode.mSize >= mMaxCacheSize)
+        if (cnode.mSize >= mMaxCacheSize) {
+            ZimbraLog.cache.debug("msgcache: not caching %s.  size %d is bigger than max cache size %d.", key, cnode.mSize, mMaxCacheSize);
             return;
+        }
         
         synchronized (mCache) {
-            if (ZimbraLog.cache.isDebugEnabled())
-                ZimbraLog.cache.debug("msgcache: caching " + (cnode.mContent != null ? "raw" : "mime") + " message: " + key);
             mCache.put(key, cnode);
             mTotalSize += cnode.mSize;
+            ZimbraLog.cache.debug("msgcache: caching %s message: size=%d, digest=%s.  Cache size is now %d.",
+                (cnode.mContent != null ? "raw" : "mime"), cnode.mSize, key, mTotalSize);
 
             // trim the cache if needed
             if (mTotalSize > mMaxCacheSize) {
-                for (Iterator it = mCache.values().iterator(); mTotalSize > DEFAULT_CACHE_SIZE && it.hasNext(); ) {
-                    CacheNode cnPurge = (CacheNode) it.next();
+                ZimbraLog.cache.debug("msgcache: cache size %d exceeded maximum %d.", mTotalSize, mMaxCacheSize);
+                for (Iterator<Map.Entry<String, CacheNode>> it = mCache.entrySet().iterator(); mTotalSize > mMaxCacheSize && it.hasNext(); ) {
+                    Map.Entry<String, CacheNode> entry = it.next();
+                    String digest = entry.getKey();
+                    CacheNode cnPurge = entry.getValue();
                     it.remove();
                     mTotalSize -= cnPurge.mSize;
+                    ZimbraLog.cache.debug("msgcache: removed %s, size %d.  Cache size is now %d.", digest, cnPurge.mSize, mTotalSize);
                 }
             }
         }
