@@ -43,7 +43,6 @@ import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.TransactionId;
 import com.zimbra.cs.redolog.Version;
-import com.zimbra.cs.util.Zimbra;
 
 public abstract class RedoableOp {
 
@@ -642,7 +641,7 @@ public abstract class RedoableOp {
         for (int opcode = OP_UNKNOWN + 1; opcode < OP_LAST; opcode++) {
             String className = RedoableOp.getOpClassName(opcode);
             if (className == null) {
-                mLog.error("Invalid redo operation code: " + opcode);
+                System.err.println("Invalid redo operation code: " + opcode);
                 allGood = false;
             } else if (className.compareTo("UNKNOWN") != 0) {
                 Class clz = null;
@@ -652,15 +651,17 @@ public abstract class RedoableOp {
                 } catch (ClassNotFoundException e) {
                     // Some classes may not be found depending on which
                     // optional packages are installed.
-                    mLog.debug("Ignoring ClassNotFoundException for redo operation " + className);
+                    System.out.println("Ignoring ClassNotFoundException for redo operation " + className);
                 } catch (InstantiationException e) {
                     String msg = "Unable to instantiate " + className +
                     "; Check default constructor is defined.";
-                    mLog.error(msg, e);
+                    System.err.println(msg);
+                    e.printStackTrace(System.err);
                     allGood = false;
                 } catch (IllegalAccessException e) {
                     String msg = "IllegalAccessException while instantiating " + className;
-                    mLog.error(msg, e);
+                    System.err.println(msg);
+                    e.printStackTrace(System.err);
                     allGood = false;
                 }
             }
@@ -668,18 +669,15 @@ public abstract class RedoableOp {
         return allGood;
     }
 
-    private static Map<String, Class> sOpClassMap;
-    private static List<ClassLoader> sOpClassLoaders;
+    private static Map<String, Class> sOpClassMap = new HashMap<String, Class>();
+    private static List<ClassLoader> sOpClassLoaders = new ArrayList<ClassLoader>();
 
-    static {
-        sOpClassMap = new HashMap<String, Class>();
-        sOpClassLoaders = new ArrayList<ClassLoader>();
-
-        boolean allSubclassesGood = checkSubclasses();
-        if (!allSubclassesGood) {
-            Zimbra.halt(
+    public static void main(String[] args) {
+        if (!checkSubclasses()) {
+            System.err.println(
                     "Some RedoableOp subclasses are incomplete.  " +
-            "Hint: Make sure the subclass defines a default constructor.");
+                "Hint: Make sure the subclass defines a default constructor.");
+            System.exit(1);
         }
     }
 
