@@ -78,9 +78,8 @@ public class ImportAppointments extends MailDocumentHandler  {
                 // part of existing message
                 ItemId iid = new ItemId(messageId, zsc);
                 String part = content.getAttribute(MailConstants.A_PART);
-                String[] acceptableTypes = new String[] { MimeConstants.CT_TEXT_CALENDAR };
                 String partStr = CreateContact.fetchItemPart(
-                        zsc, octxt, mbox, iid, part, acceptableTypes, MimeConstants.P_CHARSET_UTF8);
+                        zsc, octxt, mbox, iid, part, null, MimeConstants.P_CHARSET_UTF8);
                 is = new ByteArrayInputStream(partStr.getBytes(MimeConstants.P_CHARSET_UTF8));
             } else {
                 is = new ByteArrayInputStream(content.getText().getBytes(MimeConstants.P_CHARSET_UTF8));
