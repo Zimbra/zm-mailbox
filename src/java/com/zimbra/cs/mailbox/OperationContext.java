@@ -17,6 +17,7 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -132,7 +133,15 @@ public class OperationContext {
         return isAdmin;
     }
     public boolean isDelegatedRequest(Mailbox mbox) {
-        return authuser != null && !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+        if (authuser != null) {
+            // Similar to CalendarRequest.isOnBehalfOfRequest(ZimbraSoapContext)...
+            String zdLocalAcctId = LC.zdesktop_local_account_id.value();
+            if (zdLocalAcctId != null && zdLocalAcctId.length() > 0)
+                return !zdLocalAcctId.equalsIgnoreCase(authuser.getId());
+            else
+                return !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+        }
+        return false;
     }
     
     public OperationContext setRequestIP(String addr) {

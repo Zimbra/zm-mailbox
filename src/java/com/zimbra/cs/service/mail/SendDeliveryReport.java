@@ -67,13 +67,17 @@ public class SendDeliveryReport extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the message");
 
         // first, send the notification
-        sendReport(getAuthenticatedAccount(zsc), msg, false, zsc.getRequestIP(), zsc.getUserAgent());
+        sendReport(getSenderAccount(zsc), msg, false, zsc.getRequestIP(), zsc.getUserAgent());
 
         // then mark the message as \Notified
         mbox.alterTag(octxt, msgid, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_NOTIFIED, true);
 
         Element response = zsc.createElement(MailConstants.SEND_REPORT_RESPONSE);
         return response;
+    }
+
+    protected Account getSenderAccount(ZimbraSoapContext zsc) throws ServiceException {
+        return getAuthenticatedAccount(zsc);
     }
 
     void sendReport(Account authAccount, Message msg, boolean automatic, String requestHost, String userAgent)
