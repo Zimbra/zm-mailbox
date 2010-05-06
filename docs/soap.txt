@@ -147,7 +147,7 @@ element involving the session.)  If there is a session, there will be a
             <tag id="66" name="phlox" u="8"/>
             <folder id="4353" name="a&p" u="2" l="1"/>
             <folder id="4356" name="subfoldre" u="2" l="4353"/>
-            <link id="1" name="new-mount-point" l="1" n="6" u="1" f="u" owner="user1@example.com" zid="151bd192-e19a-40be-b8c9-259b21ffac48" rid="2">
+            <link id="1" name="new-mount-point" l="1" n="6" u="1" f="u" owner="user1@example.com" zid="151bd192-e19a-40be-b8c9-259b21ffac48" rid="2" oname="user1folder">
               <folder id="151bd192-e19a-40be-b8c9-259b21ffac48:260" name="remote-subfolder" n="43" l="151bd192-e19a-40be-b8c9-259b21ffac48:2"/>
             </link>
           </created>
@@ -1186,7 +1186,7 @@ Folders:
 
 Mountpoints:
 
-  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] owner="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" [color="{color}"] [view="{default-type}"]/>
+  <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] owner="{owner's-display-name}" zid="{owner's-zimbra-id}" rid="{id-of-shared-item}" oname="{owner's-name-for-item}" [color="{color}"] [view="{default-type}"]/>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
@@ -1195,6 +1195,7 @@ Mountpoints:
   {owner's-display-name} = primary email address of the owner of the linked-to resource
   {owner's-zimbra-id} = Zimbra id (guid) of the owner of the linked-to resource
   {id-of-shared-item} = item id of the linked-to resource in the remote mailbox
+  {owner's-name-for-item} = The name presently used for the item by the owner
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}:
