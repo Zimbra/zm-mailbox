@@ -29,11 +29,9 @@ import java.util.UUID;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.zimbra.common.localconfig.KnownKey;
-import com.zimbra.common.localconfig.LC;
 import org.apache.commons.codec.binary.Base64;
 
-import com.zimbra.common.datasource.SyncState;
+import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
