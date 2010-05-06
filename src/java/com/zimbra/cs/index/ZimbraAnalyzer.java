@@ -175,6 +175,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                     || fieldName.equals(LuceneFields.L_H_CC)
                     || fieldName.equals(LuceneFields.L_H_X_ENV_FROM)
                     || fieldName.equals(LuceneFields.L_H_X_ENV_TO)
+                    || fieldName.equals(LuceneFields.L_CONTACT_DATA)
                     ) 
         {
             return new AddressTokenFilter(new AddrCharTokenizer(reader));
