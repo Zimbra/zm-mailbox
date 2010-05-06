@@ -444,6 +444,7 @@ public class MailConstants {
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
     public static final String A_OWNER_NAME = "owner";
+    public static final String A_OWNER_FOLDER_NAME = "oname";
 
     // browse
     public static final String A_BROWSE_BY = "browseBy";
