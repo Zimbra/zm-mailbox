@@ -14,15 +14,13 @@
  */
 package com.zimbra.qa.unittest;
 
+import com.zimbra.cs.datasource.imap.ImapUtil;
 import junit.framework.TestCase;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.ImapInputStream;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.util.Ascii;
-import com.zimbra.cs.datasource.ImapUtil;
 
-import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;

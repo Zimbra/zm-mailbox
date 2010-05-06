@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
+import com.zimbra.cs.datasource.imap.ImapSync;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;

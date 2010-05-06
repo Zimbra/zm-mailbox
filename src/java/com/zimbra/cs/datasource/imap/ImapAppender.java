@@ -12,8 +12,9 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.datasource;
+package com.zimbra.cs.datasource.imap;
 
+import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
@@ -24,7 +25,6 @@ import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MailboxName;
-import com.zimbra.cs.mailclient.imap.Quoted;
 import com.zimbra.cs.mailclient.imap.ResponseText;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailbox.Message;
@@ -38,7 +38,6 @@ import javax.mail.MessagingException;
 import java.util.List;
 import java.util.Date;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.Iterator;
 import java.util.Map;
 import java.io.InputStream;

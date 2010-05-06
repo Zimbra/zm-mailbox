@@ -35,12 +35,12 @@ public abstract class MailItemImport implements DataSource.DataImport {
     protected final DataSource dataSource;
     protected final Mailbox mbox;
     
-    protected MailItemImport(DataSource ds) throws ServiceException {
+    public MailItemImport(DataSource ds) throws ServiceException {
         dataSource = ds;
         mbox = DataSourceManager.getInstance().getMailbox(ds);
     }
 
-    protected void validateDataSource() throws ServiceException {
+    public void validateDataSource() throws ServiceException {
         DataSource ds = getDataSource();
         if (ds.getHost() == null) {
             throw ServiceException.FAILURE(ds + ": host not set", null);
@@ -56,18 +56,18 @@ public abstract class MailItemImport implements DataSource.DataImport {
         }
     }
 
-    protected boolean isOffline() {
+    public boolean isOffline() {
         return getDataSource().isOffline();
     }
 
 
-    protected Message addMessage(OperationContext octxt, ParsedMessage pm,
+    public Message addMessage(OperationContext octxt, ParsedMessage pm,
                                  int folderId, int flags)
         throws ServiceException, IOException {
         return addMessage(octxt, pm, folderId, flags, new DeliveryContext());
     }
     
-    protected Message addMessage(OperationContext octxt, ParsedMessage pm,
+    public Message addMessage(OperationContext octxt, ParsedMessage pm,
                                  int folderId, int flags, DeliveryContext dc)
         throws ServiceException, IOException {
         Message msg = null;
@@ -116,7 +116,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         return mbox;
     }
     
-    protected Integer getFirstLocalId(List<ItemId> idList) {
+    public Integer getFirstLocalId(List<ItemId> idList) {
         if (idList == null) {
             return null;
         }

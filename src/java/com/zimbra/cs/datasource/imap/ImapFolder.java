@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.datasource;
+package com.zimbra.cs.datasource.imap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +21,8 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.datasource.DataSourceFolderMapping;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;

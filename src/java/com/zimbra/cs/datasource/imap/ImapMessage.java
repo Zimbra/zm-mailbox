@@ -12,10 +12,11 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.datasource;
+package com.zimbra.cs.datasource.imap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.datasource.DataSourceMapping;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 
 public class ImapMessage extends DataSourceMapping {

@@ -23,8 +23,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.datasource.ImapFolder;
-import com.zimbra.cs.datasource.ImapFolderCollection;
+import com.zimbra.cs.datasource.imap.ImapFolder;
+import com.zimbra.cs.datasource.imap.ImapFolderCollection;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 

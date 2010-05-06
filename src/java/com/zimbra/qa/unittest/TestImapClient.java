@@ -15,6 +15,7 @@
 
 package com.zimbra.qa.unittest;
 
+import com.zimbra.cs.datasource.imap.ImapAppender;
 import org.junit.*;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -43,7 +44,6 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.datasource.ImapAppender;
 
 import java.io.IOException;
 import java.io.File;

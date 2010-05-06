@@ -28,7 +28,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
 import java.util.Date;
 
-final class SyncUtil {
+public final class SyncUtil {
     private static final Flags EMPTY_FLAGS = new Flags();
 
     // Excludes flags which have no IMAP equivalent

@@ -12,10 +12,15 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.datasource;
+package com.zimbra.cs.datasource.imap;
                              
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
+import com.zimbra.cs.datasource.LogOutputStream;
+import com.zimbra.cs.datasource.MailItemImport;
+import com.zimbra.cs.datasource.MessageContent;
+import com.zimbra.cs.datasource.SyncState;
+import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -310,7 +315,7 @@ public class ImapSync extends MailItemImport {
         int lastModSeq = getMailbox().getLastChangeID();
         for (ImapFolderSync ifs : syncedFolders.values()) {
             checkIsEnabled();
-            LocalFolder folder = ifs.getLocalFolder();
+            ImapFolderSync.LocalFolder folder = ifs.getLocalFolder();
             int folderId = folder.getId();
             try {
                 if (folderIds == null || folderIds.contains(folderId) ||
@@ -337,7 +342,7 @@ public class ImapSync extends MailItemImport {
             try {
                 ifs.finishSync();
             } catch (Exception e) {
-                LocalFolder folder = ifs.getLocalFolder();
+                ImapFolderSync.LocalFolder folder = ifs.getLocalFolder();
                 syncFailed(folder.getPath(), e);
             }
         }
@@ -420,7 +425,7 @@ public class ImapSync extends MailItemImport {
             int count = 1;
             for (;;) {
                 String path = String.format("%s-%d", localPath, count++);
-                if (LocalFolder.fromPath(mbox, path) == null) {
+                if (ImapFolderSync.LocalFolder.fromPath(mbox, path) == null) {
                     return path;
                 }
             }
@@ -440,7 +445,7 @@ public class ImapSync extends MailItemImport {
      * name.
      */
     private boolean isUniqueLocalPathNeeded(String localPath) throws ServiceException {
-        LocalFolder lf = LocalFolder.fromPath(mbox, localPath);
+        ImapFolderSync.LocalFolder lf = ImapFolderSync.LocalFolder.fromPath(mbox, localPath);
         return lf != null && (
             trackedFolders.getByItemId(lf.getId()) != null ||
             lf.isSystem() && !lf.isKnown());
