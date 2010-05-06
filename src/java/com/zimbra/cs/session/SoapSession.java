@@ -1091,6 +1091,7 @@ public class SoapSession extends Session {
         transferLongAttribute(elem, mptTarget, MailConstants.A_UNREAD);
         transferLongAttribute(elem, mptTarget, MailConstants.A_NUM);
         transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
+        elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
         elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
         elem.addAttribute(MailConstants.A_RIGHTS, mptTarget.getAttribute(MailConstants.A_RIGHTS, null));
         if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
