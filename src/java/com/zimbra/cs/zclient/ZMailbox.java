@@ -4018,7 +4018,10 @@ public class ZMailbox implements ToZJSONObject {
             if (folderId == null) folderId = ZFolder.ID_CALENDAR;
             ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId, timeZone, query);
             if (cached == null) {
-                idsToFetch.add(folderId);
+                ZFolder folder = getFolderById(folderId);
+                if (folder != null && (!(folder instanceof ZMountpoint) || (folder instanceof ZMountpoint && folder.getEffectivePerms() != null))) {
+                    idsToFetch.add(folderId);
+                }
             } else {
                 summaries.add(cached);
             }
