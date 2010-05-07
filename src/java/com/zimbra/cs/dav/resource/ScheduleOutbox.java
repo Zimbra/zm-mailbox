@@ -161,7 +161,13 @@ public class ScheduleOutbox extends Collection {
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         InternetAddress from, sender, to;
         try {
-            from = AccountUtil.getFriendlyEmailAddress(getMailbox(ctxt).getAccount());
+            Account target = null;
+            Provisioning prov = Provisioning.getInstance();
+            if (ctxt.getPathInfo() != null)
+                target = prov.getAccountByName(ctxt.getPathInfo());
+            if (target == null)
+                target = getMailbox(ctxt).getAccount();
+            from = AccountUtil.getFriendlyEmailAddress(target);
             if (originator.toLowerCase().startsWith("mailto:"))
                 originator = originator.substring(7);
             sender = new InternetAddress(originator);

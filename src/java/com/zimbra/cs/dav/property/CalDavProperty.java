@@ -244,8 +244,8 @@ public class CalDavProperty extends ResourceProperty {
 			}
 			// always use authenticated user's outbox.
 			String url = DavServlet.DAV_PATH + "/" + authUser + "/Sent/";
-			//if (!authUser.equals(mUser))
-				//url += mUser + "/";
+			if (!authUser.equals(mUser))
+				url += mUser + "/";
 			outboxUrl.add(createHref(url));
 			return outboxUrl;
 		}

@@ -428,9 +428,9 @@ public class UrlNamespace {
                 } catch (UnsupportedEncodingException e) {
                     ZimbraLog.dav.warn("Can't decode URL %s", path);
                 }
-        	} else if (f.getId() == Mailbox.ID_FOLDER_INBOX) {
+        	} else if (f.getId() == Mailbox.ID_FOLDER_INBOX || f.getId() == Mailbox.ID_FOLDER_SENT) {
         		ctxt.setPathInfo(path.substring(index+1));
-        		// delegated notification handling
+        		// delegated scheduling and notification handling
         		return getResourceFromMailItem(ctxt, f);
         	}
         }
