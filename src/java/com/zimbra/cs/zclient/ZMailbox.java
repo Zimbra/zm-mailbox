@@ -1038,7 +1038,7 @@ public class ZMailbox implements ToZJSONObject {
                     Element folder = miniCalRequest.addElement(MailConstants.E_FOLDER);
                     folder.addAttribute(MailConstants.A_ID, sArray[i]);
                     if (searchQuery.length() > 1) searchQuery.append(" or ");
-                    searchQuery.append("inid:").append(sArray[i]);
+                    searchQuery.append("inid:").append("\""+sArray[i]+"\"");
                 }
             }
 
