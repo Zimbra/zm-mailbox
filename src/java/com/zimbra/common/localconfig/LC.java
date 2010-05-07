@@ -801,7 +801,7 @@ public class LC {
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
 
-        soap_fault_include_stack_trace = new KnownKey("soap_fault_include_stack_trace", "false");
+        soap_fault_include_stack_trace = new KnownKey("soap_fault_include_stack_trace", "true");
         
         soap_response_buffer_size = new KnownKey("soap_response_buffer_size");
         soap_response_buffer_size.setDefault("");
