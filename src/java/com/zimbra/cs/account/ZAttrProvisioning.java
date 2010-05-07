@@ -28,11 +28,11 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100504-1549 */
+    /* build: 6.0.2_BETA1_1111 jylee 20100507-1427 */
 
     public static enum AccountCalendarUserType {
-        USER("USER"),
-        RESOURCE("RESOURCE");
+        RESOURCE("RESOURCE"),
+        USER("USER");
         private String mValue;
         private AccountCalendarUserType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -42,17 +42,17 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isUSER() { return this == USER;}
         public boolean isRESOURCE() { return this == RESOURCE;}
+        public boolean isUSER() { return this == USER;}
     }
 
     public static enum AccountStatus {
-        active("active"),
-        lockout("lockout"),
-        pending("pending"),
-        locked("locked"),
         maintenance("maintenance"),
-        closed("closed");
+        pending("pending"),
+        active("active"),
+        closed("closed"),
+        locked("locked"),
+        lockout("lockout");
         private String mValue;
         private AccountStatus(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -62,17 +62,17 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isActive() { return this == active;}
-        public boolean isLockout() { return this == lockout;}
-        public boolean isPending() { return this == pending;}
-        public boolean isLocked() { return this == locked;}
         public boolean isMaintenance() { return this == maintenance;}
+        public boolean isPending() { return this == pending;}
+        public boolean isActive() { return this == active;}
         public boolean isClosed() { return this == closed;}
+        public boolean isLocked() { return this == locked;}
+        public boolean isLockout() { return this == lockout;}
     }
 
     public static enum BackupMode {
-        Auto_Grouped("Auto-Grouped"),
-        Standard("Standard");
+        Standard("Standard"),
+        Auto_Grouped("Auto-Grouped");
         private String mValue;
         private BackupMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -82,13 +82,13 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isAuto_Grouped() { return this == Auto_Grouped;}
         public boolean isStandard() { return this == Standard;}
+        public boolean isAuto_Grouped() { return this == Auto_Grouped;}
     }
 
     public static enum CalendarCompatibilityMode {
-        exchange("exchange"),
-        standard("standard");
+        standard("standard"),
+        exchange("exchange");
         private String mValue;
         private CalendarCompatibilityMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -98,8 +98,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isExchange() { return this == exchange;}
         public boolean isStandard() { return this == standard;}
+        public boolean isExchange() { return this == exchange;}
     }
 
     public static enum CalResType {
@@ -119,9 +119,9 @@ public class ZAttrProvisioning {
     }
 
     public static enum ClusterType {
-        none("none"),
+        Veritas("Veritas"),
         RedHat("RedHat"),
-        Veritas("Veritas");
+        none("none");
         private String mValue;
         private ClusterType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -131,16 +131,16 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isNone() { return this == none;}
-        public boolean isRedHat() { return this == RedHat;}
         public boolean isVeritas() { return this == Veritas;}
+        public boolean isRedHat() { return this == RedHat;}
+        public boolean isNone() { return this == none;}
     }
 
     public static enum DataSourceConnectionType {
+        tls_if_available("tls_if_available"),
         tls("tls"),
         ssl("ssl"),
-        cleartext("cleartext"),
-        tls_if_available("tls_if_available");
+        cleartext("cleartext");
         private String mValue;
         private DataSourceConnectionType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -150,18 +150,18 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
+        public boolean isTls_if_available() { return this == tls_if_available;}
         public boolean isTls() { return this == tls;}
         public boolean isSsl() { return this == ssl;}
         public boolean isCleartext() { return this == cleartext;}
-        public boolean isTls_if_available() { return this == tls_if_available;}
     }
 
     public static enum DomainStatus {
-        active("active"),
-        locked("locked"),
         maintenance("maintenance"),
-        suspended("suspended"),
+        active("active"),
         closed("closed"),
+        locked("locked"),
+        suspended("suspended"),
         shutdown("shutdown");
         private String mValue;
         private DomainStatus(String value) { mValue = value; }
@@ -172,17 +172,17 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isActive() { return this == active;}
-        public boolean isLocked() { return this == locked;}
         public boolean isMaintenance() { return this == maintenance;}
-        public boolean isSuspended() { return this == suspended;}
+        public boolean isActive() { return this == active;}
         public boolean isClosed() { return this == closed;}
+        public boolean isLocked() { return this == locked;}
+        public boolean isSuspended() { return this == suspended;}
         public boolean isShutdown() { return this == shutdown;}
     }
 
     public static enum DomainType {
-        local("local"),
-        alias("alias");
+        alias("alias"),
+        local("local");
         private String mValue;
         private DomainType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -192,13 +192,13 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isLocal() { return this == local;}
         public boolean isAlias() { return this == alias;}
+        public boolean isLocal() { return this == local;}
     }
 
     public static enum FreebusyExchangeAuthScheme {
-        basic("basic"),
-        form("form");
+        form("form"),
+        basic("basic");
         private String mValue;
         private FreebusyExchangeAuthScheme(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -208,14 +208,14 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isBasic() { return this == basic;}
         public boolean isForm() { return this == form;}
+        public boolean isBasic() { return this == basic;}
     }
 
     public static enum GalLdapAuthMech {
-        none("none"),
+        simple("simple"),
         kerberos5("kerberos5"),
-        simple("simple");
+        none("none");
         private String mValue;
         private GalLdapAuthMech(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -225,15 +225,15 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isNone() { return this == none;}
-        public boolean isKerberos5() { return this == kerberos5;}
         public boolean isSimple() { return this == simple;}
+        public boolean isKerberos5() { return this == kerberos5;}
+        public boolean isNone() { return this == none;}
     }
 
     public static enum GalMode {
-        zimbra("zimbra"),
+        both("both"),
         ldap("ldap"),
-        both("both");
+        zimbra("zimbra");
         private String mValue;
         private GalMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -243,9 +243,9 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isZimbra() { return this == zimbra;}
-        public boolean isLdap() { return this == ldap;}
         public boolean isBoth() { return this == both;}
+        public boolean isLdap() { return this == ldap;}
+        public boolean isZimbra() { return this == zimbra;}
     }
 
     public static enum GalStatus {
@@ -265,9 +265,9 @@ public class ZAttrProvisioning {
     }
 
     public static enum GalSyncLdapAuthMech {
-        none("none"),
+        simple("simple"),
         kerberos5("kerberos5"),
-        simple("simple");
+        none("none");
         private String mValue;
         private GalSyncLdapAuthMech(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -277,14 +277,14 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isNone() { return this == none;}
-        public boolean isKerberos5() { return this == kerberos5;}
         public boolean isSimple() { return this == simple;}
+        public boolean isKerberos5() { return this == kerberos5;}
+        public boolean isNone() { return this == none;}
     }
 
     public static enum GalTokenizeAutoCompleteKey {
-        and("and"),
-        or("or");
+        or("or"),
+        and("and");
         private String mValue;
         private GalTokenizeAutoCompleteKey(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -294,13 +294,13 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isAnd() { return this == and;}
         public boolean isOr() { return this == or;}
+        public boolean isAnd() { return this == and;}
     }
 
     public static enum GalTokenizeSearchKey {
-        and("and"),
-        or("or");
+        or("or"),
+        and("and");
         private String mValue;
         private GalTokenizeSearchKey(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -310,13 +310,13 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isAnd() { return this == and;}
         public boolean isOr() { return this == or;}
+        public boolean isAnd() { return this == and;}
     }
 
     public static enum GalType {
-        zimbra("zimbra"),
-        ldap("ldap");
+        ldap("ldap"),
+        zimbra("zimbra");
         private String mValue;
         private GalType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -326,8 +326,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isZimbra() { return this == zimbra;}
         public boolean isLdap() { return this == ldap;}
+        public boolean isZimbra() { return this == zimbra;}
     }
 
     public static enum IMService {
@@ -348,10 +348,10 @@ public class ZAttrProvisioning {
 
     public static enum MailMode {
         https("https"),
-        http("http"),
         both("both"),
-        redirect("redirect"),
-        mixed("mixed");
+        http("http"),
+        mixed("mixed"),
+        redirect("redirect");
         private String mValue;
         private MailMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -362,16 +362,16 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isHttps() { return this == https;}
-        public boolean isHttp() { return this == http;}
         public boolean isBoth() { return this == both;}
-        public boolean isRedirect() { return this == redirect;}
+        public boolean isHttp() { return this == http;}
         public boolean isMixed() { return this == mixed;}
+        public boolean isRedirect() { return this == redirect;}
     }
 
     public static enum MailReferMode {
-        always("always"),
         reverse_proxied("reverse-proxied"),
-        wronghost("wronghost");
+        wronghost("wronghost"),
+        always("always");
         private String mValue;
         private MailReferMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -381,9 +381,9 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isAlways() { return this == always;}
         public boolean isReverse_proxied() { return this == reverse_proxied;}
         public boolean isWronghost() { return this == wronghost;}
+        public boolean isAlways() { return this == always;}
     }
 
     public static enum MailStatus {
@@ -435,11 +435,11 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefCalendarInitialView {
+        workWeek("workWeek"),
+        schedule("schedule"),
         month("month"),
         list("list"),
         day("day"),
-        workWeek("workWeek"),
-        schedule("schedule"),
         week("week");
         private String mValue;
         private PrefCalendarInitialView(String value) { mValue = value; }
@@ -450,17 +450,17 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
+        public boolean isWorkWeek() { return this == workWeek;}
+        public boolean isSchedule() { return this == schedule;}
         public boolean isMonth() { return this == month;}
         public boolean isList() { return this == list;}
         public boolean isDay() { return this == day;}
-        public boolean isWorkWeek() { return this == workWeek;}
-        public boolean isSchedule() { return this == schedule;}
         public boolean isWeek() { return this == week;}
     }
 
     public static enum PrefClientType {
-        advanced("advanced"),
-        standard("standard");
+        standard("standard"),
+        advanced("advanced");
         private String mValue;
         private PrefClientType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -470,8 +470,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isAdvanced() { return this == advanced;}
         public boolean isStandard() { return this == standard;}
+        public boolean isAdvanced() { return this == advanced;}
     }
 
     public static enum PrefComposeFormat {
@@ -507,8 +507,8 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefConversationOrder {
-        dateAsc("dateAsc"),
-        dateDesc("dateDesc");
+        dateDesc("dateDesc"),
+        dateAsc("dateAsc");
         private String mValue;
         private PrefConversationOrder(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -518,14 +518,14 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isDateAsc() { return this == dateAsc;}
         public boolean isDateDesc() { return this == dateDesc;}
+        public boolean isDateAsc() { return this == dateAsc;}
     }
 
     public static enum PrefConvReadingPaneLocation {
-        right("right"),
         bottom("bottom"),
-        off("off");
+        off("off"),
+        right("right");
         private String mValue;
         private PrefConvReadingPaneLocation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -535,15 +535,15 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isRight() { return this == right;}
         public boolean isBottom() { return this == bottom;}
         public boolean isOff() { return this == off;}
+        public boolean isRight() { return this == right;}
     }
 
     public static enum PrefDedupeMessagesSentToSelf {
-        dedupeAll("dedupeAll"),
+        secondCopyifOnToOrCC("secondCopyifOnToOrCC"),
         dedupeNone("dedupeNone"),
-        secondCopyifOnToOrCC("secondCopyifOnToOrCC");
+        dedupeAll("dedupeAll");
         private String mValue;
         private PrefDedupeMessagesSentToSelf(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -553,18 +553,18 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isDedupeAll() { return this == dedupeAll;}
-        public boolean isDedupeNone() { return this == dedupeNone;}
         public boolean isSecondCopyifOnToOrCC() { return this == secondCopyifOnToOrCC;}
+        public boolean isDedupeNone() { return this == dedupeNone;}
+        public boolean isDedupeAll() { return this == dedupeAll;}
     }
 
     public static enum PrefForwardIncludeOriginalText {
-        includeBody("includeBody"),
         includeBodyWithPrefix("includeBodyWithPrefix"),
+        includeBodyOnly("includeBodyOnly"),
+        includeBody("includeBody"),
         includeAsAttachment("includeAsAttachment"),
         includeBodyAndHeaders("includeBodyAndHeaders"),
-        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix"),
-        includeBodyOnly("includeBodyOnly");
+        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix");
         private String mValue;
         private PrefForwardIncludeOriginalText(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -574,12 +574,12 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isIncludeBody() { return this == includeBody;}
         public boolean isIncludeBodyWithPrefix() { return this == includeBodyWithPrefix;}
+        public boolean isIncludeBodyOnly() { return this == includeBodyOnly;}
+        public boolean isIncludeBody() { return this == includeBody;}
         public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
         public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
-        public boolean isIncludeBodyOnly() { return this == includeBodyOnly;}
     }
 
     public static enum PrefForwardReplyFormat {
@@ -633,10 +633,10 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefIMIdleStatus {
-        offline("offline"),
-        xa("xa"),
         away("away"),
-        invisible("invisible");
+        invisible("invisible"),
+        xa("xa"),
+        offline("offline");
         private String mValue;
         private PrefIMIdleStatus(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -646,15 +646,15 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isOffline() { return this == offline;}
-        public boolean isXa() { return this == xa;}
         public boolean isAway() { return this == away;}
         public boolean isInvisible() { return this == invisible;}
+        public boolean isXa() { return this == xa;}
+        public boolean isOffline() { return this == offline;}
     }
 
     public static enum PrefMailSelectAfterDelete {
-        adaptive("adaptive"),
         previous("previous"),
+        adaptive("adaptive"),
         next("next");
         private String mValue;
         private PrefMailSelectAfterDelete(String value) { mValue = value; }
@@ -665,8 +665,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isAdaptive() { return this == adaptive;}
         public boolean isPrevious() { return this == previous;}
+        public boolean isAdaptive() { return this == adaptive;}
         public boolean isNext() { return this == next;}
     }
 
@@ -705,9 +705,9 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefReadingPaneLocation {
-        right("right"),
         bottom("bottom"),
-        off("off");
+        off("off"),
+        right("right");
         private String mValue;
         private PrefReadingPaneLocation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -717,23 +717,23 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isRight() { return this == right;}
         public boolean isBottom() { return this == bottom;}
         public boolean isOff() { return this == off;}
+        public boolean isRight() { return this == right;}
     }
 
     public static enum PrefReplyIncludeOriginalText {
-        includeSmartAndHeadersWithPrefix("includeSmartAndHeadersWithPrefix"),
-        includeSmartAndHeaders("includeSmartAndHeaders"),
-        includeBody("includeBody"),
         includeBodyWithPrefix("includeBodyWithPrefix"),
-        includeAsAttachment("includeAsAttachment"),
-        includeNone("includeNone"),
-        includeBodyAndHeaders("includeBodyAndHeaders"),
-        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix"),
-        includeSmartWithPrefix("includeSmartWithPrefix"),
+        includeSmartAndHeadersWithPrefix("includeSmartAndHeadersWithPrefix"),
         includeBodyOnly("includeBodyOnly"),
-        includeSmart("includeSmart");
+        includeBody("includeBody"),
+        includeSmartWithPrefix("includeSmartWithPrefix"),
+        includeAsAttachment("includeAsAttachment"),
+        includeSmart("includeSmart"),
+        includeBodyAndHeaders("includeBodyAndHeaders"),
+        includeSmartAndHeaders("includeSmartAndHeaders"),
+        includeNone("includeNone"),
+        includeBodyAndHeadersWithPrefix("includeBodyAndHeadersWithPrefix");
         private String mValue;
         private PrefReplyIncludeOriginalText(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -743,23 +743,23 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isIncludeSmartAndHeadersWithPrefix() { return this == includeSmartAndHeadersWithPrefix;}
-        public boolean isIncludeSmartAndHeaders() { return this == includeSmartAndHeaders;}
-        public boolean isIncludeBody() { return this == includeBody;}
         public boolean isIncludeBodyWithPrefix() { return this == includeBodyWithPrefix;}
-        public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
-        public boolean isIncludeNone() { return this == includeNone;}
-        public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
-        public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
-        public boolean isIncludeSmartWithPrefix() { return this == includeSmartWithPrefix;}
+        public boolean isIncludeSmartAndHeadersWithPrefix() { return this == includeSmartAndHeadersWithPrefix;}
         public boolean isIncludeBodyOnly() { return this == includeBodyOnly;}
+        public boolean isIncludeBody() { return this == includeBody;}
+        public boolean isIncludeSmartWithPrefix() { return this == includeSmartWithPrefix;}
+        public boolean isIncludeAsAttachment() { return this == includeAsAttachment;}
         public boolean isIncludeSmart() { return this == includeSmart;}
+        public boolean isIncludeBodyAndHeaders() { return this == includeBodyAndHeaders;}
+        public boolean isIncludeSmartAndHeaders() { return this == includeSmartAndHeaders;}
+        public boolean isIncludeNone() { return this == includeNone;}
+        public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
     }
 
     public static enum ReverseProxyImapStartTlsMode {
-        only("only"),
+        off("off"),
         on("on"),
-        off("off");
+        only("only");
         private String mValue;
         private ReverseProxyImapStartTlsMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -769,18 +769,18 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isOnly() { return this == only;}
-        public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
+        public boolean isOnly() { return this == only;}
     }
 
     public static enum ReverseProxyLogLevel {
-        debug("debug"),
-        info("info"),
-        crit("crit"),
         warn("warn"),
+        error("error"),
+        crit("crit"),
+        debug("debug"),
         notice("notice"),
-        error("error");
+        info("info");
         private String mValue;
         private ReverseProxyLogLevel(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -790,20 +790,20 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isDebug() { return this == debug;}
-        public boolean isInfo() { return this == info;}
-        public boolean isCrit() { return this == crit;}
         public boolean isWarn() { return this == warn;}
-        public boolean isNotice() { return this == notice;}
         public boolean isError() { return this == error;}
+        public boolean isCrit() { return this == crit;}
+        public boolean isDebug() { return this == debug;}
+        public boolean isNotice() { return this == notice;}
+        public boolean isInfo() { return this == info;}
     }
 
     public static enum ReverseProxyMailMode {
         https("https"),
-        http("http"),
         both("both"),
-        redirect("redirect"),
-        mixed("mixed");
+        http("http"),
+        mixed("mixed"),
+        redirect("redirect");
         private String mValue;
         private ReverseProxyMailMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -814,16 +814,16 @@ public class ZAttrProvisioning {
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
         public boolean isHttps() { return this == https;}
-        public boolean isHttp() { return this == http;}
         public boolean isBoth() { return this == both;}
-        public boolean isRedirect() { return this == redirect;}
+        public boolean isHttp() { return this == http;}
         public boolean isMixed() { return this == mixed;}
+        public boolean isRedirect() { return this == redirect;}
     }
 
     public static enum ReverseProxyPop3StartTlsMode {
-        only("only"),
+        off("off"),
         on("on"),
-        off("off");
+        only("only");
         private String mValue;
         private ReverseProxyPop3StartTlsMode(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -833,14 +833,14 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isOnly() { return this == only;}
-        public boolean isOn() { return this == on;}
         public boolean isOff() { return this == off;}
+        public boolean isOn() { return this == on;}
+        public boolean isOnly() { return this == only;}
     }
 
     public static enum TableMaintenanceOperation {
-        ANALYZE("ANALYZE"),
-        OPTIMIZE("OPTIMIZE");
+        OPTIMIZE("OPTIMIZE"),
+        ANALYZE("ANALYZE");
         private String mValue;
         private TableMaintenanceOperation(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -850,8 +850,8 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isANALYZE() { return this == ANALYZE;}
         public boolean isOPTIMIZE() { return this == OPTIMIZE;}
+        public boolean isANALYZE() { return this == ANALYZE;}
     }
 
     /**
@@ -3148,6 +3148,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=831)
     public static final String A_zimbraGalAccountId = "zimbraGalAccountId";
+
+    /**
+     * When set to TRUE, GAL search will always include local calendar
+     * resources regardless of zimbraGalMode.
+     *
+     * @since ZCS 6.0.7
+     */
+    @ZAttr(id=1093)
+    public static final String A_zimbraGalAlwaysIncludeLocalCalendarResources = "zimbraGalAlwaysIncludeLocalCalendarResources";
 
     /**
      * LDAP search filter for external GAL auto-complete queries

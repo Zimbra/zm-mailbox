@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -174,7 +175,7 @@ public class GalSearchControl {
 		StringBuilder searchQuery = new StringBuilder();
         if (query.length() > 0)
         	searchQuery.append("contact:(").append(query).append(") AND");
-        GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
+        GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
 		for (DataSource ds : galAcct.getAllDataSources()) {
 			if (ds.getType() != DataSource.Type.gal)
@@ -204,12 +205,43 @@ public class GalSearchControl {
         mParams.parseSearchParams(mParams.getRequest(), searchQuery.toString());
 	}
 	
+    private boolean generateLocalResourceSearchQuery(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
+        String query = mParams.getQuery();
+        StringBuilder searchQuery = new StringBuilder();
+        if (query.length() > 0)
+            searchQuery.append("contact:(").append(query).append(") AND");
+        searchQuery.append(" #zimbraAccountCalendarUserType:RESOURCE");
+        for (DataSource ds : galAcct.getAllDataSources()) {
+            if (ds.getType() != DataSource.Type.gal)
+                continue;
+            String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+            if (galType.compareTo("ldap") == 0)
+                continue;
+            searchQuery.append(" AND (");
+            searchQuery.append(" inid:").append(ds.getFolderId());
+            searchQuery.append(")");
+            ZimbraLog.gal.debug("query: "+searchQuery.toString());
+            mParams.parseSearchParams(mParams.getRequest(), searchQuery.toString());
+            return true;
+        }
+        return false;
+    }
+    
 	private void accountSearch(Account galAcct) throws ServiceException, GalAccountNotConfiguredException {
 		if (!galAcct.getAccountStatus().isActive()) {
 			ZimbraLog.gal.info("GalSync account "+galAcct.getId()+" is in "+galAcct.getAccountStatus().name());
 			throw new GalAccountNotConfiguredException();
 		}
 		if (Provisioning.onLocalServer(galAcct)) {
+            // bug 46608
+            // include local resource in the search result if galMode is set to ldap.
+		    Domain domain = mParams.getDomain();
+		    if (domain.getGalMode() == GalMode.ldap &&
+		            domain.isGalAlwaysIncludeLocalCalendarResources()) {
+	            if (generateLocalResourceSearchQuery(galAcct) &&
+	                    !doLocalGalAccountSearch(galAcct))
+	                throw new GalAccountNotConfiguredException();
+		    }
 			generateSearchQuery(galAcct);
 			if (!doLocalGalAccountSearch(galAcct))
 				throw new GalAccountNotConfiguredException();
@@ -273,8 +305,50 @@ public class GalSearchControl {
             OperationContext octxt = new OperationContext(mbox);
             GalSearchResultCallback callback = mParams.getResultCallback();
             HashSet<Integer> folderIds = new HashSet<Integer>();
-            GalMode galMode = Provisioning.getInstance().getDomain(galAcct).getGalMode();
+            Domain domain = mParams.getDomain();
+            GalMode galMode = domain.getGalMode();
             String syncToken = null;
+            
+            // bug 46608
+            // first do local resources sync if galMode == ldap
+            if (galMode == GalMode.ldap &&
+                    domain.isGalAlwaysIncludeLocalCalendarResources()) {
+                for (DataSource ds : galAcct.getAllDataSources()) {
+                    if (ds.getType() != DataSource.Type.gal)
+                        continue;
+                    String galType = ds.getAttr(Provisioning.A_zimbraGalType);
+                    if (galType.compareTo("ldap") == 0)
+                        continue;
+                    int fid = ds.getFolderId();
+                    DataSourceItem folderMapping = DbDataSource.getMapping(ds, fid);
+                    if (folderMapping.md == null)
+                        continue;
+                    folderIds.add(fid);
+                    syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
+                    if (mParams.isIdOnly() && token.doMailboxSync()) {
+                        int changeId = token.getChangeId(galAcct.getId());
+                        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
+
+                        int count = 0;
+                        for (int itemId : changed.getFirst()) {
+                            MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
+                            if (item instanceof Contact) {
+                                Contact c = (Contact)item;
+                                String accountType = c.get("zimbraAccountCalendarUserType");
+                                if (accountType != null &&
+                                        accountType.equals("RESOURCE"))
+                                    callback.handleContact(c);
+                            }
+                            count++;
+                            if (count % 100 == 0)
+                                ZimbraLog.gal.debug("processing resources #"+count);
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            folderIds.clear();
             for (DataSource ds : galAcct.getAllDataSources()) {
                 if (ds.getType() != DataSource.Type.gal)
                     continue;
@@ -364,7 +438,26 @@ public class GalSearchControl {
     }
     
     private void ldapSearch() throws ServiceException {
-        GalMode galMode = mParams.getDomain().getGalMode();
+        Domain domain = mParams.getDomain();
+        GalMode galMode = domain.getGalMode();
+        Provisioning.GAL_SEARCH_TYPE stype = mParams.getType();
+
+        // bug 46608
+        // first do local resources search if galMode == ldap
+        // and operation is search or sync.
+        if (mParams.getOp() != GalOp.autocomplete &&
+                stype != GAL_SEARCH_TYPE.USER_ACCOUNT &&
+                galMode == GalMode.ldap &&
+                domain.isGalAlwaysIncludeLocalCalendarResources()) {
+            mParams.setType(GAL_SEARCH_TYPE.CALENDAR_RESOURCE);
+            mParams.createSearchConfig(GalType.zimbra);
+            try {
+                LdapUtil.galSearch(mParams);
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("ldap search failed", e);
+            }
+            mParams.setType(stype);
+        }
         int limit = mParams.getLimit();
         if (galMode == GalMode.both) {
         	// make two gal searches for 1/2 results each
