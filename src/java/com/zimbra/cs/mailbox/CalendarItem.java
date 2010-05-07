@@ -1998,8 +1998,14 @@ public abstract class CalendarItem extends MailItem {
     private MailboxBlob createBlob(ParsedMessage invPm, Invite firstInvite)
     throws ServiceException {
         // Create blob only if there's an attachment or DESCRIPTION is too big to be stored in metadata.
-        if (!firstInvite.hasAttachment() && (invPm == null || firstInvite.descInMeta()))
+        if (!firstInvite.hasAttachment() && (invPm == null || firstInvite.descInMeta())) {
+            // If we're not going to create a blob after all, we must at least save the metadata to db.
+            // It's weird that the db update is implicitly required of this method, but that's the way
+            // it is, unfortunately.  If we're creating a blob, the implicit db update is done by
+            // storeUpdatedBlob() call.  (see below)
+            saveMetadata();
             return null;
+        }
 
         try { 
             // create the toplevel multipart/digest...
