@@ -175,10 +175,11 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                     || fieldName.equals(LuceneFields.L_H_CC)
                     || fieldName.equals(LuceneFields.L_H_X_ENV_FROM)
                     || fieldName.equals(LuceneFields.L_H_X_ENV_TO)
-                    || fieldName.equals(LuceneFields.L_CONTACT_DATA)
                     ) 
         {
             return new AddressTokenFilter(new AddrCharTokenizer(reader));
+        } else if (fieldName.equals(LuceneFields.L_CONTACT_DATA)) {
+            return new AddrCharTokenizer(reader);
         } else if (fieldName.equals(LuceneFields.L_FILENAME)) {
             return new FilenameTokenizer(reader);
 //          return new FilenameTokenFilter(CommaSeparatedTokenStream(reader));
@@ -884,10 +885,41 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 0, mStringList[curPos].length());
         }
     }
+    
+    private static void testTokenizer(TokenStream tokenStream, String input) {
+        System.out.println("\n====================");
+        System.out.println("Tokenizer: " + tokenStream.getClass().getName());
+        System.out.println("Input string: " + input);
+        
+        org.apache.lucene.analysis.Token t;
+        
+        while(true) {
+            try {
+                t = tokenStream.next();
+            } catch (IOException e) {
+                t = null;
+            }
+            if (t == null)
+                break;
+            
+            System.out.println("    " + t.termText());
+        } 
+        try {
+            tokenStream.close();
+        } catch (IOException e) { /* ignore */ }
+    }
 
+    private static void testTokenizers() {
+        String input = "all-snv";
+        
+        testTokenizer(new StandardTokenizer(new StringReader(input)), input);
+        testTokenizer(new AddrCharTokenizer(new StringReader(input)), input);
+        testTokenizer(new AddressTokenFilter(new AddrCharTokenizer(new StringReader(input))), input);
+    }
     
     public static void main(String[] args)
     {
+        
         MultiTokenFilter.sPrintNewTokens = true;
         ZimbraAnalyzer la = new ZimbraAnalyzer();
         String str = "DONOTREPLY@zimbra.com tim@foo.com \"Tester Address\" <test.address@mail.nnnn.com>, image/jpeg, text/plain, text/foo/bar, tim (tim@foo.com),bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
@@ -998,6 +1030,10 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, src);
 
             System.out.println("SRC="+src+" OUT=\""+concat+"\"");
+        }
+        
+        {
+            testTokenizers();
         }
         
     }
