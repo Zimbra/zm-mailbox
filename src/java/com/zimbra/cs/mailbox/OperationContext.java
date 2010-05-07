@@ -132,14 +132,20 @@ public class OperationContext {
     public boolean isUsingAdminPrivileges() {
         return isAdmin;
     }
+
     public boolean isDelegatedRequest(Mailbox mbox) {
+        return authuser != null && !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+    }
+
+    /**
+     * @see com.zimbra.cs.service.mail.CalendarRequest#isOnBehalfOfRequest(com.zimbra.soap.ZimbraSoapContext)
+     */
+    public boolean isOnBehalfOfRequest(Mailbox mbox) {
+        if (!isDelegatedRequest(mbox))
+            return false;
         if (authuser != null) {
-            // Similar to CalendarRequest.isOnBehalfOfRequest(ZimbraSoapContext)...
             String zdLocalAcctId = LC.zdesktop_local_account_id.value();
-            if (zdLocalAcctId != null && zdLocalAcctId.length() > 0)
-                return !zdLocalAcctId.equalsIgnoreCase(authuser.getId());
-            else
-                return !authuser.getId().equalsIgnoreCase(mbox.getAccountId());
+            return !authuser.getId().equalsIgnoreCase(zdLocalAcctId);
         }
         return false;
     }

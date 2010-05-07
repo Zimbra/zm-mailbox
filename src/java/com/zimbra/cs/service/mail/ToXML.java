@@ -806,7 +806,7 @@ public class ToXML {
             addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
             addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
             // read-receipts only get sent by the mailbox's owner
-            if (!octxt.isDelegatedRequest(msg.getMailbox()))
+            if (!(octxt.isDelegatedRequest(msg.getMailbox()) && octxt.isOnBehalfOfRequest(msg.getMailbox())))
                 addEmails(m, Mime.parseAddressHeader(mm, "Disposition-Notification-To"), EmailType.READ_RECEIPT);
 
             String calIntendedFor = msg.getCalendarIntendedFor();
