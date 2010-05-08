@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100507-1658 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100507-2114 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -4271,7 +4271,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailTrustedIP = "zimbraMailTrustedIP";
 
     /**
-     * max number of bytes stored in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
+     * stored in the uncompressed blob cache on disk
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -4279,7 +4282,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailUncompressedCacheMaxBytes = "zimbraMailUncompressedCacheMaxBytes";
 
     /**
-     * max number of files in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of files in
+     * the uncompressed blob cache on disk
      *
      * @since ZCS 6.0.0_BETA1
      */

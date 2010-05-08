@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100507-1658 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100507-2114 */
 
     /**
      * RFC2256: descriptive information
@@ -13782,7 +13782,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of bytes stored in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
+     * stored in the uncompressed blob cache on disk
      *
      * @return zimbraMailUncompressedCacheMaxBytes, or 1073741824 if unset
      *
@@ -13794,7 +13797,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of bytes stored in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
+     * stored in the uncompressed blob cache on disk
      *
      * @param zimbraMailUncompressedCacheMaxBytes new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13809,7 +13815,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of bytes stored in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
+     * stored in the uncompressed blob cache on disk
      *
      * @param zimbraMailUncompressedCacheMaxBytes new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13825,7 +13834,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of bytes stored in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
+     * stored in the uncompressed blob cache on disk
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13839,7 +13851,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of bytes stored in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
+     * stored in the uncompressed blob cache on disk
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13854,7 +13869,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of files in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of files in
+     * the uncompressed blob cache on disk
      *
      * @return zimbraMailUncompressedCacheMaxFiles, or 5000 if unset
      *
@@ -13866,7 +13884,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of files in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of files in
+     * the uncompressed blob cache on disk
      *
      * @param zimbraMailUncompressedCacheMaxFiles new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13881,7 +13902,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of files in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of files in
+     * the uncompressed blob cache on disk
      *
      * @param zimbraMailUncompressedCacheMaxFiles new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13897,7 +13921,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of files in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of files in
+     * the uncompressed blob cache on disk
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -13911,7 +13938,10 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * max number of files in the uncompressed blob cache on disk
+     * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
+     * uncompressed files on disk will never exceed
+     * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of files in
+     * the uncompressed blob cache on disk
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

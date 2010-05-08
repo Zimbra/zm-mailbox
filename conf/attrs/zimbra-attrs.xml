@@ -4212,14 +4212,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="824" name="zimbraMailUncompressedCacheMaxFiles" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA1">
+<attr id="824" name="zimbraMailUncompressedCacheMaxFiles" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA1" deprecatedSince="6.0.7">
   <globalConfigValue>5000</globalConfigValue>
   <desc>max number of files in the uncompressed blob cache on disk</desc>
+  <deprecateDesc>Deprecated per bug 43497.  The number of uncompressed files on disk will never exceed zimbraMailFileDescriptorCacheSize.</deprecateDesc>
 </attr>
 
-<attr id="825" name="zimbraMailUncompressedCacheMaxBytes" type="long" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA1">
+<attr id="825" name="zimbraMailUncompressedCacheMaxBytes" type="long" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA1" deprecatedSince="6.0.7">
   <globalConfigValue>1073741824</globalConfigValue>
   <desc>max number of bytes stored in the uncompressed blob cache on disk</desc>
+  <deprecateDesc>Deprecated per bug 43497.  The number of uncompressed files on disk will never exceed zimbraMailFileDescriptorCacheSize.</deprecateDesc>
 </attr>
 
 <attr id="826" name="zimbraDataSourceGalPollingInterval" type="duration" min="0" cardinality="single" optionalIn="account,cos" callback="DataSourceCallback" flags="accountInfo,accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
