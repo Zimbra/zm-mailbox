@@ -19,7 +19,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -42,16 +41,16 @@ public class UncompressedFileCache<K> {
 
     private static final Log sLog = LogFactory.getLog(UncompressedFileCache.class);
     
-    private long mMaxBytes = 100 * 1024 * 1024; // 100MB default
-    private int mMaxFiles = 10 * 1024; // 10k files default
     private File mCacheDir;
-    private Set<Listener<K>> mListeners = new HashSet<Listener<K>>();
     
     /** Maps the key to the cache to the uncompressed file digest. */
-    private LinkedHashMap<K, String> mKeyToDigest;
+    private Map<K, String> mKeyToDigest;
+    
+    /** Reverse map of the digest to all the keys that reference it. */
+    private Map<String, Set<K>> mDigestToKeys;
     
     /** All the files in the cache, indexed by digest. */
-    private Map<String, File> mDigestToFile;
+    private LinkedHashMap<String, File> mDigestToFile;
     private long mNumBytes = 0;
     
     public UncompressedFileCache(String path) {
@@ -61,42 +60,6 @@ public class UncompressedFileCache<K> {
         mCacheDir = new File(path);
     }
     
-    public interface Listener<K> {
-        /**
-         * Notifies listeners that a file is going away, to allow them
-         * to close any open file descriptors.
-         */
-        public void willPurge(K key);
-    }
-
-    /**
-     * Sets the limit for the total size of all files in the cache.
-     * @param maxBytes the limit, or <tt>null</tt> for no limit
-     */
-    public synchronized UncompressedFileCache<K> setMaxBytes(Long maxBytes) {
-        if (maxBytes != null) {
-            mMaxBytes = maxBytes;
-        } else {
-            mMaxBytes = Long.MAX_VALUE;
-        }
-        pruneIfNecessary();
-        return this;
-    }
-    
-    /**
-     * Sets the limit for the total number of files in the cache.
-     * @param maxFiles the limit, or <tt>null</tt> for no limit
-     */
-    public synchronized UncompressedFileCache<K> setMaxFiles(Integer maxFiles) {
-        if (maxFiles != null) {
-            mMaxFiles = maxFiles;
-        } else {
-            mMaxFiles = Integer.MAX_VALUE;
-        }
-        pruneIfNecessary();
-        return this;
-    }
-
     /**
      * Initializes the cache and deletes any existing files.  Call this method before
      * using the cache.
@@ -108,24 +71,19 @@ public class UncompressedFileCache<K> {
         if (!mCacheDir.isDirectory())
             throw new IOException("uncompressed file cache folder is not a directory: " + mCacheDir);
         
-        // Create the file cache with default LinkedHashMap values, but sorted by last access time.
-        mKeyToDigest = new LinkedHashMap<K, String>(16, 0.75f, true);
-        mDigestToFile = new HashMap<String, File>();
-        
-        // Clear out the cache on disk.
+        // Create caches with default LinkedHashMap values, but sorted by last access time.
+        mKeyToDigest = new HashMap<K, String>();
+        mDigestToKeys = new HashMap<String, Set<K>>();
+        mDigestToFile = new LinkedHashMap<String, File>(16, 0.75f, true);
+
         for (File file : mCacheDir.listFiles()) {
             sLog.debug("Deleting %s.", file.getPath());
             if (!file.delete())
                 ZimbraLog.store.warn("unable to delete " + file.getPath() + " from uncompressed file cache");
         }
-
         return this;
     }
     
-    public synchronized void addListener(Listener<K> l) {
-        mListeners.add(l);
-    }
-
     private class UncompressedFile {
         String digest;
         File file;
@@ -149,11 +107,14 @@ public class UncompressedFileCache<K> {
         
         synchronized (this) {
             String digest = mKeyToDigest.get(key);
+            sLog.debug("Digest for %s is %s", key, digest);
             if (digest != null) {
                 uncompressedFile = mDigestToFile.get(digest);
                 if (uncompressedFile != null) {
                     sLog.debug("Found existing uncompressed file.  Returning new SharedFile.");
                     return new SharedFile(uncompressedFile);
+                } else {
+                    sLog.debug("No existing uncompressed file.");
                 }
             }
         }
@@ -166,12 +127,14 @@ public class UncompressedFileCache<K> {
             uncompressedFile = mDigestToFile.get(temp.digest);
             
             if (uncompressedFile != null) {
-                sLog.debug("Found existing uncompressed file for digest %s.  Deleting %s.", temp.digest, temp.file.getPath());
-                mKeyToDigest.put(key, temp.digest);
+                // Another thread uncompressed the same file at the same time.
+                sLog.debug("Found existing uncompressed file.  Deleting %s.", temp.file);
+                mapKeyToDigest(key, temp.digest);
                 FileUtil.delete(temp.file);
                 shared = new SharedFile(uncompressedFile);
             } else {
                 uncompressedFile = new File(mCacheDir, temp.digest);
+                sLog.debug("Renaming %s to %s.", temp.file, uncompressedFile);
                 FileUtil.rename(temp.file, uncompressedFile);
                 shared = new SharedFile(uncompressedFile); // Opens the file implicitly.
                 put(key, temp.digest, uncompressedFile);
@@ -196,62 +159,50 @@ public class UncompressedFileCache<K> {
         return result;
     }
     
+    /**
+     * Creates a record of a new uncompressed file in the cache data structures.
+     */
     private synchronized void put(K key, String digest, File file) {
         long fileSize = file.length();
-        sLog.debug("Adding file to the uncompressed cache: key=%s, size=%d, path=%s.",
-            key, fileSize, file.getPath());
-        mKeyToDigest.put(key, digest);
+        mapKeyToDigest(key, digest);
         mDigestToFile.put(digest, file);
         mNumBytes += fileSize;
-        pruneIfNecessary();
+        sLog.debug("Added file: key=%s, size=%d, path=%s.  Cache size=%d, numBytes=%d.",
+            key, fileSize, file.getPath(), mDigestToFile.size(), mNumBytes);
     }
 
-    synchronized void remove(K key) {
-        String digest = mKeyToDigest.remove(key);
-        if (digest != null)
-            mDigestToFile.remove(digest);
-    }
-
-    /**
-     * Removes the least recently accessed files from the cache and deletes them
-     * from disk so that the cache size doesn't exceed {@link #mMaxFiles} and
-     * {@link #mMaxBytes}.
-     */
-    private synchronized void pruneIfNecessary() {
-        if (mKeyToDigest == null ||
-            mDigestToFile.size() <= 1 || // Leave at least one file so we don't constantly add/remove.
-            (mNumBytes < mMaxBytes && mDigestToFile.size() < mMaxFiles)) {
-            return;
+    private synchronized void mapKeyToDigest(K key, String digest) {
+        mKeyToDigest.put(key, digest);
+        Set<K> keys = mDigestToKeys.get(digest);
+        if (keys == null) {
+            keys = new HashSet<K>();
+            mDigestToKeys.put(digest, keys);
         }
+        keys.add(key);
+    }
+    
+    public synchronized void remove(K key) {
+        String digest = mKeyToDigest.remove(key);
+        sLog.debug("Removing %s, digest=%s", key, digest);
         
-        Iterator<Map.Entry<K, String>> iEntries = mKeyToDigest.entrySet().iterator();
-        
-        while (iEntries.hasNext()) {
-            // Get key.
-            Map.Entry<K, String> entry = iEntries.next();
-            K key = entry.getKey();
-            String digest = entry.getValue();
-            
-            // Notify listeners.
-            for (Listener<K> listener : mListeners) {
-                listener.willPurge(key);
+        if (digest != null) {
+            Set<K> keys = mDigestToKeys.get(digest);
+            if (keys != null) {
+                keys.remove(key);
             }
-
-            // Remove key and file.
-            iEntries.remove();
-            File file = mDigestToFile.remove(digest);
-            if (file != null) {
-                sLog.debug("Deleting %s: key=%s, digest=%s.", file.getPath(), key, digest);
-                mNumBytes -= file.length();
-                try {
-                    FileUtil.delete(file);
-                } catch (Exception e) { // Handle IOException and SecurityException
-                    sLog.warn("Unable to delete %s.", file, e);
+            
+            if (keys == null || keys.isEmpty()) {
+                File file = mDigestToFile.remove(digest);
+                sLog.debug("Deleting unreferenced file %s.", file);
+                if (file != null) {
+                    try {
+                        FileUtil.delete(file);
+                    } catch (Exception e) { // IOException and SecurityException
+                        ZimbraLog.store.warn("Unable to remove a file from the uncompressed cache.", e);
+                    }
                 }
-            }
-            
-            if (mNumBytes < mMaxBytes && mDigestToFile.size() < mMaxFiles) {
-                break;
+            } else {
+                sLog.debug("Not deleting %s.  It is referenced by %s.", digest, keys);
             }
         }
     }

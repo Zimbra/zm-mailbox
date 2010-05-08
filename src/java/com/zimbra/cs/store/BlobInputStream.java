@@ -182,7 +182,11 @@ implements SharedInputStream {
      * Closes the file descriptor referenced by this stream.
      */
     public void closeFile() {
-        getFileDescriptorCache().remove(mRoot.mFile.getPath());
+        try {
+            getFileDescriptorCache().remove(mRoot.mFile.getPath());
+        } catch (IOException e) {
+            sLog.warn("Unable to close mRoot.mFile", e);
+        }
     }
 
     /**

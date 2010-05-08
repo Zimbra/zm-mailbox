@@ -34,6 +34,13 @@ public class SharedFile {
     private long mPos = 0;
     
     /**
+     * Keep track of the number of threads that are reading from this file.
+     * We do this so that we don't delete a file that's being read on
+     * Windows (bug 43497).
+     */
+    private int mNumReaders;
+    
+    /**
      * Remember the file's length, in case we have an open file descriptor and the
      * uncompressed cache deletes this file from disk.
      */
@@ -83,6 +90,20 @@ public class SharedFile {
         return numRead;
     }
     
+    synchronized void aboutToRead() {
+        mNumReaders++;
+    }
+    
+    synchronized void doneReading() {
+        if (mNumReaders > 0) {
+            mNumReaders--;
+        }
+    }
+    
+    synchronized int getNumReaders() {
+        return mNumReaders;
+    }
+    
     private synchronized void openIfNecessary()
     throws IOException {
         if (mRAF == null) {
@@ -101,5 +122,9 @@ public class SharedFile {
             mPos = 0;
             mRAF = null;
         }
+    }
+    
+    public String toString() {
+        return mFile.toString();
     }
 }

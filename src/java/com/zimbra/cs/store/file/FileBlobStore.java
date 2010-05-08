@@ -56,6 +56,7 @@ public class FileBlobStore extends StoreManager {
 
     @Override public void shutdown() {
         IncomingDirectory.stopSweeper();
+        BlobInputStream.getFileDescriptorCache().shutdown();
     }
 
     private Blob getUniqueIncomingBlob() throws IOException, ServiceException {

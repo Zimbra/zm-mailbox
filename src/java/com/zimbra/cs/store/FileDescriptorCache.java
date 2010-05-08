@@ -20,10 +20,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -32,12 +35,13 @@ import com.zimbra.cs.localconfig.DebugConfig;
 /**
  * Caches file descriptors to blobs in the mail store.  If the blob is compressed,
  * uses {@link UncompressedFileCache} to access the uncompressed data.  Cache entries
- * that reference uncompressed blobs keep the file descriptor open until {@link #close}
+ * that reference uncompressed blobs keep the file descriptor open until {@link #remove}
  * is called or the cache entry is aged out.
  */
 public class FileDescriptorCache
-implements UncompressedFileCache.Listener<String>
 {
+    private static final Log sLog = LogFactory.getLog(FileDescriptorCache.class);
+
     // Create the file cache with default LinkedHashMap values, but sorted by last access time.
     private LinkedHashMap<String, SharedFile> mCache = new LinkedHashMap<String, SharedFile>(16, 0.75f, true);
     private int mMaxSize = 1000;
@@ -46,7 +50,6 @@ implements UncompressedFileCache.Listener<String>
 
     public FileDescriptorCache(UncompressedFileCache<String> uncompressedCache) {
         mUncompressedFileCache = uncompressedCache;
-        mUncompressedFileCache.addListener(this);
     }
     
     public synchronized FileDescriptorCache setMaxSize(int maxSize) {
@@ -65,99 +68,160 @@ implements UncompressedFileCache.Listener<String>
         long uncompressedMaxBytes = server.getMailUncompressedCacheMaxBytes();
         int fileDescriptorCacheSize = server.getMailFileDescriptorCacheSize();
     
-        ZimbraLog.store.info("Loading FileDescriptorCache settings: %s=%d, %s=%d, %s=%d.",
+        sLog.info("Loading settings: %s=%d, %s=%d, %s=%d.",
                 Provisioning.A_zimbraMailUncompressedCacheMaxFiles, uncompressedMaxFiles,
                 Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes,
                 Provisioning.A_zimbraMailFileDescriptorCacheSize, fileDescriptorCacheSize);
 
         setMaxSize(fileDescriptorCacheSize);
-        mUncompressedFileCache.setMaxBytes(uncompressedMaxBytes);
-        mUncompressedFileCache.setMaxFiles(uncompressedMaxFiles);
 
         return this;
     }
 
+    /**
+     * Closes all file descriptors, clears the cache, and removes any files from
+     * the uncompressed cache. 
+     */
+    public synchronized void shutdown() {
+        Iterator<Map.Entry<String, SharedFile>> iEntries = mCache.entrySet().iterator();
+        while (iEntries.hasNext()) {
+            Map.Entry<String, SharedFile> entry = iEntries.next();
+            String path = entry.getKey();
+            SharedFile file = entry.getValue();
+            iEntries.remove();
+            try {
+                close(file, path);
+            } catch (IOException e) {
+                sLog.warn("Unable to close %s", file, e);
+            }
+        }
+    }
 
     /**
      * Reads from the specified file.
      */
     public int read(String path, long rawSize, long fileOffset, byte[] buf, int bufferOffset, int len)
     throws IOException {
-        SharedFile file = getSharedFile(path, rawSize);
-        int numRead = file.read(fileOffset, buf, bufferOffset, len);
-        closeIfPruned(path, file);
+        sLog.debug("Reading %s.  rawSize=%d, fileOffset=%d, bufferOffset=%d, len=%d.", path, rawSize, fileOffset, bufferOffset, len);
+        SharedFile file = null;
+        int numRead;
+        
+        try {
+            file = getSharedFile(path, rawSize);
+            numRead = file.read(fileOffset, buf, bufferOffset, len);
+        } finally {
+            if (file != null) {
+               file.doneReading();
+            }
+        }
+        
         return numRead;
     }
     
-    private synchronized void closeIfPruned(String path, SharedFile file)
-    throws IOException {
-        if (!mCache.containsKey(path)) {
-            // Another thread pruned this file from the cache.
-            file.close();
-        }
-    }
-    
     /**
-     * Returns the existing cache entry or creates a new one.
+     * Returns the existing cache entry or creates a new one.  Implicitly
+     * increments the number of readers for the <tt>SharedFile</tt>.
      */
     private SharedFile getSharedFile(String path, long rawSize)
     throws IOException {
         SharedFile sharedFile = null;
+        
         synchronized (this) {
             sharedFile = mCache.get(path);
+            if (sharedFile != null) {
+                sLog.debug("Found existing file descriptor for %s, rawSize=%d.", path, rawSize);
+                sharedFile.aboutToRead();
+                mHitRate.increment(100);
+                return sharedFile;
+            }
         }
+
+        // Open a new file descriptor.
+        mHitRate.increment(0);
+        File file = new File(path);
         
-        if (sharedFile == null) {
-            mHitRate.increment(0);
-            File file = new File(path);
-            if (file.length() != rawSize && FileUtil.isGzipped(file)) {
-                ZimbraLog.store.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
-                sharedFile = mUncompressedFileCache.get(path, file, !DebugConfig.disableMessageStoreFsync);
-            } else {
-                ZimbraLog.store.debug("Opening new file descriptor for %s.", path);
-                sharedFile = new SharedFile(file);
-            }
-            
-            synchronized (this) {
-                if (mCache.containsKey(path)) {
-                    // Another thread just opened the same file.  Close our copy and return the other one.
-                    sharedFile.close();
-                    sharedFile = mCache.get(path);
-                } else {
-                    mCache.put(path, sharedFile);
-                }
-            }
-            pruneIfNecessary();
+        if (file.length() != rawSize && FileUtil.isGzipped(file)) {
+            sLog.debug("Adding file descriptor cache entry for %s from the uncompressed file cache.", path);
+            sharedFile = mUncompressedFileCache.get(path, file, !DebugConfig.disableMessageStoreFsync);
         } else {
-            mHitRate.increment(100);
+            sLog.debug("Opening new file descriptor for %s.", path);
+            sharedFile = new SharedFile(file);
         }
+
+        synchronized (this) {
+            if (mCache.containsKey(path)) {
+                sLog.debug("Another thread just opened the same file.  Closing our copy and returning the other one.");
+                sharedFile.close();
+                sharedFile = mCache.get(path);
+            } else {
+                sLog.debug("Caching file descriptor: path=%s, sharedFile=%s", path, sharedFile);
+                mCache.put(path, sharedFile);
+            }
+            sharedFile.aboutToRead();
+        }
+        pruneIfNecessary();
         
         return sharedFile;
     }
     
-    public void remove(String path) {
-        mUncompressedFileCache.remove(path);
-        close(path);
+    /**
+     * Closes the file descriptor and removes it from the cache.  Does nothing if the file
+     * descriptor is not in the cache.
+     */
+    public void remove(String path)
+    throws IOException {
+        SharedFile file = null;
+        
+        synchronized (this) {
+            file = mCache.remove(path);
+        }
+        
+        if (file != null) {
+            close(file, path);
+        } else {
+            sLog.debug("Attempted to remove %s but could not find it in the cache.", path);
+        }
     }
 
     /**
-     * Closes the file descriptor to the given file.  Does nothing if the file
-     * descriptor is not in the cache.
+     * Waits for all threads to finish reading from the given <tt>SharedFile</tt>
+     * and closes it.
+     * @throws IOException if the operation times out waiting for readers to finish
      */
-    private synchronized void close(String path) {
-        SharedFile file = mCache.remove(path);
-        
+    private void close(SharedFile file, String path)
+    throws IOException {
         if (file != null) {
-            ZimbraLog.store.debug("closing file descriptor for " + path);
-            try {
-                file.close();
-            } catch (IOException e) {
-                ZimbraLog.store.warn("unable to close file descriptor for " + path, e);
+            sLog.debug("Closing file descriptor for %s, %s", path, file);
+            
+            // Loop until other threads are done reading.
+            for (int i = 1; i <= 20; i++) {
+                int numReaders = file.getNumReaders();
+                if (numReaders == 0) {
+                    file.close();
+
+                    synchronized (this) {
+                        if (!mCache.containsKey(path)) {
+                            mUncompressedFileCache.remove(path);
+                        } else {
+                            sLog.debug("Not removing %s from the uncompressed cache.  Another thread reopened it.");
+                        }
+                    }
+
+                    return;
+                } else {
+                    sLog.debug("numReaders=%d.  Sleeping.", numReaders);
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                    }
+                }
             }
+            throw new IOException("FileDescriptorCache.close() timed out waiting for " + file);
+
         }
     }
     
-    public int getSize() {
+    public synchronized int getSize() {
         return mCache.size();
     }
     
@@ -174,22 +238,16 @@ implements UncompressedFileCache.Listener<String>
             Map.Entry<String, SharedFile> mapEntry = iEntries.next();
             String path = mapEntry.getKey();
             SharedFile file = mapEntry.getValue();
-            iEntries.remove();
-            
-            try {
-                ZimbraLog.store.debug("closing file descriptor for " + path);
-                file.close();
-            } catch (IOException e) {
-                ZimbraLog.store.warn("unable to close file descriptor for " + path, e);
+            if (file.getNumReaders() == 0) {
+                iEntries.remove();
+                try {
+                    close(file, path);
+                } catch (IOException e) {
+                    ZimbraLog.store.warn("Unable to close file descriptor for " + path, e);
+                }
+            } else {
+                sLog.debug("Not pruning %s because another thread is reading from it.", path);
             }
         }
     }
-
-    /**
-     * Closes file descriptor for a file that will be removed from the uncompressed cache.
-     */
-    public void willPurge(String path) {
-        close(path);
-    }
-
 }
