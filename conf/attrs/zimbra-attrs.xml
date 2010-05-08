@@ -4897,7 +4897,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1093" name="zimbraGalAlwaysIncludeLocalCalendarResources" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited,domainAdminModifiable"  since="6.0.7">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>
     When set to TRUE, GAL search will always include local
     calendar resources regardless of zimbraGalMode.
