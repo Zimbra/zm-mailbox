@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Counter;
@@ -64,14 +63,10 @@ public class FileDescriptorCache
 
     public FileDescriptorCache loadSettings() throws ServiceException {
         Server server = Provisioning.getInstance().getLocalServer(); 
-        int uncompressedMaxFiles = server.getMailUncompressedCacheMaxFiles();
-        long uncompressedMaxBytes = server.getMailUncompressedCacheMaxBytes();
         int fileDescriptorCacheSize = server.getMailFileDescriptorCacheSize();
     
-        sLog.info("Loading settings: %s=%d, %s=%d, %s=%d.",
-                Provisioning.A_zimbraMailUncompressedCacheMaxFiles, uncompressedMaxFiles,
-                Provisioning.A_zimbraMailUncompressedCacheMaxBytes, uncompressedMaxBytes,
-                Provisioning.A_zimbraMailFileDescriptorCacheSize, fileDescriptorCacheSize);
+        sLog.info("Loading settings: %s=%d.",
+            Provisioning.A_zimbraMailFileDescriptorCacheSize, fileDescriptorCacheSize);
 
         setMaxSize(fileDescriptorCacheSize);
 
