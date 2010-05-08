@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.zclient.ZFilterRule;
 import com.zimbra.cs.zclient.ZFilterRules;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -138,6 +139,74 @@ extends TestCase {
         String newName = mFolder2.getName().toUpperCase();
         renameFolder(mFolder2.getId(), newName, mFolder4.getId());
         sendMessages();
+    }
+    
+    /**
+     * Confirms that when a folder is deleted, any rules that filed into that
+     * folder or its subfolders are disabled (bug 17797).
+     */
+    public void testDeleteFolder()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        mbox.deleteFolder(mFolder2.getId());
+        
+        // Deliver messages that used to match rules 2 and 3, and make sure
+        // that they get delivered to inbox.
+        TestUtil.addMessageLmtp(SUBJECT2, USER_NAME, USER_NAME);
+        TestUtil.getMessage(mbox, "in:inbox subject:\"" + SUBJECT2 + "\"");
+        TestUtil.addMessageLmtp(SUBJECT3, USER_NAME, USER_NAME);
+        TestUtil.getMessage(mbox, "in:inbox subject:\"" + SUBJECT3 + "\"");
+        
+        // Confirm that rules for folders 2 and 3 are disabled.
+        List<ZFilterRule> rules = mbox.getFilterRules(true).getRules();
+        assertEquals(4, rules.size());
+        for (ZFilterRule rule : rules) {
+            if (rule.getName().equals("Folder 1")) {
+                assertTrue(rule.isActive());
+            } else if (rule.getName().equals("Folder 2")) {
+                assertFalse(rule.isActive());
+            } else if (rule.getName().equals("Folder 3")) {
+                assertFalse(rule.isActive());
+            } else if (rule.getName().equals("Folder 4")) {
+                assertTrue(rule.isActive());
+            } else {
+                fail("Unexpected rule name: " + rule.getName());
+            }
+        }
+    }
+    
+    /**
+     * Confirms that when a folder moved to the trash, any rules that filed into that
+     * folder or its subfolders are disabled (bug 17797).
+     */
+    public void testMoveFolderToTrash()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        mbox.trashFolder(mFolder2.getId());
+        
+        // Deliver messages that used to match rules 2 and 3, and make sure
+        // that they get delivered to inbox.
+        TestUtil.addMessageLmtp(SUBJECT2, USER_NAME, USER_NAME);
+        TestUtil.getMessage(mbox, "in:inbox subject:\"" + SUBJECT2 + "\"");
+        TestUtil.addMessageLmtp(SUBJECT3, USER_NAME, USER_NAME);
+        TestUtil.getMessage(mbox, "in:inbox subject:\"" + SUBJECT3 + "\"");
+        
+        // Confirm that rules for folders 2 and 3 are disabled.
+        List<ZFilterRule> rules = mbox.getFilterRules(true).getRules();
+        assertEquals(4, rules.size());
+        for (ZFilterRule rule : rules) {
+            if (rule.getName().equals("Folder 1")) {
+                assertTrue(rule.isActive());
+            } else if (rule.getName().equals("Folder 2")) {
+                assertFalse(rule.isActive());
+            } else if (rule.getName().equals("Folder 3")) {
+                assertFalse(rule.isActive());
+            } else if (rule.getName().equals("Folder 4")) {
+                assertTrue(rule.isActive());
+            } else {
+                fail("Unexpected rule name: " + rule.getName());
+            }
+        }
     }
     
     /**

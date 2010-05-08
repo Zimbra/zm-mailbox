@@ -51,7 +51,7 @@ class FolderRenamer extends SieveVisitor {
         }
     }
 
-    private String prefixWithSlash(String path) {
+    static String prefixWithSlash(String path) {
         if (path == null || path.length() == 0) {
             return path;
         }

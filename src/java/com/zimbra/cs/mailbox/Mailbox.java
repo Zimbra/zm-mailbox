@@ -5361,8 +5361,16 @@ public class Mailbox {
     
     protected void updateFilterRules(int folderId, String oldPath) {
         try {
-            Folder folder = getFolderById(folderId);
-            if (!folder.getPath().equals(oldPath) && !folder.isHidden()) {
+            Folder folder = null;
+            try {
+                folder = getFolderById(folderId);
+            } catch (NoSuchItemException e) {
+            }
+            if (folder == null || folder.inTrash() || folder.isHidden()) {
+                ZimbraLog.filter.info("Disabling filter rules that reference %s.", oldPath);
+                RuleManager.folderDeleted(getAccount(), oldPath);
+            } else if (!folder.getPath().equals(oldPath)) {
+                ZimbraLog.filter.info("Updating filter rules that reference %s.", oldPath);
                 RuleManager.folderRenamed(getAccount(), oldPath, folder.getPath());
             }
         } catch (ServiceException e) {
@@ -5411,6 +5419,7 @@ public class Mailbox {
     *  @param tcon target constraint or <tt>null</tt> */
     public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
+        Map<Integer, String> deletedFolderPaths = new HashMap<Integer, String>();
 
         boolean success = false;
         try {
@@ -5427,6 +5436,10 @@ public class Mailbox {
                 } catch (NoSuchItemException nsie) {
                     // trying to delete nonexistent things is A-OK!
                     continue;
+                }
+                
+                if (item.getType() == MailItem.TYPE_FOLDER) {
+                    deletedFolderPaths.put(item.getId(), ((Folder) item).getPath());
                 }
 
                 // however, trying to delete messages and passing in a folder ID is not OK
@@ -5447,6 +5460,10 @@ public class Mailbox {
             success = true;
         } finally {
             endTransaction(success);
+        }
+        
+        for (int id : deletedFolderPaths.keySet()) {
+            updateFilterRules(id, deletedFolderPaths.get(id));
         }
     }
 
