@@ -898,7 +898,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     /**
      * For Provisioning instance(e.g. LdapProvisioning) that caches non-existing
-     * (domains that do not exist in zimrba directory) domains for perf purpose, 
+     * (domains that do not exist in zimbra directory) domains for perf purpose, 
      * this methods will bypass the non-existing cache.  It will only return domain 
      * from the regular cache(or load it from directory and cache like usual).
      * 
@@ -914,7 +914,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *   - on mbs-1: zmprov ca user1@test.com test123 (or any command that needs the domain)
      *               will throw NO_SUCH_DOMAIN because test.com is in the non-existing cache.           
      *               
-     * Whereas the "get(DomainBy keyType, String key)" signature is used when existance of the 
+     * Whereas the "get(DomainBy keyType, String key)" signature is used when existence of the 
      * domain is not that critical(the cache will refresh after the TTL) but perf is more important, 
      * e.g. going through all invitees of a invite that can contain losts of external domains.                 
      * 
