@@ -84,8 +84,8 @@ public abstract class SoapCLI {
     public static final String O_HIDDEN = "hidden";
     public static final String O_S = "s";
     
-    public static final Option OPT_AUTHTOKEN = new Option(O_AUTHTOKEN, "authtoken", true, "use auth token string(has to be in JSON format) from command line");
-    public static final Option OPT_AUTHTOKENFILE = new Option(O_AUTHTOKENFILE, "authtokenfile", true, "use auth token string(has to be in JSON format) from command line");
+    public static final Option OPT_AUTHTOKEN = new Option(O_AUTHTOKEN, "authtoken", true, "use auth token string (has to be in JSON format) from command line");
+    public static final Option OPT_AUTHTOKENFILE = new Option(O_AUTHTOKENFILE, "authtokenfile", true, "read auth token (has to be in JSON format) from a file");
 
 
     private String mUser;
