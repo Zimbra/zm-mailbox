@@ -16,6 +16,7 @@
 package com.zimbra.qa.unittest;
 
 import com.zimbra.cs.datasource.imap.ImapAppender;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import org.junit.*;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
@@ -28,7 +29,6 @@ import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
@@ -146,7 +146,7 @@ public class TestImapClient {
     @Test
     public void testSelect() throws Exception {
         login();
-        Mailbox mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailbox();
         assertNotNull(mb);
         assertTrue(mb.isReadWrite());
         assertTrue(mb.getUidValidity() > 0);
@@ -192,7 +192,7 @@ public class TestImapClient {
         // Stop IDLE...
         connection.stopIdle();
         // Check mailbox status
-        Mailbox mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailbox();
         assertEquals(mb.getExists(), exists.get());
     }
 
@@ -228,7 +228,7 @@ public class TestImapClient {
     @Test
     public void testAppend() throws Exception {
         login();
-        Mailbox mb = connection.select("INBOX");
+        MailboxInfo mb = connection.select("INBOX");
         long exists = mb.getExists();
         Date date = new Date((System.currentTimeMillis() / 1000) * 1000);
         Flags flags = Flags.fromSpec("fs");
@@ -250,7 +250,7 @@ public class TestImapClient {
     @Test
     public void testDelete() throws Exception {
         login();
-        Mailbox mb = connection.select("INBOX");
+        MailboxInfo mb = connection.select("INBOX");
         long exists = mb.getExists();
         AppendResult res = connection.append("INBOX", Flags.fromSpec("fs"),
             new Date(System.currentTimeMillis()), new Literal(Ascii.getBytes(MESSAGE)));
@@ -269,7 +269,7 @@ public class TestImapClient {
     public void testFetch() throws Exception {
         connect();
         login();
-        Mailbox mb = connection.select("INBOX");
+        MailboxInfo mb = connection.select("INBOX");
         final AtomicLong count = new AtomicLong(mb.getExists());
         connection.uidFetch("1:*", "(FLAGS INTERNALDATE RFC822.SIZE ENVELOPE BODY BODY.PEEK[])", new ResponseHandler() {
             public void handleResponse(ImapResponse res) throws Exception {
@@ -394,7 +394,7 @@ public class TestImapClient {
         if (!connection.exists(name)) {
             connection.create(name);
         }
-        Mailbox mb = connection.select(name);
+        MailboxInfo mb = connection.select(name);
         for (int i = (int) mb.getExists(); i < count; i++) {
             MimeMessage mm = newTestMessage(i);
             long uid = uidAppend(mm, null, null);

@@ -22,7 +22,7 @@ import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.Mailbox;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.common.util.Log;
@@ -68,7 +68,7 @@ public class TestImapSync {
         Assert.assertFalse(imapFolder1.exists());
         syncFolders();
         Assert.assertTrue(imapFolder1.exists());
-        Mailbox mb = imapFolder1.select();
+        MailboxInfo mb = imapFolder1.select();
         Assert.assertEquals(1, mb.getExists());
         Assert.assertEquals(1, mb.getUnseen());
     }
@@ -155,7 +155,7 @@ public class TestImapSync {
             return lds.isEmpty() ? null : lds.get(0);
         }
         
-        Mailbox select() throws IOException {
+        MailboxInfo select() throws IOException {
             return imapConnection.select(name());
         }
 

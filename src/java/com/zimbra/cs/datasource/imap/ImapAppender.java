@@ -21,7 +21,7 @@ import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.Envelope;
-import com.zimbra.cs.mailclient.imap.Mailbox;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MailboxName;
@@ -121,7 +121,7 @@ public class ImapAppender {
     // Slow APPEND for servers lacking APPENDUID (UIDPLUS) capability
     private long appendSlow(MessageInfo mi, Literal lit)
         throws IOException, MessagingException {
-        Mailbox mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailbox();
         if (mdf == null) {
             mdf = new MailDateFormat();
         }

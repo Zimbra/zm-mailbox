@@ -99,7 +99,7 @@ public class ImapClient extends MailClient {
         ImapConnection ic = getImapConnection();
         String cmd = cmdLine[0];
         if (isMatch(cmd, "SELect")) {
-            Mailbox mbox = ic.select(cmdLine[1]);
+            MailboxInfo mbox = ic.select(cmdLine[1]);
             System.out.printf(">> Selected mailbox: %s\n", mbox);
         } else if (isMatch(cmd, "CAPability")) {
             ImapCapabilities cap = ic.capability();

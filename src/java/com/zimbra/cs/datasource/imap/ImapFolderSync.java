@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
@@ -62,7 +63,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Literal;
-import com.zimbra.cs.mailclient.imap.Mailbox;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseText;
@@ -76,7 +77,7 @@ class ImapFolderSync {
     private final ImapSync imapSync;
     private final ImapConnection connection;
     private final DataSource ds;
-    private final com.zimbra.cs.mailbox.Mailbox mailbox;
+    private final Mailbox mailbox;
     private final Statistics stats = new Statistics();
     private ImapFolder tracker;
     private LocalFolder localFolder;
@@ -213,7 +214,7 @@ class ImapFolderSync {
             tracker = null;
             return;
         }
-        Mailbox mb = checkUidValidity();
+        MailboxInfo mb = checkUidValidity();
         syncState = getSyncState(fullSync);
         localFolder.debug("SyncState = " + syncState);
         long uidNext = mb.getUidNext();
@@ -593,9 +594,9 @@ class ImapFolderSync {
      * remote folder and empty the local folder so that messages will be
      * fetched again when we synchronize.
      */
-    private Mailbox checkUidValidity()
+    private MailboxInfo checkUidValidity()
         throws ServiceException, IOException {
-        Mailbox mb = remoteFolder.select();
+        MailboxInfo mb = remoteFolder.select();
         long uidValidity = getUidValidity();
         if (uidValidity == tracker.getUidValidity()) {
             return mb;
@@ -1353,12 +1354,12 @@ class ImapFolderSync {
             }
         }
 
-        public Mailbox select() throws IOException {
+        public MailboxInfo select() throws IOException {
             return connection.select(path);
         }
 
         public boolean isSelected() {
-            Mailbox mb = connection.getMailbox();
+            MailboxInfo mb = connection.getMailbox();
             return mb != null && mb.getName().equals(path);
         }
 

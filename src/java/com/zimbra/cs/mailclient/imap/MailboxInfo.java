@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * IMAP Mailbox information.
  */
-public final class Mailbox implements ResponseHandler {
+public final class MailboxInfo implements ResponseHandler {
     private String name;
     private Flags flags;
     private Flags permanentFlags;
@@ -32,11 +32,11 @@ public final class Mailbox implements ResponseHandler {
     private long unseen = -1;
     private CAtom access;
 
-    public Mailbox(String name) {
+    public MailboxInfo(String name) {
         this.name = name;
     }
 
-    public Mailbox(Mailbox mb) {
+    public MailboxInfo(MailboxInfo mb) {
         name = mb.name;
         flags = mb.flags;
         permanentFlags = mb.permanentFlags;
@@ -48,7 +48,7 @@ public final class Mailbox implements ResponseHandler {
         access = mb.access;
     }
     
-    private Mailbox() {}
+    private MailboxInfo() {}
     
     // IMAP mailbox STATUS response:
     //
@@ -59,8 +59,8 @@ public final class Mailbox implements ResponseHandler {
     // status-att      = "MESSAGES" / "RECENT" / "UIDNEXT" / "UIDVALIDITY" /
     //                   "UNSEEN"
     //
-    public static Mailbox readStatus(ImapInputStream is) throws IOException {
-        Mailbox mbox = new Mailbox();
+    public static MailboxInfo readStatus(ImapInputStream is) throws IOException {
+        MailboxInfo mbox = new MailboxInfo();
         mbox.parseStatus(is);
         return mbox;
     }

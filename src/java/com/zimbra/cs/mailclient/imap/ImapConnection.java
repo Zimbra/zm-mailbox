@@ -40,7 +40,7 @@ import org.apache.commons.codec.binary.Base64;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
-    private Mailbox mailbox;
+    private MailboxInfo mailbox;
     private ImapRequest request;
     private DataHandler dataHandler;
     
@@ -189,18 +189,18 @@ public final class ImapConnection extends MailConnection {
         return mailbox != null && mailbox.getName().equals(name);
     }
     
-    public synchronized Mailbox select(String name) throws IOException {
+    public synchronized MailboxInfo select(String name) throws IOException {
         mailbox = doSelectOrExamine(CAtom.SELECT, name);
         setState(State.SELECTED);
         return getMailbox();
     }
 
-    public Mailbox examine(String name) throws IOException {
+    public MailboxInfo examine(String name) throws IOException {
         return doSelectOrExamine(CAtom.EXAMINE, name);
     }
 
-    private Mailbox doSelectOrExamine(CAtom cmd, String name) throws IOException {
-        Mailbox mbox = new Mailbox(name);
+    private MailboxInfo doSelectOrExamine(CAtom cmd, String name) throws IOException {
+        MailboxInfo mbox = new MailboxInfo(name);
         ImapRequest req = newRequest(cmd, new MailboxName(name));
         req.setResponseHandler(mbox);
         mbox.handleResponse(req.sendCheckStatus());
@@ -262,9 +262,9 @@ public final class ImapConnection extends MailConnection {
         setState(State.AUTHENTICATED);
     }
 
-    public Mailbox status(String name, Object... params) throws IOException {
+    public MailboxInfo status(String name, Object... params) throws IOException {
         ImapRequest req = newRequest(CAtom.STATUS, new MailboxName(name), params);
-        List<Mailbox> results = new ArrayList<Mailbox>(1);
+        List<MailboxInfo> results = new ArrayList<MailboxInfo>(1);
         req.setResponseHandler(new BasicResponseHandler(CAtom.STATUS, results));
         req.sendCheckStatus();
         if (results.isEmpty()) {
@@ -454,11 +454,11 @@ public final class ImapConnection extends MailConnection {
         return capabilities;
     }
 
-    public Mailbox getMailbox() {
+    public MailboxInfo getMailbox() {
         // Make sure we return a copy of the actual mailbox since it can
         // be modified in-place in response to unsolicited messages from
         // the server.
-        return mailbox != null ? new Mailbox(mailbox) : null;
+        return mailbox != null ? new MailboxInfo(mailbox) : null;
     }
 
     public TraceOutputStream getTraceOutputStream() {
