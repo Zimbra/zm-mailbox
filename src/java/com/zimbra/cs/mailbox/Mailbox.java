@@ -874,12 +874,9 @@ public class Mailbox {
      *    <li>all global admin accounts (if using admin privileges)
      *    <li>appropriate domain admins (if using admin privileges)</ul> */
     public boolean hasFullAccess(OperationContext octxt) throws ServiceException {
-        Account authuser = null;
-        if (octxt != null)
-            authuser = octxt.getAuthenticatedUser();
-        if (authuser == null)
-            return false;
-        if (getAccountId().equals(authuser.getId()))
+        Account authuser = octxt != null ? octxt.getAuthenticatedUser() : null;
+        // XXX: in Mailbox, authuser is set to null if authuser == owner.
+        if (authuser == null || getAccountId().equals(authuser.getId()))
             return true;
         return AccessManager.getInstance().canAccessAccount(authuser, getAccount(), octxt.isUsingAdminPrivileges());
     }
