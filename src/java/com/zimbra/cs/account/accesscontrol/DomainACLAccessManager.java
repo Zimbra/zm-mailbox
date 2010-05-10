@@ -78,7 +78,7 @@ public class DomainACLAccessManager extends DomainAccessManager {
             }
             
             // 3. check ACL
-            Boolean result = RightChecker.checkPresetRight(grantee, target, rightNeeded, false, null); 
+            Boolean result = PresetRightChecker.check(grantee, target, rightNeeded, false, null); 
             if (result != null)
                 return result.booleanValue();
             else {

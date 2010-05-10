@@ -17,7 +17,10 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -31,8 +34,22 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
  */
 
 public class CrossDomain {
+    private static final Log sLog = LogFactory.getLog(RightChecker.class);
     
-
+    static boolean crossDomainOK(Provisioning prov, Account grantee, Domain granteeDomain, 
+            Domain targetDomain, DistributionList grantedOn) throws ServiceException {
+        
+       if (!CrossDomain.checkCrossDomain(prov, granteeDomain, targetDomain, 
+                (DistributionList)grantedOn)) {
+            sLog.info("No cross domain right for " + grantee.getName() + " on domain " +
+                    targetDomain.getName() + 
+                    ", skipping positive grants on dl " + ((DistributionList)grantedOn).getName());
+            
+            return false;
+        } else
+            return true;
+    }
+    
     static Boolean checkCrossDomainAdminRight(Provisioning prov, 
             Domain granteeDomain, Entry target,
             boolean canDelegateNeeded) throws ServiceException {

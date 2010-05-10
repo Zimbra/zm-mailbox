@@ -344,8 +344,8 @@ public enum TargetType {
             return TargetType.zimlet;
         else if (target instanceof XMPPComponent)
             return TargetType.xmppcomponent;
-        else
-            throw ServiceException.FAILURE("internal error", null);
+        else 
+            throw ServiceException.FAILURE("internal error, target is : " + (target==null?"null":target.getClass().getCanonicalName()), null);
     }
 
     boolean isDomained() {

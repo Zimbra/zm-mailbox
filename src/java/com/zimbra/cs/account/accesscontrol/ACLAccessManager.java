@@ -452,7 +452,7 @@ public class ACLAccessManager extends AccessManager {
             //
             Boolean result = null;
             if (target != null)
-                result = RightChecker.checkPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
+                result = PresetRightChecker.check(grantee, target, rightNeeded, canDelegateNeeded, via);
             
             if (result != null)
                 return result.booleanValue();
