@@ -192,24 +192,27 @@ public class SoapSession extends Session {
             }
             if (pms.modified != null && !pms.modified.isEmpty()) {
                 for (Change chg : pms.modified.values()) {
-                    if (!(chg.what instanceof MailItem))
-                        continue;
-
-                    MailItem item = (MailItem) chg.what;
-                    boolean isVisible = visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
-                    boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
-                    if (item instanceof Conversation) {
-                        filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS);
-                    } else if (isVisible) {
-                        filtered.recordModified(item, chg.why);
-                        // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
-                        if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0))
-                            forceConversationModification((Message) item, pms, filtered, moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
-                    } else if (moved) {
-                        filtered.recordDeleted(item);
-                        // if it's a message and it's moved, make sure the conv shows up in the modified or created list
-                        if (item instanceof Message)
-                            forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
+                    if (chg.what instanceof MailItem) {
+                        MailItem item = (MailItem) chg.what;
+                        boolean isVisible = visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
+                        boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
+                        if (item instanceof Conversation) {
+                            filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS);
+                        } else if (isVisible) {
+                            filtered.recordModified(item, chg.why);
+                            // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
+                            if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0))
+                                forceConversationModification((Message) item, pms, filtered, moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
+                        } else if (moved) {
+                            filtered.recordDeleted(item);
+                            // if it's a message and it's moved, make sure the conv shows up in the modified or created list
+                            if (item instanceof Message)
+                                forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
+                        }
+                    } else if (chg.what instanceof Mailbox) {
+                        if (mMailbox.hasFullAccess(new OperationContext(getAuthenticatedAccountId()))) {
+                            filtered.recordModified((Mailbox) chg.what, chg.why);
+                        }
                     }
                 }
             }

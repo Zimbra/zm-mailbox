@@ -868,6 +868,21 @@ public class Mailbox {
         return false;
     }
 
+    /** Returns whether the authenticated user in the given op context has full access to this
+     *  <tt>Mailbox</tt>.   The following users have full access:<ul>
+     *    <li>the mailbox's owner
+     *    <li>all global admin accounts (if using admin privileges)
+     *    <li>appropriate domain admins (if using admin privileges)</ul> */
+    public boolean hasFullAccess(OperationContext octxt) throws ServiceException {
+        Account authuser = null;
+        if (octxt != null)
+            authuser = octxt.getAuthenticatedUser();
+        if (authuser == null)
+            return false;
+        if (getAccountId().equals(authuser.getId()))
+            return true;
+        return AccessManager.getInstance().canAccessAccount(authuser, getAccount(), octxt.isUsingAdminPrivileges());
+    }
 
     /** Returns the total (uncompressed) size of the mailbox's contents. */
     public long getSize() {
