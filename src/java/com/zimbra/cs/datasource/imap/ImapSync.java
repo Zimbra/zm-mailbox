@@ -315,7 +315,7 @@ public class ImapSync extends MailItemImport {
         int lastModSeq = getMailbox().getLastChangeID();
         for (ImapFolderSync ifs : syncedFolders.values()) {
             checkIsEnabled();
-            ImapFolderSync.LocalFolder folder = ifs.getLocalFolder();
+            LocalFolder folder = ifs.getLocalFolder();
             int folderId = folder.getId();
             try {
                 if (folderIds == null || folderIds.contains(folderId) ||
@@ -342,7 +342,7 @@ public class ImapSync extends MailItemImport {
             try {
                 ifs.finishSync();
             } catch (Exception e) {
-                ImapFolderSync.LocalFolder folder = ifs.getLocalFolder();
+                LocalFolder folder = ifs.getLocalFolder();
                 syncFailed(folder.getPath(), e);
             }
         }
@@ -425,7 +425,7 @@ public class ImapSync extends MailItemImport {
             int count = 1;
             for (;;) {
                 String path = String.format("%s-%d", localPath, count++);
-                if (ImapFolderSync.LocalFolder.fromPath(mbox, path) == null) {
+                if (LocalFolder.fromPath(mbox, path) == null) {
                     return path;
                 }
             }
@@ -445,7 +445,7 @@ public class ImapSync extends MailItemImport {
      * name.
      */
     private boolean isUniqueLocalPathNeeded(String localPath) throws ServiceException {
-        ImapFolderSync.LocalFolder lf = ImapFolderSync.LocalFolder.fromPath(mbox, localPath);
+        LocalFolder lf = LocalFolder.fromPath(mbox, localPath);
         return lf != null && (
             trackedFolders.getByItemId(lf.getId()) != null ||
             lf.isSystem() && !lf.isKnown());
