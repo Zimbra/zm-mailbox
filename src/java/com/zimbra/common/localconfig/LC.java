@@ -351,6 +351,8 @@ public class LC {
     public static final KnownKey calendar_cache_range_months;
     public static final KnownKey calendar_cache_max_stale_items;
 
+    public static final KnownKey text_attachments_base64;
+    
     public static final KnownKey nio_imap_enabled =
         new KnownKey("nio_imap_enabled", "false");
 
@@ -1595,6 +1597,8 @@ public class LC {
         networkaddress_cache_ttl.setDoc("Value for the java.security.Security networkaddress.cache.ttl property, " +
                 "set through -Dsun.net.inetaddr.ttl JVM system property. " +
                 "Number of seconds to cache successful hostname-to-IP address lookup from the name service. ");
+
+        text_attachments_base64 = new KnownKey("text_attachments_base64", "true");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
@@ -1602,5 +1606,5 @@ public class LC {
 		//       KnownKey.
 		//       You can still use setDoc but it is NOT recommended
 		//       because it will not be able to be translated.
-	}
+    }
 }
