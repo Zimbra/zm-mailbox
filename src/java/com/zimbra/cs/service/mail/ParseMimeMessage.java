@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.DataSourceWrapper;
@@ -605,7 +606,21 @@ public class ParseMimeMessage {
         String filename = up.getName();
 
         // create the part and override the DataSource's default ctype, if required
-        MimeBodyPart mbp = new MimeBodyPart();
+        MimeBodyPart mbp = new MimeBodyPart() {
+            /**
+             * Overrides the default transfer encoding and sets the encoding
+             * of text attachments to base64, so that we preserve line endings
+             * (bug 45858).
+             */
+            protected void updateHeaders() throws MessagingException {
+                super.updateHeaders();
+                if (LC.text_attachments_base64.booleanValue() &&
+                    Mime.getContentType(this).startsWith(MimeConstants.CT_TEXT_PREFIX)) {
+                    setHeader("Content-Transfer-Encoding", "base64");
+                }
+            }
+        };
+        
         UploadDataSource uds = new UploadDataSource(up);
         if (ctypeOverride != null && !ctypeOverride.equals(""))
             uds.setContentType(ctypeOverride);

@@ -15,6 +15,7 @@
 package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +29,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -244,6 +246,24 @@ public class TestSendAndReceive extends TestCase {
         ZMessage fwd = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + fwdSubject + "\"");
         ZMimePart fwdAttachPart = fwd.getMimeStructure().getChildren().get(1);
         assertEquals("test.txt", fwdAttachPart.getFileName());
+    }
+    
+    /**
+     * Confirms that we preserve line endings of attached text files (bug 45858).
+     */
+    public void testTextAttachmentLineEnding()
+    throws Exception {
+        String content = "I used to think that the day would never come,\n" +
+            "I'd see the light in the shade of the morning sun\n";
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String attachId = mbox.uploadAttachment("text.txt", content.getBytes(), MimeConstants.CT_TEXT_PLAIN, 5000);
+        String subject = NAME_PREFIX + " testTextAttachmentLineEnding";
+        TestUtil.sendMessage(mbox, USER_NAME, subject, "Testing text attachment", attachId);
+
+        ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        InputStream in = mbox.getRESTResource("?id=" + msg.getId() + "&part=2");
+        String attachContent = new String(ByteUtil.getContent(in, content.length()));
+        assertEquals(content, attachContent);
     }
     
     public void tearDown()
