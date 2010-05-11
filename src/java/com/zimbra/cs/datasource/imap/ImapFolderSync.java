@@ -35,7 +35,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.MessageContent;
 import com.zimbra.cs.datasource.SyncErrorManager;
-import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
@@ -112,7 +111,7 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         String path = ld.getMailbox();
     	if (ds.isSyncInboxOnly() && !path.equalsIgnoreCase("Inbox"))
-    		return null;
+    	    return null;
         remoteFolder = new RemoteFolder(connection, path);
         tracker = imapSync.getTrackedFolders().getByRemotePath(path);
         if (tracker != null) {
@@ -199,10 +198,9 @@ class ImapFolderSync {
             tracker = null;
             return;
         }
-        MailboxInfo mb = checkUidValidity();
+        MailboxInfo mi = checkUidValidity();
         syncState = getSyncState(fullSync);
-        localFolder.debug("SyncState = " + syncState);
-        long uidNext = mb.getUidNext();
+        long uidNext = mi.getUidNext();
         if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
             String msg = String.format(
                 "Inconsistent UIDNEXT value from server (got %d but last known uid %d)",
@@ -248,8 +246,8 @@ class ImapFolderSync {
         remoteFolder.close();
 
         // Update sync state for new mailbox status
-        syncState.setExists(mb.getExists());
-        syncState.setUnseen(mb.getUnseen());
+        syncState.setExists(mi.getExists());
+        syncState.setUnseen(mi.getUnseen());
 
         // Clean up tracked message state no longer in use
         trackedMsgs = null;
@@ -259,8 +257,8 @@ class ImapFolderSync {
 
     
     private SyncState getSyncState(boolean fullSync) throws ServiceException {
-        syncState = ds.removeSyncState(localFolder.getId());
-        if (syncState == null || fullSync) {
+        SyncState ss = imapSync.removeSyncState(localFolder.getId());
+        if (ss == null || fullSync) {
             int lastModSeq = 0;
             synchronized (mailbox) {
                 trackedMsgs = tracker.getMessages();
@@ -269,18 +267,18 @@ class ImapFolderSync {
                     lastModSeq = mailbox.getLastChangeID();
                 }
             }
-            if (syncState == null) {
-                syncState = new SyncState();
-                syncState.setLastUid(trackedMsgs.getLastUid());
+            if (ss == null) {
+                ss = new SyncState();
+                ss.setLastUid(trackedMsgs.getLastUid());
                 if (!fullSync) {
                     trackedMsgs = null;
                 }
             }
             if (lastModSeq > 0) {
-                syncState.setLastModSeq(lastModSeq);
+                ss.setLastModSeq(lastModSeq);
             }
         }
-        return syncState;
+        return ss;
     }
 
     private void syncFlags(long lastUid) throws ServiceException, IOException {
@@ -400,7 +398,7 @@ class ImapFolderSync {
             appendMsgs(newMsgIds);
         }
         if (syncState != null) {
-            ds.putSyncState(localFolder.getId(), syncState);
+            imapSync.putSyncState(localFolder.getId(), syncState);
         }
         if (LOG.isDebugEnabled()) {
             if (stats.flagsUpdatedLocally > 0) {
@@ -481,7 +479,7 @@ class ImapFolderSync {
             tracker.setLocalPath(localPath);
             tracker.setRemoteId(newRemotePath);
             tracker.update();
-            ds.clearSyncState(tracker.getFolderId());
+            imapSync.removeSyncState(tracker.getFolderId());
         } else {
             // Folder was moved outside of the data source root, or
             // folder should no longer be synchronized
@@ -581,10 +579,10 @@ class ImapFolderSync {
      */
     private MailboxInfo checkUidValidity()
         throws ServiceException, IOException {
-        MailboxInfo mb = remoteFolder.select();
+        MailboxInfo mi = remoteFolder.select();
         long uidValidity = getUidValidity();
         if (uidValidity == tracker.getUidValidity()) {
-            return mb;
+            return mi;
         }
         remoteFolder.info("Resynchronizing folder because UIDVALIDITY has " +
                           "changed from %d to %d", tracker.getUidValidity(), uidValidity);
@@ -611,7 +609,7 @@ class ImapFolderSync {
         tracker.deleteMappings();
         tracker.setUidValidity(uidValidity);
         tracker.update();
-        ds.clearSyncState(folderId);
+        imapSync.removeSyncState(folderId);
         return remoteFolder.select();
     }
 
@@ -993,10 +991,10 @@ class ImapFolderSync {
         if (syncedFolder != null && syncedFolder.syncState != null) {
             syncedFolder.syncState.updateLastUid(uid);
         } else {
-            SyncState ss = ds.getSyncState(fid);
+            SyncState ss = imapSync.removeSyncState(fid);
             if (ss != null) {
                 ss.updateLastUid(uid);
-                ds.putSyncState(fid, ss);
+                imapSync.putSyncState(fid, ss);
             }
         }
         return true;

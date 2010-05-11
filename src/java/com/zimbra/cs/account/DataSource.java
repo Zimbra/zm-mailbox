@@ -31,7 +31,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
@@ -377,21 +376,6 @@ public class DataSource extends AccountProperty {
     public long getSyncFrequency() {
         return 0;
     }
-
-    // Overridden by OfflineDataSource
-    public boolean hasSyncState(int folderId) { return false; }
-
-    // Overridden by OfflineDataSource
-    public SyncState getSyncState(int folderId) { return null; }
-    
-    // Overridden by OfflineDataSource
-    public SyncState removeSyncState(int folderId) { return null; }
-
-    // Overridden by OfflineDataSource
-    public void putSyncState(int folderId, SyncState state) {}
-
-    // Overridden by OfflineDataSource
-    public void clearSyncState(int folderId) {}
 
     public void reportError(int itemId, String error, Exception e) {
         // Do nothing by default...

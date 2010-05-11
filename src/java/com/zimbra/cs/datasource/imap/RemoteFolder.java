@@ -82,27 +82,6 @@ final class RemoteFolder {
         return new RemoteFolder(connection, newName);
     }
 
-    public long appendMessage(MimeMessage msg, Flags flags, Date date)
-        throws IOException {
-        ensureSelected();
-        ImapConfig config = connection.getImapConfig();
-        File tmp = null;
-        OutputStream os = null;
-        try {
-            tmp = File.createTempFile("lit", null, config.getLiteralDataDir());
-            os = new FileOutputStream(tmp);
-            msg.writeTo(os);
-            os.close();
-            AppendResult res = connection.append(path, flags, date, new Literal(tmp));
-            return res != null ? res.getUid() : -1;
-        } catch (MessagingException e) {
-            throw new MailException("Error appending message", e);
-        } finally {
-            if (os != null) os.close();
-            if (tmp != null) tmp.delete();
-        }
-    }
-
     public CopyResult copyMessage(long uid, String mbox) throws IOException {
         ensureSelected();
         String seq = String.valueOf(uid);

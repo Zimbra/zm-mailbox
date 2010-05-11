@@ -2690,7 +2690,7 @@ public class Mailbox {
     
     /** Returns the folder with the specified id.
      * @throws NoSuchItemException if the folder does not exist */
-    protected Folder getFolderById(int id) throws ServiceException {
+    public Folder getFolderById(int id) throws ServiceException {
         return (Folder) getItemById(id, MailItem.TYPE_FOLDER);
     }
     

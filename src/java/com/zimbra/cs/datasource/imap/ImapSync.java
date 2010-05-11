@@ -16,10 +16,10 @@ package com.zimbra.cs.datasource.imap;
                              
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
+import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.LogOutputStream;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.datasource.MessageContent;
-import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
@@ -55,22 +55,71 @@ import java.util.regex.Pattern;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
-    private Folder localRootFolder;
+    private final Folder localRootFolder;
+    private final SyncStateManager syncStateManager;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private ImapFolderCollection trackedFolders;
     private Map<Integer, ImapFolderSync> syncedFolders;
     // Optional mail client authenticator (default is plaintext login)
     private Authenticator authenticator;
-    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|]");
+    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[:\\*\\?\"<>\\|]");
 
     private static final Log LOG = ZimbraLog.datasource;
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
         connection = new ImapConnection(newImapConfig(ds));
+        connection.setDataHandler(new FetchDataHandler());
+        localRootFolder = getMailbox().getFolderById(dataSource.getFolderId());
+        syncStateManager = SyncStateManager.getInstance(ds);
     }
 
-    public ImapConnection getConnection() { return connection; }
+    // TODO Deprecate folderIds - it's better to determine which folders to sync here
+    public void importData(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
+        importData(fullSync);
+    }
+
+    public synchronized void importData(boolean fullSync) throws ServiceException {
+        validateDataSource();
+        connect();
+        fullSync |= forceFullSync();
+        List<Integer> folderIds = null;
+        if (!fullSync) {
+            // If not full sync, then only sync INBOX and possibly SENT folder
+            // if server saves sent messages to SENT folder automatically.
+            folderIds = new ArrayList<Integer>(2);
+            folderIds.add(Mailbox.ID_FOLDER_INBOX);
+            if (!dataSource.isSaveToSent()) {
+                folderIds.add(Mailbox.ID_FOLDER_SENT);
+            }
+        }
+        try {
+            syncFolders(folderIds, fullSync);
+            connection.logout();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Folder sync failed", e);
+        } finally {
+            connection.close();
+        }
+    }
+
+    /*
+     * For ZDesktop, force a full sync of all folders if requested or INBOX
+     * not yet fully sync'd. For ZCS import we always do a full sync.
+     */
+    private boolean forceFullSync() throws ServiceException {
+        if (!dataSource.isOffline()) {
+            return true; // Always force full sync for ZCS import
+        }
+        DataSourceManager dsm = DataSourceManager.getInstance();
+        Folder inbox = dsm.getMailbox(dataSource).getFolderById(Mailbox.ID_FOLDER_INBOX);
+        return dsm.isSyncEnabled(dataSource, inbox) && getSyncState(inbox.getId()) == null;
+    }
+
+    public ImapConnection getConnection() {
+        return connection;
+    }
 
     public void setAuthenticator(Authenticator auth) {
         authenticator = auth;
@@ -163,22 +212,6 @@ public class ImapSync extends MailItemImport {
         config.setTraceStream(ps);
     }
 
-    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
-        throws ServiceException {
-        validateDataSource();
-        connect();
-        int folderId = dataSource.getFolderId();
-        localRootFolder = getMailbox().getFolderById(null, folderId);
-        connection.setDataHandler(new FetchDataHandler());
-        try {
-            syncFolders(folderIds, fullSync);
-            connection.logout();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Folder sync failed", e);
-        } finally {
-            connection.close();
-        }
-    }
 
     // Handler for fetched message data which uses ParsedMessage to stream
     // the message data to disk if necessary.
@@ -329,8 +362,34 @@ public class ImapSync extends MailItemImport {
     }
 
     private boolean hasLocalChanges(int folderId, int lastModSeq) {
-        SyncState ss = dataSource.getSyncState(folderId);
+        SyncState ss = getSyncState(folderId);
         return ss == null || ss.getLastModSeq() < lastModSeq;
+    }
+
+    public SyncState getSyncState(int folderId) {
+        if (syncStateManager != null) {
+            SyncState ss = syncStateManager.get(folderId);
+            LOG.debug("getSyncState: fid = %d, state = %s", folderId, ss);
+            return ss;
+        }
+        return null;
+    }
+
+    public SyncState removeSyncState(int folderId) {
+        if (syncStateManager != null) {
+            SyncState ss = syncStateManager.remove(folderId);
+            LOG.debug("removeSyncState: fid = %d, state = %s", folderId, ss);
+            return ss;
+        }
+        return null;
+    }
+
+    public SyncState putSyncState(int folderId, SyncState ss) {
+        if (syncStateManager != null) {
+            LOG.debug("putSyncState: fid = %d, state = %s", folderId, ss);
+            return syncStateManager.put(folderId, ss);
+        }
+        return null;
     }
 
     private void finishSync() throws ServiceException {
