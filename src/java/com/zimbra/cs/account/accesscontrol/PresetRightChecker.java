@@ -2,6 +2,7 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.List;
 
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -139,8 +140,11 @@ public class PresetRightChecker {
         //
         Domain targetDomain = TargetType.getTargetDomain(mProv, mTarget);
         
+        // group target is only supported for admin rights
+        boolean expandTargetGroups = RightChecker.allowGroupTarget(mRightNeeded);
+        
         // check grants granted on entries from which the target entry can inherit from
-        TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), mTarget);
+        TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), mTarget, expandTargetGroups);
         Entry grantedOn;
         
         GroupACLs groupACLs = null;

@@ -65,6 +65,10 @@ public abstract class TargetIterator{
     }
     
     static TargetIterator getTargetIeterator(Provisioning prov, Entry target) throws ServiceException {
+        return getTargetIeterator(prov, target, true);
+    }
+    
+    static TargetIterator getTargetIeterator(Provisioning prov, Entry target, boolean expandGroups) throws ServiceException {
         /*
          * tested in the order of how often acl are checked on each target types in normal 
          * server operation pattern.
@@ -77,9 +81,9 @@ public abstract class TargetIterator{
         TargetIterator iter = null;
         
         if (target instanceof CalendarResource)
-            iter = new TargetIterator.AccountTargetIterator(prov, target);
+            iter = new TargetIterator.AccountTargetIterator(prov, target, expandGroups);
         else if (target instanceof Account)
-            iter =  new TargetIterator.AccountTargetIterator(prov, target);
+            iter =  new TargetIterator.AccountTargetIterator(prov, target, expandGroups);
         else if (target instanceof Domain)
             iter =  new TargetIterator.DomainTargetIterator(prov, target);
         else if (target instanceof Cos)
@@ -91,7 +95,7 @@ public abstract class TargetIterator{
             // call getAclGroup if it is not yet an ACL group.
             if (!((DistributionList)target).isAclGroup())
                 target = prov.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
-            iter =  new TargetIterator.DistributionListTargetIterator(prov, target);
+            iter =  new TargetIterator.DistributionListTargetIterator(prov, target, expandGroups);
         } else if (target instanceof Server)
             iter =  new TargetIterator.ServerTargetIterator(prov, target);
         else if (target instanceof Config)
@@ -118,11 +122,13 @@ public abstract class TargetIterator{
     }
     
     public static class AccountTargetIterator extends TargetIterator {
+        private boolean mExpandGroups;
         private AclGroups mGroups = null;
         private int mIdxInGroups = 0;
         
-        AccountTargetIterator(Provisioning prov, Entry target) {
+        AccountTargetIterator(Provisioning prov, Entry target, boolean expandGroups) {
             super(prov, TargetType.account, target);
+            mExpandGroups = expandGroups;
         }
         
         @Override
@@ -133,7 +139,11 @@ public abstract class TargetIterator{
             Entry grantedOn = null;
             
             if (!mCheckedSelf) {
-                mCurTargetType = TargetType.dl;
+                if (mExpandGroups)
+                    mCurTargetType = TargetType.dl;
+                else
+                    mCurTargetType = TargetType.domain;
+                
                 mCheckedSelf = true;
                 grantedOn = mTarget;
                 
@@ -182,11 +192,13 @@ public abstract class TargetIterator{
     }
     
     public static class DistributionListTargetIterator extends TargetIterator {
+        private boolean mExpandGroups;
         private AclGroups mGroups = null;
         private int mIdxInGroups = 0;
         
-        DistributionListTargetIterator(Provisioning prov, Entry target) {
+        DistributionListTargetIterator(Provisioning prov, Entry target, boolean expandGroups) {
             super(prov, TargetType.dl, target);
+            mExpandGroups = expandGroups;
         }
         
         @Override
@@ -197,7 +209,11 @@ public abstract class TargetIterator{
             Entry grantedOn = null;
             
             if (!mCheckedSelf) {
-                mCurTargetType = TargetType.dl;
+                if (mExpandGroups)
+                    mCurTargetType = TargetType.dl;
+                else
+                    mCurTargetType = TargetType.domain;
+                
                 mCheckedSelf = true;
                 grantedOn = mTarget;
                 

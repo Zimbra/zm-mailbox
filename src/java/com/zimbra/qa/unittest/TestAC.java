@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.GranteeFlag;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightCommand.ACE;
 import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
@@ -305,6 +306,9 @@ public class TestAC extends TestCase {
     }
     
     private boolean isRightGrantableOnTargetType(Right right, TargetType targetType) throws Exception {
+        if (targetType == TargetType.dl && !RightChecker.allowGroupTarget(right))
+            return false;
+        
         if (right.isUserRight()) {
             return targetType == TargetType.account ||
                    targetType == TargetType.calresource ||
@@ -558,44 +562,71 @@ public class TestAC extends TestCase {
         //
         Entry goodTarget = null;
         Entry badTarget = null;
-        TargetType targetType = right.getTargetType();
-        switch (targetType) {
+        TargetType targetTypeOfRight = right.getTargetType();
+        switch (targetTypeOfRight) {
         case account:
-            if (grantedOnTargetType == TargetType.account)
+            if (grantedOnTargetType == TargetType.account) {
                 goodTarget = grantedOnTarget;
-            else if (grantedOnTargetType == TargetType.dl) {
-                goodTarget = createUserAccount("target-acct", domain);
-                sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                badTarget = createUserAccount("bad-target-acct", domain);
+                
+            } else if (grantedOnTargetType == TargetType.calresource) {
+                if (isUserRight) {
+                    goodTarget = grantedOnTarget;
+                    badTarget = createCalendarResource("bad-target-cr", domain);
+                } else {
+                    badTarget = grantedOnTarget;
+                }
+                
+            } else if (grantedOnTargetType == TargetType.dl) {
+                if (RightChecker.allowGroupTarget(right)) {
+                    goodTarget = createUserAccount("target-acct", domain);
+                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                } else {
+                    badTarget = createUserAccount("target-acct", domain);
+                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
+                }
+                
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTarget = createUserAccount("target-acct", domain);
+                
+                Domain anyDomain = createDomain();
+                badTarget = createUserAccount("target-acct", anyDomain);
+                
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTarget = createUserAccount("target-acct", anyDomain);
+                
             } else {
-                if (isUserRight) {
-                    if (grantedOnTargetType == TargetType.calresource)
-                        goodTarget = grantedOnTarget;
-                }
-            }
-            
-            if (goodTarget == null)
                 badTarget = grantedOnTarget;
+            }
+
             break;    
         case calresource:
-            if (grantedOnTargetType == TargetType.calresource)
+            if (grantedOnTargetType == TargetType.calresource) {
                 goodTarget = grantedOnTarget;
-            else if (grantedOnTargetType == TargetType.dl) {
-                goodTarget = createCalendarResource("target-cr", domain);
-                sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                badTarget = createCalendarResource("bad-target-cr", domain);
+                
+            } else if (grantedOnTargetType == TargetType.dl) {
+                if (RightChecker.allowGroupTarget(right)) {
+                    goodTarget = createCalendarResource("target-cr", domain);
+                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                } else {
+                    badTarget = createCalendarResource("target-cr", domain);
+                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
+                }
+                
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTarget = createCalendarResource("target-cr", domain);
+                
+                Domain anyDomain = createDomain();
+                badTarget = createUserAccount("target-acct", anyDomain);
+                
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTarget = createCalendarResource("target-cr", anyDomain);
-            }
-            
-            if (goodTarget == null)
+            } else {
                 badTarget = grantedOnTarget;
+            }
             break;    
         case cos:
             if (grantedOnTargetType == TargetType.cos)
@@ -609,33 +640,39 @@ public class TestAC extends TestCase {
         case dl:
             if (grantedOnTargetType == TargetType.dl) {
                 goodTarget = grantedOnTarget;
+                badTarget = createUserGroup("bad-target-dl", domain);
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTarget = createUserGroup("target-dl", domain);
+                
+                Domain anyDomain = createDomain();
+                badTarget = createUserGroup("bad-target-dl", anyDomain);
+                
             } else if (grantedOnTargetType == TargetType.global) {
                 Domain anyDomain = createDomain();
                 goodTarget = createUserGroup("target-dl", anyDomain);
-            }
-            
-            if (goodTarget == null)
+            } else {
                 badTarget = grantedOnTarget;
+            }
             break;  
         case domain:
-            if (grantedOnTargetType == TargetType.domain)
+            if (grantedOnTargetType == TargetType.domain) {
                 goodTarget = grantedOnTarget;
-            else if (grantedOnTargetType == TargetType.global)
+                badTarget = createDomain();
+            } else if (grantedOnTargetType == TargetType.global) {
                 goodTarget = createDomain();
-            
-            if (goodTarget == null)
+            } else {
                 badTarget = grantedOnTarget;
+            }
             break;
         case server:
-            if (grantedOnTargetType == TargetType.server)
+            if (grantedOnTargetType == TargetType.server) {
                 goodTarget = grantedOnTarget;
-            else if (grantedOnTargetType == TargetType.global)
+                badTarget = createServer();
+            } else if (grantedOnTargetType == TargetType.global) {
                 goodTarget = createServer();
-            
-            if (goodTarget == null)
+            } else {
                 badTarget = grantedOnTarget;
+            }
             break;
         case xmppcomponent:
             cleanup(); // skip for now
@@ -646,28 +683,27 @@ public class TestAC extends TestCase {
             // object does not have the grant
             sProv.reload(grantedOnTarget);
             
-            if (grantedOnTargetType == TargetType.zimlet)
+            if (grantedOnTargetType == TargetType.zimlet) {
                 goodTarget = grantedOnTarget;
-            else if (grantedOnTargetType == TargetType.global)
+                badTarget = createZimlet();
+            } else if (grantedOnTargetType == TargetType.global) {
                 goodTarget = createZimlet();
-            
-            if (goodTarget == null)
+            } else {
                 badTarget = grantedOnTarget;
+            }
             break;
         case config:
             if (grantedOnTargetType == TargetType.config)
                 goodTarget = grantedOnTarget;
             else if (grantedOnTargetType == TargetType.global)
                 goodTarget = getConfig();
-            
-            if (goodTarget == null)
+            else
                 badTarget = grantedOnTarget;
             break;
         case global:
             if (grantedOnTargetType == TargetType.global)
-                
                 goodTarget = getGlobalGrant();
-            if (goodTarget == null)
+            else
                 badTarget = grantedOnTarget;
             break;
         default:
@@ -732,6 +768,7 @@ public class TestAC extends TestCase {
     public void testBasic() throws Exception {
 
         // full test
+        /*
         int totalTests = TargetType.values().length * GranteeType.values().length * sRights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
@@ -741,22 +778,33 @@ public class TestAC extends TestCase {
                 }
             }
         }
-
+        */
         
-        // test a particular grant target
         /*
+         *  account 
+         *  calresource
+         *  cos
+         *  dl
+         *  domain
+         *  server
+         *  xmppcomponent
+         *  zimlet
+         *  config
+         *  global
+         */
+        // test a particular grant target
         int totalTests = GranteeType.values().length * sRights.size();
         int curTest = 1;
-        TargetType targetType = TargetType.global;
+        TargetType targetType = TargetType.zimlet;
         for (GranteeType granteeType : GranteeType.values()) {
             for (Right right : sRights) {
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right);
             }
         }
-        */
+
         
         // test a particular grant target and grantee type and right
-        // doTest("1/1", TargetType.global, GranteeType.GT_DOMAIN, USER_RIGHT);
+        // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_RIGHT_ACCOUNT);
     }
     
 

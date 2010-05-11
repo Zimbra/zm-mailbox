@@ -1070,11 +1070,16 @@ public class RightCommand {
         /*
          * check if the right can be granted on the target type
          */
+        // first the "normal" checking 
         if (!right.grantableOnTargetType(targetType))
             throw ServiceException.INVALID_REQUEST(
                     "right " + right.getName() + 
                     " cannot be granted on a " + targetType.getCode() + " entry. " +
                     "It can only be granted on target types: " + right.reportGrantableTargetTypes(), null);
+        
+        // then the ugly special group target checking
+        if (targetType == TargetType.dl && !RightChecker.allowGroupTarget(right))
+            throw ServiceException.INVALID_REQUEST("group target is not supported", null);
         
         /*
          * check if the authed account can grant this right on this target

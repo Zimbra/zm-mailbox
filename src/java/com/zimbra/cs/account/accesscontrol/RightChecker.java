@@ -61,13 +61,30 @@ import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.service.account.ToXML;
 
 public class RightChecker {
 
     private static final Log sLog = LogFactory.getLog(RightChecker.class);
     
-    
+    // master control to enable/disable group targets
+    // TODO: - consolidate more callsites of TargetIterator to use this function
+    //       - check all callsites of Right.grantableOnTargetType and 
+    //         RightChecker.rightApplicableOnTargetType
+    //         see if they can be optimized
+    //
+    public static boolean allowGroupTarget(Right rightNeeded) {
+        // group target is only supported for admin rights
+        boolean allowed = !rightNeeded.isUserRight();
+        
+        // group targets can be turned off by a localconfig key
+        if (DebugConfig.disableGroupTargetForAdminRight) {
+            allowed = false;
+        }
+        
+        return allowed;
+    }
 
     
     /*
