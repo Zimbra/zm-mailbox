@@ -69,8 +69,7 @@ public class RightChecker {
     private static final Log sLog = LogFactory.getLog(RightChecker.class);
     
     // master control to enable/disable group targets
-    // TODO: - consolidate more callsites of TargetIterator to use this function
-    //       - check all callsites of Right.grantableOnTargetType and 
+    // TODO: - check all callsites of Right.grantableOnTargetType and 
     //         RightChecker.rightApplicableOnTargetType
     //         see if they can be optimized
     //
@@ -157,7 +156,8 @@ public class RightChecker {
         
         if (!car.isAll()) {
             // check grants granted on entries from which the target entry can inherit
-            TargetIterator iter = TargetIterator.getTargetIeterator(prov, target);
+            boolean expandTargetGroups = RightChecker.allowGroupTarget(rightNeeded);
+            TargetIterator iter = TargetIterator.getTargetIeterator(prov, target, expandTargetGroups);
             Entry grantedOn;
             
             GroupACLs groupACLs = null;
@@ -699,7 +699,8 @@ public class RightChecker {
         Domain targetDomain = TargetType.getTargetDomain(prov, target);
         
         // check grants granted on entries from which the target entry can inherit from
-        TargetIterator iter = TargetIterator.getTargetIeterator(prov, target);
+        boolean expandTargetGroups = RightChecker.allowGroupTarget(AdminRight.PR_ADMIN_PRESET_RIGHT);
+        TargetIterator iter = TargetIterator.getTargetIeterator(prov, target, expandTargetGroups);
         Entry grantedOn;
             
         GroupACLs groupACLs = null;

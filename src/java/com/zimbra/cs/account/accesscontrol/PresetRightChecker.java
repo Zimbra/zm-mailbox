@@ -23,25 +23,30 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 public class PresetRightChecker {
     private static final Log sLog = LogFactory.getLog(RightChecker.class);
     
-    private Provisioning mProv; 
     
+    
+    // input to the class
     private Account mGrantee;
     private Entry mTarget;
-    private TargetType mTargetType;
     private Right mRightNeeded;
     private boolean mCanDelegateNeeded;
     private ViaGrant mVia;
     
+    // derived from input or aux vars
+    private Provisioning mProv; 
+    private AclGroups mGranteeGroups;
+    private TargetType mTargetType;
+    private SeenRight mSeenRight;
     
     private static class SeenRight {
-        private boolean mSeenRight;
+        private boolean mSeen;
         
         void setSeenRight() {
-            mSeenRight = true;
+            mSeen = true;
         }
         
         boolean seenRight() {
-            return mSeenRight;
+            return mSeen;
         }
     }
     
@@ -84,6 +89,18 @@ public class PresetRightChecker {
             mTarget = mProv.getAclGroup(DistributionListBy.id, ((DistributionList)target).getId());
         
         mTargetType = TargetType.getTargetType(mTarget);
+        
+        mSeenRight = new SeenRight();
+    }
+    
+    private AclGroups getGranteeGroups() throws ServiceException {
+        if (mGranteeGroups == null) {
+            // get all groups the grantee belongs if we haven't done so (Prov.getAclGroups never returns null)
+            // get only admin groups if the right is an admin right
+            boolean adminGroupsOnly = !mRightNeeded.isUserRight();
+            mGranteeGroups = mProv.getAclGroups(mGrantee, adminGroupsOnly);
+        }
+        return mGranteeGroups;
     }
             
     private Boolean checkRight() throws ServiceException {
@@ -114,13 +131,6 @@ public class PresetRightChecker {
 
         
         Boolean result = null;
-        SeenRight seenRight = new SeenRight();
-        
-        // get all groups the grantee belongs 
-        // only get admin groups if the right is an admin right
-        AclGroups granteeGroups = mProv.getAclGroups(mGrantee, adminRight);
-        
-        
         
         // check grants explicitly granted on the target entry
         // we don't return the target entry itself in TargetIterator because if 
@@ -129,7 +139,7 @@ public class PresetRightChecker {
         // the actual target separately
         List<ZimbraACE> acl = ACLUtil.getAllACEs(mTarget);
         if (acl != null) {
-            result = checkTargetPresetRight(acl, granteeGroups, seenRight);
+            result = checkTargetPresetRight(acl);
             if (result != null) 
                 return result;
         }
@@ -173,7 +183,7 @@ public class PresetRightChecker {
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null)
-                        result = checkTargetPresetRight(aclsOnGroupTargets, granteeGroups, seenRight);
+                        result = checkTargetPresetRight(aclsOnGroupTargets);
                     if (result != null) 
                         return result;
                     
@@ -184,19 +194,19 @@ public class PresetRightChecker {
                 // didn't encounter any group grantedOn, or none of them matches, just check this grantedOn entry
                 if (acl == null)
                     continue;
-                result = checkTargetPresetRight(acl, granteeGroups, seenRight);
+                result = checkTargetPresetRight(acl);
                 if (result != null) 
                     return result;
             }
         }
         
-        if (seenRight.seenRight())
+        if (mSeenRight.seenRight())
             return Boolean.FALSE;
         else
             return null;
     }
     
-    private Boolean checkTargetPresetRight(List<ZimbraACE> acl, AclGroups granteeGroups, SeenRight seenRight) throws ServiceException {
+    private Boolean checkTargetPresetRight(List<ZimbraACE> acl) throws ServiceException {
         Boolean result = null;
         
         // if the right is user right, checking for individual match will
@@ -205,29 +215,29 @@ public class PresetRightChecker {
         short adminFlag = (mRightNeeded.isUserRight()? 0 : GranteeFlag.F_ADMIN);
         
         // as an individual: user, guest, key
-        result = checkPresetRight(acl, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag), seenRight);
+        result = checkPresetRight(acl, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag));
         if (result != null) 
             return result;
         
         // as a group member
-        result = checkGroupPresetRight(acl, granteeGroups, (short)(GranteeFlag.F_GROUP), seenRight);
+        result = checkGroupPresetRight(acl, (short)(GranteeFlag.F_GROUP));
         if (result != null) 
             return result;
        
         // if right is an user right, check domain, authed users and public grantees
         if (mRightNeeded.isUserRight()) {
             // as an zimbra user in the same domain
-            result = checkPresetRight(acl, (short)(GranteeFlag.F_DOMAIN), seenRight);
+            result = checkPresetRight(acl, (short)(GranteeFlag.F_DOMAIN));
             if (result != null) 
                 return result;
             
             // all authed zimbra user
-            result = checkPresetRight(acl, (short)(GranteeFlag.F_AUTHUSER), seenRight);
+            result = checkPresetRight(acl, (short)(GranteeFlag.F_AUTHUSER));
             if (result != null) 
                 return result;
             
             // public
-            result = checkPresetRight(acl, (short)(GranteeFlag.F_PUBLIC), seenRight);
+            result = checkPresetRight(acl, (short)(GranteeFlag.F_PUBLIC));
             if (result != null) 
                 return result;
         }
@@ -283,10 +293,6 @@ public class PresetRightChecker {
      *     - check if the Account (the grantee parameter) matches the grantee of the grant
      *       
      * @param acl
-     * @param targetType
-     * @param grantee
-     * @param rightNeeded
-     * @param canDelegateNeeded
      * @param granteeFlags       For admin rights, because of negative grants and the more "specific" 
      *                           grantee takes precedence over the less "specific" grantee, we can't 
      *                           just do a single ZimbraACE.match to see if a grantee matches the grant.
@@ -298,13 +304,10 @@ public class PresetRightChecker {
      *                                       groupG allow rightR  - grant2
      *                                and adminA is in groupG, we want to check grant1 before grant2.
      *                                       
-     * @param via
-     * @param seenRight
      * @return
      * @throws ServiceException
      */
-    private Boolean checkPresetRight(List<ZimbraACE> acl, 
-                        short granteeFlags, SeenRight seenRight) throws ServiceException {
+    private Boolean checkPresetRight(List<ZimbraACE> acl, short granteeFlags) throws ServiceException {
         Boolean result = null;
         for (ZimbraACE ace : acl) {
             if (!matchesPresetRight(ace, granteeFlags))
@@ -312,10 +315,10 @@ public class PresetRightChecker {
             
             // if we get here, the right matched, mark it in seenRight.  
             // This is so callsite default will not be honored.
-            seenRight.setSeenRight();
+            mSeenRight.setSeenRight();
                 
             if (ace.matchesGrantee(mGrantee))
-                return gotResult(ace, mGrantee, mRightNeeded, mCanDelegateNeeded, mVia);
+                return gotResult(ace);
         }
        
         return result;
@@ -331,50 +334,49 @@ public class PresetRightChecker {
      * Eligible:
      *   - for admin rights granted to a group, the grant is effective only if the group has
      *     zimbraIsAdminGroup=TRUE.  The the group's zimbraIsAdminGroup is set to false after 
-     *     if grant is made, the grant is still there on the targe entry, but becomes useless.
+     *     if grant is made, the grant is still there on the target entry, but becomes useless.
      */
-    private Boolean checkGroupPresetRight(List<ZimbraACE> acl, 
-            AclGroups granteeGroups, short granteeFlags, SeenRight seenRight) throws ServiceException {
+    private Boolean checkGroupPresetRight(List<ZimbraACE> acl, short granteeFlags) throws ServiceException {
         Boolean result = null;
+        
         for (ZimbraACE ace : acl) {
             if (!matchesPresetRight(ace, granteeFlags))
                 continue;
             
             // if we get here, the right matched, mark it in seenRight.  
             // This is so callsite default will not be honored.
-            seenRight.setSeenRight();
+            mSeenRight.setSeenRight();
             
-            if (granteeGroups.groupIds().contains(ace.getGrantee()))   
-                return gotResult(ace, mGrantee, mRightNeeded, mCanDelegateNeeded, mVia);
+            if (getGranteeGroups().groupIds().contains(ace.getGrantee()))   
+                return gotResult(ace);
         }
         return result;
     }
     
-    private Boolean gotResult(ZimbraACE ace, Account grantee, Right right, boolean canDelegateNeeded, 
-            ViaGrant via) throws ServiceException {
+    private Boolean gotResult(ZimbraACE ace) throws ServiceException {
         if (ace.deny()) {
             if (sLog.isDebugEnabled())
-                sLog.debug("Right " + "[" + right.getName() + "]" + " DENIED to " + grantee.getName() + 
+                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" + " DENIED to " + mGrantee.getName() + 
                            " via grant: " + ace.dump() + " on: " + ace.getTargetType().getCode() + ace.getTargetName());
-            if (via != null)
-                via.setImpl(new ViaGrantImpl(ace.getTargetType(),
-                                             ace.getTargetName(),
-                                             ace.getGranteeType(),
-                                             ace.getGranteeDisplayName(),
-                                             ace.getRight(),
-                                             ace.deny()));
+            if (mVia != null)
+                mVia.setImpl(new ViaGrantImpl(ace.getTargetType(),
+                                              ace.getTargetName(),
+                                              ace.getGranteeType(),
+                                              ace.getGranteeDisplayName(),
+                                              ace.getRight(),
+                                              ace.deny()));
             return Boolean.FALSE;
         } else {
             if (sLog.isDebugEnabled())
-                sLog.debug("Right " + "[" + right.getName() + "]" + " ALLOWED to " + grantee.getName() + 
+                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" + " ALLOWED to " + mGrantee.getName() + 
                            " via grant: " + ace.dump() + " on: " + ace.getTargetType().getCode() + ace.getTargetName());
-            if (via != null)
-                via.setImpl(new ViaGrantImpl(ace.getTargetType(),
-                                             ace.getTargetName(),
-                                             ace.getGranteeType(),
-                                             ace.getGranteeDisplayName(),
-                                             ace.getRight(),
-                                             ace.deny()));
+            if (mVia != null)
+                mVia.setImpl(new ViaGrantImpl(ace.getTargetType(),
+                                              ace.getTargetName(),
+                                              ace.getGranteeType(),
+                                              ace.getGranteeDisplayName(),
+                                              ace.getRight(),
+                                              ace.deny()));
             return Boolean.TRUE;
         }
     }

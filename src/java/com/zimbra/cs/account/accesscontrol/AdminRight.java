@@ -32,6 +32,9 @@ public abstract class AdminRight extends Right {
     public static AdminRight PR_ALWAYS_ALLOW;
     public static AdminRight PR_SYSTEM_ADMIN_ONLY;
     
+    // pseudo right for collecting effective admin preset right grants
+    public static AdminRight PR_ADMIN_PRESET_RIGHT;
+    
     static void init(RightManager rm) throws ServiceException {
         
         PR_GET_ATTRS = (AttrRight)newAdminSystemRight("PSEUDO_GET_ATTRS", RightType.getAttrs);
@@ -39,6 +42,7 @@ public abstract class AdminRight extends Right {
         
         PR_ALWAYS_ALLOW = newAdminSystemRight("PSEUDO_ALWAYS_ALLOW", RightType.preset);
         PR_SYSTEM_ADMIN_ONLY = newAdminSystemRight("PSEUDO_SYSTEM_ADMIN_ONLY", RightType.preset);
+        PR_ADMIN_PRESET_RIGHT = newAdminSystemRight("PSEUDO_ADMIN_PRESET_RIGHT", RightType.preset);
         
         if (LC.zimbra_rights_delegated_admin_supported.booleanValue())
             AdminRights.init(rm);

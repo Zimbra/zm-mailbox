@@ -64,10 +64,6 @@ public abstract class TargetIterator{
         mTarget = target;
     }
     
-    static TargetIterator getTargetIeterator(Provisioning prov, Entry target) throws ServiceException {
-        return getTargetIeterator(prov, target, true);
-    }
-    
     static TargetIterator getTargetIeterator(Provisioning prov, Entry target, boolean expandGroups) throws ServiceException {
         /*
          * tested in the order of how often acl are checked on each target types in normal 

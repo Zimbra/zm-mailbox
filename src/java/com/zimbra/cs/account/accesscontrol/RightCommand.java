@@ -1079,7 +1079,7 @@ public class RightCommand {
         
         // then the ugly special group target checking
         if (targetType == TargetType.dl && !RightChecker.allowGroupTarget(right))
-            throw ServiceException.INVALID_REQUEST("group target is not supported", null);
+            throw ServiceException.INVALID_REQUEST("group target is not supported for right: " + right.getName(), null);
         
         /*
          * check if the authed account can grant this right on this target

@@ -768,7 +768,6 @@ public class TestAC extends TestCase {
     public void testBasic() throws Exception {
 
         // full test
-        /*
         int totalTests = TargetType.values().length * GranteeType.values().length * sRights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
@@ -778,7 +777,7 @@ public class TestAC extends TestCase {
                 }
             }
         }
-        */
+
         
         /*
          *  account 
@@ -793,6 +792,7 @@ public class TestAC extends TestCase {
          *  global
          */
         // test a particular grant target
+        /*
         int totalTests = GranteeType.values().length * sRights.size();
         int curTest = 1;
         TargetType targetType = TargetType.zimlet;
@@ -801,7 +801,7 @@ public class TestAC extends TestCase {
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right);
             }
         }
-
+        */
         
         // test a particular grant target and grantee type and right
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_RIGHT_ACCOUNT);
