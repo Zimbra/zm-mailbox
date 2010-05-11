@@ -95,7 +95,9 @@ public class DeployZimlet extends AdminDocumentHandler {
 			Server s = null;
 			try {
 				s = Provisioning.getInstance().getLocalServer();
-				ZimletUtil.deployZimlet(new ZimletFile(upload.getName(), upload.getInputStream()), progress, auth, flushCache);
+				ZimletFile zf = new ZimletFile(upload.getName(), upload.getInputStream());
+				ZimletUtil.deployZimlet(zf, progress, auth, flushCache);
+				ZimletUtil.reloadZimlet(zf.getZimletName());
 			} catch (Exception e) {
 				ZimbraLog.zimlet.info("deploy", e);
 				if (s != null)
