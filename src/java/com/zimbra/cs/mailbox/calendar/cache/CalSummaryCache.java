@@ -266,8 +266,14 @@ public class CalSummaryCache {
         for (int calItemId : staleItemIds) {
             CalendarItemData calItemData =
                 fetchCalendarItemData(octxt, mbox, folderId, calItemId, rangeStart, rangeEnd);
-            if (calItemData != null)
-                calData.addCalendarItem(calItemData);
+            if (calItemData != null) {
+                // Special check for renumbered item.  ZDesktop can renumber items and it causes a lookup
+                // by old id to return a MailItem object having the new id.  We must ignore it here.  If
+                // we don't, we'll end up with duplicates because the new id is also in the stale item ids
+                // list.
+                if (calItemData.getCalItemId() == calItemId)
+                    calData.addCalendarItem(calItemData);
+            }
         }
         return calData;  // return a non-null object even if there are no items in the range
     }
