@@ -97,7 +97,6 @@ public class DeployZimlet extends AdminDocumentHandler {
 				s = Provisioning.getInstance().getLocalServer();
 				ZimletFile zf = new ZimletFile(upload.getName(), upload.getInputStream());
 				ZimletUtil.deployZimlet(zf, progress, auth, flushCache);
-				ZimletUtil.reloadZimlet(zf.getZimletName());
 			} catch (Exception e) {
 				ZimbraLog.zimlet.info("deploy", e);
 				if (s != null)
@@ -113,7 +112,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		mProgressMap = new LRUMap(20);
 	}
 	
-	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth, boolean flushCache) throws ServiceException {
+	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth, boolean flushCache, boolean synchronous) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(aid);
@@ -121,8 +120,18 @@ public class DeployZimlet extends AdminDocumentHandler {
         Progress pr = new Progress((auth != null));
         mProgressMap.put(aid, pr);
         Runnable action = new DeployThread(up, pr, auth, flushCache);
-        new Thread(action).start();
+        Thread t = new Thread(action);
+        t.start();
+        if (synchronous) {
+            try {
+                t.join(DEPLOY_TIMEOUT);
+            } catch (InterruptedException e) {
+                ZimbraLog.zimlet.warn("error while deploying Zimlet", e);
+            }
+        }
 	}
+	
+	private static final long DEPLOY_TIMEOUT = 10000;
 	
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -131,7 +140,8 @@ public class DeployZimlet extends AdminDocumentHandler {
 		String action = request.getAttribute(AdminConstants.A_ACTION).toLowerCase();
 		Element content = request.getElement(MailConstants.E_CONTENT);
 		String aid = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-		Boolean flushCache = request.getAttributeBool(AdminConstants.A_FLUSH, false);
+		boolean flushCache = request.getAttributeBool(AdminConstants.A_FLUSH, false);
+        boolean synchronous = request.getAttributeBool(AdminConstants.A_SYNCHRONOUS, false);
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
@@ -140,7 +150,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		    	checkRight(zsc, context, server, Admin.R_deployZimlet);
 		    }
 		        
-			deploy(zsc, aid, zsc.getRawAuthToken(), flushCache);
+			deploy(zsc, aid, zsc.getRawAuthToken(), flushCache, synchronous);
 			if(flushCache) {
 				if (ZimbraLog.misc.isDebugEnabled()) {
 					ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
@@ -154,7 +164,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		    Server localServer = Provisioning.getInstance().getLocalServer();
 		    checkRight(zsc, context, localServer, Admin.R_deployZimlet);
 		    
-			deploy(zsc, aid, null, false);
+			deploy(zsc, aid, null, false, synchronous);
 			
 			if(flushCache) {
 				if (ZimbraLog.misc.isDebugEnabled()) {

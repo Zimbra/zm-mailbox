@@ -1438,7 +1438,7 @@ Access: domain admin sufficient
 
 -----------------------------
 
-<DeployZimletRequest action="deployAll|deployLocal|status">
+<DeployZimletRequest action="deployAll|deployLocal|status" flush="0|1" synchronous="0|1">
   <content aid="{attachment-id}"/>
 <DeployZimletRequest/>
 

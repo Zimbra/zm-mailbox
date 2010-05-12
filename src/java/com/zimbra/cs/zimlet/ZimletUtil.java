@@ -486,6 +486,7 @@ public class ZimletUtil {
 	}
 
 	public static void flushCache() throws ZimletException {
+	    sZimletsLoaded = false;
 		try {
 		    Provisioning.getInstance().flushCache(CacheEntryType.zimlet, null);
 		} catch (ServiceException e) {
@@ -517,6 +518,8 @@ public class ZimletUtil {
 		Server localServer = Provisioning.getInstance().getLocalServer();
 		try {
 			deployZimlet(zf);
+			if (flushCache)
+			    flushCache();
 			if (listener != null)
 				listener.markFinished(localServer);
 		} catch (Exception e) {
@@ -1162,18 +1165,15 @@ public class ZimletUtil {
 		}
 	}
 	
-	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL) throws ServiceException, IOException {
-	    deployZimletBySoap(zimletFile, adminURL, uploadURL, null, null);
-	}
-	
-	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL, String username, String password) throws ServiceException, IOException {
+	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL, boolean synchronous) throws ServiceException, IOException {
         File zf = new File(zimletFile);
         if (adminURL != null && uploadURL != null) {
-            ZimletSoapUtil soapUtil = new ZimletSoapUtil(adminURL, uploadURL, username, password);
-            soapUtil.deployZimletOnServer(zf.getName(), ByteUtil.getContent(zf));
+            ZimletSoapUtil soapUtil = new ZimletSoapUtil(adminURL, uploadURL, null, null);
+            soapUtil.deployZimletOnServer(zf.getName(), ByteUtil.getContent(zf), true);
         } else {
             ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-            soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null);
+            soapUtil.mSynchronous = synchronous;
+            soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null, true);
         }
 	}
 	
@@ -1346,6 +1346,8 @@ public class ZimletUtil {
 		private SoapHttpTransport mTransport;
 		private boolean mRunningInServer;
 		private Provisioning mProv;
+		private boolean mSynchronous;
+		private String mStatus;
 
         public ZimletSoapUtil() throws ServiceException {
             initZimletSoapUtil(null, null);
@@ -1384,17 +1386,13 @@ public class ZimletUtil {
 			mProv = Provisioning.getInstance();
 		}
 		
-		public void deployZimlet(String zimlet, byte[] data, DeployListener listener) throws ServiceException {
-			deployZimlet(zimlet,data,listener,false);
-		}
-		
 		public void deployZimlet(String zimlet, byte[] data, DeployListener listener, boolean flushCache) throws ServiceException {
 			List<Server> allServers = mProv.getAllServers();
 			for (Server server : allServers) {
-				// localhost is already taken care of.
 		        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
 				if (mRunningInServer && (mProv.getLocalServer().compareTo(server) == 0) ||
 					!hasMailboxService) {
+	                // localhost is already taken care of.
 					ZimbraLog.zimlet.info("Skipping on " + server.getName());
 					continue;
 				}
@@ -1431,9 +1429,6 @@ public class ZimletUtil {
 				}
 			}
         }
-        public void deployZimletOnServer(String zimlet, byte[] data) throws ServiceException {
-        	deployZimletOnServer(zimlet,data,false);
-        }
         
         public void deployZimletOnServer(String zimlet, byte[] data, boolean flushCache) throws ServiceException {
             mTransport = null;
@@ -1445,7 +1440,10 @@ public class ZimletUtil {
                 mAttachmentId = postAttachment(mUploadURL, zimlet, data, url.getHost());
                 
                 soapDeployZimlet(flushCache);
-                ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
+                if (mSynchronous)
+                    ZimbraLog.zimlet.info("Deploy status: " + mStatus);
+                else
+                    ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
             } catch (Exception e) {
                 ZimbraLog.zimlet.info("deploy failed on " + mAdminURL, e);
                 if (e instanceof ServiceException)
@@ -1456,9 +1454,6 @@ public class ZimletUtil {
                 if (mTransport != null)
                     mTransport.shutdown();
             }                        
-        }
-        public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
-        	deployZimletOnServer(zimlet, data, server, listener, false);
         }
         
 		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener, boolean flushCache) throws ServiceException {
@@ -1478,7 +1473,10 @@ public class ZimletUtil {
 				
 				// deploy
 				soapDeployZimlet(flushCache);
-				ZimbraLog.zimlet.info("Deploy initiated.  (check the servers mailbox.log for the status)");
+                if (mSynchronous)
+                    ZimbraLog.zimlet.info("Deploy status: " + mStatus);
+                else
+                    ZimbraLog.zimlet.info("Deploy initiated.  Check the server's mailbox.log for the status.");
 				if (listener != null)
 					listener.markFinished(server);
 			} catch (Exception e) {
@@ -1495,13 +1493,17 @@ public class ZimletUtil {
 			}
 		}
 		
-		private void soapDeployZimlet(boolean flushCache) throws ServiceException, IOException {
-			XMLElement req = new XMLElement(AdminConstants.DEPLOY_ZIMLET_REQUEST);
-			req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
-			req.addAttribute(AdminConstants.A_FLUSH, flushCache);
-			req.addElement(MailConstants.E_CONTENT).addAttribute(MailConstants.A_ATTACHMENT_ID, mAttachmentId);
-			mTransport.invoke(req);
-		}
+        private void soapDeployZimlet(boolean flushCache) throws ServiceException, IOException {
+            XMLElement req = new XMLElement(AdminConstants.DEPLOY_ZIMLET_REQUEST);
+            req.addAttribute(AdminConstants.A_ACTION, AdminConstants.A_DEPLOYLOCAL);
+            req.addAttribute(AdminConstants.A_FLUSH, flushCache);
+            if (mSynchronous)
+                req.addAttribute(AdminConstants.A_SYNCHRONOUS, mSynchronous);
+            req.addElement(MailConstants.E_CONTENT).addAttribute(MailConstants.A_ATTACHMENT_ID, mAttachmentId);
+            Element res = mTransport.invoke(req);
+            if (mSynchronous)
+                mStatus = res.getElement(AdminConstants.E_PROGRESS).getAttribute(AdminConstants.A_STATUS, "");
+        }
 		
 		public void undeployZimletOnServer(String zimlet, Server server) throws ServiceException {
 			mTransport = null;
@@ -1785,12 +1787,16 @@ public class ZimletUtil {
 			String zimlet = args[argPos++];
 			switch (cmd) {
 			case DEPLOY_ZIMLET:
-				if (localInstall) {
-					deployZimlet(new ZimletFile(zimlet));
-				} else {
-				    deployZimletBySoap(zimlet, adminURL, uploadURL);				    
-				}
-				break;
+			    if (localInstall) {
+			        deployZimlet(new ZimletFile(zimlet));
+			    } else {
+			        boolean synchronous = false;
+			        if (args.length > argPos && args[argPos].equals("sync")) {
+			            synchronous = true;
+			        }
+			        deployZimletBySoap(zimlet, adminURL, uploadURL, synchronous);				    
+			    }
+			    break;
 			case INSTALL_ZIMLET:
 				installZimlet(new ZimletFile(zimlet));
 				break;
