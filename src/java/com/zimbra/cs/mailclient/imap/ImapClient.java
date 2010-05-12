@@ -117,7 +117,7 @@ public class ImapClient extends MailClient {
         if (isMatch(arg, "CAPability")) {
             System.out.printf(">> Current capabilities: %s\n", ic.getCapabilities());
         } else if (isMatch(arg, "MAILbox") || isMatch(arg, "MBox")) {
-            System.out.printf(">> Current mailbox: %s\n", ic.getMailbox());
+            System.out.printf(">> Current mailbox: %s\n", ic.getMailboxInfo());
         } else {
             return false;
         }

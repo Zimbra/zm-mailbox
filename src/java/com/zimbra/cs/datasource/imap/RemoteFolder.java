@@ -17,31 +17,21 @@ package com.zimbra.cs.datasource.imap;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.MailException;
-import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.CopyResult;
 import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
-import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseText;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 final class RemoteFolder {
@@ -190,18 +180,34 @@ final class RemoteFolder {
         return !connection.list("", path).isEmpty();
     }
 
-    public void ensureSelected() throws IOException {
-        if (!isSelected()) {
-            select();
-        }
+    public MailboxInfo ensureSelected() throws IOException {
+        return isSelected() ? getMailboxInfo() : select();
     }
 
+    public MailboxInfo getMailboxInfo() {
+        return connection.getMailboxInfo();
+    }
+    
     public MailboxInfo select() throws IOException {
-        return connection.select(path);
+        MailboxInfo mi = connection.select(path);
+        // Bug 35554: If server does not provide UIDVALIDITY, then assume a value of 1
+        if (mi.getUidValidity() <= 0) {
+            mi.setUidValidity(1);
+        }
+        return mi;
+    }
+
+    public MailboxInfo status() throws IOException {
+        MailboxInfo mi = connection.status(path, "UIDVALIDITY", "UIDNEXT");
+        // Bug 35554: If server does not provide UIDVALIDITY, then assume a value of 1
+        if (mi.getUidValidity() <= 0) {
+            mi.setUidValidity(1);
+        }
+        return mi;
     }
 
     public boolean isSelected() {
-        MailboxInfo mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailboxInfo();
         return mb != null && mb.getName().equals(path);
     }
 

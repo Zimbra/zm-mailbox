@@ -153,6 +153,10 @@ public final class MailboxInfo implements ResponseHandler {
     public boolean isReadWrite() { return access == CAtom.READ_WRITE; }
 
     public void setName(String name) { this.name = name; }
+    
+    public void setUidValidity(long uidValidity) {
+        this.uidValidity = uidValidity;
+    }
 
     public String toString() {
         String encoded = name != null ? new MailboxName(name).encode() : null;

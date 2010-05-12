@@ -121,7 +121,7 @@ public class ImapAppender {
     // Slow APPEND for servers lacking APPENDUID (UIDPLUS) capability
     private long appendSlow(MessageInfo mi, Literal lit)
         throws IOException, MessagingException {
-        MailboxInfo mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailboxInfo();
         if (mdf == null) {
             mdf = new MailDateFormat();
         }

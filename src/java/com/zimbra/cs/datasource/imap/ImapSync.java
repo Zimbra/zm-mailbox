@@ -351,19 +351,13 @@ public class ImapSync extends MailItemImport {
             LocalFolder folder = ifs.getLocalFolder();
             int folderId = folder.getId();
             try {
-                if (folderIds == null || folderIds.contains(folderId) ||
-                    hasLocalChanges(folderId, lastModSeq)) {
+                if (folderIds == null || folderIds.contains(folderId) || ifs.hasLocalChanges()) {
                     ifs.syncMessages(fullSync);
                 }
             } catch (Exception e) {
                 syncFailed(folder.getPath(), e);
             }
         }
-    }
-
-    private boolean hasLocalChanges(int folderId, int lastModSeq) {
-        SyncState ss = getSyncState(folderId);
-        return ss == null || ss.getLastModSeq() < lastModSeq;
     }
 
     public SyncState getSyncState(int folderId) {

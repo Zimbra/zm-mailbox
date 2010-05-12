@@ -71,4 +71,9 @@ public class ImapMessage extends DataSourceMapping {
     private static String remoteId(int folderId, long uid) {
         return Integer.toString(folderId) + "_" + Long.toString(uid); 
     }
+
+    public String toString() {
+        return String.format("{folderId=%d,itemId=%d,remoteId=%s}",
+            getFolderId(), getItemId(), getRemoteId());
+    }
 }

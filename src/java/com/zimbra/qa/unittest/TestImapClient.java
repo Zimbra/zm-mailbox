@@ -146,7 +146,7 @@ public class TestImapClient {
     @Test
     public void testSelect() throws Exception {
         login();
-        MailboxInfo mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailboxInfo();
         assertNotNull(mb);
         assertTrue(mb.isReadWrite());
         assertTrue(mb.getUidValidity() > 0);
@@ -192,7 +192,7 @@ public class TestImapClient {
         // Stop IDLE...
         connection.stopIdle();
         // Check mailbox status
-        MailboxInfo mb = connection.getMailbox();
+        MailboxInfo mb = connection.getMailboxInfo();
         assertEquals(mb.getExists(), exists.get());
     }
 
@@ -415,7 +415,7 @@ public class TestImapClient {
     
     private long uidAppend(MimeMessage msg, Flags flags, Date date)
         throws IOException {
-        String name = connection.getMailbox().getName();
+        String name = connection.getMailboxInfo().getName();
         File tmp = null;
         OutputStream os = null;
         try {
@@ -502,7 +502,7 @@ public class TestImapClient {
         connect();
         connection.login(PASS);
         connection.select("INBOX");
-        assertTrue(connection.getMailbox().getName().equals("INBOX"));
+        assertTrue(connection.getMailboxInfo().getName().equals("INBOX"));
         ImapCapabilities cap = connection.getCapabilities();
         assertNotNull(cap);
         assertTrue(cap.hasCapability(ImapCapabilities.UIDPLUS));

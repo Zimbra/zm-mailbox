@@ -67,6 +67,7 @@ class ImapFolderSync {
     private LocalFolder localFolder;
     private RemoteFolder remoteFolder;
     private SyncState syncState;
+    private MailboxInfo mailboxInfo;
     private ImapMessageCollection trackedMsgs;
     private Set<Integer> localMsgIds;
     private List<Integer> newMsgIds;                                  
@@ -131,8 +132,7 @@ class ImapFolderSync {
      * otherwise returns null if remote folder deleted, is not eligible
      * for synchronization, or synchronization has been disabled.
      */
-    public ImapFolder syncFolder(Folder folder)
-        throws ServiceException, IOException {
+    public ImapFolder syncFolder(Folder folder) throws ServiceException, IOException {
         DataSourceManager dsm = DataSourceManager.getInstance();
         if (!dsm.isSyncEnabled(ds, folder)) {
             return null;
@@ -157,14 +157,15 @@ class ImapFolderSync {
             remoteFolder = createRemoteFolder(folder);
             if (remoteFolder == null) return null;
             try {
-                remoteFolder.select();
+                mailboxInfo = remoteFolder.select();
             } catch (CommandFailedException e) {
                 syncFolderFailed(folder.getId(), remoteFolder.getPath(),
                                  "Unable to select remote folder", e);
                 return null;
             }
             tracker = imapSync.createFolderTracker(
-                folder.getId(), folder.getPath(), remoteFolder.getPath(), getUidValidity());
+                folder.getId(), folder.getPath(), remoteFolder.getPath(),
+                mailboxInfo.getUidValidity());
         }
         return tracker;
     }
@@ -198,9 +199,19 @@ class ImapFolderSync {
             tracker = null;
             return;
         }
-        MailboxInfo mi = checkUidValidity();
+
+        if (mailboxInfo == null) {
+            mailboxInfo = remoteFolder.status();
+        }
+        checkUidValidity();
+        if (!fullSync && !hasLocalChanges() && !hasRemoteChanges()) {
+            return; // No need to sync messages
+        }
         syncState = getSyncState(fullSync);
-        long uidNext = mi.getUidNext();
+        if (!remoteFolder.isSelected()) {
+            mailboxInfo = remoteFolder.select();
+        }
+        long uidNext = mailboxInfo.getUidNext();
         if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
             String msg = String.format(
                 "Inconsistent UIDNEXT value from server (got %d but last known uid %d)",
@@ -245,9 +256,8 @@ class ImapFolderSync {
         deleteMessages(uidsToDelete);
         remoteFolder.close();
 
-        // Update sync state for new mailbox status
-        syncState.setExists(mi.getExists());
-        syncState.setUnseen(mi.getUnseen());
+        // Update last mailbox status
+        syncState.setMailboxInfo(mailboxInfo);
 
         // Clean up tracked message state no longer in use
         trackedMsgs = null;
@@ -255,7 +265,18 @@ class ImapFolderSync {
         completed = true;
     }
 
-    
+    public boolean hasLocalChanges() throws ServiceException {
+        SyncState ss = imapSync.getSyncState(localFolder.getId());
+        return ss == null || ss.getLastModSeq() < mailbox.getLastChangeID();
+    }
+
+    private boolean hasRemoteChanges() throws ServiceException, IOException {
+        SyncState ss = imapSync.getSyncState(localFolder.getId());
+        return ss == null ||
+               ss.getLastUidNext() != mailboxInfo.getUidNext() ||
+               ss.getLastUidValidity() != mailboxInfo.getUidValidity();
+    }
+
     private SyncState getSyncState(boolean fullSync) throws ServiceException {
         SyncState ss = imapSync.removeSyncState(localFolder.getId());
         if (ss == null || fullSync) {
@@ -302,13 +323,13 @@ class ImapFolderSync {
     }
 
     private int pushChanges(int lastModSeq) throws ServiceException, IOException {
-        localFolder.debug("pushChanges: lastModSeq = %d", lastModSeq);
         List<Integer> deletedIds;
         List<Integer> modifiedIds;
-        int newModSeq;
+        int modSeq;
         synchronized (mailbox) {
-            newModSeq = mailbox.getLastChangeID();
-            if (newModSeq <= lastModSeq) {
+            modSeq = mailbox.getLastChangeID();
+            localFolder.debug("pushChanges: modSeq = %d, lastModSeq = %d", modSeq, lastModSeq);
+            if (modSeq <= lastModSeq) {
                 return lastModSeq; // No changes
             }
             deletedIds = mailbox.getTombstones(lastModSeq).getIds(MailItem.TYPE_MESSAGE);
@@ -320,20 +341,23 @@ class ImapFolderSync {
         if (modifiedIds != null) {
             for (int id : modifiedIds) {
                 clearError(id);
-                Message msg = localFolder.getMessage(id);
-                if (msg != null) {
-                    try {
-                        pushModification(msg, deletedIds);
-                    } catch (Exception e) {
-                        pushFailed(id, "Push modification failed", e);
-                    }
+                Message msg;
+                try {
+                    msg = mailbox.getMessageById(null, id);
+                } catch (MailServiceException.NoSuchItemException e) {
+                    continue;
+                }
+                try {
+                    pushModification(msg, deletedIds);
+                } catch (Exception e) {
+                    pushFailed(id, "Push modification failed", e);
                 }
             }
         }
         if (!deletedIds.isEmpty()) {
             pushDeletes(deletedIds);
         }
-        return newModSeq;
+        return modSeq;
     }
 
     private void pushDeletes(List<Integer> deletedIds)
@@ -366,8 +390,12 @@ class ImapFolderSync {
         int msgFolderId = msg.getFolderId();
 
         ImapMessage msgTracker = getMsgTracker(msgId);
+
+        LOG.debug("pushModification: folderId=%d, msgFolderId=%d, msgTracker=%s",
+            folderId, msgFolderId, msgTracker);
+
         if (msgTracker != null) {
-            int trackedFolderId = tracker.getFolderId();
+            int trackedFolderId = msgTracker.getFolderId();
             if (msgFolderId == trackedFolderId) {
                 if (trackedFolderId == folderId) {
                     // Case 1: Message flags changed. Update remote flags.
@@ -491,8 +519,7 @@ class ImapFolderSync {
         return true;
     }
 
-    private void createLocalFolder(ListData ld)
-        throws ServiceException, IOException {
+    private void createLocalFolder(ListData ld) throws ServiceException, IOException {
         String remotePath = ld.getMailbox();
         String localPath = imapSync.getLocalPath(ld);
         if (localPath == null) {
@@ -503,8 +530,8 @@ class ImapFolderSync {
         Flags flags = ld.getFlags();
         long uidValidity = 0;
         if (!flags.isNoselect()) {
-            remoteFolder.select();
-            uidValidity = getUidValidity();
+            mailboxInfo = remoteFolder.select();
+            uidValidity = mailboxInfo.getUidValidity();
         }
         // Create local folder
         localFolder = new LocalFolder(mailbox, localPath);
@@ -577,15 +604,13 @@ class ImapFolderSync {
      * remote folder and empty the local folder so that messages will be
      * fetched again when we synchronize.
      */
-    private MailboxInfo checkUidValidity()
-        throws ServiceException, IOException {
-        MailboxInfo mi = remoteFolder.select();
-        long uidValidity = getUidValidity();
-        if (uidValidity == tracker.getUidValidity()) {
-            return mi;
+    private void checkUidValidity() throws ServiceException, IOException {
+        if (mailboxInfo.getUidValidity() == tracker.getUidValidity()) {
+            return;
         }
         remoteFolder.info("Resynchronizing folder because UIDVALIDITY has " +
-                          "changed from %d to %d", tracker.getUidValidity(), uidValidity);
+                          "changed from %d to %d", tracker.getUidValidity(),
+                          mailboxInfo.getUidValidity());
         List<Integer> newLocalIds = tracker.getNewMessageIds();
         if (newLocalIds.size() > 0) {
             remoteFolder.info("Copying %d messages to remote folder", newLocalIds.size());
@@ -607,10 +632,10 @@ class ImapFolderSync {
         mailbox.emptyFolder(null, tracker.getItemId(), false);
         localFolder.emptyFolder();
         tracker.deleteMappings();
-        tracker.setUidValidity(uidValidity);
+        tracker.setUidValidity(mailboxInfo.getUidValidity());
         tracker.update();
         imapSync.removeSyncState(folderId);
-        return remoteFolder.select();
+        mailboxInfo = remoteFolder.select();
     }
 
     private ImapAppender newImapAppender(String path) {
@@ -966,8 +991,9 @@ class ImapFolderSync {
         stats.msgsCopiedRemotely++;
         // If remote folder created on demand, then create folder tracker
         if (folderTracker == null) {
-            imapSync.createFolderTracker(
-                fid, folder.getPath(), remotePath, cr.getUidValidity());
+            long uv = cr.getUidValidity();
+            if (uv == 0) uv = 1;
+            imapSync.createFolderTracker(fid, folder.getPath(), remotePath, uv);
         } else {
             // If target folder was already sync'd, then make sure we remove
             // msg id from folder's list of new messages to be appended
@@ -1021,13 +1047,7 @@ class ImapFolderSync {
     private boolean isYahoo() {
         return ImapUtil.isYahoo(connection);
     }
-    
-    private long getUidValidity() {
-        // Bug 35554: If server does not provide UIDVALIDITY, then assume a value of 1
-        long uidValidity = connection.getMailbox().getUidValidity();
-        return uidValidity > 0 ? uidValidity : 1;
-    }
-    
+
     private boolean skipItem(int itemId) {
         return SyncErrorManager.getErrorCount(ds, itemId) >= MAX_ITEM_ERRORS;
     }
@@ -1037,7 +1057,7 @@ class ImapFolderSync {
     }
 
     private String remoteId(long uid) {
-        return getUidValidity() + ":" + uid;
+        return mailboxInfo.getUidValidity() + ":" + uid;
     }
 
     private void clearError(int itemId) {

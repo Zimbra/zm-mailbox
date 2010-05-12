@@ -192,7 +192,7 @@ public final class ImapConnection extends MailConnection {
     public synchronized MailboxInfo select(String name) throws IOException {
         mailbox = doSelectOrExamine(CAtom.SELECT, name);
         setState(State.SELECTED);
-        return getMailbox();
+        return getMailboxInfo();
     }
 
     public MailboxInfo examine(String name) throws IOException {
@@ -454,7 +454,7 @@ public final class ImapConnection extends MailConnection {
         return capabilities;
     }
 
-    public MailboxInfo getMailbox() {
+    public MailboxInfo getMailboxInfo() {
         // Make sure we return a copy of the actual mailbox since it can
         // be modified in-place in response to unsolicited messages from
         // the server.
