@@ -15,10 +15,13 @@
 package com.zimbra.cs.dav.service.method;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
@@ -58,6 +61,11 @@ public class Move extends DavMethod {
 			end--;
 		begin = dest.lastIndexOf("/", end-1);
 		String newName = dest.substring(begin+1, end);
+        try {
+            newName = URLDecoder.decode(newName, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.dav.warn("can't decode URL ", dest, e);
+        }
 		if (!oldName.equals(newName))
 			rs.rename(ctxt, newName, destCollection);
 	}
