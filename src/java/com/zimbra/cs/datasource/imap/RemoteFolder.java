@@ -73,7 +73,7 @@ final class RemoteFolder {
     }
 
     public CopyResult copyMessage(long uid, String mbox) throws IOException {
-        ensureSelected();
+        assert isSelected();
         String seq = String.valueOf(uid);
         ImapRequest req = connection.newUidRequest(CAtom.COPY, seq, new MailboxName(mbox));
         ResponseText rt = req.sendCheckStatus().getResponseText();
@@ -94,7 +94,7 @@ final class RemoteFolder {
      * @throws java.io.IOException if an I/O error occurred
      */
     public void deleteMessages(List<Long> uids) throws IOException {
-        ensureSelected();
+        assert isSelected();
         int size = uids.size();
         debug("deleting %d messages(s) from folder", size);
         for (int i = 0; i < size; i += 16) {
@@ -110,7 +110,7 @@ final class RemoteFolder {
     }
 
     public void deleteMessage(long uid) throws IOException {
-        ensureSelected();
+        assert isSelected();
         debug("deleting message with uid %d", uid);
         String seq = String.valueOf(uid);
         connection.uidStore(seq, "+FLAGS.SILENT", "(\\Deleted)");
@@ -133,7 +133,7 @@ final class RemoteFolder {
     }
 
     public List<Long> getUids(long startUid, long endUid) throws IOException {
-        ensureSelected();
+        assert isSelected();
         String end = endUid > 0 ? String.valueOf(endUid) : "*";
         List<Long> uids = connection.getUids(startUid + ":" + end);
         // If sequence is "<startUid>:*" and there are no messages with UID
@@ -178,10 +178,6 @@ final class RemoteFolder {
 
     public boolean exists() throws IOException {
         return !connection.list("", path).isEmpty();
-    }
-
-    public MailboxInfo ensureSelected() throws IOException {
-        return isSelected() ? getMailboxInfo() : select();
     }
 
     public MailboxInfo getMailboxInfo() {

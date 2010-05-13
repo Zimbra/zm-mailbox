@@ -77,7 +77,7 @@ final class LocalFolder {
         folder = mbox.createFolder(null, path, (byte) 0, MailItem.TYPE_MESSAGE);
     }
 
-    public void checkFlags(ListData ld) throws ServiceException {
+    public void updateFlags(ListData ld) throws ServiceException {
         getFolder();
         if (folder.getId() < 256) return; // Ignore system folder
         // debug("Updating flags (remote = %s)", ld.getMailbox());
@@ -155,6 +155,10 @@ final class LocalFolder {
 
     public int getId() throws ServiceException {
         return getFolder().getId();
+    }
+
+    public boolean isInbox() throws ServiceException {
+        return getFolder().getId() == Mailbox.ID_FOLDER_INBOX;
     }
 
     public String getPath() {

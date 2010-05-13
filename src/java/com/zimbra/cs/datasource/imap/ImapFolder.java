@@ -32,7 +32,6 @@ import com.zimbra.cs.db.DbImapMessage;
 
 public class ImapFolder extends DataSourceFolderMapping {
     private String localPath;
-    private long uidNext = -1; // Used to optimize offline data source
     private Long uidValidity;
     private static final String METADATA_KEY_LOCAL_PATH = "lp";
     private static final String METADATA_KEY_UID_VALIDITY = "uv";
@@ -58,18 +57,12 @@ public class ImapFolder extends DataSourceFolderMapping {
 
     public String getLocalPath() { return localPath; }
     
-    public long getUidNext() { return uidNext; }
-    
     public long getUidValidity() { return uidValidity; }
     
     public void setLocalPath(String localPath) {
         dsi.md.put(METADATA_KEY_LOCAL_PATH, this.localPath = localPath);
     }
     
-    public void setUidNext(long uidNext) {
-        this.uidNext = uidNext;
-    }
-
     public void setUidValidity(Long uidValidity) {
         dsi.md.put(METADATA_KEY_UID_VALIDITY, this.uidValidity = uidValidity);
     }

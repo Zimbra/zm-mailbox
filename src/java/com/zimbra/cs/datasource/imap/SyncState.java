@@ -14,56 +14,43 @@
  */
 package com.zimbra.cs.datasource.imap;
 
-import com.zimbra.cs.mailclient.imap.MailboxInfo;
+class SyncState {
+    long lastFetchedUid;
+    long lastUidNext;
+    int lastModSeq;
 
-public class SyncState {
-    private long lastUid = -1;
-    private int lastModSeq;
-    private MailboxInfo mailboxInfo;
-
-    public SyncState() {}
-
-    public long getLastUid() {
-        return lastUid;
+    public void updateLastFetchedUid(long uid) {
+        if (uid > lastFetchedUid) {
+            lastFetchedUid = uid;
+        }
     }
 
-    public MailboxInfo getMailboxInfo() {
-        return mailboxInfo;
+    public long getLastFetchedUid() {
+        return lastFetchedUid;
     }
-    
+
+    public long getLastUidNext() {
+        return lastUidNext;
+    }
+
     public int getLastModSeq() {
         return lastModSeq;
     }
 
-    public void setLastUid(long lastUid) {
-        this.lastUid = lastUid;
+    public void setLastFetchedUid(long lastFetchedUid) {
+        this.lastFetchedUid = lastFetchedUid;
     }
 
-    public void updateLastUid(long uid) {
-        if (uid > lastUid) {
-            lastUid = uid;
-        }
+    public void setLastUidNext(long lastUidNext) {
+        this.lastUidNext = lastUidNext;
     }
 
     public void setLastModSeq(int lastModSeq) {
         this.lastModSeq = lastModSeq;
     }
 
-    public void setMailboxInfo(MailboxInfo mi) {
-        mailboxInfo = mi;
-    }
-
-    public long getLastUidNext() {
-        return mailboxInfo != null ? mailboxInfo.getUidNext() : -1;
-    }
-
-    public long getLastUidValidity() {
-        return mailboxInfo != null ? mailboxInfo.getUidValidity() : -1;
-    }
-
     public String toString() {
         return String.format(
-            "{lastUid=%d,lastModSeq=%d,uidNext=%d,uidValidity=%d}",
-            lastUid, lastModSeq, getLastUidNext(), getLastUidValidity());
+            "{lastUidNext=%d,lastModSeq=%d}", lastUidNext, lastModSeq);
     }
 }

@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.zimbra.cs.mailbox.Folder;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.service.ServiceException;
@@ -437,6 +438,13 @@ public class DataSource extends AccountProperty {
         }
     }
 
+    public boolean isSyncEnabled(Folder folder) {
+        return DataSourceManager.getInstance().isSyncEnabled(this, folder);
+    }
+
+    public boolean isSyncCapable(Folder folder) {
+        return DataSourceManager.getInstance().isSyncCapable(this, folder);
+    }
 
     public String toString() {
         List<String> parts = new ArrayList<String>();
