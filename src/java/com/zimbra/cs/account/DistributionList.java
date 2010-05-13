@@ -20,7 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import java.util.Map;
 import java.util.Set;
 
-public class DistributionList extends ZAttrDistributionList {
+public class DistributionList extends ZAttrDistributionList implements GroupedEntry {
     
     /*
      * This is for sanity checking purpose.
@@ -97,7 +97,8 @@ public class DistributionList extends ZAttrDistributionList {
         /*
          * Hack.
          * 
-         * We do not want to cache zimbraMailAlias/zimbraMailForwardingAddress, they can be big.
+         * We do not want to cache zimbraMailAlias/zimbraMailForwardingAddress.
+         * zimbraMailForwardingAddress can be big.
          * zimbraMailAlias was loaded for computing the upward membership and is now no longer 
          * needed.  Remove it before caching.
          */ 
@@ -114,4 +115,14 @@ public class DistributionList extends ZAttrDistributionList {
         mIsAclGroup = true;
         trimForAclGroup();
     }
+    
+    public String[] getAllAddrsAsGroupMember() throws ServiceException {
+        String aliases[] = getAliases();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        return addrs;
+    }
+
 }

@@ -443,7 +443,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
-        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
+        GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[-v] [{domain}]", Category.LIST, 0, 2),
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_EFFECTIVE_RIGHTS("getAllEffectiveRights", "gaer", "{grantee-type} {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 2, 4),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
@@ -2006,6 +2006,7 @@ public class ProvUtil implements HttpDebugListener {
         System.out.println("# distributionList " + dl.getName() + " memberCount=" + count);
         Map<String, Object> attrs = dl.getAttrs();
         dumpAttrs(attrs, attrNames);
+        System.out.println();
     }
 
     private void dumpAlias(Alias alias) throws ServiceException {
@@ -2291,7 +2292,24 @@ public class ProvUtil implements HttpDebugListener {
     }
     
     private void doGetAllDistributionLists(String[] args) throws ServiceException {
-        String d = args.length == 2 ? args[1] : null;
+        String d = null;
+        boolean verbose = false;
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v")) {
+                verbose = true;
+            } else {
+                if (d == null)
+                    d = arg;
+                else {
+                    System.out.println("invalid arg: " + arg + ", already specified domain: " + d);
+                    usage();
+                    return;
+                }
+            }
+            i++;
+        }
 
         if (d == null) {
             List domains = mProv.getAllDomains();
@@ -2300,7 +2318,10 @@ public class ProvUtil implements HttpDebugListener {
                 Collection dls = mProv.getAllDistributionLists(domain);
                 for (Iterator it = dls.iterator(); it.hasNext();) {
                     DistributionList dl = (DistributionList)it.next();
-                    System.out.println(dl.getName());
+                    if (verbose)
+                        dumpDistributionList(dl, null);
+                    else
+                        System.out.println(dl.getName());
                 }
             }
         } else {
@@ -2308,7 +2329,10 @@ public class ProvUtil implements HttpDebugListener {
             Collection dls = mProv.getAllDistributionLists(domain);
             for (Iterator it = dls.iterator(); it.hasNext();) {
                 DistributionList dl = (DistributionList) it.next();
-                System.out.println(dl.getName());
+                if (verbose)
+                    dumpDistributionList(dl, null);
+                else
+                    System.out.println(dl.getName());
             }
         }
     }

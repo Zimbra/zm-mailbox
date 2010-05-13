@@ -17,11 +17,17 @@ public enum EntryCacheDataKey {
     /*
      * MailTarget
      */
-    MAILTARGET_DOMAIN_ID;
+    MAILTARGET_DOMAIN_ID,
+    
+    /*
+     * grouped entries(entries that can be in groups): account, cr, dl
+     */
+    GROUPEDENTRY_DIRECT_GROUPS;  
     
     
     // all access of the key name must be through this, 
     // not calling name() or toString() directly
+    // TODO: add a signature in Entry to take a EntryCacheDataKey for get/set
     public String getKeyName() {
         return name();
     }

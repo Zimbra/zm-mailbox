@@ -23,6 +23,7 @@ import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.auth.AuthContext;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +31,7 @@ import java.util.Set;
 /**
  * @author schemers
  */
-public class Account extends ZAttrAccount  {
+public class Account extends ZAttrAccount implements GroupedEntry {
     
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
@@ -286,6 +287,16 @@ public class Account extends ZAttrAccount  {
         return isGalSyncAcct.booleanValue();
     }
     */
+    
+    public String[] getAllAddrsAsGroupMember() throws ServiceException {
+        String aliases[] = getMailAlias();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        
+        return addrs;
+    }
     
 }
  

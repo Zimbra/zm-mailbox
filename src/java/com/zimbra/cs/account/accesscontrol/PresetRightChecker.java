@@ -154,7 +154,7 @@ public class PresetRightChecker {
         boolean expandTargetGroups = RightChecker.allowGroupTarget(mRightNeeded);
         
         // check grants granted on entries from which the target entry can inherit from
-        TargetIterator iter = TargetIterator.getTargetIeterator(Provisioning.getInstance(), mTarget, expandTargetGroups);
+        TargetIterator iter = TargetIterator.getTargetIeterator(mProv, mTarget, expandTargetGroups);
         Entry grantedOn;
         
         GroupACLs groupACLs = null;
