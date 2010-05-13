@@ -724,4 +724,6 @@ public class AdminConstants {
     
     // flush cache
     public static final String A_ALLSERVERS = "allServers";
+    
+    public static final String A_SYNCHRONOUS = "synchronous";
 }
