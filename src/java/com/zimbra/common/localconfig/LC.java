@@ -956,7 +956,7 @@ public class LC {
 
         ldap_cache_external_domain_maxage = new KnownKey("ldap_cache_external_domain_maxage", "15");
         
-        ldap_cache_group_maxsize = new KnownKey("ldap_cache_group_maxsize", "200");
+        ldap_cache_group_maxsize = new KnownKey("ldap_cache_group_maxsize", "2000");
 
         ldap_cache_group_maxage = new KnownKey("ldap_cache_group_maxage", "15");
 
