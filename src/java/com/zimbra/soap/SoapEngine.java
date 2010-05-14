@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.Session;
@@ -364,11 +365,11 @@ public class SoapEngine {
                 if (needsAuth || needsAdminAuth) {
                     // make sure that the authenticated account is still active and has not been deleted since the last request
                     //   note that delegated auth allows access unless the account's in maintenance mode
-                    Account account = Provisioning.getInstance().get(AccountBy.id, acctId, at);
+                    Account account = prov.get(AccountBy.id, acctId, at);
                     if (account == null)
                         return soapFault(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
 
-                    if (at.getValidityValue() != account.getAuthTokenValidityValue())
+                    if (!AuthProvider.checkAuthTokenValidityValue(prov, account, at))    
                         return soapFault(soapProto, "invalid validity value", ServiceException.AUTH_EXPIRED());
                     
                     if (delegatedAuth && account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
@@ -379,7 +380,7 @@ public class SoapEngine {
                     
                     // if using delegated auth, make sure the "admin" is really an active admin account
                     if (delegatedAuth) {
-                        Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
+                        Account admin = prov.get(AccountBy.id, at.getAdminAccountId());
                         if (admin == null)
                             return soapFault(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
                         boolean isAdmin = AdminAccessControl.isSufficientAdminForSoapDelegatedAuth(admin);
