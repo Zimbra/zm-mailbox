@@ -4906,10 +4906,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="1094" name="zimbraAuthTokenValidityCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.8">
+<attr id="1094" name="zimbraAuthTokenValidityValueEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.8">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>
-    Whether auth token validity checking should be performed during auth token validation.  
+    Whether auth token validity value checking should be performed during auth token validation.  
     See description for zimbraAuthTokenValidityValue.
   </desc>
 </attr>

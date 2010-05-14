@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100514-1046 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100514-1055 */
 
     /**
      * RFC2256: descriptive information
@@ -1931,69 +1931,74 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether auth token validity checking should be performed during auth
-     * token validation. See description for zimbraAuthTokenValidityValue.
+     * Whether auth token validity value checking should be performed during
+     * auth token validation. See description for
+     * zimbraAuthTokenValidityValue.
      *
-     * @return zimbraAuthTokenValidityCheckEnabled, or true if unset
+     * @return zimbraAuthTokenValidityValueEnabled, or true if unset
      *
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1094)
-    public boolean isAuthTokenValidityCheckEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAuthTokenValidityCheckEnabled, true);
+    public boolean isAuthTokenValidityValueEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAuthTokenValidityValueEnabled, true);
     }
 
     /**
-     * Whether auth token validity checking should be performed during auth
-     * token validation. See description for zimbraAuthTokenValidityValue.
+     * Whether auth token validity value checking should be performed during
+     * auth token validation. See description for
+     * zimbraAuthTokenValidityValue.
      *
-     * @param zimbraAuthTokenValidityCheckEnabled new value
+     * @param zimbraAuthTokenValidityValueEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1094)
-    public void setAuthTokenValidityCheckEnabled(boolean zimbraAuthTokenValidityCheckEnabled) throws com.zimbra.common.service.ServiceException {
+    public void setAuthTokenValidityValueEnabled(boolean zimbraAuthTokenValidityValueEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokenValidityCheckEnabled, zimbraAuthTokenValidityCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValueEnabled, zimbraAuthTokenValidityValueEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Whether auth token validity checking should be performed during auth
-     * token validation. See description for zimbraAuthTokenValidityValue.
+     * Whether auth token validity value checking should be performed during
+     * auth token validation. See description for
+     * zimbraAuthTokenValidityValue.
      *
-     * @param zimbraAuthTokenValidityCheckEnabled new value
+     * @param zimbraAuthTokenValidityValueEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1094)
-    public Map<String,Object> setAuthTokenValidityCheckEnabled(boolean zimbraAuthTokenValidityCheckEnabled, Map<String,Object> attrs) {
+    public Map<String,Object> setAuthTokenValidityValueEnabled(boolean zimbraAuthTokenValidityValueEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokenValidityCheckEnabled, zimbraAuthTokenValidityCheckEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValueEnabled, zimbraAuthTokenValidityValueEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
     }
 
     /**
-     * Whether auth token validity checking should be performed during auth
-     * token validation. See description for zimbraAuthTokenValidityValue.
+     * Whether auth token validity value checking should be performed during
+     * auth token validation. See description for
+     * zimbraAuthTokenValidityValue.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1094)
-    public void unsetAuthTokenValidityCheckEnabled() throws com.zimbra.common.service.ServiceException {
+    public void unsetAuthTokenValidityValueEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokenValidityCheckEnabled, "");
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValueEnabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Whether auth token validity checking should be performed during auth
-     * token validation. See description for zimbraAuthTokenValidityValue.
+     * Whether auth token validity value checking should be performed during
+     * auth token validation. See description for
+     * zimbraAuthTokenValidityValue.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2001,9 +2006,9 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 6.0.8
      */
     @ZAttr(id=1094)
-    public Map<String,Object> unsetAuthTokenValidityCheckEnabled(Map<String,Object> attrs) {
+    public Map<String,Object> unsetAuthTokenValidityValueEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAuthTokenValidityCheckEnabled, "");
+        attrs.put(Provisioning.A_zimbraAuthTokenValidityValueEnabled, "");
         return attrs;
     }
 
