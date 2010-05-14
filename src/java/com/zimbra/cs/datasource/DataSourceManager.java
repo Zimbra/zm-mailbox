@@ -172,13 +172,13 @@ public class DataSourceManager {
     public static void test(DataSource ds) throws ServiceException {
         ZimbraLog.datasource.info("Testing: %s", ds);
         try {
-        	DataImport di = getInstance().getDataImport(ds);
-        	di.test();
+            DataImport di = getInstance().getDataImport(ds);
+            di.test();
             ZimbraLog.datasource.info("Test succeeded: %s", ds);
         } catch (ServiceException x) {
-        	ZimbraLog.datasource.warn("Test failed: %s", ds, x);
+            ZimbraLog.datasource.warn("Test failed: %s", ds, x);
             throw x;
-        }        
+        }
     }
 
     public static List<ImportStatus> getImportStatus(Account account)

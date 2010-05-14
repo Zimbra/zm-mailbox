@@ -36,7 +36,9 @@ public class XYMEAuthenticator extends Authenticator {
     }
 
     @Override
-    public void init(MailConfig config, String password) {}
+    public void init(MailConfig config, String password) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public String getMechanism() {

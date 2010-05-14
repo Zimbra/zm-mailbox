@@ -14,38 +14,25 @@
  */
 package com.zimbra.cs.datasource.imap;
                              
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.net.SocketFactories;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.datasource.LogOutputStream;
 import com.zimbra.cs.datasource.MailItemImport;
-import com.zimbra.cs.datasource.MessageContent;
 import com.zimbra.cs.datasource.SyncUtil;
-import com.zimbra.cs.mailclient.MailConfig;
-import com.zimbra.cs.mailclient.imap.ImapCapabilities;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.DataHandler;
-import com.zimbra.cs.mailclient.imap.ImapData;
-import com.zimbra.cs.mailclient.imap.IDInfo;
-import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,26 +41,73 @@ import java.util.LinkedHashMap;
 import java.util.regex.Pattern;
 
 public class ImapSync extends MailItemImport {
-    private final ImapConnection connection;
     private final Folder localRootFolder;
     private final SyncStateManager syncStateManager;
+    private ImapConnection connection;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private final Map<Integer, ImapFolderSync> syncedFolders;
     private ImapFolderCollection trackedFolders;
-    // Optional mail client authenticator (default is plaintext login)
-    private Authenticator authenticator;
     private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[:\\*\\?\"<>\\|]");
     private boolean fullSync;
+    private Authenticator authenticator;
+    private boolean reuseConnections;
 
     private static final Log LOG = ZimbraLog.datasource;
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
-        connection = new ImapConnection(newImapConfig(ds));
-        connection.setDataHandler(new FetchDataHandler());
-        localRootFolder = getMailbox().getFolderById(dataSource.getFolderId());
+        validateDataSource();
+        localRootFolder = getMailbox().getFolderById(ds.getFolderId());
         syncStateManager = SyncStateManager.getInstance(ds);
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
+        reuseConnections = ds.isOffline();
+    }
+
+    public synchronized void test() throws ServiceException {
+        // In case datasource was modified, make sure we close any open
+        // connection as well as remove cached synchronization state
+        ConnectionManager.getInstance().closeConnection(dataSource);
+        SyncStateManager.removeInstance(dataSource);
+        connect();
+        if (reuseConnections) {
+            releaseConnection();
+        } else {
+            closeConnection();
+        }
+    }
+
+    protected void setAuthenticator(Authenticator auth) {
+        authenticator = auth;
+    }
+
+    protected void setReuseConnections(boolean reuseConnections) {
+        this.reuseConnections = reuseConnections;
+    }
+
+    protected void connect() throws ServiceException {
+        if (connection == null) {
+            // A full sync always refreshes the IMAP connection
+            if (isFullSync()) {
+                ConnectionManager.getInstance().closeConnection(dataSource);
+            }
+            connection = ConnectionManager.getInstance().openConnection(dataSource, authenticator);
+        }
+    }
+
+    private void releaseConnection() {
+        if (connection != null) {
+            LOG.debug("Releasing connection");
+            ConnectionManager.getInstance().releaseConnection(dataSource, connection);
+            connection = null;
+        }
+    }
+
+    private void closeConnection() {
+        if (connection != null) {
+            LOG.debug("Closing connection");
+            connection.close();
+            connection = null;
+        }
     }
 
     // TODO Deprecate folderIds - it's better to determine which folders to sync here
@@ -85,8 +119,6 @@ public class ImapSync extends MailItemImport {
     public synchronized void importData(boolean fullSync) throws ServiceException {
         fullSync |= forceFullSync();
         this.fullSync = fullSync;
-        validateDataSource();
-        connect();
         List<Integer> folderIds = null;
         if (!fullSync) {
             // If not full sync, then only sync INBOX and possibly SENT folder
@@ -97,13 +129,16 @@ public class ImapSync extends MailItemImport {
                 folderIds.add(Mailbox.ID_FOLDER_SENT);
             }
         }
+        connect();
         try {
             syncFolders(folderIds);
-            connection.logout();
-        } catch (IOException e) {
+            if (reuseConnections) {
+                releaseConnection();
+            }
+        } catch (Exception e) {
             throw ServiceException.FAILURE("Folder sync failed", e);
         } finally {
-            connection.close();
+            closeConnection();
         }
     }
 
@@ -128,10 +163,6 @@ public class ImapSync extends MailItemImport {
         return connection;
     }
 
-    public void setAuthenticator(Authenticator auth) {
-        authenticator = auth;
-    }
-    
     public ImapFolderCollection getTrackedFolders() {
         return trackedFolders;
     }
@@ -156,125 +187,6 @@ public class ImapSync extends MailItemImport {
         return syncedFolders.get(folderId);
     }
 
-    public ImapConfig newImapConfig(DataSource ds) {
-        ImapConfig config = new ImapConfig();
-        config.setHost(ds.getHost());
-        config.setPort(ds.getPort());
-        config.setAuthenticationId(ds.getUsername());
-        config.setSecurity(getSecurity(ds.getConnectionType()));
-        // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
-        // Avoiding LITERAL+ also gives servers a chance to reject uploaded
-        // messages that are too big, since the server must send a continuation
-        // response before the literal data can be sent.
-        config.setUseLiteralPlus(false);
-        if (ds.isDebugTraceEnabled()) {
-            config.setDebug(true);
-            enableTrace(ds, config);
-        }
-        config.setSocketFactory(SocketFactories.defaultSocketFactory());
-        config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
-        config.setConnectTimeout(ds.getConnectTimeout(LC.javamail_imap_timeout.intValue()));
-        config.setReadTimeout(ds.getReadTimeout(LC.javamail_imap_timeout.intValue()));
-        return config;
-    }
-
-    private MailConfig.Security getSecurity(DataSource.ConnectionType type) {
-        if (type == null) {
-            type = DataSource.ConnectionType.cleartext;
-        }
-        switch (type) {
-        case cleartext:
-            // bug 44439: For ZCS import, if connection type is 'cleartext' we
-            // still use localconfig property to determine if we should try
-            // TLS. This maintains compatibility with 5.0.x since there is
-            // still no UI setting to explicitly enable TLS. For desktop
-            // this forced a plaintext connection since we have the UI options.
-            return !dataSource.isOffline() && LC.javamail_imap_enable_starttls.booleanValue() ?
-                MailConfig.Security.TLS_IF_AVAILABLE : MailConfig.Security.NONE;
-        case ssl:
-            return MailConfig.Security.SSL;
-        case tls:
-            return MailConfig.Security.TLS;
-        case tls_if_available:
-            return MailConfig.Security.TLS_IF_AVAILABLE;
-        default:
-            return MailConfig.Security.NONE;
-        }
-    }
-
-    public synchronized void test() throws ServiceException {
-        validateDataSource();
-        enableTrace(dataSource, connection.getImapConfig());
-        try {
-            connect();
-        } finally {
-            connection.close();
-        }
-    }
-
-    private static void enableTrace(DataSource ds, ImapConfig config) {
-        config.setTrace(true);
-        config.setMaxLiteralTraceSize(ds.getMaxTraceSize());
-        PrintStream ps = ds.isOffline() ?
-            new PrintStream(new LogOutputStream(ZimbraLog.imap), true) : System.out;
-        config.setTraceStream(ps);
-    }
-
-
-    // Handler for fetched message data which uses ParsedMessage to stream
-    // the message data to disk if necessary.
-    private static class FetchDataHandler implements DataHandler {
-        public Object handleData(ImapData data) throws Exception {
-            try {
-                return MessageContent.read(data.getInputStream(), data.getSize());
-            } catch (OutOfMemoryError e) {
-                Zimbra.halt("Out of memory");
-                return null;
-            }
-        }
-    }
-
-    protected void connect() throws ServiceException {
-        if (!connection.isClosed()) return;
-        try {
-            connection.connect();
-            try {
-                if (authenticator != null) {
-                    connection.authenticate(authenticator);
-                } else {
-                    connection.login(dataSource.getDecryptedPassword());
-                }
-            } catch (CommandFailedException e) {
-                throw new LoginException(e.getError());
-            }
-            checkImportingSelf();
-            delimiter = connection.getDelimiter();
-        } catch (ServiceException e) {
-            connection.close();
-            throw e;
-        } catch (Exception e) {
-            connection.close();
-            throw ServiceException.FAILURE(
-                "Unable to connect to IMAP server: " + dataSource, e);
-        }
-    }
-
-    private void checkImportingSelf() throws IOException, ServiceException {
-        if (dataSource.isOffline() || !connection.hasCapability(ImapCapabilities.ID))
-            return;
-        try {
-            IDInfo id = connection.id();
-            if ("Zimbra".equalsIgnoreCase(id.getName())) {
-                String user = id.get("user");
-                if (user != null && user.equals(dataSource.getAccount().getName())) {
-                    throw ServiceException.INVALID_REQUEST(
-                        "User attempted to import messages from his/her own mailbox", null);
-                }
-            }
-        } catch (CommandFailedException e) {
-            // Skip check if ID command fails
-        }
-    }
 
     public void checkIsEnabled() throws ServiceException {
         if (!getDataSource().isManaged()) {
@@ -292,6 +204,7 @@ public class ImapSync extends MailItemImport {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         trackedFolders = ImapFolder.getFolders(dataSource);
+        delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
         syncLocalFolders(getLocalFolders());
         syncMessages(folderIds);

@@ -29,6 +29,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -112,8 +113,8 @@ public abstract class MailConnection {
     private void initStreams(InputStream is, OutputStream os)
         throws IOException {
         if (config.isTrace()) {
-            is = traceIn = newTraceInputStream(is);
-            os = traceOut = newTraceOutputStream(os);
+            is = traceIn = new TraceInputStream(is, config.getTraceOut());
+            os = traceOut = new TraceOutputStream(os, config.getTraceOut());
         }
         mailIn = newMailInputStream(is);
         mailOut = newMailOutputStream(os);
@@ -462,11 +463,9 @@ public abstract class MailConnection {
         return ssf != null ? ssf : (SSLSocketFactory) SSLSocketFactory.getDefault();
     }
 
-    private TraceInputStream newTraceInputStream(InputStream is) {
-        return new TraceInputStream(is, config.getTraceOut());
-    }
-
-    private TraceOutputStream newTraceOutputStream(OutputStream os) {
-        return new TraceOutputStream(os, config.getTraceOut());
+    @Override
+    public String toString() {
+        return String.format("{host=%s,port=%d,type=%s,state=%s}",
+            config.getHost(), config.getPort(), config.getSecurity(), state);
     }
 }
