@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100507-2114 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100514-1046 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1489,6 +1489,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=108)
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
+
+    /**
+     * Whether auth token validity checking should be performed during auth
+     * token validation. See description for zimbraAuthTokenValidityValue.
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1094)
+    public static final String A_zimbraAuthTokenValidityCheckEnabled = "zimbraAuthTokenValidityCheckEnabled";
 
     /**
      * if set, this value gets stored in the auth token and compared on every
