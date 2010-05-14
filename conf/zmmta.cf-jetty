@@ -125,6 +125,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF virtual_mailbox_domains			        LOCAL postfix_virtual_mailbox_domains
 	POSTCONF virtual_mailbox_maps				          LOCAL postfix_virtual_mailbox_maps
 	POSTCONF virtual_transport					          LOCAL postfix_virtual_transport
+  POSTCONF always_add_missing_headers           LOCAL postfix_always_add_missing_headers
   RESTART mta
 
 SECTION sasl
