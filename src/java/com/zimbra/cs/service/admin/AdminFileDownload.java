@@ -14,18 +14,31 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.zimbra.common.localconfig.LC;
+
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.SoapEngine;
+import com.zimbra.soap.ZimbraSoapContext;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,10 +49,17 @@ import java.lang.reflect.Method;
  */
 public class AdminFileDownload  extends ZimbraServlet {
 
-    private static final String ACTION_GETBP = "getBP" ;
+    private static final String ACTION_GETBP_RESULTS = "getBP" ;
     private static final String ACTION_GETSR = "getSR" ; //get search results
+    private static final String ACTION_GETBP_FILE = "getBulkFile" ; //get search results
+    private static final String fileFormat = "fileFormat";
+    private static final String fileID = "fileID";
+    
+	private static final String FILE_FORMAT_MIGRATION_XML = "migrationxml";
+	private static final String FILE_FORMAT_BULK_XML = "bulkxml";
+	private static final String FILE_FORMAT_BULK_CSV = "csv";
 
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
 		try {
@@ -56,7 +76,7 @@ public class AdminFileDownload  extends ZimbraServlet {
                 return ;
             }
             String filename ;
-            if (action.equalsIgnoreCase(ACTION_GETBP))  {
+            if (action.equalsIgnoreCase(ACTION_GETBP_RESULTS))  {
                 String aid = req.getParameter("aid") ;
                 filename = "bp_result.csv"  ;
 
@@ -98,12 +118,49 @@ public class AdminFileDownload  extends ZimbraServlet {
                 resp.setContentType("application/x-download");
                 resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
                 writeSearchResults (resp.getOutputStream(), query, domain, types, authToken);
+            } else if (action.equalsIgnoreCase(ACTION_GETBP_FILE) )  {
+            	String pFileId = req.getParameter(fileID);
+            	String pFileFormat = req.getParameter(fileFormat);
+            	String bulkFileName = null;
+            	String clientFileName = null;
+            	if(pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_CSV)) {
+            		bulkFileName = String.format("%s%s_bulk_%s_%s.csv", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
+            		clientFileName = "bulk_provision.csv";
+            	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_XML)) {
+            		bulkFileName = String.format("%s%s_bulk_%s_%s.xml", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
+            		clientFileName = "bulk_provision.xml";
+            	}
+            	if(bulkFileName != null) {
+            		InputStream is = null;            	
+            		try {
+            			is = new FileInputStream(bulkFileName);
+            		} catch (FileNotFoundException ex) {
+        	        	if(is != null)
+        	        		is.close();
+        	        	
+                        resp.sendError(HttpServletResponse.SC_NOT_FOUND, "File not found");
+                        return;
+                    }
+            		resp.setHeader("Expires", "Tue, 24 Jan 2000 20:46:50 GMT");
+            		resp.setStatus(resp.SC_OK);
+            		resp.setContentType("application/x-download");
+            		resp.setHeader("Content-Disposition", "attachment; filename=" + clientFileName );            		
+            		try {
+						ByteUtil.copy(is, true, resp.getOutputStream(), false);
+					} catch (Exception e) {
+						ZimbraLog.webclient.error(e) ;
+					}
+            		try {
+						is.close();
+						File file = new File(bulkFileName);
+						file.delete();
+					} catch (Exception e) {
+						ZimbraLog.webclient.error(e) ;
+					}
+            	}
             }
-
-
-            //ByteUtil.copy(new ByteArrayInputStream(rr.getMStdout()), true, resp.getOutputStream(), false);
 		} catch (Exception e) {
-			e.printStackTrace();
+			ZimbraLog.webclient.error(e) ;
         	return;
 		}
 
