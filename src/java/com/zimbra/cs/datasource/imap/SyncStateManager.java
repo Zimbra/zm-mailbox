@@ -45,5 +45,11 @@ final class SyncStateManager extends HashMap<Integer, SyncState>{
         }
     }
 
+    public static void removeInstance(DataSource ds) {
+        synchronized (instances) {
+            instances.remove(ds.getId());
+        }
+    }
+
     private SyncStateManager() {}
 }

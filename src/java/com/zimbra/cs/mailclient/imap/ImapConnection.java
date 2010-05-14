@@ -43,6 +43,7 @@ public final class ImapConnection extends MailConnection {
     private MailboxInfo mailbox;
     private ImapRequest request;
     private DataHandler dataHandler;
+    private Character delimiter;
     
     private final AtomicInteger tagCount = new AtomicInteger();
 
@@ -262,6 +263,12 @@ public final class ImapConnection extends MailConnection {
         setState(State.AUTHENTICATED);
     }
 
+    public synchronized void unselect() throws IOException {
+        newRequest(CAtom.UNSELECT).sendCheckStatus();
+        mailbox = null;
+        setState(State.AUTHENTICATED);
+    }
+
     public MailboxInfo status(String name, Object... params) throws IOException {
         ImapRequest req = newRequest(CAtom.STATUS, new MailboxName(name), params);
         List<MailboxInfo> results = new ArrayList<MailboxInfo>(1);
@@ -296,8 +303,11 @@ public final class ImapConnection extends MailConnection {
     }
 
     public char getDelimiter() throws IOException {
-        List<ListData> ld = list("", "");
-        return ld.isEmpty() ? 0 : ld.get(0).getDelimiter();
+        if (delimiter == null) {
+            List<ListData> ld = list("", "");
+            delimiter = ld.isEmpty() ? 0 : ld.get(0).getDelimiter();
+        }
+        return delimiter;
     }
 
     public CopyResult copy(String seq, String mbox) throws IOException {
@@ -467,6 +477,14 @@ public final class ImapConnection extends MailConnection {
 
     public boolean hasCapability(String cap) {
         return capabilities != null && capabilities.hasCapability(cap);
+    }
+
+    public boolean hasIdle() {
+        return hasCapability(ImapCapabilities.UNSELECT);
+    }
+
+    public boolean hasUnselect() {
+        return hasCapability(ImapCapabilities.UNSELECT);
     }
 
     public boolean hasMechanism(String method) {

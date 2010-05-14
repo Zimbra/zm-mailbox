@@ -36,6 +36,7 @@ public class ImapCapabilities {
     public static final String IDLE = "IDLE";
     public static final String AUTH_PLAIN = "AUTH=PLAIN";
     public static final String AUTH_GSSAPI = "AUTH=GSSAPI";
+    public static final String UNSELECT = "UNSELECT";
 
     public static ImapCapabilities read(ImapInputStream is) throws IOException {
         ImapCapabilities caps = new ImapCapabilities();
