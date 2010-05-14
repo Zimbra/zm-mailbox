@@ -152,9 +152,15 @@ public class TestProvisioningUtil extends TestCase {
         }
     }
     
-    public static void verifyEquals(Set<String> expected, Set<String> atual) throws Exception {
-        assertEquals(0, SetUtil.subtract(expected, atual).size());
-        assertEquals(0, SetUtil.subtract(atual, expected).size());
+    public static void verifyEquals(Set<String> expected, Set<String> actual) throws Exception {
+       
+        assertEquals(expected.size(), actual.size());
+        
+        for (String e : expected)
+            assertTrue(actual.contains(e));
+        
+        for (String a : actual)
+            assertTrue(expected.contains(a));
     }
     
     
@@ -197,6 +203,7 @@ public class TestProvisioningUtil extends TestCase {
     
     public static SoapProvisioning getSoapProvisioning() throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();
+        sp.soapSetTransportTimeout(0); // use infinite timeout
         sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
         return sp;

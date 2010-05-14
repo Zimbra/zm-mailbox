@@ -22,7 +22,7 @@ public enum EntryCacheDataKey {
     /*
      * grouped entries(entries that can be in groups): account, cr, dl
      */
-    GROUPEDENTRY_DIRECT_GROUPS;  
+    GROUPEDENTRY_DIRECT_GROUPIDS;  
     
     
     // all access of the key name must be through this, 

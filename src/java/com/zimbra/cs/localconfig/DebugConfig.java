@@ -155,6 +155,8 @@ public class DebugConfig {
     
     public static boolean disableGroupTargetForAdminRight;
     
+    public static boolean disableComputeGroupMembershipOptimization;
+    
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -208,6 +210,8 @@ public class DebugConfig {
         enableMigrateUserZimletPrefs = booleanValue("migrate_user_zimlet_prefs", false);
         
         disableGroupTargetForAdminRight = booleanValue("disable_group_target_for_admin_right", false);
+        
+        disableComputeGroupMembershipOptimization = booleanValue("disable_compute_group_membership_optimization", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {

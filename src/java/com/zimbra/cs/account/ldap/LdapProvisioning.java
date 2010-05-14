@@ -77,6 +77,7 @@ import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -2827,8 +2828,8 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via, boolean minimalData) throws ServiceException {
-        String addrs[] = list.getAllAddrsAsGroupMember();
-        return getDistributionLists(addrs, directOnly, via, minimalData);
+        // GROUP-TODO: retire minimal data, it has never been honored anyway in this path. 
+        return LdapProvisioning.getGroups(list, directOnly, via);
     }
 
     private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc, String[] returnAttrs) throws ServiceException {
@@ -3050,7 +3051,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    public DistributionList getFromCache(DistributionListBy keyType, String key) throws ServiceException {
+    private DistributionList getAclGroupFromCache(DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case id: 
             return sAclGroupCache.getById(key);
@@ -3059,6 +3060,28 @@ public class LdapProvisioning extends Provisioning {
         default:
             return null;
         }
+    }
+    
+    // GROUP-TODO: consolidate with sAclGroupCache
+    private DistributionList getDLFromCache(DistributionListBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case id: 
+            return sDLCache.getById(key);
+        case name: 
+            return sDLCache.getByName(key);
+        default:
+            return null;
+        }
+    }
+    
+    void removeGroupFromCache(DistributionListBy keyType, String key) throws ServiceException {
+        DistributionList group = getAclGroupFromCache(keyType, key);
+        if (group != null)
+            removeFromCache(group);
+        
+        group = getDLFromCache(keyType, key);
+        if (group != null)
+            removeFromCache(group);
     }
 
     private DistributionList getAclGroupById(String groupId) throws ServiceException {
@@ -4225,8 +4248,20 @@ public class LdapProvisioning extends Provisioning {
         
     }
 
-    // TODO: remove minimalData, it is not used here at all
-    static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via, boolean minimalData)
+    // GROUP-TODO: retire after getGroupsInternal is stable and have callsites call it directly
+    private static List<DistributionList> getGroups(Entry entry, boolean directOnly, Map<String, String> via) throws ServiceException {
+        if (DebugConfig.disableComputeGroupMembershipOptimization) {
+            // old way
+            String[] addr = ((GroupedEntry)entry).getAllAddrsAsGroupMember();
+            return getDistributionLists(addr, directOnly, via);
+        } else {
+            // new way
+            return getGroupsInternal(entry, directOnly, via);
+        }
+    }
+
+    // GROUP-TODO: deprecate after getGroupsInternal is stable
+    private static List<DistributionList> getDistributionLists(String addrs[], boolean directOnly, Map<String, String> via)
         throws ServiceException 
     {
         LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance(); // GROSS
@@ -4267,27 +4302,43 @@ public class LdapProvisioning extends Provisioning {
         if (!(entry instanceof GroupedEntry))
             throw ServiceException.FAILURE("internal error", null);
         
-        String cacheKey = EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPS.getKeyName();
+        String cacheKey = EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName();
         List<String> directGroupIds = (List<String>)entry.getCachedData(cacheKey);
         
         List<DistributionList> directGroups = null;
         
         if (directGroupIds == null) {
             String[] addrs = ((GroupedEntry)entry).getAllAddrsAsGroupMember();
+            
+            // fetch from LDAP
             directGroups = prov.getAllDistributionListsForAddresses(addrs, true);
             
             // - build the group id list and cache it on the entry
-            // - refresh our groups cache with groups just fetched from LDAP
+            // - add each group in cache only if it is not already in.
+            //   we do not want to overwrite the entry in cache, because it 
+            //   might have its direct group ids cached on it. 
+            // - if the group is already in cache, return the cached instance
+            //   instead of the instance we ject fetched, because the cached 
+            //   instance might have its direct group ids cached on it. 
             directGroupIds = new ArrayList<String>(directGroups.size());
+            List<DistributionList> directGroupsToReturn = new ArrayList<DistributionList>(directGroups.size());
             for (DistributionList group : directGroups) {
-                directGroupIds.add(group.getId());
-                sDLCache.put(group);
+                String groupId = group.getId();
+                directGroupIds.add(groupId);
+                DistributionList cached = sDLCache.getById(groupId);
+                if (cached == null) {
+                    sDLCache.put(group);
+                    directGroupsToReturn.add(group);
+                } else {
+                    directGroupsToReturn.add(cached);
+                }
             }
             entry.setCachedData(cacheKey, directGroupIds);
-            return directGroups;
+            return directGroupsToReturn;
             
         } else {
             directGroups = new ArrayList<DistributionList>();
+            Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
                 DistributionList group = sDLCache.getById(groupId);
                 if (group == null) {
@@ -4295,18 +4346,38 @@ public class LdapProvisioning extends Provisioning {
                     group = prov.getDistributionListByQuery(prov.mDIT.mailBranchBaseDN(),
                                 LdapFilter.distributionListById(groupId),
                                 null, sMinimalDlAttrs);
-                    if (group != null)  // the group could have been deleted
+                    if (group == null) {
+                        // the group could have been deleted
+                        // remove it from our direct group id cache on the entry
+                        if (idsToRemove == null)
+                            idsToRemove = new HashSet<String>();
+                        idsToRemove.add(groupId);
+                    } else  { 
                         sDLCache.put(group);
+                    }
                 } 
                 if (group != null)
                     directGroups.add(group);
+            }
+            
+            // update our direct group id cache if needed
+            if (idsToRemove != null) {
+                // create a new object, do *not* update directly on the cached copy
+                List<String> updatedDirectGroupIds = new ArrayList<String>();
+                for (String id : directGroupIds) {
+                    if (!idsToRemove.contains(id))
+                        updatedDirectGroupIds.add(id);
+                }
+                    
+                // swap the new data in
+                entry.setCachedData(cacheKey, updatedDirectGroupIds);
             }
         }
         
         return directGroups;
     }
     
-    static List<DistributionList> getDistributionListsXXX(Entry entry, boolean directOnly, Map<String, String> via)
+    private static List<DistributionList> getGroupsInternal(Entry entry, boolean directOnly, Map<String, String> via)
         throws ServiceException 
     {
         LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance(); // GROSS
@@ -4386,8 +4457,8 @@ public class LdapProvisioning extends Provisioning {
     }
     
     private List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via, boolean minimal) throws ServiceException {
-        String addrs[] = acct.getAllAddrsAsGroupMember();
-        return LdapProvisioning.getDistributionLists(addrs, directOnly, via, minimal);
+        // GROUP-TODO: retire minimal data, it has never been honored anyway in this path. 
+        return LdapProvisioning.getGroups(acct, directOnly, via);
     }
     
     private static final int DEFAULT_GAL_MAX_RESULTS = 100;
@@ -6117,12 +6188,12 @@ public class LdapProvisioning extends Provisioning {
             if (entries != null) {
                 for (CacheEntry entry : entries) {
                     DistributionListBy dlBy = (entry.mEntryBy==CacheEntryBy.id)? DistributionListBy.id : DistributionListBy.name;
-                    DistributionList aclGroup = getFromCache(dlBy, entry.mEntryIdentity);
-                    if (aclGroup != null)
-                        removeFromCache(aclGroup);
+                    removeGroupFromCache(dlBy, entry.mEntryIdentity);
                 }
-            } else
+            } else {
                 sAclGroupCache.clear();
+                sDLCache.clear();
+            }
             return; 
         case config:
             if (entries != null)
@@ -6187,9 +6258,10 @@ public class LdapProvisioning extends Provisioning {
     public void removeFromCache(Entry entry) {
         if (entry instanceof Account)
             sAccountCache.remove((Account)entry);
-        else if (entry instanceof DistributionList)
+        else if (entry instanceof DistributionList) {
             sAclGroupCache.remove((DistributionList)entry);
-        else
+            sDLCache.remove((DistributionList)entry);
+        } else
             throw new UnsupportedOperationException(); 
     }
     

@@ -30,6 +30,7 @@ import javax.naming.directory.Attributes;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -61,9 +62,9 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
                 // can't do prov.getFromCache because it only caches by primary name 
                 Account acct = prov.get(AccountBy.name, memberName);
                 if (acct != null)
-                        clearUpwardMembershipCache(acct);
+                    clearUpwardMembershipCache(acct);
                 else {
-                        // for DistributionList/ACLGroup, get it from cache because 
+                    // for DistributionList/ACLGroup, get it from cache because 
                     // if the dl is not in cache, after loading it prov.getAclGroup 
                     // always compute the upward membership.  Sounds silly if we are 
                     // about to clean the cache.  If memberName is indeed an alias 
@@ -74,9 +75,7 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
                     // the upward membership cache for that is computed and cache only when 
                     // the entry is loaded/being cached, instead of lazily computed like we 
                     // do for account.
-                    DistributionList dl = prov.getFromCache(DistributionListBy.name, memberName);
-                    if (dl != null)
-                        prov.removeFromCache(dl);
+                    prov.removeGroupFromCache(DistributionListBy.name, memberName);
                 }
             }
         }
@@ -144,9 +143,7 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
                     if (acct != null)
                         clearUpwardMembershipCache(acct);
                 } else {
-                    DistributionList dl = prov.getFromCache(DistributionListBy.name, primary);
-                    if (dl != null)
-                        prov.removeFromCache(dl);
+                    prov.removeGroupFromCache(DistributionListBy.name, primary);
                 }
             }
         }
@@ -177,6 +174,7 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
         acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST, null);
         acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
     }
     
     public String getDN() {

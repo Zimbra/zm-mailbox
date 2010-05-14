@@ -44,13 +44,9 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.mailbox.ACL;
 
-public class TestAC extends TestCase {
+public class TestAC extends TestProv {
     
     protected static final AccessManager sAM = AccessManager.getInstance();
-    protected static final Provisioning sProv = Provisioning.getInstance();
-    protected static final String TEST_ID = TestProvisioningUtil.genTestId();
-    protected static final String BASE_DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-ACL", TEST_ID);
-    protected static final String PASSWORD = "test123";
     
     protected static Right USER_RIGHT;
     protected static Right ADMIN_RIGHT_ACCOUNT;
@@ -66,16 +62,7 @@ public class TestAC extends TestCase {
     private static List<Right> sRights;
     
     private Account mGlobalAdminAcct;
-    private int mSequence = 1;
-    
-    
-    List<NamedEntry> mDeleteEntries = new ArrayList<NamedEntry>();
-    
-    // add domains in a seperate list, so they are deleted, after all domained 
-    // entries are deleted, or else will get domain not empty exception
-    // TODO: need to handle subdomains - those needed to be deleted before parent domains or
-    //       else won't get deleted.  For now just go in LDAP and delete the test root directly.
-    List<NamedEntry> mDeleteDomains = new ArrayList<NamedEntry>();
+
     
     static {
         try {
@@ -115,176 +102,26 @@ public class TestAC extends TestCase {
     static Right getRight(String right) throws ServiceException {
         return RightManager.getInstance().getRight(right);
     }
-    
-    private String nextSeq() {
-        return "" + mSequence++;
-    }
-    
-    private String genDomainName() {
-        return nextSeq() + "." + BASE_DOMAIN_NAME;
-    }
-    
-    private String genCosName() {
-        return "cos-" + nextSeq() + "." + BASE_DOMAIN_NAME;
-    }
-    
-    private String genServerName() {
-        return "server-" + nextSeq() + "." + BASE_DOMAIN_NAME;
-    }
-    
-    private String genXMPPComponentName() {
-        return "xmpp-" + nextSeq() + "." + BASE_DOMAIN_NAME;
-    }
-    
-    private String genZimletName() {
-        return "zimlet-" + nextSeq() + "." + BASE_DOMAIN_NAME;
-    }
-    
-    private Domain createDomain() throws Exception {
-        Domain domain = sProv.createDomain(genDomainName(), new HashMap<String, Object>());
-        mDeleteDomains.add(domain);
-        return domain;
-    }
-    
-    private Account createAccount(String localpart, Domain domain, Map<String, Object> attrs) throws Exception {
-        if (domain == null)
-            domain = createDomain();
-         
-        String email = localpart + "@" + domain.getName();
-        Account acct = sProv.createAccount(email, PASSWORD, attrs);
-        mDeleteEntries.add(acct);
-        return acct;
-    }
-    
-    private Account createUserAccount(String localpart, Domain domain) throws Exception {
-        return createAccount(localpart, domain, null);
-    }
-    
-    private Account createDelegatedAdminAccount(String localpart, Domain domain) throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
-        return createAccount(localpart, domain, attrs);
-    }
-    
-    protected Account createGuestAccount(String email, String password) {
-        return new ACL.GuestAccount(email, password);
-    }
-    
-    protected Account createKeyAccount(String name, String accesKey) {
-        AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
-        return new ACL.GuestAccount(authToken);
-    }
-    
-    protected Account anonAccount() {
-        return ACL.ANONYMOUS_ACCT;
-    }
-    
-    private CalendarResource createCalendarResource(String localpart, Domain domain) throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_displayName, localpart);
-        attrs.put(Provisioning.A_zimbraCalResType, "Equipment");
-        
-        String email = localpart + "@" + domain.getName();
-        CalendarResource cr = sProv.createCalendarResource(email, PASSWORD, attrs);
-        mDeleteEntries.add(cr);
-        return cr;
-    }
-    
-    private Cos createCos() throws Exception {
-        Cos cos = sProv.createCos(genCosName(), null);
-        mDeleteEntries.add(cos);
-        return cos;
-    }
-    
-    protected DistributionList createGroup(String localpart, Domain domain, Map<String, Object> attrs) throws Exception {
-        if (domain == null)
-            domain = createDomain();
-         
-        String email = localpart + "@" + domain.getName();
-        DistributionList dl = sProv.createDistributionList(email, attrs);
-        mDeleteEntries.add(dl);
-        return dl;
-    }
-    
-    private DistributionList createUserGroup(String localpart, Domain domain) throws Exception {
-        return createGroup(localpart, domain, new HashMap<String, Object>());
-    }
-    
-    private DistributionList createAdminGroup(String localpart, Domain domain) throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
-        return createGroup(localpart, domain, attrs);
-    }
-    
-    
-    private Server createServer() throws Exception {
-        Server server = sProv.createServer(genServerName(), new HashMap<String, Object>());
-        mDeleteEntries.add(server);
-        return server;
-    }
-    
-    /*
-    private Server createXMPPComponent() throws Exception {
-        return sProv.createXMPPComponent(genXMPPComponentName(), null);
-    }
-    */
-    
-    private Zimlet createZimlet() throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraZimletVersion, "1.0");
-        Zimlet zimlet = sProv.createZimlet(genZimletName(), attrs);
-        mDeleteEntries.add(zimlet);
-        return zimlet;
-    }
+
     
     private Config getConfig() throws Exception {
-        return sProv.getConfig();
+        return mProv.getConfig();
     }
     
     private GlobalGrant getGlobalGrant() throws Exception {
-        return sProv.getGlobalGrant();
+        return mProv.getGlobalGrant();
     }
-    
-    private void deleteEntry(NamedEntry entry) throws Exception {
-        if (entry instanceof Account)
-            sProv.deleteAccount(entry.getId());
-        else if (entry instanceof CalendarResource)
-            sProv.deleteCalendarResource(entry.getId());
-        else if (entry instanceof Cos)
-            sProv.deleteCos(entry.getId());
-        else if (entry instanceof DistributionList)
-            sProv.deleteDistributionList(entry.getId());
-        else if (entry instanceof Domain)
-            sProv.deleteDomain(entry.getId());
-        else if (entry instanceof Server)
-            sProv.deleteServer(entry.getId());
-        else if (entry instanceof Zimlet)
-            sProv.deleteZimlet(entry.getName());
-        else
-            throw new Exception("not yet implemented");
-            
-    }
-    
-    // delete all non-domained entries
-    // for domained entries, it is faster to go in LDAP and just delete the domain root
-    private void deleteAllEntries() throws Exception {
-        for (NamedEntry entry : mDeleteEntries)
-            deleteEntry(entry);
-        mDeleteEntries.clear();
-        
-        for (NamedEntry entry : mDeleteDomains)
-            deleteEntry(entry);
-        mDeleteDomains.clear();
-    }
+
+
     
     private void revokeAllGrantsOnGlobalGrant() throws Exception {
         
-        Grants grants = RightCommand.getGrants(sProv,
+        Grants grants = RightCommand.getGrants(mProv,
                 TargetType.global.getCode(), null, null, 
                 null, null, null, false);
             
         for (RightCommand.ACE ace : grants.getACEs()) {
-            RightCommand.revokeRight(sProv,
+            RightCommand.revokeRight(mProv,
                 getGlobalAdminAcct(),
                 ace.targetType(), TargetBy.id, ace.targetId(),
                 ace.granteeType(), GranteeBy.id, ace.granteeId(),
@@ -294,7 +131,7 @@ public class TestAC extends TestCase {
     
     private Account getGlobalAdminAcct() throws Exception {
         if (mGlobalAdminAcct == null)
-            mGlobalAdminAcct = sProv.get(AccountBy.name, TestUtil.getAddress("admin"));
+            mGlobalAdminAcct = mProv.get(AccountBy.name, TestUtil.getAddress("admin"));
         return mGlobalAdminAcct;
     }
     
@@ -399,13 +236,13 @@ public class TestAC extends TestCase {
                 grantee = createUserGroup("grantee-user-group", domain);
                 Account allowedAcct = createUserAccount("allowed-user-acct", domain);
                 allowedAccts.add(allowedAcct);
-                sProv.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
+                mProv.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
                 deniedAccts.add(createUserAccount("denied-user-acct", domain));
             } else {
                 grantee = createAdminGroup("grantee-admin-group", domain);
                 Account allowedAcct = createDelegatedAdminAccount("allowed-da-acct", domain);
                 allowedAccts.add(allowedAcct);
-                sProv.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
+                mProv.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
                 deniedAccts.add(createDelegatedAdminAccount("denied-da-acct", domain));
             }
             granteeName = grantee.getName();
@@ -540,7 +377,7 @@ public class TestAC extends TestCase {
             Account grantingAccount = getGlobalAdminAcct();
             
             RightCommand.grantRight(
-                    sProv, 
+                    mProv, 
                     grantingAccount,
                     grantedOnTargetType.getCode(), TargetBy.name, targetName,
                     granteeType.getCode(), GranteeBy.name, granteeName, secret,
@@ -580,10 +417,10 @@ public class TestAC extends TestCase {
             } else if (grantedOnTargetType == TargetType.dl) {
                 if (RightChecker.allowGroupTarget(right)) {
                     goodTarget = createUserAccount("target-acct", domain);
-                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
                 } else {
                     badTarget = createUserAccount("target-acct", domain);
-                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
+                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
                 }
                 
             } else if (grantedOnTargetType == TargetType.domain) {
@@ -609,10 +446,10 @@ public class TestAC extends TestCase {
             } else if (grantedOnTargetType == TargetType.dl) {
                 if (RightChecker.allowGroupTarget(right)) {
                     goodTarget = createCalendarResource("target-cr", domain);
-                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
                 } else {
                     badTarget = createCalendarResource("target-cr", domain);
-                    sProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
+                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
                 }
                 
             } else if (grantedOnTargetType == TargetType.domain) {
@@ -681,7 +518,7 @@ public class TestAC extends TestCase {
             // zimlet is trouble, need to reload it or else the grant is not on the object
             // ldapProvisioning.getZimlet does not return a cached entry so our grantedOnTarget
             // object does not have the grant
-            sProv.reload(grantedOnTarget);
+            mProv.reload(grantedOnTarget);
             
             if (grantedOnTargetType == TargetType.zimlet) {
                 goodTarget = grantedOnTarget;
