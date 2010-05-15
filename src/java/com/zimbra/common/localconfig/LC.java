@@ -380,6 +380,8 @@ public class LC {
         new KnownKey("nio_imap_write_chunk_size").setDefault(8*1024);
     public static final KnownKey nio_imap_thread_keep_alive_time =
         new KnownKey("nio_imap_thread_keep_alive_time").setDefault(60);
+    public static final KnownKey data_source_imap_reuse_connections =
+        new KnownKey("data_source_imap_reuse_connection", "false");
 
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
