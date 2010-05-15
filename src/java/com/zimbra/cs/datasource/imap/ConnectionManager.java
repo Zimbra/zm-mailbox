@@ -243,18 +243,22 @@ final class ConnectionManager {
             return false;
         }
         try {
-            if (!ic.isSelected("INBOX")) {
-                ic.select("INBOX");
+            if (ic.hasIdle()) {
+                if (!ic.isSelected("INBOX")) {
+                    ic.select("INBOX");
+                }
+                ic.idle(null);
+            } else if (ic.hasUnselect()) {
+                ic.unselect();
+            } else {
+                ic.mclose();
             }
             ic.setReadTimeout(IDLE_READ_TIMEOUT);
-            if (ic.hasIdle()) {
-                ic.idle(null);
-            }
             LOG.debug("Suspended connection: " + ic);
         } catch (IOException e) {
             LOG.warn("Error suspending connection", e);
         }
-        return true;
+        return true;     
     }
 
     private static boolean resumeConnection(ImapConnection ic) {
@@ -262,11 +266,12 @@ final class ConnectionManager {
             return false;
         }
         try {
+            ic.setReadTimeout(ic.getImapConfig().getReadTimeout());
             if (ic.isIdling()) {
                 ic.stopIdle();
+            } else {
+                ic.noop();
             }
-            ic.noop();
-            ic.setReadTimeout(ic.getImapConfig().getReadTimeout());
             LOG.debug("Resumed connection: " + ic);
         } catch (IOException e) {
             LOG.warn("Error resuming connection: " + ic, e);

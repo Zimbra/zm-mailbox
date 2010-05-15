@@ -299,26 +299,17 @@ public class DataSourceManager {
     
     private static String generateErrorMessage(Throwable t) {
         StringBuilder buf = new StringBuilder();
-        boolean isFirst = true;
         while (t != null) {
             // HACK: go with JavaMail error message
             if (t.getClass().getName().startsWith("javax.mail.")) {
                 String msg = t.getMessage();
-                if (msg == null) {
-                    msg = t.toString();
-                }
-                return msg;
+                return msg != null ? msg : t.toString();
             }
-            if (isFirst) {
-                isFirst = false;
-            } else {
+            if (buf.length() > 0) {
                 buf.append(", ");
             }
             String msg = t.getMessage();
-            if (msg == null) {
-                msg = t.toString(); 
-            }
-            buf.append(msg);
+            buf.append(msg != null ? msg : t.toString());
             t = t.getCause();
         }
         return buf.toString();
