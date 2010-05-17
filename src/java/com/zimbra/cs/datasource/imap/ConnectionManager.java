@@ -27,12 +27,15 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailConfig.Security;
 import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.DataHandler;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailclient.imap.ImapResponse;
+import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.util.Zimbra;
 
 import javax.security.auth.login.LoginException;
@@ -98,7 +101,7 @@ final class ConnectionManager {
      */
     public void releaseConnection(DataSource ds, ImapConnection ic) {
         LOG.debug("Releasing connection: " + ic);
-        if (isReuseConnections(ds) && suspendConnection(ic)) {
+        if (isReuseConnections(ds) && suspendConnection(ds, ic)) {
             if (connections.put(ds.getId(), ic) != null) {
                 throw new AssertionError();
             }
@@ -237,7 +240,7 @@ final class ConnectionManager {
         }
     }
 
-    private static boolean suspendConnection(ImapConnection ic) {
+    private static boolean suspendConnection(DataSource ds, ImapConnection ic) {
         // If IDLE supported then IDLE connection, otherwise just let it sit
         if (ic.isClosed()) {
             return false;
@@ -247,11 +250,11 @@ final class ConnectionManager {
                 if (!ic.isSelected("INBOX")) {
                     ic.select("INBOX");
                 }
-                ic.idle(null);
+                ic.idle(idleHandler(ds));
             } else if (ic.hasUnselect()) {
                 ic.unselect();
             } else {
-                ic.mclose();
+                ic.close_mailbox();
             }
             ic.setReadTimeout(IDLE_READ_TIMEOUT);
             LOG.debug("Suspended connection: " + ic);
@@ -259,6 +262,16 @@ final class ConnectionManager {
             LOG.warn("Error suspending connection", e);
         }
         return true;     
+    }
+
+    private static ResponseHandler idleHandler(final DataSource ds) {
+        return new ResponseHandler() {
+            public void handleResponse(ImapResponse res) throws Exception {
+                if (res.getCCode() == CAtom.EXISTS) {
+                    ds.needsSync(true);
+                }
+            }
+        };
     }
 
     private static boolean resumeConnection(ImapConnection ic) {

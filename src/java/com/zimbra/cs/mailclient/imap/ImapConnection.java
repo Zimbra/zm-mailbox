@@ -257,7 +257,7 @@ public final class ImapConnection extends MailConnection {
         newUidRequest(CAtom.EXPUNGE, seq).sendCheckStatus();
     }
 
-    public synchronized void mclose() throws IOException {
+    public synchronized void close_mailbox() throws IOException {
         newRequest(CAtom.CLOSE).sendCheckStatus();
         mailbox = null;
         setState(State.AUTHENTICATED);
@@ -565,7 +565,9 @@ public final class ImapConnection extends MailConnection {
             }
             assert res.isTagged();
         } catch (IOException e) {
-            getLogger().error("IDLE failed", e);
+            if (!isClosed()) {
+                getLogger().error("IDLE failed", e);
+            }
         }
         synchronized (this) {
             request = null;

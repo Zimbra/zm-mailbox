@@ -128,7 +128,7 @@ final class RemoteFolder {
      */
     public void close() throws IOException {
         if (deleted > 0 && !connection.hasUidPlus()) {
-            connection.mclose();
+            connection.close_mailbox();
         }
     }
 

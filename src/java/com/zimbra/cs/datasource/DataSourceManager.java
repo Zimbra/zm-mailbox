@@ -143,7 +143,7 @@ public class DataSourceManager {
                         cmdClass = ExtensionUtil.findClass(className);
                     }
                     Constructor constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
-                    return (DataImport)constructor.newInstance(new Object[] {ds});
+                    return (DataImport)constructor.newInstance(ds);
                 }
             } catch (Exception x) {
                 ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
@@ -154,15 +154,15 @@ public class DataSourceManager {
                 "Unknown data import type: " + ds.getType());
         }
     }
-    
+
     public static String getDefaultImportClass(DataSource.Type ds) {
-    	switch (ds) {
-    	case caldav:
-    		return CalDavDataImport.class.getName();
-    	case gal:
-    		return GalImport.class.getName();
-    	}
-    	return null;
+        switch (ds) {
+        case caldav:
+            return CalDavDataImport.class.getName();
+        case gal:
+            return GalImport.class.getName();
+        }
+        return null;
     }
 
     /*
@@ -266,8 +266,6 @@ public class DataSourceManager {
                 importStatus.mIsRunning = false;
             }
         }
-        
-        return;
     }
     
     public static void resetErrorStatus(DataSource ds) {

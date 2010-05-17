@@ -446,6 +446,11 @@ public class DataSource extends AccountProperty {
         return DataSourceManager.getInstance().isSyncCapable(this, folder);
     }
 
+    public boolean needsSync(boolean newValue) {
+        // Do nothing by default...
+        return false;
+    }
+
     public String toString() {
         List<String> parts = new ArrayList<String>();
         parts.add("id=" + getId());
