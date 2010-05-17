@@ -38,11 +38,11 @@ public class IDInfo extends TreeMap<String, String> {
 
     public static IDInfo read(ImapInputStream is) throws IOException {
         is.skipSpaces();
+        IDInfo info = new IDInfo();
         if (!is.match('(')) {
             is.skipNil();
-            return null;
+            return info;
         }
-        IDInfo info = new IDInfo();
         while (!is.match(')')) {
             String name = is.readString();
             is.skipChar(' ');
