@@ -270,6 +270,7 @@ public class LC {
     public static final KnownKey zimbra_logger_mysql_password;
 
     public static final KnownKey postfix_alias_maps;
+    public static final KnownKey postfix_always_add_missing_headers;
     public static final KnownKey postfix_broken_sasl_auth_clients;
     public static final KnownKey postfix_bounce_queue_lifetime;
     public static final KnownKey postfix_command_directory;
@@ -1053,6 +1054,9 @@ public class LC {
 
         postfix_alias_maps  = new KnownKey("postfix_alias_maps");
         postfix_alias_maps.setDefault("hash:" + FS + "etc" + FS + "aliases");
+
+        postfix_always_add_missing_headers  = new KnownKey("postfix_always_add_missing_headers");
+        postfix_always_add_missing_headers.setDefault("yes");
 
         postfix_broken_sasl_auth_clients  = new KnownKey("postfix_broken_sasl_auth_clients");
         postfix_broken_sasl_auth_clients.setDefault("yes");
