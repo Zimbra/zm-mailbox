@@ -45,7 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-final class ConnectionManager {
+public final class ConnectionManager {
     private Map<String, ImapConnection> connections =
         Collections.synchronizedMap(new HashMap<String, ImapConnection>());
 
@@ -111,15 +111,19 @@ final class ConnectionManager {
         }
     }
 
+    public void closeConnection(DataSource ds) {
+        closeConnection(ds.getId());
+    }
+
     /**
      * Closes any suspended connection associated with specified data source.
      * This must be called whenever data source is modified or deleted in order
      * to force a reconnect upon next use.
      *
-     * @param ds the data source for the connection
+     * @param dataSourceId the data source id for the connection
      */
-    public void closeConnection(DataSource ds) {
-        ImapConnection ic = connections.remove(ds.getId());
+    public void closeConnection(String dataSourceId) {
+        ImapConnection ic = connections.remove(dataSourceId);
         if (ic != null) {
             LOG.debug("Closing connection: " + ic);
             ic.close();

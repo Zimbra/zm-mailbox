@@ -234,10 +234,16 @@ class ImapFolderSync {
 
         // If not a full sync and there are no new local or remote changes,
         // then no need to continue
-        if (!fullSync && syncState.lastModSeq == mailbox.getLastChangeID() &&
-                         syncState.lastUidNext == mailboxInfo.getUidNext()) {
-            imapSync.putSyncState(localFolder.getId(), syncState);
-            return;
+        MessageChanges changes = null;
+        if (!fullSync) {
+            changes = MessageChanges.getChanges(
+                ds, localFolder.getFolder(), syncState.getLastModSeq());
+            if (!changes.hasChanges() &&
+                mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
+                syncState.setLastModSeq(changes.getModSeq());
+                imapSync.putSyncState(localFolder.getId(), syncState);
+                return;
+            }
         }
 
         // Since know we need we need fetch new messages or sync flags,
@@ -280,7 +286,7 @@ class ImapFolderSync {
             int lastModSeq = syncState.getLastModSeq();
             if (lastModSeq > 0) {
                 // Push only changes for partial sync
-                syncState.setLastModSeq(pushChanges(lastModSeq));
+                syncState.setLastModSeq(pushChanges(changes));
             }
         }
 
@@ -345,102 +351,40 @@ class ImapFolderSync {
         }
     }
 
-    private int pushChanges(int lastModSeq) throws ServiceException, IOException {
-        List<Integer> deletedIds;
-        List<Integer> modifiedIds;
-        int modSeq;
-        synchronized (mailbox) {
-            modSeq = mailbox.getLastChangeID();
-            localFolder.debug("pushChanges: modSeq = %d, lastModSeq = %d", modSeq, lastModSeq);
-            if (modSeq <= lastModSeq) {
-                return lastModSeq; // No changes
-            }
-            deletedIds = mailbox.getTombstones(lastModSeq).getIds(MailItem.TYPE_MESSAGE);
-            modifiedIds = mailbox.getModifiedItems(null, lastModSeq, MailItem.TYPE_MESSAGE).getFirst();
-        }
-        if (deletedIds == null) {
-            deletedIds = new ArrayList<Integer>();
-        }
-        if (modifiedIds != null) {
-            for (int id : modifiedIds) {
-                clearError(id);
-                Message msg;
-                try {
-                    msg = mailbox.getMessageById(null, id);
-                } catch (MailServiceException.NoSuchItemException e) {
-                    continue;
-                }
-                try {
-                    pushModification(msg, deletedIds);
-                } catch (Exception e) {
-                    pushFailed(id, "Push modification failed", e);
-                }
-            }
-        }
-        if (!deletedIds.isEmpty()) {
-            pushDeletes(deletedIds);
-        }
-        return modSeq;
-    }
-
-    private void pushDeletes(List<Integer> deletedIds)
-        throws ServiceException, IOException {
-        int folderId = localFolder.getId();
-        for (int id : deletedIds) {
-            clearError(id);
-            ImapMessage msgTracker = getMsgTracker(id);
-            if (msgTracker != null && msgTracker.getFolderId() == folderId) {
-                deleteMessage(msgTracker.getUid());
-            }
-        }
-    }
-
     /*
      * There are four ways in which a message could have been modified:
      *
-     * 1. Message flags changed
-     * 2. New message added to this folder
-     * 3. Message moved from this folder to another
+     * 1. Message flags changed (UPDATED)
+     * 2. New message added to this folder (ADDED)
+     * 3. Message moved from this folder to another (MOVED)
      * 4. Message moved to this folder from another
      *
      * We can handle cases 1-3 here. Case 4 is the mirror of case 3 so just
      * let it be handled when the originating folder is processed.
      */
-    private void pushModification(Message msg, List<Integer> deletedIds)
-        throws ServiceException, IOException {
-        int folderId = localFolder.getId();
-        int msgId = msg.getId();
-        int msgFolderId = msg.getFolderId();
-
-        ImapMessage msgTracker = getMsgTracker(msgId);
-
-        //LOG.debug("pushModification: folderId=%d, msgFolderId=%d, msgTracker=%s",
-        //    folderId, msgFolderId, msgTracker);
-
-        if (msgTracker != null) {
-            int trackedFolderId = msgTracker.getFolderId();
-            if (msgFolderId == trackedFolderId) {
-                if (trackedFolderId == folderId) {
-                    // Case 1: Message flags changed. Update remote flags.
-                    int flags = msgTracker.getFlags();
-                    updateFlags(msgTracker, SyncUtil.zimbraToImapFlags(flags));
-                } else {
-                    // Case 4: Message moved from another folder. Let move be
-                    // handled when source folder is processed.
+    private int pushChanges(MessageChanges changes) throws ServiceException, IOException {
+        localFolder.debug("Pushing changes: %s", changes);
+        for (MessageChange change : changes.getChanges()) {
+            clearError(change.getItemId());
+            switch (change.getType()) {
+            case DELETED:
+                deleteMessage(change.getTracker().getUid());
+                break;
+            case UPDATED:
+                int flags = change.getTracker().getFlags();
+                updateFlags(change.getTracker(), SyncUtil.zimbraToImapFlags(flags));
+                break;
+            case ADDED:
+                newMsgIds.add(change.getItemId());
+                break;
+            case MOVED:
+                if (!moveMessage(change.getTracker())) {
+                    deleteMessage(change.getTracker().getUid());
                 }
-            } else if (trackedFolderId == folderId) {
-                // Case 3: Message moved to another folder. Try to use COPY
-                // if UIDPLUS available, otherwise just delete the message
-                // remotely and let the new local message be appended when
-                // the destination folder is processed.
-                if (!moveMessage(msgTracker)) {
-                    deletedIds.add(msgId);
-                }
+                break;
             }
-        } else if (msgFolderId == folderId) {
-            // Case 2: New message has been added to this folder
-            newMsgIds.add(msgId);
         }
+        return changes.getModSeq();
     }
 
     public void finishSync() throws ServiceException, IOException {

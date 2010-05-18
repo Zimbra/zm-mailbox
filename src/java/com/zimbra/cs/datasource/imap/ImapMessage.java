@@ -24,7 +24,7 @@ public class ImapMessage extends DataSourceMapping {
     private long uid;
     private static final String METADATA_KEY_FLAGS = "f";
     private static final String METADATA_KEY_UID = "u";
-    
+
     public ImapMessage(DataSource ds, DataSourceItem dsi) throws ServiceException {
         super(ds, dsi);
     }
