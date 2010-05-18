@@ -4859,8 +4859,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Comma separated list of Contact attributes that should be hidden from clients and export of contacts.</desc>
 </attr>
 
-<attr id="1087" name="zimbraCalendarResourceDoubleBookingAllowed" type="boolean" cardinality="single" optionalIn="globalConfig" since="6.0.7">
-  <globalConfigValue>TRUE</globalConfigValue>
+<attr id="1087" name="zimbraCalendarResourceDoubleBookingAllowed" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.7">
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether calendar reasources can be double booked</desc>
 </attr>
 

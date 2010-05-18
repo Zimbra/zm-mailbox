@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100514-1055 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100518-1523 */
 
     /**
      * RFC2256: descriptive information
@@ -4136,78 +4136,6 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetCalendarRecurrenceYearlyMaxYears(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarRecurrenceYearlyMaxYears, "");
-        return attrs;
-    }
-
-    /**
-     * whether calendar reasources can be double booked
-     *
-     * @return zimbraCalendarResourceDoubleBookingAllowed, or true if unset
-     *
-     * @since ZCS 6.0.7
-     */
-    @ZAttr(id=1087)
-    public boolean isCalendarResourceDoubleBookingAllowed() {
-        return getBooleanAttr(Provisioning.A_zimbraCalendarResourceDoubleBookingAllowed, true);
-    }
-
-    /**
-     * whether calendar reasources can be double booked
-     *
-     * @param zimbraCalendarResourceDoubleBookingAllowed new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.7
-     */
-    @ZAttr(id=1087)
-    public void setCalendarResourceDoubleBookingAllowed(boolean zimbraCalendarResourceDoubleBookingAllowed) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarResourceDoubleBookingAllowed, zimbraCalendarResourceDoubleBookingAllowed ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether calendar reasources can be double booked
-     *
-     * @param zimbraCalendarResourceDoubleBookingAllowed new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.7
-     */
-    @ZAttr(id=1087)
-    public Map<String,Object> setCalendarResourceDoubleBookingAllowed(boolean zimbraCalendarResourceDoubleBookingAllowed, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarResourceDoubleBookingAllowed, zimbraCalendarResourceDoubleBookingAllowed ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether calendar reasources can be double booked
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 6.0.7
-     */
-    @ZAttr(id=1087)
-    public void unsetCalendarResourceDoubleBookingAllowed() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarResourceDoubleBookingAllowed, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether calendar reasources can be double booked
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 6.0.7
-     */
-    @ZAttr(id=1087)
-    public Map<String,Object> unsetCalendarResourceDoubleBookingAllowed(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalendarResourceDoubleBookingAllowed, "");
         return attrs;
     }
 
