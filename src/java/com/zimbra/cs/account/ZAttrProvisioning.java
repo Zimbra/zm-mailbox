@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1523 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100518-1543 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1996,7 +1996,7 @@ public class ZAttrProvisioning {
      * Comma separated list of Contact attributes that should be hidden from
      * clients and export of contacts.
      *
-     * @since ZCS 6.0.7
+     * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public static final String A_zimbraContactHiddenAttributes = "zimbraContactHiddenAttributes";

@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1523 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100518-1543 */
 
     /**
      * RFC2256: descriptive information
@@ -4906,7 +4906,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail,vcardUID,vcardURL,vcardXProps" if unset
      *
-     * @since ZCS 6.0.7
+     * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public String getContactHiddenAttributes() {
@@ -4920,7 +4920,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraContactHiddenAttributes new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.7
+     * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public void setContactHiddenAttributes(String zimbraContactHiddenAttributes) throws com.zimbra.common.service.ServiceException {
@@ -4937,7 +4937,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.7
+     * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public Map<String,Object> setContactHiddenAttributes(String zimbraContactHiddenAttributes, Map<String,Object> attrs) {
@@ -4952,7 +4952,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.7
+     * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public void unsetContactHiddenAttributes() throws com.zimbra.common.service.ServiceException {
@@ -4968,7 +4968,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.7
+     * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public Map<String,Object> unsetContactHiddenAttributes(Map<String,Object> attrs) {
