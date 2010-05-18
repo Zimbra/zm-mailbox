@@ -1605,12 +1605,14 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
+        String command = (returnOptions & RETURN_XLIST) != 0 ? "XLIST" : "LIST";
+
         if (selectOptions == 0 && returnOptions == 0 && mailboxNames.size() == 1 && mailboxNames.contains("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
             //         the hierarchy delimiter and the root name of the name given in the reference."
             sendNotifications(true, false);
-            sendUntagged("LIST (\\NoSelect) \"/\" \"\"");
-            sendOK(tag, "LIST completed");
+            sendUntagged(command + " (\\NoSelect) \"/\" \"\"");
+            sendOK(tag, command + " completed");
             return CONTINUE_PROCESSING;
         }
 
@@ -1657,8 +1659,8 @@ abstract class ImapHandler extends ProtocolHandler {
                     // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
                     //              requiring that a user name be included with the Other Users'
                     //              Namespace prefix before listing any other user's mailboxes."
-                    ZimbraLog.imap.info("LIST failed: wildcards not permitted in username " + patternPath);
-                    sendNO(tag, "LIST failed: wildcards not permitted in username");
+                    ZimbraLog.imap.info(command + " failed: wildcards not permitted in username " + patternPath);
+                    sendNO(tag, command + " failed: wildcards not permitted in username");
                     return CONTINUE_PROCESSING;
                 }
 
@@ -1668,7 +1670,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
                 // make sure we can do a  LIST "" "/home/user1"
                 if (owner != null && (ImapPath.NAMESPACE_PREFIX + owner).equalsIgnoreCase(resolvedPath)) {
-                    matches.put(patternPath, "LIST (\\NoSelect) \"/\" " + patternPath.asUtf7String());
+                    matches.put(patternPath, command + " (\\NoSelect) \"/\" " + patternPath.asUtf7String());
                     continue;
                 }
 
@@ -1705,7 +1707,7 @@ abstract class ImapHandler extends ProtocolHandler {
             for (ImapPath path : selected) {
                 for (Pattern pattern : patterns) {
                     if (pathMatches(path, pattern)) {
-                        String hit = "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String();
+                        String hit = command + " (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String();
                         if (status == 0)
                             matches.put(path, hit);
                         else
@@ -1733,7 +1735,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                         parent = cached;  break;
                                     }
                                 }
-                                matches.put(parent, "LIST (" + getFolderAttrs(parent, returnOptions, paths, remoteSubscriptions) + ") \"/\" " +
+                                matches.put(parent, command + " (" + getFolderAttrs(parent, returnOptions, paths, remoteSubscriptions) + ") \"/\" " +
                                                           parent.asUtf7String() + " (CHILDINFO (\"SUBSCRIBED\"))");
                             }
                         }
@@ -1741,8 +1743,8 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
             }
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn("LIST failed", e);
-            sendNO(tag, "LIST failed");
+            ZimbraLog.imap.warn(command + " failed", e);
+            sendNO(tag, command + " failed");
             return canContinue(e);
         }
 
@@ -1758,7 +1760,7 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         sendNotifications(true, false);
-        sendOK(tag, "LIST completed");
+        sendOK(tag, command + " completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -2109,11 +2111,11 @@ abstract class ImapHandler extends ProtocolHandler {
             if (appendHint != null && uvv > 0)
                 appendHint.append("[APPENDUID ").append(uvv).append(' ').append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
         } catch (ServiceException e) {
-            for (AppendMessage append : appends) {
+            for (AppendMessage append : appends)
                 append.cleanup();
-            }
             deleteTags(newTags);
             deleteMessages(mboxobj, createdIds);
+
             String msg = "APPEND failed";
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
                 ZimbraLog.imap.info("APPEND failed: no such folder: " + path);
@@ -2128,6 +2130,8 @@ abstract class ImapHandler extends ProtocolHandler {
                 ZimbraLog.imap.info("APPEND failed: folder not visible: " + path);
             } else if (e.getCode().equals(ImapServiceException.FOLDER_NOT_WRITABLE)) {
                 ZimbraLog.imap.info("APPEND failed: folder not writable: " + path);
+            } else if (e.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
+                ZimbraLog.imap.info("APPEND failed: quota exceeded");
             } else {
                 ZimbraLog.imap.warn("APPEND failed", e);
             }
