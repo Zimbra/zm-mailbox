@@ -114,14 +114,15 @@ DOWNLOAD ZIMBRA SOURCE
 INSTALL MySQL
 =============
 
-1. Download MySQL disk image (mysql-5.1.43-osx10.5-x86_64.dmg)
+1. Download MySQL disk image (mysql-5.1.46-osx10.5-x86_64.dmg)
 
 	* NOTE: This is the version for Mac OS X Leopard (10.5.x). Select the
-	        appropriate image for Snow Leopard (10.6.x) as needed.
+	        appropriate image for Snow Leopard (10.6.x) as needed. Depending
+	        on your machine, you may want the 32-bit version.
 
 2. Install both packages included in the distribution:
 
-	PACKAGE #1: mysql-5.1.43-osx10.5-x86_64.pkg
+	PACKAGE #1: mysql-5.1.46-osx10.5-x86_64.pkg
 		The MySQL binaries install package
 
 	PACKAGE #2: MySQLStartupItem.pkg
@@ -151,7 +152,7 @@ INSTALL MySQL
 
 5. Start MySQL with the following command:
 
-	sudo -b /opt/zimbra/mysql/bin/safe_mysqld --user=mysql
+	sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
 
 	Note: With MySQLStartupItem package installed, mysqld will start automatically on reboot.
 
@@ -212,13 +213,27 @@ command:
 BUILD AND DEPLOY ZIMBRA SERVER
 ==============================
 
-1. Change to the Zimbra server source directory:	cd $SRCDIR/ZimbraServer2. Run the "reset all" ant task:	ant reset-all3. Browse to your local server and login as "Demo User One":	http://localhost:7070/zimbra	Username: user1	Password: test123
+1. Change to the Zimbra server source directory:
+
+	cd $SRCDIR/ZimbraServer
+
+2. Run the "reset all" ant task:
+
+	ant reset-all
+
+3. Browse to your local server and login as "Demo User One":
+
+	http://localhost:7070/zimbra
+
+	Username: user1
+	Password: test123
 
 4. Browse to your local server admin console and login as "Admin":
 
 	https://localhost:7071/zimbraAdmin
 
-	Username: admin	Password: test123
+	Username: admin
+	Password: test123
 
 
 STARTING AND STOPPING SERVERS
@@ -274,35 +289,27 @@ the following commands: [The first time you run CPAN, you
 will need to configure it -- use default settings where
 possible]
 
-<pre>
 sudo -H -s
 cpan
-</pre>
 
 At the CPAN prompt, type the following commands:
 
-<pre>
 install Net::SMTP::Server
 install Net::LMTP
 install Net::DNS
 quit
-</pre>
 
 If you're use Mac OS 10.5 or later, run "sudo visudo"
 and add the following line to the Defaults section:
 
-<pre>
 Defaults        env_keep += "ZIMBRA_HOSTNAME"
-</pre>
 
 to allow ZIMBRA_HOSTNAME to be exported into a sudo
 environment.  Now you can run the Perl MTA with the following
 commands:
 
-<pre>
 export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
 sudo -b perl $SRCDIR/ZimbraServer/src/perl/zMTAHack.pl
-</pre>
 
 NOTE: When sending mail, you need to fully qualify the
 address as {username}@$ZIMBRA_HOSTNAME. The {username} is
