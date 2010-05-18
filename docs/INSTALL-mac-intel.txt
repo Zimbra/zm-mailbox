@@ -289,27 +289,33 @@ the following commands: [The first time you run CPAN, you
 will need to configure it -- use default settings where
 possible]
 
-sudo -H -s
-cpan
+    sudo -H -s
+    cpan
 
 At the CPAN prompt, type the following commands:
 
-install Net::SMTP::Server
-install Net::LMTP
-install Net::DNS
-quit
+    install Net::SMTP::Server
+    install Net::LMTP
+    install Net::DNS
+    quit
+
+If you're behind a firewall, you may have trouble installing those
+modules, even if you configure CPAN to use a proxy. It may be easier
+to wait until you're on an open network. It may also complain about a
+missing header file (.../config.h). To fix that, you can either find a
+copy of it and copy it over, or do a full install of Xcode.
 
 If you're use Mac OS 10.5 or later, run "sudo visudo"
 and add the following line to the Defaults section:
 
-Defaults        env_keep += "ZIMBRA_HOSTNAME"
+    Defaults        env_keep += "ZIMBRA_HOSTNAME"
 
 to allow ZIMBRA_HOSTNAME to be exported into a sudo
 environment.  Now you can run the Perl MTA with the following
 commands:
 
-export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
-sudo -b perl $SRCDIR/ZimbraServer/src/perl/zMTAHack.pl
+    export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
+    sudo -b perl $SRCDIR/ZimbraServer/src/perl/zMTAHack.pl
 
 NOTE: When sending mail, you need to fully qualify the
 address as {username}@$ZIMBRA_HOSTNAME. The {username} is
