@@ -40,10 +40,12 @@ import com.zimbra.cs.db.DbPool.PoolConfig;
 
 public class SQLite extends Db {
 
+    private static final String PRAGMA_JOURNAL_MODE_DEFAULT = "DELETE";
+    private static final String PRAGMA_SYNCHRONOUS_DEFAULT  = "FULL";
+
     private Map<Db.Error, String> mErrorCodes;
     private String cacheSize;
     private String journalMode;
-    private String pageSize;
     private String syncMode;
 
     SQLite() {
@@ -101,13 +103,9 @@ public class SQLite extends Db {
         if (cacheSize.equals("0"))
             cacheSize = null;
         journalMode = LC.sqlite_journal_mode.value();
-        pageSize = LC.sqlite_page_size.value();
-        if (pageSize.equals("0"))
-            pageSize = null;
         syncMode = LC.sqlite_sync_mode.value();
         ZimbraLog.dbconn.info("sqlite driver running with " +
             (cacheSize == null ? "default" : cacheSize) + " cache cache, " +
-            (pageSize == null ? "default" : pageSize) + " page size, " +
             journalMode + " journal mode, " + syncMode + " sync mode");
         super.startup(pool, poolSize);
     }
@@ -138,21 +136,13 @@ public class SQLite extends Db {
          * auto_vacuum causes databases to be locked permanently
          * pragma(conn, dbname, "auto_vacuum", "2");
          */
-        pragma(conn, dbname, "encoding", "\"UTF-8\"");
         pragma(conn, dbname, "foreign_keys", "ON");
-        pragma(conn, dbname, "fullfsync", "OFF");
-        pragma(conn, dbname, "journal_mode", journalMode);
-        pragma(conn, dbname, "synchronous", syncMode);
-
-        if (cacheSize != null) {
+        if (journalMode != null && !journalMode.equalsIgnoreCase(PRAGMA_JOURNAL_MODE_DEFAULT))
+            pragma(conn, dbname, "journal_mode", journalMode);
+        if (syncMode != null && !syncMode.equalsIgnoreCase(PRAGMA_SYNCHRONOUS_DEFAULT))
+            pragma(conn, dbname, "synchronous", syncMode);
+        if (cacheSize != null)
             pragma(conn, dbname, "cache_size", cacheSize);
-            // leaving this uncommented seems to break subsequent PRAGMAs
-            // pragma(conn, dbname, "default_cache_size", cacheSize);
-        }
-        if (pageSize != null) {
-            pragma(conn, dbname, "default_page_size", pageSize);
-            pragma(conn, dbname, "page_size", pageSize);
-        }
     }
 
     private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
