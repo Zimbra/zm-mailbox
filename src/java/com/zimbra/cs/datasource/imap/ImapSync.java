@@ -41,9 +41,9 @@ import java.util.LinkedHashMap;
 import java.util.regex.Pattern;
 
 public class ImapSync extends MailItemImport {
-    private final Folder localRootFolder;
     private final SyncStateManager syncStateManager;
     private ImapConnection connection;
+    private Folder localRootFolder;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private final Map<Integer, ImapFolderSync> syncedFolders;
     private ImapFolderCollection trackedFolders;
@@ -57,7 +57,6 @@ public class ImapSync extends MailItemImport {
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
         validateDataSource();
-        localRootFolder = getMailbox().getFolderById(ds.getFolderId());
         syncStateManager = SyncStateManager.getInstance(ds);
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         reuseConnections = ds.isOffline();
@@ -203,6 +202,7 @@ public class ImapSync extends MailItemImport {
         if (dataSource.isOffline() && fullSync) {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
+        localRootFolder = getMailbox().getFolderById(dataSource.getFolderId());
         trackedFolders = ImapFolder.getFolders(dataSource);
         delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
