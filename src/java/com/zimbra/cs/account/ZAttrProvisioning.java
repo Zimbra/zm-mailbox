@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1543 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100518-1823 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -1505,7 +1505,7 @@ public class ZAttrProvisioning {
      * auth token validation. See description for
      * zimbraAuthTokenValidityValue.
      *
-     * @since ZCS 6.0.8
+     * @since ZCS 6.0.7
      */
     @ZAttr(id=1094)
     public static final String A_zimbraAuthTokenValidityValueEnabled = "zimbraAuthTokenValidityValueEnabled";

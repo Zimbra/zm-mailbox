@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1543 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100518-1823 */
 
     /**
      * RFC2256: descriptive information
@@ -1937,7 +1937,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraAuthTokenValidityValueEnabled, or true if unset
      *
-     * @since ZCS 6.0.8
+     * @since ZCS 6.0.7
      */
     @ZAttr(id=1094)
     public boolean isAuthTokenValidityValueEnabled() {
@@ -1952,7 +1952,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraAuthTokenValidityValueEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.8
+     * @since ZCS 6.0.7
      */
     @ZAttr(id=1094)
     public void setAuthTokenValidityValueEnabled(boolean zimbraAuthTokenValidityValueEnabled) throws com.zimbra.common.service.ServiceException {
@@ -1970,7 +1970,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.8
+     * @since ZCS 6.0.7
      */
     @ZAttr(id=1094)
     public Map<String,Object> setAuthTokenValidityValueEnabled(boolean zimbraAuthTokenValidityValueEnabled, Map<String,Object> attrs) {
@@ -1986,7 +1986,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 6.0.8
+     * @since ZCS 6.0.7
      */
     @ZAttr(id=1094)
     public void unsetAuthTokenValidityValueEnabled() throws com.zimbra.common.service.ServiceException {
@@ -2003,7 +2003,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 6.0.8
+     * @since ZCS 6.0.7
      */
     @ZAttr(id=1094)
     public Map<String,Object> unsetAuthTokenValidityValueEnabled(Map<String,Object> attrs) {
