@@ -581,10 +581,10 @@
     	<delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
-	<delete failonerror="false">
-	    <fileset dir="${jetty.home.dir}/common/lib"
-		includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
-	</delete>
+        <delete dir="${zimbra.home.dir}/third-party-cache" failonerror="false"/>
+        <delete failonerror="false">
+    	    <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
+    	</delete>
     </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
