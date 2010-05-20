@@ -51,9 +51,16 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         Set<String> existing = getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
         Set<String> mods = new HashSet<String>();
         
+        // all addrs of thie DL
+        AddrsOfEntry addrsOfDL = getAllAddressesOfEntry(prov, getName());
+        
         for (int i = 0; i < members.length; i++) { 
             String memberName = members[i].toLowerCase();
             memberName = IDNUtil.toAsciiEmail(members[i]);
+            
+            if (addrsOfDL.isIn(memberName))
+                throw ServiceException.INVALID_REQUEST("Cannot add self as a member: " + memberName, null);
+            
             if (!existing.contains(memberName)) {
                 mods.add(memberName);
 
@@ -217,6 +224,10 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         
         int size() {
             return mAllAddrs.size();
+        }
+        
+        boolean isIn(String addr) {
+            return mAllAddrs.contains(addr.toLowerCase());
         }
     }
     
