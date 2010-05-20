@@ -586,20 +586,20 @@ public class ZCalendar {
             // Write with folding.
             String rawval = sw.toString();
 
-			if (escapeHtmlTags) { // Use only escapeHtmlTags when the file isn't supposed to be downloaded (ie. it's supposed to be shown in the browser)
+            if (escapeHtmlTags) { // Use only escapeHtmlTags when the file isn't supposed to be downloaded (ie. it's supposed to be shown in the browser)
                 w.write(htmlPattern.matcher(rawval).replaceAll("&lt;$1&gt;"));
-			} else {
-		        int len = rawval.length();
-		        for (int i = 0; i < len; i += CHARS_PER_FOLDED_LINE) {
-		            int upto = Math.min(i + CHARS_PER_FOLDED_LINE, len);
-		            String segment = rawval.substring(i, upto);
-		            if (i > 0) {
-		                w.write(LINE_BREAK);
-		                w.write(' ');
-		            }
-		            w.write(segment);
-		        }
-			}
+            } else {
+                int len = rawval.length();
+                for (int i = 0; i < len; i += CHARS_PER_FOLDED_LINE) {
+                    int upto = Math.min(i + CHARS_PER_FOLDED_LINE, len);
+                    String segment = rawval.substring(i, upto);
+                    if (i > 0) {
+                        w.write(LINE_BREAK);
+                        w.write(' ');
+                    }
+                    w.write(segment);
+                }
+            }
             w.write(LINE_BREAK);
         }
 
