@@ -55,9 +55,11 @@ public class AdminFileDownload  extends ZimbraServlet {
     private static final String fileFormat = "fileFormat";
     private static final String fileID = "fileID";
     
-	private static final String FILE_FORMAT_MIGRATION_XML = "migrationxml";
-	private static final String FILE_FORMAT_BULK_XML = "bulkxml";
-	private static final String FILE_FORMAT_BULK_CSV = "csv";
+	public static final String FILE_FORMAT_MIGRATION_XML = "migrationxml";
+	public static final String FILE_FORMAT_BULK_XML = "bulkxml";
+	public static final String FILE_FORMAT_BULK_CSV = "csv";
+	public static final String FILE_FORMAT_BULK_IMPORT_ERRORS = "errorscsv";
+	public static final String FILE_FORMAT_BULK_IMPORT_REPORT = "reportcsv";
 
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -129,6 +131,12 @@ public class AdminFileDownload  extends ZimbraServlet {
             	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_XML)) {
             		bulkFileName = String.format("%s%s_bulk_%s_%s.xml", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
             		clientFileName = "bulk_provision.xml";
+            	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_IMPORT_ERRORS)) {
+            		bulkFileName = String.format("%s%s_bulk_errors_%s_%s.csv", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
+            		clientFileName = "failed_accounts.csv";
+            	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_IMPORT_REPORT)) {
+            		bulkFileName = String.format("%s%s_bulk_report_%s_%s.csv", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
+            		clientFileName = "accounts_report.csv";
             	}
             	if(bulkFileName != null) {
             		InputStream is = null;            	
