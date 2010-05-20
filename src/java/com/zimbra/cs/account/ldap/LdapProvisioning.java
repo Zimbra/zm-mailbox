@@ -357,11 +357,22 @@ public class LdapProvisioning extends Provisioning {
     }  
 
     /**
-     * reload/refresh the entry.
+     * reload/refresh the entry from the ***master***.
      */
     public void reload(Entry e) throws ServiceException
     {    
-        refreshEntry(e, null, this);
+        reload(e, true);
+    }
+    
+    private void reload(Entry e, boolean master) throws ServiceException {
+        
+        ZimbraLdapContext zlc = null;
+        try {
+            new ZimbraLdapContext(master);
+            refreshEntry(e, zlc, this);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
     }
 
     void refreshEntry(Entry entry, ZimbraLdapContext initZlc, LdapProvisioning prov) throws ServiceException {
@@ -6199,7 +6210,7 @@ public class LdapProvisioning extends Provisioning {
             if (entries != null)
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
             Config config = getConfig();
-            reload(config);
+            reload(config, false);
             return;
         case cos:
             if (entries != null) {
@@ -6207,7 +6218,7 @@ public class LdapProvisioning extends Provisioning {
                     CosBy cosBy = (entry.mEntryBy==CacheEntryBy.id)? CosBy.id : CosBy.name;
                     Cos cos = getFromCache(cosBy, entry.mEntryIdentity);
                     if (cos != null)
-                        reload(cos);
+                        reload(cos, false);
                 }
             } else
                 sCosCache.clear();
@@ -6221,7 +6232,7 @@ public class LdapProvisioning extends Provisioning {
                         if (domain instanceof DomainCache.NonExistingDomain)
                             sDomainCache.removeNonExisting(domainBy, entry.mEntryIdentity);
                         else
-                            reload(domain);
+                            reload(domain, false);
                     }
                 }
             } else
@@ -6233,7 +6244,7 @@ public class LdapProvisioning extends Provisioning {
                     ServerBy serverBy = (entry.mEntryBy==CacheEntryBy.id)? ServerBy.id : ServerBy.name;
                     Server server = get(serverBy, entry.mEntryIdentity);
                     if (server != null)
-                        reload(server);
+                        reload(server, false);
                 }
             } else
                 sServerCache.clear();
@@ -6244,7 +6255,7 @@ public class LdapProvisioning extends Provisioning {
                     ZimletBy zimletBy = (entry.mEntryBy==CacheEntryBy.id)? ZimletBy.id : ZimletBy.name;
                     Zimlet zimlet = getFromCache(zimletBy, entry.mEntryIdentity);
                     if (zimlet != null)
-                        reload(zimlet);
+                        reload(zimlet, false);
                 }
             } else
                 sZimletCache.clear();
