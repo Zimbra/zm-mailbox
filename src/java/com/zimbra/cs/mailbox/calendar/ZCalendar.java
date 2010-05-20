@@ -308,6 +308,10 @@ public class ZCalendar {
         }
 
         public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
+            toICalendar(w, needAppleICalHacks, false);
+        }
+
+        public void toICalendar(Writer w, boolean needAppleICalHacks, boolean escapeHtmlTags) throws IOException {
             w.write("BEGIN:");
             String name = escape(mName);
             w.write(name);
@@ -320,7 +324,7 @@ public class ZCalendar {
                 // so there is no loss of functionality.
                 if (needAppleICalHacks && ICalTok.X_ALT_DESC.equals(prop.getToken()))
                     continue;
-                prop.toICalendar(w, needAppleICalHacks);
+                prop.toICalendar(w, needAppleICalHacks, escapeHtmlTags);
             }
 
             for (ZComponent comp : mComponents)
@@ -541,9 +545,13 @@ public class ZCalendar {
         public void toICalendar(Writer w) throws IOException {
             toICalendar(w, false);
         }
-
         public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
+            toICalendar(w, needAppleICalHacks, false);
+        }
+
+        public void toICalendar(Writer w, boolean needAppleICalHacks, boolean escapeHtmlTags) throws IOException {
             StringWriter sw = new StringWriter();
+            Pattern htmlPattern = Pattern.compile("<([^>]+)>");
             
             sw.write(escape(mName));
             for (ZParameter param: mParameters)
@@ -577,16 +585,21 @@ public class ZCalendar {
 
             // Write with folding.
             String rawval = sw.toString();
-            int len = rawval.length();
-            for (int i = 0; i < len; i += CHARS_PER_FOLDED_LINE) {
-                int upto = Math.min(i + CHARS_PER_FOLDED_LINE, len);
-                String segment = rawval.substring(i, upto);
-                if (i > 0) {
-                    w.write(LINE_BREAK);
-                    w.write(' ');
-                }
-                w.write(segment);
-            }
+
+			if (escapeHtmlTags) { // Use only escapeHtmlTags when the file isn't supposed to be downloaded (ie. it's supposed to be shown in the browser)
+                w.write(htmlPattern.matcher(rawval).replaceAll("&lt;$1&gt;"));
+			} else {
+		        int len = rawval.length();
+		        for (int i = 0; i < len; i += CHARS_PER_FOLDED_LINE) {
+		            int upto = Math.min(i + CHARS_PER_FOLDED_LINE, len);
+		            String segment = rawval.substring(i, upto);
+		            if (i > 0) {
+		                w.write(LINE_BREAK);
+		                w.write(' ');
+		            }
+		            w.write(segment);
+		        }
+			}
             w.write(LINE_BREAK);
         }
 

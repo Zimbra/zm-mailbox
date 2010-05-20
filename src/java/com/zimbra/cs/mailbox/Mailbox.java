@@ -3268,9 +3268,17 @@ public class Mailbox {
     }
 
     public synchronized void writeICalendarForCalendarItems(
+        Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
+        boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
+        boolean trimCalItemsList)
+    throws ServiceException {
+            writeICalendarForCalendarItems(writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, trimCalItemsList, false);
+    }
+
+    public synchronized void writeICalendarForCalendarItems(
             Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
             boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
-            boolean trimCalItemsList)
+            boolean trimCalItemsList, boolean escapeHtmlTags)
     throws ServiceException {
         try {
             writer.write("BEGIN:VCALENDAR\r\n");
@@ -3319,7 +3327,7 @@ public class Mailbox {
                     }
                     if (comps != null) {
                         for (ZComponent comp : comps) {
-                            comp.toICalendar(writer, needAppleICalHacks);
+                            comp.toICalendar(writer, needAppleICalHacks, escapeHtmlTags);
                         }
                     }
                 }
@@ -3332,15 +3340,22 @@ public class Mailbox {
     }
 
     public synchronized void writeICalendarForRange(
+        Writer writer, OperationContext octxt, long start, long end, int folderId,
+        boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks)
+    throws ServiceException {
+        writeICalendarForRange(writer, octxt, start, end, folderId, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, false);
+    }
+
+    public synchronized void writeICalendarForRange(
             Writer writer, OperationContext octxt, long start, long end, int folderId,
-            boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks)
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks, boolean escapeHtmlTags)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("writeICalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
             writeICalendarForCalendarItems(
-                    writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, true);
+                    writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, true, escapeHtmlTags);
         } finally {
             endTransaction(success);
         }
