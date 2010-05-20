@@ -394,8 +394,6 @@ public class LC {
     public static final KnownKey zmmtaconfig_enable_config_restarts;
 
     public static final KnownKey zimbra_mailbox_groups;
-    
-    public static final KnownKey debug_mailboxindex_use_new_locking;
 
     public static final KnownKey zimbra_class_provisioning;
     public static final KnownKey zimbra_class_accessmanager;
@@ -1313,9 +1311,6 @@ public class LC {
         
         zimbra_mailbox_groups = new KnownKey("zimbra_mailbox_groups");
         zimbra_mailbox_groups.setDefault("100");
-
-        debug_mailboxindex_use_new_locking = new KnownKey("debug_mailboxindex_use_new_locking");
-        debug_mailboxindex_use_new_locking.setDefault("true");
 
         zimbra_class_provisioning = new KnownKey("zimbra_class_provisioning", "com.zimbra.cs.account.ldap.LdapProvisioning");
         zimbra_class_accessmanager = new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.accesscontrol.ACLAccessManager");
