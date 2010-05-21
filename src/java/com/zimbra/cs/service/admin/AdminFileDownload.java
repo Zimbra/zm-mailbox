@@ -131,7 +131,10 @@ public class AdminFileDownload  extends ZimbraServlet {
             	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_XML)) {
             		bulkFileName = String.format("%s%s_bulk_%s_%s.xml", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
             		clientFileName = "bulk_provision.xml";
-            	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_IMPORT_ERRORS)) {
+            	}  else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_MIGRATION_XML)) {
+            		bulkFileName = String.format("%s%s_migration_%s_%s.xml", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
+            		clientFileName = "bulk_provision.xml";
+            	}  else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_IMPORT_ERRORS)) {
             		bulkFileName = String.format("%s%s_bulk_errors_%s_%s.csv", LC.zimbra_tmp_directory.value(),File.separator,authToken.getAccountId(),pFileId);
             		clientFileName = "failed_accounts.csv";
             	} else if (pFileFormat.equalsIgnoreCase(FILE_FORMAT_BULK_IMPORT_REPORT)) {
