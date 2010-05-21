@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -111,6 +112,7 @@ import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.ZAppointmentResult;
 import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 
@@ -301,6 +303,19 @@ extends Assert {
     throws Exception {
         ZOutgoingMessage msg = getOutgoingMessage(recipientName, subject, body, attachmentUploadId);
         senderMbox.sendMessage(msg, null, false);
+    }
+    
+    public static void saveDraftAndSendMessage(ZMailbox senderMbox, String recipient, String subject, String body, String attachmentUploadId)
+    throws ServiceException {
+        ZOutgoingMessage outgoingDraft = getOutgoingMessage(recipient, subject, body, attachmentUploadId);
+        ZMessage draft = senderMbox.saveDraft(outgoingDraft, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS));
+        
+        ZOutgoingMessage outgoing = getOutgoingMessage(recipient, subject, body, null);
+        if (attachmentUploadId != null) {
+            AttachedMessagePart part = new AttachedMessagePart(draft.getId(), "2", null);
+            outgoing.setMessagePartsToAttach(Arrays.asList(part));
+        }
+        senderMbox.sendMessage(outgoing, null, false);
     }
     
     public static ZOutgoingMessage getOutgoingMessage(String recipient, String subject, String body, String attachmentUploadId)

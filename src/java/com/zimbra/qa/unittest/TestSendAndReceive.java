@@ -253,16 +253,27 @@ public class TestSendAndReceive extends TestCase {
      */
     public void testTextAttachmentLineEnding()
     throws Exception {
+        // Test simple send.
         String content = "I used to think that the day would never come,\n" +
             "I'd see the light in the shade of the morning sun\n";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String attachId = mbox.uploadAttachment("text.txt", content.getBytes(), MimeConstants.CT_TEXT_PLAIN, 5000);
-        String subject = NAME_PREFIX + " testTextAttachmentLineEnding";
+        String subject = NAME_PREFIX + " testTextAttachmentLineEnding 1";
         TestUtil.sendMessage(mbox, USER_NAME, subject, "Testing text attachment", attachId);
 
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         InputStream in = mbox.getRESTResource("?id=" + msg.getId() + "&part=2");
         String attachContent = new String(ByteUtil.getContent(in, content.length()));
+        assertEquals(content, attachContent);
+        
+        // Test save draft and send.
+        attachId = mbox.uploadAttachment("text.txt", content.getBytes(), MimeConstants.CT_TEXT_PLAIN, 5000);
+        subject = NAME_PREFIX + " testTextAttachmentLineEnding 2";
+        TestUtil.saveDraftAndSendMessage(mbox, USER_NAME, subject, "Testing text attachment", attachId);
+
+        msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        in = mbox.getRESTResource("?id=" + msg.getId() + "&part=2");
+        attachContent = new String(ByteUtil.getContent(in, content.length()));
         assertEquals(content, attachContent);
     }
     

@@ -93,6 +93,22 @@ public class ParseMimeMessage {
     static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
 
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
+    
+    /**
+     * Overrides the default transfer encoding and sets the encoding
+     * of text attachments to base64, so that we preserve line endings
+     * (bug 45858).
+     */
+    private static class Base64TextMimeBodyPart
+    extends MimeBodyPart {
+        protected void updateHeaders() throws MessagingException {
+            super.updateHeaders();
+            if (LC.text_attachments_base64.booleanValue() &&
+                Mime.getContentType(this).startsWith(MimeConstants.CT_TEXT_PREFIX)) {
+                setHeader("Content-Transfer-Encoding", "base64");
+            }
+        }
+    }
 
     public static MimeMessage importMsgSoap(Element msgElem) throws ServiceException {
         /* msgElem == "<m>" E_MSG */
@@ -606,20 +622,7 @@ public class ParseMimeMessage {
         String filename = up.getName();
 
         // create the part and override the DataSource's default ctype, if required
-        MimeBodyPart mbp = new MimeBodyPart() {
-            /**
-             * Overrides the default transfer encoding and sets the encoding
-             * of text attachments to base64, so that we preserve line endings
-             * (bug 45858).
-             */
-            protected void updateHeaders() throws MessagingException {
-                super.updateHeaders();
-                if (LC.text_attachments_base64.booleanValue() &&
-                    Mime.getContentType(this).startsWith(MimeConstants.CT_TEXT_PREFIX)) {
-                    setHeader("Content-Transfer-Encoding", "base64");
-                }
-            }
-        };
+        MimeBodyPart mbp = new Base64TextMimeBodyPart();
         
         UploadDataSource uds = new UploadDataSource(up);
         if (ctypeOverride != null && !ctypeOverride.equals(""))
@@ -777,7 +780,7 @@ public class ParseMimeMessage {
         String filename = Mime.getFilename(mp);
         ctxt.incrementSize("part " + filename, mp.getSize());
 
-        MimeBodyPart mbp = new MimeBodyPart();
+        MimeBodyPart mbp = new Base64TextMimeBodyPart();
 
         String ctype = mp.getContentType();
         if (ctype != null) {
