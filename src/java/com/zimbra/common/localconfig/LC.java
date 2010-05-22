@@ -306,6 +306,7 @@ public class LC {
     public static final KnownKey postfix_virtual_mailbox_maps;
     public static final KnownKey postfix_virtual_transport;
 
+    public static final KnownKey sqlite_shared_cache_enabled;
     public static final KnownKey sqlite_cache_size;
     public static final KnownKey sqlite_journal_mode;
     public static final KnownKey sqlite_page_size;
@@ -1158,6 +1159,7 @@ public class LC {
         postfix_virtual_transport  = new KnownKey("postfix_virtual_transport");
         postfix_virtual_transport.setDefault("error");
 
+        sqlite_shared_cache_enabled = new KnownKey("sqlite_shared_cache_enabled", "false");
         sqlite_cache_size = new KnownKey("sqlite_cache_size", "2000");
         sqlite_journal_mode = new KnownKey("sqlite_journal_mode", "PERSIST");
         sqlite_page_size = new KnownKey("sqlite_page_size", "4096");
