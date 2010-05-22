@@ -343,7 +343,8 @@ public class SQLite extends Db {
 
         private Properties getSQLiteProperties() {
             Properties props = new Properties();
-            props.setProperty("shared_cache", "true");
+            if (LC.sqlite_shared_cache_enabled.booleanValue())
+                props.setProperty("shared_cache", "true");
             return props;
         }
     }
