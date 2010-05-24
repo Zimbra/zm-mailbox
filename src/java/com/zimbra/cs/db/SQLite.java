@@ -152,7 +152,7 @@ public class SQLite extends Db {
             pragma(conn, dbname, "page_size", pageSize);
     }
 
-    private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
+    private static final int DEFAULT_CONNECTION_POOL_SIZE = 6;
 
     private static final int MAX_ATTACHED_DATABASES = readConfigInt("sqlite_max_attached_databases", "max # of attached databases", 7);
 
