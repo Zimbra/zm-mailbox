@@ -1160,7 +1160,7 @@ public class LC {
         postfix_virtual_transport.setDefault("error");
 
         sqlite_shared_cache_enabled = new KnownKey("sqlite_shared_cache_enabled", "false");
-        sqlite_cache_size = new KnownKey("sqlite_cache_size", "2000");
+        sqlite_cache_size = new KnownKey("sqlite_cache_size", "500");
         sqlite_journal_mode = new KnownKey("sqlite_journal_mode", "PERSIST");
         sqlite_page_size = new KnownKey("sqlite_page_size", "4096");
         sqlite_sync_mode = new KnownKey("sqlite_sync_mode", "NORMAL");
