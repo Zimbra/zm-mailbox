@@ -489,6 +489,7 @@ public class LC {
     // http client read timeouts
     public static final KnownKey httpclient_soaphttptransport_retry_count;
     public static final KnownKey httpclient_soaphttptransport_so_timeout;
+    public static final KnownKey cli_httpclient_soaphttptransport_so_timeout;
     
     // convertd
     public static final KnownKey httpclient_convertd_so_timeout;
@@ -1487,6 +1488,14 @@ public class LC {
                 "httpclient_soaphttptransport_so_timeout", 
                 Long.toString(300 * Constants.MILLIS_PER_SECOND),
                 "socket timeout in milliseconds for SOAP clients using the SoapHttpTransport class");
+        
+        // Bug: 47051
+        // Known key for the CLI utilities SOAP HTTP transport timeout.
+        // The default value is set to 0 i.e. no timeout.
+        cli_httpclient_soaphttptransport_so_timeout = new KnownKey(
+            "cli_httpclient_soaphttptransport_so_timeout", 
+            "0",
+            "socket timeout in milliseconds for cli utilities SOAP clients using the SoapHttpTransport class");
         
         httpclient_convertd_so_timeout = new KnownKey(
                 "httpclient_convertd_so_timeout", 
