@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1823 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100525-1214 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -22467,7 +22467,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22479,7 +22480,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22491,7 +22493,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22506,7 +22509,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22522,7 +22526,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22537,7 +22542,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22553,7 +22559,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -22567,7 +22574,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *

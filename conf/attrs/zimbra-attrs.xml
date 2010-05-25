@@ -922,9 +922,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>SSL port for end-user UI</desc>
 </attr>
 
-<attr id="167" name="zimbraPrefContactsInitialView" type="enum" value="cards,list" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="167" name="zimbraPrefContactsInitialView" type="enum" value="cards,list" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="6.0.5">
   <defaultCOSValue>list</defaultCOSValue>
   <desc>initial contact view to use</desc>
+  <deprecateDesc>We do not support cards view any more.  See bug 47439</deprecateDesc>
 </attr>
 
 <attr id="168" name="zimbraTableMaintenanceMinRows" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="4.5.7">

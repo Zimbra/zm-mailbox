@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1823 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100525-1214 */
 
     public static enum AccountCalendarUserType {
         USER("USER"),
@@ -5493,7 +5493,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefContactsDisableAutocompleteOnContactGroupMembers = "zimbraPrefContactsDisableAutocompleteOnContactGroupMembers";
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      */
     @ZAttr(id=167)
     public static final String A_zimbraPrefContactsInitialView = "zimbraPrefContactsInitialView";

@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100518-1823 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100525-1214 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -16300,7 +16300,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16312,7 +16313,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16324,7 +16326,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16339,7 +16342,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16355,7 +16359,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16370,7 +16375,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16386,7 +16392,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
@@ -16400,7 +16407,8 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * initial contact view to use
+     * Deprecated since: 6.0.5. We do not support cards view any more. See
+     * bug 47439. Orig desc: initial contact view to use
      *
      * <p>Valid values: [list, cards]
      *
