@@ -333,8 +333,22 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * reload/refresh the entry.
+     * 
+     * (LdapProvisioning will reload the entry from the master)
      */
     public abstract void reload(Entry e) throws ServiceException;
+    
+
+    /**
+     * reload/refresh the entry.
+     * 
+     * @param e
+     * @param fromMaster whether to reload the entry from the master 
+     * @throws ServiceException
+     */
+    public void reload(Entry e, boolean fromMaster) throws ServiceException {
+        reload(e);
+    }
 
     /**
      * @return the domain this account, or null if an admin account. 

@@ -484,21 +484,6 @@ public abstract class AuthProvider {
         return false;
     }
     
-    /**
-     * 
-     * @param prov
-     * @param acct
-     * @param at
-     * @return     true if the the validity checking is OK (either disabled or passed checking)
-     *             false otherwise 
-     */
-    public static boolean checkAuthTokenValidityValue(Provisioning prov, Account acct, AuthToken at) throws ServiceException {
-        if (!prov.getConfig().isAuthTokenValidityValueEnabled())
-            return true;
-        
-        return (acct.getAuthTokenValidityValue() == at.getValidityValue());
-    }
-    
     public static Account validateAuthToken(Provisioning prov, AuthToken at, boolean addToLoggingContext) throws ServiceException {
         if (prov == null)
             prov = Provisioning.getInstance();
@@ -529,7 +514,7 @@ public abstract class AuthProvider {
          */
         if (acct == null || 
             !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
-            !checkAuthTokenValidityValue(prov, acct, at))
+            !acct.checkAuthTokenValidityValue(at))
             throw ServiceException.AUTH_EXPIRED();
         
         return acct;

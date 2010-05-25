@@ -369,7 +369,7 @@ public class SoapEngine {
                     if (account == null)
                         return soapFault(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
 
-                    if (!AuthProvider.checkAuthTokenValidityValue(prov, account, at))    
+                    if (!account.checkAuthTokenValidityValue(at))    
                         return soapFault(soapProto, "invalid validity value", ServiceException.AUTH_EXPIRED());
                     
                     if (delegatedAuth && account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))

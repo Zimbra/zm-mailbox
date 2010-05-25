@@ -23,7 +23,6 @@ import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.auth.AuthContext;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -296,6 +295,95 @@ public class Account extends ZAttrAccount implements GroupedEntry {
             addrs[i+1] = aliases[i];
         
         return addrs;
+    }
+    
+    /**
+     * 
+     * @param prov
+     * @param acct
+     * @param at
+     * @return     true if the the validity checking is OK (either disabled or passed checking)
+     *             false otherwise 
+     */
+    public boolean checkAuthTokenValidityValue(AuthToken at) throws ServiceException {
+        if (!getProvisioning().getConfig().isAuthTokenValidityValueEnabled())
+            return true;
+        
+        int acctValue = getAuthTokenValidityValue();
+        int authTokenValue = at.getValidityValue();
+        
+        if (acctValue == authTokenValue)
+            return true;
+        
+        ZimbraLog.account.debug("checkAuthTokenValidityValue: validity value on account = " + acctValue + 
+                ", validity value on auth token = " + authTokenValue);
+        
+        if (acctValue < authTokenValue) {
+            /* bug 46287
+             * 
+             * If the validity value in the auth token is higher(i.e. newer) than the 
+             * zimbraAuthTokenValidityValue on the account, the password had probably 
+             * changed on another server.   (Note: ChangePassword does *not* get proxied 
+             * to the home server, so even if this is the home server of the account, our 
+             * zimbraAuthTokenValidityValue on the account can be behind.) 
+             * 
+             * If this is the case, we reload the account from LDAP replica.
+             * Note: for this reload, we reload from replica just like a regular caching reload.  
+             * If the replica is slow(which is a system error to be corrected, and is orthogonal 
+             * to the problem we are trying to solve), so be it - it is a generic/documented behavior.
+             * 
+             * To defend against LDAP fluke (slow replica, someone directly modifies LDAP, etc) 
+             * so that we don't stuck in a situation repeatedly pounding LDAP, we remember the 
+             * highest validity value for which we have done the reload.   Do the reload only when 
+             * we have not yet reloaded the account during its life in cache for a validity value as 
+             * high as the one in this auth token.
+             * 
+             * e.g. - req 1
+             *        - account.zimbraAuthTokenValidityValue is 1
+             *        - autoToken.ValidityValue is 3
+             *        - we have not reloaded, so go ahead reload the account
+             *        - after the reload account.zimbraAuthTokenValidityValue is still not 3 (e.g is 1 or 2)
+             *          (should not happen, but people can modify LDAP data outside zimbra or 
+             *           there could be a slow replica, etc)
+             *      
+             *        - record that we have reloaded for validity value 3
+             *        - reject the auth token 
+             *       
+             *      - req 2 
+             *        - account.zimbraAuthTokenValidityValue is still 1  
+             *        - autoToken.ValidityValue is 3
+             *        - we do *not* reload again this time, since we already tried.
+             *        - reject the auth token
+             *
+             *      - req 3 
+             *        - account.zimbraAuthTokenValidityValue is still 1  
+             *        - autoToken.ValidityValue is 4
+             *        - the highest validity value we've tried reloading for is 3, so do
+             *          the reload again.
+             *        - reloaded account.zimbraAuthTokenValidityValue is 4
+             *        - remember that we have reloaded for validity value 4
+             *        - accept the auth token
+             */
+            Integer highestReloadedFor = (Integer)getCachedData(EntryCacheDataKey.ACCOUNT_VALIDITY_VALUE_HIGHEST_RELOAD.getKeyName());
+            boolean willReload = (highestReloadedFor == null) || (highestReloadedFor < authTokenValue);
+
+            ZimbraLog.account.debug("checkAuthTokenValidityValue: highest validity value reloaded for = " + highestReloadedFor +
+                    ", will reload = " + willReload);
+            
+            if (willReload) {
+                ZimbraLog.account.debug("checkAuthTokenValidityValue: reloading account " + getName() + " for validity value " + authTokenValue);
+                getProvisioning().reload(this, false); // reload from replica
+                setCachedData(EntryCacheDataKey.ACCOUNT_VALIDITY_VALUE_HIGHEST_RELOAD.getKeyName(), 
+                    Integer.valueOf(authTokenValue));
+                
+                // validate the value again
+                acctValue = getAuthTokenValidityValue();
+                ZimbraLog.account.debug("checkAuthTokenValidityValue: validity value on account after reload = " + acctValue);
+                return (acctValue == authTokenValue);
+            }
+        } 
+      
+        return false;
     }
     
 }

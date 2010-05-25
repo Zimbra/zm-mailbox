@@ -364,7 +364,8 @@ public class LdapProvisioning extends Provisioning {
         reload(e, true);
     }
     
-    private void reload(Entry e, boolean master) throws ServiceException {
+    @Override
+    public void reload(Entry e, boolean master) throws ServiceException {
         
         ZimbraLdapContext zlc = null;
         try {
