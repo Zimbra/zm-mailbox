@@ -22,11 +22,7 @@ import org.apache.commons.cli.Option;
 
 public class CliUtil {
     public static void toolSetup() {
-        toolSetup("INFO");
-        
-        // Bug: 47051
-        // for the CLI utilities we need to disable HTTP soap client timeout.
-        LC.httpclient_soaphttptransport_so_timeout.setDefault(LC.cli_httpclient_soaphttptransport_so_timeout.longValue());  
+        toolSetup("INFO"); 
     }
 
     public static void toolSetup(String defaultLogLevel) {
@@ -36,6 +32,10 @@ public class CliUtil {
     public static void toolSetup(String defaultLogLevel, String logFile, boolean showThreads) {
         ZimbraLog.toolSetupLog4j(defaultLogLevel, logFile, showThreads);
         SocketFactories.registerProtocols();
+        
+        // Bug: 47051
+        // for the CLI utilities we need to disable HTTP soap client timeout.
+        LC.httpclient_soaphttptransport_so_timeout.setDefault(LC.cli_httpclient_soaphttptransport_so_timeout.longValue()); 
     }
 
     /**
