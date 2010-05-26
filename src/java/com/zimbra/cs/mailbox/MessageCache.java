@@ -70,10 +70,6 @@ public class MessageCache {
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
     
-    static {
-        ZimbraLog.test.info("Using MessageCache that contains the fix for bug 47522");
-    }
-    
     private static Map<String, CacheNode> mCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
     private static int mTotalSize = 0;
     private static int mMaxCacheSize;
