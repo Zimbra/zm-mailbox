@@ -86,6 +86,7 @@
     <property name="deploy.port" value="7070"/>
     <property name="ldap.host" value="127.0.0.1"/>
     <property name="ldap.port" value="389"/>
+	<property name="ldap.service.windows" value="CDSSilverSlapd" />
     
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
@@ -1566,7 +1567,7 @@
     <target name="stop-ldap-windows" if="is-windows">
         <exec executable="net">
             <arg value="stop"/>
-            <arg value="CDSSilverSlapd"/>
+            <arg value="${ldap.service.windows}"/>
         </exec>
     </target>
 
@@ -1589,7 +1590,7 @@
     <target name="start-ldap-windows" if="is-windows">
         <exec executable="net">
             <arg value="start"/>
-            <arg value="CDSSilverSlapd"/>
+            <arg value="${ldap.service.windows}"/>
         </exec>
     </target>
 
