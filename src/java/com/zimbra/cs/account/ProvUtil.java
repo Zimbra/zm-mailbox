@@ -66,7 +66,6 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
@@ -2781,7 +2780,7 @@ public class ProvUtil implements HttpDebugListener {
     }
     
     public static void main(String args[]) throws IOException, ParseException, ServiceException {
-        // CliUtil.toolSetup();
+        CliUtil.setCliSoapHttpTransportTimeout();
         ZimbraLog.toolSetupLog4jConsole("INFO", true, false); // send all logs to stderr
         SocketFactories.registerProtocols();
         

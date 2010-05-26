@@ -41,6 +41,7 @@ import org.apache.log4j.Logger;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -353,6 +354,9 @@ public class PlaybackUtil {
     }
 
     public static void main(String[] cmdlineargs) throws Throwable {
+        // Bug: 47051
+        // for the CLI utilities we need to set the default soap http transport timeout to 0 (no timeout).
+        CliUtil.setCliSoapHttpTransportTimeout();
         setup();
         try {
             CommandLine cl = parseArgs(cmdlineargs);
