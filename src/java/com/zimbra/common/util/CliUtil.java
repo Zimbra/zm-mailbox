@@ -37,6 +37,15 @@ public class CliUtil {
         // for the CLI utilities we need to disable HTTP soap client timeout.
         LC.httpclient_soaphttptransport_so_timeout.setDefault(LC.cli_httpclient_soaphttptransport_so_timeout.longValue()); 
     }
+    
+    /**
+     * Sets up the default value in local configuration cache for httpclient_soaphttptransport_so_timeout
+     * for CLI utilities. Use cli_httpclient_soaphttptransport_so_timeout configuration key to 
+     * override the default using local configuration file.
+     */
+    public static void setCliSoapHttpTransportTimeout() {
+        LC.httpclient_soaphttptransport_so_timeout.setDefault(LC.cli_httpclient_soaphttptransport_so_timeout.longValue());
+    }
 
     /**
      * Looks up an <tt>Option</tt> by its short or long name.  This workaround is necessary
