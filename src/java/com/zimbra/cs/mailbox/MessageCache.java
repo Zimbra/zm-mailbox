@@ -56,7 +56,7 @@ public class MessageCache {
      * </ul>
      */
     private static enum ConvertedState { RAW, EXPANDED, BOTH };
-    private static final int STREAMED_MESSAGE_SIZE = 4096;
+    public static final int STREAMED_MESSAGE_SIZE = 4096;
 
     private static final class CacheNode {
         long mSize;
@@ -69,6 +69,10 @@ public class MessageCache {
     }
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
+    
+    static {
+        ZimbraLog.test.info("Using MessageCache that contains the fix for bug 47522");
+    }
     
     private static Map<String, CacheNode> mCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
     private static int mTotalSize = 0;
@@ -118,7 +122,7 @@ public class MessageCache {
         if (cnode == null) {
             ZimbraLog.cache.debug("msgcache: attempted to purge %s but could not find it in the cache.", digest);
         } else {
-            ZimbraLog.cache.debug("msgcache: purged %s, size=%d.", digest, cnode.mSize);
+            ZimbraLog.cache.debug("msgcache: purged %s, size=%d.  Cache size is now %d.", digest, cnode.mSize, mTotalSize);
         }
     }
     
@@ -317,6 +321,25 @@ public class MessageCache {
         CacheNode cnode = new CacheNode(STREAMED_MESSAGE_SIZE, msg, ConvertedState.BOTH);
         cacheItem(digest, cnode);
     }
+    
+    public static int getNumBytes() {
+        synchronized (mCache) {
+            return mTotalSize;
+        }
+    }
+    
+    public static int getNumMessages() {
+        synchronized (mCache) {
+            return mCache.size();
+        }
+    }
+    
+    public static void clear() {
+        synchronized (mCache) {
+            mCache.clear();
+            mTotalSize = 0;
+        }
+    }
 
     private static void cacheItem(String key, CacheNode cnode) {
         if (cnode.mSize >= mMaxCacheSize) {
@@ -325,7 +348,12 @@ public class MessageCache {
         }
         
         synchronized (mCache) {
-            mCache.put(key, cnode);
+            CacheNode oldNode = mCache.put(key, cnode);
+            if (oldNode != null) {
+                mTotalSize -= oldNode.mSize;
+                ZimbraLog.cache.debug("msgcache: found existing node for %s: size=%d.  Discarding the old version.  Cache size is now %d.",
+                    key, oldNode.mSize, mTotalSize);
+            }
             mTotalSize += cnode.mSize;
             ZimbraLog.cache.debug("msgcache: caching %s message: size=%d, digest=%s.  Cache size is now %d.",
                 (cnode.mContent != null ? "raw" : "mime"), cnode.mSize, key, mTotalSize);
