@@ -27,12 +27,13 @@ import com.zimbra.cs.mailbox.Tag;
 public class ItemData {
     public String sender, extra, flags, path, tags;
     public MailItem.UnderlyingData ud;
+    private String tagsOldFmt = null;
     
     private static enum Keys {
         id, type, parent_id, folder_id, index_id, imap_id, date, size,
         volume_id, blob_digest, unread, flags, tags, subject, name,
         metadata, mod_metadata, change_date, mod_content,
-        sender, ExtraStr, FlagStr, Path, TagStr, Ver
+        sender, ExtraStr, FlagStr, Path, TagStr, TagNames, Ver
     }
 
     public ItemData(MailItem mi) throws IOException {
@@ -45,6 +46,7 @@ public class ItemData {
             extra = userData;
             flags = mi.getFlagString();
             path = mi.getPath();
+            tagsOldFmt = mi.getTagString();
             tags = getTagString(mi);
             ud = mi.getUnderlyingData();
         } catch (Exception e) {
@@ -91,7 +93,7 @@ public class ItemData {
             extra = json.optString(Keys.ExtraStr.toString());
             flags = json.optString(Keys.FlagStr.toString());
             path = json.optString(Keys.Path.toString());
-            tags = json.optString(Keys.TagStr.toString());
+            getTagsFromJson(json);
         } catch (JSONException e) {
             throw new IOException("decode error: " + e);
         }
@@ -129,7 +131,8 @@ public class ItemData {
                 putOpt(Keys.ExtraStr.toString(), extra).
                 putOpt(Keys.FlagStr.toString(), flags).
                 put(Keys.Path.toString(), path).
-                putOpt(Keys.TagStr.toString(), tags).
+                putOpt(Keys.TagStr.toString(), tagsOldFmt).
+                putOpt(Keys.TagNames.toString(), tags).
                 put(Keys.Ver.toString(), Metadata.CURRENT_METADATA_VERSION);
         } catch (Exception e) {
             throw new IOException("encode error: " + e);
@@ -152,18 +155,36 @@ public class ItemData {
         }
     }
 
-    public static String getTagString(MailItem mi) throws IOException {
+    private String getTagString(MailItem mi) throws IOException {
         String tags = "";
 
         try {
             for (Tag tag : mi.getTagList()) {
-                if (tags != null)
+                if (tags.length() > 0)
                     tags += ':';
-                    tags += tag.getName();
-                }
+                tags += tag.getName();
+            }
         } catch (Exception e) {
             throw new IOException("tag error: " + e);
         }
         return tags;
+    }
+    
+    private boolean isOldTags() {
+        return tags.length() > 0 && Character.isDigit(tags.charAt(0)) && tags.indexOf(":") == -1;
+    }
+    
+    private void getTagsFromJson(JSONObject json) {
+        tags = json.optString(Keys.TagNames.toString()); // 6.0.7+ format (TagNames="<tag-name>[:<tag-name>]")
+        if (tags.length() == 0) {
+            // either 6.0.6 format (TagStr=":<tag-name>[:<tag-name>]"), or pre-6.0.6 format (TagStr="<tag int>[,<tag int>]")
+            tags = json.optString(Keys.TagStr.toString()); 
+            if (isOldTags()) // is pre-6.0.6
+                tagsOldFmt = tags;
+        }
+    }
+    
+    public boolean tagsEqual(MailItem mi) throws IOException {
+        return isOldTags() ? tags.equals(mi.getTagString()) : tags.equals(getTagString(mi));
     }
 }

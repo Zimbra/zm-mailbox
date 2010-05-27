@@ -1312,8 +1312,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     mbox.setColor(oc, newItem.getId(), newItem.getType(),
                         mi.getColor());
                 
-                if (!id.flags.equals(newItem.getFlagString()) ||
-                    !id.tags.equals(ItemData.getTagString(newItem)))
+                if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem))
                     mbox.setTags(oc, newItem.getId(), newItem.getType(),
                         Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
                         null);
@@ -1321,8 +1320,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (mi.getColor() != oldItem.getColor())
                     mbox.setColor(oc, oldItem.getId(), oldItem.getType(),
                         mi.getColor());
-                if (!id.flags.equals(oldItem.getFlagString()) ||
-                    !id.tags.equals(ItemData.getTagString(oldItem)))
+                if (!id.flags.equals(oldItem.getFlagString()) || !id.tagsEqual(oldItem))
                     mbox.setTags(oc, oldItem.getId(), oldItem.getType(),
                         Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
                         null);
