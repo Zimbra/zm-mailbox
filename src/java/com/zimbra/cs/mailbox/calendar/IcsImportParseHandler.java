@@ -136,7 +136,11 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     }
 
     public void propertyValue(String value) throws ParserException { 
-        mCurProperty.mValue = value;
+        ICalTok token = mCurProperty.getToken();
+        if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token))
+            mCurProperty.setValueList(ZCalendar.parseCommaSepText(value));
+        else
+            mCurProperty.setValue(ZCalendar.unescape(value));
         if (mComponents.size() == 0) {
             if (ICalTok.METHOD.equals(mCurProperty.getToken()))
                 mMethod = value;
@@ -151,7 +155,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
 
     public void endProperty(String name) { mCurProperty = null; }
 
-    public void parameter(String name, String value) { 
+    public void parameter(String name, String value) {
         ZParameter param = new ZParameter(name, value);
         if (mCurProperty != null) {
             mCurProperty.mParameters.add(param);

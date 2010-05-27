@@ -118,7 +118,7 @@ public abstract class CalendarUser {
 
         for (Iterator<ZParameter> paramIter = prop.parameterIterator(); paramIter.hasNext(); ) {
             ZParameter param = paramIter.next();
-            if (param.mTok == null) {
+            if (param.getToken() == null) {
                 String name = param.getName();
                 if (name.startsWith("X-") || name.startsWith("x-"))
                     addXParam(param);

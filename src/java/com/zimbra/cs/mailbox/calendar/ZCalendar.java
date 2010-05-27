@@ -313,8 +313,7 @@ public class ZCalendar {
 
         public void toICalendar(Writer w, boolean needAppleICalHacks, boolean escapeHtmlTags) throws IOException {
             w.write("BEGIN:");
-            String name = escape(mName);
-            w.write(name);
+            w.write(mName);
             w.write(LINE_BREAK);
             
             for (ZProperty prop : mProperties) {
@@ -331,7 +330,7 @@ public class ZCalendar {
                 comp.toICalendar(w, needAppleICalHacks);
             
             w.write("END:");
-            w.write(name);
+            w.write(mName);
             w.write(LINE_BREAK);
         }
 
@@ -372,7 +371,7 @@ public class ZCalendar {
     }
     
     private static final Pattern SIMPLE_ESCAPED = Pattern.compile("\\\\([,;\"\\\\])");
-    private static final Pattern NEWLINE_ESCAPED = Pattern.compile("\\\\n");
+    private static final Pattern NEWLINE_ESCAPED = Pattern.compile("\\\\[nN]");
 
 
     public static String unescape(String str) {
@@ -381,33 +380,6 @@ public class ZCalendar {
             return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\r\n"); 
         }
         return str;
-    }
-
-
-    // From RFC2445, Section 4.1 Content Lines:
-    //
-    // param-value = paramtext / quoted-string
-    // paramtext = *SAFE-CHAR
-    // quoted-string = DQUOTE *QSAFE-CHAR DQUOTE
-    // NON-US-ASCII = %x80-F8
-    // QSAFE-CHAR = WSP / %x21 / %x23-7E / NON-US-ASCII
-    // ; Any character except CTLs and DQUOTE
-    // SAFE-CHAR  = WSP / %x21 / %x23-2B / %x2D-39 / %x3C-7E
-    //              / NON-US-ASCII
-    // ; Any character except CTLs, DQUOTE, ";", ":", ","
-    // CTL = %x00-08 / %x0A-1F / %x7F
-    //
-    // Thus a parameter value cannot contain CTLs or DQUOTE.
-    // When a value has to be quoted, there is no need to escape
-    // DQUOTE because it may not occur in the value.
-    //
-    private static final Pattern MUST_QUOTE = Pattern.compile("[;:,]");
-
-    public static String quote(String str) {
-        if (str != null && MUST_QUOTE.matcher(str).find())
-        	return "\"" + str + "\"";
-        else
-	        return str;
     }
 
     public static String unquote(String str) {
@@ -493,10 +465,13 @@ public class ZCalendar {
         }
         
         public void setName(String name) {
-            mName = unescape(name.toUpperCase());
+            mName = name.toUpperCase();
         }
         public void setValue(String value) {
-            mValue = unescape(value);
+            mValue = value;
+        }
+        public void setValueList(List<String> valueList) {
+            mValueList = valueList;
         }
         
         
@@ -519,7 +494,7 @@ public class ZCalendar {
         public String paramVal(ICalTok tok, String defaultValue) { 
             ZParameter param = getParameter(tok);
             if (param != null) {
-                return unquote(param.getValue());
+                return param.getValue();
             }
             return defaultValue;
         }
@@ -553,12 +528,15 @@ public class ZCalendar {
             StringWriter sw = new StringWriter();
             Pattern htmlPattern = Pattern.compile("<([^>]+)>");
             
-            sw.write(escape(mName));
+            sw.write(mName);
             for (ZParameter param: mParameters)
                 param.toICalendar(sw, needAppleICalHacks);
 
             sw.write(':');
-            if (mValue != null) {
+            if (ICalTok.CATEGORIES.equals(mTok) || ICalTok.RESOURCES.equals(mTok)) {
+                if (mValueList != null)
+                    sw.write(toCommaSepText(mValueList));
+            } else if (mValue != null) {
                 String value = mValue;
                 boolean noEscape = false;
                 if (mTok != null) {
@@ -567,7 +545,6 @@ public class ZCalendar {
                     case EXRULE:
                     case RDATE:
                     case EXDATE:
-                    case CATEGORIES:
                     case GEO:
                         noEscape = true;
                         break;
@@ -606,13 +583,15 @@ public class ZCalendar {
         public ICalTok getToken() { return mTok; }  // may be null
         public String getName() { return mName; }
         public String getValue() { return mValue; }
+        public List<String> getValueList() { return mValueList; }
         public long getLongValue() { return Long.parseLong(mValue); };
         public int getIntValue() { return Integer.parseInt(mValue); };
         public boolean getBoolValue() { return mValue.equalsIgnoreCase("TRUE"); }
         
-        ICalTok mTok;
-        String mName;
-        String mValue;
+        private ICalTok mTok;
+        private String mName;
+        private String mValue;
+        private List<String> mValueList;  // used only for CATEGORIES and RESOURCES properties
     }
     
     /**
@@ -639,10 +618,10 @@ public class ZCalendar {
         }
         
         public void setName(String name) {
-            mName = unescape(name.toUpperCase());
+            mName = name.toUpperCase();
         }
         public void setValue(String value) {
-            maValue = unescape(unquote(value));
+            maValue = value;
         }
 
         public String toString() {
@@ -660,20 +639,10 @@ public class ZCalendar {
 
         public void toICalendar(Writer w, boolean needAppleICalHacks) throws IOException {
             w.write(';');
-            w.write(escape(mName));
+            w.write(mName);
             w.write('=');
             if (maValue == null || maValue.length()==0) {
                 w.write("\"\""); // bug 4941: cannot put a completely blank parameter value, will confuse parsers
-            } else if (ICalTok.CN.equals(mTok)) {
-                // Outlook special:
-                // Outlook's MIME parser chokes when CN value containing
-                // characters with high bit set isn't quoted, even though it is
-                // not necessary to quote according to RFC2445.
-                w.write(sanitizeParamValue(maValue));
-            } else if (maValue.startsWith("\"") && maValue.endsWith("\"")) {
-                w.write('\"');
-                w.write(escape(maValue.substring(1, maValue.length()-1)));
-                w.write('\"');
             } else if (ICalTok.TZID.equals(mTok)) {
                 String value = maValue;
                 if (needAppleICalHacks) {
@@ -686,15 +655,9 @@ public class ZCalendar {
                 // property value).  It's an Entourage bug, but we have to
                 // keep it happy with a hacky quoting policy.
                 boolean entourageCompat = LC.calendar_entourage_compatible_timezones.booleanValue();
-                if (entourageCompat) {
-                    w.write('\"');
-                    w.write(value);
-                    w.write('\"');
-                } else {
-                    w.write(quote(value));
-                }
+                w.write(quote(value, entourageCompat));
             } else {
-                w.write(quote(maValue));
+                w.write(quote(maValue, false));
             }
         }
         
@@ -704,9 +667,9 @@ public class ZCalendar {
         long getLongValue() { return Long.parseLong(maValue); };
         int getIntValue() { return Integer.parseInt(maValue); };
         
-        ICalTok mTok;
-        String mName;
-        String maValue;
+        private ICalTok mTok;
+        private String mName;
+        private String maValue;
 
         /**
          * Sanitize a string to make it a valid param-value.  DQUOTE
@@ -724,7 +687,7 @@ public class ZCalendar {
          * @param str
          * @return
          */
-        private static String sanitizeParamValue(String str) {
+        private static String quote(String str, boolean force) {
             if (str == null) return "";
             int len = str.length();
             if (len == 0) return "";
@@ -774,7 +737,7 @@ public class ZCalendar {
                 sb.append(ch);
             }
             sb.append('"');  // matches initial quote
-            if (needToQuote)
+            if (needToQuote || force)
                 return sb.toString();
             else
                 return sb.substring(1, sb.length() - 1);
@@ -855,7 +818,7 @@ public class ZCalendar {
             mComponents.remove(mComponents.size()-1);
         }
 
-        public void startProperty(String name) { 
+        public void startProperty(String name) {
             mCurProperty = new ZProperty(name);
             
             if (mComponents.size() > 0) {
@@ -865,8 +828,12 @@ public class ZCalendar {
             }
         }
 
-        public void propertyValue(String value) throws ParserException { 
-            mCurProperty.mValue = value;
+        public void propertyValue(String value) throws ParserException {
+            ICalTok token = mCurProperty.getToken();
+            if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token))
+                mCurProperty.setValueList(parseCommaSepText(value));
+            else
+                mCurProperty.setValue(unescape(value));
             if (mComponents.size() == 0) {
                 if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
                     if (sObsoleteVcalVersion.equals(value))

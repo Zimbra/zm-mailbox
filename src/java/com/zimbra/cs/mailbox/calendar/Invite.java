@@ -1782,209 +1782,213 @@ public class Invite {
 
                         boolean sawIntendedFreeBusy = false;
                         for (ZProperty prop : comp.mProperties) {
-                            // Skip properties with missing value.  There may be parameters specified, but
-                            // it's still wrong to send a property without value.  They can only lead to
-                            // parse errors later, so ignore them.
-                            String val = prop.getValue();
-                            if (val == null || val.length() < 1)
-                                continue;
-
-                            if (prop.mTok == null) {
+                            String propVal = prop.getValue();
+                            ICalTok propToken = prop.getToken();
+                            if (propToken == null) {
+                                // Skip properties with missing value.  There may be parameters specified, but
+                                // it's still wrong to send a property without value.  They can only lead to
+                                // parse errors later, so ignore them.
+                                if (propVal == null || propVal.length() < 1)
+                                    continue;
                                 String name = prop.getName();
                                 if (name.startsWith("X-") || name.startsWith("x-"))
                                     newInv.addXProp(prop);
-                                continue;
-                            }
-    
-                            switch (prop.mTok) {
-                            case ORGANIZER:
-                                newInv.setOrganizer(new ZOrganizer(prop));
-                                break;
-                            case ATTENDEE:
-                                newInv.addAttendee(new ZAttendee(prop));
-                                break;
-                            case DTSTAMP:
-                                ParsedDateTime dtstamp = ParsedDateTime.parse(prop, tzmap);
-                                newInv.setDtStamp(dtstamp.getUtcTime());
-                                break;
-                            case RECURRENCE_ID:
-                                ParsedDateTime rid = ParsedDateTime.parse(prop, tzmap);
-                                newInv.setRecurId(new RecurId(rid, RecurId.RANGE_NONE));
-                                break;
-                            case SEQUENCE:
-                                newInv.setSeqNo(prop.getIntValue());
-                                break;
-                            case DTSTART:
-                                ParsedDateTime dtstart = ParsedDateTime.parse(prop, tzmap);
-                                newInv.setDtStart(dtstart);
-                                if (!dtstart.hasTime()) 
-                                	newInv.setIsAllDayEvent(true);
-                                break;
-                            case DTEND:
-                                if (isEvent) {
-                                    ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
-                                    newInv.setDtEnd(dtend);
+                            } else if (propToken.equals(ICalTok.CATEGORIES)) {
+                                List<String> categories = prop.getValueList();
+                                if (categories != null && !categories.isEmpty()) {
+                                    for (String cat : categories) {
+                                        newInv.addCategory(cat);
+                                    }
                                 }
-                                break;
-                            case DUE:
-                                if (isTodo) {
-                                    ParsedDateTime due = ParsedDateTime.parse(prop, tzmap);
-                                    // DUE is for VTODO what DTEND is for VEVENT.
-                                    newInv.setDtEnd(due);
-                                }
-                                break;
-                            case DURATION:
-                                ParsedDuration dur = ParsedDuration.parse(prop.getValue());
-                                newInv.setDuration(dur);
-                                break;
-                            case LOCATION:
-                                newInv.setLocation(prop.getValue());
-                                break;
-                            case SUMMARY:
-                                String summary = prop.getValue();
-                                if (summary != null) {
-                                    // Make sure SUMMARY is a single line.
-                                    summary = ZCalendar.unescape(summary);
-                                    summary = summary.replaceAll("[\\\r\\\n]+", " ");
-                                }
-                                prop.setValue(summary);
-                                newInv.setName(summary);
-                                break;
-                            case DESCRIPTION:
-                                newInv.setDescription(prop.mValue, newInv.mDescHtml);
-                                newInv.setFragment(Fragment.getFragment(prop.mValue, true));
-                                break;
-                            case X_ALT_DESC:
-                                ZParameter fmttype = prop.getParameter(ICalTok.FMTTYPE);
-                                if (fmttype != null && MimeConstants.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
-                                    String html = prop.getValue();
-                                    newInv.setDescription(newInv.mDescription, html);
-                                } else {
-                                    // Unknown format.  Just add as an x-prop.
-                                    newInv.addXProp(prop);
-                                }
-                                break;
-                            case COMMENT:
-                                newInv.addComment(prop.getValue());
-                                break;
-                            case UID:
-                                newInv.setUid(prop.getValue());
-                                break;
-                            case RRULE:
-                                ZRecur recur = new ZRecur(prop.getValue(), tzmap);
-                                addRecurs.add(recur);
-                                newInv.setIsRecurrence(true);
-                                break;
-                            case RDATE:
-                                RdateExdate rdate = RdateExdate.parse(prop, tzmap);
-                                addRecurs.add(rdate);
-                                newInv.setIsRecurrence(true);
-                                break;
-                            case EXRULE:
-                                ZRecur exrecur = new ZRecur(prop.getValue(), tzmap);
-                                subRecurs.add(exrecur);
-                                newInv.setIsRecurrence(true);                            
-                                break;
-                            case EXDATE:
-                                RdateExdate exdate = RdateExdate.parse(prop, tzmap);
-                                subRecurs.add(exdate);
-                                newInv.setIsRecurrence(true);
-                                break;
-                            case STATUS:
-                                String status = IcalXmlStrMap.sStatusMap.toXml(prop.getValue());
-                                if (status != null) {
-                                    if (IcalXmlStrMap.STATUS_IN_PROCESS.equals(status)) {
-                                        String zstatus = prop.getParameterVal(ICalTok.X_ZIMBRA_STATUS, null);
-                                        if (ICalTok.X_ZIMBRA_STATUS_WAITING.toString().equals(zstatus) ||
-                                            ICalTok.X_ZIMBRA_STATUS_DEFERRED.toString().equals(zstatus)) {
-                                            newInv.setStatus(IcalXmlStrMap.sStatusMap.toXml(zstatus));
+                            } else {    
+                                // Skip properties with missing value.  There may be parameters specified, but
+                                // it's still wrong to send a property without value.  They can only lead to
+                                // parse errors later, so ignore them.
+                                if (propVal == null || propVal.length() < 1)
+                                    continue;
+                                switch (propToken) {
+                                case ORGANIZER:
+                                    newInv.setOrganizer(new ZOrganizer(prop));
+                                    break;
+                                case ATTENDEE:
+                                    newInv.addAttendee(new ZAttendee(prop));
+                                    break;
+                                case DTSTAMP:
+                                    ParsedDateTime dtstamp = ParsedDateTime.parse(prop, tzmap);
+                                    newInv.setDtStamp(dtstamp.getUtcTime());
+                                    break;
+                                case RECURRENCE_ID:
+                                    ParsedDateTime rid = ParsedDateTime.parse(prop, tzmap);
+                                    newInv.setRecurId(new RecurId(rid, RecurId.RANGE_NONE));
+                                    break;
+                                case SEQUENCE:
+                                    newInv.setSeqNo(prop.getIntValue());
+                                    break;
+                                case DTSTART:
+                                    ParsedDateTime dtstart = ParsedDateTime.parse(prop, tzmap);
+                                    newInv.setDtStart(dtstart);
+                                    if (!dtstart.hasTime()) 
+                                    	newInv.setIsAllDayEvent(true);
+                                    break;
+                                case DTEND:
+                                    if (isEvent) {
+                                        ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
+                                        newInv.setDtEnd(dtend);
+                                    }
+                                    break;
+                                case DUE:
+                                    if (isTodo) {
+                                        ParsedDateTime due = ParsedDateTime.parse(prop, tzmap);
+                                        // DUE is for VTODO what DTEND is for VEVENT.
+                                        newInv.setDtEnd(due);
+                                    }
+                                    break;
+                                case DURATION:
+                                    ParsedDuration dur = ParsedDuration.parse(propVal);
+                                    newInv.setDuration(dur);
+                                    break;
+                                case LOCATION:
+                                    newInv.setLocation(propVal);
+                                    break;
+                                case SUMMARY:
+                                    String summary = propVal;
+                                    if (summary != null) {
+                                        // Make sure SUMMARY is a single line.
+                                        summary = summary.replaceAll("[\\\r\\\n]+", " ");
+                                    }
+                                    prop.setValue(summary);
+                                    newInv.setName(summary);
+                                    break;
+                                case DESCRIPTION:
+                                    newInv.setDescription(propVal, newInv.mDescHtml);
+                                    newInv.setFragment(Fragment.getFragment(propVal, true));
+                                    break;
+                                case X_ALT_DESC:
+                                    ZParameter fmttype = prop.getParameter(ICalTok.FMTTYPE);
+                                    if (fmttype != null && MimeConstants.CT_TEXT_HTML.equalsIgnoreCase(fmttype.getValue())) {
+                                        String html = propVal;
+                                        newInv.setDescription(newInv.mDescription, html);
+                                    } else {
+                                        // Unknown format.  Just add as an x-prop.
+                                        newInv.addXProp(prop);
+                                    }
+                                    break;
+                                case COMMENT:
+                                    newInv.addComment(propVal);
+                                    break;
+                                case UID:
+                                    newInv.setUid(propVal);
+                                    break;
+                                case RRULE:
+                                    ZRecur recur = new ZRecur(propVal, tzmap);
+                                    addRecurs.add(recur);
+                                    newInv.setIsRecurrence(true);
+                                    break;
+                                case RDATE:
+                                    RdateExdate rdate = RdateExdate.parse(prop, tzmap);
+                                    addRecurs.add(rdate);
+                                    newInv.setIsRecurrence(true);
+                                    break;
+                                case EXRULE:
+                                    ZRecur exrecur = new ZRecur(propVal, tzmap);
+                                    subRecurs.add(exrecur);
+                                    newInv.setIsRecurrence(true);                            
+                                    break;
+                                case EXDATE:
+                                    RdateExdate exdate = RdateExdate.parse(prop, tzmap);
+                                    subRecurs.add(exdate);
+                                    newInv.setIsRecurrence(true);
+                                    break;
+                                case STATUS:
+                                    String status = IcalXmlStrMap.sStatusMap.toXml(propVal);
+                                    if (status != null) {
+                                        if (IcalXmlStrMap.STATUS_IN_PROCESS.equals(status)) {
+                                            String zstatus = prop.getParameterVal(ICalTok.X_ZIMBRA_STATUS, null);
+                                            if (ICalTok.X_ZIMBRA_STATUS_WAITING.toString().equals(zstatus) ||
+                                                ICalTok.X_ZIMBRA_STATUS_DEFERRED.toString().equals(zstatus)) {
+                                                newInv.setStatus(IcalXmlStrMap.sStatusMap.toXml(zstatus));
+                                            } else {
+                                                newInv.setStatus(status);
+                                            }
                                         } else {
                                             newInv.setStatus(status);
                                         }
-                                    } else {
-                                        newInv.setStatus(status);
                                     }
-                                }
-                                break;
-                            case TRANSP:
-                                // TRANSP is examined only when intended F/B is not supplied.
-                                if (isEvent && !sawIntendedFreeBusy) {
-                                    String transp = IcalXmlStrMap.sTranspMap.toXml(prop.getValue());
-                                    if (transp != null) {
-                                        newInv.setTransparency(transp);
-                                        // If transparent, set intended f/b to free.
-                                        // If opaque, don't set intended f/b because there are multiple possibilities.
-                                        if (newInv.isTransparent())
-                                            newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
+                                    break;
+                                case TRANSP:
+                                    // TRANSP is examined only when intended F/B is not supplied.
+                                    if (isEvent && !sawIntendedFreeBusy) {
+                                        String transp = IcalXmlStrMap.sTranspMap.toXml(propVal);
+                                        if (transp != null) {
+                                            newInv.setTransparency(transp);
+                                            // If transparent, set intended f/b to free.
+                                            // If opaque, don't set intended f/b because there are multiple possibilities.
+                                            if (newInv.isTransparent())
+                                                newInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
+                                        }
                                     }
-                                }
-                                break;
-                            case CLASS:
-                                String classProp = IcalXmlStrMap.sClassMap.toXml(prop.getValue());
-                                if (classProp != null)
-                                    newInv.setClassProp(classProp);
-                                break;
-                            case X_MICROSOFT_CDO_ALLDAYEVENT:
-                                if (isEvent) {
-                                    if (prop.getBoolValue()) 
-                                        newInv.setIsAllDayEvent(true);
-                                }
-                                break;
-                            case X_MICROSOFT_CDO_INTENDEDSTATUS:
-                                sawIntendedFreeBusy = true;
-                                if (isEvent) {
-                                    String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
-                                    if (fb != null) {
-                                        newInv.setFreeBusy(fb);
-                                        // Intended F/B takes precedence over TRANSP.
-                                        if (IcalXmlStrMap.FBTYPE_FREE.equals(fb))
-                                            newInv.setTransparency(IcalXmlStrMap.TRANSP_TRANSPARENT);
-                                        else
-                                            newInv.setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
+                                    break;
+                                case CLASS:
+                                    String classProp = IcalXmlStrMap.sClassMap.toXml(propVal);
+                                    if (classProp != null)
+                                        newInv.setClassProp(classProp);
+                                    break;
+                                case X_MICROSOFT_CDO_ALLDAYEVENT:
+                                    if (isEvent) {
+                                        if (prop.getBoolValue()) 
+                                            newInv.setIsAllDayEvent(true);
                                     }
+                                    break;
+                                case X_MICROSOFT_CDO_INTENDEDSTATUS:
+                                    sawIntendedFreeBusy = true;
+                                    if (isEvent) {
+                                        String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(propVal);
+                                        if (fb != null) {
+                                            newInv.setFreeBusy(fb);
+                                            // Intended F/B takes precedence over TRANSP.
+                                            if (IcalXmlStrMap.FBTYPE_FREE.equals(fb))
+                                                newInv.setTransparency(IcalXmlStrMap.TRANSP_TRANSPARENT);
+                                            else
+                                                newInv.setTransparency(IcalXmlStrMap.TRANSP_OPAQUE);
+                                        }
+                                    }
+                                    break;
+                                case PRIORITY:
+                                    String prio = propVal;
+                                    if (prio != null)
+                                        newInv.setPriority(prio);
+                                    break;
+                                case PERCENT_COMPLETE:
+                                    if (isTodo) {
+                                        String pctComplete = propVal;
+                                        if (pctComplete != null)
+                                            newInv.setPercentComplete(pctComplete);
+                                    }
+                                    break;
+                                case COMPLETED:
+                                    if (isTodo) {
+                                        ParsedDateTime completed = ParsedDateTime.parseUtcOnly(propVal);
+                                        newInv.setCompleted(completed.getUtcTime());
+                                    }
+                                    break;
+                                case CONTACT:
+                                    newInv.addContact(propVal);
+                                    break;
+                                case GEO:
+                                    Geo geo = Geo.parse(prop);
+                                    newInv.setGeo(geo);
+                                    break;
+                                case URL:
+                                    newInv.setUrl(propVal);
+                                    break;
+                                case X_ZIMBRA_LOCAL_ONLY:
+                                    if (prop.getBoolValue())
+                                        newInv.setLocalOnly(true);
+                                    break;
+                                case X_ZIMBRA_DISCARD_EXCEPTIONS:
+                                    newInv.addXProp(prop);
+                                    break;
                                 }
-                                break;
-                            case PRIORITY:
-                                String prio = prop.getValue();
-                                if (prio != null)
-                                    newInv.setPriority(prio);
-                                break;
-                            case PERCENT_COMPLETE:
-                                if (isTodo) {
-                                    String pctComplete = prop.getValue();
-                                    if (pctComplete != null)
-                                        newInv.setPercentComplete(pctComplete);
-                                }
-                                break;
-                            case COMPLETED:
-                                if (isTodo) {
-                                    ParsedDateTime completed = ParsedDateTime.parseUtcOnly(prop.getValue());
-                                    newInv.setCompleted(completed.getUtcTime());
-                                }
-                                break;
-                            case CATEGORIES:
-                                List<String> categories = ZCalendar.parseCommaSepText(prop.getValue());
-                                for (String cat : categories) {
-                                    newInv.addCategory(cat);
-                                }
-                                break;
-                            case CONTACT:
-                                newInv.addContact(prop.getValue());
-                                break;
-                            case GEO:
-                                Geo geo = Geo.parse(prop);
-                                newInv.setGeo(geo);
-                                break;
-                            case URL:
-                                newInv.setUrl(prop.getValue());
-                                break;
-                            case X_ZIMBRA_LOCAL_ONLY:
-                                if (prop.getBoolValue())
-                                    newInv.setLocalOnly(true);
-                                break;
-                            case X_ZIMBRA_DISCARD_EXCEPTIONS:
-                                newInv.addXProp(prop);
-                                break;
                             }
                         }
     
@@ -2213,8 +2217,9 @@ public class Invite {
             // CATEGORIES
             List<String> categories = getCategories();
             if (categories != null && !categories.isEmpty()) {
-                String encodedCat = ZCalendar.toCommaSepText(categories);
-                component.addProperty(new ZProperty(ICalTok.CATEGORIES, encodedCat));
+                ZProperty catsProp = new ZProperty(ICalTok.CATEGORIES);
+                catsProp.setValueList(categories);
+                component.addProperty(catsProp);
             }
 
             // CONTACT
