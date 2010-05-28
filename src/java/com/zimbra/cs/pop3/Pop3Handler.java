@@ -522,7 +522,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendContinuation("");
         }
     }
-    
+
     private boolean continueAuthentication(String response) throws IOException {
         byte[] b = Base64.decodeBase64(response.getBytes("us-ascii"));
         mAuthenticator.handle(b);
@@ -539,10 +539,9 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private boolean isAuthenticated() {
         return mState != STATE_AUTHORIZATION && mAccountId != null;
     }
-    
+
     protected void authenticate(String username, String authenticateId, String password, Authenticator auth)
     throws Pop3CmdException {
-        String type = auth != null ? "authentication" : "login";
         String mechanism = auth != null ? auth.getMechanism() : "LOGIN";
         try {
             // LOGIN is just another form of AUTH PLAIN with authcid == authzid
@@ -555,7 +554,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.pop3, getOrigRemoteIpAddr(), null);
             // auth failure was represented by Authenticator.authenticate() returning null
             if (acct == null)
-                throw new Pop3CmdException(type + " failed");
+                throw new Pop3CmdException("invalid username/password");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
                 throw new Pop3CmdException("pop access not enabled for account");
             mAccountId = acct.getId();
@@ -592,13 +591,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
     protected boolean isSSLEnabled() {
         return mStartedTLS;
     }
-        
+
     private void doSTAT() throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
         sendOK(mMbx.getNumMessages()+" "+mMbx.getSize());
     }
-    
+
     private void doSTLS() throws Pop3CmdException, IOException {
         if (mConfig.isSslEnabled())
             throw new Pop3CmdException("command not valid over SSL");
@@ -628,7 +627,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendLine(TERMINATOR);
         }
     }
-    
+
     private void doUIDL(String msg) throws Pop3CmdException, IOException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
@@ -676,14 +675,14 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private void doTOP(String arg) throws Pop3CmdException, IOException, ServiceException {
         if (mState != STATE_TRANSACTION) 
             throw new Pop3CmdException("this command is only valid after a login");
-        
+
         int space = arg == null ? -1 : arg.indexOf(" ");
         if (space == -1)
             throw new Pop3CmdException("please specify a message and number of lines");
-        
+
         String msg = arg.substring(0, space);
         int n = parseInt(arg.substring(space + 1), "unable to parse number of lines");
-        
+
         if (n < 0) 
             throw new Pop3CmdException("please specify a non-negative value for number of lines");
 
@@ -736,11 +735,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendLine("IMPLEMENTATION ZimbraInc", false);
         sendLine(TERMINATOR);
     }
-    
+
     private void doXOIP(String origIp) throws Pop3CmdException, IOException {
         if (origIp == null)
             throw new Pop3CmdException("please specify an ip address");
-        
+
         String curOrigRemoteIp = getOrigRemoteIpAddr();
         if (curOrigRemoteIp == null) {
             setOrigRemoteIpAddr(origIp);
@@ -752,7 +751,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             else
                 ZimbraLog.pop.error("POP3 XOIP is allowed only once per session, received different IP: " + origIp + ", command ignored");
         }
-        
+
         sendOK("");
     }
 
@@ -765,7 +764,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         }
         return sb.toString();
     }
-    
+
     protected abstract void startTLS() throws IOException;
 
     protected abstract void completeAuthentication() throws IOException;
