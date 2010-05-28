@@ -71,11 +71,11 @@ public class MessageCache {
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
     
     private static Map<String, CacheNode> mCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
-    private static int mTotalSize = 0;
-    private static int mMaxCacheSize;
+    private static int mNumBytes = 0;
+    private static int mMaxBytes;
     static {
         try {
-            mMaxCacheSize = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMessageCacheSize, DEFAULT_CACHE_SIZE);
+            mMaxBytes = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMessageCacheSize, DEFAULT_CACHE_SIZE);
         } catch (ServiceException e) {
             throw new RuntimeException(e);
         }
@@ -108,17 +108,19 @@ public class MessageCache {
      *  stale data. */
     public static void purge(String digest) {
         CacheNode cnode = null;
+        int numMessages = -1;
         synchronized (mCache) {
             cnode = mCache.remove(digest);
             if (cnode != null) {
-                mTotalSize -= cnode.mSize;
+                mNumBytes -= cnode.mSize;
+                numMessages = mCache.size();
             }
         }
         
         if (cnode == null) {
             ZimbraLog.cache.debug("msgcache: attempted to purge %s but could not find it in the cache.", digest);
         } else {
-            ZimbraLog.cache.debug("msgcache: purged %s, size=%d.  Cache size is now %d.", digest, cnode.mSize, mTotalSize);
+            ZimbraLog.cache.debug("msgcache: purged %s, size=%d.  %d messages, %d bytes in cache.", digest, cnode.mSize, numMessages, mNumBytes);
         }
     }
     
@@ -142,10 +144,10 @@ public class MessageCache {
             cacheHit = cnode != null && cnode.mContent != null;
 
             if (!cacheHit && cnode != null) {
-                mCache.remove(key);  mTotalSize -= cnode.mSize;
+                mCache.remove(key);  mNumBytes -= cnode.mSize;
                 ZimbraLog.cache.debug(
-                    "msgcache: can't use a cached MimeMessage because of TNEF conversion.  Removing item with size=%d.  Cache size is now %d.",
-                    cnode.mSize, mTotalSize);
+                    "msgcache: can't use a cached MimeMessage because of TNEF conversion.  Removed %s, size=%d.  %d messages, %d bytes in cache.",
+                    key, cnode.mSize, mCache.size(), mNumBytes);
             }
         }
 
@@ -186,7 +188,7 @@ public class MessageCache {
         ZimbraLog.cache.debug("msgcache: getRawContent(): id=%d, size=%d, digest=%s.", item.getId(), item.getSize(), key);
         if (key == null || key.equals(""))
             return null;
-        if (item.getSize() < mMaxCacheSize) {
+        if (item.getSize() < mMaxBytes) {
             // Content is small enough to be cached in memory
             return new SharedByteArrayInputStream(getItemContent(item));
         }
@@ -225,8 +227,9 @@ public class MessageCache {
             }
 
             if (!cacheHit && cnode != null) {
-                mCache.remove(key);  mTotalSize -= cnode.mSize;
-                ZimbraLog.cache.debug("msgcache: replacing the cached byte array with a MimeMessage.  New cache size=%d.", mTotalSize);
+                mCache.remove(key);  mNumBytes -= cnode.mSize;
+                ZimbraLog.cache.debug("msgcache: replacing the cached byte array with a MimeMessage.  Removed %s, size %d.  %d messages, %d bytes in cache.",
+                    key, cnode.mSize, mCache.size(), mNumBytes);
             }
         }
 
@@ -320,7 +323,7 @@ public class MessageCache {
     
     public static int getNumBytes() {
         synchronized (mCache) {
-            return mTotalSize;
+            return mNumBytes;
         }
     }
     
@@ -333,37 +336,37 @@ public class MessageCache {
     public static void clear() {
         synchronized (mCache) {
             mCache.clear();
-            mTotalSize = 0;
+            mNumBytes = 0;
         }
     }
 
     private static void cacheItem(String key, CacheNode cnode) {
-        if (cnode.mSize >= mMaxCacheSize) {
-            ZimbraLog.cache.debug("msgcache: not caching %s.  size %d is bigger than max cache size %d.", key, cnode.mSize, mMaxCacheSize);
+        if (cnode.mSize >= mMaxBytes) {
+            ZimbraLog.cache.debug("msgcache: not caching %s.  size %d is bigger than max cache size %d.", key, cnode.mSize, mMaxBytes);
             return;
         }
         
         synchronized (mCache) {
             CacheNode oldNode = mCache.put(key, cnode);
             if (oldNode != null) {
-                mTotalSize -= oldNode.mSize;
-                ZimbraLog.cache.debug("msgcache: found existing node for %s: size=%d.  Discarding the old version.  Cache size is now %d.",
-                    key, oldNode.mSize, mTotalSize);
+                mNumBytes -= oldNode.mSize;
+                ZimbraLog.cache.debug("msgcache: found existing node for %s: size=%d.  Discarding the old version.  %d messages, %d bytes in cache.",
+                    key, oldNode.mSize, mCache.size(), mNumBytes);
             }
-            mTotalSize += cnode.mSize;
+            mNumBytes += cnode.mSize;
             ZimbraLog.cache.debug("msgcache: caching %s message: size=%d, digest=%s.  Cache size is now %d.",
-                (cnode.mContent != null ? "raw" : "mime"), cnode.mSize, key, mTotalSize);
+                (cnode.mContent != null ? "raw" : "mime"), cnode.mSize, key, mNumBytes);
 
             // trim the cache if needed
-            if (mTotalSize > mMaxCacheSize) {
-                ZimbraLog.cache.debug("msgcache: cache size %d exceeded maximum %d.", mTotalSize, mMaxCacheSize);
-                for (Iterator<Map.Entry<String, CacheNode>> it = mCache.entrySet().iterator(); mTotalSize > mMaxCacheSize && it.hasNext(); ) {
+            if (mNumBytes > mMaxBytes) {
+                ZimbraLog.cache.debug("msgcache: cache size %d exceeded maximum %d.", mNumBytes, mMaxBytes);
+                for (Iterator<Map.Entry<String, CacheNode>> it = mCache.entrySet().iterator(); mNumBytes > mMaxBytes && it.hasNext(); ) {
                     Map.Entry<String, CacheNode> entry = it.next();
                     String digest = entry.getKey();
                     CacheNode cnPurge = entry.getValue();
                     it.remove();
-                    mTotalSize -= cnPurge.mSize;
-                    ZimbraLog.cache.debug("msgcache: removed %s, size %d.  Cache size is now %d.", digest, cnPurge.mSize, mTotalSize);
+                    mNumBytes -= cnPurge.mSize;
+                    ZimbraLog.cache.debug("msgcache: removed %s, size %d.  Cache size is now %d.", digest, cnPurge.mSize, mNumBytes);
                 }
             }
         }
