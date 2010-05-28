@@ -84,14 +84,14 @@ public class MessageCache {
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
-    static void purge(MailItem item) {
+    public static void purge(MailItem item) {
         purge(item.getDigest());
     }
     
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
-    static void purge(Mailbox mbox, int itemId) {
+    public static void purge(Mailbox mbox, int itemId) {
         String digest = null;
         try {
             digest = DbMailItem.getBlobDigest(mbox, itemId);
@@ -106,7 +106,7 @@ public class MessageCache {
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
-    static void purge(String digest) {
+    public static void purge(String digest) {
         CacheNode cnode = null;
         synchronized (mCache) {
             cnode = mCache.remove(digest);
