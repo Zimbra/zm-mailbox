@@ -430,7 +430,7 @@ public class Mailbox {
             // init the index
             if (!DebugConfig.disableIndexing) 
                 mIndexHelper.instantiateMailboxIndex();
-            
+
             if (mVersion == null) { 
                 // if we've just initialized() the mailbox, then the version will
                 // be set in the config, but it won't be comitted yet -- and unfortunately 
@@ -483,7 +483,7 @@ public class Mailbox {
         }
         return false;
     }
-    
+
     /** Returns the server-local numeric ID for this mailbox.  To get a
      *  system-wide, persistent unique identifier for the mailbox, use
      *  {@link #getAccountId()}. */
@@ -570,7 +570,7 @@ public class Mailbox {
         if (mListeners.isEmpty())
             return Collections.emptyList();
         else if (stype == null)
-                return new ArrayList<Session>(mListeners);
+            return new ArrayList<Session>(mListeners);
 
         List<Session> sessions = new ArrayList<Session>(mListeners.size());
         for (Session s : mListeners)
@@ -585,18 +585,14 @@ public class Mailbox {
         else if (stype == null)
             return true;
 
-        for (Session s : mListeners)
+        for (Session s : mListeners) {
             if (s.getType() == stype)
                 return true;
+        }
         return false;
     }
 
-    /**
-     * Loookup a {@link Session) in the set of listeners on this mailbox
-     * 
-     * @param sessionId
-     * @return
-     */
+    /** Loookup a {@link Session} in the set of listeners on this mailbox. */
     public Session getListener(String sessionId) {
         if (sessionId != null) {
             for (Session session : mListeners) {
@@ -897,14 +893,17 @@ public class Mailbox {
 
         // if we go negative, that's OK!  just pretend we're at 0.
         long size = Math.max(0, (mCurrentChange.size == MailboxChange.NO_CHANGE ? mData.size : mCurrentChange.size) + delta);
+        if (delta > 0 && checkQuota)
+            checkSizeChange(size);
 
-        if (delta > 0 && checkQuota) {
-            long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
-            if (quota != 0 && size > quota)
-                throw MailServiceException.QUOTA_EXCEEDED(quota);
-        }
         mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
         mCurrentChange.size = size;
+    }
+
+    void checkSizeChange(long newSize) throws ServiceException {
+        long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+        if (quota != 0 && newSize > quota)
+            throw MailServiceException.QUOTA_EXCEEDED(quota);
     }
 
     /** Returns the last time that the mailbox had a write op caused by a SOAP
@@ -4508,6 +4507,9 @@ public class Mailbox {
             String hash = getHash(subject);
             long tags = Tag.tagsToBitmask(tagStr);
 
+            // step 0: preemptively check for quota issues (actual update is done in Message.create)
+            checkSizeChange(getSize() + staged.getStagedSize());
+
             // step 1: get an ID assigned for the new message
             int messageId = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
             if (isRedo)
@@ -6636,8 +6638,7 @@ public class Mailbox {
         }
     }
 
-    private SharedDeliveryCoordinator mSharedDelivCoord =
-        new SharedDeliveryCoordinator();
+    private SharedDeliveryCoordinator mSharedDelivCoord = new SharedDeliveryCoordinator();
 
     /**
      * Puts mailbox in shared delivery mode.  A shared delivery is delivery of
@@ -6881,7 +6882,6 @@ public class Mailbox {
                 //    a redo error, and the second case would index the wrong
                 //    value.
                 if (redoRecorder != null) {
-                    
                     if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.changedTypes != 0) {
                         // if an "all accounts" waitset is active, and this change has an appropriate type,
                         // then we'll need to set a commit-callback
