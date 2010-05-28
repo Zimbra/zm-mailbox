@@ -37,8 +37,8 @@ public class ImapMessage extends DataSourceMapping {
         super(ds, remoteId(folderId, uid));
     }
     
-    public ImapMessage(DataSource ds, int folderId, int itemId, int flags,
-        long uid) throws ServiceException {
+    public ImapMessage(DataSource ds, int folderId, int itemId, int flags, long uid)
+        throws ServiceException {
         super(ds, folderId, itemId, remoteId(folderId, uid));
         setFlags(flags);
         setUid(uid);

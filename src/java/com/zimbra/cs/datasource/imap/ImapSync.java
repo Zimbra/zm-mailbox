@@ -34,30 +34,32 @@ import com.zimbra.common.util.StringUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class ImapSync extends MailItemImport {
-    private final SyncStateManager syncStateManager;
     private ImapConnection connection;
+    private SyncState syncState;
     private Folder localRootFolder;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private final Map<Integer, ImapFolderSync> syncedFolders;
     private ImapFolderCollection trackedFolders;
-    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[:\\*\\?\"<>\\|]");
     private boolean fullSync;
     private Authenticator authenticator;
     private boolean reuseConnections;
 
+    private static final Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[:\\*\\?\"<>\\|]");
     private static final Log LOG = ZimbraLog.datasource;
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
         validateDataSource();
-        syncStateManager = SyncStateManager.getInstance(ds);
+        syncState = SyncStateManager.getInstance().getOrCreateSyncState(ds);
         syncedFolders = new LinkedHashMap<Integer, ImapFolderSync>();
         reuseConnections = ds.isOffline();
     }
@@ -65,8 +67,7 @@ public class ImapSync extends MailItemImport {
     public synchronized void test() throws ServiceException {
         // In case datasource was modified, make sure we close any open
         // connection as well as remove cached synchronization state
-        ConnectionManager.getInstance().closeConnection(dataSource);
-        SyncStateManager.removeInstance(dataSource);
+        dataSourceDeleted(dataSource.getId());
         connect();
         if (reuseConnections) {
             releaseConnection();
@@ -75,6 +76,21 @@ public class ImapSync extends MailItemImport {
         }
     }
 
+    public static void dataSourceDeleted(String dataSourceId) {
+        ConnectionManager.getInstance().closeConnection(dataSourceId);
+        SyncStateManager.getInstance().removeSyncState(dataSourceId);
+    }
+
+    public static boolean isSyncNeeded(DataSource ds) throws ServiceException {
+        if (ds.isOffline()) {
+            SyncState ss = SyncStateManager.getInstance().getSyncState(ds);
+            if (ss != null) {
+                return ss.hasInboxChanges();
+            }
+        }
+        return false;
+    }
+    
     protected void setAuthenticator(Authenticator auth) {
         authenticator = auth;
     }
@@ -116,13 +132,18 @@ public class ImapSync extends MailItemImport {
     }
 
     public synchronized void importData(boolean fullSync) throws ServiceException {
+        if (dataSource.isOffline()) {
+            getMailbox().beginTrackingSync();
+            syncState = SyncStateManager.getInstance().getOrCreateSyncState(dataSource);
+            syncState.setHasRemoteInboxChanges(false);
+        }
         fullSync |= forceFullSync();
         this.fullSync = fullSync;
-        List<Integer> folderIds = null;
+        Set<Integer> folderIds = null;
         if (!fullSync) {
             // If not full sync, then only sync INBOX and possibly SENT folder
-            // if server saves sent messages to SENT folder automatically.
-            folderIds = new ArrayList<Integer>(2);
+            // if server saves sent messages to SENT folder for us.
+            folderIds = new HashSet<Integer>();
             folderIds.add(Mailbox.ID_FOLDER_INBOX);
             if (!dataSource.isSaveToSent()) {
                 folderIds.add(Mailbox.ID_FOLDER_SENT);
@@ -141,6 +162,7 @@ public class ImapSync extends MailItemImport {
         }
     }
 
+
     public ImapFolderSync getInboxFolderSync() {
         return syncedFolders.get(Mailbox.ID_FOLDER_INBOX);
     }
@@ -155,7 +177,7 @@ public class ImapSync extends MailItemImport {
         }
         DataSourceManager dsm = DataSourceManager.getInstance();
         Folder inbox = dsm.getMailbox(dataSource).getFolderById(Mailbox.ID_FOLDER_INBOX);
-        return dsm.isSyncEnabled(dataSource, inbox) && getSyncState(inbox.getId()) == null;
+        return dsm.isSyncEnabled(dataSource, inbox) && getFolderSyncState(inbox.getId()) == null;
     }
 
     public ImapConnection getConnection() {
@@ -194,11 +216,8 @@ public class ImapSync extends MailItemImport {
         }
     }
     
-    private void syncFolders(List<Integer> folderIds) throws ServiceException, IOException {
-        if (dataSource.isOffline()) {
-            getMailbox().beginTrackingSync();
-        }
-        // For offline if full sync then automatically re-enable sync on Inbox
+    private void syncFolders(Set<Integer> folderIds) throws ServiceException, IOException {
+        // For offline full sync automatically re-enable sync on INBOX
         if (dataSource.isOffline() && fullSync) {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
@@ -264,7 +283,7 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private void syncMessages(List<Integer> folderIds) throws ServiceException {
+    private void syncMessages(Set<Integer> folderIds) throws ServiceException {
         // If folder ids specified, then only sync messages for specified
         // folders, otherwise sync messages for all folders.
         for (ImapFolderSync ifs : syncedFolders.values()) {
@@ -272,7 +291,7 @@ public class ImapSync extends MailItemImport {
             LocalFolder folder = ifs.getLocalFolder();
             int folderId = folder.getId();
             try {
-                if (ifs.isSyncNeeded() || folderIds.contains(folderId)) {
+                if (folderIds == null || folderIds.contains(folderId)) {
                     ifs.syncMessages();
                 }
             } catch (Exception e) {
@@ -281,28 +300,28 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    public SyncState getSyncState(int folderId) {
-        if (syncStateManager != null) {
-            SyncState ss = syncStateManager.get(folderId);
+    public FolderSyncState getFolderSyncState(int folderId) {
+        if (syncState != null) {
+            FolderSyncState ss = syncState.getFolderSyncState(folderId);
             LOG.debug("getSyncState: fid = %d, state = %s", folderId, ss);
             return ss;
         }
         return null;
     }
 
-    public SyncState removeSyncState(int folderId) {
-        if (syncStateManager != null) {
-            SyncState ss = syncStateManager.remove(folderId);
+    public FolderSyncState removeSyncState(int folderId) {
+        if (syncState != null) {
+            FolderSyncState ss = syncState.removeFolderSyncState(folderId);
             LOG.debug("removeSyncState: fid = %d, state = %s", folderId, ss);
             return ss;
         }
         return null;
     }
 
-    public SyncState putSyncState(int folderId, SyncState ss) {
-        if (syncStateManager != null) {
+    public FolderSyncState putSyncState(int folderId, FolderSyncState ss) {
+        if (syncState != null) {
             LOG.debug("putSyncState: fid = %d, state = %s", folderId, ss);
-            return syncStateManager.put(folderId, ss);
+            return syncState.putFolderSyncState(folderId, ss);
         }
         return null;
     }

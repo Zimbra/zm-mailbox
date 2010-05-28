@@ -14,43 +14,45 @@
  */
 package com.zimbra.cs.datasource.imap;
 
-class SyncState {
-    long lastFetchedUid;
-    long lastUidNext;
-    int lastModSeq;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
 
-    public void updateLastFetchedUid(long uid) {
-        if (uid > lastFetchedUid) {
-            lastFetchedUid = uid;
-        }
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+final class SyncState {
+    private final Mailbox mbox;
+    private final Folder inboxFolder;
+    private final Map<Integer, FolderSyncState> folders;
+    private boolean hasRemoteInboxChanges;
+
+    SyncState(Mailbox mbox) throws ServiceException {
+        this.mbox = mbox;
+        inboxFolder = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
+        folders = Collections.synchronizedMap(new HashMap<Integer, FolderSyncState>());
     }
 
-    public long getLastFetchedUid() {
-        return lastFetchedUid;
+    public FolderSyncState getFolderSyncState(int folderId) {
+        return folders.get(folderId);
     }
 
-    public long getLastUidNext() {
-        return lastUidNext;
+    public FolderSyncState putFolderSyncState(int folderId, FolderSyncState folderSyncState) {
+        return folders.put(folderId, folderSyncState);
     }
 
-    public int getLastModSeq() {
-        return lastModSeq;
+    public FolderSyncState removeFolderSyncState(int folderId) {
+        return folders.remove(folderId);
     }
 
-    public void setLastFetchedUid(long lastFetchedUid) {
-        this.lastFetchedUid = lastFetchedUid;
+    public void setHasRemoteInboxChanges(boolean hasChanges) {
+        hasRemoteInboxChanges = hasChanges;
     }
 
-    public void setLastUidNext(long lastUidNext) {
-        this.lastUidNext = lastUidNext;
-    }
-
-    public void setLastModSeq(int lastModSeq) {
-        this.lastModSeq = lastModSeq;
-    }
-
-    public String toString() {
-        return String.format(
-            "{lastUidNext=%d,lastModSeq=%d}", lastUidNext, lastModSeq);
+    public boolean hasInboxChanges() throws ServiceException {
+        if (hasRemoteInboxChanges) return true;
+        FolderSyncState fss = getFolderSyncState(Mailbox.ID_FOLDER_INBOX);
+        return fss != null && inboxFolder.getImapMODSEQ() != fss.getLastModSeq();
     }
 }

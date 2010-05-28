@@ -20,7 +20,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
 
@@ -31,8 +30,8 @@ import java.util.Date;
 public final class SyncUtil {
     private static final Flags EMPTY_FLAGS = new Flags();
 
-    // Excludes flags which have no IMAP equivalent
-    private static int ZFLAGS_MASK =
+    // Excludes non-IMAP related Zimbra flags
+    private static int IMAP_FLAGS_BITMASK =
          Flag.BITMASK_REPLIED | Flag.BITMASK_DELETED |
          Flag.BITMASK_DRAFT | Flag.BITMASK_FLAGGED | Flag.BITMASK_UNREAD;
     
@@ -51,7 +50,7 @@ public final class SyncUtil {
     }
 
     public static int imapFlagsOnly(int zflags) {
-        return zflags & ZFLAGS_MASK;
+        return zflags & IMAP_FLAGS_BITMASK;
     }
     
     public static Flags getFlagsToAdd(Flags flags, int zflags) {

@@ -66,7 +66,7 @@ class ImapFolderSync {
     private ImapFolder tracker;
     private LocalFolder localFolder;
     private RemoteFolder remoteFolder;
-    private SyncState syncState;
+    private FolderSyncState syncState;
     private MailboxInfo mailboxInfo;
     private ImapMessageCollection trackedMsgs;
     private Set<Integer> localMsgIds;
@@ -193,21 +193,14 @@ class ImapFolderSync {
         return newFolder;
     }
 
-    public boolean isSyncNeeded() throws ServiceException {
-        if (fullSync) {
-            return true;
-        }
-        SyncState ss = imapSync.getSyncState(localFolder.getId());
-        if (ss == null || ss.getLastModSeq() != mailbox.getLastChangeID()) {
-            return true;
-        }
-        return false;
+    public void syncMessages() throws ServiceException, IOException {
+        syncMessages(null);
     }
-
+    
     /*
      * Synchronizes messages between local and remote folder.
      */
-    public void syncMessages() throws ServiceException, IOException {
+    public void syncMessages(FolderChanges changes) throws ServiceException, IOException {
         localFolder.debug("Syncing messages for folder");
         if (!isSyncEnabled()) {
             localFolder.debug("Synchronization disabled for this folder");
@@ -219,6 +212,7 @@ class ImapFolderSync {
         syncState = imapSync.removeSyncState(localFolder.getId());
         if (syncState == null || fullSync) {
             syncState = newSyncState();
+            fullSync = true;
         }
 
         // Get remote folder UIDNEXT and UIDVALIDITY
@@ -226,28 +220,27 @@ class ImapFolderSync {
             mailboxInfo = fullSync ? remoteFolder.select() : remoteFolder.status();
         }
 
-        // Refresh folder state if UIDVALIDITY changed
+        // Refresh folder state and force full sync if UIDVALIDITY changed
         if (!checkUidValidity()) {
-            syncState = newSyncState();
             mailboxInfo = remoteFolder.select();
+            syncState = newSyncState();
+            fullSync = true;
         }
 
-        // If not a full sync and there are no new local or remote changes,
+        // If not full sync and there are no new local or remote changes,
         // then no need to continue
-        MessageChanges changes = null;
         if (!fullSync) {
-            changes = MessageChanges.getChanges(
-                ds, localFolder.getFolder(), syncState.getLastModSeq());
-            if (!changes.hasChanges() &&
-                mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
-                syncState.setLastModSeq(changes.getModSeq());
+            if (changes == null) {
+                changes = FolderChanges.getChanges(
+                    ds, localFolder.getFolder(), syncState.getLastChangeId());
+            }
+            if (!changes.hasChanges() && mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
+                syncState.update(changes);
                 imapSync.putSyncState(localFolder.getId(), syncState);
                 return;
             }
         }
 
-        // Since know we need we need fetch new messages or sync flags,
-        // make sure remote folder is selected
         if (!remoteFolder.isSelected()) {
             mailboxInfo = remoteFolder.select();
         }
@@ -283,10 +276,11 @@ class ImapFolderSync {
             }
             syncFlags(lastFetchedUid);
         } else {
-            int lastModSeq = syncState.getLastModSeq();
+            int lastModSeq = syncState.getLastChangeId();
             if (lastModSeq > 0) {
                 // Push only changes for partial sync
-                syncState.setLastModSeq(pushChanges(changes));
+                pushChanges(changes);
+                syncState.update(changes);
             }
         }
 
@@ -320,15 +314,15 @@ class ImapFolderSync {
                ds.isSyncEnabled(localFolder.getFolder());
     }
     
-    private SyncState newSyncState() throws ServiceException {
-        SyncState ss = new SyncState();
+    private FolderSyncState newSyncState() throws ServiceException {
+        FolderSyncState ss = new FolderSyncState();
         synchronized (mailbox) {
             trackedMsgs = tracker.getMessages();
             localMsgIds = localFolder.getMessageIds();
-            ss.setLastModSeq(mailbox.getLastChangeID());
+            ss.setLastChangeId(mailbox.getLastChangeID());
+            ss.setLastModSeq(localFolder.getFolder().getImapMODSEQ());
         }
         ss.setLastFetchedUid(trackedMsgs.getLastUid());
-        fullSync = true;
         return ss;
     }
 
@@ -362,9 +356,9 @@ class ImapFolderSync {
      * We can handle cases 1-3 here. Case 4 is the mirror of case 3 so just
      * let it be handled when the originating folder is processed.
      */
-    private int pushChanges(MessageChanges changes) throws ServiceException, IOException {
+    private void pushChanges(FolderChanges changes) throws ServiceException, IOException {
         localFolder.debug("Pushing changes: %s", changes);
-        for (MessageChange change : changes.getChanges()) {
+        for (MessageChange change : changes.getMessageChanges()) {
             clearError(change.getItemId());
             switch (change.getType()) {
             case DELETED:
@@ -384,7 +378,6 @@ class ImapFolderSync {
                 break;
             }
         }
-        return changes.getModSeq();
     }
 
     public void finishSync() throws ServiceException, IOException {
@@ -979,10 +972,9 @@ class ImapFolderSync {
         if (syncedFolder != null && syncedFolder.syncState != null) {
             syncedFolder.syncState.updateLastFetchedUid(uid);
         } else {
-            SyncState ss = imapSync.removeSyncState(fid);
-            if (ss != null) {
-                ss.updateLastFetchedUid(uid);
-                imapSync.putSyncState(fid, ss);
+            FolderSyncState fss = imapSync.getFolderSyncState(fid);
+            if (fss != null) {
+                fss.updateLastFetchedUid(uid);
             }
         }
         return true;

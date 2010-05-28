@@ -45,7 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ConnectionManager {
+final class ConnectionManager {
     private Map<String, ImapConnection> connections =
         Collections.synchronizedMap(new HashMap<String, ImapConnection>());
 
@@ -272,7 +272,10 @@ public final class ConnectionManager {
         return new ResponseHandler() {
             public void handleResponse(ImapResponse res) throws Exception {
                 if (res.getCCode() == CAtom.EXISTS) {
-                    ds.needsSync(true);
+                    SyncState ss = SyncStateManager.getInstance().getOrCreateSyncState(ds);
+                    if (ss != null) {
+                        ss.setHasRemoteInboxChanges(true);
+                    }
                 }
             }
         };
