@@ -95,10 +95,6 @@ public class DateUtil {
         Calendar cal = new GregorianCalendar();
         cal.setTime(date);
 
-        int tzoffset = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / 60000;
-        char tzsign = tzoffset > 0 ? '+' : '-';
-        tzoffset = Math.abs(tzoffset);
-
         StringBuilder sb = new StringBuilder(40);
         append2DigitNumber(sb, cal.get(Calendar.DAY_OF_MONTH)).append('-');
         sb.append(MONTH_NAME[cal.get(Calendar.MONTH)]).append('-');
@@ -108,6 +104,16 @@ public class DateUtil {
         append2DigitNumber(sb, cal.get(Calendar.MINUTE)).append(':');
         append2DigitNumber(sb, cal.get(Calendar.SECOND)).append(' ');
 
+        sb.append(getTimezoneString(cal));
+        return sb.toString();
+    }
+
+    public static String getTimezoneString(Calendar cal) {
+        int tzoffset = (cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / 60000;
+        char tzsign = tzoffset > 0 ? '+' : '-';
+        tzoffset = Math.abs(tzoffset);
+
+        StringBuilder sb = new StringBuilder(5);
         sb.append(tzsign);
         append2DigitNumber(sb, tzoffset / 60);
         append2DigitNumber(sb, tzoffset % 60);
@@ -159,8 +165,13 @@ public class DateUtil {
     }
 
     public static Date parseRFC2822Date(String encoded, Date fallback) {
+        Calendar cal = parseRFC2822DateAsCalendar(encoded);
+        return cal == null ? fallback : cal.getTime();
+    }
+
+    public static Calendar parseRFC2822DateAsCalendar(String encoded) {
         if (encoded == null)
-            return fallback;
+            return null;
 
         Calendar cal = new GregorianCalendar();
         cal.set(Calendar.SECOND, 0);
@@ -182,10 +193,11 @@ public class DateUtil {
             if (encoded.charAt(pos) == ':')
                 pos = readCalendarField(encoded, skipCFWS(encoded, pos + 1), cal, Calendar.SECOND);
             readCalendarTimeZone(encoded, skipCFWS(encoded, pos), cal);
+
+            return cal;
         } catch (ParseException e) {
-            return fallback;
+            return null;
         }
-        return cal.getTime();
     }
 
     private static int skipCFWS(String encoded, int start) throws ParseException {
@@ -667,5 +679,13 @@ public class DateUtil {
         System.out.println("20070318050124.0Z" + "-true = " +  parseGeneralizedTime("20070318050124.0Z", true));
         System.out.println("20070318050124.0Z" + "-false = " +  parseGeneralizedTime("20070318050124.0Z", false));
         */
+
+        java.util.Calendar cal = DateUtil.parseRFC2822DateAsCalendar("21 Nov 97 09:55:06 GMT");
+        if (cal != null) {
+            java.text.DateFormat format = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT, java.util.Locale.UK);
+            System.out.println(format.format(cal.getTime()));
+            format.setTimeZone(TimeZone.getTimeZone("GMT" + DateUtil.getTimezoneString(cal)));
+            System.out.println(format.format(cal.getTime()));
+        }
     }
 }
