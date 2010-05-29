@@ -15,9 +15,11 @@
 package com.zimbra.cs.service.mail;
 
 import java.text.DateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.mail.MessagingException;
 import javax.mail.Transport;
@@ -30,6 +32,7 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -139,8 +142,14 @@ public class SendDeliveryReport extends MailDocumentHandler {
 
     private String generateTextPart(Account owner, MimeMessage mm, Locale lc) throws MessagingException {
         String subject = Mime.getSubject(mm);
-        Date date = mm.getSentDate();
-        String dateStr = date == null ? "???" : DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, lc).format(date);
+
+        String dateStr = "???";
+        Calendar cal = DateUtil.parseRFC2822DateAsCalendar(mm.getHeader("Date", null));
+        if (cal != null) {
+            DateFormat format = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, lc);
+            format.setTimeZone(TimeZone.getTimeZone("GMT" + DateUtil.getTimezoneString(cal)));
+            dateStr = format.format(cal.getTime());
+        }
 
         return L10nUtil.getMessage(MsgKey.readReceiptNotification, lc, dateStr, owner.getName(), subject);
     }
