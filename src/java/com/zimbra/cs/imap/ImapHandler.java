@@ -1607,7 +1607,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         String command = (returnOptions & RETURN_XLIST) != 0 ? "XLIST" : "LIST";
 
-        if (selectOptions == 0 && returnOptions == 0 && mailboxNames.size() == 1 && mailboxNames.contains("")) {
+        if (selectOptions == 0 && (returnOptions & ~RETURN_XLIST) == 0 && mailboxNames.size() == 1 && mailboxNames.contains("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
             //         the hierarchy delimiter and the root name of the name given in the reference."
             sendNotifications(true, false);
