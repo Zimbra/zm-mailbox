@@ -77,6 +77,9 @@
   <desc> Admin Console set attr rights for accounts contact tab </desc>
   <attrs>
     <a n="telephoneNumber"/>
+    <a n="homePhone"/>
+    <a n="mobile"/>
+    <a n="pager"/>
     <a n="company"/>
     <a n="street"/>
     <a n="l"/>
@@ -90,6 +93,9 @@
   <desc> Admin Console view attr rights for accounts contact tab </desc>
   <attrs>
     <a n="telephoneNumber"/>
+    <a n="homePhone"/>
+    <a n="mobile"/>
+    <a n="pager"/>    
     <a n="company"/>
     <a n="street"/>
     <a n="l"/>
