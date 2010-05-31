@@ -16,11 +16,13 @@
 package com.zimbra.common.util;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,7 +44,6 @@ public class L10nUtil {
     public static enum MsgKey {
 
         // calendar messages
-
         calendarSubjectCancelled,
         calendarSubjectWithheld,
         calendarCancelRemovedFromAttendeeList,
@@ -80,10 +81,10 @@ public class L10nUtil {
 
         // caldav messages
         caldavCalendarDescription,
-        
+
         // carddav messages
         carddavAddressbookDescription,
-        
+
         // share notification
         shareNotifSubject,
 
@@ -147,7 +148,7 @@ public class L10nUtil {
         zsRecurEndNumber,
         zsRecurEndByDate,
         zsRecurBlurb,
-        
+
         wikiTOC,
         wikiActions,
         wikiDocName,
@@ -159,97 +160,84 @@ public class L10nUtil {
 
         Notebook,
 
-		errAttachmentDownloadDisabled,
-		errInvalidId,
-		errInvalidImapId,
-		errInvalidPath,
-		errInvalidRequest,
-		errMailboxNotFound,
-		errMessageNotFound,
-		errMissingUploadId,
-		errMustAuthenticate,
-		errNoSuchAccount,
-		errNoSuchItem,
-		errNoSuchUpload,
-		errNotImplemented,
-		errPartNotFound,
-		errPermissionDenied,
-		errUnsupportedFormat
+        errAttachmentDownloadDisabled,
+        errInvalidId,
+        errInvalidImapId,
+        errInvalidPath,
+        errInvalidRequest,
+        errMailboxNotFound,
+        errMessageNotFound,
+        errMissingUploadId,
+        errMustAuthenticate,
+        errNoSuchAccount,
+        errNoSuchItem,
+        errNoSuchUpload,
+        errNotImplemented,
+        errPartNotFound,
+        errPermissionDenied,
+        errUnsupportedFormat
 
-		// add other messages in the future...
+        // add other messages in the future...
     }
 
 
     public static final String MSG_FILE_BASENAME = "ZsMsg";
-	public static final String L10N_MSG_FILE_BASENAME = "L10nMsg";
+    public static final String L10N_MSG_FILE_BASENAME = "L10nMsg";
 
-	public static final String P_LOCALE_ID = "loc";
-//	public static final String P_FALLBACK_LOCALE_ID = "javax.servlet.jsp.jstl.fmt.fallbackLocale";
+    public static final String P_LOCALE_ID = "loc";
+    //	public static final String P_FALLBACK_LOCALE_ID = "javax.servlet.jsp.jstl.fmt.fallbackLocale";
 
     // class loader that loads ZsMsg.properties files from
     // /opt/zimbra/conf/msgs directory
-    private static ClassLoader sMsgClassLoader;
-    public static ClassLoader getMsgClassLoader() { return sMsgClassLoader; } 
+    private static ClassLoader sMsgClassLoader = getClassLoader(LC.localized_msgs_directory.value());
 
-    private static Map<String, Locale> sLocaleMap;
+    private static Map<String, Locale> sLocaleMap = new HashMap<String, Locale>();
 
     private static ClassLoader getClassLoader(String directory) {
         ClassLoader classLoader = null;
         try {
-        	File msgsDir = new File(directory);
-            URL urls[] = new URL[1];
-            urls[0] = msgsDir.toURL();
+            URL urls[] = new URL[] { new File(directory).toURL() };
             classLoader = new URLClassLoader(urls);
         } catch (MalformedURLException e) {
-			try {
-				ZimbraLog.system.fatal("Unable to initialize localization", e);
-			}
-			finally {
-				Runtime.getRuntime().halt(1);
-			}
+            try {
+                ZimbraLog.system.fatal("Unable to initialize localization", e);
+            } finally {
+                Runtime.getRuntime().halt(1);
+            }
+        }
 
-		}
-        
         return classLoader;
     }
-    
-    static {
-		String msgsDir = LC.localized_msgs_directory.value();
-        sMsgClassLoader = getClassLoader(msgsDir);
-        sLocaleMap = new HashMap<String, Locale>();
+
+    public static ClassLoader getMsgClassLoader() {
+        return sMsgClassLoader;
+    } 
+
+    public static String getMessage(MsgKey key, Object... args) {
+        return getMessage(key.toString(), (Locale) null, args);
     }
 
-	public static String getMessage(MsgKey key,
-									Object... args) {
-		return getMessage(key.toString(), (Locale)null, args);
-	}
+    public static String getMessage(String key, Object... args) {
+        return getMessage(key, (Locale) null, args);
+    }
 
-	public static String getMessage(String key,
-									Object... args) {
-		return getMessage(key, (Locale)null, args);
-	}
+    public static String getMessage(MsgKey key, HttpServletRequest request, Object... args) {
+        return getMessage(key.toString(), request, args);
+    }
 
-	public static String getMessage(MsgKey key,
-									HttpServletRequest request,
-									Object... args) {
-		return getMessage(key.toString(), request, args);
-	}
+    public static String getMessage(String key, HttpServletRequest request, Object... args) {
+        Locale locale = null;
+        if (request != null) {
+            locale = lookupLocale(request.getParameter(P_LOCALE_ID));
+        }
+        // TODO: If not specified in params, get locale from config
+        if (locale == null && request != null) {
+            locale = request.getLocale();
+        }
+        return getMessage(key, locale, args);
+    }
 
-	public static String getMessage(String key,
-									HttpServletRequest request,
-									Object... args) {
-		Locale locale = null;
-		if (request != null) {
-			locale = lookupLocale(request.getParameter(P_LOCALE_ID));
-		}
-		// TODO: If not specified in params, get locale from config
-		if (locale == null && request != null) {
-			locale = request.getLocale();
-		}
-		return getMessage(key, locale, args);
-	}
-
-	/**
+    /**
      * Get the message for specified key in given locale, applying variable
      * substitutions with any args.  ({0}, {1}, etc.)
      * @param key message key
@@ -257,36 +245,100 @@ public class L10nUtil {
      * @param args variable-length argument list for {N} variable substitution
      * @return
      */
-    public static String getMessage(MsgKey key,
-                                    Locale lc,
-                                    Object... args) {
-		return getMessage(key.toString(), lc, args);
-	}
+    public static String getMessage(MsgKey key, Locale lc, Object... args) {
+        return getMessage(key.toString(), lc, args);
+    }
 
-	public static String getMessage(String key,
-									Locale lc,
-									Object... args) {
-		return getMessage(MSG_FILE_BASENAME, key, lc, args);
-	}
+    public static String getMessage(String key, Locale lc, Object... args) {
+        return getMessage(MSG_FILE_BASENAME, key, lc, args);
+    }
 
-	public static String getMessage(String basename, String key,
-									Locale lc,
-									Object... args) {
-		ResourceBundle rb;
-		try {
-			if (lc == null) lc = Locale.getDefault();
-			rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
-			String fmt = rb.getString(key);
-			if (fmt != null && args != null && args.length > 0)
-				return MessageFormat.format(fmt, args);
-			else
-				return fmt;
-		} catch (MissingResourceException e) {
-			ZimbraLog.misc.error("no resource bundle for base name " + basename + " can be found, " + 
-			                     "(locale=" + key + ")", e);
-			return null;
-		}
-	}
+    public static String getMessage(String basename, String key, Locale lc, Object... args) {
+        ResourceBundle rb;
+        try {
+            if (lc == null)
+                lc = Locale.getDefault();
+            rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
+            String fmt = rb.getString(key);
+            if (fmt != null && args != null && args.length > 0)
+                return MessageFormat.format(fmt, args);
+            else
+                return fmt;
+        } catch (MissingResourceException e) {
+            ZimbraLog.misc.error("no resource bundle for base name " + basename + " can be found, " + 
+                    "(locale=" + key + ")", e);
+            return null;
+        }
+    }
+
+    /** Returns the set of localized server messages for the given keys across
+     *  all installed locales on the system. */
+    public static Set<String> getMessagesAllLocales(MsgKey... msgkeys) {
+        String msgsDir = LC.localized_msgs_directory.value();
+        File dir = new File(msgsDir);
+        if (!dir.exists()) {
+            ZimbraLog.misc.info("message directory does not exist: " + msgsDir);
+            return Collections.emptySet();
+        } else if (!dir.isDirectory()) {
+            ZimbraLog.misc.info("message directory is not a directory: " + msgsDir);
+            return Collections.emptySet();
+        }
+
+        Set<String> messages = new HashSet<String>();
+        for (File file : dir.listFiles(new MatchingPropertiesFilter(new String[] { MSG_FILE_BASENAME }))) {
+            Locale locale = getLocaleForPropertiesFile(file, false);
+            if (locale != null) {
+                for (MsgKey key : msgkeys)
+                    messages.add(getMessage(key, locale));
+            }
+        }
+        messages.remove(null);
+        return messages;
+    }
+
+    static class MatchingPropertiesFilter implements FilenameFilter {
+        private final String[] prefixes;
+
+        MatchingPropertiesFilter(Object[] basenames) {
+            prefixes = new String[basenames.length * 2];
+            int i = 0;
+            for (Object basename : basenames) {
+                prefixes[i++] = basename + ".";
+                prefixes[i++] = basename + "_";
+            }
+        }
+
+        public boolean accept(File dir, String name) {
+            if (!name.endsWith(".properties"))
+                return false;
+            for (String prefix : prefixes) {
+                if (name.startsWith(prefix))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    /** Returns the locale corresponding to the given properties file.
+     *  Note that a filename like <tt>ZmMsg.properties</tt> will return
+     *  <tt>null</tt>, <u>not</u> <tt>en_US</tt>. */
+    static Locale getLocaleForPropertiesFile(File file, boolean debug) {
+        String[] localeParts = file.getName().split("\\.")[0].split("_");
+        if (localeParts.length == 2) {
+            if (debug)
+                ZimbraLog.misc.debug("        found locale: " + localeParts[1]);
+            return new Locale(localeParts[1]);
+        } else if (localeParts.length == 3) {
+            if (debug)
+                ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2]);
+            return new Locale(localeParts[1], localeParts[2]);
+        } else if (localeParts.length == 4) {
+            if (debug)
+                ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2] + " " + localeParts[3]);
+            return new Locale(localeParts[1], localeParts[2], localeParts[3]);
+        }
+        return null;
+    }
 
     /**
      * Lookup a Locale object from locale string specified in
@@ -300,7 +352,7 @@ public class L10nUtil {
             synchronized (sLocaleMap) {
                 lc = sLocaleMap.get(name);
                 if (lc == null) {
-					String parts[] = name.indexOf('_') != -1 ? name.split("_") : name.split("-");
+                    String parts[] = name.indexOf('_') != -1 ? name.split("_") : name.split("-");
                     if (parts.length == 1)
                         lc = new Locale(parts[0]);
                     else if (parts.length == 2)
@@ -315,13 +367,12 @@ public class L10nUtil {
         return lc;
     }
 
-    private static class LocaleComparatorByDisplayName
-    implements Comparator<Locale> {
+    private static class LocaleComparatorByDisplayName implements Comparator<Locale> {
         private Locale mInLocale;
         LocaleComparatorByDisplayName(Locale inLocale) {
             mInLocale = inLocale;
         }
-        
+
         public int compare(Locale a, Locale b) {
             String da = a.getDisplayName(mInLocale);
             String db = b.getDisplayName(mInLocale);
@@ -338,7 +389,7 @@ public class L10nUtil {
         Arrays.sort(locales, new LocaleComparatorByDisplayName(Locale.US));
         return locales;
     }
-    
+
     /**
      * Return all localized(i.e. translated) locales sorted by their inLocale display name 
      * @return
@@ -346,14 +397,14 @@ public class L10nUtil {
     public static Locale[] getLocalesSorted(Locale inLocale) {
         return LocalizedClientLocales.getLocales(inLocale);
     }
-    
+
     public static void flushLocaleCache() {
-    	if (ZimbraLog.misc.isDebugEnabled()) {
-    		ZimbraLog.misc.debug("L10nUtil: flushing locale cache");
-    	}
+        if (ZimbraLog.misc.isDebugEnabled()) {
+            ZimbraLog.misc.debug("L10nUtil: flushing locale cache");
+        }
         LocalizedClientLocales.flushCache();
     }
-    
+
     private static class LocalizedClientLocales {
         enum ClientResource {
             // I18nMsg,  // generated, all locales are there, so we don't count this resource
@@ -364,22 +415,20 @@ public class L10nUtil {
             ZmMsg
         }
 
-        
         // set of localized(translated) locales
         static Set<Locale> sLocalizedLocales = null;
-        
+
         // we cache the sorted list per display locale to avoid the array copy
         // and sorting each time for a GetLocale request
         static Map<Locale, Locale[]> sLocalizedLocalesSorted = null;
-        
+
         /*
          * load only those supported by JAVA
          */ 
         private static void loadBundlesByJavaLocal(Set<Locale> locales, String msgsDir) {
-            
             ClassLoader classLoader = getClassLoader(msgsDir);
             Locale[] allLocales = Locale.getAvailableLocales();
-            
+
             for (Locale locale : allLocales) {
                 for (ClientResource clientRes : ClientResource.values()) {
                     try {
@@ -399,8 +448,7 @@ public class L10nUtil {
                 }
             }
         }
-        
-        
+
         /*
          * scan disk
          */
@@ -414,65 +462,31 @@ public class L10nUtil {
                 ZimbraLog.misc.info("message directory is not a directory:" + msgsDir);
                 return;
             }
-            
-            for (File file : dir.listFiles()) {
-                
-                String fileName = file.getName();
-                ZimbraLog.misc.debug("loadBundlesByDiskScan processing file: " + fileName);
-                
-                String[] parts = fileName.split("\\.");
-                if (parts.length >=2 && parts[parts.length-1].equals("properties")) {
-                    ZimbraLog.misc.debug("    found property file:" + fileName);
-                    
-                    String[] localeParts = parts[0].split("_");
-                    if (localeParts.length >= 2) {
-                        ClientResource resource = null;
-                        try {
-                            resource = ClientResource.valueOf(localeParts[0]);
-                        } catch (IllegalArgumentException e) {
-                            // not a resource file
-                        }
-                        
-                        if (resource != null) {
-                            ZimbraLog.misc.debug("        found resource file: " + fileName);
-                            
-                            Locale locale = null;
-                            if (localeParts.length == 2) {
-                                locale = new Locale(localeParts[1]);
-                                ZimbraLog.misc.debug("        found locale: " + localeParts[1]);
-                            } else if (localeParts.length == 3) {
-                                locale = new Locale(localeParts[1], localeParts[2]);
-                                ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2]);
-                            } else if (localeParts.length == 4) {
-                                locale = new Locale(localeParts[1], localeParts[2], localeParts[3]);
-                                ZimbraLog.misc.debug("        found locale: " + localeParts[1] + " " + localeParts[2] + " " + localeParts[3]);
-                            }
-                            
-                            if (locale != null && !locales.contains(locale)) {
-                                ZimbraLog.misc.info("Adding locale " + locale.toString());
-                                locales.add(locale);
-                            }
-                        }
-                    }
+
+            for (File file : dir.listFiles(new MatchingPropertiesFilter(ClientResource.values()))) {
+                ZimbraLog.misc.debug("loadBundlesByDiskScan processing file: " + file.getName());
+                Locale locale = getLocaleForPropertiesFile(file, true);
+                if (locale != null && !locales.contains(locale)) {
+                    ZimbraLog.misc.info("Adding locale " + locale);
+                    locales.add(locale);
                 }
             }
-            
         }
-        
+
         private static void loadBundles() {
             sLocalizedLocales = new HashSet<Locale>();
-            
+
             // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/messages";
             String msgsDir = LC.localized_client_msgs_directory.value();
             ZimbraLog.misc.info("Scanning installed locales from " + msgsDir);
-            
+
             // the en_US locale is always available
             ZimbraLog.misc.info("Adding locale " + Locale.US.toString() + " (always added)");
             sLocalizedLocales.add(Locale.US);
-            
+
             // loadBundlesByJavaLocal(sLocalizedLocales, msgsDir);
             loadBundlesByDiskScan(sLocalizedLocales, msgsDir);
-            
+
             /*
              * UI displays locales with country in sub menus. 
              * 
@@ -505,17 +519,17 @@ public class L10nUtil {
                 sLocalizedLocales = SetUtil.union(sLocalizedLocales, pseudoLocales);
             }
         }
-        
+
         public synchronized static Locale[] getLocales(Locale inLocale) {
             if (sLocalizedLocales == null)
                 loadBundles();
-            
+
             Locale[] sortedLocales = null;
             if (sLocalizedLocalesSorted == null)
                 sLocalizedLocalesSorted = new HashMap<Locale, Locale[]>();
             else
                 sortedLocales = sLocalizedLocalesSorted.get(inLocale);
-            
+
             if (sortedLocales == null) {
                 // cache the sorted list per display locale
                 sortedLocales = sLocalizedLocales.toArray(new Locale[sLocalizedLocales.size()]);
@@ -524,7 +538,7 @@ public class L10nUtil {
             }
             return sortedLocales;
         }
-        
+
         public synchronized static void flushCache() {
             sLocalizedLocales = null;
             sLocalizedLocalesSorted = null;
