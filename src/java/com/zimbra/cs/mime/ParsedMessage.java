@@ -58,6 +58,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
@@ -1197,12 +1198,22 @@ public class ParsedMessage {
         sb.append(s);
     }
 
-    // these *should* be taken from a properties file
+    // default set of complex subject prefix strings to ignore when normalizing
     private static final Set<String> SYSTEM_PREFIXES = new HashSet<String>(Arrays.asList(
         "accept:", "accepted:", "decline:", "declined:",
         "tentative:", "cancelled:", "new time proposed:",
         "read-receipt:", "share created:", "share accepted:"
     ));
+
+    static {
+        // installed locale-specific complex subject prefix strings to ignore when normalizing
+        for (String localized : L10nUtil.getMessagesAllLocales(L10nUtil.MsgKey.calendarSubjectCancelled,
+                                                               L10nUtil.MsgKey.calendarReplySubjectAccept,
+                                                               L10nUtil.MsgKey.calendarReplySubjectDecline,
+                                                               L10nUtil.MsgKey.calendarReplySubjectTentative,
+                                                               L10nUtil.MsgKey.shareNotifSubject))
+            SYSTEM_PREFIXES.add(localized.trim().toLowerCase() + ":");
+    }
 
     private static final int MAX_PREFIX_LENGTH = 3;
 
