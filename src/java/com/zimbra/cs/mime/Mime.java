@@ -1061,8 +1061,11 @@ public class Mime {
                 sender = msg.getHeader("Sender", null);
             } catch (MessagingException e) {}
         }
-        if (sender == null)
+        if (sender == null) {
             sender = "";
+        } else if (sender.endsWith("<>")) { // Bug #47492
+            sender = sender.replaceAll("<>$","").trim();
+        }
         String decoded;
         try {
             decoded = MimeUtility.decodeText(sender);
