@@ -305,6 +305,7 @@ public class GetInfo extends AccountDocumentHandler  {
         elem.addAttribute(AccountConstants.A_ID, child.getId());
         elem.addAttribute(AccountConstants.A_NAME, child.getUnicodeName());
         elem.addAttribute(AccountConstants.A_VISIBLE, isVisible);
+        elem.addAttribute(AccountConstants.A_ACTIVE, child.isAccountStatusActive());
 
         String displayName = child.getAttr(Provisioning.A_displayName);
         if (displayName != null) {

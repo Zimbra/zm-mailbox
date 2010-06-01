@@ -213,6 +213,10 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         return get(SignatureBy.id, key);
     }
 
+    public boolean isAccountStatusActive() {
+        return Provisioning.ACCOUNT_STATUS_ACTIVE.equals(getAccountStatus(getProvisioning()));
+    }
+    
     public String getAccountStatus(Provisioning prov) {
         
         String domainStatus = null;

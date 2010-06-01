@@ -235,7 +235,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         try {
             Account account = mCredentials.getAccount();
-            if (account == null || !isAccountStatusActive(account)) {
+            if (account == null || !account.isAccountStatusActive()) {
                 ZimbraLog.imap.warn("account missing or not active; dropping connection");
                 return STOP_PROCESSING;
             }
@@ -253,7 +253,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         try {
             Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
-            if (account == null || !isAccountStatusActive(account)) {
+            if (account == null || !account.isAccountStatusActive()) {
                 ZimbraLog.imap.warn("target account missing or not active; dropping connection");
                 return STOP_PROCESSING;
             }
@@ -263,11 +263,6 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         return CONTINUE_PROCESSING;
-    }
-
-    // TODO Consider adding method to Account base class
-    private boolean isAccountStatusActive(Account account) {
-        return account.getAccountStatus(Provisioning.getInstance()).equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
     }
 
     boolean executeRequest(ImapRequest req) throws IOException, ImapParseException {
