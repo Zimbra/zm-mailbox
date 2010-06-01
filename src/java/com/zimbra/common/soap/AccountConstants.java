@@ -150,6 +150,7 @@ public class AccountConstants {
     public static final String E_OWNER = "owner";
     public static final String E_SHARE = "share";
     
+    public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
