@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.datasource.imap;
 
 import com.zimbra.common.service.ServiceException;
@@ -10,11 +24,15 @@ import com.zimbra.cs.mailbox.Message;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-final class FolderChanges {
+/*
+ * Find message changes within a specified folder.
+ */
+final class MessageChanges {
     private final DataSource ds;
     private final Folder folder;
     private final Mailbox mbox;
@@ -23,18 +41,18 @@ final class FolderChanges {
     private int lastChangeId;
     private int lastModSeq;
 
-    public static FolderChanges getChanges(DataSource ds, Folder folder, int changeId)
+    public static MessageChanges getChanges(DataSource ds, Folder folder, int changeId)
         throws ServiceException {
-        return new FolderChanges(ds, folder).findChanges(changeId);
+        return new MessageChanges(ds, folder).findChanges(changeId);
     }
     
-    private FolderChanges(DataSource ds, Folder folder) {
+    private MessageChanges(DataSource ds, Folder folder) {
         this.ds = ds;
         this.folder = folder;
         mbox = folder.getMailbox();
     }
 
-    private FolderChanges findChanges(int changeId) throws ServiceException {
+    private MessageChanges findChanges(int changeId) throws ServiceException {
         // Find tombstones and modified items since specified change id
         List<Integer> tombstones;
         List<Integer> modifiedItems;

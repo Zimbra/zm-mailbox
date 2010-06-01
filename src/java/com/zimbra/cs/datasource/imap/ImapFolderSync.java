@@ -200,7 +200,7 @@ class ImapFolderSync {
     /*
      * Synchronizes messages between local and remote folder.
      */
-    public void syncMessages(FolderChanges changes) throws ServiceException, IOException {
+    public void syncMessages(MessageChanges changes) throws ServiceException, IOException {
         localFolder.debug("Syncing messages for folder");
         if (!isSyncEnabled()) {
             localFolder.debug("Synchronization disabled for this folder");
@@ -231,7 +231,7 @@ class ImapFolderSync {
         // then no need to continue
         if (!fullSync) {
             if (changes == null) {
-                changes = FolderChanges.getChanges(
+                changes = MessageChanges.getChanges(
                     ds, localFolder.getFolder(), syncState.getLastChangeId());
             }
             if (!changes.hasChanges() && mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
@@ -356,7 +356,7 @@ class ImapFolderSync {
      * We can handle cases 1-3 here. Case 4 is the mirror of case 3 so just
      * let it be handled when the originating folder is processed.
      */
-    private void pushChanges(FolderChanges changes) throws ServiceException, IOException {
+    private void pushChanges(MessageChanges changes) throws ServiceException, IOException {
         localFolder.debug("Pushing changes: %s", changes);
         for (MessageChange change : changes.getMessageChanges()) {
             clearError(change.getItemId());

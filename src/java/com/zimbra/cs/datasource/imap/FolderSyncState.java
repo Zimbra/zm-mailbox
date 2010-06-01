@@ -58,7 +58,7 @@ final class FolderSyncState {
         }
     }
 
-    public void update(FolderChanges fc) {
+    public void update(MessageChanges fc) {
         lastChangeId = fc.getLastChangeId();
         lastModSeq = fc.getLastModSeq();
     }
