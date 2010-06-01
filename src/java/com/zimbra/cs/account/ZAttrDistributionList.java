@@ -34,7 +34,7 @@ public class ZAttrDistributionList extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100525-1214 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100601-1142 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
