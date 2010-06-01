@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100601-1142 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100601-1518 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -30760,7 +30760,7 @@ public class ZAttrAccount  extends MailTarget {
      */
     @ZAttr(id=1073)
     public String[] getPrefSpellIgnoreWord() {
-        return getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord);
+        String[] value = getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord); return value.length > 0 ? value : new String[] {"blog"};
     }
 
     /**

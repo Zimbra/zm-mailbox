@@ -4786,6 +4786,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1073" name="zimbraPrefSpellIgnoreWord" type="string" max="256" cardinality="multi" optionalIn="account,cos,domain" flags="domainAdminModifiable" since="6.0.5">
+  <defaultCOSValue>blog</defaultCOSValue>
   <desc>List of words to ignore when checking spelling.  The word list of an account includes the words specified for its cos and domain.
   </desc>
 </attr>

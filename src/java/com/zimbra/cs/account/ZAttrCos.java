@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100601-1142 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100601-1518 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -22854,7 +22854,7 @@ public class ZAttrCos extends NamedEntry {
      */
     @ZAttr(id=1073)
     public String[] getPrefSpellIgnoreWord() {
-        return getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord);
+        String[] value = getMultiAttr(Provisioning.A_zimbraPrefSpellIgnoreWord); return value.length > 0 ? value : new String[] {"blog"};
     }
 
     /**
