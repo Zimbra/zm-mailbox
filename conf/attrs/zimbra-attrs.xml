@@ -437,7 +437,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>must change password on auth</desc>
 </attr>
 
-<attr id="42" name="zimbraAuthMech" type="string" max="512" cardinality="single" optionalIn="domain">
+<attr id="42" name="zimbraAuthMech" type="string" max="512" cardinality="single" optionalIn="domain" callback="AuthMech">
   <desc>mechanism to use for authentication.  Valid values are zimbra, ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]</desc>
 </attr>
 
