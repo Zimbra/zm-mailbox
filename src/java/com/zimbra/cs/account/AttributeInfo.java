@@ -17,6 +17,7 @@ package com.zimbra.cs.account;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -42,10 +43,10 @@ public class AttributeInfo {
     private static Pattern DURATION_PATTERN = Pattern.compile("^\\d+([hmsd]|ms)?$");
     
     /** attribute name */
-    private String mName;
+    protected String mName;
     
     /** attribute type */
-    private AttributeType mType;
+    protected AttributeType mType;
     
     /** sort order */
     private AttributeOrder mOrder;
@@ -77,7 +78,7 @@ public class AttributeInfo {
     
     private List<String> mGlobalConfigValuesUpgrade;
     
-    private List<String> mDefaultCOSValues;
+    protected List<String> mDefaultCOSValues;
     
     private List<String> mDefaultCOSValuesUpgrade;
     
@@ -129,7 +130,7 @@ public class AttributeInfo {
     }
 
     
-    AttributeInfo (String attrName, int id, String parentId, int groupId, AttributeCallback callback, AttributeType type,
+    protected AttributeInfo (String attrName, int id, String parentId, int groupId, AttributeCallback callback, AttributeType type,
                    AttributeOrder order, String value, boolean immutable, String min, String max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
@@ -263,19 +264,23 @@ public class AttributeInfo {
         return max;
     }
     
-    public void checkValue(Object value, boolean checkImmutable) throws ServiceException {
+    public void checkValue(Object value, boolean checkImmutable, Map attrsToModify) throws ServiceException {
         if ((value == null) || (value instanceof String)) {
-            checkValue((String) value, checkImmutable);
+            checkValue((String) value, checkImmutable, attrsToModify);
         } else if (value instanceof String[]) {
             String[] values = (String[]) value;
             for (int i=0; i < values.length; i++)
-                checkValue(values[i], checkImmutable);
+                checkValue(values[i], checkImmutable, attrsToModify);
         }
     }
 
-    private void checkValue(String value, boolean checkImmutable) throws ServiceException {
+    protected void checkValue(String value, boolean checkImmutable, Map attrsToModify) throws ServiceException {
         if (checkImmutable && mImmutable)
             throw ServiceException.INVALID_REQUEST(mName+" is immutable", null);
+        checkValue(value, attrsToModify);
+    }
+
+    protected void checkValue(String value, Map attrsToModify) throws ServiceException {
 
         // means to delete/unset the attribute
         if (value == null || value.equals(""))

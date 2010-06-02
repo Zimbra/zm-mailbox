@@ -29,6 +29,7 @@ import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.util.BuildInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -145,7 +146,22 @@ public class AttributeManager {
             	return mInstance;
             }
             String dir = LC.zimbra_attrs_directory.value();
-            mInstance = new AttributeManager(dir);
+            String className = LC.zimbra_class_attrmanager.value();
+            if (className != null && !className.equals("")) {
+                try {
+                    try {
+                        mInstance = (AttributeManager) Class.forName(className).getDeclaredConstructor(String.class).newInstance(dir);
+                    } catch (ClassNotFoundException cnfe) {
+                        // ignore and look in extensions
+                        mInstance = (AttributeManager) ExtensionUtil.findClass(className).getDeclaredConstructor(String.class).newInstance(dir);
+                    }
+                } catch (Exception e) {
+                    ZimbraLog.account.error("could not instantiate AttributeManager interface of class '" + className + "'; defaulting to AttributeManager", e);
+                }
+            }
+            if (mInstance == null) {
+                mInstance = new AttributeManager(dir);
+            }
             if (mInstance.hasErrors()) {
             	throw ServiceException.FAILURE(mInstance.getErrors(), null);
             }
@@ -156,7 +172,7 @@ public class AttributeManager {
         }
     }
 
-    private AttributeManager(String dir) throws ServiceException {
+    public AttributeManager(String dir) throws ServiceException {
     	initFlagsToAttrsMap();
         initClassToAttrsMap();        
     	File fdir = new File(dir);
@@ -453,7 +469,7 @@ public class AttributeManager {
                 }
             }
 
-            AttributeInfo info = new AttributeInfo(
+            AttributeInfo info = createAttributeInfo(
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
@@ -487,6 +503,22 @@ public class AttributeManager {
                 }
             }
         }
+    }
+
+    protected AttributeInfo createAttributeInfo(String name, int id, String parentOid, int groupId,
+                                                AttributeCallback callback, AttributeType type, AttributeOrder order,
+                                                String value, boolean immutable, String min, String max,
+                                                AttributeCardinality cardinality, Set<AttributeClass> requiredIn,
+                                                Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
+                                                List<String> globalConfigValues, List<String> defaultCOSValues,
+                                                List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade,
+                                                String description, List<AttributeServerType> requiresRestart,
+                                                BuildInfo.Version sinceVer, BuildInfo.Version deprecatedSinceVer) {
+        return new AttributeInfo(
+                name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
+                cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
+                globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
+                description, requiresRestart, sinceVer, deprecatedSinceVer);
     }
 
     private enum ObjectClassType {
@@ -1023,7 +1055,7 @@ public class AttributeManager {
                     mIDNCallback.preModify(context, name, value, attrs, entry, isCreate);
                     value = attrs.get(name);
                 }
-                info.checkValue(value, checkImmutable);
+                info.checkValue(value, checkImmutable, attrs);
                 if (allowCallback && info.getCallback() != null)
                     info.getCallback().preModify(context, name, value, attrs, entry, isCreate);
             } else {
