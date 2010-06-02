@@ -2994,7 +2994,7 @@ Grant account level permissions.
      usr - either zid or d is required. 
      grp - either zid or d is required. 
      all - zid, d, pw are ignored
-     gst - zid is ignored, d is required, pw is optional (not yet supported)
+     gst - zid is ignored, d is required, pw is optional
      key - zid is ignored, d is required
      pub - zid, d, pw are ignored
   
@@ -3012,7 +3012,7 @@ GrantPermissionResponse returns permissions that are successfully granted.
 
 <GrantPermissionResponse>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>*
-</GrantPermissionRequest>
+</GrantPermissionResponse>
 ---------------------------
 
 Revoke account level permissions.
