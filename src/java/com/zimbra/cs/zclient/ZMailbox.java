@@ -4019,7 +4019,10 @@ public class ZMailbox implements ToZJSONObject {
             ZApptSummaryResult cached = mApptSummaryCache.get(startMsec, endMsec, folderId, timeZone, query);
             if (cached == null) {
                 ZFolder folder = getFolderById(folderId);
-                if (folder != null && (!(folder instanceof ZMountpoint) || (folder instanceof ZMountpoint && folder.getEffectivePerms() != null))) {
+                /*
+                 * Folder cache might not always result in a hit, still go ahead and fetch the appointments.
+                 */
+                if ((folder == null) || !(folder instanceof ZMountpoint) || (folder instanceof ZMountpoint && folder.getEffectivePerms() != null)) {
                     idsToFetch.add(folderId);
                 }
             } else {
