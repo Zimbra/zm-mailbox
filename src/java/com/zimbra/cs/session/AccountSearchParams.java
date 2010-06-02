@@ -89,7 +89,7 @@ class AccountSearchParams {
     
     void doSearch() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        mResult = prov.searchDirectory(mOptions, false);
+        mResult = prov.searchDirectory(mOptions);
         
         if (mRightChecker != null) {
             List allowed = new ArrayList<String>();

@@ -394,7 +394,11 @@ public class ZimbraLdapContext {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             
             if (ZimbraLog.ldap.isDebugEnabled())
-                ZimbraLog.ldap.debug("GET DIR CTXT: " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", startTLS=" + startTLS);
+                ZimbraLog.ldap.debug("GET DIR CTXT: " + "url=" + env.get(Context.PROVIDER_URL) + 
+                        ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + 
+                        ", startTLS=" + startTLS +
+                        ", connpool=" + env.get("com.sun.jndi.ldap.connect.pool"));
+            
             mDirContext = new InitialLdapContext(env, null);
                         
             if (startTLS) {

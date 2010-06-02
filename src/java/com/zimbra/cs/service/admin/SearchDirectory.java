@@ -170,7 +170,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             options.setSortAscending(sortAscending);
             options.setSortAttr(sortBy);
             options.setConvertIDNToAscii(true);
-            accounts = prov.searchDirectory(options, false);
+            accounts = prov.searchDirectory(options);
             accounts = rightChecker.getAllowed(accounts);
         }
 

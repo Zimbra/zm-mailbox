@@ -1351,10 +1351,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException;
 
-    public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
-        return searchDirectory(options);
-    }
-
     public enum GalMode {
         zimbra, // only use internal
         ldap,   // only use exteranl gal

@@ -4611,7 +4611,7 @@ public class LdapProvisioning extends Provisioning {
         return bases.toArray(new String[bases.size()]);
     }
     
-    public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
+    private List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
         String base = null;
         
         LdapDomain ld = (LdapDomain) options.getDomain();
