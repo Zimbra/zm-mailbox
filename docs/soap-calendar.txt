@@ -51,7 +51,7 @@
      [<e .../>*]  // users to send request to
      <su>{subject}</su>
 
-     <inv [uid="uid-for-create"]>  // optional: client can request the UID to use
+     <inv>
        [                            // Time zone components define the time zones referenced in the
                                     // rest of the <inv>, for start/end times and recurrence rules.
                                     // Time zones defined in the LDAP server don't need to be defined
@@ -95,6 +95,7 @@
            // in <inv> are defined in LDAP
        [
        <comp
+            [uid="uid-for-create"]  // optional: client can request the UID to use
             [status="TENT|CONF|CANC|NEED|COMP|INPR|WAITING|DEFERRED"]
                             // TENTative, CONFirmed, CANCelled, COMPleted,
                             // INPRogress, WAITING, DEFERRED

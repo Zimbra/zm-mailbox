@@ -3289,4 +3289,12 @@ resets the contact ranking table for the account
     <zimlet name="{name}" presence="{enabled|disabled}"/>+
 </ModifyZimletPrefsResponse>
 
+----------------------------
+
+<GenerateUUIDRequest/>
+
+<GenerateUUIDResponse>{generated UUID}</GenerateUUIDResponse>
+
+Ajax client can use this request to ask the server for help in generating a proper, globally unique UUID.
+
 ---------

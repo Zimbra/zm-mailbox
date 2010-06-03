@@ -38,6 +38,9 @@ public class MailService implements DocumentService {
         // noop
         dispatcher.registerHandler(MailConstants.NO_OP_REQUEST, new NoOp());
 
+        // UUID generation
+        dispatcher.registerHandler(MailConstants.GENERATE_UUID_REQUEST, new GenerateUUID());
+
         // searching
         dispatcher.registerHandler(MailConstants.BROWSE_REQUEST, new Browse());
         dispatcher.registerHandler(MailConstants.SEARCH_REQUEST, new Search());
