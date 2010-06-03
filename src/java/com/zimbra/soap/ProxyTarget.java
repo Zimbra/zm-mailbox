@@ -121,6 +121,7 @@ public class ProxyTarget {
         SoapHttpTransport transport = null;
         try {
             transport = new SoapHttpTransport(mURL);
+            transport.setTargetAcctId(zsc.getRequestedAccountId());
             if (mMaxAttempts > 0)
                 transport.setRetryCount(mMaxAttempts);
             if (mTimeout >= 0)
