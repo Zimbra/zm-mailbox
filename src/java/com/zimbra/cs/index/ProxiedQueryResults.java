@@ -295,6 +295,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         else
             zscProxy = new ZimbraSoapContext(mAuthToken, mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount() + 1);
 
+        long start = System.currentTimeMillis();
         Element searchResp = null;
         try {
             searchResp = DocumentHandler.proxyWithNotification(searchElt, proxy, zscProxy, zscInbound);
@@ -311,6 +312,9 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 return false;
             }
             throw e;
+        } finally {
+            long elapsed = System.currentTimeMillis() - start;
+            ZimbraLog.index.debug("Remote query took " + elapsed + "ms; URL=" + proxy.toString() + "; QUERY=" + searchElt.toString());
         }
 
         int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
