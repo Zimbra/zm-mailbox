@@ -26,6 +26,10 @@ public class MailConstants {
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
 
+    // UUID generation
+    public static final QName GENERATE_UUID_REQUEST = QName.get("GenerateUUIDRequest", NAMESPACE);
+    public static final QName GENERATE_UUID_RESPONSE = QName.get("GenerateUUIDResponse", NAMESPACE);
+
     // searching
     public static final QName SEARCH_REQUEST = QName.get("SearchRequest", NAMESPACE);
     public static final QName SEARCH_RESPONSE = QName.get("SearchResponse", NAMESPACE);
