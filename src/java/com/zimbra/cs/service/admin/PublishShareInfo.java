@@ -82,23 +82,31 @@ public class PublishShareInfo extends ShareInfoHandler {
             checkAdminLoginAsRight(zsc, prov, ownerAcct);
             
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ownerAcct, false);
-            if (mbox == null)
-                throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
+
+            if (mbox == null) {
+                /*
+                 * bug 42416
+                 * instead of throwing, just do nothing.  The mailbox does not exist, there is any
+                 * share info anyway. 
+                 */
+                // throw ServiceException.FAILURE("mailbox not found for account " + ownerAcct.getId(), null);
+            } else {
             
-            Folder folder = null;
+                Folder folder = null;
+                    
+                if (folderPath != null)
+                    folder = getFolderByPath(octxt, mbox, folderPath);
+                else if (folderId != null)
+                    folder = getFolderByPath(octxt, mbox, folderId);
+                else if (folderIdOrPath != null)
+                    folder = getFolder(octxt, mbox, folderIdOrPath);
+                else {
+                    // no folder is given, iterate through all folders
+                    folder = null;
+                }
                 
-            if (folderPath != null)
-                folder = getFolderByPath(octxt, mbox, folderPath);
-            else if (folderId != null)
-                folder = getFolderByPath(octxt, mbox, folderId);
-            else if (folderIdOrPath != null)
-                folder = getFolder(octxt, mbox, folderIdOrPath);
-            else {
-                // no folder is given, iterate through all folders
-                folder = null;
+                ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry, ownerAcct, folder);
             }
-            
-            ShareInfo.Publishing.publish(prov, octxt, publishingOnEntry, ownerAcct, folder);
             
         } else {
             // removing (unpublishing)
