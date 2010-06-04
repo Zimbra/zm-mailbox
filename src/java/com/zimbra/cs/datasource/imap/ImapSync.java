@@ -67,7 +67,7 @@ public class ImapSync extends MailItemImport {
     public synchronized void test() throws ServiceException {
         // In case datasource was modified, make sure we close any open
         // connection as well as remove cached synchronization state
-        dataSourceDeleted(dataSource.getId());
+        reset(dataSource.getId());
         connect();
         if (reuseConnections) {
             releaseConnection();
@@ -76,7 +76,7 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    public static void dataSourceDeleted(String dataSourceId) {
+    public static void reset(String dataSourceId) {
         ConnectionManager.getInstance().closeConnection(dataSourceId);
         SyncStateManager.getInstance().removeSyncState(dataSourceId);
     }
@@ -84,9 +84,7 @@ public class ImapSync extends MailItemImport {
     public static boolean isSyncNeeded(DataSource ds) throws ServiceException {
         if (ds.isOffline()) {
             SyncState ss = SyncStateManager.getInstance().getSyncState(ds);
-            if (ss != null) {
-                return ss.hasInboxChanges();
-            }
+            return ss == null || ss.checkAndResetHasChanges(ds);
         }
         return false;
     }
@@ -135,7 +133,7 @@ public class ImapSync extends MailItemImport {
         if (dataSource.isOffline()) {
             getMailbox().beginTrackingSync();
             syncState = SyncStateManager.getInstance().getOrCreateSyncState(dataSource);
-            syncState.setHasRemoteInboxChanges(false);
+            syncState.resetHasChanges();
         }
         fullSync |= forceFullSync();
         this.fullSync = fullSync;
@@ -147,6 +145,12 @@ public class ImapSync extends MailItemImport {
             folderIds.add(Mailbox.ID_FOLDER_INBOX);
             if (!dataSource.isSaveToSent()) {
                 folderIds.add(Mailbox.ID_FOLDER_SENT);
+            }
+            // If there are pending INBOX changes then sync related folders as well
+            MessageChanges mc = syncState.getInboxChanges();
+            if (mc != null && mc.hasChanges()) {
+                folderIds.addAll(mc.getFolderIdsToSync());
+                System.out.println("XXX changed folder ids = " + folderIds);
             }
         }
         connect();

@@ -443,6 +443,8 @@ public class DataSource extends AccountProperty {
     public boolean isSyncNeeded() throws ServiceException {
         return false;
     }
+
+    public void mailboxDeleted() {}
     
     public Mailbox getMailbox() throws ServiceException {
         return DataSourceManager.getInstance().getMailbox(this);

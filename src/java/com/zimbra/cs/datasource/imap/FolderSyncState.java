@@ -18,7 +18,6 @@ final class FolderSyncState {
     private long lastFetchedUid;
     private long lastUidNext;
     private int lastChangeId;
-    private int lastModSeq;
 
     public long getLastFetchedUid() {
         return lastFetchedUid;
@@ -30,10 +29,6 @@ final class FolderSyncState {
 
     public int getLastChangeId() {
         return lastChangeId;
-    }
-
-    public int getLastModSeq() {
-        return lastModSeq;
     }
 
     public void setLastFetchedUid(long uid) {
@@ -48,24 +43,15 @@ final class FolderSyncState {
         this.lastChangeId = lastChangeId;
     }
 
-    public void setLastModSeq(int lastModSeq) {
-        this.lastModSeq = lastModSeq;
-    }
-
     public void updateLastFetchedUid(long uid) {
         if (uid > lastFetchedUid) {
             lastFetchedUid = uid;
         }
     }
 
-    public void update(MessageChanges fc) {
-        lastChangeId = fc.getLastChangeId();
-        lastModSeq = fc.getLastModSeq();
-    }
-
     public String toString() {
         return String.format(
-            "{lastFetchedUid=%d,lastUidNext=%d,lastChangeId=%d,lastModSeq=%d}",
-            lastFetchedUid, lastUidNext, lastChangeId, lastModSeq);
+            "{lastFetchedUid=%d,lastUidNext=%d,lastChangeId=%d}",
+            lastFetchedUid, lastUidNext, lastChangeId);
     }
 }

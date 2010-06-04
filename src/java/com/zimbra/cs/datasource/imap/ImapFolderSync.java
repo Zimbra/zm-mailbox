@@ -235,7 +235,7 @@ class ImapFolderSync {
                     ds, localFolder.getFolder(), syncState.getLastChangeId());
             }
             if (!changes.hasChanges() && mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
-                syncState.update(changes);
+                syncState.setLastChangeId(changes.getLastChangeId());
                 imapSync.putSyncState(localFolder.getId(), syncState);
                 return;
             }
@@ -280,7 +280,7 @@ class ImapFolderSync {
             if (lastModSeq > 0) {
                 // Push only changes for partial sync
                 pushChanges(changes);
-                syncState.update(changes);
+                syncState.setLastChangeId(changes.getLastChangeId());
             }
         }
 
@@ -310,7 +310,7 @@ class ImapFolderSync {
     }
 
     private boolean isSyncEnabled() throws ServiceException {
-        return tracker != null && tracker.getUidValidity() > 0 ||
+        return tracker != null && tracker.getUidValidity() > 0 &&
                ds.isSyncEnabled(localFolder.getFolder());
     }
     
@@ -320,7 +320,6 @@ class ImapFolderSync {
             trackedMsgs = tracker.getMessages();
             localMsgIds = localFolder.getMessageIds();
             ss.setLastChangeId(mailbox.getLastChangeID());
-            ss.setLastModSeq(localFolder.getFolder().getImapMODSEQ());
         }
         ss.setLastFetchedUid(trackedMsgs.getLastUid());
         return ss;
@@ -358,24 +357,21 @@ class ImapFolderSync {
      */
     private void pushChanges(MessageChanges changes) throws ServiceException, IOException {
         localFolder.debug("Pushing changes: %s", changes);
-        for (MessageChange change : changes.getMessageChanges()) {
+        for (MessageChange change : changes.getChanges()) {
             clearError(change.getItemId());
-            switch (change.getType()) {
-            case DELETED:
+            if (change.isAdded()) {
+                newMsgIds.add(change.getItemId());
+            } else if (change.isDeleted()) {
                 deleteMessage(change.getTracker().getUid());
-                break;
-            case UPDATED:
+            } else if (change.isUpdated()) {
                 int flags = change.getTracker().getFlags();
                 updateFlags(change.getTracker(), SyncUtil.zimbraToImapFlags(flags));
-                break;
-            case ADDED:
-                newMsgIds.add(change.getItemId());
-                break;
-            case MOVED:
+            } else if (change.isMoved() &&
+                       change.getMessage().getFolderId() != localFolder.getId()) {
+                // Message moved to another folder
                 if (!moveMessage(change.getTracker())) {
                     deleteMessage(change.getTracker().getUid());
                 }
-                break;
             }
         }
     }
@@ -906,8 +902,7 @@ class ImapFolderSync {
         }
     }
 
-    private boolean moveMessage(ImapMessage msgTracker)
-        throws ServiceException, IOException {
+    private boolean moveMessage(ImapMessage msgTracker) throws ServiceException, IOException {
         Message msg;
         Folder folder;
 

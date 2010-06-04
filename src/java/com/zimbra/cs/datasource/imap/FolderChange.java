@@ -14,38 +14,34 @@
  */
 package com.zimbra.cs.datasource.imap;
 
-import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Folder;
 
-final class MessageChange {
+class FolderChange {
     public enum Type {
-        ADDED, UPDATED, MOVED, DELETED
+        ADDED, MOVED, DELETED
     }
 
     private final Type type;
     private final int itemId;
-    private final Message msg;
-    private final ImapMessage tracker;
+    private final Folder folder;
+    private final ImapFolder tracker;
 
-    public static MessageChange added(Message msg) {
-        return new MessageChange(Type.ADDED, msg.getId(), msg, null);
+    public static FolderChange added(Folder folder) {
+        return new FolderChange(Type.ADDED, folder.getId(), folder, null);
     }
 
-    public static MessageChange updated(Message msg, ImapMessage tracker) {
-        return new MessageChange(Type.UPDATED, msg.getId(), msg, tracker);
+    public static FolderChange moved(Folder folder, ImapFolder tracker) {
+        return new FolderChange(Type.MOVED, folder.getId(), folder, tracker);
     }
 
-    public static MessageChange moved(Message msg, ImapMessage tracker) {
-        return new MessageChange(Type.MOVED, msg.getId(), msg, tracker);
-    }
-
-    public static MessageChange deleted(int itemId, ImapMessage tracker) {
-        return new MessageChange(Type.DELETED, itemId, null, tracker);
+    public static FolderChange deleted(int itemId, ImapFolder tracker) {
+        return new FolderChange(Type.DELETED, itemId, null, tracker);
     }
     
-    MessageChange(Type type, int itemId, Message msg, ImapMessage tracker) {
+    private FolderChange(Type type, int itemId, Folder folder, ImapFolder tracker) {
         this.type = type;
         this.itemId = itemId;
-        this.msg = msg;
+        this.folder = folder;
         this.tracker = tracker;
     }
 
@@ -57,20 +53,16 @@ final class MessageChange {
         return itemId;
     }
 
-    public Message getMessage() {
-        return msg;
+    public Folder getFolder() {
+        return folder;
     }
 
-    public ImapMessage getTracker() {
+    public ImapFolder getTracker() {
         return tracker;
     }
 
     public boolean isAdded() {
         return type == Type.ADDED;
-    }
-
-    public boolean isUpdated() {
-        return type == Type.UPDATED;
     }
 
     public boolean isMoved() {

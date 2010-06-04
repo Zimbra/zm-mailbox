@@ -27,25 +27,19 @@ import java.util.Collection;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-/*
- * Find message changes within a specified folder.
- */
-final class MessageChanges {
+class MessageChanges {
     private final DataSource ds;
     private final Folder folder;
     private final Mailbox mbox;
-    private List<MessageChange> messageChanges;
-    private Set<Integer> changedFolderIds;
+    private List<MessageChange> changes;
     private int lastChangeId;
-    private int lastModSeq;
 
     public static MessageChanges getChanges(DataSource ds, Folder folder, int changeId)
         throws ServiceException {
         return new MessageChanges(ds, folder).findChanges(changeId);
     }
-    
+
     private MessageChanges(DataSource ds, Folder folder) {
         this.ds = ds;
         this.folder = folder;
@@ -59,7 +53,6 @@ final class MessageChanges {
         
         synchronized (mbox) {
             lastChangeId = mbox.getLastChangeID();
-            lastModSeq = folder.getImapMODSEQ();
             if (lastChangeId <= changeId) {
                 return this; // No changes
             }
@@ -70,92 +63,94 @@ final class MessageChanges {
             return this; // No changes
         }
 
-        messageChanges = new ArrayList<MessageChange>();
-        changedFolderIds = new HashSet<Integer>();
+        changes = new ArrayList<MessageChange>();
         
         // Find messages deleted from this folder
         if (tombstones != null) {
             for (int id : tombstones) {
-                ImapMessage im = getTracker(id);
-                if (im != null && im.getFolderId() == folder.getId()) {
-                    messageChanges.add(MessageChange.deleted(id, im));
+                ImapMessage tracker = getTracker(id);
+                if (tracker != null && tracker.getFolderId() == folder.getId()) {
+                    changes.add(MessageChange.deleted(id, tracker));
                 }
             }
         }
 
         // Find modified messages for this folder
-        int folderId = folder.getId();
         for (int id : modifiedItems) {
-            Message msg = getMessage(id);
-            if (msg != null) {
-                changedFolderIds.add(msg.getFolderId());
-                ImapMessage tracker = getTracker(id);
-                if (tracker != null) {
-                    changedFolderIds.add(tracker.getFolderId());
-                    if (msg.getFolderId() == tracker.getFolderId()) {
-                        if (tracker.getFolderId() == folderId &&
-                            tracker.getFlags() != msg.getFlagBitmask()) {
-                            // Message flags updated
-                            messageChanges.add(MessageChange.updated(msg, tracker));
-                        } else {
-                            // Message moved to this folder from another.
-                            // Let this case be handled when the other folder
-                            // is synchronized.
-                        }
-                    } else if (tracker.getFolderId() == folderId) {
-                        // Message moved to another folder
-                        messageChanges.add(MessageChange.moved(msg, tracker));
-                    }
-                } else if (msg.getFolderId() == folderId) {
-                    // Message added to this folder
-                    messageChanges.add(MessageChange.added(msg));
-                }
+            MessageChange change = getChange(id);
+            if (change != null) {
+                changes.add(change);
             }
         }
         
         return this;
     }
 
+    private MessageChange getChange(int msgId) throws ServiceException {
+        Message msg = getMessage(msgId);
+        if (msg != null) {
+            ImapMessage tracker = getTracker(msgId);
+            if (tracker != null) {
+                if (msg.getFolderId() == folder.getId()) {
+                    if (tracker.getFolderId() != folder.getId()) {
+                        // Message moved to this folder from another
+                        return MessageChange.moved(msg, tracker);
+                    }
+                    if (tracker.getFlags() != msg.getFlagBitmask()) {
+                        // Message flags updated
+                        return MessageChange.updated(msg, tracker);
+                    }
+                } else if (tracker.getFolderId() == folder.getId()) {
+                    // Message moved from this folder to another
+                    return MessageChange.moved(msg, tracker);
+                }
+            } else if (msg.getFolderId() == folder.getId()) {
+                // Message added to this folder
+                return MessageChange.added(msg);
+            }
+        }
+        return null;
+    }
+
     public boolean hasChanges() {
-        return messageChanges != null && !messageChanges.isEmpty();
+        return changes != null && !changes.isEmpty();
     }
     
-    public Collection<MessageChange> getMessageChanges() {
-        if (messageChanges == null) {
-            messageChanges = new ArrayList<MessageChange>();
+    public Collection<MessageChange> getChanges() {
+        if (changes == null) {
+            changes = new ArrayList<MessageChange>();
         }
-        return messageChanges;
+        return changes;
     }
 
     public int getLastChangeId() {
         return lastChangeId;
     }
 
-    public int getLastModSeq() {
-        return lastModSeq;
-    }
-
-    /*
-     * Returns set of ids for all folders that have been effected by changes.
-     */
-    public Collection<Integer> getChangedFolderIds() {
-        if (changedFolderIds == null) {
-            changedFolderIds = new HashSet<Integer>();
+    public Collection<Integer> getFolderIdsToSync() {
+        HashSet<Integer> folderIds = new HashSet<Integer>();
+        for (MessageChange change : changes) {
+            if (change.isAdded() || change.isUpdated() || change.isMoved()) {
+                folderIds.add(change.getMessage().getFolderId());
+            }
+            if (change.isUpdated() || change.isMoved() || change.isDeleted()) {
+                folderIds.add(change.getTracker().getFolderId());
+            }
         }
-        return changedFolderIds;
+        return folderIds;
     }
 
-    private Message getMessage(int itemId) throws ServiceException {
+    private Message getMessage(int msgId) throws ServiceException {
         try {
-            return mbox.getMessageById(null, itemId);
+            return mbox.getMessageById(null, msgId);
         } catch (MailServiceException.NoSuchItemException e) {
             return null;
         }
     }
     
-    private ImapMessage getTracker(int itemId) throws ServiceException {
+    private ImapMessage getTracker(int msgId) throws ServiceException {
         try {
-            return new ImapMessage(ds, itemId);
+            return new ImapMessage(ds, msgId);
         } catch (MailServiceException.NoSuchItemException e) {
             return null;
         }
@@ -164,7 +159,7 @@ final class MessageChanges {
     @Override
     public String toString() {
         int added = 0, updated = 0, moved = 0, deleted = 0;
-        for (MessageChange change : getMessageChanges()) {
+        for (MessageChange change : getChanges()) {
             switch (change.getType()) {
             case ADDED:   added++; break;
             case UPDATED: updated++; break;
@@ -173,8 +168,8 @@ final class MessageChanges {
             }
         }
         return String.format(
-            "{changeId=%d,added=%d,updated=%d,moved=%d,deleted=%d,folders=%s}",
-            lastChangeId, added, updated, moved, deleted, getChangedFolderIds());
+            "{changeId=%d,added=%d,updated=%d,moved=%d,deleted=%d}",
+            lastChangeId, added, updated, moved, deleted);
     }
 
 }
