@@ -17,10 +17,13 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
@@ -304,17 +307,31 @@ public class User extends Principal {
 			if (nameOnly)
 				return proxy;
         	ArrayList<Pair<Mountpoint,ZFolder>> mps = getMountpoints(ctxt);
+            HashSet<Account> writeProxies = new HashSet<Account>();
+        	HashMap<Account,Element> proxies = new HashMap<Account,Element>();
         	for (Pair<Mountpoint,ZFolder> folder : mps) {
         		try {
         			short rights = ACL.stringToRights(folder.getSecond().getEffectivePerms());
-        			if ((rights & ACL.RIGHT_WRITE) == 0 && (rights & ACL.RIGHT_READ) > 0) {
-        				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
-        				if (owner != null)
-        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner));
-        			}
+                    Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
+                    if (owner == null)
+                        continue;
+                    if ((rights & ACL.RIGHT_WRITE) > 0) {
+                        writeProxies.add(owner);
+                        proxies.remove(owner);
+                    }
+                    if ((rights & ACL.RIGHT_WRITE) == 0 && (rights & ACL.RIGHT_READ) > 0) {
+                        if (!writeProxies.contains(owner) && !proxies.containsKey(owner)) {
+                            Element e = DocumentHelper.createElement(DavElements.E_HREF);
+                            e.setText(UrlNamespace.getPrincipalUrl(mAccount, owner));
+                            proxies.put(owner, e);
+                        }
+                    }
         		} catch (ServiceException se) {
             		ZimbraLog.dav.warn("can't convert rights", se);
         		}
+        	}
+        	for (Element e : proxies.values()) {
+        	    proxy.add(e);
         	}
     		return proxy;
     	}
@@ -330,13 +347,18 @@ public class User extends Principal {
 			if (nameOnly)
 				return proxy;
         	ArrayList<Pair<Mountpoint,ZFolder>> mps = getMountpoints(ctxt);
+            HashSet<Account> proxies = new HashSet<Account>();
         	for (Pair<Mountpoint,ZFolder> folder : mps) {
         		try {
         			short rights = ACL.stringToRights(folder.getSecond().getEffectivePerms());
         			if ((rights & ACL.RIGHT_WRITE) > 0) {
         				Account owner = Provisioning.getInstance().get(AccountBy.id, folder.getFirst().getOwnerId());
-        				if (owner != null)
-        					proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner));
+                        if (owner == null)
+                            continue;
+                        if (!proxies.contains(owner)) {
+                            proxy.addElement(DavElements.E_HREF).setText(UrlNamespace.getPrincipalUrl(mAccount, owner));
+                            proxies.add(owner);
+                        }
         			}
         		} catch (ServiceException se) {
             		ZimbraLog.dav.warn("can't convert rights", se);
