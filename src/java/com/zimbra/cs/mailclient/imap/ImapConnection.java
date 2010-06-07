@@ -25,6 +25,7 @@ import com.zimbra.cs.mailclient.util.Ascii;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
 import java.util.Formatter;
 import java.util.List;
 import java.util.ArrayList;
@@ -564,6 +565,8 @@ public final class ImapConnection extends MailConnection {
                 throw new IOException("Unexpected continuation response");
             }
             assert res.isTagged();
+        } catch (SocketTimeoutException e) {
+            getLogger().debug("Timed-out during IDLE", e);
         } catch (IOException e) {
             if (!isClosed()) {
                 getLogger().error("IDLE failed", e);
