@@ -974,18 +974,11 @@ public class ParsedMessage {
 
         // Get the list of attachment content types from this message and any
         // TNEF attachments
-        Set<String> contentTypes = Mime.getAttachmentList(mMessageParts);
+        Set<String> contentTypes = Mime.getAttachmentTypeList(mMessageParts);
 
         // Assemble a comma-separated list of attachment content types
-        StringBuilder buf = new StringBuilder();
-        for (String contentType : contentTypes) {
-            if (buf.length() > 0)
-                buf.append(',');
-            buf.append(contentType);
-        }
-        
-        String attachments = buf.toString();
-        if (attachments.equals(""))
+        String attachments = StringUtil.join(",", contentTypes);
+        if (attachments == null || attachments.equals(""))
             attachments = LuceneFields.L_ATTACHMENT_NONE;
         else
             attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
