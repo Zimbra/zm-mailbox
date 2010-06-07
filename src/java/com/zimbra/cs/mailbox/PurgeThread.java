@@ -222,7 +222,7 @@ extends Thread {
     
     /**
      * Returns all the mailbox id's in purge order, starting with the one
-     * after {@link Provisioning#A_zimbraMailLastPurgedMailboxId}.
+     * after {@link Config#KEY_PURGE_LAST_MAILBOX_ID}.
      */
     private List<Long> getMailboxIds() {
         List<Long> mailboxIds = new ArrayList<Long>();
