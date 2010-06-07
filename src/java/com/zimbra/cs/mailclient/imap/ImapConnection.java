@@ -480,7 +480,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public boolean hasIdle() {
-        return hasCapability(ImapCapabilities.UNSELECT);
+        return hasCapability(ImapCapabilities.IDLE);
     }
 
     public boolean hasUnselect() {

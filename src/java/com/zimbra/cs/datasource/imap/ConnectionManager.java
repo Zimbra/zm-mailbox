@@ -250,6 +250,7 @@ final class ConnectionManager {
             return false;
         }
         try {
+            ic.setReadTimeout(IDLE_READ_TIMEOUT);
             if (ic.hasIdle()) {
                 if (!ic.isSelected("INBOX")) {
                     ic.select("INBOX");
@@ -260,7 +261,6 @@ final class ConnectionManager {
             } else {
                 ic.close_mailbox();
             }
-            ic.setReadTimeout(IDLE_READ_TIMEOUT);
             LOG.debug("Suspended connection: " + ic);
         } catch (IOException e) {
             LOG.warn("Error suspending connection", e);
