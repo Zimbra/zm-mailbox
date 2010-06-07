@@ -454,13 +454,15 @@ public class ACLAccessManager extends AccessManager {
             if (target != null)
                 result = PresetRightChecker.check(grantee, target, rightNeeded, canDelegateNeeded, via);
             
-            if (result != null)
-                return result.booleanValue();
+            if (result != null && result.booleanValue()) 
+                return result.booleanValue();  // // allowed by ACL
             else {
+                // either no matching ACL for the right or is now allowed by ACL
+                
                 if (canDelegateNeeded)
                     return false;
                 
-                // no ACL, call the fallback if there is one for the right
+                // call the fallback if there is one for the right
                 CheckRightFallback fallback = rightNeeded.getFallback();
                 if (fallback != null) {
                     Boolean fallbackResult = fallback.checkRight(grantee, target, asAdmin);
@@ -468,10 +470,13 @@ public class ACLAccessManager extends AccessManager {
                         return fallbackResult.booleanValue();
                 }
                 
-                // no ACL, and no callback (or no callback result), see if there is a configured default 
-                Boolean defaultValue = rightNeeded.getDefault();
-                if (defaultValue != null)
-                    return defaultValue.booleanValue();
+                if (result == null) {
+                    // no matching ACL for the right, and no callback (or no callback result), 
+                    // see if there is a configured default 
+                    Boolean defaultValue = rightNeeded.getDefault();
+                    if (defaultValue != null)
+                        return defaultValue.booleanValue();
+                }
             }
                 
         } catch (ServiceException e) {

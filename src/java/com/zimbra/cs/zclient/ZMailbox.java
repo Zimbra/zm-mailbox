@@ -4746,6 +4746,23 @@ public class ZMailbox implements ToZJSONObject {
         return result;
     }
 
+    public boolean checkPermission(String name, List<String> rights) throws ServiceException {
+        Element req = newRequestElement(MailConstants.CHECK_PERMISSION_REQUEST);
+        Element eTarget = req.addElement(MailConstants.E_TARGET);
+        eTarget.addAttribute(MailConstants.A_TARGET_TYPE, "account");
+        eTarget.addAttribute(MailConstants.A_TARGET_BY, "name");
+        eTarget.setText(name);
+        
+        for (String right : rights) {
+            Element eRight = req.addElement(MailConstants.E_RIGHT);
+            eRight.setText(right);
+        }
+        Element resp = invoke(req);
+        boolean allow = resp.getAttributeBool(MailConstants.A_ALLOW);
+        
+        return allow;
+    }
+    
     public String toString() {
         try {
             return String.format("[ZMailbox %s]", getName());

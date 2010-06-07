@@ -347,7 +347,7 @@ public class ZMailboxUtil implements DebugListener {
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
-        // CHECK_PERMISSION("checkPermission", "cp", "[right1 [right2...]]", "check if the user has the specified right on target.", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
+        CHECK_PERMISSION("checkPermission", "cp", "{name} {right}", "check if the user has the specified right on target.", Category.PERMISSION, 2, 2, O_VERBOSE),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-name}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
         CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -933,6 +933,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case ADMIN_AUTHENTICATE:
             doAdminAuth(args);
+            break;
+        case CHECK_PERMISSION:
+            doCheckPermission(args);
             break;
         case CREATE_CONTACT:
             String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt())).getId();
@@ -1659,6 +1662,15 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
+    private void doCheckPermission(String[] args) throws ServiceException {
+        String user = args[0];
+        List<String> rights = new ArrayList<String>();
+        rights.add(args[1]); // support only one right in CLI
+        
+        boolean allow =  mMbox.checkPermission(user, rights);
+        stdout.println((allow?"allowed":"not allowed"));
+    }
+    
     private void doAdminAuth(String[] args) throws ServiceException {
         adminAuth(args[0], args[1], urlOpt(true));
     }
