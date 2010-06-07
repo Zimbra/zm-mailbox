@@ -840,7 +840,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>company=company</globalConfigValue>
   <globalConfigValue>givenName,gn=firstName</globalConfigValue>
   <globalConfigValue>sn=lastName</globalConfigValue>
-  <globalConfigValue>displayName,cn=fullName</globalConfigValue>
+  <globalConfigValue>displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10</globalConfigValue>
   <globalConfigValue>initials=initials</globalConfigValue>
   <globalConfigValue>description=notes</globalConfigValue>
   <globalConfigValue>l=workCity</globalConfigValue>
