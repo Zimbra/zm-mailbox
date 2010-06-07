@@ -468,6 +468,11 @@ public class Mime {
         return getTextReader(textPart.getInputStream(), textPart.getContentType(), defaultCharset);
     }
 
+    public static void recursiveRepairTransferEncoding(MimeMessage mm) throws MessagingException, IOException {
+        for (MPartInfo mpi : listParts(mm))
+            repairTransferEncoding(mpi.mPart);
+    }
+
     public static void repairTransferEncoding(MimePart mp) throws MessagingException {
         String cte = mp.getHeader("Content-Transfer-Encoding", null);
         if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase().trim()))
@@ -568,13 +573,13 @@ public class Mime {
                 return false;
 
             // ignore body parts with a parent of multipart/alternative
-            if (parent != null && parent.getContentType().equals(MimeConstants.CT_MULTIPART_ALTERNATIVE))
+            if (parent.getContentType().equals(MimeConstants.CT_MULTIPART_ALTERNATIVE))
                 return false;
 
             // ignore if: it is the first body part, and has a multipart/* parent, and that
             //   multipart's parent is null or message/rfc822
             if (mpi.getPartNum() == 1) {
-                if (parent != null && parent.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+                if (parent.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
                     MPartInfo pp = parent.getParent();
                     if (pp == null || pp.getContentType().equals(MimeConstants.CT_MESSAGE_RFC822))
                         return false;
