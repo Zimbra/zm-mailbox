@@ -2737,8 +2737,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="543" name="zimbraMailLastPurgedMailboxId" type="integer" cardinality="single" optionalIn="server" since="5.0.0">
+<attr id="543" name="zimbraMailLastPurgedMailboxId" type="integer" cardinality="single" optionalIn="server" since="5.0.0" deprecatedSince="5.0.7">
   <desc>The id of the last purged mailbox.</desc>
+  <deprecateDesc>deprecated per bug 28842</deprecateDesc>>
 </attr>
 
 <attr id="544" name="zimbraFeatureZimbraAssistantEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.0">
