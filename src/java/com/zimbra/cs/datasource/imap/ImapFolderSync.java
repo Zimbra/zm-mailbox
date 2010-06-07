@@ -193,14 +193,10 @@ class ImapFolderSync {
         return newFolder;
     }
 
-    public void syncMessages() throws ServiceException, IOException {
-        syncMessages(null);
-    }
-    
     /*
      * Synchronizes messages between local and remote folder.
      */
-    public void syncMessages(MessageChanges changes) throws ServiceException, IOException {
+    public void syncMessages() throws ServiceException, IOException {
         localFolder.debug("Syncing messages for folder");
         if (!isSyncEnabled()) {
             localFolder.debug("Synchronization disabled for this folder");
@@ -229,11 +225,10 @@ class ImapFolderSync {
 
         // If not full sync and there are no new local or remote changes,
         // then no need to continue
+        MessageChanges changes = null;
         if (!fullSync) {
-            if (changes == null) {
-                changes = MessageChanges.getChanges(
-                    ds, localFolder.getFolder(), syncState.getLastChangeId());
-            }
+            changes = MessageChanges.getChanges(
+                ds, localFolder.getFolder(), syncState.getLastChangeId());
             if (!changes.hasChanges() && mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
                 syncState.setLastChangeId(changes.getLastChangeId());
                 imapSync.putSyncState(localFolder.getId(), syncState);
@@ -275,7 +270,7 @@ class ImapFolderSync {
                 moveMessages();
             }
             syncFlags(lastFetchedUid);
-        } else {
+        } else if (changes != null) {
             int lastModSeq = syncState.getLastChangeId();
             if (lastModSeq > 0) {
                 // Push only changes for partial sync

@@ -150,7 +150,6 @@ public class ImapSync extends MailItemImport {
             MessageChanges mc = syncState.getInboxChanges();
             if (mc != null && mc.hasChanges()) {
                 folderIds.addAll(mc.getFolderIdsToSync());
-                System.out.println("XXX changed folder ids = " + folderIds);
             }
         }
         connect();
