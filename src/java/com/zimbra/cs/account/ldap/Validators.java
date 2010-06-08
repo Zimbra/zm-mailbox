@@ -102,7 +102,22 @@ public class Validators {
             long maxAccount = Long.parseLong(limit);
             long now = System.currentTimeMillis();
             if (now > getNextCheck()) {
-                mLastUserCount = prov.countAccounts(domain);
+                try {
+                    mLastUserCount = prov.countAccounts(domain);
+                } catch (ServiceException e) {
+                    Throwable cause = e.getCause();
+                    String causeMsg = cause.getMessage();
+                    
+
+                    if (causeMsg != null && causeMsg.contains("timeout"))
+                        throw ServiceException.FAILURE("The directory may not be responding or is responding slowly.  " +
+                                "The directory may need tuning or the LDAP read timeout may need to be raised.  " +
+                                "Otherwise, removing the zimbraDomainMaxAccounts restriction will avoid this check.", e); 
+                    else
+                        throw ServiceException.FAILURE("Unable to count users for setting zimbraDomainMaxAccounts=" +  limit + "" +
+                                " in domain " + d.getName(), e);
+
+                }
                 long nextCheck = (maxAccount - mLastUserCount) > NUM_ACCT_THRESHOLD ? 
                         LDAP_CHECK_INTERVAL : 0;
                 setNextCheck(nextCheck);

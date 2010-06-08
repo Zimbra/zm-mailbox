@@ -6094,31 +6094,45 @@ public class LdapProvisioning extends Provisioning {
         
         ZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext();
+            zlc = new ZimbraLdapContext();  
             
             SearchControls searchControls = 
                 new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, new String[] {"zimbraId", "objectclass"}, false, false);
 
             NamingEnumeration<SearchResult> ne = null;
-
+            
+            //Set the page size and initialize the cookie that we pass back in subsequent pages
+            int maxResults = 0; // no limit
+            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+            byte[] cookie = null;
+            
             try {
-                String dn = mDIT.domainToAccountSearchDN(domain);
-                ne = zlc.searchDir(dn, query, searchControls);
-                while (ne != null && ne.hasMore()) {
-                    SearchResult sr = ne.nextElement();
-                    dn = sr.getNameInNamespace();
-                    // skip admin accounts
-                    if (dn.endsWith("cn=zimbra")) continue;
-                    Attributes attrs = sr.getAttributes();
-                    Attribute objectclass = attrs.get("objectclass");
-                    if (objectclass.contains("zimbraAccount")) 
-                        numAccounts++;
-                }
+                String base = mDIT.domainToAccountSearchDN(domain);
+                
+                do {
+                    zlc.setPagedControl(pageSize, cookie, true);
+                    ne = zlc.searchDir(base, query, searchControls);
+                    
+                    while (ne != null && ne.hasMore()) {
+                        SearchResult sr = ne.nextElement();
+                        String dn = sr.getNameInNamespace();
+                        // skip admin accounts
+                        if (dn.endsWith("cn=zimbra")) continue;
+                        Attributes attrs = sr.getAttributes();
+                        Attribute objectclass = attrs.get("objectclass");
+                        if (objectclass.contains("zimbraAccount")) 
+                            numAccounts++;
+                    }
+                    cookie = zlc.getCookie();
+                } while (cookie != null);
+                
             } finally {
                 if (ne != null) ne.close();
             }
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to count the users", e);
+            throw ServiceException.FAILURE("unable to count users", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to count users", e);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
@@ -6488,7 +6502,7 @@ public class LdapProvisioning extends Provisioning {
      */
     public static void main(String[] args) throws Exception {
         LdapProvisioning prov = (LdapProvisioning)Provisioning.getInstance();
-        
+
         /*
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         acctAttrs.put("zimbraYahooId", null);
