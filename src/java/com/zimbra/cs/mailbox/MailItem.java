@@ -2739,10 +2739,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             // string representation of color.  e.g. #00008B, #F0F8FF, etc
             setColor(color);
         }
-        // don't change this constructor to public.  RGB_INDICATOR is
-        // for internal use only in order to make metadata backward
-        // compatible.
-        static Color fromMetadata(long value) {
+        // internal use only.  changing the visibility to public
+        // in order to allow redo players to use it.
+        public static Color fromMetadata(long value) {
             return (value & RGB_INDICATOR) != 0 ? new Color(value & RGB_MASK) : new Color((byte)value);
         }
 		public static byte getMappedColor(String s) {

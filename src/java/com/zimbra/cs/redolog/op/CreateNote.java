@@ -107,7 +107,7 @@ public class CreateNote extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createNote(getOperationContext(), mContent, mBounds, new MailItem.Color(mColor), mFolderId);
+            mailbox.createNote(getOperationContext(), mContent, mBounds, MailItem.Color.fromMetadata(mColor), mFolderId);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

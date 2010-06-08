@@ -84,7 +84,7 @@ public class CreateTag extends RedoableOp {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mbox.createTag(getOperationContext(), mName, new MailItem.Color(mColor));
+            mbox.createTag(getOperationContext(), mName, MailItem.Color.fromMetadata(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

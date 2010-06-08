@@ -108,7 +108,7 @@ public class CreateSavedSearch extends RedoableOp {
 
         try {
             mailbox.createSearchFolder(getOperationContext(), mFolderId, mName,
-                mQuery, mTypes, mSort, mFlags, new MailItem.Color(mColor));
+                mQuery, mTypes, mSort, mFlags, MailItem.Color.fromMetadata(mColor));
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

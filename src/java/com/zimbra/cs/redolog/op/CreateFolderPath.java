@@ -118,7 +118,7 @@ public class CreateFolderPath extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createFolder(getOperationContext(), mPath, mAttrs, mDefaultView, mFlags, new MailItem.Color(mColor), mUrl);
+            mailbox.createFolder(getOperationContext(), mPath, mAttrs, mDefaultView, mFlags, MailItem.Color.fromMetadata(mColor), mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

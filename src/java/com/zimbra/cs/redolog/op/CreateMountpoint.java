@@ -105,7 +105,7 @@ public class CreateMountpoint extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mDefaultView, mFlags, new MailItem.Color(mColor));
+            mailbox.createMountpoint(getOperationContext(), mFolderId, mName, mOwnerId, mRemoteId, mDefaultView, mFlags, MailItem.Color.fromMetadata(mColor));
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 if (mLog.isInfoEnabled())

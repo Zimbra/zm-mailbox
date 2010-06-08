@@ -82,6 +82,6 @@ public class ColorItem extends RedoableOp {
     @Override public void redo() throws Exception {
         long mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mailbox.setColor(getOperationContext(), mIds, mType, new MailItem.Color(mColor));
+        mailbox.setColor(getOperationContext(), mIds, mType, MailItem.Color.fromMetadata(mColor));
     }
 }
