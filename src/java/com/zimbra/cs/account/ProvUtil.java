@@ -70,6 +70,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
@@ -392,6 +393,15 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
     
+    static class CountObjectsHelp implements CommandHelp {
+        public void printHelp() {
+            System.out.println();
+            System.out.println("Valid types:");
+            for (CountObjectsType type : CountObjectsType.values())
+                System.out.println("    " + type.toString());
+        }
+    }
+    
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
@@ -402,6 +412,7 @@ public class ProvUtil implements HttpDebugListener {
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}", Category.RIGHT, 3, 4, null, new RightCommandHelp()),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
+        COUNT_OBJECTS("countObject", "cto", "{type} [-d {domain|id}]", Category.MISC, 1, 3, Via.ldap, new CountObjectsHelp()), // add more counting types later if needed.
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
         CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk"),  //("  CreateBulkAccounts(cabulk) {domain} {namemask} {number of accounts to create} ");
@@ -724,7 +735,10 @@ public class ProvUtil implements HttpDebugListener {
             break;  
         case COUNT_ACCOUNT:
             doCountAccount(args);
-            break;  
+            break; 
+        case COUNT_OBJECTS:
+            doCountObjects(args);
+            break;
         case CREATE_ACCOUNT:
             System.out.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMap(args, 3)).getId());
             break;       
@@ -1874,7 +1888,43 @@ public class ProvUtil implements HttpDebugListener {
         }
         
         System.out.println();
-    }    
+    }  
+    
+    private void doCountObjects(String[] args) throws ServiceException {
+        
+        // only used by installer for now.  LDAP only is good for now, add soap if needed.
+        if (!(mProv instanceof LdapProvisioning))
+            throwLdapOnly();
+        
+        CountObjectsType type = Provisioning.CountObjectsType.fromString(args[1]);
+        
+        Domain domain = null;
+        int idx = 2;
+        while (args.length > idx) {
+            String arg = args[idx];
+            
+            if (arg.equals("-d")) {
+                if (domain != null)
+                    throw ServiceException.INVALID_REQUEST("domain is already specified as:" + domain.getName(), null);
+                idx++;
+                if (args.length <= idx) {
+                    usage();
+                    throw ServiceException.INVALID_REQUEST("expecting domain, not enough args", null);
+                }
+                
+                domain = lookupDomain(args[idx]);
+            } else {
+                usage();
+                return;
+            }
+                
+            idx++;
+            
+        }
+        
+        long result = mProv.countObjects(type, domain);
+        System.out.println(result);
+    } 
     
     private void doSyncGal(String[] args) throws ServiceException {
         String domain = args[1];

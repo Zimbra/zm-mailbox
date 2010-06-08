@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -6086,59 +6087,6 @@ public class LdapProvisioning extends Provisioning {
                                   right, rightModifier);               
     }
 
-
-    
-    public long countAccounts(String domain) throws ServiceException {
-        String query = LdapFilter.allNonSystemAccounts();
-        int numAccounts = 0;
-        
-        ZimbraLdapContext zlc = null;
-        try {
-            zlc = new ZimbraLdapContext();  
-            
-            SearchControls searchControls = 
-                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, new String[] {"zimbraId", "objectclass"}, false, false);
-
-            NamingEnumeration<SearchResult> ne = null;
-            
-            //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int maxResults = 0; // no limit
-            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
-            byte[] cookie = null;
-            
-            try {
-                String base = mDIT.domainToAccountSearchDN(domain);
-                
-                do {
-                    zlc.setPagedControl(pageSize, cookie, true);
-                    ne = zlc.searchDir(base, query, searchControls);
-                    
-                    while (ne != null && ne.hasMore()) {
-                        SearchResult sr = ne.nextElement();
-                        String dn = sr.getNameInNamespace();
-                        // skip admin accounts
-                        if (dn.endsWith("cn=zimbra")) continue;
-                        Attributes attrs = sr.getAttributes();
-                        Attribute objectclass = attrs.get("objectclass");
-                        if (objectclass.contains("zimbraAccount")) 
-                            numAccounts++;
-                    }
-                    cookie = zlc.getCookie();
-                } while (cookie != null);
-                
-            } finally {
-                if (ne != null) ne.close();
-            }
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to count users", e);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("unable to count users", e);
-        } finally {
-            ZimbraLdapContext.closeContext(zlc);
-        }
-        return numAccounts;
-    }
-    
     public String getNamingRdnAttr(Entry entry) throws ServiceException {
         return mDIT.getNamingRdnAttr(entry);
     }
@@ -6350,6 +6298,83 @@ public class LdapProvisioning extends Provisioning {
                       0);
 
         return visitor.getResult();
+    }
+    
+    
+    
+    @Override
+    public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
+        
+        String[] bases = null;
+        String query = null;
+        String[] attrs = null;
+        
+        // figure out bases, query, and attrs for each supported counting type
+        switch (type) {
+        case userAccounts:
+            
+            if (domain instanceof LdapDomain) {
+                String b = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
+                bases = new String[]{b};
+            } else
+                bases = getSearchBases(Provisioning.SA_ACCOUNT_FLAG);
+                
+            query = LdapFilter.allNonSystemAccounts();
+            attrs = new String[] {"zimbraId"};
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
+        }
+        
+        long num = 0;
+        for (String base : bases) {
+            num += countObjects(base, query, attrs);
+        }
+        
+        return num;
+    }
+    
+    private long countObjects(String base, String query, String[] attrs) throws ServiceException {
+        long num = 0;
+        
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext();  
+            
+            SearchControls searchControls = 
+                new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, attrs, false, false);
+
+            NamingEnumeration<SearchResult> ne = null;
+            
+            //Set the page size and initialize the cookie that we pass back in subsequent pages
+            int maxResults = 0; // no limit
+            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000);
+            byte[] cookie = null;
+            
+            try {
+                do {
+                    zlc.setPagedControl(pageSize, cookie, true);
+                    ne = zlc.searchDir(base, query, searchControls);
+                    
+                    while (ne != null && ne.hasMore()) {
+                        SearchResult sr = ne.nextElement();
+                        num++;
+                    }
+                    cookie = zlc.getCookie();
+                } while (cookie != null);
+                
+            } finally {
+                if (ne != null) ne.close();
+            }
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to count users", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to count users", e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+        
+        return num;
     }
     
     @Override

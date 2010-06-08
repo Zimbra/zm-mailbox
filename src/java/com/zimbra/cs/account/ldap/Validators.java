@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
+import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.ldap.LdapProvisioning.ProvisioningValidator;
 
 public class Validators {
@@ -103,7 +104,7 @@ public class Validators {
             long now = System.currentTimeMillis();
             if (now > getNextCheck()) {
                 try {
-                    mLastUserCount = prov.countAccounts(domain);
+                    mLastUserCount = prov.countObjects(CountObjectsType.userAccounts, d);
                 } catch (ServiceException e) {
                     Throwable cause = e.getCause();
                     String causeMsg = cause.getMessage();

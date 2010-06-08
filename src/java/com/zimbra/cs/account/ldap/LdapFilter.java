@@ -29,8 +29,8 @@ public class LdapFilter {
     public static String allNonSystemAccounts() {
         StringBuilder buf = new StringBuilder();
         buf.append("(&");
-        buf.append("(!(zimbraIsSystemResource=TRUE))");
         buf.append("(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))");
+        buf.append("(!(zimbraIsSystemResource=TRUE))");
         buf.append(")");
 
         return buf.toString();
