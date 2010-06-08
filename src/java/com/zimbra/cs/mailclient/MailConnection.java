@@ -345,7 +345,7 @@ public abstract class MailConnection {
      *                     <tt>0</tt> means no timeout.
      * @throws SocketException if a socket I/O error occurs
      */
-    public void setReadTimeout(final int readTimeout) throws SocketException {
+    public void setReadTimeout(int readTimeout) throws SocketException {
         int timeout = (int) Math.min(readTimeout * 1000L, Integer.MAX_VALUE);
         if (socket != null && !isClosed())
             socket.setSoTimeout(timeout > 0 ? timeout : Integer.MAX_VALUE);

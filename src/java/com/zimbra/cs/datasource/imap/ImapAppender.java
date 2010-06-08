@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ByteArrayInputStream;
-import java.text.ParseException;
 
 public class ImapAppender {
     private final ImapConnection connection;
@@ -118,7 +117,7 @@ public class ImapAppender {
         throw req.failed("APPENDUID supported but UID missing from result");
     }
 
-    // Slow APPEND for servers lacking APPENDUID (UIDPLUS) capability
+    // Slow APPEND for servers lacking UIDPLUS capability
     private long appendSlow(MessageInfo mi, Literal lit)
         throws IOException, MessagingException {
         MailboxInfo mb = connection.getMailboxInfo();
@@ -144,8 +143,17 @@ public class ImapAppender {
         }
         // If not found then server must have de-duped the message. This
         // is certainly possible with GMail. Search through the entire mailbox
-        // for possible matches and hope it's not too slow :(
-        List<Long> uids = connection.uidSearch(getSearchParams(mi));
+        // for matching message and hope this is not too slow.
+        List<Long> uids;
+        try {
+            // bug 45385: Temporarily increase timeout to 10 minutes in case of slow search.
+            // Not pretty, but hopefully we never get here since most servers now support
+            // UIDPLUS or don't de-dup messages.
+            connection.setReadTimeout(10 * 60);
+            uids = connection.uidSearch(getSearchParams(mi));
+        } finally {
+            connection.setReadTimeout(connection.getConfig().getReadTimeout());
+        }
         Iterator<Long> it = uids.iterator();
         while (it.hasNext()) {
             List<Long> found = findUids(nextSeq(it, 5), mi);
@@ -201,27 +209,18 @@ public class ImapAppender {
     private boolean matches(MessageInfo mi, MessageData md)
         throws IOException, MessagingException {
         // Message size must match
-        if (mi.data.getSize() != md.getRfc822Size()) return false;
-        // Date, Message-ID, and optional Subject must match
-        Envelope env = md.getEnvelope();
-        if (env == null) return false;
-        String subj = mi.mm.getSubject();
-        return mi.mm.getSentDate().equals(parseDate(env.getDate())) &&
-               mi.mm.getMessageID().equals(env.getMessageId()) &&
-               (subj == null || subj.equals(env.getSubject()));
-    }
-
-    private Date parseDate(String date) {
-        if (date != null) {
-            try {
-                return mdf.parse(date);
-            } catch (ParseException e) {
-                return null;
+        if (mi.data.getSize() == md.getRfc822Size()) {
+            // Message-ID, and optional Subject must match
+            Envelope env = md.getEnvelope();
+            if (env != null) {
+                String subj = mi.mm.getSubject();
+                return mi.mm.getMessageID().equals(env.getMessageId()) &&
+                       (subj == null || subj.equals(env.getSubject()));
             }
         }
-        return null;
+        return false;
     }
-    
+
     private long getUidNext() throws IOException {
         return connection.status(mailbox, "UIDNEXT").getUidNext();
     }
