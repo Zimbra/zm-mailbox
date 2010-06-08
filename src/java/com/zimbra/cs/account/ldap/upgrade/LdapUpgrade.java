@@ -144,6 +144,12 @@ abstract class LdapUpgrade {
     * @param args
      */
     public static void main(String[] args) throws ServiceException {
+        
+        System.out.print(LdapUpgrade.class.getCanonicalName() + " ");
+        for (String arg : args)
+            System.out.print(arg + " ");
+        System.out.println();
+        
         CliUtil.toolSetup();
         
         CommandLine cl = null;

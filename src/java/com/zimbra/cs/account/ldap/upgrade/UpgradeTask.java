@@ -31,7 +31,9 @@ public enum UpgradeTask {
     BUG_42877(zimbraGalLdapAttrMap.class),
     BUG_42896(ZimbraMailQuota_constraint.class),
     BUG_43147(GalSyncAccountContactLimit.class),
-    BUG_46297(ZimbraContactHiddenAttributes.class);
+    BUG_46297(ZimbraContactHiddenAttributes.class),
+    BUG_46961(zimbraGalLdapAttrMap_fullName.class);
+
     
     private Class mUpgradeClass;
     
