@@ -4922,4 +4922,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>default font size</desc>
 </attr>
 
+<attr id="1096" name="zimbraMailPurgeBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.8">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Maximum number of messages to delete from a folder during a single purge operation.  If the limit is exceeded, the mailbox is purged again at the end of the purge cycle until all qualifying messages are purged.</desc>
+</attr>
+
+<attr id="1097" name="zimbraMailEmptyFolderBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.8">
+  <globalConfigValue>100000</globalConfigValue>
+  <desc>Maximum number of messages to delete during a single transaction when emptying a folder.  If the limit is exceeded, the folder is emptied in multiple transactions.  Each transaction deletes this number of messages.</desc>
+</attr>
+
 </attrs>

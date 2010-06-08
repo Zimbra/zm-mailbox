@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100602-1304 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100608-1116 */
 
     /**
      * RFC2256: descriptive information
@@ -7933,7 +7933,7 @@ public class ZAttrConfig extends Entry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
     }
 
     /**
@@ -12450,6 +12450,93 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of messages to delete during a single transaction when
+     * emptying a folder. If the limit is exceeded, the folder is emptied in
+     * multiple transactions. Each transaction deletes this number of
+     * messages.
+     *
+     * @return zimbraMailEmptyFolderBatchSize, or 100000 if unset
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1097)
+    public int getMailEmptyFolderBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, 100000);
+    }
+
+    /**
+     * Maximum number of messages to delete during a single transaction when
+     * emptying a folder. If the limit is exceeded, the folder is emptied in
+     * multiple transactions. Each transaction deletes this number of
+     * messages.
+     *
+     * @param zimbraMailEmptyFolderBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1097)
+    public void setMailEmptyFolderBatchSize(int zimbraMailEmptyFolderBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchSize, Integer.toString(zimbraMailEmptyFolderBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages to delete during a single transaction when
+     * emptying a folder. If the limit is exceeded, the folder is emptied in
+     * multiple transactions. Each transaction deletes this number of
+     * messages.
+     *
+     * @param zimbraMailEmptyFolderBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1097)
+    public Map<String,Object> setMailEmptyFolderBatchSize(int zimbraMailEmptyFolderBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchSize, Integer.toString(zimbraMailEmptyFolderBatchSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages to delete during a single transaction when
+     * emptying a folder. If the limit is exceeded, the folder is emptied in
+     * multiple transactions. Each transaction deletes this number of
+     * messages.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1097)
+    public void unsetMailEmptyFolderBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages to delete during a single transaction when
+     * emptying a folder. If the limit is exceeded, the folder is emptied in
+     * multiple transactions. Each transaction deletes this number of
+     * messages.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1097)
+    public Map<String,Object> unsetMailEmptyFolderBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailEmptyFolderBatchSize, "");
+        return attrs;
+    }
+
+    /**
      * Number of bytes to buffer in memory per file descriptor in the cache.
      * Larger values result in fewer disk reads, but increase memory
      * consumption.
@@ -12950,6 +13037,93 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailProxyPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailProxyPort, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages to delete from a folder during a single
+     * purge operation. If the limit is exceeded, the mailbox is purged again
+     * at the end of the purge cycle until all qualifying messages are
+     * purged.
+     *
+     * @return zimbraMailPurgeBatchSize, or 10000 if unset
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1096)
+    public int getMailPurgeBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraMailPurgeBatchSize, 10000);
+    }
+
+    /**
+     * Maximum number of messages to delete from a folder during a single
+     * purge operation. If the limit is exceeded, the mailbox is purged again
+     * at the end of the purge cycle until all qualifying messages are
+     * purged.
+     *
+     * @param zimbraMailPurgeBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1096)
+    public void setMailPurgeBatchSize(int zimbraMailPurgeBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeBatchSize, Integer.toString(zimbraMailPurgeBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages to delete from a folder during a single
+     * purge operation. If the limit is exceeded, the mailbox is purged again
+     * at the end of the purge cycle until all qualifying messages are
+     * purged.
+     *
+     * @param zimbraMailPurgeBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1096)
+    public Map<String,Object> setMailPurgeBatchSize(int zimbraMailPurgeBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeBatchSize, Integer.toString(zimbraMailPurgeBatchSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages to delete from a folder during a single
+     * purge operation. If the limit is exceeded, the mailbox is purged again
+     * at the end of the purge cycle until all qualifying messages are
+     * purged.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1096)
+    public void unsetMailPurgeBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages to delete from a folder during a single
+     * purge operation. If the limit is exceeded, the mailbox is purged again
+     * at the end of the purge cycle until all qualifying messages are
+     * purged.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1096)
+    public Map<String,Object> unsetMailPurgeBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeBatchSize, "");
         return attrs;
     }
 

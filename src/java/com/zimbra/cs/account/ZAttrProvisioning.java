@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100602-1304 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100608-1116 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4060,6 +4060,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
     /**
+     * Maximum number of messages to delete during a single transaction when
+     * emptying a folder. If the limit is exceeded, the folder is emptied in
+     * multiple transactions. Each transaction deletes this number of
+     * messages.
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1097)
+    public static final String A_zimbraMailEmptyFolderBatchSize = "zimbraMailEmptyFolderBatchSize";
+
+    /**
      * Number of bytes to buffer in memory per file descriptor in the cache.
      * Larger values result in fewer disk reads, but increase memory
      * consumption.
@@ -4119,7 +4130,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailIdleSessionTimeout = "zimbraMailIdleSessionTimeout";
 
     /**
-     * The id of the last purged mailbox.
+     * Deprecated since: 5.0.7. deprecated per bug 28842. Orig desc: The id
+     * of the last purged mailbox.
      *
      * @since ZCS 5.0.0
      */
@@ -4158,6 +4170,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=626)
     public static final String A_zimbraMailProxyPort = "zimbraMailProxyPort";
+
+    /**
+     * Maximum number of messages to delete from a folder during a single
+     * purge operation. If the limit is exceeded, the mailbox is purged again
+     * at the end of the purge cycle until all qualifying messages are
+     * purged.
+     *
+     * @since ZCS 6.0.8
+     */
+    @ZAttr(id=1096)
+    public static final String A_zimbraMailPurgeBatchSize = "zimbraMailPurgeBatchSize";
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
