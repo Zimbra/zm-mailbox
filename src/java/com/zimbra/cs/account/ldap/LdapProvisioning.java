@@ -3257,12 +3257,34 @@ public class LdapProvisioning extends Provisioning {
     private void checkAccountStatus(Account acct, Map<String, Object> authCtxt) throws ServiceException {
         /*
          * We no longer do this reload(see bug 18981):
-         *     Staled data can be read back if there are replication delays and the account is 
+         *     Stale data can be read back if there are replication delays and the account is 
          *     refreshed from a not-caught-up replica.
          * 
-         * For now we comment it out and leave a "stub" here for reference instead of deleting it.
+         * We put this reload back for bug 46767.  
+         *     SetPassword is always proxied to the home server, 
+         *     but not the AuthRequest.  Not reloading here creates the problem that after a 
+         *     SetPassword, if an AuthRequest (or auth from other protocols: imap/pop3) comes 
+         *     in on a non-home server, the new password won't get hornored; even worse, the old 
+         *     password will!  This hole will last until the account is aged out of cache.
+         * 
+         *     We have to put back this reload.
+         *         - if we relaod from the master, bug 18981 and bug 46767 will be taken care of, 
+         *           but will regress bug 20634 - master down should not block login. 
+         *           
+         *         - if we reload from the replica, 
+         *           1. if the replica is always caught up, everything is fine.
+         *           
+         *           2. if the replica is slow, bug 18981 and bug 46767 can still happen.
+         *              To minimize impact to bug 18981, we do this reload only when the server 
+         *              is not the home server of the account.
+         *              For bug 46767, customer will have to fix their replica, period!
+         *              
+         *              Note, if nginx is fronting, auth is always redirected to the home 
+         *              server, so bug 46767 should not happen and the reload should never 
+         *              be triggered(good for bug 18981).
          */
-        // reload(acct);
+        if (!onLocalServer(acct))
+            reload(acct, false);  // reload from the replica 
         
         String accountStatus = acct.getAccountStatus(Provisioning.getInstance());
         if (accountStatus == null)
