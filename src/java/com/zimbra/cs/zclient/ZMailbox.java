@@ -2812,7 +2812,7 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public ZActionResult emptyFolder(String ids, boolean subfolders) throws ServiceException {
-        return doAction(folderAction("empty", ids).addAttribute(MailConstants.A_RECURSIVE, true));
+        return doAction(folderAction("empty", ids).addAttribute(MailConstants.A_RECURSIVE, subfolders));
     }
 
     /** mark all items in folder as read

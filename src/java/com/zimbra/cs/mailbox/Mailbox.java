@@ -72,6 +72,7 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyProvider;
@@ -6139,9 +6140,31 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-
-    public synchronized void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
+    
+    public void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
     throws ServiceException {
+        Folder root = getFolderById(octxt, folderId);
+        long itemCount = 0;
+        if (!removeSubfolders) {
+            itemCount = root.getItemCount();
+        } else {
+            for (Folder folder : getFolderById(folderId).getSubfolderHierarchy()) {
+                itemCount += folder.getItemCount();
+            }
+        }
+        ZimbraLog.mailbox.info("Emptying %d items from %s, removeSubfolders=%b.", itemCount, root.getPath(), removeSubfolders);
+        
+        int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
+        if (itemCount <= batchSize) {
+            emptySmallFolder(octxt, folderId, removeSubfolders);
+        } else {
+            emptyLargeFolder(octxt, folderId, removeSubfolders, 2);
+        }
+    }
+
+    private synchronized void emptySmallFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
+    throws ServiceException {
+        ZimbraLog.mailbox.debug("Emptying small folder %s, removeSubfolders=%b", folderId, removeSubfolders);
         EmptyFolder redoRecorder = new EmptyFolder(mId, folderId, removeSubfolders);
 
         boolean success = false;
@@ -6153,6 +6176,58 @@ public class Mailbox {
             success = true;
         } finally {
             endTransaction(success);
+        }
+    }
+    
+    private void emptyLargeFolder(OperationContext octxt, int folderId, boolean removeSubfolders, int batchSize)
+    throws ServiceException {
+        ZimbraLog.mailbox.debug("Emptying large folder %s, removeSubfolders=%b, batchSize=%d",
+            folderId, removeSubfolders, batchSize);
+        
+        List<Integer> folderIds = new ArrayList<Integer>();
+        if (!removeSubfolders) {
+            folderIds.add(folderId);
+        } else {
+            List<Folder> folders = getFolderById(octxt, folderId).getSubfolderHierarchy();
+            for (Folder folder : folders) {
+                folderIds.add(folder.getId());
+            }
+        }
+        
+        for (int id : folderIds) {
+            Folder folder = getFolderById(octxt, id);
+            if (!folder.canAccess(ACL.RIGHT_DELETE)) {
+                throw ServiceException.PERM_DENIED("not authorized to empty " + folder.getPath());
+            }
+        }
+        
+        QueryParams params = new QueryParams();
+        params.setFolderIds(folderIds).setModifiedBefore(System.currentTimeMillis()).setRowLimit(batchSize);
+        params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
+        
+        while (true) {
+            Set<Integer> itemIds = null;
+            Connection conn = null;
+            
+            // Synchronize on this mailbox to make sure that no one modifies the
+            // items we're about to delete.
+            synchronized (this) {
+                try {
+                    conn = DbPool.getConnection();
+                    itemIds = DbMailItem.getIds(this, conn, params);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
+
+                if (itemIds.isEmpty()) {
+                    break;
+                }
+                delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.TYPE_UNKNOWN, null);
+            }
+        }
+        
+        if (removeSubfolders) {
+            emptySmallFolder(octxt, folderId, removeSubfolders);
         }
     }
 
@@ -6228,15 +6303,19 @@ public class Mailbox {
      * Purges messages in system folders based on user- and admin-level purge settings
      * on the account.
      */
-    public void purgeMessages(OperationContext octxt) throws ServiceException {
+    public boolean purgeMessages(OperationContext octxt) throws ServiceException {
         // Look up the account outside the synchronized block, so that the mailbox
         // doesn't get locked due to an unresponsive LDAP server (see bug 33650).
-        purgeMessages(octxt, getAccount());
+        int batchSize = Provisioning.getInstance().getLocalServer().getMailPurgeBatchSize();
+        return purgeMessages(octxt, getAccount(), batchSize);
     }
 
-    private synchronized void purgeMessages(OperationContext octxt, Account acct) throws ServiceException {
+    /**
+     * @return <tt>true</tt> if all messages that meet the purge criteria were purged,
+     * <tt>false</tt> if the number of messages to purge in any folder exceeded <tt>maxItemsPerFolder</tt>
+     */
+    private synchronized boolean purgeMessages(OperationContext octxt, Account acct, Integer maxItemsPerFolder) throws ServiceException {
         if (ZimbraLog.purge.isDebugEnabled()) {
-            ZimbraLog.purge.debug("Purging messages.");
             ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
                 acct.getAttr(Provisioning.A_zimbraMailTrashLifetime),
                 acct.getAttr(Provisioning.A_zimbraMailSpamLifetime),
@@ -6266,8 +6345,10 @@ public class Mailbox {
             userInboxReadTimeout <= 0 && userInboxReadTimeout <= 0 &&
             userInboxUnreadTimeout <= 0 && userSentTimeout <= 0)
             // Nothing to do
-            return;
+            return true;
 
+        ZimbraLog.purge.info("Purging messages.");
+        
         // sanity-check the really dangerous value...
         if (globalTimeout > 0 && globalTimeout < Constants.SECONDS_PER_MONTH) {
             // this min is also used by POP3 EXPIRE command. update Pop3Handler.MIN_EPXIRE_DAYS if it changes.
@@ -6287,38 +6368,64 @@ public class Mailbox {
             Folder sent = getFolderById(ID_FOLDER_SENT);
             Folder inbox = getFolderById(ID_FOLDER_INBOX);
 
-            if (globalTimeout > 0)
-                Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null, false, false);
+            boolean purgedAll = true;
+            
+            if (globalTimeout > 0) {
+                int numPurged = Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null, false, false, maxItemsPerFolder);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+            }
             if (trashTimeout > 0) {
                 boolean useChangeDate =
                     acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, true);
-                Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null, useChangeDate, true);
+                int numPurged = Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null, useChangeDate, true, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d messages from Trash", numPurged);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
-            if (junkTimeout > 0)
-                Folder.purgeMessages(this, junk, getOperationTimestamp() - junkTimeout, null, false, false);
-            if (userInboxReadTimeout > 0)
-                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false, false, false);
-            if (userInboxUnreadTimeout > 0)
-                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxUnreadTimeout, true, false, false);
-            if (userSentTimeout > 0)
-                Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null, false, false);
-
+            if (junkTimeout > 0) {
+                int numPurged = Folder.purgeMessages(this, junk, getOperationTimestamp() - junkTimeout, null, false, false, maxItemsPerFolder);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d messages from Junk", numPurged);
+            }
+            if (userInboxReadTimeout > 0) {
+                int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false, false, false, maxItemsPerFolder);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d read messages from Inbox", numPurged);
+            }
+            if (userInboxUnreadTimeout > 0) {
+                int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxUnreadTimeout, true, false, false, maxItemsPerFolder);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d unread messages from Inbox", numPurged);
+            }
+            if (userSentTimeout > 0) {
+                int numPurged = Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null, false, false, maxItemsPerFolder);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d messages from Sent", numPurged);
+            }
             // deletes have already been collected, so fetch the tombstones and write once
             TypedIdList tombstones = collectPendingTombstones();
             if (tombstones != null && !tombstones.isEmpty())
                 DbMailItem.writeTombstones(this, tombstones);
 
             int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / 1000);
-            int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / 1000);
             DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
             
             // TODO: reenamble tombstone purging once we're able to add the client
             // support described in bug 12965.
+            // int tombstoneTimeout = (int) (LC.tombstone_max_age_ms.longValue() / 1000);
             // DbMailItem.purgeTombstones(this, getOperationTimestamp() - tombstoneTimeout);
             success = true;
+            ZimbraLog.purge.debug("purgedAll=%b", purgedAll);
+            return purgedAll;
         } finally {
             endTransaction(success);
         }
+    }
+    
+    private boolean updatePurgedAll(boolean purgedAll, int numDeleted, Integer maxItems) {
+        if (!purgedAll) {
+            return false;
+        }
+        return (maxItems == null || numDeleted < maxItems);
     }
 
     /** Returns the smaller non-zero value, or <tt>0</tt> if both

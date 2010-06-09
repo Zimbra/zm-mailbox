@@ -113,7 +113,7 @@ extends Thread {
     @Override public void run() {
         // Sleep before doing work, to give the server time to warm up.  Also limits the amount
         // of random effect when determining the next mailbox id.
-        long sleepTime = LC.purge_initial_sleep_time.longValue();
+        long sleepTime = LC.purge_initial_sleep_ms.longValue();
         ZimbraLog.purge.info("Purge thread sleeping for %dms before doing work.", sleepTime);
 
         try {
@@ -128,7 +128,8 @@ extends Thread {
             List<Long> mailboxIds = getMailboxIds();
             boolean slept = false;
             
-            for (long mailboxId : mailboxIds) {
+            for (int i = 0; i < mailboxIds.size(); i++) {
+                long mailboxId = mailboxIds.get(i);
                 if (mShutdownRequested) {
                     ZimbraLog.purge.info("Shutting down purge thread.");
                     sPurgeThread = null;
@@ -145,7 +146,11 @@ extends Thread {
                         Mailbox mbox = mm.getMailboxById(mailboxId);
                         Account account = mbox.getAccount();
                         ZimbraLog.addAccountNameToContext(account.getName());
-                        mbox.purgeMessages(null);
+                        boolean purgedAll = mbox.purgeMessages(null);
+                        if (!purgedAll) {
+                            ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
+                            mailboxIds.add(mailboxId);
+                        }
                         Config.setLong(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);

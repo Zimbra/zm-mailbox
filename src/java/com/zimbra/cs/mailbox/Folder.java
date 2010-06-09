@@ -1097,17 +1097,19 @@ public class Folder extends MailItem {
         super.purgeCache(info, purgeItem);
     }
 
-
-    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread,
-                              boolean useChangeDate, boolean deleteEmptySubfolders)
+    /**
+     * @return the number of messages that were purged
+     */
+    static int purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread,
+                              boolean useChangeDate, boolean deleteEmptySubfolders, Integer maxItems)
     throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
-            return;
+            return 0;
 
         // get the full list of things that are being removed
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread, useChangeDate);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread, useChangeDate, maxItems);
         delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
 
         if (deleteEmptySubfolders) {
@@ -1120,6 +1122,9 @@ public class Folder extends MailItem {
                 }
             }
         }
+        
+        List<Integer> ids = info.itemIds.getIds(MailItem.TYPE_MESSAGE);
+        return (ids == null ? 0 : ids.size());
     }
 
 

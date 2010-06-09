@@ -52,6 +52,7 @@ public class TestPurge extends TestCase {
     private String mOriginalUserJunkLifetime;
     
     private String mOriginalUseChangeDateForTrash;
+    private String mOriginalPurgeBatchSize;
     
     private long mOriginalTombstoneAge;
     
@@ -80,6 +81,7 @@ public class TestPurge extends TestCase {
             account.getAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash);
         
         mOriginalTombstoneAge = LC.tombstone_max_age_ms.longValue();
+        mOriginalPurgeBatchSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailPurgeBatchSize);
     }
     
     /**
@@ -380,7 +382,7 @@ public class TestPurge extends TestCase {
      * Confirms that tombstones get purged correctly (bug 12965).
      */
     // XXX bburtin: Disabling this method until bug 12965 is fixed. 
-    public void xtestTombstones()
+    public void disabledTestTombstones()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Message msg = TestUtil.addMessage(mbox, NAME_PREFIX + " testTombstones");
@@ -434,6 +436,37 @@ public class TestPurge extends TestCase {
         assertEquals(0, getNumConversations(mbox, convId));
     }
     
+    public void testBatchSize()
+    throws Exception {
+        // Use the item date for purge.
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtil.LDAP_FALSE);
+        
+        // Set retention policy
+        Account account = TestUtil.getAccount(USER_NAME);
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraPrefTrashLifetime, "24h");
+        Provisioning.getInstance().modifyAttrs(account, attrs);
+        
+        // Insert messages
+        String prefix = NAME_PREFIX + " testPurgeMaxItems ";
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, prefix + "purged",
+            System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, prefix + "kept",
+            System.currentTimeMillis() - (35 * Constants.MILLIS_PER_HOUR));
+        
+        // Run purge and verify results
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailPurgeBatchSize, Integer.toString(1));
+        assertFalse(mbox.purgeMessages(null));
+        assertFalse("purged was kept", messageExists(purged.getId()));
+        assertTrue("kept was purged", messageExists(kept.getId()));
+        
+        // Run purge again and make sure that the second message was purged.
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailPurgeBatchSize, Integer.toString(2));
+        assertTrue(mbox.purgeMessages(null));
+        assertFalse("second message was not purged", messageExists(kept.getId()));
+    }
+    
     private int getNumConversations(Mailbox mbox, int convId)
     throws ServiceException {
         DbResults results = DbUtil.executeQuery(
@@ -485,6 +518,8 @@ public class TestPurge extends TestCase {
         attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, mOriginalUseChangeDateForTrash);
         Provisioning.getInstance().modifyAttrs(account, attrs);
 
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailPurgeBatchSize, mOriginalPurgeBatchSize);
+        
         cleanUp();
 }
     

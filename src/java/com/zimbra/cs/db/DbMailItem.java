@@ -27,6 +27,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -35,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -2333,9 +2336,9 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-
+    
     public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
-                                             Boolean unread, boolean useChangeDate)
+                                             Boolean unread, boolean useChangeDate, Integer maxItems)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -2354,10 +2357,14 @@ public class DbMailItem {
                              " AND " + DbUtil.whereIn("folder_id", folders.size());
             if (unread != null)
                 constraint += " AND unread = ?";
+            String orderByLimit = "";
+            if (maxItems != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                orderByLimit = " ORDER BY " + dateColumn + " LIMIT " + maxItems;
+            }
 
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + constraint);
+                        " WHERE " + IN_THIS_MAILBOX_AND + constraint + orderByLimit);
             if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
                 Db.getInstance().enableStreaming(stmt);
             int pos = 1;
@@ -3140,6 +3147,127 @@ public class DbMailItem {
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("finding items between dates", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
+    public static class QueryParams {
+        private SortedSet<Integer> mFolderIds = new TreeSet<Integer>();
+        private Long mModifiedBefore;
+        private Integer mRowLimit;
+        private SortedSet<Byte> mIncludedTypes = new TreeSet<Byte>();
+        private SortedSet<Byte> mExcludedTypes = new TreeSet<Byte>();
+
+        public SortedSet<Integer> getFolderIds() { return Collections.unmodifiableSortedSet(mFolderIds); }
+        public QueryParams setFolderIds(Collection<Integer> ids) {
+            mFolderIds.clear();
+            if (ids != null) {
+                mFolderIds.addAll(ids);
+            }
+            return this;
+        }
+        
+        public SortedSet<Byte> getIncludedTypes() { return Collections.unmodifiableSortedSet(mIncludedTypes); }
+        public QueryParams setIncludedTypes(byte ... types) {
+            mIncludedTypes.clear();
+            if (types != null) {
+                for (byte type : types) {
+                    mIncludedTypes.add(type);
+                }
+            }
+            return this;
+        }
+        
+        public SortedSet<Byte> getExcludedTypes() { return Collections.unmodifiableSortedSet(mExcludedTypes); }
+        public QueryParams setExcludedTypes(byte ... types) {
+            mExcludedTypes.clear();
+            if (types != null) {
+                for (byte type : types) {
+                    mExcludedTypes.add(type);
+                }
+            }
+            return this;
+        }
+
+        /**
+         * @return the timestamp, in milliseconds
+         */
+        public Long getModifiedBefore() { return mModifiedBefore; }
+        /**
+         * Return items modified earlier than the given timestamp.
+         * @param timestamp the timestamp, in milliseconds
+         */
+        public QueryParams setModifiedBefore(Long timestamp) { mModifiedBefore = timestamp; return this; }
+        
+        public Integer getRowLimit() { return mRowLimit; }
+        public QueryParams setRowLimit(Integer rowLimit) { mRowLimit = rowLimit; return this; }
+    }
+
+    /**
+     * Returns the ids of items that match the given query parameters.
+     * @return the matching ids, or an empty <tt>Set</tt>
+     */
+    public static Set<Integer> getIds(Mailbox mbox, Connection conn, QueryParams params)
+    throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+        
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Set<Integer> ids = new HashSet<Integer>();
+        
+        try {
+            // Prepare the statement based on query parameters.
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT id FROM " + getMailItemTableName(mbox) + " WHERE " + IN_THIS_MAILBOX_AND + "1 = 1");
+            
+            Set<Byte> includedTypes = params.getIncludedTypes();
+            Set<Byte> excludedTypes = params.getExcludedTypes();
+            Set<Integer> folderIds = params.getFolderIds();
+            Long modifiedBefore = params.getModifiedBefore();
+            Integer rowLimit = params.getRowLimit();
+            
+            if (!includedTypes.isEmpty()) {
+                buf.append(" AND ").append(DbUtil.whereIn("type", includedTypes.size()));
+            }
+            if (!excludedTypes.isEmpty()) {
+                buf.append(" AND ").append(DbUtil.whereNotIn("type", excludedTypes.size()));
+            }
+            if (!folderIds.isEmpty()) {
+                buf.append(" AND ").append(DbUtil.whereIn("folder_id", folderIds.size()));
+            }
+            if (modifiedBefore != null) {
+                buf.append(" AND ").append("mod_content < ?");
+            }
+            if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                buf.append(" LIMIT ").append(rowLimit);
+            }
+            stmt = conn.prepareStatement(buf.toString());
+            
+            // Bind values, execute query, return results.
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            for (byte type : includedTypes) {
+                stmt.setByte(pos++, type);
+            }
+            for (byte type : excludedTypes) {
+                stmt.setByte(pos++, type);
+            }
+            for (int id : folderIds) {
+                stmt.setInt(pos++, id);
+            }
+            if (modifiedBefore != null) {
+                stmt.setInt(pos++, (int) (modifiedBefore / 1000));
+            }
+
+            rs = stmt.executeQuery();
+
+            while (rs.next())
+                ids.add(rs.getInt(1));
+            return ids;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting ids", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
