@@ -471,7 +471,7 @@ public class LC {
     
     public static final KnownKey yauth_baseuri;
     
-    public static final KnownKey purge_initial_sleep_time;
+    public static final KnownKey purge_initial_sleep_ms;
     public static final KnownKey conversation_max_age_ms;
     public static final KnownKey tombstone_max_age_ms;
     
@@ -1418,7 +1418,7 @@ public class LC {
 	    yauth_baseuri.setDefault("https://login.yahoo.com/WSLogin/V1");
 	    yauth_baseuri.setDoc("base uri for yauth");
         
-        purge_initial_sleep_time = new KnownKey(
+        purge_initial_sleep_ms = new KnownKey(
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
             "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
         
