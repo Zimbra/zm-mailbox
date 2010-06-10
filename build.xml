@@ -414,6 +414,7 @@
 	            public static final String HOST = "${zimbra.buildinfo.host}";
             }
         </echo>
+    	<mkdir dir="${build.classes.dir}"/>
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
@@ -553,7 +554,7 @@
         </java>
     </target>
 
-    <target name="db-versions-init" depends="generate-buildinfo,mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
+    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -934,7 +935,7 @@
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped."/>
+    <target name="reset-the-world-stage1" depends="clean,generate-buildinfo,jar,init" description="Run when web server is stopped."/>
 
     <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,init-unittest"
             description="Run when web server is running.">
