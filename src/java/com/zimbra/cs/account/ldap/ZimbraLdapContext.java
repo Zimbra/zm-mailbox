@@ -313,7 +313,7 @@ public class ZimbraLdapContext {
             
             if (ConnType.isLDAPS(master)) {
                 if (LC.ssl_allow_untrusted_certs.booleanValue())
-                    env.put("java.naming.ldap.factory.socket", "com.zimbra.common.util.EasySSLSocketFactory");
+                    env.put("java.naming.ldap.factory.socket", DummySSLSocketFactory.class.getName());
             }
         }
         
