@@ -69,8 +69,8 @@ public class MailHost extends AttributeCallback {
             if (entry != null && !isCreate) {
                 // as long as the new mail host matches the current mail transport, 
                 // allow it since we are not stomping mail transport
-                // use the full match here instead of calling mailTransportMatch, we don't update mail transport only if 
-                // attrs on the new server matches the current mail transport.
+                // use the full match here instead of calling mailTransportMatch(which ignores port),
+                // we don't update mail transport only when the two match fully.
                 if (mailTransport(server).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))   
                     return;
         	
