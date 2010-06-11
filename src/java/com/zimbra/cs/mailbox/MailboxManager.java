@@ -687,6 +687,20 @@ public class MailboxManager {
     }
 
 
+    /** Look up mailbox id by account id.
+     * 
+     * @param accountId
+     * @return
+     */
+    public long lookupMailboxId(String accountId) {
+        Long v;
+        synchronized (this) {
+            v = mMailboxIds.get(accountId);
+        }
+        return v != null ? v.longValue() : -1;
+    }
+
+
     /** Returns the zimbra IDs and approximate sizes for all mailboxes on
      *  the system.  Note that mailboxes are created lazily, so there may be
      *  accounts homed on this system for whom there is is not yet a mailbox
