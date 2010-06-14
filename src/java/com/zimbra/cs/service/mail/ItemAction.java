@@ -181,7 +181,7 @@ public class ItemAction extends MailDocumentHandler {
         String rgb = action.getAttribute(MailConstants.A_RGB, null);
         byte c = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
         if (rgb == null && c < 0)
-            return null;
+            return new MailItem.Color(-1);  // it will default to ORANGE
         if (rgb == null)
             return new MailItem.Color(c);
         else
