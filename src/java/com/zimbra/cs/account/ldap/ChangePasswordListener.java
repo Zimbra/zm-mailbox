@@ -46,7 +46,7 @@ public abstract class ChangePasswordListener {
     }
     
     public synchronized static ChangePasswordListener getHandler(Account acct) throws ServiceException {
-        Domain domain = Provisioning.getInstance().getZimbraDomain(acct);
+        Domain domain = Provisioning.getInstance().getDomain(acct);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(acct.getDomainName());
         

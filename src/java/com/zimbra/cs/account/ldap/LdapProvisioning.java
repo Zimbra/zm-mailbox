@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
@@ -751,9 +752,6 @@ public class LdapProvisioning extends Provisioning {
         return emailAddress;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByNameInternal(java.lang.String)
-     */
     private Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
         
         Account account = getAccountByNameInternal(emailAddress, loadFromMaster);
@@ -768,9 +766,6 @@ public class LdapProvisioning extends Provisioning {
         return account;
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByNameInternal(java.lang.String)
-     */
     private Account getAccountByNameInternal(String emailAddress, boolean loadFromMaster) throws ServiceException {
         
         emailAddress = fixupAccountName(emailAddress);
@@ -1830,52 +1825,53 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {
+        return getDomain(keyType, key, false);
+    }
+    
+    @Override
+    public Domain getDomain(DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
+        
+        GetFromDomainCacheOption option = checkNegativeCache ? GetFromDomainCacheOption.BOTH : GetFromDomainCacheOption.POSITIVE;
+            
         switch(keyType) {
             case name:
-                return getDomainByNameInternal(key);
+                return getDomainByNameInternal(key, option);
             case id:
-                return getDomainByIdInternal(key);
+                return getDomainByIdInternal(key, null, option);
             case virtualHostname:
-                return getDomainByVirtualHostnameInternal(key);
+                return getDomainByVirtualHostnameInternal(key, option);
             case krb5Realm:
-                return getDomainByKrb5RealmInternal(key);
+                return getDomainByKrb5RealmInternal(key, option);
             default:
                 return null;
         }
     }
     
-    @Override
-    public Domain getZimbraDomain(DomainBy keyType, String key) throws ServiceException {
-        
-        // remove it from the non-existing cache if we find it there
-        Domain domain = getFromCache(keyType, key);
-        if (domain instanceof DomainCache.NonExistingDomain)
-            sDomainCache.removeNonExisting(keyType, key);
-        
-        return get(keyType, key);
-    }
-
-    private Domain getFromCache(DomainBy keyType, String key) throws ServiceException {
+    private Domain getFromCache(DomainBy keyType, String key, GetFromDomainCacheOption option) throws ServiceException {
         switch(keyType) {
             case name:
                 String asciiName = IDNUtil.toAsciiDomainName(key);
-                return sDomainCache.getByName(asciiName);
+                return sDomainCache.getByName(asciiName, option);
             case id:
-                return sDomainCache.getById(key);
+                return sDomainCache.getById(key, option);
             case virtualHostname:
-                return sDomainCache.getByVirtualHostname(key);
+                return sDomainCache.getByVirtualHostname(key, option);
             case krb5Realm:
-                return sDomainCache.getByKrb5Realm(key);
+                return sDomainCache.getByKrb5Realm(key, option);
             default:
                 return null;
         }
     }
 
     private Domain getDomainById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
+        return getDomainByIdInternal(zimbraId, zlc, GetFromDomainCacheOption.POSITIVE);
+    }
+
+    private Domain getDomainByIdInternal(String zimbraId, ZimbraLdapContext zlc, GetFromDomainCacheOption option) throws ServiceException {
         if (zimbraId == null)
             return null;
 
-        Domain d = sDomainCache.getById(zimbraId);
+        Domain d = sDomainCache.getById(zimbraId, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
@@ -1888,23 +1884,17 @@ public class LdapProvisioning extends Provisioning {
         return domain;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByIdInternal(java.lang.String)
-     */
-    private Domain getDomainByIdInternal(String zimbraId) throws ServiceException {
-        return getDomainById(zimbraId, null);
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#getDomainByNameInternal(java.lang.String)
-     */
-    private Domain getDomainByNameInternal(String name) throws ServiceException {
+    private Domain getDomainByNameInternal(String name, GetFromDomainCacheOption option) throws ServiceException {
         String asciiName = IDNUtil.toAsciiDomainName(name);
-        return getDomainByAsciiName(asciiName, null);
+        return getDomainByAsciiNameInternal(asciiName, null, option);
     }
 
     private Domain getDomainByAsciiName(String name, ZimbraLdapContext zlc) throws ServiceException {
-        Domain d = sDomainCache.getByName(name);
+        return getDomainByAsciiNameInternal(name, zlc, GetFromDomainCacheOption.POSITIVE);
+    }
+    
+    private Domain getDomainByAsciiNameInternal(String name, ZimbraLdapContext zlc, GetFromDomainCacheOption option) throws ServiceException {
+        Domain d = sDomainCache.getByName(name, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
@@ -1917,8 +1907,8 @@ public class LdapProvisioning extends Provisioning {
         return domain;
     }
 
-    private Domain getDomainByVirtualHostnameInternal(String virtualHostname) throws ServiceException {
-        Domain d = sDomainCache.getByVirtualHostname(virtualHostname);
+    private Domain getDomainByVirtualHostnameInternal(String virtualHostname, GetFromDomainCacheOption option) throws ServiceException {
+        Domain d = sDomainCache.getByVirtualHostname(virtualHostname, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
@@ -1931,8 +1921,8 @@ public class LdapProvisioning extends Provisioning {
         return domain;
     }
 
-    private Domain getDomainByKrb5RealmInternal(String krb5Realm) throws ServiceException {
-        Domain d = sDomainCache.getByKrb5Realm(krb5Realm);
+    private Domain getDomainByKrb5RealmInternal(String krb5Realm, GetFromDomainCacheOption option) throws ServiceException {
+        Domain d = sDomainCache.getByKrb5Realm(krb5Realm, option);
         if (d instanceof DomainCache.NonExistingDomain)
             return null;
 
@@ -6212,10 +6202,10 @@ public class LdapProvisioning extends Provisioning {
             if (entries != null) {
                 for (CacheEntry entry : entries) {
                     DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
-                    Domain domain = getFromCache(domainBy, entry.mEntryIdentity);
+                    Domain domain = getFromCache(domainBy, entry.mEntryIdentity, GetFromDomainCacheOption.BOTH);
                     if (domain != null) {
                         if (domain instanceof DomainCache.NonExistingDomain)
-                            sDomainCache.removeNonExisting(domainBy, entry.mEntryIdentity);
+                            sDomainCache.removeFromNegativeCache(domainBy, entry.mEntryIdentity);
                         else
                             reload(domain, false);
                     }
@@ -6446,7 +6436,7 @@ public class LdapProvisioning extends Provisioning {
         case domain:
             unresolvedIds = new HashSet<String>();
             for (String id : ids) {
-                entry = sDomainCache.getById(id);
+                entry = getFromCache(DomainBy.id, id, GetFromDomainCacheOption.POSITIVE);
                 if (entry != null) 
                     result.put(id, entry.getName());
                 else

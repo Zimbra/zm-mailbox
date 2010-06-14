@@ -358,20 +358,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         String dname = acct.getDomainName();
         return dname == null ? null : get(DomainBy.name, dname);
     }
-    
-    /**
-     * Like getDomain, but this method call getZimbraDomain internally 
-     * to get the domain object.
-     * 
-     * @param acct
-     * @return
-     * @throws ServiceException
-     */
-    public Domain getZimbraDomain(Account acct) throws ServiceException {
-        String dname = acct.getDomainName();
-        return dname == null ? null : getZimbraDomain(DomainBy.name, dname);
-    }
-    
+   
 
     /**
      * @return the Server object where this account's mailbox is homed
@@ -909,35 +896,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
-    
+
     /**
-     * For Provisioning instance(e.g. LdapProvisioning) that caches non-existing
-     * (domains that do not exist in zimbra directory) domains for perf purpose, 
-     * this methods will bypass the non-existing cache.  It will only return domain 
-     * from the regular cache(or load it from directory and cache like usual).
-     * 
-     * For Provisioning instance that don't have a non-existing cache, this method 
-     * works exactly the same as get(DomainBy keyType, String key).
-     * 
-     * This method is useful for multi-node setup to remedy the following provisioning situation:
-     *   - domain test.com does not exist
-     *   - on mbs-1: zmprov gd test.com
-     *               will return NO_SUCH_DOMAIN and will put test.com n the non-existing cache
-     *   - on mbs-2: zmprov cd test.com
-     *               will createthe domain in directory
-     *   - on mbs-1: zmprov ca user1@test.com test123 (or any command that needs the domain)
-     *               will throw NO_SUCH_DOMAIN because test.com is in the non-existing cache.           
-     *               
-     * Whereas the "get(DomainBy keyType, String key)" signature is used when existence of the 
-     * domain is not that critical(the cache will refresh after the TTL) but perf is more important, 
-     * e.g. going through all invitees of a invite that can contain losts of external domains.                 
-     * 
      * @param keyType
      * @param key
+     * @param checkNegativeCache whether to check the negative domain cache 
+     *                           if set to true, and if key is found in the
+     *                           negative cache, then no LDAP search will be 
+     *                           issued 
      * @return
      * @throws ServiceException
      */
-    public Domain getZimbraDomain(DomainBy keyType, String key) throws ServiceException {
+    public Domain getDomain(DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
         return get(keyType, key);
     }
 

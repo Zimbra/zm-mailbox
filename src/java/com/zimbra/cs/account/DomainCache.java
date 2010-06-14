@@ -39,13 +39,19 @@ public class DomainCache {
     private long mRefreshTTL;
     private Counter mHitRate = new Counter();
     
+    public enum GetFromDomainCacheOption {
+        POSITIVE, // only get from positive cache
+        NEGATIVE, // only get from negative cache
+        BOTH;     // try positive cache first, if not found then try the negative cache
+    }
+    
     /*
-     * for caching non-existing domains so we don't repeatedly search LDAP for domains that do not 
-     * exist in Zimbra LDAP.
+     * for caching non-existing domains so we don't repeatedly search LDAP for domains 
+     * that do not exist in Zimbra LDAP.
      * 
-     * entries in the NonExistingCache has the same TTS/max as this DomainCache.
+     * entries in the NegativeCache has the same TTS/max as this DomainCache.
      */
-    private NonExistingCache mNonExistingCache;
+    private NegativeCache mNegativeCache;
 
     static class CacheEntry {
         long mLifetime;
@@ -67,11 +73,11 @@ public class DomainCache {
     }
     
 
-    class NonExistingCache {
-        private LRUMap mNENameCache;
-        private LRUMap mNEIdCache;
-        private LRUMap mNEVirtualHostnameCache;
-        private LRUMap mNEKrb5RealmCache;
+    class NegativeCache {
+        private LRUMap mNegativeNameCache;
+        private LRUMap mNegativeIdCache;
+        private LRUMap mNegativeVirtualHostnameCache;
+        private LRUMap mNegativeKrb5RealmCache;
 
         private long mNERefreshTTL;
         
@@ -81,11 +87,11 @@ public class DomainCache {
          */
         private boolean mEnabled = true;
         
-        private NonExistingCache(int maxItems, long refreshTTL) {
-            mNENameCache = new LRUMap(maxItems);
-            mNEIdCache = new LRUMap(maxItems);
-            mNEVirtualHostnameCache = new LRUMap(maxItems);  
-            mNEKrb5RealmCache = new LRUMap(maxItems);   
+        private NegativeCache(int maxItems, long refreshTTL) {
+            mNegativeNameCache = new LRUMap(maxItems);
+            mNegativeIdCache = new LRUMap(maxItems);
+            mNegativeVirtualHostnameCache = new LRUMap(maxItems);  
+            mNegativeKrb5RealmCache = new LRUMap(maxItems);   
             mNERefreshTTL = refreshTTL;
         }
         
@@ -97,16 +103,16 @@ public class DomainCache {
             
             switch (domainBy) {
             case name:
-                mNENameCache.put(key, nonExistingDomain);
+                mNegativeNameCache.put(key, nonExistingDomain);
                 break;
             case id:
-                mNEIdCache.put(key, nonExistingDomain);
+                mNegativeIdCache.put(key, nonExistingDomain);
                 break;
             case virtualHostname:
-                mNEVirtualHostnameCache.put(key, nonExistingDomain);
+                mNegativeVirtualHostnameCache.put(key, nonExistingDomain);
                 break;
             case krb5Realm:
-                mNEKrb5RealmCache.put(key, nonExistingDomain);
+                mNegativeKrb5RealmCache.put(key, nonExistingDomain);
                 break;
             }
         }
@@ -117,13 +123,13 @@ public class DomainCache {
             
             switch (domainBy) {
             case name:
-                return (NonExistingDomain)mNENameCache.get(key);
+                return (NonExistingDomain)mNegativeNameCache.get(key);
             case id:
-                return (NonExistingDomain)mNEIdCache.get(key);
+                return (NonExistingDomain)mNegativeIdCache.get(key);
             case virtualHostname:
-                return (NonExistingDomain)mNEVirtualHostnameCache.get(key);
+                return (NonExistingDomain)mNegativeVirtualHostnameCache.get(key);
             case krb5Realm:
-                return (NonExistingDomain)mNEKrb5RealmCache.get(key);
+                return (NonExistingDomain)mNegativeKrb5RealmCache.get(key);
             }
             return null;
         }
@@ -134,36 +140,36 @@ public class DomainCache {
             
             switch (domainBy) {
             case name:
-                mNENameCache.remove(key);
+                mNegativeNameCache.remove(key);
                 break;
             case id:
-                mNEIdCache.remove(key);
+                mNegativeIdCache.remove(key);
                 break;
             case virtualHostname:
-                mNEVirtualHostnameCache.remove(key);
+                mNegativeVirtualHostnameCache.remove(key);
                 break;
             case krb5Realm:
-                mNEKrb5RealmCache.remove(key);
+                mNegativeKrb5RealmCache.remove(key);
                 break;
             }
         }
         
         private void clean(DomainBy domainBy, String key, Domain entry) {
-            mNENameCache.remove(entry.getName());
-            mNEIdCache.remove(entry.getId());
+            mNegativeNameCache.remove(entry.getName());
+            mNegativeIdCache.remove(entry.getId());
             String vhost[] = entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname);            
             for (String vh : vhost)
-                mNEVirtualHostnameCache.remove(vh.toLowerCase());
+                mNegativeVirtualHostnameCache.remove(vh.toLowerCase());
             String krb5Realm = entry.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);
             if (krb5Realm != null)
-                mNEKrb5RealmCache.remove(krb5Realm);
+                mNegativeKrb5RealmCache.remove(krb5Realm);
         }
         
         void clear() {
-            mNENameCache.clear();
-            mNEIdCache.clear();
-            mNEVirtualHostnameCache.clear();
-            mNEKrb5RealmCache.clear();
+            mNegativeNameCache.clear();
+            mNegativeIdCache.clear();
+            mNegativeVirtualHostnameCache.clear();
+            mNegativeKrb5RealmCache.clear();
         }
     }
     
@@ -172,14 +178,14 @@ public class DomainCache {
  * @param maxItems
  * @param refreshTTL
  */
-    public DomainCache(int maxItems, long refreshTTL, int maxItemsNonExisting, long refreshTTLNonExisting) {
+    public DomainCache(int maxItems, long refreshTTL, int maxItemsNegative, long refreshTTLNegative) {
         mNameCache = new LRUMap(maxItems);
         mIdCache = new LRUMap(maxItems);
         mVirtualHostnameCache = new LRUMap(maxItems);  
         mKrb5RealmCache = new LRUMap(maxItems);   
         mRefreshTTL = refreshTTL;
         
-        mNonExistingCache = new NonExistingCache(maxItemsNonExisting, refreshTTLNonExisting);
+        mNegativeCache = new NegativeCache(maxItemsNegative, refreshTTLNegative);
     }
 
     public synchronized void clear() {
@@ -188,7 +194,7 @@ public class DomainCache {
         mVirtualHostnameCache.clear();
         mKrb5RealmCache.clear();
         
-        mNonExistingCache.clear();
+        mNegativeCache.clear();
     }
 
     public synchronized void remove(Domain entry) {
@@ -204,14 +210,14 @@ public class DomainCache {
         }
     }
     
-    public synchronized void removeNonExisting(DomainBy domainBy, String key) {
-        mNonExistingCache.remove(domainBy, key);
+    public synchronized void removeFromNegativeCache(DomainBy domainBy, String key) {
+        mNegativeCache.remove(domainBy, key);
     }
     
     public synchronized void put(DomainBy domainBy, String key, Domain entry) {
         if (entry != null) {
             // clean it from the non-existing cache first
-            mNonExistingCache.clean(domainBy, key, entry);
+            mNegativeCache.clean(domainBy, key, entry);
             
             CacheEntry cacheEntry = new CacheEntry(entry, mRefreshTTL);
             mNameCache.put(entry.getName(), cacheEntry);
@@ -223,7 +229,7 @@ public class DomainCache {
             if (krb5Realm != null)
                 mKrb5RealmCache.put(krb5Realm, cacheEntry);
         } else {
-            mNonExistingCache.put(domainBy, key);
+            mNegativeCache.put(domainBy, key);
         }
     }
 
@@ -244,36 +250,72 @@ public class DomainCache {
         }
     }
     
-    public synchronized Domain getById(String key) {
-        Domain d = mNonExistingCache.get(DomainBy.id, key);
-        if (d == null)
+    public synchronized Domain getById(String key, GetFromDomainCacheOption option) {
+        
+        switch (option) {
+        case POSITIVE:
             return get(key, mIdCache);
-        else
+        case NEGATIVE:
+            return mNegativeCache.get(DomainBy.id, key);
+        case BOTH:
+            Domain d = get(key, mIdCache);
+            if (d == null)
+                d = mNegativeCache.get(DomainBy.id, key);
             return d;
+        default:
+            return null;
+        }
     }
     
-    public synchronized Domain getByName(String key) {
-        Domain d = mNonExistingCache.get(DomainBy.name, key);
-        if (d == null)
+    public synchronized Domain getByName(String key, GetFromDomainCacheOption option) {
+        
+        switch (option) {
+        case POSITIVE:
             return get(key.toLowerCase(), mNameCache);
-        else
+        case NEGATIVE:
+            return mNegativeCache.get(DomainBy.name, key);
+        case BOTH:
+            Domain d = get(key.toLowerCase(), mNameCache);
+            if (d == null)
+                d = mNegativeCache.get(DomainBy.name, key);
             return d;
+        default:
+            return null;
+        }
     }
     
-    public synchronized Domain getByVirtualHostname(String key) {
-        Domain d = mNonExistingCache.get(DomainBy.virtualHostname, key);
-        if (d == null)
+    public synchronized Domain getByVirtualHostname(String key, GetFromDomainCacheOption option) {
+        
+        switch (option) {
+        case POSITIVE:
             return get(key.toLowerCase(), mVirtualHostnameCache);
-        else
+        case NEGATIVE:
+            return mNegativeCache.get(DomainBy.virtualHostname, key);
+        case BOTH:
+            Domain d = get(key.toLowerCase(), mVirtualHostnameCache);
+            if (d == null)
+                d = mNegativeCache.get(DomainBy.virtualHostname, key);
             return d;
+        default:
+            return null;
+        }
     }
     
-    public synchronized Domain getByKrb5Realm(String key) {
-        Domain d = mNonExistingCache.get(DomainBy.virtualHostname, key);
-        if (d == null)
+    public synchronized Domain getByKrb5Realm(String key, GetFromDomainCacheOption option) {
+        
+        switch (option) {
+        case POSITIVE:
             return get(key.toLowerCase(), mKrb5RealmCache);
-        else
+        case NEGATIVE:
+            return mNegativeCache.get(DomainBy.krb5Realm, key);
+        case BOTH:
+            Domain d = get(key.toLowerCase(), mKrb5RealmCache);
+            if (d == null)
+                d = mNegativeCache.get(DomainBy.krb5Realm, key);
             return d;
+        default:
+            return null;
+        }
     }
 
     public synchronized int getSize() {
