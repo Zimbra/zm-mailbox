@@ -15,8 +15,8 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.mail.Address;
@@ -31,16 +31,17 @@ import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 
 public class ContactRankings {
 	private static final String CONFIG_KEY_CONTACT_RANKINGS = "CONTACT_RANKINGS";
+    private static final String KEY_NAME = "n";
 	private static final String KEY_RANKING = "r";
 	private static final String KEY_LAST_ACCESSED = "t";
 	
 	private int mTableSize;
 	private String mAccountId;
-	private HashMap<String,ContactEntry> mEntryMap;
+	private TreeMap<String,ContactEntry> mEntryMap;
 	private TreeSet<ContactEntry> mEntrySet;
 	public ContactRankings(String accountId) throws ServiceException {
 		mAccountId = accountId;
-		mEntryMap = new HashMap<String,ContactEntry>();
+		mEntryMap = new TreeMap<String,ContactEntry>();
 		mEntrySet = new TreeSet<ContactEntry>();
 		mTableSize = Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
 		if (!LC.contact_ranking_enabled.booleanValue())
@@ -60,18 +61,21 @@ public class ContactRankings {
 			return;
 		ContactRankings rankings = new ContactRankings(accountId);
 		for (Address addr : addrs)
-			if (addr instanceof InternetAddress)
-				rankings.increment(((InternetAddress)addr).getAddress());
+			if (addr instanceof InternetAddress) {
+			    InternetAddress address = (InternetAddress)addr;
+                rankings.increment(address.getAddress(), address.getPersonal());
+			}
 		
 		rankings.writeToDatabase();
 	}
-	public synchronized void increment(String email) {
+	public synchronized void increment(String email, String displayName) {
 		long now = System.currentTimeMillis();
 		email = email.toLowerCase();
 		ContactEntry entry = mEntryMap.get(email);
 		if (entry == null) {
 			entry = new ContactEntry();
 			entry.mEmail = email;
+			entry.setName(displayName);
 			entry.mRanking = 1;
 			entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
 			entry.mLastAccessed = now;
@@ -104,6 +108,18 @@ public class ContactRankings {
 	        return entry.mRanking;
 	    return 0;
 	}
+    public synchronized Collection<ContactEntry> search(String str) {
+        TreeSet<ContactEntry> entries = new TreeSet<ContactEntry>();
+        int len = str.length();
+        for (String k : mEntryMap.tailMap(str).keySet()) {
+            if (k.length() >= len &&
+                    k.substring(0, len).equalsIgnoreCase(str)) {
+                entries.add(mEntryMap.get(k));
+            } else
+                break;
+        }
+        return entries;
+    }
     private synchronized void readFromDatabase() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
         Metadata config = mbox.getConfig(null, CONFIG_KEY_CONTACT_RANKINGS);
@@ -122,6 +138,8 @@ public class ContactRankings {
                 entry.mRanking = num.intValue();
                 num = (Long)m.get(KEY_LAST_ACCESSED);
                 entry.mLastAccessed = num.longValue();
+                entry.setName((String)m.get(KEY_NAME));
+                entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
                 add(entry);
             }
         }
@@ -133,6 +151,8 @@ public class ContactRankings {
 		for (ContactEntry entry : mEntrySet) {
 			Metadata m = new Metadata();
 			m.put(KEY_RANKING, entry.mRanking);
+			if (entry.mDisplayName != null)
+			    m.put(KEY_NAME, entry.mDisplayName);
 			m.put(KEY_LAST_ACCESSED, entry.mLastAccessed);
 			config.put(entry.mEmail, m);
 		}
@@ -141,10 +161,13 @@ public class ContactRankings {
 	}
 	private synchronized void add(ContactEntry entry) {
 		mEntryMap.put(entry.mEmail, entry);
+		if (entry.mDisplayName.length() > 0)
+	        mEntryMap.put(entry.mDisplayName, entry);
 		mEntrySet.add(entry);
 	}
 	private synchronized void remove(ContactEntry entry) {
 		mEntryMap.remove(entry.mEmail);
+        mEntryMap.remove(entry.mDisplayName);
 		mEntrySet.remove(entry);
 	}
 	private void dump(String action) {

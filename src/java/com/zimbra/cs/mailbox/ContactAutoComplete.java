@@ -130,10 +130,13 @@ public class ContactAutoComplete {
         	int diff = that.mRanking - this.mRanking;
         	if (diff != 0)
             	return diff;
-        	// make addressbook contacts more prominent than gal contact
-        	if (this.mFolderId == FOLDER_ID_GAL && that.mFolderId != FOLDER_ID_GAL)
+        	// make ranked contacts more prominent, followed by
+        	// address book contacts then gal contacts.
+        	if (this.mFolderId == FOLDER_ID_GAL && that.mFolderId != FOLDER_ID_GAL ||
+        	        that.mFolderId == FOLDER_ID_UNKNOWN)
         	    return 1;
-            if (this.mFolderId != FOLDER_ID_GAL && that.mFolderId == FOLDER_ID_GAL)
+            if (this.mFolderId != FOLDER_ID_GAL && that.mFolderId == FOLDER_ID_GAL ||
+                    this.mFolderId == FOLDER_ID_UNKNOWN)
                 return -1;
             // alphabetical
         	return this.getEmail().compareToIgnoreCase(that.getEmail());
