@@ -535,14 +535,14 @@ public class DefangFilter extends DefaultFilter {
 
             if (eName.equals("img")) {
                 fixUrlBase(attributes, "src");
-            } else if (eName.equals("a")) {
+            } else if (eName.equals("a") || eName.equals("area")) {
                 fixUrlBase(attributes, "href");                
             }
             fixUrlBase(attributes, "background");
 
             if (eName.equals("img") && mNeuterImages) {
                 neuterTag(attributes, "src");
-            } else if (eName.equals("a")) {
+            } else if (eName.equals("a") || eName.equals("area")) {
                 fixATag(attributes);
             }
             if (mNeuterImages) {
