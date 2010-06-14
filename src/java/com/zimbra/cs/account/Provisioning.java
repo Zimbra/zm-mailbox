@@ -356,7 +356,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */    
     public Domain getDomain(Account acct) throws ServiceException {
         String dname = acct.getDomainName();
-        return dname == null ? null : get(DomainBy.name, dname);
+        boolean checkNegativeCache = (acct instanceof GuestAccount);
+        return dname == null ? null : getDomain(DomainBy.name, dname, checkNegativeCache);
     }
    
 

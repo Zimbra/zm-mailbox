@@ -166,7 +166,7 @@ public class AccountUtil {
         if (parts == null)
             return ca;
 
-        Domain domain = Provisioning.getInstance().get(DomainBy.name, parts[1]);
+        Domain domain = Provisioning.getInstance().getDomain(DomainBy.name, parts[1], true);
         if (domain == null)
             return ca;
 
