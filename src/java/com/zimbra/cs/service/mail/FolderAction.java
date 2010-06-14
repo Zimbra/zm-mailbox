@@ -29,6 +29,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -159,9 +160,9 @@ public class FolderAction extends ItemAction {
             String secret = null;
             NamedEntry nentry = null;
             if (gtype == ACL.GRANTEE_AUTHUSER) {
-                zid = ACL.GUID_AUTHUSER;
+                zid = GuestAccount.GUID_AUTHUSER;
             } else if (gtype == ACL.GRANTEE_PUBLIC) {
-                zid = ACL.GUID_PUBLIC;
+                zid = GuestAccount.GUID_PUBLIC;
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 if (zid == null || zid.indexOf('@') < 0)

@@ -19,12 +19,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.ACL.GuestAccount;
 
 public class ZimbraACE {
     
@@ -173,9 +173,9 @@ public class ZimbraACE {
         mGranteeType = granteeType;
         
         if (mGranteeType == GranteeType.GT_AUTHUSER)
-            mGrantee = ACL.GUID_AUTHUSER;
+            mGrantee = GuestAccount.GUID_AUTHUSER;
         else if (mGranteeType == GranteeType.GT_PUBLIC)
-            mGrantee = ACL.GUID_PUBLIC;
+            mGrantee = GuestAccount.GUID_PUBLIC;
         else
             mGrantee = granteeId;
             
@@ -230,17 +230,17 @@ public class ZimbraACE {
 
     
     /** Returns whether the principal id exactly matches the grantee.
-     *  <tt>principalId</tt> must be {@link ACL#GUID_PUBLIC} (<tt>null</tt>
+     *  <tt>principalId</tt> must be {@link GuestAccount#GUID_PUBLIC} (<tt>null</tt>
      *  is also OK) if the actual grantee is {@link ACL#GRANTEE_PUBLIC}.
-     *  <tt>principalId</tt> must be {@link ACL#GUID_AUTHUSER} if the actual
+     *  <tt>principalId</tt> must be {@link GuestAccount#GUID_AUTHUSER} if the actual
      *  grantee is {@link ACL#GRANTEE_AUTHUSER}.
      *  
      * @param zimbraId  The zimbraId of the principal. */
     // orig: ACL.Grant.isGrantee
     public boolean isGrantee(String principalId) {
-        if (principalId == null || principalId.equals(ACL.GUID_PUBLIC))
+        if (principalId == null || principalId.equals(GuestAccount.GUID_PUBLIC))
             return (mGranteeType == GranteeType.GT_PUBLIC);
-        else if (principalId.equals(ACL.GUID_AUTHUSER))
+        else if (principalId.equals(GuestAccount.GUID_AUTHUSER))
             return (mGranteeType == GranteeType.GT_AUTHUSER);
         return principalId.equals(mGrantee);
     }
@@ -308,7 +308,7 @@ public class ZimbraACE {
             return mGranteeType == GranteeType.GT_PUBLIC;
         switch (mGranteeType) {
             case GT_PUBLIC:   return true;
-            case GT_AUTHUSER: return !(acct instanceof ACL.GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
+            case GT_AUTHUSER: return !(acct instanceof GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
             case GT_GROUP:    return prov.inDistributionList(acct, mGrantee);
             case GT_DOMAIN:   return mGrantee.equals(acct.getDomainId());
             case GT_USER:     return mGrantee.equals(acct.getId());

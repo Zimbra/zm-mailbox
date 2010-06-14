@@ -43,6 +43,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -67,7 +68,6 @@ import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
 
 
@@ -170,16 +170,16 @@ public abstract class TestACL extends TestCase {
     }
     
     protected Account guestAccount(String email, String password) {
-        return new ACL.GuestAccount(email, password);
+        return new GuestAccount(email, password);
     }
     
     protected Account keyAccount(String name, String accesKey) {
         AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
-        return new ACL.GuestAccount(authToken);
+        return new GuestAccount(authToken);
     }
     
     protected Account anonAccount() {
-        return ACL.ANONYMOUS_ACCT;
+        return GuestAccount.ANONYMOUS_ACCT;
     }
     
     protected Account createAccount(String email) throws ServiceException {
@@ -349,12 +349,12 @@ public abstract class TestACL extends TestCase {
     
     // construct a ACE with "pub" grantee type
     protected ZimbraACE newPubACE(Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(ACL.GUID_PUBLIC, GranteeType.GT_PUBLIC, right, allowDeny.toRightModifier(), null);
+        return new ZimbraACE(GuestAccount.GUID_PUBLIC, GranteeType.GT_PUBLIC, right, allowDeny.toRightModifier(), null);
     }
     
     // construct a ACE with "all" authuser grantee type
     protected ZimbraACE newAllACE(Right right, AllowOrDeny allowDeny) throws ServiceException {
-        return new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, right, allowDeny.toRightModifier(), null);
+        return new ZimbraACE(GuestAccount.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, right, allowDeny.toRightModifier(), null);
     }
     
     // construct a ACE with "usr" grantee type
@@ -572,7 +572,7 @@ public abstract class TestACL extends TestCase {
         // String interface
         via = (expectedVia==null)?null:new ViaGrant();
         result = mAM.canDo(grantee==null?null:grantee.getName(), target, right, asAdmin.yes(), via);
-        if (grantee instanceof ACL.GuestAccount && ((ACL.GuestAccount)grantee).getAccessKey() != null) {
+        if (grantee instanceof GuestAccount && ((GuestAccount)grantee).getAccessKey() != null) {
             // string interface always return denied for key grantee unless there is a pub grant
             // skip the test for now, unless we want to pass yet another parameter to this method
             // i.e. - if no pub grant: should always expect false

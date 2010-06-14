@@ -20,15 +20,13 @@ package com.zimbra.cs.mailbox;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
@@ -84,58 +82,8 @@ public class ACL {
     public static final byte GRANTEE_KEY      = 8;
 	
 
-    /** The pseudo-GUID signifying "all authenticated users". */
-    public static final String GUID_AUTHUSER = "00000000-0000-0000-0000-000000000000";
-    /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
-    public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
-
-    public static final Account ANONYMOUS_ACCT = new GuestAccount("public", null);
-
     private static final int ACCESSKEY_SIZE_BYTES = 16;
     
-    static Map<String, Object> getAnonAttrs() {
-        Map<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_uid, "public");
-        attrs.put(Provisioning.A_zimbraId, GUID_PUBLIC);
-        return attrs;
-    }
-    
-    public static class GuestAccount extends Account {
-        private String mDigest;     // for guest grantee
-        private String mAccessKey;  // for key grantee
-        public GuestAccount(String emailAddress, String password) {
-            super(emailAddress, GUID_PUBLIC, getAnonAttrs(), null, null);
-            mDigest = AuthToken.generateDigest(emailAddress, password);
-        }
-        public GuestAccount(AuthToken auth) {
-            // for key grantee type, sometimes there could be no email address
-            super(auth.getExternalUserEmail()==null?"":auth.getExternalUserEmail(), GUID_PUBLIC, getAnonAttrs(), null, null);
-            mDigest = auth.getDigest();
-            mAccessKey = auth.getAccessKey();
-        }
-        public boolean matches(String emailAddress, String password) {
-            if (getName().compareTo(emailAddress) != 0)
-                return false;
-            String digest = AuthToken.generateDigest(emailAddress, password);
-            return (mDigest.compareTo(digest) == 0);
-        }
-        public boolean matchesAccessKey(String emailAddress, String accesskey) {
-            /* do not verify emailAddress for key grantees
-            if (getName().compareTo(emailAddress) != 0)
-                return false;
-            */    
-            if (mAccessKey == null)
-                return false;
-            return (mAccessKey.compareTo(accesskey) == 0);
-        }
-        public String getDigest() {
-            return mDigest;
-        }
-        public String getAccessKey() {
-            return mAccessKey;
-        }
-    }
-
     public static class Grant {
         /** The zimbraId of the entry being granted rights. */
         private String mGrantee;
@@ -215,7 +163,7 @@ public class ACL {
                 return mType == ACL.GRANTEE_PUBLIC;
             switch (mType) {
                 case ACL.GRANTEE_PUBLIC:   return true;
-                case ACL.GRANTEE_AUTHUSER: return !acct.getId().equals(GUID_PUBLIC);
+                case ACL.GRANTEE_AUTHUSER: return !acct.getId().equals(GuestAccount.GUID_PUBLIC);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
                 case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
@@ -245,16 +193,16 @@ public class ACL {
         }
 
         /** Returns whether the principal id exactly matches the grantee.
-         *  <tt>zimbraId</tt> must be {@link ACL#GUID_PUBLIC} (<tt>null</tt>
+         *  <tt>zimbraId</tt> must be {@link GuestAccount#GUID_PUBLIC} (<tt>null</tt>
          *  is also OK) if the actual grantee is {@link ACL#GRANTEE_PUBLIC}.
-         *  <tt>zimbraId</tt> must be {@link ACL#GUID_AUTHUSER} if the actual
+         *  <tt>zimbraId</tt> must be {@link GuestAccount#GUID_AUTHUSER} if the actual
          *  grantee is {@link ACL#GRANTEE_AUTHUSER}.
          * 
          * @param zimbraId  The zimbraId of the principal. */
         public boolean isGrantee(String zimbraId) {
-        	if (zimbraId == null || zimbraId.equals(GUID_PUBLIC))
+        	if (zimbraId == null || zimbraId.equals(GuestAccount.GUID_PUBLIC))
                 return (mType == GRANTEE_PUBLIC);
-        	else if (zimbraId.equals(GUID_AUTHUSER))
+        	else if (zimbraId.equals(GuestAccount.GUID_AUTHUSER))
                 return (mType == GRANTEE_AUTHUSER);
             return zimbraId.equals(mGrantee);
         }
@@ -364,9 +312,9 @@ public class ACL {
     public ACL.Grant grantAccess(String zimbraId, byte type, short rights, String secret)
     throws ServiceException {
         if (type == GRANTEE_AUTHUSER)
-            zimbraId = GUID_AUTHUSER;
+            zimbraId = GuestAccount.GUID_AUTHUSER;
         else if (type == GRANTEE_PUBLIC)
-        	zimbraId = GUID_PUBLIC;
+        	zimbraId = GuestAccount.GUID_PUBLIC;
         else if (zimbraId == null)
             throw ServiceException.INVALID_REQUEST("missing grantee id", null);
 

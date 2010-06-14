@@ -56,13 +56,13 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.Zimbra;
 
@@ -416,7 +416,7 @@ public class ZimbraServlet extends HttpServlet {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
             }
-            return new ACL.GuestAccount(user, pass);
+            return new GuestAccount(user, pass);
         }
         try {
             Map<String, Object> authCtxt = new HashMap<String, Object>();

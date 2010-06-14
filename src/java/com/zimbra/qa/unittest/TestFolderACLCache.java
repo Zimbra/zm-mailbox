@@ -17,6 +17,7 @@ package com.zimbra.qa.unittest;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
@@ -180,12 +181,12 @@ public class TestFolderACLCache extends TestCase {
     }
     
     public void testPublicUser() throws Exception {
-        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, INBOX_FID, (short)0,       ACL.RIGHT_READ, false);
-        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB1_FID,  (short)0,       ACL.RIGHT_READ, false);
-        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB2_FID,  (short)0,       ACL.RIGHT_READ, false);
+        doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, INBOX_FID, (short)0,       ACL.RIGHT_READ, false);
+        doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB1_FID,  (short)0,       ACL.RIGHT_READ, false);
+        doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB2_FID,  (short)0,       ACL.RIGHT_READ, false);
         
-        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
-        doTest(ACL.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
+        doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_READ,  true);
+        doTest(GuestAccount.ANONYMOUS_ACCT,    OWNER_ACCT_ID, SUB3_FID,  ACL.RIGHT_READ, ACL.RIGHT_WRITE, false);
     }
     
     public void testOwner() throws Exception {

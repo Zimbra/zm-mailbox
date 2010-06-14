@@ -30,8 +30,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.cs.service.ZimbraAuthProvider;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -229,9 +227,9 @@ public class ZimbraAuthToken extends AuthToken {
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
         mIsDelegatedAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDelegatedAdminAccount));
         mEncoded = null;
-        if (acct instanceof ACL.GuestAccount) {
+        if (acct instanceof GuestAccount) {
             mType = C_TYPE_EXTERNAL_USER;
-            GuestAccount g = (ACL.GuestAccount) acct;
+            GuestAccount g = (GuestAccount) acct;
             mDigest = g.getDigest();
             mAccessKey = g.getAccessKey();
             mExternalUserEmail = g.getName();

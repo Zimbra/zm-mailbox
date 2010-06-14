@@ -35,6 +35,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -198,7 +199,7 @@ public abstract class WikiUtil {
                     null);
             mbox.grantAccess(octxt,
                     template.getId(),
-                    ACL.GUID_PUBLIC,
+                    GuestAccount.GUID_PUBLIC,
                     ACL.GRANTEE_PUBLIC,
                     ACL.stringToRights("r"),
                     null);
@@ -423,8 +424,8 @@ public abstract class WikiUtil {
             dom = (Domain)entry;
         if (dom == null) {
             grantee = "pub";
-            name = ACL.GUID_PUBLIC;
-            id = ACL.GUID_PUBLIC;
+            name = GuestAccount.GUID_PUBLIC;
+            id = GuestAccount.GUID_PUBLIC;
         } else {
             grantee = "dom";
             name = dom.getName();

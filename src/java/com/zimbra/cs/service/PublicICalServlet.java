@@ -34,11 +34,11 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -147,7 +147,7 @@ public class PublicICalServlet extends ZimbraServlet {
                 return;
             }
         } else {
-            authAccount = ACL.ANONYMOUS_ACCT;
+            authAccount = GuestAccount.ANONYMOUS_ACCT;
         }
 
         FreeBusyQuery fbQuery = new FreeBusyQuery(req, zsc, authAccount, rangeStart, rangeEnd, null);

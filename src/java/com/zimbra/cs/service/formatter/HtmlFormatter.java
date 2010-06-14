@@ -19,8 +19,8 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -87,14 +87,14 @@ public class HtmlFormatter extends Formatter {
         long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;
         if (context.basicAuthHappened) {
             Account acc = context.authAccount;
-            if (acc instanceof ACL.GuestAccount)
-                auth = AuthToken.getAuthToken(acc.getId(), acc.getName(), null, ((ACL.GuestAccount)acc).getDigest(), expiration);
+            if (acc instanceof GuestAccount)
+                auth = AuthToken.getAuthToken(acc.getId(), acc.getName(), null, ((GuestAccount)acc).getDigest(), expiration);
             else
                 auth = AuthProvider.getAuthToken(context.authAccount, expiration);
         } else if (context.cookieAuthHappened) {
             auth = UserServlet.getAuthTokenFromCookie(context.req, context.resp, true);
         } else {
-            auth = AuthToken.getAuthToken(ACL.GUID_PUBLIC, null, null, null, expiration);
+            auth = AuthToken.getAuthToken(GuestAccount.GUID_PUBLIC, null, null, null, expiration);
         }
 
         String authString = null;

@@ -27,6 +27,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -35,7 +36,6 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.mailbox.ACL;
 
 public class ACLAccessManager extends AccessManager {
 
@@ -208,14 +208,14 @@ public class ACLAccessManager extends AccessManager {
             Account granteeAcct;
             if (grantee == null) {
                 if (rightNeeded.isUserRight())
-                    granteeAcct = ACL.ANONYMOUS_ACCT;
+                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
                 else
                     return false;
             } else if (grantee.isZimbraUser())
                 granteeAcct = getAccountFromAuthToken(grantee);
             else {
                 if (rightNeeded.isUserRight())
-                    granteeAcct = new ACL.GuestAccount(grantee);
+                    granteeAcct = new GuestAccount(grantee);
                 else
                     return false;
             }
@@ -242,7 +242,7 @@ public class ACLAccessManager extends AccessManager {
                 granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, granteeEmail);
             if (granteeAcct == null) {
                 if (rightNeeded.isUserRight())
-                    granteeAcct = ACL.ANONYMOUS_ACCT;
+                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
                 else
                     return false;
             }
@@ -420,7 +420,7 @@ public class ACLAccessManager extends AccessManager {
                     return false;
                 
                 if (rightNeeded.isUserRight())
-                    grantee = ACL.ANONYMOUS_ACCT;
+                    grantee = GuestAccount.ANONYMOUS_ACCT;
                 else
                     return false;
             }

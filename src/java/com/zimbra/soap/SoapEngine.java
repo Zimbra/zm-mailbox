@@ -30,11 +30,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -355,7 +355,7 @@ public class SoapEngine {
             boolean delegatedAuth = false;
             if (at != null) {
                 acctId = at.getAccountId();
-                isGuestAccount = acctId.equals(ACL.GUID_PUBLIC);
+                isGuestAccount = acctId.equals(GuestAccount.GUID_PUBLIC);
                 delegatedAuth = at.isDelegatedAuth();
             }
             

@@ -32,13 +32,13 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -317,7 +317,7 @@ public class UserServlet extends ZimbraServlet {
                         } else {
                             if (at.isExpired())
                                 throw new UserServletException(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, context.req));
-                            context.authAccount = new ACL.GuestAccount(at);
+                            context.authAccount = new GuestAccount(at);
                             context.basicAuthHappened = true; // pretend that we basic authed
                             context.authToken = at;
                             return;
@@ -978,7 +978,7 @@ public class UserServlet extends ZimbraServlet {
         }
         
         public boolean isAuthedAcctGuest() {
-            return authAccount != null && authAccount instanceof ACL.GuestAccount;
+            return authAccount != null && authAccount instanceof GuestAccount;
         }
         
         // bug 42782
@@ -1065,11 +1065,11 @@ public class UserServlet extends ZimbraServlet {
         }
 
         public void setAnonymousRequest() {
-            authAccount = ACL.ANONYMOUS_ACCT;
+            authAccount = GuestAccount.ANONYMOUS_ACCT;
         }
 
         public boolean isAnonymousRequest() {
-            return authAccount.equals(ACL.ANONYMOUS_ACCT);
+            return authAccount.equals(GuestAccount.ANONYMOUS_ACCT);
         }
 
         /** Default maximum upload size for PUT/POST write ops: 10MB. */

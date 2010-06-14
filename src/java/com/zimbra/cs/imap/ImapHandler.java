@@ -25,6 +25,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -2351,7 +2352,7 @@ abstract class ImapHandler extends ProtocolHandler {
             String granteeId = null;
             byte granteeType;
             if (principal.equals("anyone")) {
-                granteeId = ACL.GUID_AUTHUSER;  granteeType = ACL.GRANTEE_AUTHUSER;
+                granteeId = GuestAccount.GUID_AUTHUSER;  granteeType = ACL.GRANTEE_AUTHUSER;
             } else {
                 granteeType = ACL.GRANTEE_USER;
                 NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
@@ -2435,7 +2436,7 @@ abstract class ImapHandler extends ProtocolHandler {
             // figure out whose permissions are being revoked
             String granteeId = null;
             if (principal.equals("anyone")) {
-                granteeId = ACL.GUID_AUTHUSER;
+                granteeId = GuestAccount.GUID_AUTHUSER;
             } else {
                 NamedEntry entry = Provisioning.getInstance().get(AccountBy.name, principal);
                 if (entry == null)
@@ -2456,16 +2457,16 @@ abstract class ImapHandler extends ProtocolHandler {
                 Folder folder = (Folder) path.getFolder();
                 if (folder.getEffectiveACL() != null) {
                     mbox.revokeAccess(getContext(), folder.getId(), granteeId);
-                    if (granteeId == ACL.GUID_AUTHUSER)
-                        mbox.revokeAccess(getContext(), folder.getId(), ACL.GUID_PUBLIC);
+                    if (granteeId == GuestAccount.GUID_AUTHUSER)
+                        mbox.revokeAccess(getContext(), folder.getId(), GuestAccount.GUID_PUBLIC);
                 }
             } else {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
                 ZFolder zfolder = (ZFolder) path.getFolder();
                 if (!zfolder.getGrants().isEmpty()) {
                     zmbx.modifyFolderRevokeGrant(zfolder.getId(), granteeId);
-                    if (granteeId == ACL.GUID_AUTHUSER)
-                        zmbx.modifyFolderRevokeGrant(zfolder.getId(), ACL.GUID_PUBLIC);
+                    if (granteeId == GuestAccount.GUID_AUTHUSER)
+                        zmbx.modifyFolderRevokeGrant(zfolder.getId(), GuestAccount.GUID_PUBLIC);
                 }
             }
         } catch (ServiceException e) {

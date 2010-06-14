@@ -27,11 +27,11 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -150,8 +150,8 @@ public abstract class DocumentHandler {
         String id = zsc.getAuthtokenAccountId();
         AuthToken at = zsc.getAuthToken();
         
-        if (ACL.GUID_PUBLIC.equals(id) || (at != null && !at.isZimbraUser()))
-            return new ACL.GuestAccount(at);
+        if (GuestAccount.GUID_PUBLIC.equals(id) || (at != null && !at.isZimbraUser()))
+            return new GuestAccount(at);
         
         Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
         if (acct == null)

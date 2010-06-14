@@ -24,9 +24,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -128,7 +128,7 @@ public class FreeBusyQuery {
         		    else if (mRequestor != null)
         		        octxt = new OperationContext(mRequestor);
         		    else
-        		        octxt = new OperationContext(ACL.ANONYMOUS_ACCT);
+        		        octxt = new OperationContext(GuestAccount.ANONYMOUS_ACCT);
                     Appointment exAppt = null;
                     if (mExApptUid != null) {
                         CalendarItem ci = mbox.getCalendarItemByUid(octxt, mExApptUid);

@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -67,9 +68,9 @@ public class OperationContext {
         authuser = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
         if (authuser == null || !auth.isZimbraUser()) {
             if (auth.getDigest() != null || auth.getAccessKey() != null)
-                authuser = new ACL.GuestAccount(auth);
+                authuser = new GuestAccount(auth);
             else
-                authuser = ACL.ANONYMOUS_ACCT;
+                authuser = GuestAccount.ANONYMOUS_ACCT;
         }
         if (authuser == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);

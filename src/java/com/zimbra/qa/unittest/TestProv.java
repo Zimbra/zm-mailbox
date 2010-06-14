@@ -16,6 +16,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -23,7 +24,6 @@ import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.mailbox.ACL;
 
 public abstract class TestProv extends TestCase {
 
@@ -119,16 +119,16 @@ public abstract class TestProv extends TestCase {
     }
     
     protected Account createGuestAccount(String email, String password) {
-        return new ACL.GuestAccount(email, password);
+        return new GuestAccount(email, password);
     }
     
     protected Account createKeyAccount(String name, String accesKey) {
         AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
-        return new ACL.GuestAccount(authToken);
+        return new GuestAccount(authToken);
     }
     
     protected Account anonAccount() {
-        return ACL.ANONYMOUS_ACCT;
+        return GuestAccount.ANONYMOUS_ACCT;
     }
     
     protected CalendarResource createCalendarResource(String localpart, Domain domain) throws Exception {

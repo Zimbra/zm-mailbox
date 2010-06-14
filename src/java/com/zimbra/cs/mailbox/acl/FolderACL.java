@@ -26,6 +26,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
@@ -276,7 +277,7 @@ public class FolderACL {
         if (mOctxt != null)
             authToken = mOctxt.getAuthToken();
         if (authToken == null)
-            authToken = AuthProvider.getAuthToken(ACL.ANONYMOUS_ACCT);
+            authToken = AuthProvider.getAuthToken(GuestAccount.ANONYMOUS_ACCT);
         transport.setAuthToken(authToken.toZAuthToken());
         transport.setTargetAcctId(mShareTarget.getAccountId());
         

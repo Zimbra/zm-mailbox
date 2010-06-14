@@ -21,9 +21,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.mailbox.ACL;
 
 /*
  * - domain based access manager
@@ -61,7 +61,7 @@ public class DomainACLAccessManager extends DomainAccessManager {
     public boolean canDo(Account grantee, Entry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             if (grantee == null)
-                grantee = ACL.ANONYMOUS_ACCT;
+                grantee = GuestAccount.ANONYMOUS_ACCT;
 
             // 1. always allow self
             if (target instanceof Account) {
@@ -105,11 +105,11 @@ public class DomainACLAccessManager extends DomainAccessManager {
         try {
             Account granteeAcct;
             if (grantee == null)
-                granteeAcct = ACL.ANONYMOUS_ACCT;
+                granteeAcct = GuestAccount.ANONYMOUS_ACCT;
             else if (grantee.isZimbraUser())
                 granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
             else
-                granteeAcct = new ACL.GuestAccount(grantee);
+                granteeAcct = new GuestAccount(grantee);
             
             return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
@@ -130,7 +130,7 @@ public class DomainACLAccessManager extends DomainAccessManager {
             if (granteeEmail != null)
                 granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, granteeEmail);
             if (granteeAcct == null)
-                granteeAcct = ACL.ANONYMOUS_ACCT;
+                granteeAcct = GuestAccount.ANONYMOUS_ACCT;
             
             return canDo(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {

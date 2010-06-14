@@ -75,6 +75,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -82,7 +83,6 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
@@ -1444,11 +1444,11 @@ public class ZMailboxUtil implements DebugListener {
             perms = args[3];
             break;
         case pub:
-            grantee = ACL.GUID_PUBLIC;
+            grantee = GuestAccount.GUID_PUBLIC;
             perms = args[2];
             break;
         case all:
-            grantee = ACL.GUID_AUTHUSER;
+            grantee = GuestAccount.GUID_AUTHUSER;
             perms = args[2];
             break;
         case guest:
@@ -1585,12 +1585,12 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case all:
             if (args.length != 2) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
-            granteeId = ACL.GUID_AUTHUSER;
+            granteeId = GuestAccount.GUID_AUTHUSER;
             right = args[1];
             break;
         case pub:
             if (args.length != 2) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
-            granteeId = ACL.GUID_PUBLIC;
+            granteeId = GuestAccount.GUID_PUBLIC;
             right = args[1];
             break;
         case gst:
