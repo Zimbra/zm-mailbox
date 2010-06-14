@@ -1508,6 +1508,18 @@
     <attrs>
       <a n="zimbraGalMode"/>
       <a n="zimbraGalMaxResults"/>
+      <a n="zimbraGalLdapURL"/>
+      <a n="zimbraGalLdapSearchBase"/>
+      <a n="zimbraGalLdapBindDn"/>
+      <a n="zimbraGalLdapBindPassword"/>
+      <a n="zimbraGalLdapFilter"/>
+      <a n="zimbraGalAutoCompleteLdapFilter"/>
+      <a n="zimbraGalSyncLdapURL"/>
+      <a n="zimbraGalSyncLdapSearchBase"/>
+      <a n="zimbraGalSyncLdapFilter"/>
+      <a n="zimbraGalLdapBindPassword"/>
+      <a n="zimbraGalSyncLdapBindDn"/>
+      <a n="zimbraGalSyncLdapBindPassword"/>      
     </attrs>
   </right>
   <right name="viewAdminConsoleDomainGALTab" type="getAttrs" targetType="domain">
@@ -1515,6 +1527,18 @@
     <attrs>
       <a n="zimbraGalMode"/>
       <a n="zimbraGalMaxResults"/>
+      <a n="zimbraGalLdapURL"/>
+      <a n="zimbraGalLdapSearchBase"/>
+      <a n="zimbraGalLdapBindDn"/>
+      <a n="zimbraGalLdapBindPassword"/>
+      <a n="zimbraGalLdapFilter"/>
+      <a n="zimbraGalAutoCompleteLdapFilter"/>
+      <a n="zimbraGalSyncLdapURL"/>
+      <a n="zimbraGalSyncLdapSearchBase"/>
+      <a n="zimbraGalSyncLdapFilter"/>
+      <a n="zimbraGalLdapBindPassword"/>
+      <a n="zimbraGalSyncLdapBindDn"/>
+      <a n="zimbraGalSyncLdapBindPassword"/>       
     </attrs>
   </right>
   <right name="adminConsoleDomainGALTabRights" type="combo">
