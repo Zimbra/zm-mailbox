@@ -67,23 +67,17 @@ public class MailHost extends AttributeCallback {
              * if it would, then replace both zimbraMailHost and set new zimbraMailTransport.  Otherwise error.
              */
             if (entry != null && !isCreate) {
-                // as long as the new mail host matches the current mail transport, 
-                // allow it since we are not stomping mail transport
-                // use the full match here instead of calling mailTransportMatch(which ignores port),
-                // we don't update mail transport only when the two match fully.
-                if (mailTransport(server).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))   
-                    return;
         	
                 String oldMailHost = entry.getAttr(Provisioning.A_zimbraMailHost);
                 if (oldMailHost != null) {
                     Server oldServer = prov.get(ServerBy.serviceHostname, oldMailHost);
                     if (oldServer != null) {
                 	    String curMailTransport = entry.getAttr(Provisioning.A_zimbraMailTransport);
-                	    if (!mailTransportMatch(oldServer, curMailTransport))
+                	    if (!mailTransportMatches(oldServer, curMailTransport))
                             throw ServiceException.INVALID_REQUEST("current value of zimbraMailHost does not match zimbraMailTransport" +
-                        	                                   ", computed mail transport from current zimbraMailHost=" + mailTransport(oldServer) +
-                        	                                   ", current zimbraMailTransport=" + curMailTransport, 
-                        	                                   null);
+                                    ", computed mail transport from current zimbraMailHost=" + mailTransport(oldServer) +
+                        	        ", current zimbraMailTransport=" + curMailTransport, 
+                        	        null);
                     }
                 }
             } else {
@@ -107,7 +101,7 @@ public class MailHost extends AttributeCallback {
      * compare only proto and host, ignore port, because if port on the server was changed we 
      * still want the change to go through.
      */
-    private static boolean mailTransportMatch(Server server, String mailTransport) {
+    private static boolean mailTransportMatches(Server server, String mailTransport) {
         // if there is no mailTransport, it sure "matches"
         if (mailTransport == null)
             return true;
