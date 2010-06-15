@@ -1834,6 +1834,19 @@ public class ZMailboxUtil implements DebugListener {
             // account is not found, still let it go to server (default to OwnerBy.BY_ID) and let server return us the error
         }
 
+        SharedItemBy sharedItemBy = SharedItemBy.BY_PATH;
+        String sharedItem = cmItem;
+        
+        int colonAt = cmItem.indexOf(':');
+        if (colonAt != -1 && colonAt != 0 && colonAt != cmItem.length()-1) {
+            String itemOwnerId = cmItem.substring(0, colonAt);
+            String itemId = cmItem.substring(colonAt+1);
+            if (Provisioning.isUUID(itemOwnerId)) {
+                sharedItemBy = SharedItemBy.BY_ID;
+                sharedItem = itemId;
+            }
+        }
+        
         ZMountpoint cm = mMbox.createMountpoint(
                     lookupFolderId(cmPath, true),
                     ZMailbox.getBasePath(cmPath),
@@ -1842,8 +1855,8 @@ public class ZMailboxUtil implements DebugListener {
                     flagsOpt(),
                     ownerBy,
                     cmOwner,
-                    (Provisioning.isUUID(cmItem) ? SharedItemBy.BY_ID : SharedItemBy.BY_PATH),
-                    cmItem);
+                    sharedItemBy,
+                    sharedItem);
         stdout.println(cm.getId());
     }
 
