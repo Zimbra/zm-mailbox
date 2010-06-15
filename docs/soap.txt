@@ -708,12 +708,12 @@ import and export of addressbook.
 
 ----------------------------
 
-<AutoCompleteRequest folders="{folders}" includeGal="0|1">
+<AutoCompleteRequest [folders="{folders}"] [includeGal="0|1"]>
   <name>...</name>
 </AutoCompleteRequest>
 
 <AutoCompleteResponse canBeCached="0|1">
-  <match ranking="..." l="..." type="gal|group|contact|unknown" email="..." [display="..."] [id="..."]/>*
+  <match ranking="..." type="gal|group|contact|rankingTable" email="..." [display="..."] [id="..."] [l="..."]/>*
 </AutoCompleteResponse>
 
   {folders} - comma separates list of folder IDs.

@@ -82,7 +82,7 @@ public class ContactRankings {
 			
 			if (mEntrySet.size() >= mTableSize) {
 				ContactEntry lastEntry = mEntrySet.last();
-				if (lastEntry.mRanking <= 1)
+				if (lastEntry.mRanking < 1)
 					remove(lastEntry);
 			}
 			if (mEntrySet.size() < mTableSize) {

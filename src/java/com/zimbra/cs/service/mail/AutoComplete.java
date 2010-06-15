@@ -110,7 +110,7 @@ public class AutoComplete extends MailDocumentHandler {
 		if (entry.getFolderId() == ContactAutoComplete.FOLDER_ID_GAL)
 			return "gal";
 		else if (entry.getFolderId() == ContactAutoComplete.FOLDER_ID_UNKNOWN)
-			return "unknown";
+			return "rankingTable";
 		else if (entry.isDlist())
 			return "group";
 		else

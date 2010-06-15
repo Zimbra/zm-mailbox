@@ -60,12 +60,13 @@ public class ContactAutoComplete {
 			    canBeCached = false;
                 return;
 			}
+			if (entries.contains(entry))
+			    return;
 			String email;
 			if (entry.isDlist())
 				email = entry.mDisplayName;
 			else
 				email = entry.mEmail.toLowerCase();
-			entry.mRanking = rankings.query(email);
 			if (!emails.contains(email)) {
 				entries.add(entry);
 				emails.add(email);
@@ -76,7 +77,6 @@ public class ContactAutoComplete {
 		        addEntry(entry);
 		}
 		private HashSet<String> emails;
-		private ContactRankings rankings;
 	}
     public static class ContactEntry implements Comparable<ContactEntry> {
         String mEmail;
@@ -126,6 +126,9 @@ public class ContactAutoComplete {
         }
         // ascending order
         public int compareTo(ContactEntry that) {
+            int nameCompare = this.getEmail().compareToIgnoreCase(that.getEmail());
+            if (nameCompare == 0)
+                return 0;
             // check the ranking
         	int diff = that.mRanking - this.mRanking;
         	if (diff != 0)
@@ -139,7 +142,7 @@ public class ContactAutoComplete {
                     this.mFolderId == FOLDER_ID_UNKNOWN)
                 return -1;
             // alphabetical
-        	return this.getEmail().compareToIgnoreCase(that.getEmail());
+        	return nameCompare;
         }
         public boolean equals(Object obj) {
         	if (obj instanceof ContactEntry)
@@ -157,7 +160,6 @@ public class ContactAutoComplete {
         		buf.append(getDisplayName()).append(" (dlist)");
         	else
         		buf.append(getEmail());
-        	buf.append(" (").append(mFolderId).append(")");
         	buf.append(" ").append(new Date(mLastAccessed));
         }
 	}
@@ -217,21 +219,24 @@ public class ContactAutoComplete {
 		ZimbraLog.gal.debug("querying "+str);
 		long t0 = System.currentTimeMillis();
 		AutoCompleteResult result = new AutoCompleteResult(limit);
-		result.rankings = new ContactRankings(mAccountId);
+		ContactRankings rankings = new ContactRankings(mAccountId);
 		if (limit <= 0)
 			return result;
 		
 		if (result.entries.size() >= limit)
 			return result;
-		long t1 = System.currentTimeMillis();
+		
+		// query ranking table
+		for (ContactEntry entry : rankings.search(str))
+		    result.addEntry(entry);
+        long t1 = System.currentTimeMillis();
 		
 		// search other folders
-		queryFolders(str, folders, limit, result);
-		if (result.entries.size() >= limit)
-			return result;
+        if (result.entries.size() < limit)
+            queryFolders(str, folders, limit, result);
 		long t2 = System.currentTimeMillis();
 		
-		if (mIncludeGal)
+		if (mIncludeGal && result.entries.size() < limit)
 			queryGal(str, limit, result);
 		long t3 = System.currentTimeMillis();
 		
