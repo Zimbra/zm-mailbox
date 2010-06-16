@@ -5450,6 +5450,7 @@ public class Mailbox {
     public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
         Map<Integer, String> deletedFolderPaths = new HashMap<Integer, String>();
+        Map<Integer, String> deletedTags = new HashMap<Integer, String>();
 
         boolean success = false;
         try {
@@ -5470,6 +5471,9 @@ public class Mailbox {
                 
                 if (item.getType() == MailItem.TYPE_FOLDER) {
                     deletedFolderPaths.put(item.getId(), ((Folder) item).getPath());
+                }
+                if (item.getType() == MailItem.TYPE_TAG) {
+                    deletedTags.put(item.getId(), item.getName());
                 }
 
                 // however, trying to delete messages and passing in a folder ID is not OK
@@ -5494,6 +5498,9 @@ public class Mailbox {
         
         for (int id : deletedFolderPaths.keySet()) {
             updateFilterRules(id, deletedFolderPaths.get(id));
+        }
+        for (int id: deletedTags.keySet()) {
+            RuleManager.tagDeleted(getAccount(), deletedTags.get(id));
         }
     }
 

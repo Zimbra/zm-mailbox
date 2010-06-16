@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
@@ -37,10 +36,12 @@ extends TestCase
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = "TestTagFilterRules";
     private static final String TAG_NAME = NAME_PREFIX;
-    private static final String NEW_TAG_NAME = TAG_NAME + "2";
+    private static final String TAG2_NAME = NAME_PREFIX + "2";
+    private static final String NEW_TAG_NAME = TAG_NAME + " new";
     
     private ZMailbox mMbox;
     private ZTag mTag;
+    private ZTag mTag2;
     private ZFilterRules mOriginalRules;
     
     public void setUp()
@@ -49,6 +50,7 @@ extends TestCase
         
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag = mMbox.createTag(TAG_NAME, ZTag.Color.purple);
+        mTag2 = mMbox.createTag(TAG2_NAME, ZTag.Color.green);
         mOriginalRules = mMbox.getFilterRules();
         mMbox.saveFilterRules(getRules());
     }
@@ -80,11 +82,33 @@ extends TestCase
         TestUtil.addMessageLmtp(subject, recipient, sender);
         
         // Confirm that the new tag name is now applied to both messages
-        List<ZMessage> messages = TestUtil.search(mMbox, "tag:" + NEW_TAG_NAME);
+        List<ZMessage> messages = TestUtil.search(mMbox, "tag:\"" + NEW_TAG_NAME + "\"");
         assertEquals("Incorrect number of tagged messages", 2, messages.size());
         for (ZMessage msg2 : messages) {
             TestUtil.verifyTag(mMbox, msg2, NEW_TAG_NAME);
         }
+    }
+    
+    /**
+     * Verifies that filter rules are disabled when a tag is deleted. 
+     */
+    public void testDeleteTag()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        mbox.deleteTag(mTag.getId());
+        
+        // Deliver message that used to match the tag rule and make sure
+        // that the message is not tagged.
+        String subject = NAME_PREFIX + " testDeleteTag";
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        assertEquals(mTag2.getId(), msg.getTagIds());
+        
+        // Confirm that the first rule was disabled and the second was not.
+        ZFilterRule rule1 = TestUtil.getFilterRule(mbox, TAG_NAME);
+        assertFalse(rule1.isActive());
+        ZFilterRule rule2 = TestUtil.getFilterRule(mbox, TAG2_NAME);
+        assertTrue(rule2.isActive());
     }
     
     public void tearDown()
@@ -108,6 +132,14 @@ extends TestCase
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, NAME_PREFIX));
         actions.add(new ZTagAction(TAG_NAME));
         rules.add(new ZFilterRule(TAG_NAME, true, false, conditions, actions));
+        
+        // if subject contains "TestTagFilterRules", tag TestTagFilterRules2
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, NAME_PREFIX));
+        actions.add(new ZTagAction(TAG2_NAME));
+        rules.add(new ZFilterRule(TAG2_NAME, true, false, conditions, actions));
+        
         return new ZFilterRules(rules);
     }
 
