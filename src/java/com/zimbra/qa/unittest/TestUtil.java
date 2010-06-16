@@ -87,6 +87,7 @@ import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZDateTime;
 import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZFilterRule;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZGetMessageParams;
@@ -1024,5 +1025,15 @@ extends Assert {
         organizer = addDomainIfNecessary(organizer);
         ZOutgoingMessage msg = getOutgoingMessage(organizer, subject, "Reply to appointment " + inviteId, null);
         mbox.sendInviteReply(inviteId, "0", replyVerb, true, null, null, msg);
+    }
+    
+    public static ZFilterRule getFilterRule(ZMailbox mbox, String ruleName)
+    throws ServiceException {
+        for (ZFilterRule rule : mbox.getFilterRules(true).getRules()) {
+            if (rule.getName().equals(ruleName)) {
+                return rule;
+            }
+        }
+        return null;
     }
 }

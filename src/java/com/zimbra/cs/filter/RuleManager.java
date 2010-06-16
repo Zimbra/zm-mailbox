@@ -441,7 +441,7 @@ public class RuleManager {
             try {
                 node = parse(script);
             } catch (ParseException e) {
-                ZimbraLog.filter.warn("Unable to update filter rules with new folder path '%s'.", e);
+                ZimbraLog.filter.warn("Unable to update filter rules after folder '%s' was deleted.", originalPath, e);
                 return;
             }
             FolderDeleted deleted = new FolderDeleted(originalPath);
@@ -478,6 +478,37 @@ public class RuleManager {
                 ZimbraLog.filter.info("Updated filter rules due to tag rename from %s to %s.",
                     originalName, newName);
                 ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n%s", rules, newRules);
+            }
+        }
+    }
+    
+    public static void tagDeleted(Account account, String tagName)
+    throws ServiceException {
+        String script = getRules(account);
+        if (script != null) {
+            Node node = null;
+            try {
+                node = parse(script);
+            } catch (ParseException e) {
+                ZimbraLog.filter.warn("Unable to update filter rules after tag '%s' was deleted.", tagName, e);
+                return;
+            }
+            TagDeleted deleted = new TagDeleted(tagName);
+            
+            deleted.accept(node);
+            if (deleted.modified()) {
+                // Kind of a hacky way to convert a Node tree to a script.  We
+                // convert to XML first, and then to a String.  Unfortunately
+                // jSieve 0.2 doesn't have an API that generates a script from
+                // a Node tree.
+                List<String> ruleNames = getRuleNames(script);
+                SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+                sieveToSoap.accept(node);
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+                String newScript = soapToSieve.getSieveScript();
+                setRules(account, newScript);
+                ZimbraLog.filter.info("Updated filter rules after tag %s was deleted.", tagName);
+                ZimbraLog.filter.debug("Old rules:\n%s, new rules:\n%s", script, newScript);
             }
         }
     }
