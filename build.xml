@@ -396,28 +396,35 @@
     </target>
 
     <target name="generate-buildinfo" depends="set-buildinfo-vars">
-        <mkdir dir="${build.dir}/buildinfo"/>
-        <echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
-            package com.zimbra.cs.util;
-            class BuildInfoGenerated {
-            	public static final String PLATFORM = "${zimbra.buildinfo.platform}";
-            	public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
-            	public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
-            	public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
-            	public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
-            	public static final String RELNUM = "${zimbra.buildinfo.relnum}";
-            	public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
-	            public static final String VERSION = "${zimbra.buildinfo.version}";
-	            public static final String TYPE = "${zimbra.buildinfo.type}";
-	            public static final String RELEASE = "${zimbra.buildinfo.release}";
-	            public static final String DATE = "${DSTAMP}-${TSTAMP}";
-	            public static final String HOST = "${zimbra.buildinfo.host}";
-            }
-        </echo>
+        <if>
+            <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
+            <then>
+                <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
+                <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
+                    package com.zimbra.cs.util;
+                	
+                    class BuildInfoGenerated {
+                        public static final String PLATFORM = "${zimbra.buildinfo.platform}";
+                        public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
+                        public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
+                        public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
+                        public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
+                        public static final String RELNUM = "${zimbra.buildinfo.relnum}";
+                        public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
+                        public static final String VERSION = "${zimbra.buildinfo.version}";
+	                    public static final String TYPE = "${zimbra.buildinfo.type}";
+	                    public static final String RELEASE = "${zimbra.buildinfo.release}";
+	                    public static final String DATE = "${DSTAMP}-${TSTAMP}";
+	                    public static final String HOST = "${zimbra.buildinfo.host}";
+                    }
+                </echo>
+        	</then>
+        </if>
+    	
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
-
+	
     <target name="setup-ldap-config">
         <!-- copy attrs source files to build dir -->
         <delete dir="${build.dir}/attrs-src"/>
@@ -567,7 +574,17 @@
 
     <target name="jar" depends="compile">
         <echo>Hostname: ${zimbra.server.hostname}</echo>
-        <jar destfile="${jarfile}" basedir="${build.classes.dir}"/>
+        <jar destfile="${jarfile}" basedir="${build.classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="com.zimbra.cs.util.BuildInfo" />
+            	<attribute name="Implementation-Vendor" value="VMware, Inc."/>
+            	<attribute name="Implementation-Title" value="Zimbra Server"/>
+            	<attribute name="Implementation-Version" value="${zimbra.buildinfo.version} ${zimbra.buildinfo.release} ${DSTAMP}-${TSTAMP} ${zimbra.buildinfo.type}"/>
+            	<attribute name="Specification-Vendor" value="VMware, Inc."/>
+            	<attribute name="Specification-Title" value="Zimbra Collaboration Suite"/>
+            	<attribute name="Specification-version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}"/>
+            </manifest>
+        </jar>
         <antcall target="generate-ldap-config"/>
     </target>
 
