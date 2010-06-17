@@ -50,7 +50,7 @@ public class ImapConfig extends ServerConfig {
     @Override
     public String getBindAddress() {
         return getAttr(isSslEnabled() ?
-            A_zimbraImapSSLBindAddress : A_zimbraPop3BindAddress, null);
+            A_zimbraImapSSLBindAddress : A_zimbraImapBindAddress, null);
     }
 
     @Override
