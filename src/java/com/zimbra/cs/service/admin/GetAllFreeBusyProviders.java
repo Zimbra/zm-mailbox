@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -30,7 +31,7 @@ public class GetAllFreeBusyProviders extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         // allow only system admin for now
-        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
+        checkRight(zsc, context, null, Admin.R_getAllFreeBusyProviders);
         
         Element response = zsc.createElement(AdminConstants.GET_ALL_FREE_BUSY_PROVIDERS_RESPONSE);
         
@@ -48,6 +49,6 @@ public class GetAllFreeBusyProviders extends AdminDocumentHandler {
 	
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        notes.add(AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);
+        relatedRights.add(Admin.R_getAllFreeBusyProviders);
     }
 }

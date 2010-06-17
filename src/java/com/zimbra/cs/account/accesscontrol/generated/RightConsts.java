@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100419-1412 */
+    /* build: 6.0.2_BETA1_1111 gsolovyev 20100617-1603 */
 
 
     /*
@@ -480,14 +480,15 @@ public class RightConsts {
 
     /**
      * login as the user as an admin. This is different from the loginAs user
-     * right as follows: - loginAs is effective only when logged in as an
-     * user - adminLoginAs is effective only when logged in as an admin That
-     * is: If you are an admin and has the adminLoginAs right on user1, the
-     * adminLoginAs is effective only when you login as an admin. It is not
-     * effective if you login as a regular user. Likewise if another user
-     * granted you the loginAs right, the right is effective when you logged
-     * in as a regular user, it is not effective when you logged in as an
-     * admin.
+     * right as follows: - loginAs is effective only when login as an user -
+     * adminLoginAs is effective only when login as an admin (i.e. present an
+     * admn auth token) For example: If an admin account has the adminLoginAs
+     * right on user1, the adminLoginAs is effective only when the admin
+     * account login as an admin. It is not effective when the admin account
+     * login as a regular user. Likewise if an user granted the loginAs right
+     * to an admin account, the right is effective when the account account
+     * login as a regular user, it is not effective when the admin account
+     * login as an admin.
      */
     public static final String RT_adminLoginAs = "adminLoginAs";
 
@@ -880,6 +881,12 @@ public class RightConsts {
      * get share info on account
      */
     public static final String RT_getAccountShareInfo = "getAccountShareInfo";
+
+    /**
+     * Retrieve a list of Free/Busy providers via
+     * GetAllFreeBusyProvidersRequest SOAP request
+     */
+    public static final String RT_getAllFreeBusyProviders = "getAllFreeBusyProviders";
 
     /**
      * get CSR from the target server
