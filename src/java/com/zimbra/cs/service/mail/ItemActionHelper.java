@@ -576,21 +576,31 @@ public class ItemActionHelper {
                     Element request = new Element.XMLElement(qname).addAttribute(MailConstants.A_FOLDER, folderStr).addAttribute(MailConstants.A_FLAGS, flags);
                     ToXML.encodeAlarmTimes(request, cal);
 
-                    boolean isOrganizer = false;
                     Invite invDefault = cal.getDefaultInviteOrNull();
+
+                    // Takeover as organizer if we're doing a MOVE and source mailbox is the organizer.
+                    // Don't takeover in a COPY operation.
+                    boolean takeoverAsOrganizer = false;
+                    if (Op.MOVE.equals(mOperation)) {
+                        Invite inv = invDefault;
+                        if (inv == null) {
+                            // no default invite; let's use the first invite
+                            Invite[] invs = cal.getInvites();
+                            if (invs != null && invs.length > 0)
+                                inv = invs[0];
+                        }
+                        takeoverAsOrganizer = inv != null && inv.isOrganizer();
+                    }
+
                     if (invDefault != null) {
-                        if (invDefault.isOrganizer())
-                            isOrganizer = true;
-                        addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target);
+                        addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target, takeoverAsOrganizer);
                     }
 
                     for (Invite inv : cal.getInvites()) {
                         if (inv == null || inv == invDefault)
                             continue;
-                        if (inv.isOrganizer())
-                            isOrganizer = true;
                         String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
-                        addCalendarPart(request.addElement(elem), cal, inv, zmbx, target);
+                        addCalendarPart(request.addElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
                     }
 
                     ToXML.encodeCalendarReplies(request, cal);
@@ -598,7 +608,7 @@ public class ItemActionHelper {
                     createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
                     mCreatedIds.add(createdId);
 
-                    if (isOrganizer) {
+                    if (takeoverAsOrganizer) {
                         // Announce organizer change to attendees.
                         request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST);
                         request.addAttribute(MailConstants.A_ID, createdId);
@@ -628,7 +638,8 @@ public class ItemActionHelper {
         }
     }
 
-    private void addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target) throws ServiceException {
+    private void addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target, boolean takeoverAsOrganizer)
+    throws ServiceException {
         parent.addAttribute(MailConstants.A_CAL_PARTSTAT, inv.getPartStat());
         Element m = parent.addUniqueElement(MailConstants.E_MSG);
 
@@ -646,7 +657,7 @@ public class ItemActionHelper {
             }
         }
 
-        if (inv.isOrganizer() && inv.hasOrganizer()) {
+        if (takeoverAsOrganizer && inv.isOrganizer() && inv.hasOrganizer()) {
             Invite invCopy = inv.newCopy();
             invCopy.setInviteId(inv.getMailItemId());
             // Increment SEQUENCE and bring DTSTAMP current because we're changing organizer.
