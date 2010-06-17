@@ -156,7 +156,7 @@ public class AttributeManager {
                         mInstance = (AttributeManager) ExtensionUtil.findClass(className).getDeclaredConstructor(String.class).newInstance(dir);
                     }
                 } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate AttributeManager interface of class '" + className + "'; defaulting to AttributeManager", e);
+                    ZimbraLog.account.debug("could not instantiate AttributeManager interface of class '" + className + "'; defaulting to AttributeManager");
                 }
             }
             if (mInstance == null) {
