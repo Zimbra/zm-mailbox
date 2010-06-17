@@ -773,4 +773,7 @@
 <right name="installZCSLicense" type="preset" targetType="global">
 	<desc>install Zimbra License file on the target server</desc>
 </right>     
+<right name="getAllFreeBusyProviders" type="preset" targetType="global">
+	<desc>Retrieve a list of Free/Busy providers via GetAllFreeBusyProvidersRequest SOAP request</desc>
+</right>
 </rights>
