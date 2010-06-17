@@ -360,7 +360,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (!csd.mDontNotifyAttendees)
                     msgId = mbox.getMailSender().sendMimeMessage(
                             octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, true);
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, false);
             } else {
                 // But if we're sending a cancel request, send emails first THEN update the local mailbox.
                 // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
@@ -376,7 +376,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (!csd.mDontNotifyAttendees)
                     msgId = mbox.getMailSender().sendMimeMessage(
                             octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, true);
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, false);
                 if (updateOwnAppointment)
                     ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
             }
@@ -564,7 +564,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
                     MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
                     mbox.getMailSender().sendMimeMessage(octxt, mbox, mmModify, null, null,
-                            new ItemId(mbox, inv.getMailItemId()), null, null, true, true);
+                            new ItemId(mbox, inv.getMailItemId()), null, null, true, false);
                 }
             }
         }
