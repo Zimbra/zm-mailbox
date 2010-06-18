@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100608-1116 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100618-1207 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -29328,8 +29328,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * address to put in reply-to header of read receipt messages, if it is
-     * not set, then the compose identitys primary email address is used.
+     * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
+     * never fully implemented.. Orig desc: address to put in reply-to header
+     * of read receipt messages, if it is not set, then the compose identitys
+     * primary email address is used.
      *
      * @return zimbraPrefReadReceiptsToAddress, or null if unset
      *
@@ -29341,8 +29343,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * address to put in reply-to header of read receipt messages, if it is
-     * not set, then the compose identitys primary email address is used.
+     * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
+     * never fully implemented.. Orig desc: address to put in reply-to header
+     * of read receipt messages, if it is not set, then the compose identitys
+     * primary email address is used.
      *
      * @param zimbraPrefReadReceiptsToAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29357,8 +29361,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * address to put in reply-to header of read receipt messages, if it is
-     * not set, then the compose identitys primary email address is used.
+     * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
+     * never fully implemented.. Orig desc: address to put in reply-to header
+     * of read receipt messages, if it is not set, then the compose identitys
+     * primary email address is used.
      *
      * @param zimbraPrefReadReceiptsToAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29374,8 +29380,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * address to put in reply-to header of read receipt messages, if it is
-     * not set, then the compose identitys primary email address is used.
+     * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
+     * never fully implemented.. Orig desc: address to put in reply-to header
+     * of read receipt messages, if it is not set, then the compose identitys
+     * primary email address is used.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -29389,8 +29397,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * address to put in reply-to header of read receipt messages, if it is
-     * not set, then the compose identitys primary email address is used.
+     * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
+     * never fully implemented.. Orig desc: address to put in reply-to header
+     * of read receipt messages, if it is not set, then the compose identitys
+     * primary email address is used.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100608-1116 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100618-1207 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6151,8 +6151,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefReadingPaneLocation = "zimbraPrefReadingPaneLocation";
 
     /**
-     * address to put in reply-to header of read receipt messages, if it is
-     * not set, then the compose identitys primary email address is used.
+     * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
+     * never fully implemented.. Orig desc: address to put in reply-to header
+     * of read receipt messages, if it is not set, then the compose identitys
+     * primary email address is used.
      *
      * @since ZCS 6.0.0_BETA1
      */
