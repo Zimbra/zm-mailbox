@@ -4207,11 +4207,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to send read receipt</desc>
 </attr>
 
-<attr id="823" name="zimbraPrefReadReceiptsToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="6.0.0_BETA1">
+<attr id="823" name="zimbraPrefReadReceiptsToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="6.0.0_BETA1" deprecatedSince="6.0.8">
   <desc>
     address to put in reply-to header of read receipt messages, 
     if it is not set, then the compose identitys primary email address is used.
   </desc>
+  <deprecateDesc>Deprecated per bug 46988.  This feature was never fully implemented.</deprecateDesc>
 </attr>
 
 <attr id="824" name="zimbraMailUncompressedCacheMaxFiles" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ServerConfig" since="6.0.0_BETA1" deprecatedSince="6.0.7">
