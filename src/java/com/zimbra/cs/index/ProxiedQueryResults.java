@@ -90,21 +90,34 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         mSearchParams.setOffset(0); 
     }
     
+    private void setSearchParams(SearchParams params, String queryString) {
+        setSearchParams(params);
+        mSearchParams.setQueryStr(queryString);
+    }
+    
     public void setTimeout(long timeout) {
         mTimeout = timeout;
     }
-
+    
     /**
-     * A search request in the current mailbox on a different server
+     * A search request in the current mailbox on a different server.
      * 
-     * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary) 
+     * The query string for this search is the string passed in the queryString
+     * parameter, *not* the query string in the params.
+     * 
+     * @param respProto
+     * @param authToken
+     * @param targetAccountId
      * @param server hostname of server
      * @param params
+     * @param queryString queryString to use for this search
+     * @param mode
      */
-    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String targetAccountId, String server, SearchParams params, Mailbox.SearchResultMode mode) {
+    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String targetAccountId, String server, 
+            SearchParams params, String queryString, Mailbox.SearchResultMode mode) {
         super(params.getTypes(), params.getSortBy(), mode);
 
-        setSearchParams(params);
+        setSearchParams(params, queryString);
         this.mAuthToken = authToken;
         this.mServer = server;
         this.mTargetAcctId = targetAccountId;

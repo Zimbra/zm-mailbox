@@ -83,8 +83,8 @@ class RemoteQueryOperation extends FilterQueryOperation {
         if (ZimbraLog.index.isDebugEnabled()) 
             ZimbraLog.index.debug("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
 
-        params.setQueryStr(mOp.toQueryString());
-        mResults = new ProxiedQueryResults(proto, authToken, mTarget.toString(), remoteServer.getName(), params, params.getMode());
+        String queryString = mOp.toQueryString();
+        mResults = new ProxiedQueryResults(proto, authToken, mTarget.toString(), remoteServer.getName(), params, queryString, params.getMode());
     }
     
     public void resetIterator() throws ServiceException {
