@@ -31,7 +31,7 @@ public class ItemData {
     
     private static enum Keys {
         id, type, parent_id, folder_id, index_id, imap_id, date, size,
-        volume_id, blob_digest, unread, flags, tags, sender, name,
+        volume_id, blob_digest, unread, flags, tags, subject, name,
         metadata, mod_metadata, change_date, mod_content,
         sender, ExtraStr, FlagStr, Path, TagStr, TagNames, Ver
     }
