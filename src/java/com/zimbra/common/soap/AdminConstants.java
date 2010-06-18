@@ -406,6 +406,10 @@ public class AdminConstants {
     public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("ReloadMemcachedClientConfigResponse", NAMESPACE);
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("GetMemcachedClientConfigRequest", NAMESPACE);
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("GetMemcachedClientConfigResponse", NAMESPACE);
+    
+    // noop
+    public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
+    public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
 
     // DumpSessions
     public static final String E_SESSION = "session";
