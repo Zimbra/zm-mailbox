@@ -2453,3 +2453,11 @@ for example.
 />
 
 Returns the memcached client configuration on a mailbox server.
+
+----------------------------
+
+<NoOpRequest/>
+
+<NoOpResponse/>
+
+A request that does nothing and always returns nothing. Used to keep an admin session alive.
