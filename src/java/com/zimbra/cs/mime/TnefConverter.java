@@ -17,7 +17,10 @@ package com.zimbra.cs.mime;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.BodyPart;
@@ -27,10 +30,17 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.util.tnef.DefaultTnefToICalendar;
+import com.zimbra.cs.util.tnef.TnefToICalendar;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 
 import net.freeutils.tnef.TNEFInputStream;
@@ -68,41 +78,49 @@ import net.freeutils.tnef.mime.TNEFMime;
  * @author bburtin
  */
 public class TnefConverter extends MimeVisitor {
+    private ThreadLocal<MimeMessage> tlMm = new ThreadLocal<MimeMessage>();
+
     protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
 
     protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
-        // do the decode in the exit phase
-        if (visitKind != VisitPhase.VISIT_END)
-            return false;
-
-        MimeMultipart multi = null;
-        try {
-            // we only care about "application/ms-tnef" content
-            if (!TNEFUtils.isTNEFMimeType(msg.getContentType()))
-                return false;
-    
-            Object content = msg.getContent();
-            if (!(content instanceof MimeBodyPart))
-                return false;
-            // try to expand the TNEF into a suitable Multipart
-            multi = expandTNEF((MimeBodyPart) content);
-            if (multi == null)
-                return false;
-        } catch (MessagingException e) {
-            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
-            return false;
-        } catch (IOException e) {
-            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+        if (visitKind == VisitPhase.VISIT_BEGIN) {
+            tlMm.set(msg);
             return false;
         }
 
-        // check to make sure that the caller's OK with altering the message
-        if (mCallback != null && !mCallback.onModification())
+        // do the decode in the exit phase
+        try {
+            MimeMultipart multi = null;
+            try {
+                // we only care about "application/ms-tnef" content
+                if (!TNEFUtils.isTNEFMimeType(msg.getContentType()))
+                    return false;
+        
+                Object content = msg.getContent();
+                if (!(content instanceof MimeBodyPart))
+                    return false;
+                // try to expand the TNEF into a suitable Multipart
+                multi = expandTNEF((MimeBodyPart) content);
+                if (multi == null)
+                    return false;
+            } catch (MessagingException e) {
+                ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+                return false;
+            } catch (IOException e) {
+                ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+                return false;
+            }
+    
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
+                return false;
+            // and put the new multipart/alternative where the TNEF used to be
+            msg.setContent(multi);
+            msg.setHeader("Content-Type", multi.getContentType() + "; generated=true");
             return false;
-        // and put the new multipart/alternative where the TNEF used to be
-        msg.setContent(multi);
-        msg.setHeader("Content-Type", multi.getContentType() + "; generated=true");
-        return false;
+        } finally {
+            tlMm.set(null);
+        }
     }
 
     protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind) throws MessagingException {
@@ -159,6 +177,7 @@ public class TnefConverter extends MimeVisitor {
     /**
      * Performs the TNEF->MIME conversion on any TNEF body parts that
      * make up the given message. 
+     * @throws ServiceException 
      */
 
     private MimeMultipart expandTNEF(MimeBodyPart bp) throws MessagingException, IOException {
@@ -197,10 +216,44 @@ public class TnefConverter extends MimeVisitor {
         MimeBodyPart convertedPart = new MimeBodyPart();
         convertedPart.setContent(convertedMulti);
 
+        // If the TNEF object contains calendar data, create an iCalendar version.
+        MimeBodyPart icalPart = null;
+        if (DebugConfig.enableTnefToICalendarConversion) {
+            try {
+                TnefToICalendar calConverter = new DefaultTnefToICalendar();
+                ZCalendar.DefaultContentHandler icalHandler = new ZCalendar.DefaultContentHandler();
+                MimeMessage mm = tlMm.get();
+                if (calConverter.convert(mm, bp.getInputStream(), icalHandler)) {
+                    if (icalHandler.getNumCals() > 0) {
+                        List<ZVCalendar> cals = icalHandler.getCals();
+                        Writer writer = new StringWriter(1024);
+                        ICalTok method = null;
+                        for (ZVCalendar cal : cals) {
+                            cal.toICalendar(writer);
+                            if (method == null)
+                                method = cal.getMethod();
+                        }
+                        writer.close();
+                        icalPart = new MimeBodyPart();
+                        icalPart.setText(writer.toString());
+                        ContentType ct = new ContentType(MimeConstants.CT_TEXT_CALENDAR);
+                        ct.setCharset(MimeConstants.P_CHARSET_UTF8);
+                        if (method != null)
+                            ct.setParameter("method", method.toString());
+                        icalPart.setHeader("Content-Type", ct.toString());
+                    }
+                }
+            } catch (ServiceException e) {
+                throw new MessagingException("TNEF to iCalendar conversion failure: " + e.getMessage(), e);
+            }
+        }
+
         // create a multipart/alternative for the TNEF and its MIME version
         MimeMultipart altMulti = new MimeMultipart("alternative");
         altMulti.addBodyPart(bp);
         altMulti.addBodyPart(convertedPart);
+        if (icalPart != null)
+            altMulti.addBodyPart(icalPart);
 
         return altMulti;
     }

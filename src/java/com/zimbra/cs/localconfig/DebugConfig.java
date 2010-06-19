@@ -141,7 +141,8 @@ public class DebugConfig {
     public static boolean disableCalendarTZMatchByID;
     public static boolean disableCalendarTZMatchByRule;
 
-    public static boolean forceMimeConvertersForCalendarBlobs;
+    public static boolean disableMimeConvertersForCalendarBlobs;
+    public static boolean enableTnefToICalendarConversion;
 
     /** If true, disable the memcached-based folders/tags cache of mailboxes.
      */
@@ -199,7 +200,8 @@ public class DebugConfig {
         disableCalendarTZMatchByID = booleanValue("debug_disable_calendar_tz_match_by_id", false);
         disableCalendarTZMatchByRule = booleanValue("debug_disable_calendar_tz_match_by_rule", false);
 
-        forceMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
+        disableMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
+        enableTnefToICalendarConversion = booleanValue("debug_enable_tnef_to_icalendar_conversion", false);
 
         disableFoldersTagsCache = booleanValue("debug_disable_folders_tags_cache", false);
         

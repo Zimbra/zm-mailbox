@@ -2891,7 +2891,7 @@ public abstract class CalendarItem extends MailItem {
             mm = new MimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 
-            if (DebugConfig.forceMimeConvertersForCalendarBlobs) {
+            if (!DebugConfig.disableMimeConvertersForCalendarBlobs) {
                 try {
                     for (Class<? extends MimeVisitor> visitor : MimeVisitor.getConverters())
                         visitor.newInstance().accept(mm);

@@ -779,7 +779,7 @@ public class ZCalendar {
         public int getNumCals();
     }
 
-    private static class DefaultContentHandler implements ZICalendarParseHandler {
+    public static class DefaultContentHandler implements ZICalendarParseHandler {
         List<ZVCalendar> mCals = new ArrayList<ZVCalendar>(1);
         ZVCalendar mCurCal = null;
         List<ZComponent> mComponents = new ArrayList<ZComponent>();
