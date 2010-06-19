@@ -371,6 +371,11 @@ public class ZimbraLog {
      */
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
 
+    /**
+     * "zimbra.tnef" logger.  Logs TNEF conversion operations.
+     */
+    public static final Log tnef = LogFactory.getLog("zimbra.tnef");
+
     
     /**
      * Maps the log category name to its description.
