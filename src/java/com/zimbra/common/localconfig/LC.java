@@ -786,7 +786,7 @@ public class LC {
         zimbra_http_originating_ip_header = new KnownKey("zimbra_http_originating_ip_header", "X-Forwarded-For");
 
         zimbra_session_limit_imap = new KnownKey("zimbra_session_limit_imap");
-        zimbra_session_limit_imap.setDefault("5");
+        zimbra_session_limit_imap.setDefault("15");
 
         zimbra_session_timeout_soap = new KnownKey("zimbra_session_timeout_soap");
         zimbra_session_timeout_soap.setDefault("600");
