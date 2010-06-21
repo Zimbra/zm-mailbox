@@ -402,6 +402,7 @@ public class ImapSessionManager {
     }
 
 
+    private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
     private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
 
     static void closeFolder(ImapSession session, boolean isUnregistering) {
@@ -430,6 +431,12 @@ public class ImapSessionManager {
 
         if (isUnregistering)
             return;
+
+        // recognize if we're not configured to allow sessions to hang around after end of SELECT
+        if (TERMINATE_ON_CLOSE) {
+            session.detach();
+            return;
+        }
 
         // if there are still other listeners on this folder, this session is unnecessary
         Mailbox mbox = session.getMailbox();

@@ -164,6 +164,7 @@ public class DebugConfig {
     public static int imapSessionInactivitySerializationTime;
     public static int imapTotalNonserializedSessionFootprintLimit;
     public static int imapNoninteractiveSessionLimit;
+    public static boolean imapTerminateSessionOnClose;
     public static boolean imapSerializeSessionOnClose;
 
     static {
@@ -229,6 +230,7 @@ public class DebugConfig {
         imapSessionInactivitySerializationTime = intValue("debug_imap_session_inactivity_serialization_time", 600);
         imapTotalNonserializedSessionFootprintLimit = intValue("debug_imap_total_nonserialized_session_footprint_limit", Integer.MAX_VALUE);
         imapNoninteractiveSessionLimit = intValue("debug_imap_noninteractive_session_limit", Integer.MAX_VALUE);
+        imapTerminateSessionOnClose = booleanValue("imap_terminate_session_on_close", false);
         imapSerializeSessionOnClose = booleanValue("imap_serialize_session_on_close", true);
     }
 
