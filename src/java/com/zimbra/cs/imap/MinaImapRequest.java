@@ -94,7 +94,7 @@ public class MinaImapRequest extends ImapRequest {
         if (isMaxRequestSizeExceeded()) {
             // If this request is too long then send an error response
             // rather than a continuation request
-            throw new ImapParseException(getTag(), "maximum request size exceeded", false);
+            throw new ImapParseException(getTag(), "maximum request size exceeded");
         }
         mHandler.sendContinuation("send literal data");
     }

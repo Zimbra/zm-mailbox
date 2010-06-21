@@ -73,19 +73,17 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     public void messageReceived(Object msg) throws IOException {
-        if (mRequest == null) {
+        if (mRequest == null)
             mRequest = new MinaImapRequest(this);
-        }
         
         if (mRequest.parse(msg)) {
             // Request is complete
             setUpLogContext(mSession.getRemoteAddress().toString());
             try {
-                if (!processRequest(mRequest)) {
+                if (!processRequest(mRequest))
                     dropConnection();
-                }
-            } catch (ImapParseException e) {
-                handleParseException(e);
+            } catch (ImapParseException ipe) {
+                handleParseException(ipe);
             } finally {
                 ZimbraLog.clearContext();
                 if (mRequest != null) {
@@ -93,13 +91,14 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
                     mRequest = null;
                 }
             }
+            if (mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD)
+                dropConnection();
         }
     }
 
-    private boolean processRequest(MinaImapRequest req)
-        throws IOException, ImapParseException {
+    private boolean processRequest(MinaImapRequest req) throws IOException, ImapParseException {
         if (req.isMaxRequestSizeExceeded())
-            throw new ImapParseException(req.getTag(), "maximum request size exceeded", false);
+            throw new ImapParseException(req.getTag(), "maximum request size exceeded");
 
         ImapSession i4selected = mSelectedFolder;
         if (i4selected != null)
@@ -110,19 +109,22 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         try {
             if (!checkAccountStatus())
                 return STOP_PROCESSING;
+
             if (mAuthenticator != null && !mAuthenticator.isComplete())
                 return continueAuthentication(req);
+
             try {
-                return executeRequest(req);
-            } catch (ImapParseException e) {
-                handleParseException(e);
+                boolean keepGoing = executeRequest(req);
+                mConsecutiveBAD = 0;
+                return keepGoing;
+            } catch (ImapParseException ipe) {
+                handleParseException(ipe);
                 return CONTINUE_PROCESSING;
             }
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
-
         }
     }
 
