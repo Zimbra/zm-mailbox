@@ -154,8 +154,12 @@ public class Collection extends MailItemResource {
 
         FileUploadServlet.Upload upload = ctxt.getUpload();
         String ctype = upload.getContentType();
-        if (ctype != null && ctype.startsWith(DavProtocol.VCARD_CONTENT_TYPE)) {
-            // create vcard if content type is text/vcard
+        if (ctype != null && 
+                (ctype.startsWith(DavProtocol.VCARD_CONTENT_TYPE) ||
+                 ctype.startsWith(MimeConstants.CT_TEXT_VCARD_LEGACY) ||
+                 ctype.startsWith(MimeConstants.CT_TEXT_VCARD_LEGACY2))) {
+            // create vcard if content type is text/vcard or legacy
+            // vCard MIME types such as text/x-vcard or text/directory.
             return createVCard(ctxt, name);
         }
         String author = ctxt.getAuthAccount().getName();
