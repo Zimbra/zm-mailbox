@@ -285,7 +285,7 @@ public class SoapSession extends Session {
             return this;
         }
 
-        int getNotificationCount() {
+        int getScaledNotificationCount() {
             if (count == -1) {
                 count = 0;
                 if (deleted != null)   count += StringUtil.countOccurrences(deleted, ',') / 4 + 1;
@@ -301,14 +301,6 @@ public class SoapSession extends Session {
             if (modified != null && !modified.isEmpty())  return true;
             return false;
         }
-    }
-
-    static int getNotificationCount(PendingModifications pms) {
-        int count = 0;
-        if (pms.deleted != null)   count += (pms.deleted.size() + 3) / 4;
-        if (pms.created != null)   count += pms.created.size();
-        if (pms.modified != null)  count += pms.modified.size();
-        return count;
     }
 
     class QueuedNotifications {
@@ -339,9 +331,9 @@ public class SoapSession extends Session {
             return false;
         }
 
-        int getNotificationCount() {
-            return (mMailboxChanges == null ? 0 : SoapSession.getNotificationCount(mMailboxChanges)) +
-                   (mRemoteChanges == null  ? 0 : mRemoteChanges.getNotificationCount());
+        int getScaledNotificationCount() {
+            return (mMailboxChanges == null ? 0 : mMailboxChanges.getScaledNotificationCount()) +
+                   (mRemoteChanges == null  ? 0 : mRemoteChanges.getScaledNotificationCount());
         }
 
         void addNotification(IMNotification imn) {
@@ -586,7 +578,7 @@ public class SoapSession extends Session {
         if (eNotify != null) {
             RemoteNotifications rns = new RemoteNotifications(eNotify);
             synchronized (mSentChanges) {
-                if (!skipNotifications(rns.getNotificationCount(), !isPing))
+                if (!skipNotifications(rns.getScaledNotificationCount(), !isPing))
                     mChanges.addNotification(rns);
             }
         }
@@ -814,7 +806,7 @@ public class SoapSession extends Session {
         // XXX: should constrain to folders, tags, and stuff relevant to the current query?
 
         synchronized (mSentChanges) {
-            if (!skipNotifications(getNotificationCount(pms), fromThisSession)) {
+            if (!skipNotifications(pms.getScaledNotificationCount(), fromThisSession)) {
                 // if we're here, these changes either
                 //   a) do not cause the session's notification cache to overflow, or
                 //   b) originate from this session and hence must be notified back to the session
@@ -832,7 +824,7 @@ public class SoapSession extends Session {
         // determine whether this set of notifications would cause the cached set to overflow
         if (mForceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
             // XXX: more accurate would be to combine pms and mChanges and take the count...
-            int count = notificationCount + mChanges.getNotificationCount();
+            int count = notificationCount + mChanges.getScaledNotificationCount();
             if (count > MAX_QUEUED_NOTIFICATIONS) {
                 // if we've overflowed, jettison the pending change set
                 mChanges.clearMailboxChanges();
@@ -840,7 +832,7 @@ public class SoapSession extends Session {
             }
 
             for (QueuedNotifications ntfn : mSentChanges) {
-                count += ntfn.getNotificationCount();
+                count += ntfn.getScaledNotificationCount();
                 if (count > MAX_QUEUED_NOTIFICATIONS) {
                     ntfn.clearMailboxChanges();
                     mForceRefresh = Math.max(mForceRefresh, ntfn.getSequence());

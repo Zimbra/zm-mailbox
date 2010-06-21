@@ -69,6 +69,8 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     private static ExecutorService sHandlerThreadPool;
     
     private static Server startServer(boolean ssl) throws ServiceException {
+        ImapSessionManager.startup();
+
         ImapConfig config = new ImapConfig(ssl);
         Server server;
         if (MinaImapServer.isEnabled()) {

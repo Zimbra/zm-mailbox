@@ -96,7 +96,7 @@ public class ImapConfig extends ServerConfig {
     }
 
     public int getAuthenticatedMaxIdleSeconds() {
-        return ImapFolder.IMAP_IDLE_TIMEOUT_SEC;
+        return ImapSession.IMAP_IDLE_TIMEOUT_SEC;
     }
 
     public boolean isCleartextLoginEnabled() {

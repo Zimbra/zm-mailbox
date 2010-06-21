@@ -165,7 +165,7 @@ class ImapProxy {
                     boolean success = false;
                     try {
                         // the standard aggressive read timeout is inappropriate for IDLE
-                        conn.setReadTimeout(ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
+                        conn.setReadTimeout(ImapSession.IMAP_IDLE_TIMEOUT_SEC);
                         // send the IDLE command; this call waits until the subsequent DONE is acknowledged
                         boolean ok = proxyCommand(req.getTag(), req.toByteArray(), true, true);
                         // restore the old read timeout

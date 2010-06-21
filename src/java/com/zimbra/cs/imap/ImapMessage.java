@@ -66,7 +66,9 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
 
-public class ImapMessage implements Comparable<ImapMessage> {
+public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializable {
+    private static final long serialVersionUID = -1756550148606322493L;
+
     static class ImapMessageSet extends TreeSet<ImapMessage> {
         private static final long serialVersionUID = 4831178352505203361L;
         ImapMessageSet()                              { super(new SequenceComparator()); }
@@ -109,15 +111,21 @@ public class ImapMessage implements Comparable<ImapMessage> {
         this(item.getId(), item.getType(), item.getImapUid(), item.getFlagBitmask(), item.getTagBitmask());
     }
 
-    byte getType() {
-        return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.TYPE_MESSAGE : MailItem.TYPE_CONTACT;
+    ImapMessage(ImapMessage i4msg) {
+        msgId   = i4msg.msgId;
+        imapUid = i4msg.imapUid;
+        flags   = i4msg.flags;
+        tags    = i4msg.tags;
+        sflags  = (short) (i4msg.sflags & FLAG_IS_CONTACT);
     }
 
-    long getSize(MailItem item) throws ServiceException {
-        if (item instanceof Message)
-            return item.getSize();
-        // FIXME: need to generate the representation of the item to do this correctly...
-        return getContent(item).getFirst();
+    ImapMessage reset() {
+        sflags &= FLAG_IS_CONTACT;
+        return this;
+    }
+
+    byte getType() {
+        return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.TYPE_MESSAGE : MailItem.TYPE_CONTACT;
     }
 
     boolean isExpunged()  { return (sflags & FLAG_EXPUNGED) != 0; }
@@ -125,6 +133,13 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
     void setExpunged(boolean expunged)  { sflags = (short) (expunged ? sflags | FLAG_EXPUNGED : sflags & ~FLAG_EXPUNGED); }
     void setAdded(boolean added)        { sflags = (short) (added ? sflags | FLAG_ADDED : sflags & ~FLAG_ADDED); }
+
+    long getSize(MailItem item) throws ServiceException {
+        if (item instanceof Message)
+            return item.getSize();
+        // FIXME: need to generate the representation of the item to do this correctly...
+        return getContent(item).getFirst();
+    }
 
 
     public int compareTo(ImapMessage i4msg) {
@@ -289,8 +304,9 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 if (nonulls == null)  nonulls = new StringBuilder();
                 nonulls.append(value.substring(lastNull + 1, i));
                 lastNull = i;
-            } else if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20)
+            } else if (c == '"' || c == '\\' || c >= 0x7f || c < 0x20) {
                 literal = true;
+            }
         }
         String content = (nonulls == null ? value : nonulls.append(value.substring(lastNull + 1, i)).toString());
         if (upcase)
@@ -555,9 +571,10 @@ public class ImapMessage implements Comparable<ImapMessage> {
 
             int lines = 0, c;
             boolean complete = false;
-            while ((c = is.read()) != -1)
+            while ((c = is.read()) != -1) {
                 if ((complete = (c == '\n')) == true)
                     lines++;
+            }
             return complete ? lines : lines + 1;
         } catch (MessagingException e) {
             return 0;

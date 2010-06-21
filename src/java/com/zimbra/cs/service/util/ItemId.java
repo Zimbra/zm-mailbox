@@ -37,7 +37,9 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ItemId {
+public class ItemId implements java.io.Serializable {
+    private static final long serialVersionUID = -9044615129495573523L;
+
     private static final char ACCOUNT_DELIMITER = ':';
     private static final char PART_DELIMITER    = '-';
 

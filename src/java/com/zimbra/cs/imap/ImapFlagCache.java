@@ -30,8 +30,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 
-public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
-    static final class ImapFlag {
+public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.Serializable {
+    private static final long serialVersionUID = -8938341239505513246L;
+
+    static final class ImapFlag implements java.io.Serializable {
+        private static final long serialVersionUID = 5445749167572465447L;
+
         final String  mName;
         final String  mImapName;
         final int     mId;
@@ -76,19 +80,20 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
             return (mask & mBitmask) != 0;
         }
 
-        @Override
-        public String toString()  { return mImapName; }
+        @Override public String toString()  { return mImapName; }
     }
 
 
-    private final Mailbox mMailbox;
-    private final Map<String, ImapFlag> mNames  = new LinkedHashMap<String, ImapFlag>();
-    private final Map<Long, ImapFlag> mBitmasks = new HashMap<Long, ImapFlag>();
+    private final Map<String, ImapFlag> mNames;
+    private transient Map<Long, ImapFlag> mBitmasks;
 
-    ImapFlagCache()  { mMailbox = null; }
+    ImapFlagCache() {
+        mNames = new LinkedHashMap<String, ImapFlag>();
+        mBitmasks = new HashMap<Long, ImapFlag>();
+    }
 
     ImapFlagCache(Mailbox mbox, OperationContext octxt) throws ServiceException {
-        mMailbox = mbox;
+        this();
         try {
             for (Tag ltag : mbox.getTagList(octxt)) {
                 if (!(ltag instanceof Flag))
@@ -153,8 +158,8 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
     }
 
 
-    ImapFlag createTag(OperationContext octxt, String name, List<Tag> newTags) throws ServiceException {
-        if (mMailbox == null)
+    ImapFlag createTag(Mailbox mbox, OperationContext octxt, String name, List<Tag> newTags) throws ServiceException {
+        if (mbox == null)
             return null;
 
         ImapFlag i4flag = getByName(name);
@@ -165,7 +170,7 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
             throw MailServiceException.INVALID_NAME(name);
 
         try {
-            Tag ltag = mMailbox.createTag(octxt, name, MailItem.DEFAULT_COLOR);
+            Tag ltag = mbox.createTag(octxt, name, MailItem.DEFAULT_COLOR);
             newTags.add(ltag);
             i4flag = getByName(name);
             if (i4flag == null)
@@ -199,5 +204,14 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
 
     public Iterator<ImapFlag> iterator() {
         return mNames.values().iterator();
+    }
+
+    private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+        // read in standard stuff
+        s.defaultReadObject();
+        // construct bitmask mapping
+        mBitmasks = new HashMap<Long, ImapFlag>();
+        for (ImapFlag i4flag : mNames.values())
+            cache(i4flag);
     }
 }

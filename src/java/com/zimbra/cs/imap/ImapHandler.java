@@ -34,6 +34,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
@@ -109,7 +110,7 @@ abstract class ImapHandler extends ProtocolHandler {
     protected boolean         mStartedTLS;
     protected String          mLastCommand;
     private   ImapProxy       mProxy;
-    protected ImapFolder      mSelectedFolder;
+    protected ImapSession     mSelectedFolder;
     private   String          mIdleTag;
     private   String          mOrigRemoteAddress;
     private   String          mUserAgent;
@@ -128,7 +129,8 @@ abstract class ImapHandler extends ProtocolHandler {
         mStartedTLS = mConfig.isSslEnabled();
     }
 
-    ImapCredentials getCredentials()  { return mCredentials; }
+    ImapCredentials getCredentials()                   { return mCredentials; }
+    ImapHandler setCredentials(ImapCredentials creds)  { mCredentials = creds;  return this; }
 
     public boolean isSSLEnabled()  { return mStartedTLS; }
 
@@ -144,7 +146,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
     protected void setUpLogContext(String remoteAddress) {
         ZimbraLog.clearContext();
-        ImapFolder i4selected = mSelectedFolder;
+        ImapSession i4selected = mSelectedFolder;
         Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
         String origRemoteIp = getOrigRemoteIpAddr();
 
@@ -246,7 +248,7 @@ abstract class ImapHandler extends ProtocolHandler {
         }
 
         // check target folder owner's account status before executing command
-        ImapFolder i4selected = mSelectedFolder;
+        ImapSession i4selected = mSelectedFolder;
         if (i4selected == null)
             return CONTINUE_PROCESSING;
         String id = i4selected.getTargetAccountId();
@@ -751,6 +753,12 @@ abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  Set<String> patterns = Collections.singleton(req.readFolderPattern());
                         checkEOF(tag, req);
                         return doLIST(tag, base, patterns, (byte) 0, RETURN_XLIST, (byte) 0);
+                    } else if (command.equals("XPERSIST")) {
+                        checkEOF(tag, req);
+                        return doXPERSIST(tag);
+                    } else if (command.equals("XRESTORE")) {
+                        checkEOF(tag, req);
+                        return doXRESTORE(tag);
                     }
                     break;
             }
@@ -810,15 +818,20 @@ abstract class ImapHandler extends ProtocolHandler {
         }
     }
 
-    ImapFolder getSelectedFolder() {
+    ImapSession getCurrentSession() {
         return getState() == State.LOGOUT ? null : mSelectedFolder;
     }
 
+    ImapFolder getSelectedFolder() throws IOException {
+        ImapSession i4selected = getCurrentSession();
+        return i4selected == null ? null : i4selected.getImapFolder();
+    }
+
     void unsetSelectedFolder(boolean sendClosed) throws IOException {
-        ImapFolder i4selected = mSelectedFolder;
+        ImapSession i4selected = mSelectedFolder;
         mSelectedFolder = null;
         if (i4selected != null) {
-            i4selected.unregister();
+            ImapSessionManager.closeFolder(i4selected, false);
             if (sendClosed && sessionActivated(ImapExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
@@ -832,26 +845,16 @@ abstract class ImapHandler extends ProtocolHandler {
         }
     }
 
-    void setSelectedFolder(ImapFolder i4folder) throws ServiceException, IOException {
-        if (i4folder == mSelectedFolder) {
-            if (sessionActivated(ImapExtension.QRESYNC))
-                sendUntagged("OK [CLOSED] mailbox closed");
-            return;
-        }
-
+    Pair<ImapSession, InitialFolderValues> setSelectedFolder(ImapPath path, byte params) throws ServiceException, IOException {
         unsetSelectedFolder(true);
-        if (i4folder == null)
-            return;
+        if (path == null)
+            return new Pair<ImapSession, InitialFolderValues>(null, null);
 
-        try {
-            i4folder.register();
-        } catch (ServiceException e) {
-            i4folder.unregister();
-            throw e;
-        }
-        mSelectedFolder = i4folder;
+        Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.openFolder(path, params, this);
+        mSelectedFolder = selectdata.getFirst();
         
-        ZimbraLog.imap.info("selected folder " + mSelectedFolder.toString());
+        ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
+        return selectdata;
     }
 
     boolean canContinue(ServiceException e) {
@@ -1172,13 +1175,13 @@ abstract class ImapHandler extends ProtocolHandler {
             startSession(acct, enabledHack, tag, mechanism);
 
         } catch (AccountServiceException.AuthFailedServiceException afe) {
-            mCredentials = null;
+            setCredentials(null);
 
             ZimbraLog.imap.info(afe.getMessage() + " (" + afe.getReason() + ')');
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
-            mCredentials = null;
+            setCredentials(null);
 
             ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
@@ -1210,7 +1213,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return null;
         }
 
-        mCredentials = new ImapCredentials(account, hack);
+        setCredentials(new ImapCredentials(account, hack));
         if (mCredentials.isLocal())
             mCredentials.getMailbox().beginTrackingImap();
 
@@ -1240,6 +1243,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
 
         ImapFolder i4folder = null;
+        InitialFolderValues initial = null;
         boolean writable;
         List<String> permflags = Collections.emptyList();
         try {
@@ -1258,22 +1262,11 @@ abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
 
-            ImapFolder i4oldFolder = mSelectedFolder;
-            if (i4oldFolder != null && !i4oldFolder.isVirtual() && path.isEquivalent(i4oldFolder.getPath())) {
-                try {
-                    i4oldFolder.reopen(params);
-                    i4folder = i4oldFolder;
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("error quick-reopening folder " + path + "; proceeding with manual reopen", e);
-                }
-            }
+            Pair<ImapSession, InitialFolderValues> selectdata = setSelectedFolder(path, params);
+            i4folder = selectdata.getFirst().getImapFolder();
+            initial  = selectdata.getSecond();
 
-            if (i4folder == null)
-                i4folder = new ImapFolder(path, params, this, mCredentials);
-
-        	writable = i4folder.isWritable();
-        	setSelectedFolder(i4folder);
-
+            writable = i4folder.isWritable();
             if (writable) {
                 // RFC 4314 5.1.1: "Any server implementing an ACL extension MUST accurately reflect the
                 //                  current user's rights in FLAGS and PERMANENTFLAGS responses."
@@ -1304,22 +1297,22 @@ abstract class ImapHandler extends ProtocolHandler {
         //            next unique identifier value."
         sendUntagged(i4folder.getSize() + " EXISTS");
         sendUntagged(i4folder.getRecentCount() + " RECENT");
-        if (i4folder.getFirstUnread() > 0)
-            sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + "] mailbox contains unseen messages");
+        if (initial.firstUnread > 0)
+            sendUntagged("OK [UNSEEN " + initial.firstUnread + "] mailbox contains unseen messages");
         sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + "] UIDs are valid for this mailbox");
         if (!i4folder.isVirtual())
-            sendUntagged("OK [UIDNEXT " + i4folder.getInitialUIDNEXT() + "] next expected UID is " + i4folder.getInitialUIDNEXT());
+            sendUntagged("OK [UIDNEXT " + initial.uidnext + "] next expected UID is " + initial.uidnext);
         sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
         sendUntagged("OK [PERMANENTFLAGS (" + StringUtil.join(" ", permflags) + ")] junk-related flags are not permanent");
         if (!i4folder.isVirtual())
-            sendUntagged("OK [HIGHESTMODSEQ " + i4folder.getInitialMODSEQ() + "] modseq tracked on this mailbox");
+            sendUntagged("OK [HIGHESTMODSEQ " + initial.modseq + "] modseq tracked on this mailbox");
         else
             sendUntagged("OK [NOMODSEQ] modseq not supported on search folders");
 
         // handle any QRESYNC stuff if the UVVs match
         if (qri != null && qri.uvv == i4folder.getUIDValidity() && !i4folder.isVirtual()) {
             boolean sentVanished = false;
-            String knownUIDs = qri.knownUIDs == null ? "1:" + (i4folder.getInitialUIDNEXT() - 1) : qri.knownUIDs;
+            String knownUIDs = qri.knownUIDs == null ? "1:" + (initial.uidnext - 1) : qri.knownUIDs;
             if (qri.seqMilestones != null && qri.uidMilestones != null) {
                 int lowwater = 1;
                 ImapMessageSet seqset = i4folder.getSubsequence(tag, qri.seqMilestones, false);
@@ -1405,7 +1398,8 @@ abstract class ImapHandler extends ProtocolHandler {
 
                 // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
                 if (getState() == State.SELECTED) {
-                    if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
+                    ImapSession i4selected = getCurrentSession();
+                    if (i4selected != null && path.isEquivalent(i4selected.getPath()))
                         unsetSelectedFolder(true);
                     else if (mProxy != null && path.isEquivalent(mProxy.getPath()))
                         unsetSelectedFolder(true);
@@ -1500,10 +1494,10 @@ abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
         } catch (ServiceException e) {
-        	if (e.getCode().equals(ImapServiceException.CANT_RENAME_INBOX)) {
-        		ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
-        		sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
-        		return CONTINUE_PROCESSING;
+            if (e.getCode().equals(ImapServiceException.CANT_RENAME_INBOX)) {
+                ZimbraLog.imap.info("RENAME failed: RENAME of INBOX not supported");
+                sendNO(tag, "RENAME failed: RENAME of INBOX not supported");
+                return CONTINUE_PROCESSING;
             } else if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
                 ZimbraLog.imap.info("RENAME failed: no such folder: " + oldPath);
             } else if (e.getCode().equals(MailServiceException.IMMUTABLE_OBJECT)) {
@@ -1511,10 +1505,10 @@ abstract class ImapHandler extends ProtocolHandler {
             } else if (e.getCode().equals(MailServiceException.CANNOT_CONTAIN)) {
                 ZimbraLog.imap.info("RENAME failed: invalid target folder: " + newPath);
             } else {
-        		ZimbraLog.imap.warn("RENAME failed", e);
+                ZimbraLog.imap.warn("RENAME failed", e);
             }
-        	sendNO(tag, "RENAME failed");
-        	return canContinue(e);
+            sendNO(tag, "RENAME failed");
+            return canContinue(e);
         }
 
         // note: if ImapFolder contains a pathname, we may need to update mSelectedFolder
@@ -2011,7 +2005,7 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    String status(String tag, ImapPath path, byte status) throws ServiceException {
+    String status(String tag, ImapPath path, byte status) throws ServiceException, IOException {
         StringBuilder data = new StringBuilder("STATUS ").append(path.asUtf7String()).append(" (");
         int empty = data.length();
 
@@ -2020,14 +2014,15 @@ abstract class ImapHandler extends ProtocolHandler {
         if (mboxobj instanceof Mailbox) {
             Mailbox mbox = (Mailbox) mboxobj;
             Folder folder = (Folder) path.getFolder();
+            ImapFolder i4folder = getSelectedFolder();
 
             messages = (int) folder.getItemCount();
             if ((status & STATUS_RECENT) == 0)
                 recent = -1;
             else if (messages == 0)
                 recent = 0;
-            else if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
-                recent = mSelectedFolder.getRecentCount();
+            else if (i4folder != null && path.isEquivalent(i4folder.getPath()))
+                recent = i4folder.getRecentCount();
             else
                 recent = mbox.getImapRecent(getContext(), folder.getId());
             uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
@@ -2084,18 +2079,17 @@ abstract class ImapHandler extends ProtocolHandler {
             Object folderobj = path.getFolder();
 
             synchronized (mboxobj) {
-                ImapFlagCache flagset = ImapFlagCache.getSystemFlags(mboxobj instanceof Mailbox ? (Mailbox) mboxobj : mCredentials.getMailbox());
+                Mailbox mbox = mboxobj instanceof Mailbox ? (Mailbox) mboxobj : mCredentials.getMailbox();
+                ImapFlagCache flagset = ImapFlagCache.getSystemFlags(mbox);
                 ImapFlagCache tagset = mboxobj instanceof Mailbox ? new ImapFlagCache((Mailbox) mboxobj, getContext()) : new ImapFlagCache();
 
-                for (AppendMessage append : appends) {
-                    append.checkFlags(flagset, tagset, newTags);
-                }
+                for (AppendMessage append : appends)
+                    append.checkFlags(mbox, flagset, tagset, newTags);
             }
 
             // Append message parts and check message content size
-            for (AppendMessage append : appends) {
+            for (AppendMessage append : appends)
                 append.checkContent();
-            }
             
             for (AppendMessage append : appends) {
                 int id = append.storeContent(mboxobj, folderobj);
@@ -2665,7 +2659,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        ImapFolder i4folder = mSelectedFolder;
+        ImapFolder i4folder = getSelectedFolder();
         boolean expunged = false;
         try {
             // 6.4.2: "The CLOSE command permanently removes all messages that have the \Deleted
@@ -2714,7 +2708,10 @@ abstract class ImapHandler extends ProtocolHandler {
     boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
-        } else if (!mSelectedFolder.isWritable()) {
+        }
+
+        ImapFolder i4folder = getSelectedFolder();
+        if (!i4folder.isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return CONTINUE_PROCESSING;
         }
@@ -2722,10 +2719,10 @@ abstract class ImapHandler extends ProtocolHandler {
         String command = (byUID ? "UID EXPUNGE" : "EXPUNGE");
         boolean expunged;
         try {
-            if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
+            if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE))
                 throw ServiceException.PERM_DENIED("you do not have permission to delete messages from this folder");
 
-            expunged = expungeMessages(tag, mSelectedFolder, sequenceSet);
+            expunged = expungeMessages(tag, i4folder, sequenceSet);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -2734,8 +2731,8 @@ abstract class ImapHandler extends ProtocolHandler {
 
         String status = "";
         try {
-            if (expunged && byUID && !mSelectedFolder.isVirtual() && sessionActivated(ImapExtension.QRESYNC))
-                status = "[HIGHESTMODSEQ " + mSelectedFolder.getCurrentMODSEQ() + "] ";
+            if (expunged && byUID && !i4folder.isVirtual() && sessionActivated(ImapExtension.QRESYNC))
+                status = "[HIGHESTMODSEQ " + i4folder.getCurrentMODSEQ() + "] ";
         } catch (ServiceException e) {
             ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
         }
@@ -2747,7 +2744,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
     boolean expungeMessages(String tag, ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException, ImapParseException {
         Set<ImapMessage> i4set;
-        synchronized (mSelectedFolder.getMailbox()) {
+        synchronized (i4folder.getMailbox()) {
             i4set = (sequenceSet == null ? null : i4folder.getSubsequence(tag, sequenceSet, true));
         }
         List<Integer> ids = new ArrayList<Integer>(SUGGESTED_DELETE_BATCH_SIZE);
@@ -2765,18 +2762,14 @@ abstract class ImapHandler extends ProtocolHandler {
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 try {
                     ZimbraLog.imap.debug("  ** deleting: " + ids);
-                    
-                    int[] idsArray = new int[ids.size()];
-                    int counter  = 0;
-                    for (int id : ids)
-                        idsArray[counter++] = id;
-                    mSelectedFolder.getMailbox().delete(getContext(), idsArray, MailItem.TYPE_UNKNOWN, null);
+                    mSelectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.TYPE_UNKNOWN, null);
                 } catch (MailServiceException.NoSuchItemException e) {
+                    // FIXME: strongly suspect this is dead code (see Mailbox.delete() implementation)
                     // something went wrong, so delete *this* batch one at a time
                     for (int id : ids) {
                         try {
                             ZimbraLog.imap.debug("  ** fallback deleting: " + id);
-                            mSelectedFolder.getMailbox().delete(getContext(), new int[] {id}, MailItem.TYPE_UNKNOWN, null);
+                            i4folder.getMailbox().delete(getContext(), new int[] {id}, MailItem.TYPE_UNKNOWN, null);
                         } catch (MailServiceException.NoSuchItemException nsie) {
                             i4msg = i4folder.getById(id);
                             if (i4msg != null)
@@ -2819,7 +2812,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
-        ImapFolder i4folder = mSelectedFolder;
+        ImapFolder i4folder = getSelectedFolder();
 
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ)
@@ -2970,7 +2963,7 @@ abstract class ImapHandler extends ProtocolHandler {
         SearchParams params = new SearchParams();
         params.setIncludeTagDeleted(true);
         params.setQueryStr(search);
-        params.setTypes(ITEM_TYPES);
+        params.setTypes(i4folder.getTypeConstraint());
         params.setSortBy(sort);
         params.setChunkSize(2000);
         params.setPrefetch(false);
@@ -2988,7 +2981,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
-        ImapFolder i4folder = mSelectedFolder;
+        ImapFolder i4folder = getSelectedFolder();
 
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ)
@@ -3097,7 +3090,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
-        ImapFolder i4folder = mSelectedFolder;
+        ImapFolder i4folder = getSelectedFolder();
 
         // 6.4.8: "However, server implementations MUST implicitly include the UID message
         //         data item as part of any FETCH response caused by a UID command, regardless
@@ -3198,8 +3191,8 @@ abstract class ImapHandler extends ProtocolHandler {
         for (ImapMessage i4msg : i4set) {
             OutputStream os = mOutputStream;
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
-	        PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(os, baosDebug), false, "utf-8");
-        	try {
+            PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(os, baosDebug), false, "utf-8");
+            try {
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
                 MailItem item = null;
@@ -3225,7 +3218,6 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
 
                 if (!fullMessage.isEmpty()) {
-                    // FIXME: fetching the entire body into memory even for a partial fetch
                     for (ImapPartSpecifier pspec : fullMessage) {
                         result.print(empty ? "" : " ");  pspec.write(result, os, item);  empty = false;
                     }
@@ -3313,7 +3305,10 @@ abstract class ImapHandler extends ProtocolHandler {
     throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
-        } else if (!mSelectedFolder.isWritable()) {
+        }
+
+        ImapFolder i4folder = getSelectedFolder();
+        if (!i4folder.isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return CONTINUE_PROCESSING;
         }
@@ -3336,7 +3331,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(tag, sequenceSet, byUID);
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3346,26 +3341,26 @@ abstract class ImapHandler extends ProtocolHandler {
             Set<ImapFlag> i4flags = new HashSet<ImapFlag>(flagNames.size());
             synchronized (mbox) {
                 for (String name : flagNames) {
-                    ImapFlag i4flag = mSelectedFolder.getFlagByName(name);
+                    ImapFlag i4flag = i4folder.getFlagByName(name);
                     if ((i4flag == null || !i4flag.mListed) && operation != StoreAction.REMOVE)
-                        i4flag = mSelectedFolder.getTagset().createTag(getContext(), name, newTags);
+                        i4flag = i4folder.getTagset().createTag(mbox, getContext(), name, newTags);
                     if (i4flag != null)
                         i4flags.add(i4flag);
                 }
 
-                if (mSelectedFolder.areTagsDirty()) {
-                    sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
-                    mSelectedFolder.cleanTags();
+                if (i4folder.areTagsDirty()) {
+                    sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
+                    i4folder.cleanTags();
                 }
             }
 
             if (operation != StoreAction.REMOVE) {
                 for (ImapFlag i4flag : i4flags) {
                     if (i4flag.mId == Flag.ID_FLAG_DELETED) {
-                        if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
+                        if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE))
                             throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
                     } else if (i4flag.mPermanent) {
-                        if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_WRITE))
+                        if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE))
                             throw ServiceException.PERM_DENIED("you do not have permission to set the " + i4flag.mName + " flag");
                     }
                 }
@@ -3400,7 +3395,7 @@ abstract class ImapHandler extends ProtocolHandler {
                         MailItem[] items = mbox.getItemById(getContext(), idlist, MailItem.TYPE_UNKNOWN);
                         for (int idx = items.length - 1; idx >= 0; idx--) {
                             ImapMessage i4msg = i4list.get(idx);
-                            if (i4msg.getModseq(items[idx], mSelectedFolder.getTagset()) > modseq) {
+                            if (i4msg.getModseq(items[idx], i4folder.getTagset()) > modseq) {
                                 modifyConflicts.add(i4msg);
                                 i4list.remove(idx);  idlist.remove(idx);
                                 allPresent = false;
@@ -3411,14 +3406,14 @@ abstract class ImapHandler extends ProtocolHandler {
                     try {
                         // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
                         if (silent && !modseqEnabled)
-                            mSelectedFolder.disableNotifications();
+                            i4folder.disableNotifications();
     
                         if (operation == StoreAction.REPLACE) {
                             // replace real tags and flags on all messages
                             mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.TYPE_UNKNOWN, flags, tags, null);
                             // replace session tags on all messages
                             for (ImapMessage i4msg : i4list)
-                                i4msg.setSessionFlags(sflags, mSelectedFolder);
+                                i4msg.setSessionFlags(sflags, i4folder);
                         } else {
                             for (ImapFlag i4flag : i4flags) {
                                 boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
@@ -3428,19 +3423,19 @@ abstract class ImapHandler extends ProtocolHandler {
                                 } else {
                                     // session tag; update one-by-one in memory only
                                     for (ImapMessage i4msg : i4list)
-                                        i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), mSelectedFolder);
+                                        i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
                                 }
                             }
                         }
                     } finally {
                         // if it was a STORE [+-]?FLAGS.SILENT, reenable notifications
-                        mSelectedFolder.enableNotifications();
+                        i4folder.enableNotifications();
                     }
                 }
 
                 if (!silent || modseqEnabled) {
                     for (ImapMessage i4msg : i4list) {
-                        ImapFolder.DirtyMessage dirty = mSelectedFolder.undirtyMessage(i4msg);
+                        ImapFolder.DirtyMessage dirty = i4folder.undirtyMessage(i4msg);
                         if (silent && (dirty == null || dirty.modseq <= 0))
                             continue;
 
@@ -3448,7 +3443,7 @@ abstract class ImapHandler extends ProtocolHandler {
                         boolean empty = true;
                         ntfn.append(i4msg.sequence).append(" FETCH (");
                         if (!silent) {
-                            ntfn.append(i4msg.getFlags(mSelectedFolder));  empty = false;
+                            ntfn.append(i4msg.getFlags(i4folder));  empty = false;
                         }
                         // 6.4.8: "However, server implementations MUST implicitly include
                         //         the UID message data item as part of any FETCH response
@@ -3506,11 +3501,13 @@ abstract class ImapHandler extends ProtocolHandler {
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
         List<MailItem> copies = new ArrayList<MailItem>();
-        Mailbox mbox = mSelectedFolder.getMailbox();
+
+        ImapFolder i4folder = getSelectedFolder();
+        Mailbox mbox = i4folder.getMailbox();
 
         Set<ImapMessage> i4set;
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(tag, sequenceSet, byUID);
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
@@ -3652,12 +3649,16 @@ abstract class ImapHandler extends ProtocolHandler {
             return;
         }
 
-        ImapFolder i4folder = mSelectedFolder;
-        if (i4folder == null)
+        ImapSession i4selected = getCurrentSession();
+        if (i4selected == null || !i4selected.hasNotifications())
+            return;
+        
+        Mailbox mbox = i4selected.getMailbox();
+        if (mbox == null)
             return;
 
-        Mailbox mbox = i4folder.getMailbox();
-        if (mbox == null)
+        ImapFolder i4folder = i4selected.getImapFolder();
+        if (i4folder == null)
             return;
 
         List<String> notifications = new ArrayList<String>();
@@ -3673,7 +3674,7 @@ abstract class ImapHandler extends ProtocolHandler {
             int oldRecent = i4folder.getRecentCount();
             boolean removed = false, received = i4folder.checkpointSize();
             if (notifyExpunges) {
-                List<Integer> expunged = i4folder.collapseExpunged();
+                List<Integer> expunged = i4folder.collapseExpunged(sessionActivated(ImapExtension.QRESYNC));
                 removed = !expunged.isEmpty();
                 if (removed) {
                     if (sessionActivated(ImapExtension.QRESYNC)) {
@@ -3758,4 +3759,31 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     abstract void sendLine(String line, boolean flush) throws IOException;
+
+
+    boolean doXPERSIST(String tag) throws IOException {
+        if (!checkState(tag, State.SELECTED))
+            return CONTINUE_PROCESSING;
+
+        try {
+            mSelectedFolder.unload();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("XPERSIST failed", e);
+            sendNO(tag, "XPERSIST failed");
+            return canContinue(e);
+        }
+
+        sendOK(tag, "XPERSIST completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    boolean doXRESTORE(String tag) throws IOException {
+        if (!checkState(tag, State.SELECTED))
+            return CONTINUE_PROCESSING;
+
+        mSelectedFolder.reload();
+
+        sendOK(tag, "XRESTORE completed");
+        return CONTINUE_PROCESSING;
+    }
 }

@@ -31,7 +31,8 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.OperationContext;
 
-class ImapCredentials {
+class ImapCredentials implements java.io.Serializable {
+    private static final long serialVersionUID = -3323076274740054770L;
 
     /** The various special modes the server can be thrown into in order to
      *  deal with client weirdnesses.  These modes are specified by appending
@@ -41,9 +42,10 @@ class ImapCredentials {
         NONE, WM5("/wm"), THUNDERBIRD("/tb"), NO_IDLE("/ni");
 
         private String extension;
-        EnabledHack()             { }
-        EnabledHack(String ext)   { extension = ext; }
-        public String toString()  { return extension; }
+        EnabledHack()            { }
+        EnabledHack(String ext)  { extension = ext; }
+
+        @Override public String toString()  { return extension; }
     }
 
     private static final String SN_IMAP = "imap";

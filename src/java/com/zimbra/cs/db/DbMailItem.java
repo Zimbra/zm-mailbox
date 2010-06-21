@@ -764,7 +764,7 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-        	boolean isFolder = item instanceof Folder;
+            boolean isFolder = item instanceof Folder;
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET date = ?, size = ?, flags = ?, name = ?, subject = ?," +
                         "  folder_id = ?," + (isFolder ? " parent_id = ?," : "") +
@@ -3039,11 +3039,11 @@ public class DbMailItem {
                         " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                         " WHERE mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
                         (DebugConfig.disableMailboxGroups ? "" : " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id") +
-                		" AND " + DbUtil.whereIn("ci.uid", count));
+                        " AND " + DbUtil.whereIn("ci.uid", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
-                	stmt.setString(pos++, uids.get(index));
+                    stmt.setString(pos++, uids.get(index));
                 rs = stmt.executeQuery();
                 while (rs.next())
                     result.add(constructItem(rs));
@@ -3356,13 +3356,13 @@ public class DbMailItem {
     }
 
     public static List<CalendarItem.CalendarMetadata> getCalendarItemMetadata(Folder folder, long start, long end) throws ServiceException {
-    	Mailbox mbox = folder.getMailbox();
+        Mailbox mbox = folder.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         ArrayList<CalendarItem.CalendarMetadata> result = new ArrayList<CalendarItem.CalendarMetadata>();
 
-    	Connection conn = mbox.getOperationConnection();
+        Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -3383,14 +3383,14 @@ public class DbMailItem {
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
             while (rs.next()) {
-            	result.add(new CalendarItem.CalendarMetadata(
-            			rs.getInt(1),
-            			rs.getInt(2),
-            			rs.getString(3),
-            			rs.getInt(4),
-            			rs.getInt(5),
-            			rs.getTimestamp(6).getTime(),
-            			rs.getTimestamp(7).getTime()));
+                result.add(new CalendarItem.CalendarMetadata(
+                            rs.getInt(1),
+                            rs.getInt(2),
+                            rs.getString(3),
+                            rs.getInt(4),
+                            rs.getInt(5),
+                            rs.getTimestamp(6).getTime(),
+                            rs.getTimestamp(7).getTime()));
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching CalendarItem Metadata for mbox " + mbox.getId(), e);

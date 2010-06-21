@@ -75,7 +75,7 @@ public class SearchFolder extends Folder {
 
     /** Returns whether the folder can contain objects of the given type.
      *  Search folders may only contain other search folders. */
-    boolean canContain(byte type) {
+    @Override boolean canContain(byte type) {
         return (type == TYPE_SEARCHFOLDER);
     }
 
@@ -196,14 +196,14 @@ public class SearchFolder extends Folder {
     }
 
 
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mQuery = meta.get(Metadata.FN_QUERY);
         mTypes = meta.get(Metadata.FN_TYPES, null);
         mSort = meta.get(Metadata.FN_SORT, null);
     }
 
-    Metadata encodeMetadata(Metadata meta) {
+    @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mQuery, mTypes, mSort);
     }
 
@@ -223,7 +223,7 @@ public class SearchFolder extends Folder {
     private static final String CN_NAME  = "name";
     private static final String CN_QUERY = "query";
 
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("search: {");
         appendCommonMembers(sb).append(", ");

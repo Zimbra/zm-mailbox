@@ -61,11 +61,11 @@ public class ImapPath implements Comparable<ImapPath> {
     private ImapCredentials mCredentials;
     private String mOwner;
     private String mPath;
-    private Object mMailbox;
-    private Object mFolder;
     private ItemId mItemId;
     private Scope mScope = Scope.CONTENT;
-    private ImapPath mReferent;
+    private transient Object mMailbox;
+    private transient Object mFolder;
+    private transient ImapPath mReferent;
 
     /** Takes a user-supplied IMAP mailbox path and converts it to a Zimbra
      *  folder pathname.  Applies all special, hack-specific folder mappings.
@@ -546,7 +546,7 @@ public class ImapPath implements Comparable<ImapPath> {
                 return false;
             // search folder visibility depends on an account setting
             if (folder instanceof SearchFolder)
-                return ((SearchFolder) folder).isImapVisible();
+                return ((SearchFolder) folder).isImapVisible() && ImapFolder.getTypeConstraint((SearchFolder) folder).length > 0;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
             // the mailbox root folder is not visible

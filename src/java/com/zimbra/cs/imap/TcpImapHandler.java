@@ -64,7 +64,7 @@ class TcpImapHandler extends ImapHandler {
 
     @Override protected void setIdle(boolean idle) {
         super.setIdle(idle);
-        ImapFolder i4selected = mSelectedFolder;
+        ImapSession i4selected = mSelectedFolder;
         if (i4selected != null)
             i4selected.updateAccessTime();
     }

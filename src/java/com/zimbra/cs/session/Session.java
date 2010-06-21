@@ -181,6 +181,10 @@ public abstract class Session {
         
         return this;
     }
+
+    protected boolean isRegistered() {
+        return mIsRegistered;
+    }
     
     /** Returns TRUE if this session wants to hear about IM events. */
     protected boolean isIMListener() { 
@@ -218,7 +222,7 @@ public abstract class Session {
         if (mRecentOperations.size() >= OPERATION_HISTORY_LENGTH) 
             mRecentOperations.remove(0);
 
-        while (mRecentOperations.size() > 0 && mRecentOperations.get(0).mTimestamp < cutoff)
+        while (!mRecentOperations.isEmpty() && mRecentOperations.get(0).mTimestamp < cutoff)
             mRecentOperations.remove(0);
 
         mRecentOperations.add(new RecentOperation(now, op.getClass()));
@@ -242,6 +246,11 @@ public abstract class Session {
     /** Returns the Session's identifier. */
     public String getSessionId() {
         return mSessionId;
+    }
+
+    /** Returns the Session's identifier, qualified uniquely by the server run. */
+    public String getQualifiedSessionId() {
+        return SessionCache.qualifySessionId(mSessionId);
     }
 
     /** Sets the Session's identifier. Used for unit testing only, 

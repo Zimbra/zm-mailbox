@@ -157,7 +157,15 @@ public class DebugConfig {
     public static boolean disableGroupTargetForAdminRight;
     
     public static boolean disableComputeGroupMembershipOptimization;
-    
+
+    public static int imapSerializedSessionNotificationOverloadThreshold;
+    public static int imapSessionSerializerFrequency;
+    public static boolean imapCacheConsistencyCheck;
+    public static int imapSessionInactivitySerializationTime;
+    public static int imapTotalNonserializedSessionFootprintLimit;
+    public static int imapNoninteractiveSessionLimit;
+    public static boolean imapSerializeSessionOnClose;
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -204,16 +212,24 @@ public class DebugConfig {
         enableTnefToICalendarConversion = booleanValue("debug_enable_tnef_to_icalendar_conversion", false);
 
         disableFoldersTagsCache = booleanValue("debug_disable_folders_tags_cache", false);
-        
+
         enableContactLocalizedSort = booleanValue("debug_enable_contact_localized_sort", true);
-        
+
         enableRefCountedIndexReaderStats = booleanValue("debug_enable_ref_counted_index_reader_stats", false);
-        
+
         enableMigrateUserZimletPrefs = booleanValue("migrate_user_zimlet_prefs", false);
-        
+
         disableGroupTargetForAdminRight = booleanValue("disable_group_target_for_admin_right", false);
-        
+
         disableComputeGroupMembershipOptimization = booleanValue("disable_compute_group_membership_optimization", false);
+
+        imapSerializedSessionNotificationOverloadThreshold = intValue("debug_imap_serialized_session_notification_overload_threshold", 100);
+        imapSessionSerializerFrequency = intValue("debug_imap_session_serializer_frequency", 120);
+        imapCacheConsistencyCheck = booleanValue("debug_imap_cache_consistency_check", false);
+        imapSessionInactivitySerializationTime = intValue("debug_imap_session_inactivity_serialization_time", 600);
+        imapTotalNonserializedSessionFootprintLimit = intValue("debug_imap_total_nonserialized_session_footprint_limit", Integer.MAX_VALUE);
+        imapNoninteractiveSessionLimit = intValue("debug_imap_noninteractive_session_limit", Integer.MAX_VALUE);
+        imapSerializeSessionOnClose = booleanValue("imap_serialize_session_on_close", true);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
@@ -223,11 +239,15 @@ public class DebugConfig {
         return Boolean.valueOf(val).booleanValue();
     }
 
-    @SuppressWarnings("unused")
     private static int intValue(String key, int defaultValue) {
         String val = LC.get(key);
         if (val.length() < 1)
             return defaultValue;
-        return Integer.valueOf(val).intValue();
+
+        try {
+            return Integer.valueOf(val).intValue();
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 }

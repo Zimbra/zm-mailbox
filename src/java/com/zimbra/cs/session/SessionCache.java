@@ -139,7 +139,13 @@ public final class SessionCache {
             }
         }
     }
-    
+
+    private static final String sRunIdentifier = (System.currentTimeMillis() / 1000) + "." + new java.util.Random().nextInt(100);
+
+    static String qualifySessionId(String sessionId) {
+        return sRunIdentifier + "." + sessionId;
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     // Internals below here... 
     //////////////////////////////////////////////////////////////////////////////
@@ -175,7 +181,7 @@ public final class SessionCache {
     private static long sContextSeqNo = 1;
 
     synchronized static String getNextSessionId(Session.Type type) {
-        return Integer.toString(type.getIndex())+Long.toString(sContextSeqNo++);
+        return Integer.toString(type.getIndex()) + Long.toString(sContextSeqNo++);
     }
 
     static void logActiveSessions() {
@@ -251,6 +257,8 @@ public final class SessionCache {
     }
     
     private static final class StatsCallback implements RealtimeStatsCallback {
+        StatsCallback()  { }
+
         /* @see com.zimbra.common.stats.RealtimeStatsCallback#getStatData() */
         public Map<String, Object> getStatData() {
             Map<String, Object> data = new HashMap<String, Object>();
@@ -261,7 +269,9 @@ public final class SessionCache {
     }
     
     private static final class SweepMapTimerTask extends TimerTask {
-        public void run() {
+        SweepMapTimerTask()  { }
+
+        @Override public void run() {
             try {
                 if (sLog.isDebugEnabled())
                     SessionCache.logActiveSessions();

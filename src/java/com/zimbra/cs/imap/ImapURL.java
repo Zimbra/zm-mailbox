@@ -20,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Arrays;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -72,7 +71,7 @@ class ImapURL {
         if (mPath == null || mPath.asZimbraPath().length() == 0) {
             if (handler.getState() != ImapHandler.State.SELECTED)
                 throw new ImapUrlException(tag, url, "IMAP URL must specify folder if session not SELECTED");
-            mPath = handler.getSelectedFolder().getPath();
+            mPath = handler.getCurrentSession().getPath();
         }
 
         if (mUsername == null || mUsername.length() == 0) {
@@ -187,7 +186,7 @@ class ImapURL {
             return literal;
         }
 
-        Literal readLiteral() throws ImapParseException {
+        @Override Literal readLiteral() throws ImapParseException {
             return getNextBuffer();
         }
     }
@@ -220,12 +219,13 @@ class ImapURL {
             if (acct == null)
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
 
-            OperationContext octxt = creds.getContext().setSession(handler.getSelectedFolder());
+            ImapSession i4session = handler.getCurrentSession();
+            OperationContext octxt = creds.getContext().setSession(i4session);
             Pair<Long, InputStream> content = null;
             // special-case the situation where the relevant folder is already SELECTed
-            if (state == ImapHandler.State.SELECTED) {
-                ImapFolder i4folder = handler.getSelectedFolder();
-                if (i4folder != null && acct.getId().equals(i4folder.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
+            ImapFolder i4folder = handler.getSelectedFolder();
+            if (state == ImapHandler.State.SELECTED && i4session != null && i4folder != null) {
+                if (acct.getId().equals(i4session.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
                     if (i4msg == null || i4msg.isExpunged())
                         throw new ImapUrlException(tag, mURL, "no such message");
@@ -281,7 +281,7 @@ class ImapURL {
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
 
-    public String toString() {
+    @Override public String toString() {
         try {
             return "imap://" + URLEncoder.encode(mUsername, "utf-8") + '@' + mHostname + (mPort > 0 ? ":" + mPort : "") +
                    '/' + URLEncoder.encode(mPath.asImapPath(), "utf-8") + "/;UID=" + mUid +
@@ -294,9 +294,9 @@ class ImapURL {
 
     public static void main(String[] args) throws ImapParseException, ServiceException, IOException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
-        ImapHandler handler = new TcpImapHandler(null);
         ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
-        handler.setSelectedFolder(new ImapFolder(new ImapPath("trash", creds), (byte) 0, handler, creds));
+        ImapHandler handler = new TcpImapHandler(null).setCredentials(creds);
+        handler.setSelectedFolder(new ImapPath("trash", creds), (byte) 0);
 
         System.out.println(new ImapURL("tag", handler, "/Drafts;UIDVALIDITY=385759045/;UID=20/;section=HEADER"));
         System.out.println(new ImapURL("tag", handler, "/;UID=20/;section=1.mime"));

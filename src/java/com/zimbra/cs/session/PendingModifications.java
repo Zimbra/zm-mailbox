@@ -62,8 +62,8 @@ public final class PendingModifications {
     }
 
     public static final class ModificationKey extends Pair<String, Integer> {
-        public ModificationKey(String first, Integer second) {
-            super(first, second);
+        public ModificationKey(String accountId, Integer itemId) {
+            super(accountId, itemId);
         }
         public ModificationKey(MailItem item) {
             super(item.getMailbox().getAccountId(), item.getId());
@@ -79,7 +79,6 @@ public final class PendingModifications {
      * @link{MailItem#typeToBitmask} */
     public int changedTypes = 0;
 
-    // The key is MailItemID
     public LinkedHashMap<ModificationKey, MailItem> created;
     public HashMap<ModificationKey, Change> modified;
     public HashMap<ModificationKey, Object> deleted;
@@ -90,6 +89,14 @@ public final class PendingModifications {
         return (deleted  != null && !deleted.isEmpty()) ||
                (created  != null && !created.isEmpty()) ||
                (modified != null && !modified.isEmpty());
+    }
+
+    public int getScaledNotificationCount() {
+        int count = 0;
+        if (deleted != null)   count += (deleted.size() + 3) / 4;
+        if (created != null)   count += created.size();
+        if (modified != null)  count += modified.size();
+        return count;
     }
 
     public boolean overlapsWithAccount(String accountId) {
@@ -121,7 +128,7 @@ public final class PendingModifications {
     }
 
     public void recordDeleted(String accountId, int id, byte type) {
-        if (type != 0) 
+        if (type != 0 && type != MailItem.TYPE_UNKNOWN)
             changedTypes |= MailItem.typeToBitmask(type);
         ModificationKey key = new ModificationKey(accountId, id);
         delete(key, key.getItemId());

@@ -1100,8 +1100,9 @@
         </delete>
 
         <delete dir="${zimbra.home.dir}/zmstat"/>
-        <delete dir="${zimbra.home.dir}/store"/>
-        <delete dir="${zimbra.home.dir}/index"/>
+        <delete dir="${zimbra.home.dir}/imap"/>
+        <delete dir="${zimbra.store.dir}"/>
+        <delete dir="${zimbra.index.dir}"/>
         <delete dir="${zimbra.home.dir}/redolog"/>
         <delete dir="${zimbra.home.dir}/backup"/>
         <delete dir="${zimbra.home.dir}/lib/ext"/>
@@ -1125,8 +1126,9 @@
     	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
-        <mkdir dir="${zimbra.home.dir}/store"/>
-        <mkdir dir="${zimbra.home.dir}/index"/>
+        <mkdir dir="${zimbra.home.dir}/imap"/>
+        <mkdir dir="${zimbra.store.dir}"/>
+        <mkdir dir="${zimbra.index.dir}"/>
         <mkdir dir="${zimbra.home.dir}/redolog"/>
         <mkdir dir="${zimbra.home.dir}/redolog/archive"/>
         <mkdir dir="${zimbra.home.dir}/backup"/>

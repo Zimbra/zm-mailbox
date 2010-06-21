@@ -62,7 +62,7 @@ class AppendMessage {
     private short sflags;
 
     public static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
-        throws ImapParseException, IOException {
+    throws ImapParseException, IOException {
         AppendMessage append = new AppendMessage(handler, tag);
         append.parse(req);
         return append;
@@ -106,17 +106,20 @@ class AppendMessage {
         }
     }
 
-    public void checkFlags(ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
-        throws ServiceException {
-        if (flagNames == null) return;
+    public void checkFlags(Mailbox mbox, ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
+    throws ServiceException {
+        if (flagNames == null)
+            return;
+
         for (String name : flagNames) {
             ImapFlagCache.ImapFlag i4flag = flagSet.getByName(name);
             if (i4flag != null && !i4flag.mListed)
                 i4flag = null;
             else if (i4flag == null && !name.startsWith("\\"))
                 i4flag = tagSet.getByName(name);
+
             if (i4flag == null)
-                i4flag = tagSet.createTag(handler.getContext(), name, newTags);
+                i4flag = tagSet.createTag(mbox, handler.getContext(), name, newTags);
 
             if (i4flag != null) {
                 if (!i4flag.mPermanent)               sflags |= i4flag.mBitmask;
@@ -211,10 +214,10 @@ class AppendMessage {
         }
     }
 
-    private void checkDate(Blob content) throws IOException, ServiceException {
+    private void checkDate(Blob blob) throws IOException, ServiceException {
         // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
         if (date == null && getCredentials().isHackEnabled(ImapCredentials.EnabledHack.THUNDERBIRD))
-            date = getSentDate(content);
+            date = getSentDate(blob);
 
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         // FIXME: Why is this different from INTERNALDATE range check?

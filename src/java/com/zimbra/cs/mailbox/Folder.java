@@ -35,7 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.imap.ImapFolder;
+import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -159,8 +159,8 @@ public class Folder extends MailItem {
      *  has not already been cached. */
     public int getImapRECENTCutoff() {
         for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
-            ImapFolder i4folder = (ImapFolder) s;
-            if (i4folder.getId() == mId && i4folder.isWritable())
+            ImapSession i4session = (ImapSession) s;
+            if (i4session.getFolderId() == mId && i4session.isWritable())
                 return mMailbox.getLastItemId();
         }
         return mImapRECENTCutoff;
@@ -181,8 +181,8 @@ public class Folder extends MailItem {
 
         // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
         for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
-            ImapFolder i4folder = (ImapFolder) s;
-            if (i4folder.getId() == mId && i4folder.isWritable())
+            ImapSession i4session = (ImapSession) s;
+            if (i4session.getFolderId() == mId && i4session.isWritable())
                 return 0;
         }
 
