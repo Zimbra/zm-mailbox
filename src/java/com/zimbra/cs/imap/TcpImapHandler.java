@@ -82,9 +82,8 @@ class TcpImapHandler extends ImapHandler {
         try {
             mRequest.continuation();
             if (mRequest.isMaxRequestSizeExceeded()) {
-                setIdle(false); // FIXME Why for only this error?
-                throw new ImapParseException(
-                    mRequest.getTag(), "maximum request size exceeded", false);
+                setIdle(false);  // FIXME Why for only this error?
+                throw new ImapParseException(mRequest.getTag(), "maximum request size exceeded");
             }
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
@@ -103,6 +102,7 @@ class TcpImapHandler extends ImapHandler {
             if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
             clearRequest();
+            mConsecutiveBAD = 0;
             return keepGoing;
         } catch (TcpImapRequest.ImapContinuationException ice) {
             mRequest.rewind();
@@ -114,7 +114,7 @@ class TcpImapHandler extends ImapHandler {
         } catch (ImapParseException ipe) {
             clearRequest();
             handleParseException(ipe);
-            return CONTINUE_PROCESSING;
+            return mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD ? STOP_PROCESSING : CONTINUE_PROCESSING;
         } finally {
             ZimbraLog.clearContext();
         }

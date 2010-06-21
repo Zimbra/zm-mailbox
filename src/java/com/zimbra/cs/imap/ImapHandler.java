@@ -96,6 +96,10 @@ abstract class ImapHandler extends ProtocolHandler {
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
+    /** Maximum number of consecutive user commands resulting in BAD responses
+     *  before the server disconnects the client. */
+    static final int MAXIMUM_CONSECUTIVE_BAD = 5;
+
     // ID response parameters
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"";
 
@@ -108,6 +112,7 @@ abstract class ImapHandler extends ProtocolHandler {
     protected ImapCredentials mCredentials;
     protected boolean         mStartedTLS;
     protected String          mLastCommand;
+    protected int             mConsecutiveBAD;
     private   ImapProxy       mProxy;
     protected ImapFolder      mSelectedFolder;
     private   String          mIdleTag;
@@ -158,6 +163,7 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     protected void handleParseException(ImapParseException e) throws IOException {
+        mConsecutiveBAD++;
         String message = (e.mCode == null ? "" : '[' + e.mCode + "] ") + e.getMessage();
         if (e.mTag == null)
             sendUntagged("BAD " + message, true);
@@ -472,7 +478,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                     throw new ImapParseException(tag, "unknown LIST select option \"" + option + '"');
                             }
                             if ((selectOptions & (SELECT_SUBSCRIBED | SELECT_RECURSIVE)) == SELECT_RECURSIVE)
-                                throw new ImapParseException(tag, "must include SUBSCRIBED when specifying RECURSIVEMATCH", false);
+                                throw new ImapParseException(tag, "must include SUBSCRIBED when specifying RECURSIVEMATCH");
                             req.skipChar(')');  req.skipSpace();
                         }
 
