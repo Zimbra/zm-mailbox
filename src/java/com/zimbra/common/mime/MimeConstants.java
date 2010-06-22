@@ -30,6 +30,7 @@ public class MimeConstants {
     public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_APPLICATION_BINARY = "application/binary";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
+    public static final String CT_APPLICATION_TNEF = "application/ms-tnef";
     public static final String CT_APPLICATION_PDF = "application/pdf";
     public static final String CT_MULTIPART_ALTERNATIVE = "multipart/alternative";
     public static final String CT_MULTIPART_DIGEST = "multipart/digest";
