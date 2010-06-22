@@ -179,7 +179,9 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         {
             return new AddressTokenFilter(new AddrCharTokenizer(reader));
         } else if (fieldName.equals(LuceneFields.L_CONTACT_DATA)) {
-            return new AddrCharTokenizer(reader);
+            return new ContactDataFilter(new AddrCharTokenizer(reader)); // for bug 48146
+            // return new AddrCharTokenizer(reader);        // for bug 41512
+            // return super.tokenStream(fieldName, reader); // would be StandardTokenizer
         } else if (fieldName.equals(LuceneFields.L_FILENAME)) {
             return new FilenameTokenizer(reader);
 //          return new FilenameTokenFilter(CommaSeparatedTokenStream(reader));
@@ -833,7 +835,24 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         protected char normalize(char c) {
             return Character.toLowerCase(c);
         }
-    }  
+    } 
+    
+    private static class ContactDataFilter extends TokenFilter {
+        
+        public ContactDataFilter(AddrCharTokenizer input) {
+            super(input);
+        }
+        
+        // swallow '.'
+        // include "." in a token only when it is not the only char in the token 
+        public org.apache.lucene.analysis.Token next() throws IOException {
+            org.apache.lucene.analysis.Token t;
+            do {
+                t = input.next();
+            } while (t != null && t.termText().equals(".")); 
+            return t;
+        }
+    }
 
     /**
      * 
@@ -886,12 +905,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         }
     }
     
-    private static void testTokenizer(TokenStream tokenStream, String input) {
-        System.out.println("\n====================");
+    private static void testTokenizer(TokenStream tokenStream, String input, String[] expected) {
         System.out.println("Tokenizer: " + tokenStream.getClass().getName());
         System.out.println("Input string: " + input);
         
         org.apache.lucene.analysis.Token t;
+        
+        int i = 0;
+        boolean ok = true;
         
         while(true) {
             try {
@@ -903,18 +924,40 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 break;
             
             System.out.println("    " + t.termText());
+            
+            if (i < expected.length) {
+                if (!expected[i].equals(t.termText()))
+                    ok = false;
+            } else
+                ok = false;
+            i++;
         } 
         try {
             tokenStream.close();
         } catch (IOException e) { /* ignore */ }
+        
+        System.out.println("OK=" + ok);
+        System.out.println();
     }
 
-    private static void testTokenizers() {
-        String input = "all-snv";
+    private static void testTokenizers(String input, String[] expected) {
+        System.out.println("\n====================");
         
-        testTokenizer(new StandardTokenizer(new StringReader(input)), input);
-        testTokenizer(new AddrCharTokenizer(new StringReader(input)), input);
-        testTokenizer(new AddressTokenFilter(new AddrCharTokenizer(new StringReader(input))), input);
+        testTokenizer(new StandardTokenizer(new StringReader(input)), input, expected);
+        testTokenizer(new AddrCharTokenizer(new StringReader(input)), input, expected);
+        testTokenizer(new ContactDataFilter(new AddrCharTokenizer(new StringReader(input))), input, expected);
+        testTokenizer(new AddressTokenFilter(new AddrCharTokenizer(new StringReader(input))), input, expected);
+    }
+    
+    private static void testTokenizers() {
+        testTokenizers("all-snv", new String[]{"all-snv"});
+        testTokenizers(".", new String[]{});
+        testTokenizers(".. .", new String[]{});
+        testTokenizers(".abc", new String[]{".abc"});
+        testTokenizers("a", new String[]{"a"});
+        testTokenizers("test.com", new String[]{"test.com"});
+        testTokenizers("user1@zim", new String[]{"user1@zim"});
+        testTokenizers("user1@zimbra.com", new String[]{"user1@zimbra.com"});
     }
     
     public static void main(String[] args)
