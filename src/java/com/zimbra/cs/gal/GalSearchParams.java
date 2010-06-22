@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -123,6 +124,13 @@ public class GalSearchParams {
 	}
 	public ZimbraSoapContext getSoapContext() {
 		return mSoapContext;
+	}
+	
+	public AuthToken getAuthToken() {
+	    if (mSoapContext == null)
+	        return null;
+	    else
+	        return mSoapContext.getAuthToken();
 	}
 	
 	public SearchParams getSearchParams() {

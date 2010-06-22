@@ -319,7 +319,10 @@ public abstract class Filter {
                 try {
                     gal.search();
                 } catch (ServiceException e) {
-                    ZimbraLog.dav.error("Can't get gal search result for %s", ctxt.getUser());
+                    if (ServiceException.PERM_DENIED.equals(e.getCode()))
+                        ZimbraLog.dav.debug("Can't get gal search result for %s (%s)", ctxt.getUser(), e.getMessage()); 
+                    else
+                        ZimbraLog.dav.error("Can't get gal search result for %s", ctxt.getUser());
                 }
             }
             return result;

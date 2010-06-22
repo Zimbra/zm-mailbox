@@ -190,9 +190,7 @@ public class ContactAutoComplete {
 			String emailKeys = acct.getAttr(Provisioning.A_zimbraContactEmailFields);
 			if (emailKeys != null)
 				mEmailKeys = Arrays.asList(emailKeys.split(","));
-	        mIncludeGal = acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
-	                acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false) &&
-	                acct.getBooleanAttr(Provisioning.A_zimbraPrefGalAutoCompleteEnabled , false);
+	        mIncludeGal = acct.getBooleanAttr(Provisioning.A_zimbraPrefGalAutoCompleteEnabled , false);
 		} catch (ServiceException se) {
 			ZimbraLog.gal.warn("error initializing ContactAutoComplete", se);
 		}
@@ -254,10 +252,17 @@ public class ContactAutoComplete {
 		params.setLimit(200);
 		params.setResultCallback(new AutoCompleteCallback(str, result, params));
 		try {
-	        GalSearchControl gal = new GalSearchControl(params);
-	        gal.autocomplete();
+		    try {
+    	        GalSearchControl gal = new GalSearchControl(params);
+    	        gal.autocomplete();
+		    } catch (ServiceException e) {
+                if (ServiceException.PERM_DENIED.equals(e.getCode()))
+                    ZimbraLog.gal.debug("cannot autocomplete gal:" + e.getMessage()); // do not log stack
+                else
+                    throw e;
+            }
 		} catch (Exception e) {
-    		ZimbraLog.gal.warn("can't gal search", e);
+    		ZimbraLog.gal.warn("cannot autocomplete gal", e);
     		return;
 		}
 	}

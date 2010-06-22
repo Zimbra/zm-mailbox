@@ -28,9 +28,11 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
@@ -60,7 +62,37 @@ public class GalSearchControl {
 		mParams = params;
 	}
 	
+	private void checkFeatureEnabled(String extraFeatAttr) throws ServiceException {
+	    AuthToken authToken = mParams.getAuthToken();
+	    boolean isAdmin = authToken == null ? false : AuthToken.isAnyAdmin(authToken);
+	    
+	    // admin is always allowed.
+	    if (isAdmin)
+	        return;
+	    
+	    // check feature enabling attrs
+	    Account acct = mParams.getAccount();
+	    if (acct == null) {
+	        if (authToken != null)
+	            acct = Provisioning.getInstance().get(AccountBy.id, authToken.getAccountId());
+
+	        if (acct == null)
+	            throw ServiceException.PERM_DENIED("unable to get account for GAL feature checking");
+	    }
+	    
+	    if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled, false))
+	        throw ServiceException.PERM_DENIED("GAL feature (" + Provisioning.A_zimbraFeatureGalEnabled + ") is not enabled");
+	    
+	    if (extraFeatAttr != null) {
+	        if (!acct.getBooleanAttr(extraFeatAttr, false))
+	            throw ServiceException.PERM_DENIED("GAL feature (" + extraFeatAttr + ") is not enabled");
+	    }
+	}
+	
 	public void autocomplete() throws ServiceException {
+	    
+	    checkFeatureEnabled(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled);
+	    
 		String query = mParams.getQuery();
 		if (query == null)
 			query = "";
@@ -90,6 +122,9 @@ public class GalSearchControl {
 	}
 	
 	public void search() throws ServiceException {
+	    
+	    checkFeatureEnabled(null);
+	    
 		String query = mParams.getQuery();
 		if (query == null)
 			query = "";
@@ -118,6 +153,9 @@ public class GalSearchControl {
 	}
 	
 	public void sync() throws ServiceException {
+	    
+	    checkFeatureEnabled(Provisioning.A_zimbraFeatureGalSyncEnabled);
+	    
 		mParams.setQuery("");
 		mParams.setOp(GalOp.sync);
 		Account galAcct = mParams.getGalSyncAccount();
