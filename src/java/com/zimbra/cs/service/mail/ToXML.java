@@ -32,6 +32,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeTypes;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
@@ -1704,6 +1705,7 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailConstants.A_PART, part);
 
+        String fname = Mime.getFilename(mp);
         if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             // the <shr> share info goes underneath the top-level <m>
             Element shr = root.addElement(MailConstants.E_SHARE_NOTIFICATION);
@@ -1717,6 +1719,10 @@ public class ToXML {
         } else if (MimeConstants.CT_TEXT_ENRICHED.equals(ctype)) {
             // we'll be replacing text/enriched with text/html
             ctype = MimeConstants.CT_TEXT_HTML;
+        } else if (fname != null && (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(ctype) || MimeConstants.CT_APPLICATION_TNEF.equals(ctype))) {
+            String guess = MimeTypes.guessMimeType(fname);
+            if (guess != null)
+                ctype = guess;
         }
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, ctype);
 
@@ -1741,7 +1747,6 @@ public class ToXML {
 
         // figure out attachment name
         try {
-            String fname = Mime.getFilename(mp);
             if (fname == null && MimeConstants.CT_MESSAGE_RFC822.equals(ctype)) {
                 // "filename" for attached messages is the Subject
                 Object content = Mime.getMessageContent(mp);
