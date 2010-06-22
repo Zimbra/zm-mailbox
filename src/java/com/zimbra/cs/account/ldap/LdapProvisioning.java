@@ -5345,7 +5345,7 @@ public class LdapProvisioning extends Provisioning {
             // check for duplicate names
             List<Signature> sigs = getAllSignatures(account);
             for (Signature sig : sigs) {
-                if (sig.getName().equals(newName) && !sig.getId().equals(signatureId))
+                if (sig.getName().equalsIgnoreCase(newName) && !sig.getId().equals(signatureId))
                     throw AccountServiceException.SIGNATURE_EXISTS(newName);
             }
         }
