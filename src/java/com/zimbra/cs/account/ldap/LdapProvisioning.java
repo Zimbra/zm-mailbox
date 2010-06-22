@@ -5260,7 +5260,7 @@ public class LdapProvisioning extends Provisioning {
          * 
          */ 
         Signature acctSig = LdapSignature.getAccountSignature(this, account);
-        if (acctSig != null && signatureName.equals(acctSig.getName()))
+        if (acctSig != null && signatureName.equalsIgnoreCase(acctSig.getName()))
             throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
         
         boolean setAsDefault = false;
