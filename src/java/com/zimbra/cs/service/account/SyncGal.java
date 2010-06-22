@@ -43,12 +43,6 @@ public class SyncGal extends AccountDocumentHandler {
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         
-        if (!AuthToken.isAnyAdmin(zsc.getAuthToken())) {
-            if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalSyncEnabled, false) &&
-                  account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled, false)))
-                throw ServiceException.PERM_DENIED("cannot sync GAL");
-        }
-        
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
         boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);
