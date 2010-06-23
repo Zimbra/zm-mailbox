@@ -289,8 +289,13 @@ public class Search extends MailDocumentHandler  {
             if (ch.getScore() != 0)
                 c.addAttribute(MailConstants.A_SCORE, ch.getScore());
             
-            for (MessageHit mh : ch.getMessageHits())
-                c.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(mh.getMessage()));
+            for (MessageHit mh : ch.getMessageHits()) {
+                Message msg = mh.getMessage();
+                Element m = c.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+                // if it's a 1-message conversation, hand back the folder and size for the lone message
+                if (c.getAttributeLong(MailConstants.A_NUM, 0) == 1)
+                    m.addAttribute(MailConstants.A_SIZE, msg.getSize()).addAttribute(MailConstants.A_FOLDER, msg.getFolderId());
+            }
             return c;
         }
     }
