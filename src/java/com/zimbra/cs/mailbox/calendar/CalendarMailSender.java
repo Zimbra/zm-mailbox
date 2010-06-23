@@ -21,11 +21,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -58,6 +60,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
@@ -569,7 +572,7 @@ public class CalendarMailSender {
 
     public static MimeMessage createForwardedInviteMessage(MimeMessage mmOrig, String origSenderEmail, String forwarderEmail, String[] forwardTo)
     throws ServiceException {
-        List<Address> rcpts = new ArrayList<Address>(forwardTo.length);
+        List<Address> rcpts = new ArrayList<Address>();
         for (String to : forwardTo) {
             try {
                 rcpts.add(new InternetAddress(to));
@@ -597,6 +600,96 @@ public class CalendarMailSender {
             mm.setHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, forwarderEmail);
 
             mm.saveChanges();
+        } catch (MessagingException e) {
+            ZimbraLog.calendar.warn("Unable to compose email for invite forwarding", e);
+        }
+        return mm;
+    }
+
+    public static MimeMessage createForwardedPrivateInviteMessage(
+            Locale lc, String method, List<Invite> invites, String origSenderEmail, String forwarderEmail, String[] forwardTo)
+    throws ServiceException {
+        if (invites == null || invites.isEmpty())
+            return null;
+        List<Address> rcpts = new ArrayList<Address>();
+        for (String to : forwardTo) {
+            try {
+                rcpts.add(new InternetAddress(to));
+            } catch (AddressException e) {
+                ZimbraLog.calendar.warn("Ignoring invalid address \"" + to + "\" during invite forward");
+            }
+        }
+        if (rcpts.isEmpty())
+            return null;
+
+        String subject = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, lc);
+        // Create filtered version of invites.
+        List<Invite> filteredInvs = new ArrayList<Invite>();
+        for (Invite inv : invites) {
+            Invite filtered = inv.newCopy();
+            filtered.clearPrivateInfo();
+            filtered.setName(subject);
+            // Add ATTENDEE for forwarder.
+            List<ZAttendee> atts = inv.getAttendees();
+            if (atts != null && forwarderEmail != null) {
+                for (ZAttendee att : atts) {
+                    if (forwarderEmail.equalsIgnoreCase(att.getAddress())) {
+                        filtered.addAttendee(att);
+                    }
+                }
+            }
+            filteredInvs.add(filtered);
+        }
+
+        MimeMessage mm = null;
+        try {
+            mm = new Mime.FixedMimeMessage(JMSession.getSession());
+            mm.setFrom(new InternetAddress(origSenderEmail));
+            mm.addRecipients(RecipientType.TO, rcpts.toArray(new Address[0]));
+            // Set special header to indicate the forwarding attendee.
+            mm.setHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, forwarderEmail);
+            mm.setSubject(subject);
+
+            StringWriter writer = new StringWriter();
+            try {
+                writer.write("BEGIN:VCALENDAR\r\n");
+                ZProperty prop;
+                prop = new ZProperty(ICalTok.PRODID, ZCalendar.sZimbraProdID);
+                prop.toICalendar(writer);
+                prop = new ZProperty(ICalTok.VERSION, ZCalendar.sIcalVersion);
+                prop.toICalendar(writer);
+                prop = new ZProperty(ICalTok.METHOD, method);
+                prop.toICalendar(writer);
+                // timezones
+                Invite firstInv = filteredInvs.get(0);
+                TimeZoneMap tzmap = new TimeZoneMap(firstInv.getTimeZoneMap().getLocalTimeZone());
+                for (Invite inv : filteredInvs) {
+                    tzmap.add(inv.getTimeZoneMap());
+                }
+                for (Iterator<ICalTimeZone> iter = tzmap.tzIterator(); iter.hasNext(); ) {
+                    ICalTimeZone tz = iter.next();
+                    tz.newToVTimeZone().toICalendar(writer);
+                }
+                // VEVENTs/VTODOs
+                for (Invite inv : filteredInvs) {
+                    ZComponent comp = inv.newToVComponent(false, true);
+                    comp.toICalendar(writer);
+                }
+                writer.write("END:VCALENDAR\r\n");
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Error writing iCalendar", e);
+            } finally {
+                if (writer != null)
+                    try {
+                        writer.close();
+                    } catch (IOException e) {}
+            }
+            mm.setText(writer.toString());
+
+            ContentType ct = new ContentType(MimeConstants.CT_TEXT_CALENDAR);
+            ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
+            ct.setParameter("method", method);
+            mm.setHeader("Content-Type", ct.toString());
         } catch (MessagingException e) {
             ZimbraLog.calendar.warn("Unable to compose email for invite forwarding", e);
         }
