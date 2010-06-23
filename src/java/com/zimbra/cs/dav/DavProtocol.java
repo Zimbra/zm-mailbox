@@ -18,6 +18,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
+import com.zimbra.common.mime.MimeConstants;
+
 // HTTP protocol extensions and headers for WebDAV
 public class DavProtocol {
 	public enum Compliance {
@@ -92,13 +94,13 @@ public class DavProtocol {
 		return buf.toString();
 	}
 	
-	public static final String XML_CONTENT_TYPE = "text/xml";
-    public static final String XML_CONTENT_TYPE2 = "application/xml";
-	public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
-    public static final String VCARD_CONTENT_TYPE = "text/vcard";
-	public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
-	public static final String ENCODING_GZIP = "gzip";
-	public static final String VCARD_VERSION = "3.0";
+    public static final String XML_CONTENT_TYPE = MimeConstants.CT_TEXT_XML;
+    public static final String XML_CONTENT_TYPE2 = MimeConstants.CT_TEXT_XML_LEGACY;
+    public static final String DAV_CONTENT_TYPE = "text/xml; charset=\"UTF-8\"";
+    public static final String VCARD_CONTENT_TYPE = MimeConstants.CT_TEXT_VCARD;
+    public static final String DEFAULT_CONTENT_TYPE = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+    public static final String ENCODING_GZIP = "gzip";
+    public static final String VCARD_VERSION = "3.0";
 
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";

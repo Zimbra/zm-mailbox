@@ -38,7 +38,7 @@ public class VcfFormatter extends Formatter {
     }
 
     public String[] getDefaultMimeTypes() {
-        return new String[] { MimeConstants.CT_TEXT_VCARD, "application/vcard" };
+        return new String[] { MimeConstants.CT_TEXT_VCARD, MimeConstants.CT_TEXT_VCARD_LEGACY, MimeConstants.CT_TEXT_VCARD_LEGACY2 };
     }
 
     public String getDefaultSearchTypes() {
@@ -57,7 +57,7 @@ public class VcfFormatter extends Formatter {
             String filename = context.target instanceof Contact ? ((Contact) context.target).getFileAsString() : "contacts";
             String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".vcf");
             context.resp.addHeader("Content-Disposition", cd);
-            context.resp.setContentType(MimeConstants.CT_TEXT_VCARD);
+            context.resp.setContentType(MimeConstants.CT_TEXT_VCARD_LEGACY);  // for backward compatibility
             context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
 
             int count = 0;
