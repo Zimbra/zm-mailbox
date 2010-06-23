@@ -32,7 +32,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimeTypes;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
@@ -1720,7 +1720,7 @@ public class ToXML {
             // we'll be replacing text/enriched with text/html
             ctype = MimeConstants.CT_TEXT_HTML;
         } else if (fname != null && (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(ctype) || MimeConstants.CT_APPLICATION_TNEF.equals(ctype))) {
-            String guess = MimeTypes.guessMimeType(fname);
+            String guess = MimeDetect.getMimeDetect().detect(fname);
             if (guess != null)
                 ctype = guess;
         }
