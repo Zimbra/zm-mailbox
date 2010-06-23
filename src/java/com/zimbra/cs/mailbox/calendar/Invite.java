@@ -2664,4 +2664,22 @@ public class Invite {
             tzids.addAll(Recurrence.getReferencedTZIDs(recur));
         return tzids;
     }
+
+    // remove all data considered private
+    public void clearPrivateInfo() {
+        mName = null;
+        mDescription = null;
+        mDescHtml = null;
+        mComments.clear();
+        mLocation = null;
+        mAttendees.clear();
+        mPriority = null;
+        mPercentComplete = null;
+        mCompleted = 0;
+        mCategories.clear();
+        mContacts.clear();
+        mGeo = null;
+        mAlarms.clear();
+        mXProps.clear();
+    }
 }

@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -121,9 +122,20 @@ public class AddCalendarItemInvite extends CalendarRequest {
                     calItemIdStr, folderId, inv.isPublic() ? inv.getName() : "(private)",
                     inv.getUid(), inv.getRecurId().getDtZ());
 
-        int[] ids = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
-
         Element response = getResponseElement(zsc);
+        if (calItem != null) {
+            // If the calendar item already has the invite, no need to add again.
+            RecurId rid = scid.mInv.getRecurId();
+            Invite matchingInv = calItem.getInvite(rid);
+            if (matchingInv != null && matchingInv.isSameOrNewerVersion(scid.mInv)) {
+                response.addAttribute(MailConstants.A_CAL_ID, calItem.getId());
+                response.addAttribute(MailConstants.A_CAL_INV_ID, matchingInv.getMailItemId());
+                response.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, matchingInv.getComponentNum());
+                return response;
+            }
+        }
+
+        int[] ids = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
         if (ids != null && ids.length >= 2) {
             calItem = mbox.getCalendarItemById(octxt, ids[0]);
             if (calItem != null) {
