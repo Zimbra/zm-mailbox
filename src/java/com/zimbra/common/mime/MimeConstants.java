@@ -21,7 +21,11 @@ public class MimeConstants {
     public static final String CT_TEXT_HTML = "text/html";
     public static final String CT_TEXT_ENRICHED = "text/enriched";
     public static final String CT_TEXT_CALENDAR = "text/calendar";
-    public static final String CT_TEXT_VCARD = "text/x-vcard";
+    public static final String CT_TEXT_VCARD = "text/vcard";
+    public static final String CT_TEXT_VCARD_LEGACY = "text/x-vcard";
+    public static final String CT_TEXT_VCARD_LEGACY2 = "text/directory";
+    public static final String CT_TEXT_XML = "text/xml";
+    public static final String CT_TEXT_XML_LEGACY = "application/xml";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
     public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_APPLICATION_BINARY = "application/binary";
