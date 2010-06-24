@@ -561,7 +561,9 @@ public class LC {
     public static final KnownKey freebusy_exchange_cn1;
     public static final KnownKey freebusy_exchange_cn2;
     public static final KnownKey freebusy_exchange_cn3;
-    
+
+    public static final KnownKey freebusy_disable_nodata_status;
+
     public static final KnownKey data_source_scheduling_enabled;
     
     public static final KnownKey notes_enabled;
@@ -1587,6 +1589,8 @@ public class LC {
         freebusy_exchange_cn1 = new KnownKey("freebusy_exchange_cn1");
         freebusy_exchange_cn2 = new KnownKey("freebusy_exchange_cn2");
         freebusy_exchange_cn3 = new KnownKey("freebusy_exchange_cn3");
+
+        freebusy_disable_nodata_status = new KnownKey("freebusy_disable_nodata_status", "false");
 
         zimbra_lmtp_validate_messages = new KnownKey("zimbra_lmtp_validate_messages", "true");
         zimbra_lmtp_max_line_length = new KnownKey("zimbra_lmtp_max_line_length", "10240");
