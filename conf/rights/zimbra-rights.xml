@@ -776,4 +776,7 @@
 <right name="getAllFreeBusyProviders" type="preset" targetType="global">
 	<desc>Retrieve a list of Free/Busy providers via GetAllFreeBusyProvidersRequest SOAP request</desc>
 </right>
+<right name="checkSoftwareUpdates" type="preset" targetType="global">
+	<desc>check for Zimbra software updates</desc>
+</right>
 </rights>

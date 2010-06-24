@@ -2555,6 +2555,62 @@
   </rights>
 </right>
 
+<right name="viewAdminConsoleSoftwareUpdatesConfigAttrs" type="getAttrs" targetType="config">
+  <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <attrs>
+	<a n="zimbraVersionCheckLastAttempt"/>
+	<a n="zimbraVersionCheckLastSuccess"/>
+	<a n="zimbraVersionCheckLastResponse"/>
+	<a n="zimbraVersionCheckNotificationEmail"/>
+	<a n="zimbraVersionCheckSendNotifications"/>
+	<a n="zimbraVersionCheckNotificationEmailFrom"/>
+	<a n="zimbraVersionCheckNotificationSubject"/>
+	<a n="zimbraVersionCheckNotificationBody"/>
+	<a n="zimbraVersionCheckInterval"/>
+	<a n="zimbraVersionCheckServer"/>
+	<a n="zimbraVersionCheckURL"/>
+	</attrs>
+</right>
+
+<right name="setAdminConsoleSoftwareUpdatesConfigAttrs" type="setAttrs" targetType="config">
+  <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <attrs>
+	<a n="zimbraVersionCheckLastAttempt"/>
+	<a n="zimbraVersionCheckLastSuccess"/>
+	<a n="zimbraVersionCheckLastResponse"/>
+	<a n="zimbraVersionCheckNotificationEmail"/>
+	<a n="zimbraVersionCheckSendNotifications"/>
+	<a n="zimbraVersionCheckNotificationEmailFrom"/>
+	<a n="zimbraVersionCheckNotificationSubject"/>
+	<a n="zimbraVersionCheckNotificationBody"/>
+	<a n="zimbraVersionCheckInterval"/>
+	<a n="zimbraVersionCheckServer"/>
+	<a n="zimbraVersionCheckURL"/>  </attrs>
+</right>
+
+<right name="viewAdminConsoleSoftwareUpdatesServerAttrs" type="getAttrs" targetType="server">
+  <desc> Admin Console view attr rights for accounts contact tab </desc>
+  <attrs>
+    <a n="zimbraId"/>
+    <a n="cn"/>
+    <a n="zimbraSmtpHostname"/>
+    <a n="zimbraServiceInstalled"/>
+    <a n="zimbraServiceEnabled"/>
+    <a n="zimbraServiceHostname"/>
+  </attrs>
+</right>
+
+<right type="combo" name="adminConsoleSoftwareUpdatesRights">
+  <desc>Rights for configuring SSL certificate on a server through Admin Console</desc>
+  <rights>
+   <r n="listServer" />
+   <r n="listAccount" />
+   <r n="checkSoftwareUpdates"/>
+   <r n="viewAdminConsoleSoftwareUpdatesConfigAttrs"/>
+   <r n="setAdminConsoleSoftwareUpdatesConfigAttrs"/>
+   <r n="viewAdminConsoleSoftwareUpdatesServerAttrs"/>   
+  </rights>
+</right>
 
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
@@ -2576,6 +2632,7 @@
     <r n="adminConsoleBackupRights"/>
     <r n="adminConsoleCrossMailboxSearchRights"/>
     <r n="adminConsoleSavedSearchRights"/>
+    <r n="adminConsoleSoftwareUpdatesRights"/>
   </rights>
 </right>
 
