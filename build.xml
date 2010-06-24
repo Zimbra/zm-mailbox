@@ -1936,6 +1936,7 @@
 	    	               com.zimbra.cs.service.hsm 
 	    	               com.zimbra.xmbxsearch
 	    	               com.zimbra.cert
+	    	               com.zimbra.cs.service.versioncheck
 	    	               com.zimbra.license.service"/>
 	        <param name="output" value="docs/rights-ext.txt"/>
 	    </antcall>
