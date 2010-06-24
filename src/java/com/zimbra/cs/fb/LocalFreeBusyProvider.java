@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -56,6 +57,7 @@ public class LocalFreeBusyProvider {
     throws ServiceException {
         AccessManager accessMgr = AccessManager.getInstance();
         boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), User.R_viewFreeBusy, asAdmin);
+        int numAllowedFolders = 0;
 
         int exApptId = exAppt == null ? -1 : exAppt.getId();
 
@@ -74,7 +76,10 @@ public class LocalFreeBusyProvider {
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
                 continue;
             // Free/busy must be allowed by folder or at account-level.
-            if (!CalendarItem.allowFreeBusyAccess(f, authAcct, asAdmin) && !accountAceAllowed)
+            boolean folderFBAllowed = CalendarItem.allowFreeBusyAccess(f, authAcct, asAdmin);
+            if (folderFBAllowed)
+                ++numAllowedFolders;
+            if (!folderFBAllowed && !accountAceAllowed)
                 continue;
             for (Iterator<CalendarItemData> iter = result.data.calendarItemIterator(); iter.hasNext(); ) {
                 CalendarItemData appt = iter.next();
@@ -124,6 +129,10 @@ public class LocalFreeBusyProvider {
                     }
                 }
             }
+        }
+        if (!accountAceAllowed && numAllowedFolders == 0 && !LC.freebusy_disable_nodata_status.booleanValue()) {
+            Interval nodata = new Interval(start, end, IcalXmlStrMap.FBTYPE_NODATA);
+            intervals.addInterval(nodata);
         }
         return new FreeBusy(name, intervals, start, end);
     }

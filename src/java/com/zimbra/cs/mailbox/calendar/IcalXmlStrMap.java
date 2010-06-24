@@ -90,6 +90,7 @@ public class IcalXmlStrMap {
     public final static String FBTYPE_FREE = "F";
     public final static String FBTYPE_BUSY_TENTATIVE = "T";
     public final static String FBTYPE_BUSY_UNAVAILABLE = "O";
+    public final static String FBTYPE_NODATA = "N";
 
     // transparency 
     public final static String TRANSP_OPAQUE = "O";
@@ -172,6 +173,7 @@ public class IcalXmlStrMap {
         sFreeBusyMap.add(FreeBusy.FBTYPE_BUSY, FBTYPE_BUSY);
         sFreeBusyMap.add(FreeBusy.FBTYPE_BUSY_TENTATIVE, FBTYPE_BUSY_TENTATIVE);
         sFreeBusyMap.add(FreeBusy.FBTYPE_BUSY_UNAVAILABLE, FBTYPE_BUSY_UNAVAILABLE);
+        sFreeBusyMap.add(FreeBusy.FBTYPE_NODATA, FBTYPE_NODATA);
 
         sOutlookFreeBusyMap.add(FreeBusy.FBTYPE_OUTLOOK_FREE, FBTYPE_FREE);
         sOutlookFreeBusyMap.add(FreeBusy.FBTYPE_OUTLOOK_BUSY, FBTYPE_BUSY);

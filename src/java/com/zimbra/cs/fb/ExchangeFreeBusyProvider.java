@@ -372,7 +372,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private List<FreeBusy> getEmptyList(ArrayList<Request> req) {
 		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (Request r : req)
-			ret.add(FreeBusy.emptyFreeBusy(r.email, r.start, r.end));
+			ret.add(FreeBusy.nodataFreeBusy(r.email, r.start, r.end));
 		return ret;
 	}
 	

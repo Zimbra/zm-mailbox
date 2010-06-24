@@ -141,7 +141,7 @@ public abstract class FreeBusyProvider {
 			}
 			if (!succeed) {
 				ZimbraLog.fb.error("can't find free/busy provider for user "+emailAddr);
-				ret.add(FreeBusy.emptyFreeBusy(emailAddr, start, end));
+				ret.add(FreeBusy.nodataFreeBusy(emailAddr, start, end));
 			}
 		}
 		

@@ -208,7 +208,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	
 	private void addFailedAccounts(Element response, String[] idStrs) {
 		for (String id : idStrs) {
-			ToXML.encodeFreeBusy(response, FreeBusy.emptyFreeBusy(id, mStart, mEnd));
+			ToXML.encodeFreeBusy(response, FreeBusy.nodataFreeBusy(id, mStart, mEnd));
 		}
 	}
 	

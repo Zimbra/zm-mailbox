@@ -2128,6 +2128,8 @@ public class ToXML {
         		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
         	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
         		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_NODATA)) {
+                elt = resp.addElement(MailConstants.E_FREEBUSY_NODATA);
         	} else {
         		assert(false);
         		elt = null;

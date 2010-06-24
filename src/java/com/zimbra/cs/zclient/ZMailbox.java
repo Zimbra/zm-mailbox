@@ -4318,7 +4318,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public enum ZFreeBusySlotType {
-        FREE, BUSY, TENTATIVE, UNAVAILABLE, NO_DATA, OUT_OF_OFFICE;
+        FREE, BUSY, TENTATIVE, UNAVAILABLE, NODATA;
 
         public static ZFreeBusySlotType fromString(String s) throws ServiceException {
             try {
@@ -4360,18 +4360,16 @@ public class ZMailbox implements ToZJSONObject {
             List<ZFreeBusyTimeSlot> slots = new ArrayList<ZFreeBusyTimeSlot>();
             for (Element slot : user.listElements()) {
                 ZFreeBusySlotType type;
-                if (slot.getName().equals(MailConstants.E_FREEBUSY_FREE)) {
-                    type = ZFreeBusySlotType.FREE;
-                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY)) {
+                if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY)) {
                     type = ZFreeBusySlotType.BUSY;
                 } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_TENTATIVE)) {
                     type = ZFreeBusySlotType.TENTATIVE;
                 } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE)) {
                     type = ZFreeBusySlotType.UNAVAILABLE;
-                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_OUT_OF_OFFICE)) {
-                    type = ZFreeBusySlotType.OUT_OF_OFFICE;
+                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_NODATA)) {
+                    type = ZFreeBusySlotType.NODATA;
                 } else {
-                    type = ZFreeBusySlotType.NO_DATA;
+                    type = ZFreeBusySlotType.FREE;
                 }
                 slots.add(new ZFreeBusyTimeSlot(
                         type,
@@ -4390,7 +4388,7 @@ public class ZMailbox implements ToZJSONObject {
                 case BUSY:
                 case TENTATIVE:
                 case UNAVAILABLE:
-                case OUT_OF_OFFICE:    
+                case NODATA:
                     result.add(new ZAppointmentHit(slot));
                     break;
             }
