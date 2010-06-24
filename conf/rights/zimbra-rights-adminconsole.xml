@@ -2522,13 +2522,6 @@
   </rights>
 </right>
 
-<right type="combo" name="adminConsoleCertificateRights">
-  <desc>Admin Console Certificate Rights</desc>
-  <rights>
-    <r n="listServer"/>
-  </rights>
-</right>
-
 <right type="combo" name="adminConsoleBackupRights">
   <desc>Admin Console Backup Rights</desc>
   <rights>
@@ -2549,6 +2542,19 @@
     <r n="createAccount"/>
   </rights>
 </right>
+
+
+<right type="combo" name="adminConsoleCertificateRights">
+  <desc>Rights for configuring SSL certificate on a server through Admin Console</desc>
+  <rights>
+   <r n="listServer" />
+   <r n="getCertificateInfo"/>
+   <r n="installCertificate"/>
+   <r n="getCSR"/>   
+   <r n="generateCSR"/> 
+  </rights>
+</right>
+
 
 <right type="combo" name="adminConsoleRights">
   <desc>Admin Console Rights and Views</desc>
