@@ -110,6 +110,11 @@ public class TZRule {
         }
     }
 
+    public TZRule() throws IOException {
+        isAssociatedWithRecurrence = true;
+        isEffectiveRule = true;
+        setStartYear(1971);
+    }
     /**
      *
      * @return The RRrule for use in an ICALENDAR STANDARD component
@@ -248,7 +253,7 @@ public class TZRule {
     /**
      * @param bias the time zone's offset in minutes from UTC.
      */
-    private void setBias(Long bias) {
+    public void setBias(Long bias) {
         Bias = bias.intValue();
     }
 
@@ -260,9 +265,9 @@ public class TZRule {
     }
 
     /**
-     * @param the offset in minutes from Bias during standard time.
+     * @param standardBias the offset in minutes from Bias during standard time.
      */
-    private void setStandardBias(Long standardBias) {
+    public void setStandardBias(Long standardBias) {
         StandardBias = standardBias.intValue();
     }
 
@@ -276,7 +281,7 @@ public class TZRule {
     /**
      * @param the offset in minutes from Bias during daylight saving time.
      */
-    private void setDaylightBias(Long daylightBias) {
+    public void setDaylightBias(Long daylightBias) {
         DaylightBias = daylightBias.intValue();
     }
 
@@ -389,5 +394,27 @@ public class TZRule {
         Date startDate = gc.getTime();
         DateTime startDateTime = new DateTime(startDate);
         return new DtStart(startDateTime);
+    }
+
+    public boolean equivalentRule(TZRule other) {
+        if (other == null) {
+            return false;
+        }
+        if (Bias != other.getBias()) {
+            return false;
+        }
+        if (StandardBias != other.getStandardBias()) {
+            return false;
+        }
+        if (DaylightBias != other.getDaylightBias()) {
+            return false;
+        }
+        if (!this.getStandardDate().equivalentInTimeZones(other.getStandardDate())) {
+            return false;
+        }
+        if (!this.getDaylightDate().equivalentInTimeZones(other.getDaylightDate())) {
+            return false;
+        }
+        return true;
     }
 }

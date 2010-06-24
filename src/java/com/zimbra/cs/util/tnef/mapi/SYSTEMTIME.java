@@ -170,4 +170,37 @@ public class SYSTEMTIME {
             }
         }
     }
+
+    /**
+     *
+     * @param other
+     * @return true if <code>other</code> can be regarded as sufficiently
+     * similar if it is part of a timezone rule.
+     */
+    public boolean equivalentInTimeZones(SYSTEMTIME other) {
+        if (other == null) {
+            return false;
+        }
+        // All timezone rules that we support have the same rule for every
+        // year, so we don't mind if the year differs
+        if (Month != other.getMonth()) {
+            return false;
+        }
+        if (dayOfWeek != other.getDayOfWeek()) {
+            return false;
+        }
+        if (Hour != other.getHour()) {
+            return false;
+        }
+        if (Minute != other.getMinute()) {
+            return false;
+        }
+        if (Seconds != other.getSeconds()) {
+            return false;
+        }
+        if (Milliseconds != other.getMilliseconds()) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -48,6 +48,7 @@ import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCa
 import com.zimbra.cs.util.tnef.mapi.AppointmentStateFlags;
 import com.zimbra.cs.util.tnef.mapi.BusyStatus;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
+import com.zimbra.cs.util.tnef.mapi.TZRule;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import java.util.EnumSet;
 import net.fortuna.ical4j.model.parameter.Cn;
@@ -116,16 +117,34 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
             TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
 
+            String tzDesc = schedView.getTimeZoneDescription();
+            if (null != tzDesc) {
+                TimeZoneDefinition tzStructInfo =
+                        schedView.getTimeZoneStructInfo(tzDesc);
+                if (null != tzStructInfo) {
+                    // if the rules differ, tzStructInfo should win
+                    if (recurrenceTZinfo != null) {
+                        TZRule tzsRule = tzStructInfo.getEffectiveRule();
+                        if (tzsRule != null) {
+                            if (!tzsRule.equivalentRule(
+                                    recurrenceTZinfo.getEffectiveRule())) {
+                                sLog.debug(
+    "PidLidAppointmentTimeZoneDefinitionRecur effective rule differs from PidLidTimeZoneStruct rule - ignored");
+                                recurrenceTZinfo = tzStructInfo;
+                            }
+                        }
+                    }
+                    if (startTimeTZinfo == null) {
+                        startTimeTZinfo = tzStructInfo;
+                    }
+                }
+            }
+
             if (recurrenceTZinfo == null) {
                 recurrenceTZinfo = startTimeTZinfo;
             }
             if (endTimeTZinfo == null) {
                 endTimeTZinfo = startTimeTZinfo;
-            }
-
-            Object tzStructInfo = schedView.getTimeZoneStructInfo();
-            if (null != tzStructInfo) {
-                sLog.debug("tzStructInfo=" + tzStructInfo.toString());
             }
 
             RecurrenceDefinition recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
@@ -141,11 +160,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             DateTime attendeeCriticalChange = schedView.getAttendeeCriticalChange();
             DateTime ownerCriticalChange = schedView.getOwnerCriticalChange();
             String[] categories = schedView.getCategories();
-            String tzDesc = schedView.getTimeZoneDescription();
-            if (null != tzDesc) {
-                sLog.debug("Timezone Description=" + tzDesc);
-            }
-
             Method method = null;
             PartStat partstat = null;
             String descriptionText = null;
@@ -168,7 +182,8 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
             if (msgClass == null) {
                 sLog.debug("Unable to determine Class of TNEF - cannot generate ICALENDER equivalent");
-                throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
+                // throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
+                return false;
             }
             if (msgClass != null) {
                 // IPM.Microsoft Schedule.MtgRespP IPM.Schedule.Meeting.Resp.Pos
@@ -209,6 +224,9 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
 
             icalOutput.startCalendar();
+            // Results in a 2nd PRODID in iCalendar
+            // IcalUtil.addProperty(icalOutput, Property.PRODID,
+            //         "Zimbra-TNEF-iCalendar-Converter");
             IcalUtil.addProperty(icalOutput, method);
             if (recurDef != null) {
                 String MsCalScale = recurDef.xMicrosoftCalscale();
@@ -271,10 +289,23 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addProperty(icalOutput, Property.SUMMARY, summary, false);
             IcalUtil.addProperty(icalOutput, Property.LOCATION, location, false);
             IcalUtil.addProperty(icalOutput, Property.DESCRIPTION, descriptionText, false);
-            IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
-                    icalStartDate, startTimeTZinfo, isAllDayEvent);
-            IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
-                    icalEndDate, endTimeTZinfo, isAllDayEvent);
+            if ( method.equals(Method.COUNTER) ) {
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
+                        proposedStartDate, startTimeTZinfo, isAllDayEvent);
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
+                        proposedEndDate, endTimeTZinfo, isAllDayEvent);
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput,
+                        "X-MS-OLK-ORIGINALSTART",
+                        icalStartDate, startTimeTZinfo, isAllDayEvent);
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput,
+                        "X-MS-OLK-ORIGINALEND",
+                        icalEndDate, endTimeTZinfo, isAllDayEvent);
+            } else {
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
+                        icalStartDate, startTimeTZinfo, isAllDayEvent);
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
+                        icalEndDate, endTimeTZinfo, isAllDayEvent);
+            }
             IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
                     recurrenceIdDateTime, startTimeTZinfo, isAllDayEvent);
             if (recurDef != null) {
@@ -376,7 +407,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     }
                     organizerEmail = firstFromIA;
                     String displayName = firstFromIA.getPersonal();
-                    if (displayName != null) {
+                    if ((displayName != null)&& (!displayName.equals(firstFromEmailAddr))) {
                         cn = new Cn(displayName);
                     }
                     Organizer organizer = new Organizer();
@@ -405,6 +436,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                                 }
                             }
                         }
+                        attendee.getParameters().add(Role.REQ_PARTICIPANT);
                         attendee.getParameters().add(orgPartstat);
                         // Was including SENT-BY but probably not appropriate
                         // for a request
@@ -521,7 +553,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         String email = ia.getAddress();
         String displayName = ia.getPersonal();
         Attendee attendee = new Attendee("Mailto:" + email);
-        if (displayName != null) {
+        if ((displayName != null)&& (!displayName.equals(email))) {
             Cn cn = new Cn(displayName);
             attendee.getParameters().add(cn);
         }

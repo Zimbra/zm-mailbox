@@ -212,7 +212,7 @@ public class RecurrenceDefinition {
             DayOfWeekMask.add(DayOfWeek.WE);
         }
         if ( (dayMask & 0x00000010) == 0x00000010) {
-            DayOfWeekMask.add(DayOfWeek.TU);
+            DayOfWeekMask.add(DayOfWeek.TH);
         }
         if ( (dayMask & 0x00000020) == 0x00000020) {
             DayOfWeekMask.add(DayOfWeek.FR);

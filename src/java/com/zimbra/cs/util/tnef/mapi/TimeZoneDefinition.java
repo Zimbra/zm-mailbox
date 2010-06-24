@@ -60,7 +60,7 @@ import net.freeutils.tnef.RawInputStream;
  *         TZRule flags field is not set (for example, if the TZRule is the
  *         effective rule, the value of the field TZRule flags MUST be
  *         0x0002; otherwise, it MUST be 0x0000).
- *     PidLidAppointmentTimeZone DefinitionEndDisplay
+ *     PidLidAppointmentTimeZoneDefinitionEndDisplay
  *         Specifies time zone information that indicates the time zone of
  *         the PidLidAppointmentEndWhole property. The format, constraints,
  *         and computation of this property are the same as specified in the
@@ -86,6 +86,8 @@ public class TimeZoneDefinition {
     private TimeZone theZone;
 
     /**
+     * Initialise TimeZoneDefinition object from one of the MAPI TimeZoneDefinition
+     * properties (as opposed to the simpler TimeZoneStruct property)
      * 
      * @param ris
      * @throws IOException
@@ -138,6 +140,31 @@ public class TimeZoneDefinition {
                 break;
             }
         }
+    }
+
+    /**
+     * Initialise TimeZoneDefinition object from MAPI
+     * PidLidTimeZoneStruct property.
+     * This property is set on a recurring series to specify time zone
+     * information. This property specifies how to convert time fields between
+     * local time and UTC.
+     *
+     * @param ris
+     * @param tzName
+     * @throws IOException
+     */
+    public TimeZoneDefinition(RawInputStream ris, String tzName) throws IOException {
+        theZone = null;
+        setTimezoneName(tzName);
+        TZRule currRule = new TZRule();
+        currRule.setBias(IcalUtil.readI32(ris));
+        currRule.setStandardBias(IcalUtil.readI32(ris));
+        currRule.setDaylightBias(IcalUtil.readI32(ris));
+        int wStandardYear = ris.readU16();
+        currRule.setStandardDate(new SYSTEMTIME(ris));
+        int wDaylightYear = ris.readU16();
+        currRule.setDaylightDate(new SYSTEMTIME(ris));
+        setEffectiveRule(currRule);
     }
 
     /**

@@ -49,6 +49,9 @@ public class MSGUID {
 
     public final static MSGUID PSETID_Meeting     = new MSGUID("{6ED8DA90-450B-101B-98DA-00AA003F1305}");
     public final static MSGUID PSETID_Appointment = new MSGUID("{00062002-0000-0000-C000-000000000046}");
+    public final static MSGUID PSETID_Task        = new MSGUID("{00062003-0000-0000-C000-000000000046}");
+    public final static MSGUID PSETID_Address     = new MSGUID("{00062004-0000-0000-C000-000000000046}");
+    public final static MSGUID PSETID_Common      = new MSGUID("{00062008-0000-0000-C000-000000000046}");
     public final static MSGUID PS_PUBLIC_STRINGS  = new MSGUID("{00020329-0000-0000-C000-000000000046}");
 
 	private GUID jtnefGuid;

@@ -448,14 +448,27 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
-     * @return PidLidExceptionReplaceTime which specifies UTC date and time
+     * Candidate properties :
+     *
+     *  PidLidOldWhenStartWhole - Indicates the original value of the
+     *  PidLidAppointmentStartWhole property before a meeting update.
+     *
+     * PidLidExceptionReplaceTime specifies UTC date and time
      * within a recurrence pattern that an exception will replace.
+     *
+     * @return A suitable time for the RECURRENCE-ID property for this
+     * calendaring item if one exists.
      * @throws IOException
      */
     public DateTime getRecurrenceIdTime() throws IOException {
         MAPIPropName PidLidExceptionReplaceTime
-        = PSETID_AppointmentPropName(0x8228);
-        return getUtcDateTime(PidLidExceptionReplaceTime, 0);
+                = PSETID_AppointmentPropName(0x8228);
+        DateTime recurrenceIdTime = getUtcDateTime(PidLidExceptionReplaceTime, 0);
+        if (recurrenceIdTime == null) {
+            MAPIPropName PidLidOldWhenStartWhole = PSETID_MeetingPropName(0x29);
+            recurrenceIdTime = getUtcDateTime(PidLidOldWhenStartWhole, 0);
+        }
+        return recurrenceIdTime;
     }
 
     /**
@@ -492,8 +505,9 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
-     * PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies time zone information that indicates
-     * the time zone of the PidLidAppointmentStartWhole property.
+     * PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies time zone
+     * information that indicates the time zone of the
+     * PidLidAppointmentStartWhole property.
      *
      * @return
      * @throws IOException
@@ -511,8 +525,9 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
-     * PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies time zone information that indicates
-     * the time zone of the PidLidAppointmentEndWhole property.
+     * PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies time zone
+     * information that indicates the time zone of the
+     * PidLidAppointmentEndWhole property.
      *
      * @return
      * @throws IOException
@@ -533,6 +548,9 @@ public class SchedulingViewOfTnef extends Message {
      * PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
      * that describes how to convert the meeting date and time on a recurring
      * series to and from UTC.
+     * MS-OXOCAL says "If this property is set, but it has data that is
+     * inconsistent with the data that is represented by PidLidTimeZoneStruct,
+     * then the client uses PidLidTimeZoneStruct instead of this property."
      *
      * @return
      * @throws IOException
@@ -552,13 +570,18 @@ public class SchedulingViewOfTnef extends Message {
     /**
      * PidLidTimeZoneStruct Specifies time zone information for a recurring meeting.
      *
+     * @param tzName 
      * @return
      * @throws IOException
      */
-    public Object getTimeZoneStructInfo() throws IOException {
+    public TimeZoneDefinition getTimeZoneStructInfo(String tzName) throws IOException {
         MAPIPropName PidLidTimeZoneStruct = this.PSETID_AppointmentPropName(0x8233);
         RawInputStream tzRis = getRawInputStreamValue(PidLidTimeZoneStruct, 0);
-        return tzRis;
+        if (tzRis == null) {
+            return null;
+        }
+        TimeZoneDefinition tzDef = new TimeZoneDefinition(tzRis, tzName);
+        return tzDef;
     }
 
     /**

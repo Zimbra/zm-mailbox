@@ -35,6 +35,7 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.util.TimeZones;
+import net.freeutils.tnef.RawInputStream;
 
 public class IcalUtil {
 
@@ -182,4 +183,15 @@ public class IcalUtil {
                utcCalendar.setTimeInMillis(localDate.getTime());
                return new DateTime(utcCalendar.getTime());
    }
+
+    /**
+     * Missing method from RawInputStream
+     * @param ris
+     * @return
+     * @throws IOException
+     */
+    public static Long readI32(RawInputStream ris) throws IOException {
+        return (ris.readU8() | (ris.readU8() << 8) | (ris.readU8() << 16) | (ris.readU8() << 24)) & 0xFFFFFFFFFFFFFFFFL;
+    }
+
 }
