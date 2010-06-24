@@ -209,7 +209,8 @@ public class RightConsts {
     public static final String RT_adminConsoleCOSZimletsTabRights = "adminConsoleCOSZimletsTabRights";
 
     /**
-     * Admin Console Certificate Rights
+     * Rights for configuring SSL certificate on a server through Admin
+     * Console
      */
     public static final String RT_adminConsoleCertificateRights = "adminConsoleCertificateRights";
 
@@ -546,6 +547,11 @@ public class RightConsts {
      * check if the account has a specific or any effective rights
      */
     public static final String RT_checkRightUsr = "checkRightUsr";
+
+    /**
+     * check for Zimbra software updates
+     */
+    public static final String RT_checkSoftwareUpdates = "checkSoftwareUpdates";
 
     /**
      * configure admin UI components
