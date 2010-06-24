@@ -702,8 +702,8 @@
     <r n="viewAdminConsoleDLAliasesTab"/>
     <r n="createAlias"/>
     <r n="deleteAlias"/>
-    <r n="addCalendarResourceAlias"/>
-    <r n="removeCalendarResourceAlias"/>
+    <r n="addDistributionListAlias"/>
+    <r n="removeDistributionListAlias"/>
   </rights>
 </right>
 
