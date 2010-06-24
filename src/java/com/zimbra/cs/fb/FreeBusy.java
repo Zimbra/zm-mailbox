@@ -17,6 +17,7 @@ package com.zimbra.cs.fb;
 
 import java.util.*;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
@@ -36,9 +37,17 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
  */
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
+    // free from start to end
 	public static FreeBusy emptyFreeBusy(String name, long start, long end) {
 		return new FreeBusy(name, start, end);
 	}
+	// unknown (no data) from start to end
+    public static FreeBusy nodataFreeBusy(String name, long start, long end) {
+        IntervalList il = new IntervalList(start, end);
+        if (!LC.freebusy_disable_nodata_status.booleanValue())
+            il.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_NODATA));
+        return new FreeBusy(name, il, start, end);
+    }
     protected FreeBusy(String name, long start, long end) {
     	this(name, new IntervalList(start, end), start, end);
     }
@@ -350,6 +359,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     public static final String FBTYPE_BUSY = "BUSY";
     public static final String FBTYPE_BUSY_TENTATIVE = "BUSY-TENTATIVE";
     public static final String FBTYPE_BUSY_UNAVAILABLE = "BUSY-UNAVAILABLE";
+    public static final String FBTYPE_NODATA = "X-ZIMBRA-FREEBUSY-NODATA";
 
     // FBTYPE values used by Microsoft Outlook
     public static final String FBTYPE_OUTLOOK_FREE = "FREE";
@@ -357,14 +367,15 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     public static final String FBTYPE_OUTLOOK_TENTATIVE = "TENTATIVE";
     public static final String FBTYPE_OUTLOOK_OUTOFOFFICE = "OOF";
 
-    private static String sBusyOrder[] = new String[4];
+    private static String sBusyOrder[] = new String[5];
     
     static {
         // The lower index, the busier. 
         sBusyOrder[0] = IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE;
         sBusyOrder[1] = IcalXmlStrMap.FBTYPE_BUSY;
         sBusyOrder[2] = IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE;
-        sBusyOrder[3] = IcalXmlStrMap.FBTYPE_FREE;
+        sBusyOrder[3] = IcalXmlStrMap.FBTYPE_NODATA;
+        sBusyOrder[4] = IcalXmlStrMap.FBTYPE_FREE;
     }
 
     public static String chooseBusier(String freeBusy1, String freeBusy2) {
@@ -442,6 +453,9 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
 			if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
 				continue;
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_NODATA)) {
+                // Treat no-data case same as free, because other apps probably won't understand a non-standard fbtype value.
+                continue;
 			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
 				toRet.append("FREEBUSY;FBTYPE=BUSY:");   // default is BUSY, but let's be explicit about it and set FBTYPE to BUSY
 			} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {

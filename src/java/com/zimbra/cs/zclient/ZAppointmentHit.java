@@ -38,7 +38,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public static final String FBA_BUSY = "B";
     public static final String FBA_TENTATIVE = "T";
     public static final String FBA_UNAVAILABLE = "U";
-    public static final String FBA_OUTOFOFFICE = "O";
+    public static final String FBA_NODATA= "N";
 
     public static final String TRANSP_OPAQUE = "O";
     public static final String TRANSP_TRANSPARENT = "T";
@@ -158,8 +158,8 @@ public class ZAppointmentHit implements ZSearchHit {
             case UNAVAILABLE:
                 mFreeBusyActual = FBA_UNAVAILABLE;
                 break;
-            case OUT_OF_OFFICE:
-                mFreeBusyActual = FBA_OUTOFOFFICE;
+            case NODATA:
+                mFreeBusyActual = FBA_NODATA;
                 break;
             default:
                 mFreeBusyActual = FBA_FREE;
@@ -440,8 +440,8 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean isFreeBusyActualFree() { return FBA_FREE.equals(mFreeBusyActual); }
     public boolean isFreeBusyActualBusy() { return FBA_BUSY.equals(mFreeBusyActual); }
     public boolean isFreeBusyActualTentative() { return FBA_TENTATIVE.equals(mFreeBusyActual); }
-    public boolean isFreeBusyActualOufOfOffice() { return FBA_OUTOFOFFICE.equals(mFreeBusyActual); }
     public boolean isFreeBusyActualUnavailable() { return FBA_UNAVAILABLE.equals(mFreeBusyActual); }
+    public boolean isFreeBusyActualNoData() { return FBA_NODATA.equals(mFreeBusyActual); }
 
     // transp
     public String getTransparency() { return mTransparency; }
