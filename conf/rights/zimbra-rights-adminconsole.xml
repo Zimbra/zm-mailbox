@@ -2354,6 +2354,7 @@
     <r n="adminConsoleAccountsThemesTabRights"/>
     <r n="listAccount"/>
     <r n="viewAccountAdminUI"/>
+    <r n="get.account.zimbraIsSystemResource"/>
   </rights>
 </right>
 
