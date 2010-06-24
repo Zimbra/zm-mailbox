@@ -128,6 +128,7 @@ public class AdminRights {
     public static AdminRight R_checkHealth;
     public static AdminRight R_checkRightGrp;
     public static AdminRight R_checkRightUsr;
+    public static AdminRight R_checkSoftwareUpdates;
     public static AdminRight R_configureAdminUI;
     public static AdminRight R_configureCosConstraint;
     public static AdminRight R_configureExternalAuth;
@@ -522,6 +523,7 @@ public class AdminRights {
         R_checkHealth                          = rm.getAdminRight(Right.RT_checkHealth);
         R_checkRightGrp                        = rm.getAdminRight(Right.RT_checkRightGrp);
         R_checkRightUsr                        = rm.getAdminRight(Right.RT_checkRightUsr);
+        R_checkSoftwareUpdates                 = rm.getAdminRight(Right.RT_checkSoftwareUpdates);
         R_configureAdminUI                     = rm.getAdminRight(Right.RT_configureAdminUI);
         R_configureCosConstraint               = rm.getAdminRight(Right.RT_configureCosConstraint);
         R_configureExternalAuth                = rm.getAdminRight(Right.RT_configureExternalAuth);
