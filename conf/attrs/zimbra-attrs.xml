@@ -335,7 +335,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>COS zimbraID</desc>
 </attr>
 
-<attr id="15" name="zimbraMailStatus" type="enum" value="enabled,disabled" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable">
+<attr id="15" name="zimbraMailStatus" type="enum" value="enabled,disabled" cardinality="single" optionalIn="mailRecipient,groupMail" flags="domainAdminModifiable">
   <desc>mail delivery status (enabled/disabled)</desc>
 </attr>
 
@@ -356,7 +356,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>name of the domain</desc>
 </attr>
 
-<attr id="20" name="zimbraMailAlias" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient" flags="accountInfo">
+<attr id="20" name="zimbraMailAlias" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient,groupMail" flags="accountInfo">
   <desc>RFC822 email address of this recipient for accepting mail</desc>
 </attr>
 
