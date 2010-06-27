@@ -256,6 +256,7 @@ abstract class ImapRequest {
      * It may also be used when generating a parse exception. */
     void setTag(String tag)  { mTag = tag; }
 
+
     String readContent(boolean[] acceptable) throws ImapParseException {
         return readContent(acceptable, false);
     }
@@ -410,13 +411,16 @@ abstract class ImapRequest {
 
 
     static final boolean NONZERO = false, ZERO_OK = true;
+
     String readNumber() throws ImapParseException  { return readNumber(ZERO_OK); }
+
     String readNumber(boolean zeroOK) throws ImapParseException {
         String number = readContent(NUMBER_CHARS);
         if (number.startsWith("0") && (!zeroOK || number.length() > 1))
             throw new ImapParseException(mTag, "invalid number: " + number);
         return number;
     }
+
     int parseInteger(String number) throws ImapParseException {
         try {
             return Integer.parseInt(number);
@@ -424,6 +428,7 @@ abstract class ImapRequest {
             throw new ImapParseException(mTag, "number out of range: " + number);
         }
     }
+
     long parseLong(String number) throws ImapParseException {
         try {
             return Long.parseLong(number);
@@ -431,6 +436,7 @@ abstract class ImapRequest {
             throw new ImapParseException(mTag, "number out of range: " + number);
         }
     }
+
 
     byte[] readBase64(boolean skipEquals) throws ImapParseException {
         // in some cases, "=" means to just return null and be done with it
@@ -452,6 +458,7 @@ abstract class ImapRequest {
         }
     }
 
+
     String readSequence(boolean specialsOK) throws ImapParseException {
         return validateSequence(readContent(SEQUENCE_CHARS), specialsOK);
     }
@@ -464,7 +471,7 @@ abstract class ImapRequest {
 
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
         // "$" is OK per RFC 5182 [SEARCHRES]
-        if (value.equals("$") && specialsOK && extensionEnabled("X-DRAFT-I05-SEARCHRES"))
+        if (value.equals("$") && specialsOK && extensionEnabled("SEARCHRES"))
             return value;
 
         int i, last = LAST_PUNCT;
@@ -493,12 +500,15 @@ abstract class ImapRequest {
         return value;
     }
 
+
     String readFolder() throws IOException, ImapParseException {
         return readFolder(false);
     }
+
     String readFolderPattern() throws IOException, ImapParseException {
         return readFolder(true);
     }
+
     private String readFolder(boolean isPattern) throws IOException, ImapParseException {
         String raw = readAstring(null, isPattern ? PATTERN_CHARS : ASTRING_CHARS);
         if (raw == null || raw.indexOf("&") == -1)
@@ -510,6 +520,7 @@ abstract class ImapRequest {
             return raw;
         }
     }
+
 
     private static Set<String> SYSTEM_FLAGS = new HashSet<String>(Arrays.asList("ANSWERED", "FLAGGED", "DELETED", "SEEN", "DRAFT"));
 
@@ -546,6 +557,7 @@ abstract class ImapRequest {
             skipChar(')');
         return tags;
     }
+
 
     private Date readDate() throws ImapParseException {
         return readDate(false, false);
@@ -632,6 +644,7 @@ abstract class ImapRequest {
         cal.set(Calendar.MONTH, month);
     }
 
+
     Map<String, String> readParameters(boolean nil) throws IOException, ImapParseException {
         if (peekChar() != '(') {
             if (!nil)
@@ -651,6 +664,7 @@ abstract class ImapRequest {
         skipChar(')');
         return params;
     }
+
 
     int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapParseException {
         boolean list = peekChar() == '(';
@@ -751,6 +765,7 @@ abstract class ImapRequest {
         pspec.setHeaders(headers);
         return pspec;
     }
+
 
     private static final Map<String, String> NEGATED_SEARCH = new HashMap<String, String>();
         static {
