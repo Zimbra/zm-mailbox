@@ -23,6 +23,8 @@ import javax.activation.DataSource;
 
 import com.zimbra.common.mime.MimeConstants;
 
+// TODO: Consolidate this class with com.zimbra.cs.mime.MailboxBlobDataSource.
+// Not doing it now to minimize impact on 6.0.x. 
 public class MailboxBlobDataSource implements DataSource {
     
     private MailboxBlob mBlob;

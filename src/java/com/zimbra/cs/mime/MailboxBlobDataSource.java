@@ -27,19 +27,21 @@ import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
-import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
-public class BlobDataSource implements DataSource {
+// TODO: Consolidate this class with com.zimbra.cs.store.MailboxBlobDataSource.
+// Not doing it now to minimize impact on 6.0.x. 
+public class MailboxBlobDataSource implements DataSource {
 
-    private Blob mBlob;
+    private MailboxBlob mBlob;
     private String mContentType;
 
-    public BlobDataSource(Blob blob) {
+    public MailboxBlobDataSource(MailboxBlob blob) {
         mBlob = blob;
     }
 
-    public BlobDataSource(Blob blob, String ct) {
+    public MailboxBlobDataSource(MailboxBlob blob, String ct) {
         this(blob);
         mContentType = ct;
     }
@@ -62,5 +64,4 @@ public class BlobDataSource implements DataSource {
     public OutputStream getOutputStream() {
         throw new UnsupportedOperationException();
     }
-
 }
