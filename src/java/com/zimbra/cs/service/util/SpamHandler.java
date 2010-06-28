@@ -44,7 +44,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.BlobDataSource;
+import com.zimbra.cs.mime.MailboxBlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.util.JMSession;
@@ -161,7 +161,7 @@ public class SpamHandler {
         
         MailboxBlob blob = msg.getBlob();
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new BlobDataSource(blob)));
+        mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(blob)));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mmp.addBodyPart(mbp);

@@ -74,7 +74,7 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
-import com.zimbra.cs.mime.BlobDataSource;
+import com.zimbra.cs.mime.MailboxBlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -670,7 +670,7 @@ public class ParseMimeMessage {
         ctxt.incrementSize("attached message", msg.getSize());
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
+        mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(msg.getBlob())));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mbp.setContentID(contentID);
@@ -749,7 +749,7 @@ public class ParseMimeMessage {
         String ct = doc.getContentType();
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new BlobDataSource(doc.getBlob(), ct)));
+        mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(doc.getBlob(), ct)));
         mbp.setHeader("Content-Type", new ContentType(ct).setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", doc.getName()).toString());
         mbp.setContentID(contentID);

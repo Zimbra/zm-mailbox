@@ -20,21 +20,31 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.file.Volume;
 
 public class TestDocument extends TestCase {
 
     private static final String NAME_PREFIX = TestDocument.class.getSimpleName();
     private static final String USER_NAME = "user1";
     
+    private long mOriginalCompressionThreshold;
+    private boolean mOriginalCompressBlobs;
+    
     @Override public void setUp()
     throws Exception {
         cleanUp();
+        
+        Volume vol = Volume.getCurrentMessageVolume();
+        mOriginalCompressBlobs = vol.getCompressBlobs();
+        mOriginalCompressionThreshold = vol.getCompressionThreshold();
     }
     
     /**
@@ -48,7 +58,7 @@ public class TestDocument extends TestCase {
         // Create first revision.
         String content = "one";
         ParsedDocument pd = new ParsedDocument(
-            new ByteArrayInputStream(content.getBytes()), "testDeleteRevisions.txt", "text/plain", System.currentTimeMillis(), USER_NAME);
+            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions.txt", "text/plain", System.currentTimeMillis(), USER_NAME);
         Document doc = mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.TYPE_DOCUMENT);
         int docId = doc.getId();
         byte type = doc.getType();
@@ -60,7 +70,7 @@ public class TestDocument extends TestCase {
         // Add a second revision.
         content = "two";
         pd = new ParsedDocument(
-            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions.txt", "text/plain", System.currentTimeMillis(), USER_NAME);
+            new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions2.txt", "text/plain", System.currentTimeMillis(), USER_NAME);
         doc = mbox.addDocumentRevision(null, docId, pd);
         assertEquals(2, mbox.getAllRevisions(null, docId, type).size());
         assertEquals(2, getBlobCount(blobDir, docId));
@@ -90,6 +100,22 @@ public class TestDocument extends TestCase {
         return blobFile.getParentFile();
     }
     
+    /**
+     * Confirms that saving a document to a compressed volume works correctly (bug 48363). 
+     */
+    public void testCompressedVolume()
+    throws Exception {
+        Volume vol = Volume.getCurrentMessageVolume();
+        Volume.update(vol.getId(), vol.getType(), vol.getName(), vol.getRootPath(),
+            vol.getMboxGroupBits(), vol.getMboxBits(), vol.getFileGroupBits(), vol.getFileBits(),
+            true, 1);
+        String content = "<wiklet class='TOC' format=\"template\" bodyTemplate=\"_TocBodyTemplate\" itemTemplate=\"_TocItemTemplate\">abc</wiklet>";
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        WikiItem wiki = mbox.createWiki(null, Mailbox.ID_FOLDER_NOTEBOOK, NAME_PREFIX + "-testCompressedVolume",
+            "Unit Test", new ByteArrayInputStream(content.getBytes()));
+        assertEquals("abc", wiki.getFragment());
+    }
+    
     @Override public void tearDown()
     throws Exception {
         cleanUp();
@@ -102,7 +128,15 @@ public class TestDocument extends TestCase {
         // Delete documents.
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         for (MailItem item : mbox.getItemList(null, MailItem.TYPE_DOCUMENT)) {
-            mbox.delete(null, item.getId(), item.getType());
+            if (item.getName().contains(NAME_PREFIX)) {
+                mbox.delete(null, item.getId(), item.getType());
+            }
         }
+        
+        // Restore volume compression settings.
+        Volume vol = Volume.getCurrentMessageVolume();
+        Volume.update(vol.getId(), vol.getType(), vol.getName(), vol.getRootPath(),
+            vol.getMboxGroupBits(), vol.getMboxBits(), vol.getFileGroupBits(), vol.getFileBits(),
+            mOriginalCompressBlobs, mOriginalCompressionThreshold);
     }
 }

@@ -35,10 +35,11 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StoreManager;
 
 public class ParsedDocument {
-	private Blob mBlob;
+    private Blob mBlob;
     private int mSize;
     private String mDigest;
     private String mContentType;
@@ -75,7 +76,7 @@ public class ParsedDocument {
             assert(handler != null);
 
             if (handler.isIndexingEnabled())
-                handler.init(new FileDataSource(blob.getFile()));
+                handler.init(new BlobDataSource(mBlob, ctype));
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
             handler.setSize(mSize);
