@@ -148,7 +148,7 @@ public class UncompressedFileCache<K> {
     throws IOException {
         // Write the uncompressed file and calculate the digest.
         CalculatorStream calc = new CalculatorStream(new GZIPInputStream(new FileInputStream(compressedFile)));
-        File tempFile = File.createTempFile(UncompressedFileCache.class.getSimpleName(), null);
+        File tempFile = File.createTempFile(UncompressedFileCache.class.getSimpleName(), null, mCacheDir);
         FileUtil.uncompress(calc, tempFile,  sync);
         String digest = calc.getDigest();
         sLog.debug("Uncompressed %s to %s, digest=%s.", compressedFile.getPath(), tempFile.getPath(), digest);
