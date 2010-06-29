@@ -50,6 +50,9 @@ public class MimeConstants {
     public static final String CT_TEXT_WILD = "text/.*";
     public static final String CT_XML_WILD = "xml/.*";
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
+    public static final String CT_APPLICATION_ZIMBRA_DOC = "application/x-zimbra-doc";
+    public static final String CT_APPLICATION_ZIMBRA_SLIDES = "application/x-zimbra-slides";
+    public static final String CT_APPLICATION_ZIMBRA_SPREADSHEET = "application/x-zimbra-xls";
 
     // encodings
     public static final String ET_7BIT = "7bit";
