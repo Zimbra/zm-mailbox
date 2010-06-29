@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -1167,6 +1168,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					}
 				} else {
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
+
+                    if(ctxt.item.getType() == MailItem.TYPE_DOCUMENT) {
+                        String contentType = ((Document)ctxt.item).getContentType();
+                        if(contentType != null && (contentType.indexOf(MimeConstants.CT_APPLICATION_ZIMBRA_DOC) >= 0 || contentType.indexOf(MimeConstants.CT_APPLICATION_ZIMBRA_SLIDES) >= 0 || contentType.indexOf(MimeConstants.CT_APPLICATION_ZIMBRA_SPREADSHEET) >= 0)) {
+                            url += "?fmt=html&preview=1";
+                        }
+                    }
+
 				}
 				if (url != null) {
                     if((ctxt.item.getId() == WIKI_FOLDER_ID)) {
