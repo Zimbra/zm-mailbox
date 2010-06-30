@@ -234,6 +234,7 @@ public class LuceneViewer {
             return;
         }
         
+        // note: only stored fields wil be returned
         for (Field field : (List<Field>)doc.getFields()) {
             String fieldName = field.name();
             // String value = field.stringValue();
@@ -244,8 +245,9 @@ public class LuceneViewer {
             outputLn("    Field [" + fieldName + "]: " + field.toString());
             String[] values = doc.getValues(fieldName);
             if (values != null) {
+                int i = 0;
                 for (String value : values) {
-                    output("         " + value);
+                    output("         " + "(" + i++ + ") " + value);
                     if (isDate) {
                         Date dt = DateField.stringToDate(value);
                         String d = dt.toString()+" ("+dt.getTime()+")";
@@ -291,8 +293,8 @@ public class LuceneViewer {
              * for each term, print the 
              * <document, frequency, <position>* > tuples for a term. 
              * 
-             * document:  document in which the Term appear
-             * frequency: number of time the Term appear in the document
+             * document:  document in which the Term appears
+             * frequency: number of time the Term appears in the document
              * position:  position for each appearance in the document
              * 
              * e.g. doc.add(new Field("field", "one two three two four five", Field.Store.YES, Field.Index.ANALYZED));

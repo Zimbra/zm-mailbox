@@ -1543,6 +1543,7 @@ public final class ZimbraQuery {
     public static class TextQuery extends BaseQuery
     {
         private ArrayList<String> mTokens;
+        private int mSlop;  // sloppiness for PhraseQuery
 
         private LinkedList<String> mOredTokens;
         private String mWildcardTerm;
@@ -1579,7 +1580,13 @@ public final class ZimbraQuery {
             // This is probably fine for western languages, but it likely creates problems with custom analyzers
             // used for Asian languages.  TODO investigate this issue.
             if (text.charAt(text.length()-1) != '*' || (qType != ZimbraQueryParser.TO && qType != ZimbraQueryParser.CC && qType != ZimbraQueryParser.FROM)) {
-                TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
+                TokenStream source;
+                if (analyzer instanceof ZimbraAnalyzer) {
+                    source = ((ZimbraAnalyzer)analyzer).tokenStreamSearching(QueryTypeString(qType), new StringReader(text));
+                    if (source instanceof ZimbraAnalyzer.AddressTokenFilter) // should we check for filed name also? probably not
+                        mSlop = 1;
+                } else
+                    source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
                 org.apache.lucene.analysis.Token t;
                 
                 while(true) {
@@ -1704,7 +1711,7 @@ public final class ZimbraQuery {
                     lop.addClause(this.getQueryOperatorString()+mOrigText,  q,calcTruth(truth));
                 } else if (mTokens.size() > 1) {
                     PhraseQuery p = new PhraseQuery();
-                    p.setSlop(0); // TODO configurable?
+                    p.setSlop(mSlop); // TODO configurable?
                     for (int i=0; i<mTokens.size(); i++) 
                         p.add(new Term(fieldName, mTokens.get(i)));
                     String qos = this.getQueryOperatorString();

@@ -155,7 +155,22 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         protected boolean isTokenChar(char c) { return true; }
     }
 
+    // for indexing
     public TokenStream tokenStream(String fieldName, Reader reader) {
+        return tokenStreamInternal(fieldName, reader, true);
+    }
+    
+    // for searching
+    public TokenStream tokenStreamSearching(String fieldName, Reader reader) {
+        return tokenStreamInternal(fieldName, reader, false);
+    }
+    
+    /*
+     * indexing: (bug 44191, see comments for AddressTokenFilter)
+     *    true: we are indexing
+     *    false: we are searching
+     */
+    private TokenStream tokenStreamInternal(String fieldName, Reader reader, boolean indexing) {
         if (fieldName.equals(LuceneFields.L_H_MESSAGE_ID))
             return new DontTokenizer(reader);
         
@@ -177,7 +192,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                     || fieldName.equals(LuceneFields.L_H_X_ENV_TO)
                     ) 
         {
-            return new AddressTokenFilter(new AddrCharTokenizer(reader));
+            return new AddressTokenFilter(new AddrCharTokenizer(reader), indexing);
         } else if (fieldName.equals(LuceneFields.L_CONTACT_DATA)) {
             return new ContactDataFilter(new AddrCharTokenizer(reader)); // for bug 48146
             // return new AddrCharTokenizer(reader);        // for bug 41512
@@ -663,7 +678,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             return t;
         }
     }
-
+    
     /***
      * 
      * @author tim
@@ -680,12 +695,218 @@ public class ZimbraAnalyzer extends StandardAnalyzer
      */
     public static class AddressTokenFilter extends MultiTokenFilter
     {
-        AddressTokenFilter(TokenFilter in) {
+                
+        /*
+         * bug 44191
+         * 
+         * The fix for bug 30638 (change 119098) broke searching fields using this filter,
+         * if the search string is a full email address.  
+         * (see https://bugzilla.zimbra.com/show_bug.cgi?id=42874#c23)
+         * 
+         * Fields using AddressTokenFilter are:
+         *     LuceneFields.L_H_FROM
+         *     LuceneFields.L_H_TO
+         *     LuceneFields.L_H_CC
+         *     LuceneFields.L_H_X_ENV_FROM
+         *     LuceneFields.L_H_X_ENV_TO
+         * 
+         * This is because an email address, e.g., user1@zimbra.com is tokenized to:
+         * 
+         * pre-change-119098 (i.e. FRANKLIN)
+         *     user1@zimbra.com
+         *     user1
+         *     @zimbra.com
+         *
+         * post-change-119098 (i.e. in GNR and leter)
+         *     user1@zimbra.com
+         *     @zimbra
+         *     user1
+         *     @zimbra.com
+         *     zimbra.com
+         *
+         * bug 44191 is:
+         *     The email address is indexed with the sequence of tokens produced by AddressTokenFilter,
+         *     and searched with the same sequence of terms using a Lucene PhraseQuery with slop 0
+         *     (i.e. exact match).  Using an index built in FRANKLIN, the GNR code cannot find terms 
+         *     "@zimbra" and "zimbra.com".   The way PhraseQuery (with slop=0) works is that it has 
+         *     to match all terms, in the same sequence, otherwise no hit.
+         *
+         *     Reindexing the whole mailbox on all mailboxes will fix the problem, but it is expensive.
+         * 
+         * We put a fix in 6_0_5 (bug 42874) to reindex all contacts.  That fixed a mail filter 
+         * problem when the filter is "Address in" "{from|to|cc|bcc}" "in" "My Contacts", because the 
+         * search for that is a "to:{email address}" query.
+         * 
+         * In GNR, we need to be able to find items indexed with the pre-change-119098 way, 
+         * without having to reindex the entire mailbox.
+         * 
+         * This is the solution for bug 44191:
+         * In FRANKLIN: no change, indexing and searching with the pre-change-119098 way.
+         * 
+         * In GNR(and later):
+         *   - indexing: use the post-change-119098 way (for bug 30638, so searching by the "main" domain works)
+         *   - searching: use the pre-change-119098 way
+         *       This is because it just so happens that Terms produced/indexed by the pre-change-119098 code 
+         *       can always be found by PhraseQuery with sloppiness set to 1, with index built by either 
+         *       the pre-change-119098 or post-change-119098 way.
+         *
+         */
+        
+        // whether to produce token with the main domain
+        // true: post-change-119098
+        // false: pre-change-119098
+        boolean mWantMainDomain;
+        
+        public AddressTokenFilter(TokenFilter in, boolean wantMainDomain) {
+            super(in);
+            mIncludeSeparatorChar = true;
+            mMaxSplits = 4;
+            mWantMainDomain = wantMainDomain;
+        }
+        public AddressTokenFilter(TokenStream in, boolean wantMainDomain) {
+            super(in);
+            mIncludeSeparatorChar = true;
+            mMaxSplits = 4;
+            mWantMainDomain = wantMainDomain;
+        }
+
+        protected int getNextSplit(String s) {
+            return s.indexOf("@");
+        }
+        
+        LinkedList<org.apache.lucene.analysis.Token> mSplitStrings = null;
+        
+        /**
+         * On first call, we have one toplevel'token' from our parent filter
+         * The only interesting case is when there's an @ sign such as:
+         *        foo@a.b.c.d
+         *
+         */
+        public org.apache.lucene.analysis.Token nextSplit()
+        {
+            if (mSplitStrings == null) {
+                mSplitStrings = new LinkedList<org.apache.lucene.analysis.Token>();
+                
+                String termText = mCurToken.termText();
+                // split on the "@"
+                String lhs = termText.substring(0, mNextSplitPos);
+                
+                // yes, we want to include the @!
+                String rhs = termText.substring(mNextSplitPos);
+                
+                if (mWantMainDomain) {
+                    // now, split the left part on the "."
+                    String[] lhsParts = lhs.split("\\.");
+                    if (lhsParts.length > 1) {
+                        for (String s : lhsParts) {
+                            mSplitStrings.addLast(
+                                new org.apache.lucene.analysis.Token(
+                                    s,
+                                    mCurToken.startOffset(),
+                                    mCurToken.endOffset(),
+                                    mCurToken.type()));
+                        }
+                    }
+                    
+                    // now, split the right part on the "."
+                    String[] rhsParts = rhs.split("\\.");
+                    if (rhsParts.length > 1) {
+                        // for bug 30638
+                        mSplitStrings.addLast(
+                                              new org.apache.lucene.analysis.Token(
+                                                  rhsParts[rhsParts.length-2],                                                                               
+                                                  mCurToken.startOffset(),
+                                                  mCurToken.endOffset(),
+                                                  mCurToken.type()));
+                    }
+                    
+                } else {
+                    // now, split the first part on the "."
+                    String[] lhsParts = lhs.split("\\.");
+                    if (lhsParts.length > 1) {
+                        int curOffset = mCurToken.startOffset();
+                        for (String s : lhsParts) {
+                            mSplitStrings.addLast(
+                                new org.apache.lucene.analysis.Token(
+                                    s,
+                                    curOffset,
+                                    curOffset+s.length(),
+                                    mCurToken.type()));
+                            
+                            curOffset+=s.length()+1;
+                        }
+                    }
+                }
+
+                
+
+                // the full part to the left of the @ 
+                mSplitStrings.addLast(
+                    new org.apache.lucene.analysis.Token(
+                        lhs,
+                        mCurToken.startOffset(),
+                        mCurToken.startOffset()+mNextSplitPos,
+                        mCurToken.type()));
+                
+                // the full part to the right of the @
+                mSplitStrings.addLast(
+                    new org.apache.lucene.analysis.Token(
+                        rhs,
+                        mCurToken.startOffset()+mNextSplitPos,
+                        mCurToken.endOffset(),
+                        mCurToken.type()));
+                
+                if (mWantMainDomain) {
+                    // the full part to the right of the @, not including the @
+                    // see bug 30638
+                    if (rhs.length() > 1) {
+                        mSplitStrings.addLast(
+                            new org.apache.lucene.analysis.Token(
+                                rhs.substring(1),
+                                mCurToken.startOffset()+mNextSplitPos,
+                                mCurToken.endOffset(),
+                                mCurToken.type()));
+                    }
+                }
+            }
+            
+            // split another piece, save our state, and return...
+            mNumSplits++;
+            org.apache.lucene.analysis.Token toRet = mSplitStrings.removeFirst();
+            
+            if (mSplitStrings.isEmpty()) {
+                mSplitStrings = null;
+                mCurToken = null;
+            }
+            
+            return toRet;
+        }
+    }
+    
+
+    // TODO: ========== begin dead code, delete ==========
+    /***
+     * 
+     * @author tim
+     *
+     * Email address tokenizer.  For example:
+     *   "Tim Brennan" <tim@bar.foo.com>
+     * Is tokenized as:
+     *    Tim
+     *    Brennan
+     *    tim
+     *    tim@foo.com
+     *    @foo.com
+     *    foo  -- for bug 30638
+     */
+    public static class AddressTokenFilter_GNR extends MultiTokenFilter
+    {
+        public AddressTokenFilter_GNR(TokenFilter in) {
             super(in);
             mIncludeSeparatorChar = true;
             mMaxSplits = 4;
         }
-        AddressTokenFilter(TokenStream in) {
+        public AddressTokenFilter_GNR(TokenStream in) {
             super(in);
             mIncludeSeparatorChar = true;
             mMaxSplits = 4;
@@ -781,7 +1002,99 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             return toRet;
         }
     }
+    
+    /***
+     * 
+     * @author tim
+     *
+     * Email address tokenizer.  For example:
+     *   "Tim Brennan" <tim@foo.com>
+     * Is tokenized as:
+     *    Tim
+     *    Brennan
+     *    tim
+     *    tim@foo.com
+     *    @foo.com
+     */
+   public static class AddressTokenFilter_FRANKLIN extends MultiTokenFilter
+    {
+       public AddressTokenFilter_FRANKLIN(TokenFilter in) {
+            super(in);
+            mIncludeSeparatorChar = true;
+            mMaxSplits = 4;
+       }
+       public AddressTokenFilter_FRANKLIN(TokenStream in) {
+            super(in);
+            mIncludeSeparatorChar = true;
+            mMaxSplits = 4;
+        }
 
+        protected int getNextSplit(String s) {
+            return s.indexOf("@");
+        }
+        
+        LinkedList<org.apache.lucene.analysis.Token> mSplitStrings = null;
+        
+        public org.apache.lucene.analysis.Token nextSplit()
+        {
+            if (mSplitStrings == null) {
+                mSplitStrings = new LinkedList<org.apache.lucene.analysis.Token>();
+                
+                String termText = mCurToken.termText();
+                // split on the "@"
+                String lhs = termText.substring(0, mNextSplitPos);
+                
+                // yes, we want to include the @!
+                String rhs = termText.substring(mNextSplitPos);
+                
+                // now, split the first part on the "."
+                String[] lhsParts = lhs.split("\\.");
+                if (lhsParts.length > 1) {
+                    int curOffset = mCurToken.startOffset();
+                    for (String s : lhsParts) {
+                        mSplitStrings.addLast(
+                            new org.apache.lucene.analysis.Token(
+                                s,
+                                curOffset,
+                                curOffset+s.length(),
+                                mCurToken.type()));
+                        
+                        curOffset+=s.length()+1;
+                    }
+                }
+                
+                mSplitStrings.addLast(
+                    new org.apache.lucene.analysis.Token(
+                        lhs,
+                        mCurToken.startOffset(),
+                        mCurToken.startOffset()+mNextSplitPos,
+                        mCurToken.type()));
+                
+                mSplitStrings.addLast(
+                    new org.apache.lucene.analysis.Token(
+                        rhs,
+                        mCurToken.startOffset()+mNextSplitPos,
+                        mCurToken.endOffset(),
+                        mCurToken.type()));
+            }
+            
+            // split another piece, save our state, and return...
+            mNumSplits++;
+            org.apache.lucene.analysis.Token toRet = mSplitStrings.removeFirst();
+            
+            if (mSplitStrings.isEmpty()) {
+                mSplitStrings = null;
+                mCurToken = null;
+            }
+            
+            return toRet;
+        }
+    }
+    // TODO: ========== end dead code, delete ==========
+    
+    
+    
+    
     public static class FilenameTokenizer extends CharTokenizer
     {
         public FilenameTokenizer(Reader reader) {
@@ -809,7 +1122,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     /**
      * Tokenizer for email addresses.  Skips&Splits at \r\n<>\",\'
      */
-    private static class AddrCharTokenizer extends CharTokenizer
+    public static class AddrCharTokenizer extends CharTokenizer
     {
         public AddrCharTokenizer(Reader reader) {
             super(reader);
@@ -925,12 +1238,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             
             System.out.println("    " + t.termText());
             
-            if (i < expected.length) {
-                if (!expected[i].equals(t.termText()))
+            if (expected != null) {
+                if (i < expected.length) {
+                    if (!expected[i].equals(t.termText()))
+                        ok = false;
+                } else
                     ok = false;
-            } else
-                ok = false;
-            i++;
+                i++;
+            }
         } 
         try {
             tokenStream.close();
@@ -946,7 +1261,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         testTokenizer(new StandardTokenizer(new StringReader(input)), input, expected);
         testTokenizer(new AddrCharTokenizer(new StringReader(input)), input, expected);
         testTokenizer(new ContactDataFilter(new AddrCharTokenizer(new StringReader(input))), input, expected);
-        testTokenizer(new AddressTokenFilter(new AddrCharTokenizer(new StringReader(input))), input, expected);
     }
     
     private static void testTokenizers() {
