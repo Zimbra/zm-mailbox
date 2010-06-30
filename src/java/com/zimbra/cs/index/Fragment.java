@@ -23,8 +23,8 @@ package com.zimbra.cs.index;
  */
 public class Fragment {
 
-	public enum Source { MESSAGE, APPOINTMENT, NOTEBOOK };
-	
+    public enum Source { MESSAGE, APPOINTMENT, NOTEBOOK };
+
     private static final int MAX_FRAGMENT_LENGTH = 150;
 
     private static final String CALENDAR_SEPARATOR = "*~*~*~*~*~*~*~*~*~*";
@@ -119,7 +119,7 @@ public class Fragment {
             } while (fragment.startsWith("|"));
         } else if (fragment != backup)
             fragment = backup;
-        
+
         return fragment;
     }
 
@@ -152,12 +152,12 @@ public class Fragment {
     }
 
     public static String getFragment(String content, boolean hasCalendar) {
-    	Source item = Source.MESSAGE;
-    	if (hasCalendar)
-    		item = Source.APPOINTMENT;
-    	return getFragment(content, item);
+        Source item = Source.MESSAGE;
+        if (hasCalendar)
+            item = Source.APPOINTMENT;
+        return getFragment(content, item);
     }
-    
+
     public static String getFragment(String content, Source item) {
         String remainder = content.trim();
         String backup    = remainder;
@@ -165,75 +165,74 @@ public class Fragment {
         String result;
 
         if (item == Source.NOTEBOOK) {
-        	result = content;
+            result = content;
         } else {
+            // skip the "Where:", "When:", "Organizer:", etc. headers for Outlook calendar invites
+            if (item == Source.APPOINTMENT)
+                remainder = skipFragmentHeader(remainder, true);
 
-        	// skip the "Where:", "When:", "Organizer:", etc. headers for Outlook calendar invites
-        	if (item == Source.APPOINTMENT)
-        		remainder = skipFragmentHeader(remainder, true);
-
-        	// skip "On foosday, Herbie wrote:\n> blah..."
-        	remainder = skipQuotedText(remainder, true);
-        	boolean elided = false, mainMessage = true;
-        	while (fragment.length() <= Fragment.MAX_FRAGMENT_LENGTH) {
-        		// detect quoted stuff and skip it (or unquote it if we're fragmenting a message that's nothing but quotes)
-        		if (remainder.startsWith(">") || remainder.startsWith("|")) {
-        			if (mainMessage) {
-        				remainder = skipQuotedText(remainder, false);
-        				elided = true;
-        			} else
-        				remainder = remainder.substring(1).trim();
-        		}
-        		// if we're done, we're done
-        		if (remainder.equals(""))
-        			break;
-        		// DASH-DASH-SPACE-RETURN is the standard signature delimiter
-        		int returnIndex = remainder.indexOf('\n');
-        		if ((returnIndex == 3 && remainder.startsWith("-- ")) || (returnIndex == 4 && remainder.startsWith("-- \r")))
-        			break;
-        		// check for another "On foosday, Herbie wrote:\n> blah..." and skip (unless we're fragmenting a message that's nothing but quotes)
-        		String line = (returnIndex == -1 ? remainder : remainder.substring(0, returnIndex)).trim();
-        		if (mainMessage && line.endsWith(":") && returnIndex != -1) {
-        			String trimmed = skipQuotedText(remainder, false);
-        			if (trimmed != remainder) {
-        				remainder = trimmed;
-        				elided = true;
-        				continue;
-        			}
-        		}
-        		// sanitize for XML and collapse whitespace and some chars that people make lines out of
-        		line = compressLine(line);
-        		// check for stopwords that mean that what follows is a quoted message
-        		if (line.equalsIgnoreCase(STOPWORD_REPLY_1) || line.equalsIgnoreCase(STOPWORD_REPLY_2) ||
-        				line.equalsIgnoreCase(STOPWORD_REPLY_3) || line.equalsIgnoreCase(STOPWORD_REPLY_4) ||
-        				line.equalsIgnoreCase(STOPWORD_FORWARD_1) || line.equalsIgnoreCase(STOPWORD_FORWARD_2)) {
-        			if (fragment.length() != 0 || returnIndex == -1)
-        				break;
-        			// if we're here, the message was nothing but quoted text, so leave in the "-- Original Message --" and add a few more lines
-        			fragment.append(line);
-        			remainder = skipFragmentHeader(remainder.substring(returnIndex).trim(), false);
-        			elided = mainMessage = false;
-        			continue;
-        		}
-        		// and now we can finally add the line to the fragment we're building up
-        		if (fragment.length() != 0) {
-        			if (elided)
-        				fragment.append(" ...");
-        			fragment.append(' ');
-        		}
-        		fragment.append(line);
-        		remainder = (returnIndex == -1 ? "" : remainder.substring(returnIndex).trim());
-        		elided = false;
-        	}
-        	result = fragment.toString();
+            // skip "On foosday, Herbie wrote:\n> blah..."
+            remainder = skipQuotedText(remainder, true);
+            boolean elided = false, mainMessage = true;
+            while (fragment.length() <= Fragment.MAX_FRAGMENT_LENGTH) {
+                // detect quoted stuff and skip it (or unquote it if we're fragmenting a message that's nothing but quotes)
+                if (remainder.startsWith(">") || remainder.startsWith("|")) {
+                    if (mainMessage) {
+                        remainder = skipQuotedText(remainder, false);
+                        elided = true;
+                    } else
+                        remainder = remainder.substring(1).trim();
+                }
+                // if we're done, we're done
+                if (remainder.equals(""))
+                    break;
+                // DASH-DASH-SPACE-RETURN is the standard signature delimiter
+                int returnIndex = remainder.indexOf('\n');
+                if ((returnIndex == 3 && remainder.startsWith("-- ")) || (returnIndex == 4 && remainder.startsWith("-- \r")))
+                    break;
+                // check for another "On foosday, Herbie wrote:\n> blah..." and skip (unless we're fragmenting a message that's nothing but quotes)
+                String line = (returnIndex == -1 ? remainder : remainder.substring(0, returnIndex)).trim();
+                if (mainMessage && line.endsWith(":") && returnIndex != -1) {
+                    String trimmed = skipQuotedText(remainder, false);
+                    if (trimmed != remainder) {
+                        remainder = trimmed;
+                        elided = true;
+                        continue;
+                    }
+                }
+                // sanitize for XML and collapse whitespace and some chars that people make lines out of
+                line = compressLine(line);
+                // check for stopwords that mean that what follows is a quoted message
+                if (line.equalsIgnoreCase(STOPWORD_REPLY_1) || line.equalsIgnoreCase(STOPWORD_REPLY_2) ||
+                        line.equalsIgnoreCase(STOPWORD_REPLY_3) || line.equalsIgnoreCase(STOPWORD_REPLY_4) ||
+                        line.equalsIgnoreCase(STOPWORD_FORWARD_1) || line.equalsIgnoreCase(STOPWORD_FORWARD_2)) {
+                    if (fragment.length() != 0 || returnIndex == -1)
+                        break;
+                    // if we're here, the message was nothing but quoted text, so leave in the "-- Original Message --" and add a few more lines
+                    fragment.append(line);
+                    remainder = skipFragmentHeader(remainder.substring(returnIndex).trim(), false);
+                    elided = mainMessage = false;
+                    continue;
+                }
+                // and now we can finally add the line to the fragment we're building up
+                if (fragment.length() != 0) {
+                    if (elided)
+                        fragment.append(" ...");
+                    fragment.append(' ');
+                }
+                fragment.append(line);
+                remainder = (returnIndex == -1 ? "" : remainder.substring(returnIndex).trim());
+                elided = false;
+            }
+            result = fragment.toString();
         }
-        
+
         // almost done!  just make sure we haven't accidentally trimmed off everything (in which case we'll just use the original content)
         if (result.equals(""))
             result = compressLine(backup);
         boolean isTruncated = (result.length() > Fragment.MAX_FRAGMENT_LENGTH);
         result = result.substring(0, isTruncated ? Fragment.MAX_FRAGMENT_LENGTH : result.length());
-        
+
         // try to break at word boundaries and add an ellipsis if we've truncated the fragment
         // can't use the actual ellipsis character ('?') because of broken fonts on Linux
         if (isTruncated) {
