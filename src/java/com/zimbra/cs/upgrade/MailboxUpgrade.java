@@ -48,23 +48,33 @@ public class MailboxUpgrade {
 		// original RGB colors
 		map.put(0x10000ffL,(byte)1); // blue
 		map.put(0x1008284L,(byte)2); // cyan
+        map.put(0x1848284L,(byte)8); // gray
 		map.put(0x1008200L,(byte)3); // green
+        map.put(0x1ff8000L,(byte)9); // orange
 		map.put(0x1840084L,(byte)4); // purple
+        map.put(0x1ff0084L,(byte)7); // pink
 		map.put(0x1ff0000L,(byte)5); // red
 		map.put(0x1848200L,(byte)6); // yellow
-		map.put(0x1ff0084L,(byte)7); // pink
-		map.put(0x1848284L,(byte)8); // gray
-		map.put(0x1ff8000L,(byte)9); // orange
 		// newer RGB colors
 		map.put(0x19EB6F5L,(byte)1); // blue
 		map.put(0x1A4E6E6L,(byte)2); // cyan
+        map.put(0x1D3D3D3L,(byte)8); // gray
 		map.put(0x197C8B1L,(byte)3); // green
+        map.put(0x1FDBC55L,(byte)9); // orange
+        map.put(0x1FE9BD3L,(byte)7); // pink
 		map.put(0x1BA86E5L,(byte)4); // purple
 		map.put(0x1FC9696L,(byte)5); // red
 		map.put(0x1FFF6B3L,(byte)6); // yellow
-		map.put(0x1FE9BD3L,(byte)7); // pink
-		map.put(0x1D3D3D3L,(byte)8); // gray
-		map.put(0x1FDBC55L,(byte)9); // orange
+        // newest RGB colors
+        map.put(0x10252d4L,(byte)1); // blue
+        map.put(0x1008284L,(byte)2); // cyan
+        map.put(0x1848284L,(byte)8); // gray
+        map.put(0x12ca10bL,(byte)3); // green
+        map.put(0x1f57802L,(byte)9); // orange
+        map.put(0x1b027aeL,(byte)7); // pink
+        map.put(0x1492ba1L,(byte)4); // purple
+        map.put(0x1e51717L,(byte)5); // red
+        map.put(0x1848200L,(byte)6); // yellow
 	}
 
 	//
