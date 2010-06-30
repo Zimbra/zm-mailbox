@@ -24,6 +24,7 @@ import javax.servlet.ServletException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -58,71 +59,83 @@ public class ContactFolderFormatter extends Formatter {
         Delimiter d = Delimiter.Field;
         if (v != null && v.equals("2"))
         	d = Delimiter.Contact;
+        v = context.params.get("all");
+        boolean allContacts = false;
+        if (v != null)
+            allContacts = true;
         
         ItemIdFormatter ifmt = new ItemIdFormatter(context.authAccount, context.targetAccount, false);
         context.resp.setContentType(CONTENT_TYPE);
         OutputStream out = new BufferedOutputStream(context.resp.getOutputStream());
 		
         Iterator<? extends MailItem> contacts = null;
-        try {
-            contacts = this.getMailItems(context, 0, 0, 0);
-            while (contacts.hasNext()) {
-                MailItem item = contacts.next();
-                if (!(item instanceof Contact))
+        contacts = this.getMailItems(context, 0, 0, 0);
+        while (contacts.hasNext())
+            printContact(contacts.next(), out, ifmt, d);
+        if (allContacts) {
+            for (Folder folder : context.targetMailbox.getFolderList(context.opContext, SortBy.NONE)) {
+                // local contact folders only
+                if (folder == context.target || 
+                        folder.getType() == MailItem.TYPE_MOUNTPOINT ||
+                        folder.getDefaultView() != MailItem.TYPE_CONTACT)
                     continue;
-                // send metadata of the Contact
-                // itemId
-                out.write(MailConstants.A_ID.getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                out.write(ifmt.formatItemId(item).getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                // folderId
-                out.write(MailConstants.A_FOLDER.getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                out.write(ifmt.formatItemId(item.getFolderId()).getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                // date
-                out.write(MailConstants.A_DATE.getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                out.write(Long.toString(item.getDate()).getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                // revision
-                out.write(MailConstants.A_REVISION.getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                out.write(Integer.toString(item.getSavedSequence()).getBytes("UTF-8"));
-                out.write(FIELD_DELIMITER);
-                // fileAsStr
-                try {
-                    String fileAsStr = ((Contact)item).getFileAsString();
-                    out.write(MailConstants.A_FILE_AS_STR.getBytes("UTF-8"));
-                    out.write(FIELD_DELIMITER);
-                    out.write(fileAsStr.getBytes("UTF-8"));
-                } catch (ServiceException se) {
-                }
-
-                Map<String,String> fields = ((Contact) item).getFields();
-                for (String k : fields.keySet()) {
-                    out.write(FIELD_DELIMITER);
-                    out.write(k.getBytes("UTF-8"));
-                    out.write(FIELD_DELIMITER);
-                    out.write(fields.get(k).getBytes("UTF-8"));
-                }
-                switch (d) {
-                case Field:
-                    out.write(FIELD_DELIMITER);
-                    break;
-                case Contact:
-                    out.write(CONTACT_DELIMITER);
-                    break;
-                }
+                for (MailItem item : this.getMailItemsFromFolder(context, folder, 0, 0, 0))
+                    printContact(item, out, ifmt, d);
             }
-            out.flush();
-        } finally {
-            if (contacts instanceof QueryResultIterator)
-                ((QueryResultIterator) contacts).finished();
         }
+        out.flush();
     }
 
+    private void printContact(MailItem item, OutputStream out, ItemIdFormatter ifmt, Delimiter d) throws IOException {
+        if (!(item instanceof Contact))
+            return;
+        // send metadata of the Contact
+        // itemId
+        out.write(MailConstants.A_ID.getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        out.write(ifmt.formatItemId(item).getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        // folderId
+        out.write(MailConstants.A_FOLDER.getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        out.write(ifmt.formatItemId(item.getFolderId()).getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        // date
+        out.write(MailConstants.A_DATE.getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        out.write(Long.toString(item.getDate()).getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        // revision
+        out.write(MailConstants.A_REVISION.getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        out.write(Integer.toString(item.getSavedSequence()).getBytes("UTF-8"));
+        out.write(FIELD_DELIMITER);
+        // fileAsStr
+        try {
+            String fileAsStr = ((Contact)item).getFileAsString();
+            out.write(MailConstants.A_FILE_AS_STR.getBytes("UTF-8"));
+            out.write(FIELD_DELIMITER);
+            out.write(fileAsStr.getBytes("UTF-8"));
+        } catch (ServiceException se) {
+        }
+
+        Map<String,String> fields = ((Contact) item).getFields();
+        for (String k : fields.keySet()) {
+            out.write(FIELD_DELIMITER);
+            out.write(k.getBytes("UTF-8"));
+            out.write(FIELD_DELIMITER);
+            out.write(fields.get(k).getBytes("UTF-8"));
+        }
+        switch (d) {
+        case Field:
+            out.write(FIELD_DELIMITER);
+            break;
+        case Contact:
+            out.write(CONTACT_DELIMITER);
+            break;
+        }
+    }
+	
 	@Override
 	public String getType() {
 		return "cf";

@@ -159,7 +159,7 @@ public abstract class Formatter {
         }
     }
 
-    private Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime, long chunkSize) throws ServiceException {
+    protected Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime, long chunkSize) throws ServiceException {
         switch (folder.getDefaultView()) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
