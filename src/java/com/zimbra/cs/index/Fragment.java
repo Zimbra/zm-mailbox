@@ -125,7 +125,7 @@ public class Fragment {
 
     // StringUtil.stripControlCharacters(line).replaceAll("\\s+", " ").replaceAll("---+", "--").replaceAll("===+", "==");
     private static String compressLine(String line) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char last = ' ', lastButOne = 0;
         for (int i = 0; i < line.length() && sb.length() <= MAX_FRAGMENT_LENGTH + 5; i++) {
             char c = line.charAt(i);
@@ -161,7 +161,7 @@ public class Fragment {
     public static String getFragment(String content, Source item) {
         String remainder = content.trim();
         String backup    = remainder;
-        StringBuffer fragment = new StringBuffer();
+        StringBuilder fragment = new StringBuilder();
         String result;
 
         if (item == Source.NOTEBOOK) {
