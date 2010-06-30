@@ -29,6 +29,8 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
@@ -56,6 +58,20 @@ public class RemoteCollection extends Collection {
             mMailboxId = MailboxManager.getInstance().getMailboxByAccount(target).getId();
     }
 
+    public RemoteCollection(DavContext ctxt, String path, Account user) throws DavException, ServiceException {
+        super(path, user.getName());
+        ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();
+        ZMailbox mbox = getRemoteMailbox(zat, user.getId());
+        ZFolder folder = mbox.getFolderByPath(path);
+        if (folder == null)
+            throw MailServiceException.NO_SUCH_FOLDER(path);
+        mOwnerId = user.getId();
+        mId = new ItemId(folder.getId(), mOwnerId).getId();
+        mPath = path;
+        mSubject = folder.getName();
+        mType = MailItem.TYPE_FOLDER;
+    }
+    
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
