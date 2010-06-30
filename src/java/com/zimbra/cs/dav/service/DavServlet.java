@@ -483,7 +483,8 @@ public class DavServlet extends ZimbraServlet {
 		DavProtocol.HEADER_DEPTH,
 		DavProtocol.HEADER_CONTENT_TYPE,
 		DavProtocol.HEADER_ETAG,
-		DavProtocol.HEADER_IF_MATCH
+		DavProtocol.HEADER_IF_MATCH,
+        DavProtocol.HEADER_DESTINATION
 	};
 	
 	private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
