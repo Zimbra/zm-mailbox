@@ -69,11 +69,6 @@ import net.fortuna.ical4j.model.property.XProperty;
 public class DefaultTnefToICalendar implements TnefToICalendar {
 
     static Log sLog = ZimbraLog.tnef;
-    private boolean debugEnabled;
-
-    public DefaultTnefToICalendar() {
-        debugEnabled = false;
-    }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.util.tnef.TnefToICalendar#convert(java.io.InputStream, net.fortuna.ical4j.data.ContentHandler)
@@ -87,10 +82,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 
         try {
             tnefStream = new TNEFInputStream(tnefInput);
-	        schedView = new SchedulingViewOfTnef(tnefStream);
-            if (debugEnabled) {
-                System.out.println(schedView.toXmlStringBuffer());
-            }
+            schedView = new SchedulingViewOfTnef(tnefStream);
 
             // String oemCodePage = schedView.getOEMCodePage();
             String msgClass = schedView.getMessageClass();
@@ -511,14 +503,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         }
         return conversionSuccessful;
     }
-
-	public void setDebugEnabled(boolean dbgEnabled) {
-		debugEnabled = dbgEnabled;
-	}
-
-	public boolean isDebugEnabled() {
-		return debugEnabled;
-	}
 
     private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             Role role, CuType cuType, PartStat partstat, boolean rsvp)

@@ -101,9 +101,6 @@ public class TestMain {
             throw ServiceException.FAILURE("No converter!", null);
 
         TestContentHandler icalGen = new TestContentHandler(debug);
-        if (converter instanceof DefaultTnefToICalendar) {
-            ((DefaultTnefToICalendar) converter).setDebugEnabled(debug);
-        }
 
         successful = converter.convert(mm, tnefPart.getInputStream(), icalGen);
         if (successful) {
