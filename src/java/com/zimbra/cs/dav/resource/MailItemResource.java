@@ -208,7 +208,7 @@ public abstract class MailItemResource extends DavResource {
 	
 	/* Moves this resource to another Collection. */
 	public void move(DavContext ctxt, Collection dest) throws DavException {
-		if (mFolderId == dest.getId())
+		if (mFolderId == dest.getId() && mOwnerId.compareTo(dest.getOwner()) == 0)
 			return;
 		try {
 			Mailbox mbox = getMailbox(ctxt);

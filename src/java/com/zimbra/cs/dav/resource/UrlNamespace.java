@@ -120,7 +120,9 @@ public class UrlNamespace {
 	    UrlComponents uc = parseUrl(url);
 		if (uc.user == null || uc.path == null)
             throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
-		return getResourceAt(ctxt, uc.user, uc.path);
+		DavResource rs = getResourceAt(ctxt, uc.user, uc.path);
+		rs.mUri = uc.path;
+		return rs;
 	}
 	
     public static DavResource getPrincipalAtUrl(DavContext ctxt, String url) throws DavException {
@@ -340,6 +342,14 @@ public class UrlNamespace {
         if (account == null)
             throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
+        if (ctxt.getUser().compareTo(user) != 0 || !Provisioning.onLocalServer(account)) {
+            try {
+                return new RemoteCollection(ctxt, path, account);
+            } catch (MailServiceException.NoSuchItemException e) {
+                return null;
+            }
+        }
+        
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         String id = null;
         int index = path.indexOf('?');

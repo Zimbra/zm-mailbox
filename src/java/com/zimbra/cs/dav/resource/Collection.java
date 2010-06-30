@@ -65,7 +65,7 @@ public class Collection extends MailItemResource {
         mMailboxId = f.getMailboxId();
     }
 
-    private Collection(String name, String acct) throws DavException {
+    public Collection(String name, String acct) throws DavException {
         super(name, acct);
         long now = System.currentTimeMillis();
         setCreationDate(now);

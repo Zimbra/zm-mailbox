@@ -76,15 +76,19 @@ public class Move extends DavMethod {
             throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
         return destination;
 	}
-	protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
-	    String destinationUrl = getDestination(ctxt);
-	    try {
-	        DavResource r = UrlNamespace.getResourceAtUrl(ctxt, destinationUrl);
-	        if (r instanceof Collection)
-	            return ((Collection)r);
-	        return UrlNamespace.getCollectionAtUrl(ctxt, destinationUrl);
-	    } catch (Exception e) {
-	        throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
-	    }
-	}
+    protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
+        String destinationUrl = getDestination(ctxt);
+        if (!destinationUrl.endsWith("/")) {
+            int slash = destinationUrl.lastIndexOf('/');
+            destinationUrl = destinationUrl.substring(0, slash+1);
+        }
+        try {
+            DavResource r = UrlNamespace.getResourceAtUrl(ctxt, destinationUrl);
+            if (r instanceof Collection)
+                return ((Collection)r);
+            return UrlNamespace.getCollectionAtUrl(ctxt, destinationUrl);
+        } catch (Exception e) {
+            throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
+        }
+    }
 }
