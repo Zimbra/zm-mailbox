@@ -66,7 +66,7 @@ public class CreateDomain extends AdminDocumentHandler {
                     checkRight(zsc, context, null, Admin.R_createTopDomain);
                     
                     // then create a pseudo domain for checking the createSubDomain right
-                    parentDomain = (Domain)PseudoTarget.createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
+                    parentDomain = PseudoTarget.createPseudoDomain(prov);
                     break;
                 } else {
                     domainName = domainName.substring(nextDot+1);

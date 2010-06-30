@@ -165,6 +165,16 @@ public class PseudoTarget {
     }
     
     /**
+     * short hand for PseudoTarget.createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
+     * @param prov
+     * @return
+     * @throws ServiceException
+     */
+    public static Domain createPseudoDomain(Provisioning prov) throws ServiceException {
+        return (Domain)createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
+    }
+    
+    /**
      * construct a pseudo target
      * 
      * if targetType is a domain-ed type: account. cr, dl:
