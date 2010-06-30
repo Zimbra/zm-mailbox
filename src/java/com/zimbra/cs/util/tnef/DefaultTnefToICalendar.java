@@ -48,7 +48,6 @@ import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCa
 import com.zimbra.cs.util.tnef.mapi.AppointmentStateFlags;
 import com.zimbra.cs.util.tnef.mapi.BusyStatus;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
-import com.zimbra.cs.util.tnef.mapi.TZRule;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import java.util.EnumSet;
 import net.fortuna.ical4j.model.parameter.Cn;
@@ -278,6 +277,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 Property recurrenceProp =
                         recurDef.icalRecurrenceProperty(isAllDayEvent, false);
                 IcalUtil.addProperty(icalOutput, recurrenceProp);
+                for (DateTime exDate : recurDef.getDeletedInstances()) {
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.EXDATE,
+                            exDate, startTimeTZinfo, isAllDayEvent);
+                }
             }
 
             if (importance != null) {

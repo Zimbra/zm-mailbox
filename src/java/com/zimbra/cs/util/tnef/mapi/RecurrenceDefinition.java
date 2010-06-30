@@ -111,8 +111,20 @@ public class RecurrenceDefinition {
     private long dayOfMonth;
     private long weekDayOccurrenceNumber;
     private long occurrenceCount;
-    private long EndDate;   // Minutes since 1601 adjusted to the local timezone
+
+    // Minutes since 1601 Date portion of DTSTART in local time
+    private long StartDate;
+
+    // Minutes since 1601 Date portion of Start of LAST instance in local time
+    // Infinite if set to 0x5AE980DF.
+    private long EndDate;
+
+    // The number of minutes, since day start 00:00, after which each occurrence starts.
+    // e.g. the value for midnight is 0 (zero) and the value for 12:00 P.M.
+    // is 720.
     private long StartTimeOffset;  // localtime minutes since start of current day
+    private DateTime deletedInstances[];
+    private DateTime modifiedInstances[];
 
     /**
      *
@@ -122,6 +134,9 @@ public class RecurrenceDefinition {
      */
     public RecurrenceDefinition(RawInputStream ris,
             TimeZoneDefinition tz) throws IOException {
+        boolean haveDayMask = false;
+        boolean haveDayOfMonth = false;
+        boolean haveWeekDayOccurNum = false;
         this.tzDef = tz;
         int ReaderVersion = ris.readU16();  // Should be 0x3004
         int WriterVersion = ris.readU16();  // Should be 0x3004
@@ -136,8 +151,105 @@ public class RecurrenceDefinition {
         // recurrences. The following table lists the values for this field based on recurrence type.
         Period = ris.readU32();
         long SlidingFlag = ris.readU32(); // Should be 0 unless this is a task
-        StringBuffer debugInfo = new StringBuffer("RecurrenceDefinition\n");
+        long dayMask = 0;
+        dayOfMonth = 0;
+        weekDayOccurrenceNumber = 0;
+
+        // Process PatternSpecificType data
+        switch (patternType) {
+            case DAY:
+                break; // no PatternTypeSpecific data in this case
+            case WEEK:
+                dayMask = ris.readU32();
+                haveDayMask = true;
+                break;
+            case MONTH:
+            case MONTH_END:
+            case HJ_MONTH:
+            case HJ_MONTH_END:
+                dayOfMonth = ris.readU32();
+                haveDayOfMonth = true;
+                break;
+            case MONTH_NTH:
+            case HJ_MONTH_NTH:
+                dayMask = ris.readU32();
+                haveDayMask = true;
+                weekDayOccurrenceNumber = ris.readU32(); // 5 means last one
+                haveWeekDayOccurNum = true;
+                break;
+            default:
+                throw new IOException("Unexpected PatternType in Recurrence Definition");
+        }
+
+        // valid combinations?  Single bit/ weekend bits/ weekday bits
+        DayOfWeekMask = EnumSet.noneOf(DayOfWeek.class);
+        if (haveDayMask) {
+            if ( (dayMask & 0x00000001) == 0x00000001) {
+                DayOfWeekMask.add(DayOfWeek.SU);
+            }
+            if ( (dayMask & 0x00000002) == 0x00000002) {
+                DayOfWeekMask.add(DayOfWeek.MO);
+            }
+            if ( (dayMask & 0x00000004) == 0x00000004) {
+                DayOfWeekMask.add(DayOfWeek.TU);
+            }
+            if ( (dayMask & 0x00000008) == 0x00000008) {
+                DayOfWeekMask.add(DayOfWeek.WE);
+            }
+            if ( (dayMask & 0x00000010) == 0x00000010) {
+                DayOfWeekMask.add(DayOfWeek.TH);
+            }
+            if ( (dayMask & 0x00000020) == 0x00000020) {
+                DayOfWeekMask.add(DayOfWeek.FR);
+            }
+            if ( (dayMask & 0x00000040) == 0x00000040) {
+                DayOfWeekMask.add(DayOfWeek.SA);
+            }
+        }
+
+        readEndType(ris);
+        occurrenceCount = ris.readU32();
+        readFirstDayOfWeek(ris);
+        int DeletedInstanceCount = (int) ris.readU32();
+        long delMidnightMinsSince1601[] = new long[DeletedInstanceCount];
+        for (int cnt = 0;cnt < DeletedInstanceCount; cnt++) {
+            delMidnightMinsSince1601[cnt] = ris.readU32();
+        }
+        int ModifiedInstanceCount = (int) ris.readU32();
+        long modMidnightMinsSince1601[] = new long[ModifiedInstanceCount];
+        for (int cnt = 0;cnt < ModifiedInstanceCount; cnt++) {
+            modMidnightMinsSince1601[cnt] = ris.readU32();
+        }
+        
+        StartDate = ris.readU32();
+        EndDate = ris.readU32();
+        Date sDate = IcalUtil.localMinsSince1601toDate(StartDate, tzDef);
+        Date eDate = IcalUtil.localMinsSince1601toDate(EndDate, tzDef);
+
+        long ReaderVersion2 = ris.readU32();
+        // WriterVersion2 relates approximately to version of Outlook
+        // (or equivalent support level) that created this.
+        // e.g. Outlook 2000 --> 0x3006, XP -->0x3007, 2003 --> 0x3008
+        long WriterVersion2 = ris.readU32();
+        
+        StartTimeOffset = ris.readU32();
+        long EndTimeOffset = ris.readU32();
+        int ExceptionCount = ris.readU16();  // Should be same as ModifiedInstanceCount?
+
+        deletedInstances = new DateTime[(int) DeletedInstanceCount];
+        for (int cnt = 0;cnt < DeletedInstanceCount; cnt++) {
+            deletedInstances[cnt] = IcalUtil.localMinsSince1601toDate(
+                    delMidnightMinsSince1601[cnt] + StartTimeOffset, tzDef);
+        }
+
+        modifiedInstances = new DateTime[(int) ModifiedInstanceCount];
+        for (int cnt = 0;cnt < ModifiedInstanceCount; cnt++) {
+            modifiedInstances[cnt] = IcalUtil.localMinsSince1601toDate(
+                    modMidnightMinsSince1601[cnt] + StartTimeOffset, tzDef);
+        }
+
         if (sLog.isDebugEnabled()) {
+            StringBuffer debugInfo = new StringBuffer("RecurrenceDefinition\n");
             if (ReaderVersion != 0x3004) {
                 debugInfo.append("    Unexpected ReaderVersion=")
                         .append(ReaderVersion).append("\n");
@@ -158,129 +270,48 @@ public class RecurrenceDefinition {
                     .append(Period).append("\n");
             debugInfo.append("    SlidingFlag=")
                     .append(SlidingFlag).append("\n");
-        }
-        long dayMask = 0;
-        dayOfMonth = 0;
-        weekDayOccurrenceNumber = 0;
-
-        // Process PatternSpecificType data
-        switch (patternType) {
-            case DAY:
-                break; // no PatternTypeSpecific data in this case
-            case WEEK:
-                dayMask = ris.readU32();
-                if (sLog.isDebugEnabled()) {
-                    debugInfo.append("    dayMask=0x")
-                            .append(Long.toHexString(dayMask)).append("\n");
-                }
-                break;
-            case MONTH:
-            case MONTH_END:
-            case HJ_MONTH:
-            case HJ_MONTH_END:
-                dayOfMonth = ris.readU32();
-                if (sLog.isDebugEnabled()) {
+            if (haveDayMask) {
+                debugInfo.append("    dayMask=0x")
+                        .append(Long.toHexString(dayMask)).append(" - ")
+                        .append(DayOfWeekMask).append("\n");
+            }
+            if (haveDayOfMonth) {
                     debugInfo.append("    dayOfMonth=")
                             .append(dayOfMonth).append("\n");
-                }
-                break;
-            case MONTH_NTH:
-            case HJ_MONTH_NTH:
-                dayMask = ris.readU32();
-                weekDayOccurrenceNumber = ris.readU32(); // 5 means last one
-                debugInfo.append("    dayMask=0x")
-                        .append(Long.toHexString(dayMask)).append("\n");
+            }
+            if (haveDayOfMonth) {
                 debugInfo.append("    weekDayOccurrenceNumber=")
                         .append(weekDayOccurrenceNumber).append("\n");
-                break;
-            default:
-                throw new IOException("Unexpected PatternType in Recurrence Definition");
-        }
-
-        // valid combinations?  Single bit/ weekend bits/ weekday bits
-        DayOfWeekMask = EnumSet.noneOf(DayOfWeek.class);
-        if ( (dayMask & 0x00000001) == 0x00000001) {
-            DayOfWeekMask.add(DayOfWeek.SU);
-        }
-        if ( (dayMask & 0x00000002) == 0x00000002) {
-            DayOfWeekMask.add(DayOfWeek.MO);
-        }
-        if ( (dayMask & 0x00000004) == 0x00000004) {
-            DayOfWeekMask.add(DayOfWeek.TU);
-        }
-        if ( (dayMask & 0x00000008) == 0x00000008) {
-            DayOfWeekMask.add(DayOfWeek.WE);
-        }
-        if ( (dayMask & 0x00000010) == 0x00000010) {
-            DayOfWeekMask.add(DayOfWeek.TH);
-        }
-        if ( (dayMask & 0x00000020) == 0x00000020) {
-            DayOfWeekMask.add(DayOfWeek.FR);
-        }
-        if ( (dayMask & 0x00000040) == 0x00000040) {
-            DayOfWeekMask.add(DayOfWeek.SA);
-        }
-
-        readEndType(ris);
-        occurrenceCount = ris.readU32();
-        debugInfo.append("    dayOfWeekMask=")
-                .append(DayOfWeekMask).append("\n");
-        debugInfo.append("    EndType=")
-                .append(getEndType()).append("\n");
-        debugInfo.append("    occurrenceCount=")
-                .append(occurrenceCount).append("\n");
-        readFirstDayOfWeek(ris);
-        long DeletedInstanceCount = ris.readU32();
-        debugInfo.append("    firstDayOfWeek=")
-                .append(getFirstDayOfWeek()).append("\n");
-        debugInfo.append("    DeletedInstanceCount=")
-                .append(DeletedInstanceCount).append("\n");
-        for (int cnt = 1;cnt <= DeletedInstanceCount; cnt++) {
-            long fred = ris.readU32();
-            debugInfo.append("        DeletedInstance=")
-                    .append(fred).append("\n");
-        }
-        long ModifiedInstanceCount = ris.readU32();
-        debugInfo.append("    ModifedInstanceCount=")
-                .append(ModifiedInstanceCount).append("\n");
-        for (int cnt = 1;cnt <= ModifiedInstanceCount; cnt++) {
-            long fred = ris.readU32();
-            debugInfo.append("        ModifedInstance=")
-                    .append(fred).append("\n");
-        }
-        // Minutes since 1601 Date portion of DTSTART in local time
-        long StartDate = ris.readU32();
-        // Minutes since 1601 Date portion of Start of LAST instance in local time
-        // Infinite if set to 0x5AE980DF.
-        EndDate = ris.readU32();
-        Date sDate = IcalUtil.localMinsSince1601toDate(StartDate, tzDef);
-        Date eDate = IcalUtil.localMinsSince1601toDate(EndDate, tzDef);
-        debugInfo.append("    StartDate=").append(sDate)
-                .append("[").append(StartDate).append("]\n");
-        debugInfo.append("    EndDate(Start of last instance)=")
-                .append(eDate).append("[").append(EndDate).append("]\n");
-
-        long ReaderVersion2 = ris.readU32();
-        // WriterVersion2 relates approximately to version of Outlook
-        // (or equivalent support level) that created this.
-        // e.g. Outlook 2000 --> 0x3006, XP -->0x3007, 2003 --> 0x3008
-        long WriterVersion2 = ris.readU32();
-        debugInfo.append("    ReaderVersion2=0x")
-                .append(Long.toHexString(ReaderVersion2)).append("\n");
-        debugInfo.append("    WriterVersion2=0x")
-                .append(Long.toHexString(WriterVersion2)).append("\n");
-
-        // The number of minutes, since day start 00:00, after which each occurrence starts.
-        // e.g. the value for midnight is 0 (zero) and the value for 12:00 P.M.
-        // is 720.
-        StartTimeOffset = ris.readU32();
-        long EndTimeOffset = ris.readU32();
-        int ExceptionCount = ris.readU16();  // Should be same as ModifiedInstanceCount?
-        debugInfo.append("    StartTimeOffset=").append(StartTimeOffset).append("\n");
-        debugInfo.append("    EndTimeOffset=").append(EndTimeOffset).append("\n");
-        debugInfo.append("    ExceptionCount=").append(ExceptionCount).append("\n");
-
-        if (sLog.isDebugEnabled()) {
+            }
+            debugInfo.append("    EndType=")
+                    .append(getEndType()).append("\n");
+            debugInfo.append("    occurrenceCount=")
+                    .append(occurrenceCount).append("\n");
+            debugInfo.append("    firstDayOfWeek=")
+                    .append(getFirstDayOfWeek()).append("\n");
+            debugInfo.append("    DeletedInstanceCount=")
+                    .append(DeletedInstanceCount).append("\n");
+            for (Date currDate : deletedInstances) {
+                debugInfo.append("        DeletedInstance=")
+                        .append(currDate).append("\n");
+            }
+            debugInfo.append("    ModifedInstanceCount=")
+                    .append(ModifiedInstanceCount).append("\n");
+            for (Date currDate : modifiedInstances) {
+                debugInfo.append("        ModifiedInstance=")
+                        .append(currDate).append("\n");
+            }
+            debugInfo.append("    StartDate=").append(sDate)
+                    .append("[").append(StartDate).append("]\n");
+            debugInfo.append("    EndDate(Start of last instance)=")
+                    .append(eDate).append("[").append(EndDate).append("]\n");
+            debugInfo.append("    ReaderVersion2=0x")
+                    .append(Long.toHexString(ReaderVersion2)).append("\n");
+            debugInfo.append("    WriterVersion2=0x")
+                    .append(Long.toHexString(WriterVersion2)).append("\n");
+            debugInfo.append("    StartTimeOffset=").append(StartTimeOffset).append("\n");
+            debugInfo.append("    EndTimeOffset=").append(EndTimeOffset).append("\n");
+            debugInfo.append("    ExceptionCount=").append(ExceptionCount).append("\n");
             sLog.debug(debugInfo);
         }
 
@@ -381,6 +412,13 @@ public class RecurrenceDefinition {
      */
     public long getFirstDateTime() {
         return firstDateTime;
+    }
+
+    /**
+     * @return the deletedInstances
+     */
+    public DateTime[] getDeletedInstances() {
+        return deletedInstances;
     }
 
     /**
