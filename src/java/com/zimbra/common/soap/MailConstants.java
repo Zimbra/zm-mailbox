@@ -262,8 +262,8 @@ public class MailConstants {
     public static final QName AUTO_COMPLETE_RESPONSE = QName.get("AutoCompleteResponse", NAMESPACE);
     
     // contact ranking mgmt
-    public static final QName RESET_CONTACT_RANKING_REQUEST  = QName.get("ResetContactRankingRequest", NAMESPACE);
-    public static final QName RESET_CONTACT_RANKING_RESPONSE = QName.get("ResetContactRankingResponse", NAMESPACE);
+    public static final QName RANKING_ACTION_REQUEST  = QName.get("RankingActionRequest", NAMESPACE);
+    public static final QName RANKING_ACTION_RESPONSE = QName.get("RankingActionResponse", NAMESPACE);
     
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
