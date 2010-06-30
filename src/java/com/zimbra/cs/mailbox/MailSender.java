@@ -436,7 +436,10 @@ public class MailSender {
                 } catch (Exception e) {
                     ZimbraLog.smtp.error("unable to update contact rankings", e);
                 }
-                if (authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
+                saveNewContacts(mSaveContacts, octxt, authMailbox);
+                
+                // disable server side detection of new contacts
+                if (false && authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
                     Collection<InternetAddress> newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
                     saveNewContacts(newContacts, octxt, authMailbox);
                 }
