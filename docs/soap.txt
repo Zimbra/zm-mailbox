@@ -3273,11 +3273,14 @@ returns the effective permissions of the specified folder
 
 ---------------------------- 
 
-<ResetContactRankingRequest/>
+<RankingActionRequest>
+  <action op="reset|delete" [email="{email-address}"] />
+</RankingActionRequest>
 
-resets the contact ranking table for the account
+<RankingActionResponse/>
 
-<ResetContactRankingResponse/>
+reset - resets the contact ranking table for the account
+delete - delete the ranking information for the email address
 
 ----------------------------
   

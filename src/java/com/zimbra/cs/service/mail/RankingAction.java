@@ -24,13 +24,24 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.ContactRankings;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ResetContactRanking extends MailDocumentHandler {
+public class RankingAction extends MailDocumentHandler {
+    
+    public static final String OP_RESET = "reset";
+    public static final String OP_DELETE = "delete";
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT("");
-        ContactRankings.reset(account.getId());
-        return zsc.createElement(MailConstants.RESET_CONTACT_RANKING_RESPONSE);
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
+        if (operation.equals(OP_RESET)) {
+            ContactRankings.reset(account.getId());
+        } else if (operation.equals(OP_DELETE)) {
+            String email = action.getAttribute(MailConstants.A_EMAIL);
+            ContactRankings.remove(account.getId(), email);
+        }
+        return zsc.createElement(MailConstants.RANKING_ACTION_RESPONSE);
     }
 }

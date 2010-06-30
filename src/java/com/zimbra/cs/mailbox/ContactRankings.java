@@ -56,6 +56,16 @@ public class ContactRankings {
         rankings.mEntrySet.clear();
         rankings.writeToDatabase();
     }
+    public static void remove(String accountId, String email) throws ServiceException {
+        if (!LC.contact_ranking_enabled.booleanValue())
+            return;
+        ContactRankings rankings = new ContactRankings(accountId);
+        ContactEntry entry = rankings.mEntryMap.get(email);
+        if (entry != null)
+            rankings.remove(entry);
+        rankings.writeToDatabase();
+    }
+    
 	public static void increment(String accountId, Collection<? extends Address> addrs) throws ServiceException {
 		if (!LC.contact_ranking_enabled.booleanValue())
 			return;
