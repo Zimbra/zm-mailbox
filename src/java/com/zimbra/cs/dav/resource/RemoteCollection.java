@@ -62,16 +62,6 @@ public class RemoteCollection extends Collection {
     }
 
     @Override
-    public boolean isCollection() {
-        return true;
-    }
-
-    @Override
-    public int getId() {
-        return mRemoteId;
-    }
-    
-    @Override
     public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
         return Collections.emptyList();
     }

@@ -84,11 +84,6 @@ public class Collection extends MailItemResource {
     }
 
     @Override
-    public boolean isLocal() {
-        return mMailboxId != 0;
-    }
-
-    @Override
     public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
         ArrayList<DavResource> children = new ArrayList<DavResource>();
 
