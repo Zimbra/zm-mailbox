@@ -116,37 +116,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
             TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
             TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
-
-            String tzDesc = schedView.getTimeZoneDescription();
-            if (null != tzDesc) {
-                TimeZoneDefinition tzStructInfo =
-                        schedView.getTimeZoneStructInfo(tzDesc);
-                if (null != tzStructInfo) {
-                    // if the rules differ, tzStructInfo should win
-                    if (recurrenceTZinfo != null) {
-                        TZRule tzsRule = tzStructInfo.getEffectiveRule();
-                        if (tzsRule != null) {
-                            if (!tzsRule.equivalentRule(
-                                    recurrenceTZinfo.getEffectiveRule())) {
-                                sLog.debug(
-    "PidLidAppointmentTimeZoneDefinitionRecur effective rule differs from PidLidTimeZoneStruct rule - ignored");
-                                recurrenceTZinfo = tzStructInfo;
-                            }
-                        }
-                    }
-                    if (startTimeTZinfo == null) {
-                        startTimeTZinfo = tzStructInfo;
-                    }
-                }
-            }
-
-            if (recurrenceTZinfo == null) {
-                recurrenceTZinfo = startTimeTZinfo;
-            }
-            if (endTimeTZinfo == null) {
-                endTimeTZinfo = startTimeTZinfo;
-            }
-
             RecurrenceDefinition recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
 
             DateTime icalStartDate = schedView.getStartTime();
@@ -306,11 +275,16 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
                         icalEndDate, endTimeTZinfo, isAllDayEvent);
             }
+
+            // TODO: RECURRENCE-ID only makes sense in relation to a recurrence. It isn't
+            // just the original start date. Make sure we only output one if this is
+            // related to a recurring series.
             IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
                     recurrenceIdDateTime, startTimeTZinfo, isAllDayEvent);
+
             if (recurDef != null) {
                 Property recurrenceProp =
-                    recurDef.icalRecurrenceProperty(isAllDayEvent, false);
+                        recurDef.icalRecurrenceProperty(isAllDayEvent, false);
                 IcalUtil.addProperty(icalOutput, recurrenceProp);
             }
 

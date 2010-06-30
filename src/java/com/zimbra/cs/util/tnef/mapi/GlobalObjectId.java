@@ -61,7 +61,11 @@ public class GlobalObjectId {
             // v     C     a     l     -     U     i     d
             {0x76, 0x43, 0x61, 0x6C, 0x2D, 0x55, 0x69, 0x64, 0x01, 0x00, 0x00, 0x00};
     private String icalUid;
-    
+
+    private int origInstanceYear;
+    private int origInstanceMonth;
+    private int origInstanceDay;
+
     /**
      * Constructs a GlobalObjectId from a raw stream
      *
@@ -73,10 +77,9 @@ public class GlobalObjectId {
         byte[] allData = ris.toByteArray();
         RawInputStream risCopy = new RawInputStream(allData);
         risCopy.readBytes(16);   // ByteArrayID
-        // TODO: Expose these next 3 variables to help with recurrence-id algorithm
-        int origInstanceYear = risCopy.readU16();  // Note: if non-zero is BIG-ENDIAN!
-        int origInstanceMonth = risCopy.readU8();
-        int origInstanceDay = risCopy.readU8();
+        setOrigInstanceYear(risCopy);
+        setOrigInstanceMonth(risCopy);
+        setOrigInstanceDay(risCopy);
         risCopy.readBytes(8);   // CreationDateTime - a FileTime uint64
         risCopy.readBytes(8);   // Reserved - MS-OXCICAL recommends setting to zeros if creating
         long dataSize = risCopy.readU32();
@@ -120,5 +123,53 @@ public class GlobalObjectId {
     public String getIcalUid() {
         return icalUid;
     }
-    
+
+    /**
+     * @return the origInstanceYear
+     */
+    public int getOrigInstanceYear() {
+        return origInstanceYear;
+    }
+
+    /**
+     * @return the origInstanceMonth
+     */
+    public int getOrigInstanceMonth() {
+        return origInstanceMonth;
+    }
+
+    /**
+     * @return the origInstanceDay
+     */
+    public int getOrigInstanceDay() {
+        return origInstanceDay;
+    }
+
+    /**
+     * @param ris - the stream currently being processed
+     * @throws IOException 
+     */
+    private void setOrigInstanceYear(RawInputStream ris) throws IOException {
+        // Note: if non-zero is BIG-ENDIAN!
+        int firstByte = ris.readU8();
+        int secondByte = ris.readU8();
+        this.origInstanceYear = (firstByte << 8) + secondByte;
+    }
+
+    /**
+     * @param ris - the stream currently being processed
+     * @throws IOException 
+     */
+    private void setOrigInstanceMonth(RawInputStream ris) throws IOException {
+        this.origInstanceMonth = ris.readU8();
+    }
+
+    /**
+     * @param ris - the stream currently being processed
+     * @throws IOException 
+     */
+    private void setOrigInstanceDay(RawInputStream ris) throws IOException {
+        this.origInstanceDay = ris.readU8();
+    }
+
 }

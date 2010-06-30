@@ -16,12 +16,14 @@
 package com.zimbra.cs.util.tnef;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.zimbra.cs.util.tnef.mapi.GlobalObjectId;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
+import com.zimbra.cs.util.tnef.mapi.TZRule;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 
 import net.fortuna.ical4j.model.DateTime;
@@ -60,6 +62,11 @@ public class SchedulingViewOfTnef extends Message {
     private String messageClass;
     private GlobalObjectId globalObjectId;
     private GlobalObjectId cleanGlobalObjectId;
+    private boolean tzinfoInitialized;
+    private TimeZoneDefinition startTimeTZinfo;
+    private TimeZoneDefinition endTimeTZinfo;
+    private TimeZoneDefinition recurrenceTZinfo;
+    
     private EnumSet <AppointmentStateFlags> appointmentStateFlagsMask;
 
     public SchedulingViewOfTnef() {
@@ -71,6 +78,10 @@ public class SchedulingViewOfTnef extends Message {
         globalObjectId = null;
         cleanGlobalObjectId = null;
         appointmentStateFlagsMask = null;
+        tzinfoInitialized = false;
+        startTimeTZinfo = null;
+        endTimeTZinfo = null;
+        recurrenceTZinfo = null;
     }
 
     /**
@@ -143,35 +154,11 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public String getIcalUID() throws IOException {
-        // Canonical name: PidLidCleanGlobalObjectId
-        // Description: Contains the value of the PidLidGlobalObjectId property for an object that represents
-        // an exception to a recurring series, where the Year, Month, and Day fields are all zero.
-        // Property set: PSETID_Meeting {6ED8DA90-450B-101B-98DA-00AA003F1305}
-        // Property long ID (LID): 0x00000023
-        // Canonical name: PidLidGlobalObjectId
-        // Description: Contains the value of the PidLidGlobalObjectId property for an object that represents
-        // an exception to a recurring series.
-        // Property set: PSETID_Meeting {6ED8DA90-450B-101B-98DA-00AA003F1305}
-        // Property long ID (LID): 0x00000003
-        // Data type: PtypBinary, 0x0102
-        RawInputStream ris;
-        if (globalObjectId == null) {
-            MAPIPropName pName = new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), (long)0x23);
-            ris = getRawInputStreamValue(pName, 0);
-            if (ris != null) {
-                globalObjectId = new GlobalObjectId(ris);
-            }
-        }
+        getGlobalObjectId();
         if (globalObjectId != null) {
             return globalObjectId.getIcalUid();
         }
-        if (cleanGlobalObjectId == null) {
-            MAPIPropName pName = new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), (long)0x3);
-            ris = getRawInputStreamValue(pName, 0);
-            if (ris != null) {
-                cleanGlobalObjectId = new GlobalObjectId(ris);
-            }
-        }
+        getCleanGlobalObjectId();
         if (cleanGlobalObjectId != null) {
             return cleanGlobalObjectId.getIcalUid();
         }
@@ -321,10 +308,10 @@ public class SchedulingViewOfTnef extends Message {
             appointmentStateFlagsMask.add(AppointmentStateFlags.ASF_MEETING);
         }
         if ( (apptFlags & 0x00000002) == 0x00000002) {
-            appointmentStateFlagsMask.add(AppointmentStateFlags.ASF_MEETING);
+            appointmentStateFlagsMask.add(AppointmentStateFlags.ASF_RECEIVED);
         }
         if ( (apptFlags & 0x00000004) == 0x00000004) {
-            appointmentStateFlagsMask.add(AppointmentStateFlags.ASF_MEETING);
+            appointmentStateFlagsMask.add(AppointmentStateFlags.ASF_CANCELED);
         }
         return appointmentStateFlagsMask;
     }
@@ -450,9 +437,6 @@ public class SchedulingViewOfTnef extends Message {
     /**
      * Candidate properties :
      *
-     *  PidLidOldWhenStartWhole - Indicates the original value of the
-     *  PidLidAppointmentStartWhole property before a meeting update.
-     *
      * PidLidExceptionReplaceTime specifies UTC date and time
      * within a recurrence pattern that an exception will replace.
      *
@@ -461,12 +445,49 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getRecurrenceIdTime() throws IOException {
+        // Note: Was assuming PidLidOldWhenStartWhole was a good candidate
+        //       but that seems to be used for non-recurrence related objects
+        //       to give the previous start time of a single appointment.
         MAPIPropName PidLidExceptionReplaceTime
                 = PSETID_AppointmentPropName(0x8228);
         DateTime recurrenceIdTime = getUtcDateTime(PidLidExceptionReplaceTime, 0);
         if (recurrenceIdTime == null) {
-            MAPIPropName PidLidOldWhenStartWhole = PSETID_MeetingPropName(0x29);
-            recurrenceIdTime = getUtcDateTime(PidLidOldWhenStartWhole, 0);
+            getGlobalObjectId();
+            if (this.globalObjectId == null) {
+                return null;
+            }
+            int origYear = globalObjectId.getOrigInstanceYear();
+            if (origYear == 0) {
+                return null;
+            }
+            int origMonth = globalObjectId.getOrigInstanceMonth();
+            int origDay = globalObjectId.getOrigInstanceDay();
+            // PidLidStartRecurrenceTime identifies start time of the recurrence pattern.
+            MAPIPropName pnPidLidStartRecurrenceTime = PSETID_MeetingPropName(0xe);
+            Integer recurTime = this.getIntegerValue(pnPidLidStartRecurrenceTime, 0);
+            int secs = 0;
+            int mins = 0;
+            int hrs = 0;
+            if (recurTime != null) {
+                // bottom 6 bits are seconds, next 6 bits are minutes, rest is hours
+                secs = recurTime & 0x0000003f;
+                mins = (recurTime & 0x00000fc0) >>6;
+                hrs = (recurTime & 0xfffff000) >>12;
+            }
+            try {
+                String dateString;
+                if (recurrenceTZinfo == null) {
+                    dateString = String.format("%04d%02d%02dT%02d%02d%02dZ",
+                        origYear, origMonth, origDay, hrs, mins, secs);
+                    recurrenceIdTime = new DateTime(dateString);
+                } else {
+                    dateString = String.format("%04d%02d%02dT%02d%02d%02d",
+                        origYear, origMonth, origDay, hrs, mins, secs);
+                    recurrenceIdTime = new DateTime(dateString, recurrenceTZinfo.getTimeZone());
+                }
+            } catch (ParseException e) {
+                sLog.debug("Problem constructing recurrence-id time", e);
+            }
         }
         return recurrenceIdTime;
     }
@@ -505,83 +526,30 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
-     * PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies time zone
-     * information that indicates the time zone of the
-     * PidLidAppointmentStartWhole property.
-     *
-     * @return
+     * @return TimeZone information relevant to the start of an appointment.
      * @throws IOException
      */
     public TimeZoneDefinition getStartDateTimezoneInfo() throws IOException {
-        MAPIPropName PidLidAppointmentTimeZoneDefinitionStartDisplay =
-                this.PSETID_AppointmentPropName(0x825E);
-        RawInputStream tzRis = getRawInputStreamValue(
-                PidLidAppointmentTimeZoneDefinitionStartDisplay, 0);
-        if (tzRis == null) {
-            return null;
-        }
-        TimeZoneDefinition startTZDef = new TimeZoneDefinition(tzRis);
-        return startTZDef;
+        initTZinfo();
+        return startTimeTZinfo;
     }
 
     /**
-     * PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies time zone
-     * information that indicates the time zone of the
-     * PidLidAppointmentEndWhole property.
-     *
-     * @return
+     * @return TimeZone information relevant to the end of an appointment.
      * @throws IOException
      */
     public TimeZoneDefinition getEndDateTimezoneInfo() throws IOException {
-        MAPIPropName PidLidAppointmentTimeZoneDefinitionEndDisplay =
-                this.PSETID_AppointmentPropName(0x825F);
-        RawInputStream tzRis = getRawInputStreamValue(
-                PidLidAppointmentTimeZoneDefinitionEndDisplay, 0);
-        if (tzRis == null) {
-            return null;
-        }
-        TimeZoneDefinition endTZDef = new TimeZoneDefinition(tzRis);
-        return endTZDef;
+        initTZinfo();
+        return endTimeTZinfo;
     }
 
     /**
-     * PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
-     * that describes how to convert the meeting date and time on a recurring
-     * series to and from UTC.
-     * MS-OXOCAL says "If this property is set, but it has data that is
-     * inconsistent with the data that is represented by PidLidTimeZoneStruct,
-     * then the client uses PidLidTimeZoneStruct instead of this property."
-     *
-     * @return
+     * @return TimeZone information relevant to the rule of a recurrence.
      * @throws IOException
      */
     public TimeZoneDefinition getRecurrenceTimezoneInfo() throws IOException {
-        MAPIPropName PidLidAppointmentTimeZoneDefinitionRecur =
-                this.PSETID_AppointmentPropName(0x8260);
-        RawInputStream tzRis = getRawInputStreamValue(
-             PidLidAppointmentTimeZoneDefinitionRecur, 0);
-        if (tzRis == null) {
-            return null;
-        }
-        TimeZoneDefinition endTZDef = new TimeZoneDefinition(tzRis);
-        return endTZDef;
-    }
-
-    /**
-     * PidLidTimeZoneStruct Specifies time zone information for a recurring meeting.
-     *
-     * @param tzName 
-     * @return
-     * @throws IOException
-     */
-    public TimeZoneDefinition getTimeZoneStructInfo(String tzName) throws IOException {
-        MAPIPropName PidLidTimeZoneStruct = this.PSETID_AppointmentPropName(0x8233);
-        RawInputStream tzRis = getRawInputStreamValue(PidLidTimeZoneStruct, 0);
-        if (tzRis == null) {
-            return null;
-        }
-        TimeZoneDefinition tzDef = new TimeZoneDefinition(tzRis, tzName);
-        return tzDef;
+        initTZinfo();
+        return recurrenceTZinfo;
     }
 
     /**
@@ -823,6 +791,149 @@ public class SchedulingViewOfTnef extends Message {
      */
     public MAPIPropName PS_PUBLIC_STRINGS_PropName(String propName) {
         return new MAPIPropName(MSGUID.PS_PUBLIC_STRINGS.getJtnefGuid(), propName);
+    }
+
+    /**
+     * PidLidGlobalObjectId is The unique identifier of the Calendar object.
+     * After it is set for a Calendar object, the value of this property MUST NOT change.
+     * 
+     * @return value of PidLidGlobalObjectId property
+     */
+    private GlobalObjectId getGlobalObjectId() {
+        if (globalObjectId != null) {
+            return globalObjectId;
+        }
+        MAPIPropName pnPidLidGlobalObjectId = new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), (long)0x3);
+        globalObjectId = this.getGlobalObjectIdType(pnPidLidGlobalObjectId);
+        return globalObjectId;
+    }
+
+    /**
+     * PidLidCleanGlobalObjectId
+     * The format of this property is the same as that of PidLidGlobalObjectId.
+     * The value of this property MUST be equal to the value of PidLidGlobalObjectId,
+     * except the YH, YL, M, and D fields MUST all be zero.
+     * All objects that refer to an instance of a recurring series (including
+     * an orphan instance), as well as the recurring series itself, will have the
+     * same value for this property.
+     * 
+     * @return value of PidLidCleanGlobalObjectId property
+     */
+    private GlobalObjectId getCleanGlobalObjectId() {
+        if (cleanGlobalObjectId != null) {
+            return cleanGlobalObjectId;
+        }
+        MAPIPropName pnPidCleanGlobalObjectId = new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), (long)0x23);
+        cleanGlobalObjectId = this.getGlobalObjectIdType(pnPidCleanGlobalObjectId);
+        return cleanGlobalObjectId;
+    }
+
+    private GlobalObjectId getGlobalObjectIdType(MAPIPropName pName) {
+        GlobalObjectId gid = null;
+        RawInputStream ris;
+        try {
+            ris = getRawInputStreamValue(pName, 0);
+            if (ris != null) {
+                gid = new GlobalObjectId(ris);
+            }
+        } catch (IOException e) {
+            sLog.debug("Problem getting value of MAPI property " + pName + " from TNEF", e);
+        }
+        return gid;
+    }
+
+    /**
+     * Initialise timezone related fields.
+     *
+     * @throws IOException
+     */
+    private void initTZinfo() {
+        if (tzinfoInitialized) {
+            return;
+        }
+        RawInputStream tzRis;
+            
+        // PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies
+        // time zone information applicable to PidLidAppointmentStartWhole.
+        MAPIPropName PidLidAppointmentTimeZoneDefinitionStartDisplay =
+                this.PSETID_AppointmentPropName(0x825E);
+        try {
+            tzRis = getRawInputStreamValue(PidLidAppointmentTimeZoneDefinitionStartDisplay, 0);
+            if (tzRis != null) {
+                startTimeTZinfo = new TimeZoneDefinition(tzRis);
+            }
+
+            // PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies
+            // time zone information applicable to PidLidAppointmentEndWhole.
+            MAPIPropName PidLidAppointmentTimeZoneDefinitionEndDisplay =
+                    this.PSETID_AppointmentPropName(0x825F);
+            tzRis = getRawInputStreamValue(PidLidAppointmentTimeZoneDefinitionEndDisplay, 0);
+            if (tzRis != null) {
+                endTimeTZinfo = new TimeZoneDefinition(tzRis);
+            }
+
+            // PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
+            // that describes how to convert the meeting date and time on a recurring
+            // series to and from UTC.
+            // MS-OXOCAL says "If this property is set, but it has data that is
+            // inconsistent with the data that is represented by PidLidTimeZoneStruct,
+            // then the client uses PidLidTimeZoneStruct instead of this property."
+            MAPIPropName PidLidAppointmentTimeZoneDefinitionRecur =
+                    this.PSETID_AppointmentPropName(0x8260);
+            tzRis = getRawInputStreamValue(PidLidAppointmentTimeZoneDefinitionRecur, 0);
+            if (tzRis != null) {
+                recurrenceTZinfo = new TimeZoneDefinition(tzRis);
+            }
+            String tzDesc = this.getTimeZoneDescription();
+            if (null != tzDesc) {
+                TimeZoneDefinition tzStructInfo =
+                        this.getTimeZoneStructInfo(tzDesc);
+                if (null != tzStructInfo) {
+                    // if the rules differ, tzStructInfo should win
+                    if (recurrenceTZinfo != null) {
+                        TZRule tzsRule = tzStructInfo.getEffectiveRule();
+                        if (tzsRule != null) {
+                            if (!tzsRule.equivalentRule(
+                                    recurrenceTZinfo.getEffectiveRule())) {
+                                sLog.debug(
+    "PidLidAppointmentTimeZoneDefinitionRecur effective rule differs from PidLidTimeZoneStruct rule - ignored");
+                                recurrenceTZinfo = tzStructInfo;
+                            }
+                        }
+                    }
+                    if (startTimeTZinfo == null) {
+                        startTimeTZinfo = tzStructInfo;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            sLog.debug("Problem encountered initialising timezone information", e);
+        }
+
+        if (recurrenceTZinfo == null) {
+            recurrenceTZinfo = startTimeTZinfo;
+        }
+        if (endTimeTZinfo == null) {
+            endTimeTZinfo = startTimeTZinfo;
+        }
+        tzinfoInitialized = true;
+    }
+
+    /**
+     * PidLidTimeZoneStruct Specifies time zone information for a recurring meeting.
+     *
+     * @param tzName 
+     * @return
+     * @throws IOException
+     */
+    private TimeZoneDefinition getTimeZoneStructInfo(String tzName) throws IOException {
+        MAPIPropName PidLidTimeZoneStruct = this.PSETID_AppointmentPropName(0x8233);
+        RawInputStream tzRis = getRawInputStreamValue(PidLidTimeZoneStruct, 0);
+        if (tzRis == null) {
+            return null;
+        }
+        TimeZoneDefinition tzDef = new TimeZoneDefinition(tzRis, tzName);
+        return tzDef;
     }
 
     /**
