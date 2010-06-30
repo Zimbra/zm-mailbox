@@ -20,7 +20,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -129,14 +128,6 @@ public class ItemActionHelper {
         return ia;
     }
 
-    public static ItemActionHelper TRASH(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, 
-                byte type, TargetConstraint tcon) throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.TRASH, type, true, tcon);
-        ia.schedule();
-        return ia;
-    }
-
     public static ItemActionHelper RENAME(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder)
     throws ServiceException {
@@ -171,7 +162,6 @@ public class ItemActionHelper {
         MOVE("move"),
         COPY("copy"),
         SPAM("spam"),
-        TRASH("trash"),
         RENAME("rename"),
         UPDATE("update")
         ;
@@ -361,16 +351,6 @@ public class ItemActionHelper {
                 for (MailItem item : copies)
                     mCreatedIds.add(mIdFormatter.formatItemId(item));
                 break;
-            case TRASH:
-                try {
-                    // in general, everything will work fine, so just blindly try to move the targets to trash
-                    getMailbox().move(getOpCtxt(), mIds, mItemType, Mailbox.ID_FOLDER_TRASH, mTargetConstraint);
-                } catch (ServiceException e) {
-                    if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS))
-                        throw e;
-                    moveWithRename(Mailbox.ID_FOLDER_TRASH);
-                }
-                break;
             case RENAME:
                 for (int id : mIds)
                     getMailbox().rename(getOpCtxt(), id, mItemType, mName, mIidFolder.getId());
@@ -389,29 +369,6 @@ public class ItemActionHelper {
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
-        }
-    }
-
-    private void moveWithRename(int targetId) throws ServiceException {
-        // naming conflict; handle on an item-by-item basis
-        for (int id : mIds) {
-            try {
-                // still more likely than not to succeed...
-                getMailbox().move(getOpCtxt(), id, mItemType, targetId, mTargetConstraint);
-            } catch (ServiceException e) {
-                if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS))
-                    throw e;
-
-                // rename the item being moved instead of the one already there...
-                String name = getMailbox().getItemById(getOpCtxt(), id, mItemType).getName();
-                String uuid = '{' + UUID.randomUUID().toString() + '}', newName;
-                if (name.length() + uuid.length() > MailItem.MAX_NAME_LENGTH)
-                    newName = name.substring(0, MailItem.MAX_NAME_LENGTH - uuid.length()) + uuid;
-                else
-                    newName = name + uuid;
-                // FIXME: relying on the fact that conversations collect things that don't cause naming conflicts
-                getMailbox().rename(getOpCtxt(), id, mItemType, newName, targetId);
-            }
         }
     }
 

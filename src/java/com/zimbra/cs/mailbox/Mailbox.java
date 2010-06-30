@@ -38,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.mail.MessagingException;
@@ -5227,6 +5228,44 @@ public class Mailbox {
      * @param targetId  The ID of the target folder for the move.
      * @param tcon      An optional constraint on the items being moved. */
     public synchronized void move(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
+        try {
+            moveInternal(octxt, itemIds, type, targetId, tcon);
+            return;
+        } catch (ServiceException e) {
+            // make sure that move-to-Trash never fails with a naming conflict
+            if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS) || targetId != ID_FOLDER_TRASH)
+                throw e;
+        }
+
+        // if we're here, we hit a naming conflict during move-to-Trash
+        if (itemIds.length == 1) {
+            // rename the item being moved instead of the one already there...
+            rename(octxt, itemIds[0], type, generateAlternativeItemName(octxt, itemIds[0], type), targetId);
+        } else {
+            // iterate one-by-one and move the items individually
+            for (int id : itemIds) {
+                // FIXME: non-transactional
+                try {
+                    // still more likely than not to succeed...
+                    moveInternal(octxt, new int[] { id }, type, targetId, tcon);
+                } catch (ServiceException e) {
+                    // rename the item being moved instead of the one already there...
+                    rename(octxt, id, type, generateAlternativeItemName(octxt, id, type), targetId);
+                }
+            }
+        }
+    }
+
+    private String generateAlternativeItemName(OperationContext octxt, int id, byte type) throws ServiceException {
+        String name = getItemById(octxt, id, type).getName();
+        String uuid = '{' + UUID.randomUUID().toString() + '}';
+        if (name.length() + uuid.length() > MailItem.MAX_NAME_LENGTH)
+            return name.substring(0, MailItem.MAX_NAME_LENGTH - uuid.length()) + uuid;
+        else
+            return name + uuid;
+    }
+
+    private synchronized void moveInternal(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
         Map<Integer, String> oldFolderPaths = new HashMap<Integer, String>(); 
 
@@ -5245,9 +5284,9 @@ public class Mailbox {
             boolean resetUIDNEXT = false;
 
             for (MailItem item : items) {
-                if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId())) {
+                if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId()))
                     oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
-                }
+
                 // train the spam filter if necessary...
                 trainSpamFilter(octxt, item, target);
                 
@@ -5271,9 +5310,8 @@ public class Mailbox {
         }
         
         if (success) {
-            for (int id : oldFolderPaths.keySet()) {
+            for (int id : oldFolderPaths.keySet())
                 updateFilterRules(id, oldFolderPaths.get(id));
-            }
         }
     }
 
