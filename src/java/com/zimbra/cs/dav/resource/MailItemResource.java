@@ -81,13 +81,13 @@ public abstract class MailItemResource extends DavResource {
 	
     private static final String BLUE   = "#0252D4FF";
     private static final String CYAN   = "#008284FF";
+    private static final String GRAY   = "#848284FF";
     private static final String GREEN  = "#2CA10BFF";
+    private static final String ORANGE = "#F57802FF";
+    private static final String PINK   = "#B027AEFF";
     private static final String PURPLE = "#492BA1FF";
     private static final String RED    = "#E51717FF";
     private static final String YELLOW = "#848200FF";
-    private static final String PINK   = "#B027AEFF";
-    private static final String GRAY   = "#848284FF";
-    private static final String ORANGE = "#F57802FF";
     private static final String DEFAULT_COLOR = ORANGE;
     
     protected static final String[] COLOR_MAP = {
