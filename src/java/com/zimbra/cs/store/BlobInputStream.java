@@ -234,7 +234,7 @@ implements SharedInputStream {
         }
         byte b = mBuf[(int) (mPos - mBufPos)];
         mPos++;
-        return b;
+        return b & 0xff;
     }
     
     /**
