@@ -20,10 +20,8 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
  * Check if grantee is allowed for rightNeeded on target entry.
  */ 
 
-public class PresetRightChecker {
-    private static final Log sLog = LogFactory.getLog(RightChecker.class);
-    
-    
+public class CheckPresetRight {
+    private static final Log sLog = LogFactory.getLog(CheckPresetRight.class);
     
     // input to the class
     private Account mGrantee;
