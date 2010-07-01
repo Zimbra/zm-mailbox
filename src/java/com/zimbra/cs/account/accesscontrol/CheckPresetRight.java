@@ -64,12 +64,12 @@ public class CheckPresetRight {
     public static Boolean check(Account grantee, Entry target, 
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         
-        PresetRightChecker checker = new PresetRightChecker(grantee, target, rightNeeded, canDelegateNeeded, via);
+        CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
         return checker.checkRight();
     }
     
 
-    private PresetRightChecker(Account grantee, Entry target, 
+    private CheckPresetRight(Account grantee, Entry target, 
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         mProv = Provisioning.getInstance();
         
