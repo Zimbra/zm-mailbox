@@ -279,7 +279,7 @@ public class RecurrenceDefinition {
                     debugInfo.append("    dayOfMonth=")
                             .append(dayOfMonth).append("\n");
             }
-            if (haveDayOfMonth) {
+            if (haveWeekDayOccurNum) {
                 debugInfo.append("    weekDayOccurrenceNumber=")
                         .append(weekDayOccurrenceNumber).append("\n");
             }

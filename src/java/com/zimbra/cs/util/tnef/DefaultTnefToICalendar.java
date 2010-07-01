@@ -87,7 +87,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             String msgClass = schedView.getMessageClass();
             String uid = schedView.getIcalUID();
             Integer sequenceNum = schedView.getSequenceNumber();
-            Boolean replyWanted = schedView.getResponseRequested();
+            boolean replyWanted = schedView.getResponseRequested();
             String location = schedView.getLocation();
             Boolean isAllDayEvent = schedView.isAllDayEvent();
             Boolean isCounterProposal = schedView.isCounterProposal();
@@ -230,10 +230,11 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             //TODO - for text properties, need to handle line endings and strange
             //       characters - also, OemCodePage may need to be taken into account.
             if (uid == null) {
-                IcalUtil.addProperty(icalOutput, Property.UID, "No-orignal-valid-UID");
-            } else {
-                IcalUtil.addProperty(icalOutput, Property.UID, uid);
+                // TODO: Would it be better to reject this?
+                uid = new String("No-original-valid-UID");
             }
+
+            IcalUtil.addProperty(icalOutput, Property.UID, uid);
             if ( (attendeeCriticalChange != null) &&
                     ( method.equals(Method.REPLY) ||
                       method.equals(Method.COUNTER) ) ) {
@@ -419,8 +420,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                             continue;  // No need to add the information twice
                         }
                         addAttendee(icalOutput, ia, Role.REQ_PARTICIPANT,
-                                    CuType.INDIVIDUAL, partstat,
-                                    ((replyWanted != null) && (replyWanted)));
+                                    CuType.INDIVIDUAL, partstat, replyWanted);
                     }
                 }
                 if (addAttendees && (ccRecips != null)) {
@@ -430,16 +430,14 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                             continue;  // No need to add the information twice
                         }
                         addAttendee(icalOutput, ia, Role.OPT_PARTICIPANT,
-                                    CuType.INDIVIDUAL, partstat,
-                                    ((replyWanted != null) && (replyWanted)));
+                                    CuType.INDIVIDUAL, partstat, replyWanted);
                     }
                 }
                 if (addAttendees && (bccRecips != null)) {
                     for (Address a : bccRecips) {
                         InternetAddress ia = (InternetAddress) a;
                         addAttendee(icalOutput, ia, Role.NON_PARTICIPANT,
-                                    CuType.RESOURCE, partstat,
-                                    ((replyWanted != null) && (replyWanted)));
+                                    CuType.RESOURCE, partstat, replyWanted);
                     }
                 }
             }
@@ -480,21 +478,21 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             // TODO:  Want VALARM too "for completeness"
             icalOutput.endCalendar();
             conversionSuccessful = true;
+            sLog.info("Calendaring TNEF message mapped to ICALENDAR with UID=%s", uid);
         } catch (ParserException e) {
-            sLog.error( "Unexpected ParserException thrown" , e);
+            sLog.debug( "Unexpected ParserException thrown" , e);
         } catch (URISyntaxException e) {
-            sLog.error( "Unexpected URISyntaxException thrown" , e);
+            sLog.debug( "Unexpected URISyntaxException thrown" , e);
         } catch (ParseException e) {
-            sLog.error( "Unexpected ParseException thrown" , e);
+            sLog.debug( "Unexpected ParseException thrown" , e);
         } catch (MessagingException e) {
-            sLog.error( "Unexpected MessagingException thrown" , e);
+            sLog.debug( "Unexpected MessagingException thrown" , e);
         } catch (IOException e) {
-            sLog.error( "Unexpected IOException thrown" , e);
+            sLog.debug( "Unexpected IOException thrown" , e);
         } catch (UnsupportedTnefCalendaringMsgException e) {
-            // TODO: debug level is probably more appropriate
-            sLog.warn("Unable to map this message to ICALENDAR", e);
+            sLog.debug("Unable to map this message to ICALENDAR", e);
         } catch (TNEFtoIcalendarServiceException e) {
-            sLog.warn("Problem encountered mapping this message to ICALENDAR", e);
+            sLog.debug("Problem encountered mapping this message to ICALENDAR", e);
         } finally {
             try {
                 if (tnefStream != null) {

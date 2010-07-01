@@ -317,11 +317,19 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
-     * @return value of PidTagResponseRequested property or null if absent
+     * @return whether responses are desired for this calendaring object or not
      * @throws IOException
      */
-    public Boolean getResponseRequested() throws IOException {
-        return getBooleanValue(null, MAPIProp.PR_RESPONSE_REQUESTED);
+    public boolean getResponseRequested() throws IOException {
+        Boolean responseRequested = getBooleanValue(null, MAPIProp.PR_RESPONSE_REQUESTED);
+        if (responseRequested != null) {
+            return responseRequested;
+        }
+        Boolean replyRequested = getBooleanValue(null, MAPIProp.PR_REPLY_REQUESTED);
+        if (replyRequested != null) {
+            return replyRequested;
+        }
+        return false;
     }
 
     /**
