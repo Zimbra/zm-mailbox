@@ -30,6 +30,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimePart;
 
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
@@ -53,6 +54,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -452,12 +454,38 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     public List<String> getMatchingHeader(String name)
-        throws SieveMailException {
+    throws SieveMailException {
         @SuppressWarnings("unchecked")
         List<String> result = MailUtils.getMatchingHeader(this, name);
         return result;
     }
+    
+    /**
+     * Scans all attachments and returns the values of any headers with
+     * match the given name.
+     */
+    public Set<String> getMatchingAttachmentHeader(String name)
+    throws SieveMailException {
+        MimeMessage msg = null;
+        Set<String> values = new HashSet<String>();
 
+        try {
+            msg = mHandler.getMimeMessage();
+            for (MPartInfo partInfo : Mime.getParts(msg)) {
+                MimePart part = partInfo.getMimePart();
+                if (part != msg) {
+                    for (String value : Mime.getHeaders(part, name)) {
+                        values.add(value);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new SieveMailException("Unable to match attachment headers.", e);
+        }
+        
+        return values;
+    }
+    
     public int getSize() throws SieveMailException {
         try {
             return mHandler.getParsedMessage().getRawSize();

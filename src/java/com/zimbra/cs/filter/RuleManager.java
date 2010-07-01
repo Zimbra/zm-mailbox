@@ -85,6 +85,7 @@ public class RuleManager {
             testMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
             testMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
             testMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
+            testMap.put("attachment_header", com.zimbra.cs.filter.jsieve.AttachmentHeaderTest.class.getName());
             
             sSieveFactory = sConfigurationManager.build();
         } catch (SieveException e) {
