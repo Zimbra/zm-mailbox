@@ -20,20 +20,14 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
  * Check if grantee is allowed for rightNeeded on target entry.
  */ 
 
-public class CheckPresetRight {
+public class CheckPresetRight extends CheckRight {
     private static final Log sLog = LogFactory.getLog(CheckPresetRight.class);
-    
-    // input to the class
-    private Account mGrantee;
-    private Entry mTarget;
-    private Right mRightNeeded;
-    private boolean mCanDelegateNeeded;
+
+    private Account mGranteeAcct;
     private ViaGrant mVia;
     
     // derived from input or aux vars
-    private Provisioning mProv; 
     private AclGroups mGranteeGroups;
-    private TargetType mTargetType;
     private SeenRight mSeenRight;
     
     private static class SeenRight {
@@ -71,14 +65,11 @@ public class CheckPresetRight {
 
     private CheckPresetRight(Account grantee, Entry target, 
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
-        mProv = Provisioning.getInstance();
         
-        mGrantee = grantee;
-        mRightNeeded = rightNeeded;
-        mCanDelegateNeeded = canDelegateNeeded;
+        super(target, rightNeeded, canDelegateNeeded);
+        
+        mGranteeAcct = grantee;
         mVia = via;
-        
-        mTarget = target;
         
         // This path is called from AccessManager.canDo, the target object can be a 
         // DistributionList obtained from prov.get(DistributionListBy).  
@@ -96,7 +87,7 @@ public class CheckPresetRight {
             // get all groups the grantee belongs if we haven't done so (Prov.getAclGroups never returns null)
             // get only admin groups if the right is an admin right
             boolean adminGroupsOnly = !mRightNeeded.isUserRight();
-            mGranteeGroups = mProv.getAclGroups(mGrantee, adminGroupsOnly);
+            mGranteeGroups = mProv.getAclGroups(mGranteeAcct, adminGroupsOnly);
         }
         return mGranteeGroups;
     }
@@ -114,13 +105,13 @@ public class CheckPresetRight {
         
         if (adminRight) {
             // if the grantee is no longer legitimate, e.g. not an admin any more, ignore all his grants
-            if (!RightChecker.isValidGranteeForAdminRights(GranteeType.GT_USER, mGrantee))
+            if (!RightChecker.isValidGranteeForAdminRights(GranteeType.GT_USER, mGranteeAcct))
                 return null;
             
-            granteeDomain = mProv.getDomain(mGrantee);
+            granteeDomain = mProv.getDomain(mGranteeAcct);
             // if we ever get here, the grantee must have a domain
             if (granteeDomain == null)
-                throw ServiceException.FAILURE("internal error, cannot find domain for " + mGrantee.getName(), null);
+                throw ServiceException.FAILURE("internal error, cannot find domain for " + mGranteeAcct.getName(), null);
                  
             // should only come from granting/revoking check
             if (mRightNeeded == Admin.R_crossDomainAdmin)
@@ -166,7 +157,7 @@ public class CheckPresetRight {
                 
                 boolean skipPositiveGrants = false;
                 if (adminRight)
-                    skipPositiveGrants = !CrossDomain.crossDomainOK(mProv, mGrantee, granteeDomain, 
+                    skipPositiveGrants = !CrossDomain.crossDomainOK(mProv, mGranteeAcct, granteeDomain, 
                         targetDomain, (DistributionList)grantedOn);
                 
                 // don't check yet, collect all acls on all target groups
@@ -315,7 +306,7 @@ public class CheckPresetRight {
             // This is so callsite default will not be honored.
             mSeenRight.setSeenRight();
                 
-            if (ace.matchesGrantee(mGrantee))
+            if (ace.matchesGrantee(mGranteeAcct))
                 return gotResult(ace);
         }
        
@@ -354,7 +345,7 @@ public class CheckPresetRight {
     private Boolean gotResult(ZimbraACE ace) throws ServiceException {
         if (ace.deny()) {
             if (sLog.isDebugEnabled())
-                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" + " DENIED to " + mGrantee.getName() + 
+                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" + " DENIED to " + mGranteeAcct.getName() + 
                            " via grant: " + ace.dump() + " on: " + ace.getTargetType().getCode() + ace.getTargetName());
             if (mVia != null)
                 mVia.setImpl(new ViaGrantImpl(ace.getTargetType(),
@@ -366,7 +357,7 @@ public class CheckPresetRight {
             return Boolean.FALSE;
         } else {
             if (sLog.isDebugEnabled())
-                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" + " ALLOWED to " + mGrantee.getName() + 
+                sLog.debug("Right " + "[" + mRightNeeded.getName() + "]" + " ALLOWED to " + mGranteeAcct.getName() + 
                            " via grant: " + ace.dump() + " on: " + ace.getTargetType().getCode() + ace.getTargetName());
             if (mVia != null)
                 mVia.setImpl(new ViaGrantImpl(ace.getTargetType(),

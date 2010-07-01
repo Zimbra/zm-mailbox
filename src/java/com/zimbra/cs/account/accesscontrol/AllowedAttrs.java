@@ -148,7 +148,7 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
             // see if the grantee can set zimbraConstraint on the constraint entry
             // if so, the grantee can set attrs to any value (not restricted by the constraints)
             AllowedAttrs allowedAttrsOnConstraintEntry = 
-                RightChecker.accessibleAttrs(grantee, constraintEntry, AdminRight.PR_SET_ATTRS, false);
+                CheckAttrRight.accessibleAttrs(grantee, constraintEntry, AdminRight.PR_SET_ATTRS, false);
             
             if (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_ALL ||
                 (allowedAttrsOnConstraintEntry.getResult() == AllowedAttrs.Result.ALLOW_SOME &&
