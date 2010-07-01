@@ -68,3 +68,10 @@ if anyof (invite :method ["reply", "refresh", "counter"])
 {
     keep;
 }
+# Attachment header
+if allof (attachment_header :contains "to" "james.apache.org",
+ attachment_header :contains "cc" "james.apache.org")
+{
+    fileInto "jSieve";
+    stop;
+}

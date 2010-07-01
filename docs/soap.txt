@@ -2588,14 +2588,14 @@ Tests:
 
   <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
   <headerExistsTest header="{header-name}" />
+  <attachmentHeaderTest header="{header-name}" stringComparison="{type}" value="{value}" />
   <sizeTest numberComparison="{over|under}" s="{size}" />
   <dateTest dateComparison="{before|after}" d="{date}" />
   <bodyTest value="{value}" />
   <attachmentTest />
   <addressBookTest header="{header-name}" folderPath="{folder-path}" />
   <inviteTest>
-    <method>{method}</method>
-    ...
+    <method>{method}</method>+
   </inviteTest>
 
 Each test has the following optional attributes:

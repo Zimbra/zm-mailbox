@@ -988,9 +988,9 @@ public class Mime {
      * multiple headers with the same name exist, returns the first one.
      * If the header does not exist, returns <tt>null</tt>. 
      */
-    public static String getHeader(MimeMessage msg, String headerName) {
+    public static String getHeader(MimePart part, String headerName) {
         try {
-            String value = msg.getHeader(headerName, null);
+            String value = part.getHeader(headerName, null);
             if (value == null || value.length() == 0)
                 return null;
             try {
@@ -1011,9 +1011,9 @@ public class Mime {
      * Returns the decoded and unfolded values for the given header name,
      * or an empty array if no headers with the given name exist.
      */
-    public static String[] getHeaders(MimeMessage msg, String headerName) {
+    public static String[] getHeaders(MimePart part, String headerName) {
         try {
-            String[] values = msg.getHeader(headerName);
+            String[] values = part.getHeader(headerName);
             if (values == null || values.length == 0)
                 return NO_HEADERS;
 

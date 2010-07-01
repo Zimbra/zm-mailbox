@@ -143,6 +143,18 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitAttachmentHeaderTest(Node node, VisitPhase phase, RuleProperties props,
+                                             String header, StringComparison comparison, String value)
+    throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_ATTACHMENT_HEADER_TEST, props);
+            test.addAttribute(MailConstants.A_HEADER, header);
+            test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
+            test.addAttribute(MailConstants.A_VALUE, value);
+        }
+    }
+
+    @Override
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
                                  NumberComparison comparison, int size, String sizeString)
     throws ServiceException {

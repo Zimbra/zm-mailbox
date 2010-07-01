@@ -34,6 +34,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.SizeOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
@@ -257,6 +258,12 @@ public class ZFilterRule implements ToZJSONObject {
                     String value = args[i++];
                     conditions.add(new ZHeaderCondition(headerName, HeaderOp.fromString(op), value));
                 }
+            } else if (a.equals("attachment_header")) {
+                if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                String headerName = args[i++];
+                String op = args[i++];
+                String value = args[i++];
+                conditions.add(new ZAttachmentHeaderCondition(headerName, HeaderOp.fromString(op), value));
             } else if (a.equals("invite")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
                 ZInviteCondition cond = new ZInviteCondition(args[i++].equals("exists"));

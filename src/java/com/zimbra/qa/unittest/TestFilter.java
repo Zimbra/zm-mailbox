@@ -68,6 +68,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
@@ -96,12 +97,17 @@ extends TestCase {
     private String mOriginalSpamApplyUserFilters;
     private String mOriginalSmtpPort = null;
     private String mOriginalSetEnvelopeSender = null;
+    private ZTag mTag1;
+    private ZTag mTag2;
 
     public void setUp()
     throws Exception {
-        mMbox = TestUtil.getZMailbox(USER_NAME);
         cleanUp();
 
+        mMbox = TestUtil.getZMailbox(USER_NAME);
+        mTag1 = mMbox.createTag(TAG1_NAME, null);
+        mTag2 = mMbox.createTag(TAG2_NAME, null);
+        
         // Create mountpoint for testMountpoint()
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
@@ -376,6 +382,37 @@ extends TestCase {
         // the lower case version.
         script = script.replace("fileInto", "fileinto");
         assertEquals(script, convertedScript);
+    }
+    
+    public void disabledTestAttachmentHeader()
+    throws Exception {
+        // Create a text/plain message with a text/html attachment.
+        String subject = NAME_PREFIX + " testAttachmentHeader";
+        String attachmentData = "<html><body>I'm so attached to you.</body></html>";
+        String content = new MessageBuilder().withSubject(subject).withRecipient(USER_NAME)
+            .withAttachment(attachmentData, "attachment.html", "text/html").create();
+        
+        // Create filter rules.
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        
+        conditions.add(new ZAttachmentHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/plain"));
+        actions.add(new ZTagAction(mTag1.getName()));
+        rules.add(new ZFilterRule("testMarkRead 1", true, false, conditions, actions));
+        
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZAttachmentHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/html"));
+        actions.add(new ZTagAction(mTag2.getName()));
+        rules.add(new ZFilterRule("testMarkRead 2", true, false, conditions, actions));
+        
+        saveRules(mMbox, new ZFilterRules(rules));
+        
+        // Deliver message and make sure that tag 2 was applied, but not tag 1.
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertEquals(mTag2.getId(), msg.getTagIds());
     }
     
     public void testMarkRead()
@@ -952,8 +989,9 @@ extends TestCase {
         
         // Clean up messages created by testBase64Subject()
         // bug 36705 for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
-        for (ZMessage msg : TestUtil.search(mMbox, "cortes de luz")) {
-            mMbox.deleteMessage(msg.getId());
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        for (ZMessage msg : TestUtil.search(mbox, "cortes de luz")) {
+            mbox.deleteMessage(msg.getId());
         }
     }
     

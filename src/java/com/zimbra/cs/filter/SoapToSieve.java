@@ -111,19 +111,9 @@ public class SoapToSieve {
         String snippet = null;
         
         if (name.equals(MailConstants.E_HEADER_TEST)) {
-            String header = test.getAttribute(MailConstants.A_HEADER);
-            String s = test.getAttribute(MailConstants.A_STRING_COMPARISON);
-            s = s.toLowerCase();
-            StringComparison comparison = StringComparison.fromString(s);
-            String value = test.getAttribute(MailConstants.A_VALUE);
-            snippet = String.format("header :%s \"%s\" \"%s\"",
-                comparison, FilterUtil.escape(header), FilterUtil.escape(value));
-            
-            // Bug 35983: disallow more than four asterisks in a row.
-            if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
-                throw ServiceException.INVALID_REQUEST(
-                    "Wildcard match value cannot contain more than four asterisks in a row.", null);
-            }
+            snippet = generateHeaderTest(test, "header");
+        } else if (name.equals(MailConstants.E_ATTACHMENT_HEADER_TEST)) {
+            snippet = generateHeaderTest(test, "attachment_header");
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = test.getAttribute(MailConstants.A_HEADER);
             snippet = String.format("exists \"%s\"", FilterUtil.escape(header));
@@ -163,6 +153,24 @@ public class SoapToSieve {
         
         if (snippet != null && test.getAttributeBool(MailConstants.A_NEGATIVE, false)) {
             snippet = "not " + snippet;
+        }
+        return snippet;
+    }
+    
+    private String generateHeaderTest(Element test, String testName)
+    throws ServiceException {
+        String header = test.getAttribute(MailConstants.A_HEADER);
+        String s = test.getAttribute(MailConstants.A_STRING_COMPARISON);
+        s = s.toLowerCase();
+        StringComparison comparison = StringComparison.fromString(s);
+        String value = test.getAttribute(MailConstants.A_VALUE);
+        String snippet = String.format("%s :%s \"%s\" \"%s\"",
+            testName, comparison, FilterUtil.escape(header), FilterUtil.escape(value));
+        
+        // Bug 35983: disallow more than four asterisks in a row.
+        if (comparison == StringComparison.matches && value != null && value.contains("*****")) {
+            throw ServiceException.INVALID_REQUEST(
+                "Wildcard match value cannot contain more than four asterisks in a row.", null);
         }
         return snippet;
     }
