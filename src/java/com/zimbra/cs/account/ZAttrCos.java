@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100618-1207 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100701-1303 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2334,13 +2334,13 @@ public class ZAttrCos extends NamedEntry {
      * ranking table are given the priority when generating the auto-complete
      * contact list.
      *
-     * @return zimbraContactRankingTableSize, or 40 if unset
+     * @return zimbraContactRankingTableSize, or 200 if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=758)
     public int getContactRankingTableSize() {
-        return getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
+        return getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 200);
     }
 
     /**

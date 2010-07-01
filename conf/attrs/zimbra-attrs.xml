@@ -3832,7 +3832,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="758" name="zimbraContactRankingTableSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
-  <defaultCOSValue>40</defaultCOSValue>
+  <defaultCOSValue>200</defaultCOSValue>
   <desc>
     Size of the contact ranking table.  Ranking table is used to keep track of
     most heavily used contacts in outgoing email.  Contacts in the ranking table

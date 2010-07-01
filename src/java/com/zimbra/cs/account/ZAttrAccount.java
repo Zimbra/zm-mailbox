@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100618-1207 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100701-1303 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -4833,13 +4833,13 @@ public class ZAttrAccount  extends MailTarget {
      * ranking table are given the priority when generating the auto-complete
      * contact list.
      *
-     * @return zimbraContactRankingTableSize, or 40 if unset
+     * @return zimbraContactRankingTableSize, or 200 if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=758)
     public int getContactRankingTableSize() {
-        return getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
+        return getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 200);
     }
 
     /**
