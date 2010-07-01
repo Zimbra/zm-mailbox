@@ -452,7 +452,7 @@ public class ACLAccessManager extends AccessManager {
             //
             Boolean result = null;
             if (target != null)
-                result = PresetRightChecker.check(grantee, target, rightNeeded, canDelegateNeeded, via);
+                result = CheckPresetRight.check(grantee, target, rightNeeded, canDelegateNeeded, via);
             
             if (result != null && result.booleanValue()) 
                 return result.booleanValue();  // // allowed by ACL
